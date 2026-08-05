@@ -282,11 +282,17 @@ async def test_disabling_home_reloads_entry(
 
 
 @pytest.mark.parametrize(
-    ("options_update", "expected_reload_calls"),
+    ("options_update", "expected_reload_calls", "expected_public_updates"),
     [
-        pytest.param({CONF_DISABLED_HOMES: [HOME_1_ID]}, 1, id="home_disabled"),
-        pytest.param({CONF_DISABLED_HOMES: []}, 0, id="home_selection_unchanged"),
-        pytest.param({CONF_WEATHER_AREAS: {}}, 0, id="unrelated_option"),
+        pytest.param({CONF_DISABLED_HOMES: [HOME_1_ID]}, 1, 0, id="home_disabled"),
+        pytest.param({CONF_DISABLED_HOMES: []}, 0, 1, id="home_selection_unchanged"),
+        pytest.param({CONF_WEATHER_AREAS: {}}, 0, 1, id="unrelated_option"),
+        pytest.param(
+            {CONF_DISABLED_HOMES: [HOME_1_ID], CONF_WEATHER_AREAS: {}},
+            1,
+            0,
+            id="homes_and_weather_areas",
+        ),
     ],
 )
 @pytest.mark.usefixtures("netatmo_auth")
@@ -295,19 +301,28 @@ async def test_reload_on_home_selection_change(
     config_entry: MockConfigEntry,
     options_update: dict[str, Any],
     expected_reload_calls: int,
+    expected_public_updates: int,
 ) -> None:
     """Test the entry is only reloaded when the set of enabled homes changes."""
     with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        with patch.object(hass.config_entries, "async_reload") as mock_reload:
+        with (
+            patch.object(hass.config_entries, "async_reload") as mock_reload,
+            patch(
+                "homeassistant.components.netatmo.async_dispatcher_send"
+            ) as mock_public_update,
+        ):
             hass.config_entries.async_update_entry(
                 config_entry, options={**config_entry.options, **options_update}
             )
             await hass.async_block_till_done()
 
     assert mock_reload.call_count == expected_reload_calls
+    # A reload rebuilds the public weather entities, so it must not also signal an
+    # update that would race the reload
+    assert mock_public_update.call_count == expected_public_updates
 
 
 async def test_setup_component_with_config(

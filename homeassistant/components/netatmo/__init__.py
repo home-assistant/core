@@ -118,12 +118,15 @@ async def async_config_entry_updated(
     hass: HomeAssistant, entry: NetatmoConfigEntry
 ) -> None:
     """Handle signals of config entry being updated."""
-    async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
-
     disabled_homes = set(entry.options.get(CONF_DISABLED_HOMES, []))
     if disabled_homes != entry.runtime_data.disabled_homes:
+        # A reload rebuilds the public weather entities from the new options, so it
+        # supersedes the update signal instead of racing the in-flight one
         _LOGGER.debug("Reloading entry to apply new home selection")
         await hass.config_entries.async_reload(entry.entry_id)
+        return
+
+    async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> bool:
