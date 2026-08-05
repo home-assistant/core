@@ -24,14 +24,9 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    client = AsyncMock()
-
     with patch(
-        "homeassistant.components.clicky.config_flow.ClickyClient",
-    ) as mock_lib:
-        client = mock_lib.return_value
-        client.query = AsyncMock()
-
+        "homeassistant.components.clicky.config_flow.ClickyClient", autospec=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -54,14 +49,13 @@ async def test_form_unknown(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    client = AsyncMock()
 
     with patch(
         "homeassistant.components.clicky.config_flow.ClickyClient",
-        side_effect=Exception,
+        autospec=True,
     ) as mock_lib:
         client = mock_lib.return_value
-        client.query = AsyncMock()
+        client.visitors_online.side_effect = Exception
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -93,11 +87,8 @@ async def test_form_duplicate_site_id(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.clicky.config_flow.ClickyClient",
-    ) as mock_lib:
-        client = mock_lib.return_value
-        client.query = AsyncMock()
-
+        "homeassistant.components.clicky.config_flow.ClickyClient", autospec=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -120,10 +111,10 @@ async def test_form_authentication_error(
     )
 
     with patch(
-        "homeassistant.components.clicky.config_flow.ClickyClient",
+        "homeassistant.components.clicky.config_flow.ClickyClient", autospec=True
     ) as mock_lib:
         client = mock_lib.return_value
-        client.query = AsyncMock(side_effect=AuthenticationError)
+        client.visitors_online.side_effect = AuthenticationError
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -148,10 +139,10 @@ async def test_form_connection_error(
     )
 
     with patch(
-        "homeassistant.components.clicky.config_flow.ClickyClient",
+        "homeassistant.components.clicky.config_flow.ClickyClient", autospec=True
     ) as mock_lib:
         client = mock_lib.return_value
-        client.query = AsyncMock(side_effect=ConnectionError)
+        client.visitors_online.side_effect = ConnectionError
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -174,10 +165,10 @@ async def test_form_api_error(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     )
 
     with patch(
-        "homeassistant.components.clicky.config_flow.ClickyClient",
+        "homeassistant.components.clicky.config_flow.ClickyClient", autospec=True
     ) as mock_lib:
         client = mock_lib.return_value
-        client.query = AsyncMock(side_effect=ClickyAPIError)
+        client.visitors_online.side_effect = ClickyAPIError
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

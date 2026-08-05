@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, METRICS
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,19 +42,18 @@ class ClickyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
     ) -> dict[str, Any]:
         """Fetch data from API endpoint."""
-        ret: dict[str, Any] = {}
+        try:
+            async with self.client:
+                visitors_online = await self.client.visitors_online()
+                time_total = await self.client.time_total()
+        except AuthenticationError as error:
+            raise ConfigEntryAuthFailed("API authentication failed") from error
+        except ClickyAPIError as error:
+            raise UpdateFailed(f"Error fetching data from API: {error}") from error
 
-        async with self.client as service:
-            for key, val in METRICS.items():
-                try:
-                    report = await service.query(val)
-                except AuthenticationError as error:
-                    raise ConfigEntryAuthFailed("API authentication failed") from error
-                except ClickyAPIError as error:
-                    raise UpdateFailed(
-                        f"Error fetching data from API: {error}"
-                    ) from error
-
-                ret[key] = report.value if report.value is not None else 0
-
-            return ret
+        return {
+            "visitorsOnline": visitors_online.value
+            if visitors_online.value is not None
+            else 0,
+            "timeTotal": time_total.value if time_total.value is not None else 0,
+        }
