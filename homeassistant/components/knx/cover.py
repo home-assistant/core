@@ -3,7 +3,11 @@
 from typing import Any, override
 
 from xknx import XKNX
-from xknx.devices import Cover as XknxCover
+from xknx.devices import (
+    Cover as XknxCover,
+    Device as XknxDevice,
+    ExposeSensor as XknxExposeSensor,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.cover import (
@@ -83,10 +87,48 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
+# Minimum time between two position telegrams while travelling. Without it every
+# travel calculator update would be sent - about one telegram per second and cover.
+POSITION_SEND_COOLDOWN = 2.0
+
+
+def _first_ga(group_addresses: str | list[str]) -> str:
+    """Return one group address - the YAML validator yields a list.
+
+    Only the first entry is used: a display value has exactly one sender, so
+    passive addresses make no sense here.
+    """
+    if isinstance(group_addresses, list):
+        return group_addresses[0]
+    return group_addresses
+
+
+def _create_position_publisher(
+    xknx: XKNX, name: str, group_address: Any, cooldown: float
+) -> XknxExposeSensor:
+    """Return an xknx device publishing the calculated position to the bus.
+
+    Used when no actuator reports the position: then the travel calculator is the
+    only source and displays have no other way to learn it. The caller must not
+    register the same address as position_state - Home Assistant would read its
+    own telegram back as actuator feedback and rewind the travel calculator.
+    """
+    return XknxExposeSensor(
+        xknx,
+        name=f"{name} Position",
+        group_address=group_address,
+        value_type="percent",
+        cooldown=cooldown,
+        respond_to_read=True,
+    )
+
+
 class _KnxCover(CoverEntity, RestoreEntity):
     """Representation of a KNX cover."""
 
     _device: XknxCover
+    _position_publisher: XknxExposeSensor | None = None
+    _published_position: int | None = None
 
     def init_base(self) -> None:
         """Initialize common attributes - may be based on xknx device instance."""
@@ -122,6 +164,8 @@ class _KnxCover(CoverEntity, RestoreEntity):
         response arrives; for non-readable ones it is the only source of state.
         """
         await super().async_added_to_hass()
+        if self._position_publisher is not None:
+            self._position_publisher.xknx.devices.async_add(self._position_publisher)
         if (last_state := await self.async_get_last_state()) is None or (
             last_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
@@ -133,6 +177,54 @@ class _KnxCover(CoverEntity, RestoreEntity):
             tilt_position := last_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
         ) is not None:
             self._device.angle.value = 100 - tilt_position
+        if (
+            self._position_publisher is not None
+            and (position := self._payload_position()) is not None
+        ):
+            # seed the publisher so it can answer a read before the first travel
+            self._published_position = position
+            await self._position_publisher.set(position)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove the position publisher from xknx."""
+        if self._position_publisher is not None:
+            self._position_publisher.xknx.devices.async_remove(self._position_publisher)
+        await super().async_will_remove_from_hass()
+
+    def _payload_position(self) -> int | None:
+        """Return the position in the group address value domain.
+
+        The travel calculator counts 0 as open. For an actuator configured with
+        invert_position the group address counts the other way round - xknx does
+        that in the RemoteValueScaling ranges, which this device does not use.
+        """
+        if (position := self._device.current_position()) is None:
+            return None
+        if self._device.position_current.range_from == 100:
+            return 100 - position
+        return position
+
+    @override
+    def after_update_callback(self, device: XknxDevice) -> None:
+        """Publish the position when it changed.
+
+        current_position() is the KNX side value already - cover.py inverts it
+        with `100 - pos` when reading, so no conversion is needed here.
+
+        The last published value is cached to avoid creating a task on every
+        travel calculator update; only a real change is worth a telegram.
+        """
+        if (
+            self._position_publisher is not None
+            and (position := self._payload_position()) is not None
+            and position != self._published_position
+        ):
+            self._published_position = position
+            self.hass.async_create_task(
+                self._position_publisher.set(position, skip_unchanged=True)
+            )
+        super().after_update_callback(device)
 
     @property
     @override
@@ -250,8 +342,10 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
             group_address_long=config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
             group_address_short=config.get(CoverSchema.CONF_MOVE_SHORT_ADDRESS),
             group_address_stop=config.get(CoverSchema.CONF_STOP_ADDRESS),
-            group_address_position_state=config.get(
-                CoverSchema.CONF_POSITION_STATE_ADDRESS
+            group_address_position_state=(
+                None
+                if config[CoverConf.POSITION_STATE_SEND]
+                else config.get(CoverSchema.CONF_POSITION_STATE_ADDRESS)
             ),
             group_address_angle=config.get(CoverSchema.CONF_ANGLE_ADDRESS),
             group_address_angle_state=config.get(CoverSchema.CONF_ANGLE_STATE_ADDRESS),
@@ -271,6 +365,15 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
             entity_config=config,
         )
         self.init_base()
+        if config[CoverConf.POSITION_STATE_SEND] and (
+            state_ga := config.get(CoverSchema.CONF_POSITION_STATE_ADDRESS)
+        ):
+            self._position_publisher = _create_position_publisher(
+                knx_module.xknx,
+                name=config[CONF_NAME],
+                group_address=_first_ga(state_ga),
+                cooldown=POSITION_SEND_COOLDOWN,
+            )
         if custom_device_class := config.get(CONF_DEVICE_CLASS):
             self._attr_device_class = custom_device_class
 
@@ -287,7 +390,11 @@ def _create_ui_cover(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxCover
         group_address_short=conf.get_write_and_passive(CONF_GA_STEP),
         group_address_stop=conf.get_write_and_passive(CONF_GA_STOP),
         group_address_position=conf.get_write_and_passive(CONF_GA_POSITION_SET),
-        group_address_position_state=conf.get_state_and_passive(CONF_GA_POSITION_STATE),
+        group_address_position_state=(
+            None
+            if conf.get(CoverConf.POSITION_STATE_SEND)
+            else conf.get_state_and_passive(CONF_GA_POSITION_STATE)
+        ),
         group_address_angle=conf.get_write(CONF_GA_ANGLE),
         group_address_angle_state=conf.get_state_and_passive(CONF_GA_ANGLE),
         travel_time_down=conf.get(CoverConf.TRAVELLING_TIME_DOWN),
@@ -316,4 +423,15 @@ class KnxUiCover(_KnxCover, KnxUiEntity):
         self._device = _create_ui_cover(
             knx_module.xknx, config[DOMAIN], config[CONF_ENTITY][CONF_NAME]
         )
+        knx_conf = ConfigExtractor(config[DOMAIN])
+        if (
+            knx_conf.get(CoverConf.POSITION_STATE_SEND)
+            and (state_ga := knx_conf.get_state(CONF_GA_POSITION_STATE)) is not None
+        ):
+            self._position_publisher = _create_position_publisher(
+                knx_module.xknx,
+                name=config[CONF_ENTITY][CONF_NAME],
+                group_address=state_ga,
+                cooldown=POSITION_SEND_COOLDOWN,
+            )
         self.init_base()
