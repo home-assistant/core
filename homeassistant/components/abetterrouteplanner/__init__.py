@@ -104,7 +104,7 @@ async def async_setup_entry(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, scope)},
             manufacturer=display.manufacturer if display is not None else None,
-            model=display.display_name if display is not None else raw.vehicle_model,
+            model=display.model_name if display is not None else raw.vehicle_model,
             name=raw.name or raw.vehicle_model,
             configuration_url=(
                 f"https://abetterrouteplanner.com/?vehicle_id={raw.vehicle_id}"

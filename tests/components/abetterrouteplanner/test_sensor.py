@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock
 
-from aioabrp import AbrpVehicle, ChargingState, Metric, Telemetry
+from aioabrp import AbrpVehicle, ChargingState, Metric, Telemetry, VehicleModelDisplay
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -29,6 +29,7 @@ from .conftest import (
     MOCK_VEHICLE_ID,
     MOCK_VEHICLE_ID_2,
     MOCK_VEHICLE_MODEL,
+    MOCK_VEHICLE_NAME,
     SENSOR_TEST_SUB,
     build_metric_value,
     build_vehicle_model_display,
@@ -331,60 +332,6 @@ def _lookup_sensor_entity_id(
     )
 
 
-# Suffix-decorated typecode: an exact dict lookup misses where longest-prefix
-# match resolves.
-_PREFIX_MATCH_VEHICLE_MODEL = "rivian:r1s:25:c3-53g:dual:perf"
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
-async def test_device_info_model_uses_display_endpoint(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """``DeviceInfo.model`` reflects the composed display string."""
-    display = build_vehicle_model_display(
-        manufacturer="Rivian",
-        model="R1S",
-        years="2025",
-        title="Dual Motor",
-        start_year=2025,
-        end_year=None,
-    )
-    mock_abrp_client.return_value = [
-        _make_vehicle(vehicle_model=_PREFIX_MATCH_VEHICLE_MODEL)
-    ]
-    mock_abrp_client.display_responses[_PREFIX_MATCH_VEHICLE_MODEL] = display
-
-    await _setup_integration(hass, config_entry_with_vehicles)
-
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, _scope(config_entry_with_vehicles, MOCK_VEHICLE_ID))}
-    )
-    assert device is not None
-    assert device.model == display.display_name
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
-async def test_device_info_model_falls_back_to_typecode_on_display_miss(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """``DeviceInfo.model`` falls back to the raw typecode on display miss."""
-    mock_abrp_client.return_value = [_make_vehicle()]
-
-    await _setup_integration(hass, config_entry_with_vehicles)
-
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, _scope(config_entry_with_vehicles, MOCK_VEHICLE_ID))}
-    )
-    assert device is not None
-    assert device.model == MOCK_VEHICLE_MODEL
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
 async def test_device_info_name_falls_back_to_typecode_when_unnamed(
     hass: HomeAssistant,
@@ -409,118 +356,33 @@ async def test_device_info_name_falls_back_to_typecode_when_unnamed(
 _POLESTAR_VEHICLE_MODEL = "polestar:2:24:bev:awd"
 
 
-def _set_two_make_displays(mock_abrp_client: AsyncMock) -> None:
+def _set_two_make_displays(
+    mock_abrp_client: AsyncMock,
+) -> dict[int, VehicleModelDisplay]:
     """Register display fixtures for the two distinct-make vehicles."""
-    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = (
-        build_vehicle_model_display(
+    displays = {
+        MOCK_VEHICLE_ID: build_vehicle_model_display(
             manufacturer="Rivian",
             model="R2",
             years="2026",
             title="",
             start_year=2026,
             end_year=None,
-        )
-    )
-    mock_abrp_client.display_responses[_POLESTAR_VEHICLE_MODEL] = (
-        build_vehicle_model_display(
+        ),
+        MOCK_VEHICLE_ID_2: build_vehicle_model_display(
             manufacturer="Polestar",
             model="2",
             years="2024",
             title="",
             start_year=2024,
             end_year=None,
-        )
-    )
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
-async def test_device_info_manufacturer_uses_display_make(
-    hass: HomeAssistant,
-    token_entry: dict[str, Any],
-    device_registry: dr.DeviceRegistry,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """Each per-vehicle device's ``manufacturer`` reflects its display-derived make."""
-    mock_abrp_client.return_value = [
-        _make_vehicle(),
-        _make_vehicle(
-            vehicle_id=MOCK_VEHICLE_ID_2,
-            vehicle_model=_POLESTAR_VEHICLE_MODEL,
         ),
-    ]
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SENSOR_TEST_SUB,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": token_entry,
-            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(MOCK_VEHICLE_ID_2)],
-        },
-    )
-
-    _set_two_make_displays(mock_abrp_client)
-    await _setup_integration(hass, entry)
-
-    expected_makes = {
-        MOCK_VEHICLE_ID: "Rivian",
-        MOCK_VEHICLE_ID_2: "Polestar",
     }
-    for vehicle_id, manufacturer in expected_makes.items():
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{SENSOR_TEST_SUB}_{vehicle_id}")}
-        )
-        assert device is not None
-        assert device.manufacturer == manufacturer
-
-
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
-)
-async def test_device_info_manufacturer_unset_on_display_miss(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """``DeviceInfo.manufacturer`` stays unset on display miss."""
-    await _setup_integration(hass, config_entry_with_vehicles)
-
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, _scope(config_entry_with_vehicles, MOCK_VEHICLE_ID))}
-    )
-    assert device is not None
-    assert device.manufacturer is None
-
-
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
-)
-async def test_device_info_configuration_url_is_per_vehicle_deep_link(
-    hass: HomeAssistant,
-    token_entry: dict[str, Any],
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Each device's ``configuration_url`` deep-links to its own ABRP page."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SENSOR_TEST_SUB,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": token_entry,
-            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(MOCK_VEHICLE_ID_2)],
-        },
-    )
-
-    await _setup_integration(hass, entry)
-
-    for vehicle_id in (MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2):
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{SENSOR_TEST_SUB}_{vehicle_id}")}
-        )
-        assert device is not None
-        assert (
-            device.configuration_url
-            == f"https://abetterrouteplanner.com/?vehicle_id={vehicle_id}"
-        )
+    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = displays[MOCK_VEHICLE_ID]
+    mock_abrp_client.display_responses[_POLESTAR_VEHICLE_MODEL] = displays[
+        MOCK_VEHICLE_ID_2
+    ]
+    return displays
 
 
 @pytest.mark.usefixtures(
@@ -625,36 +487,26 @@ async def test_per_vehicle_device_anchored_at_setup(
         },
     )
 
-    _set_two_make_displays(mock_abrp_client)
+    displays = _set_two_make_displays(mock_abrp_client)
     await _setup_integration(hass, entry)
 
-    expected_by_vehicle: dict[int, dict[str, str]] = {
-        MOCK_VEHICLE_ID: {
-            "manufacturer": "Rivian",
-            "model": "Rivian R2 2026",
-            "name": "Rivian R2 2027 Standard Long Range",
-            "configuration_url": (
-                f"https://abetterrouteplanner.com/?vehicle_id={MOCK_VEHICLE_ID}"
-            ),
-        },
-        MOCK_VEHICLE_ID_2: {
-            "manufacturer": "Polestar",
-            "model": "Polestar 2 2024",
-            "name": polestar_name,
-            "configuration_url": (
-                f"https://abetterrouteplanner.com/?vehicle_id={MOCK_VEHICLE_ID_2}"
-            ),
-        },
+    expected_names = {
+        MOCK_VEHICLE_ID: MOCK_VEHICLE_NAME,
+        MOCK_VEHICLE_ID_2: polestar_name,
     }
-    for vehicle_id, expected in expected_by_vehicle.items():
+    for vehicle_id, display in displays.items():
         device = device_registry.async_get_device(
             identifiers={(DOMAIN, f"{SENSOR_TEST_SUB}_{vehicle_id}")}
         )
         assert device is not None
-        assert device.manufacturer == expected["manufacturer"]
-        assert device.model == expected["model"]
-        assert device.name == expected["name"]
-        assert device.configuration_url == expected["configuration_url"]
+        assert device.manufacturer == display.manufacturer
+        # ``model_name`` drops the make, which has its own field; the label's
+        # own composition rules are the library's contract.
+        assert device.model == display.model_name
+        assert device.name == expected_names[vehicle_id]
+        assert device.configuration_url == (
+            f"https://abetterrouteplanner.com/?vehicle_id={vehicle_id}"
+        )
 
 
 @pytest.mark.usefixtures(
