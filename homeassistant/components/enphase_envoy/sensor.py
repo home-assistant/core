@@ -23,6 +23,11 @@ from pyenphase import (
 )
 from pyenphase.const import PHASENAMES
 from pyenphase.models.acb import ACBChargeStatus, ACBSleepState
+from pyenphase.models.generator import (
+    EnvoyGenerator,
+    EnvoyGeneratorConfig,
+    EnvoyGeneratorMode,
+)
 from pyenphase.models.meters import (
     CtMeterStatus,
     CtState,
@@ -58,7 +63,14 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyACBAggregateEntity, EnvoyACBBatteryEntity, EnvoyBaseEntity
+from .entity import (
+    EnvoyACBAggregateEntity,
+    EnvoyACBBatteryEntity,
+    EnvoyBaseEntity,
+    EnvoyGeneratorConfigEntity,
+    EnvoyGeneratorModeEntity,
+    EnvoyGeneratorStatusEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -707,6 +719,118 @@ ENPOWER_SENSORS = (
 
 
 @dataclass(frozen=True, kw_only=True)
+class EnvoyGeneratorStatusSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy standby generator status sensor entity."""
+
+    value_fn: Callable[[EnvoyGenerator], int | str]
+
+
+GENERATOR_STATUS_SENSORS = (
+    EnvoyGeneratorStatusSensorEntityDescription(
+        key="generator_admin_state",
+        translation_key="generator_admin_state",
+        value_fn=attrgetter("admin_state"),
+    ),
+    EnvoyGeneratorStatusSensorEntityDescription(
+        key="generator_oper_state",
+        translation_key="generator_oper_state",
+        value_fn=attrgetter("oper_state"),
+    ),
+    EnvoyGeneratorStatusSensorEntityDescription(
+        key="generator_start_soc",
+        translation_key="generator_start_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("start_soc"),
+    ),
+    EnvoyGeneratorStatusSensorEntityDescription(
+        key="generator_stop_soc",
+        translation_key="generator_stop_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("stop_soc"),
+    ),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class EnvoyGeneratorConfigSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy standby generator configuration sensor entity."""
+
+    value_fn: Callable[[EnvoyGeneratorConfig], int | float | str]
+
+
+GENERATOR_CONFIG_SENSORS = (
+    EnvoyGeneratorConfigSensorEntityDescription(
+        key="generator_nameplate_rating",
+        translation_key="generator_nameplate_rating",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("name_plate_rating_wat"),
+    ),
+    EnvoyGeneratorConfigSensorEntityDescription(
+        key="generator_max_continuous_current",
+        translation_key="generator_max_continuous_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("max_cont_gen_amps"),
+    ),
+    EnvoyGeneratorConfigSensorEntityDescription(
+        key="generator_start_method",
+        translation_key="generator_start_method",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("start_method"),
+    ),
+    EnvoyGeneratorConfigSensorEntityDescription(
+        key="generator_gen_type",
+        translation_key="generator_gen_type",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("gen_type"),
+    ),
+    EnvoyGeneratorConfigSensorEntityDescription(
+        key="generator_warm_up_mins",
+        translation_key="generator_warm_up_mins",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("warm_up_mins"),
+    ),
+    EnvoyGeneratorConfigSensorEntityDescription(
+        key="generator_cool_down_mins",
+        translation_key="generator_cool_down_mins",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("cool_down_mins"),
+    ),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class EnvoyGeneratorModeSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy standby generator mode sensor entity."""
+
+    value_fn: Callable[[EnvoyGeneratorMode], str]
+
+
+GENERATOR_MODE_SENSORS = (
+    EnvoyGeneratorModeSensorEntityDescription(
+        key="generator_requested_mode",
+        translation_key="generator_requested_mode",
+        value_fn=attrgetter("gen_cmd"),
+    ),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
 class EnvoyCollarSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy Collar sensor entity."""
 
@@ -1108,6 +1232,21 @@ async def async_setup_entry(
             EnvoyEnpowerEntity(coordinator, description)
             for description in ENPOWER_SENSORS
         )
+    if envoy_data.generator:
+        entities.extend(
+            EnvoyGeneratorStatusSensorEntity(coordinator, description)
+            for description in GENERATOR_STATUS_SENSORS
+        )
+    if envoy_data.generator_config:
+        entities.extend(
+            EnvoyGeneratorConfigSensorEntity(coordinator, description)
+            for description in GENERATOR_CONFIG_SENSORS
+        )
+    if envoy_data.generator_mode:
+        entities.extend(
+            EnvoyGeneratorModeSensorEntity(coordinator, description)
+            for description in GENERATOR_MODE_SENSORS
+        )
     if envoy_data.acb_power:
         entities.extend(
             EnvoyAcbBatteryPowerEntity(coordinator, description)
@@ -1484,6 +1623,48 @@ class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
         enpower = self.data.enpower
         assert enpower is not None
         return self.entity_description.value_fn(enpower)
+
+
+class EnvoyGeneratorStatusSensorEntity(EnvoyGeneratorStatusEntity, SensorEntity):
+    """Envoy standby generator status sensor entity."""
+
+    entity_description: EnvoyGeneratorStatusSensorEntityDescription
+
+    @property
+    @override
+    def native_value(self) -> int | str | None:
+        """Return the state of the generator status sensor."""
+        if (generator := self.data.generator) is None:
+            return None
+        return self.entity_description.value_fn(generator)
+
+
+class EnvoyGeneratorConfigSensorEntity(EnvoyGeneratorConfigEntity, SensorEntity):
+    """Envoy standby generator configuration sensor entity."""
+
+    entity_description: EnvoyGeneratorConfigSensorEntityDescription
+
+    @property
+    @override
+    def native_value(self) -> int | float | str | None:
+        """Return the state of the generator configuration sensor."""
+        if (config := self.data.generator_config) is None:
+            return None
+        return self.entity_description.value_fn(config)
+
+
+class EnvoyGeneratorModeSensorEntity(EnvoyGeneratorModeEntity, SensorEntity):
+    """Envoy standby generator mode sensor entity."""
+
+    entity_description: EnvoyGeneratorModeSensorEntityDescription
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the state of the generator mode sensor."""
+        if (mode := self.data.generator_mode) is None:
+            return None
+        return self.entity_description.value_fn(mode)
 
 
 class EnvoyAcbBatteryPowerEntity(EnvoyACBAggregateEntity, SensorEntity):

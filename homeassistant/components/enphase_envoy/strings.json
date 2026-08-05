@@ -72,6 +72,12 @@
       "dc_switch": {
         "name": "DC switch"
       },
+      "generator_present": {
+        "name": "Present"
+      },
+      "generator_schedule_enabled": {
+        "name": "Schedule enabled"
+      },
       "grid_status": {
         "name": "Grid status"
       },
@@ -402,6 +408,39 @@
       },
       "evse_ct_voltage_phase": {
         "name": "Voltage EVSE CT {phase_name}"
+      },
+      "generator_admin_state": {
+        "name": "[%key:component::enphase_envoy::entity::sensor::admin_state::name%]"
+      },
+      "generator_cool_down_mins": {
+        "name": "Cool-down time"
+      },
+      "generator_gen_type": {
+        "name": "Generator type"
+      },
+      "generator_max_continuous_current": {
+        "name": "Maximum continuous current"
+      },
+      "generator_nameplate_rating": {
+        "name": "Nameplate rating"
+      },
+      "generator_oper_state": {
+        "name": "Operating state"
+      },
+      "generator_requested_mode": {
+        "name": "Requested mode"
+      },
+      "generator_start_method": {
+        "name": "Start method"
+      },
+      "generator_start_soc": {
+        "name": "Start battery level"
+      },
+      "generator_stop_soc": {
+        "name": "Stop battery level"
+      },
+      "generator_warm_up_mins": {
+        "name": "Warm-up time"
       },
       "grid_status": {
         "name": "[%key:component::enphase_envoy::entity::binary_sensor::grid_status::name%]",
