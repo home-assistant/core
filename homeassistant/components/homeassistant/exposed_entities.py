@@ -3,7 +3,6 @@
 from collections.abc import Callable, Mapping
 import dataclasses
 from itertools import chain
-import logging
 from typing import Any, TypedDict
 
 import voluptuous as vol
@@ -15,13 +14,10 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_ent
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import DATA_EXPOSED_ENTITIES, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant", "conversation")
 
@@ -64,10 +60,6 @@ DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES = {
     SensorDeviceClass.TEMPERATURE,
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
 }
-
-# Domains that can be exposed by default via their device class, so a stored
-# "should_expose: False" for one may be a user opt-out rather than noise.
-DEVICE_CLASS_EXPOSED_DOMAINS = {"binary_sensor", "sensor"}
 
 DEFAULT_EXPOSED_ASSISTANT = {
     "conversation": True,
@@ -130,62 +122,6 @@ class ExposedEntities:
         websocket_api.async_register_command(self._hass, ws_expose_new_entities_set)
         websocket_api.async_register_command(self._hass, ws_list_exposed_entities)
         await self._async_load_data()
-        async_at_started(self._hass, self._async_prune_legacy_entities)
-
-    @callback
-    def _async_prune_legacy_entities(self, hass: HomeAssistant) -> None:
-        """Remove auto-created settings for legacy entities that no longer exist.
-
-        Legacy entities (without a unique_id) are stored by entity_id and are
-        never cleaned up when the entity disappears. Transient entities such as
-        geo_location get a record auto-created every time one appears and can
-        accumulate indefinitely.
-
-        Only drop records for entities that no longer exist (neither a current
-        state nor in the entity registry) and that carry no user intent, so an
-        explicit exposure choice is never lost.
-        """
-        entity_registry = er.async_get(self._hass)
-        stale_entity_ids = [
-            entity_id
-            for entity_id, exposed_entity in self.entities.items()
-            if self._hass.states.get(entity_id) is None
-            and entity_id not in entity_registry.entities
-            and not self._legacy_entity_has_user_intent(entity_id, exposed_entity)
-        ]
-        if not stale_entity_ids:
-            return
-
-        for entity_id in stale_entity_ids:
-            del self.entities[entity_id]
-
-        _LOGGER.debug(
-            "Pruned %s stale legacy exposed entity setting(s)", len(stale_entity_ids)
-        )
-        self._async_schedule_save()
-
-    @callback
-    def _legacy_entity_has_user_intent(
-        self, entity_id: str, exposed_entity: ExposedEntity
-    ) -> bool:
-        """Return True if a legacy record holds an exposure choice worth keeping."""
-        if any(
-            settings.get("should_expose")
-            for settings in exposed_entity.assistants.values()
-        ):
-            # Explicitly exposed to at least one assistant
-            return True
-
-        # A stored "should_expose: False" is indistinguishable from an
-        # auto-created default. It is only meaningful as an opt-out if the
-        # entity could be exposed by default, which depends on its domain (and,
-        # for sensors, a device class we cannot know while it is absent). Keep
-        # the record when the domain can be default-exposed to avoid silently
-        # reversing an opt-out if the entity returns.
-        domain = split_entity_id(entity_id)[0]
-        return (
-            domain in DEFAULT_EXPOSED_DOMAINS or domain in DEVICE_CLASS_EXPOSED_DOMAINS
-        )
 
     @callback
     def async_listen_entity_updates(
@@ -331,8 +267,8 @@ class ExposedEntities:
         return should_expose
 
     @callback
-    def async_get_should_expose(self, assistant: str, entity_id: str) -> bool:
-        """Return True if an entity should be exposed, without persisting defaults."""
+    def async_calculate_should_expose(self, assistant: str, entity_id: str) -> bool:
+        """Return True if an entity should be exposed, without persisting anything."""
         should_expose: bool
 
         entity_registry = er.async_get(self._hass)
@@ -605,18 +541,23 @@ def async_expose_entity(
 
 @callback
 def async_should_expose(hass: HomeAssistant, assistant: str, entity_id: str) -> bool:
-    """Return True if an entity should be exposed to an assistant."""
+    """Return True if an entity should be exposed to an assistant.
+
+    The calculated default is persisted, freezing the entity's exposure at the
+    value it had the first time it was checked. Use
+    async_calculate_should_expose instead when only reading the value.
+    """
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     return exposed_entities.async_should_expose(assistant, entity_id)
 
 
 @callback
-def async_get_should_expose(
+def async_calculate_should_expose(
     hass: HomeAssistant, assistant: str, entity_id: str
 ) -> bool:
-    """Return True if an entity should be exposed, without persisting defaults."""
+    """Return True if an entity should be exposed, without persisting anything."""
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
-    return exposed_entities.async_get_should_expose(assistant, entity_id)
+    return exposed_entities.async_calculate_should_expose(assistant, entity_id)
 
 
 @callback
