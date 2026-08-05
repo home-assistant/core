@@ -387,14 +387,12 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     ),
     MideaSensorEntityDescription(
         key="co2",
-        translation_key="co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
         key="pm25",
-        translation_key="pm25",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,

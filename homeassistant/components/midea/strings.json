@@ -128,9 +128,6 @@
       "bright_level": {
         "name": "Bright Level"
       },
-      "co2": {
-        "name": "Carbon Dioxide"
-      },
       "compressor_current": {
         "name": "Compressor Current"
       },
@@ -306,9 +303,6 @@
       },
       "outdoor_temperature": {
         "name": "Outdoor Temperature"
-      },
-      "pm25": {
-        "name": "PM 2.5"
       },
       "pmv": {
         "name": "Predicted Mean Vote"
