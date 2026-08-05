@@ -1,9 +1,8 @@
 """Support for KNX select entities."""
 
-from typing import override
+from typing import Any, override
 
-from xknx import XKNX
-from xknx.devices import Device as XknxDevice, RawValue
+from xknx.devices import RawValue
 
 from homeassistant import config_entries
 from homeassistant.components.select import SelectEntity
@@ -15,7 +14,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
@@ -24,12 +26,20 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
+    DOMAIN,
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .entity import KnxYamlEntity, build_yaml_unique_id
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .schema import SelectSchema
+from .storage.const import CONF_ENTITY, CONF_GA_SELECT, CONF_OPTION, CONF_OPTIONS
+from .storage.util import ConfigExtractor
 
 
 async def async_setup_entry(
@@ -39,43 +49,46 @@ async def async_setup_entry(
 ) -> None:
     """Set up select(s) for KNX platform."""
     knx_module = hass.data[KNX_MODULE_KEY]
-    config: list[ConfigType] = knx_module.config_yaml[Platform.SELECT]
-
-    async_add_entities(KNXSelect(knx_module, entity_config) for entity_config in config)
-
-
-def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
-    """Return a KNX RawValue to be used within XKNX."""
-    return RawValue(
-        xknx,
-        name=config[CONF_NAME],
-        payload_length=config[CONF_PAYLOAD_LENGTH],
-        group_address=config[KNX_ADDRESS],
-        group_address_state=config.get(CONF_STATE_ADDRESS),
-        respond_to_read=config[CONF_RESPOND_TO_READ],
-        sync_state=config[CONF_SYNC_STATE],
+    platform = async_get_current_platform()
+    knx_module.config_store.add_platform(
+        platform=Platform.SELECT,
+        controller=KnxUiEntityPlatformController(
+            knx_module=knx_module,
+            entity_platform=platform,
+            entity_class=KnxUiSelect,
+        ),
     )
 
+    entities: list[KnxYamlEntity | KnxUiEntity] = []
+    if yaml_platform_config := knx_module.config_yaml.get(Platform.SELECT):
+        entities.extend(
+            KnxYamlSelect(knx_module, entity_config)
+            for entity_config in yaml_platform_config
+        )
+    if ui_config := knx_module.config_store.data["entities"].get(Platform.SELECT):
+        entities.extend(
+            KnxUiSelect(knx_module, unique_id, config)
+            for unique_id, config in ui_config.items()
+        )
+    if entities:
+        async_add_entities(entities)
 
-class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
+
+class _KnxSelect(SelectEntity, RestoreEntity):
     """Representation of a KNX select."""
 
     _device: RawValue
+    _option_payloads: dict[str, int]
 
-    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
-        """Initialize a KNX select."""
-        self._device = _create_raw_value(knx_module.xknx, config)
-        super().__init__(
-            knx_module=knx_module,
-            unique_id=build_yaml_unique_id(self._device.remote_value.group_address),
-            entity_config=config,
-        )
-        self._option_payloads: dict[str, int] = {
-            option[SelectSchema.CONF_OPTION]: option[CONF_PAYLOAD]
-            for option in config[SelectSchema.CONF_OPTIONS]
-        }
+    def init_base(self) -> None:
+        """Initialize attributes shared by the YAML and UI variants."""
         self._attr_options = list(self._option_payloads)
-        self._attr_current_option = None
+
+    @property
+    @override
+    def current_option(self) -> str | None:
+        """Return the option the current payload is assigned to."""
+        return self.option_from_payload(self._device.remote_value.value)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -87,14 +100,6 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
                 and (option := self._option_payloads.get(last_state.state)) is not None
             ):
                 self._device.remote_value.update_value(option)
-
-    @override
-    def after_update_callback(self, device: XknxDevice) -> None:
-        """Call after device was updated."""
-        self._attr_current_option = self.option_from_payload(
-            self._device.remote_value.value
-        )
-        super().after_update_callback(device)
 
     def option_from_payload(self, payload: int | None) -> str | None:
         """Return the option a given payload is assigned to."""
@@ -110,3 +115,62 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
         """Change the selected option."""
         payload = self._option_payloads[option]
         await self._device.set(payload)
+
+
+class KnxYamlSelect(_KnxSelect, KnxYamlEntity):
+    """Representation of a KNX select configured from YAML."""
+
+    _device: RawValue
+
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
+        """Initialize a KNX select."""
+        self._device = RawValue(
+            knx_module.xknx,
+            name=config[CONF_NAME],
+            payload_length=config[CONF_PAYLOAD_LENGTH],
+            group_address=config[KNX_ADDRESS],
+            group_address_state=config.get(CONF_STATE_ADDRESS),
+            respond_to_read=config[CONF_RESPOND_TO_READ],
+            sync_state=config[CONF_SYNC_STATE],
+        )
+        super().__init__(
+            knx_module=knx_module,
+            unique_id=build_yaml_unique_id(self._device.remote_value.group_address),
+            entity_config=config,
+        )
+        self._option_payloads = {
+            option[SelectSchema.CONF_OPTION]: option[CONF_PAYLOAD]
+            for option in config[SelectSchema.CONF_OPTIONS]
+        }
+        self.init_base()
+
+
+class KnxUiSelect(_KnxSelect, KnxUiEntity):
+    """Representation of a KNX select configured from the UI."""
+
+    _device: RawValue
+
+    def __init__(
+        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+    ) -> None:
+        """Initialize a KNX select."""
+        super().__init__(
+            knx_module=knx_module,
+            unique_id=unique_id,
+            entity_config=config[CONF_ENTITY],
+        )
+        knx_conf = ConfigExtractor(config[DOMAIN])
+        self._device = RawValue(
+            knx_module.xknx,
+            name=config[CONF_ENTITY][CONF_NAME],
+            payload_length=knx_conf.get(CONF_PAYLOAD_LENGTH),
+            group_address=knx_conf.get_write(CONF_GA_SELECT),
+            group_address_state=knx_conf.get_state_and_passive(CONF_GA_SELECT),
+            respond_to_read=knx_conf.get(CONF_RESPOND_TO_READ),
+            sync_state=knx_conf.get(CONF_SYNC_STATE),
+        )
+        self._option_payloads = {
+            option[CONF_OPTION]: option[CONF_PAYLOAD]
+            for option in knx_conf.get(CONF_OPTIONS)
+        }
+        self.init_base()

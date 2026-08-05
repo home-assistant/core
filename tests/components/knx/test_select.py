@@ -10,13 +10,15 @@ from homeassistant.components.knx.const import (
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import SelectSchema
-from homeassistant.const import CONF_NAME, CONF_PAYLOAD, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_PAYLOAD, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 
 async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -219,3 +221,87 @@ async def test_select_dpt_20_103_all_options(
     await knx.receive_write(test_passive_address, (4,))
     state = hass.states.get("select.test")
     assert state.state == "Off"
+
+
+async def test_select_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test a select created from the UI - forced control of a shutter (DPT 2)."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.SELECT,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_select": {"write": "1/1/1", "state": "2/2/2"},
+            "payload_length": 0,
+            "options": [
+                {"option": "No control", "payload": 0},
+                {"option": "Force up", "payload": 2},
+                {"option": "Force down", "payload": 3},
+            ],
+            "respond_to_read": False,
+            "sync_state": True,
+        },
+    )
+    await knx.assert_read("2/2/2")
+    await knx.receive_response("2/2/2", 2)
+    knx.assert_state("select.test", "Force up")
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": "select.test", "option": "Force down"},
+        blocking=True,
+    )
+    await knx.assert_write("1/1/1", 3)
+    knx.assert_state("select.test", "Force down")
+
+
+@pytest.mark.parametrize(
+    ("options", "error_start"),
+    [
+        (
+            [{"option": "A", "payload": 0}, {"option": "A", "payload": 1}],
+            "duplicate item for 'option' not allowed: A",
+        ),
+        (
+            [{"option": "A", "payload": 1}, {"option": "B", "payload": 1}],
+            "duplicate item for 'payload' not allowed: 1",
+        ),
+        (
+            [{"option": "A", "payload": 64}],
+            "'payload: 64' for 'option: A' exceeds possible maximum",
+        ),
+    ],
+    ids=["duplicate_option", "duplicate_payload", "payload_too_large"],
+)
+async def test_select_ui_invalid_options(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    options: list[dict[str, str | int]],
+    error_start: str,
+) -> None:
+    """Test the UI schema rejects options that can not be told apart."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "knx/validate_entity",
+            "platform": Platform.SELECT,
+            "data": {
+                "entity": {"name": "test"},
+                "knx": {
+                    "ga_select": {"write": "1/1/1"},
+                    "payload_length": 0,
+                    "options": options,
+                },
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    assert res["result"]["error_base"].startswith(error_start)

@@ -1,6 +1,7 @@
 """KNX entity store schema."""
 
 from enum import StrEnum, unique
+from typing import Any
 
 import voluptuous as vol
 from xknx.dpt import DPTBase, DPTBinary, DPTNumeric
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_MODE,
     CONF_NAME,
+    CONF_PAYLOAD,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
     Platform,
@@ -95,6 +97,7 @@ from .const import (
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
     CONF_GA_SCENE,
+    CONF_GA_SELECT,
     CONF_GA_SEND,
     CONF_GA_SENSOR,
     CONF_GA_SETPOINT_SHIFT,
@@ -111,6 +114,8 @@ from .const import (
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
     CONF_IGNORE_AUTO_MODE,
+    CONF_OPTION,
+    CONF_OPTIONS,
     CONF_SPEED,
     CONF_TARGET_TEMPERATURE,
 )
@@ -572,6 +577,79 @@ SCENE_KNX_SCHEMA = vol.Schema(
     },
 )
 
+
+def _select_options_validator(config: dict[str, Any]) -> dict[str, Any]:
+    """Reject options that can not be told apart or do not fit the payload.
+
+    Mirrors select_options_sub_validator for YAML configuration.
+    """
+    payload_length: int = config[CONF_PAYLOAD_LENGTH]
+    max_payload = 0x3F if payload_length == 0 else 256**payload_length - 1
+    options_seen: set[str] = set()
+    payloads_seen: set[int] = set()
+    for item in config[CONF_OPTIONS]:
+        option = item[CONF_OPTION]
+        payload = item[CONF_PAYLOAD]
+        if payload > max_payload:
+            raise vol.Invalid(
+                f"'payload: {payload}' for 'option: {option}' exceeds possible"
+                f" maximum of 'payload_length: {payload_length}': {max_payload}"
+            )
+        if option in options_seen:
+            raise vol.Invalid(f"duplicate item for 'option' not allowed: {option}")
+        options_seen.add(option)
+        if payload in payloads_seen:
+            raise vol.Invalid(f"duplicate item for 'payload' not allowed: {payload}")
+        payloads_seen.add(payload)
+    return config
+
+
+SELECT_KNX_SCHEMA = AllSerializeFirst(
+    vol.Schema(
+        {
+            vol.Required(CONF_GA_SELECT): GASelector(write_required=True),
+            vol.Required(CONF_PAYLOAD_LENGTH, default=0): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=14, step=1, mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+            vol.Required(CONF_OPTIONS): selector.ObjectSelector(
+                selector.ObjectSelectorConfig(
+                    fields={
+                        CONF_OPTION: {
+                            "selector": {"text": {}},
+                            "required": True,
+                        },
+                        CONF_PAYLOAD: {
+                            "selector": {
+                                "number": {
+                                    "min": 0,
+                                    "mode": selector.NumberSelectorMode.BOX,
+                                }
+                            },
+                            "required": True,
+                        },
+                    },
+                    multiple=True,
+                    label_field=CONF_OPTION,
+                    translation_key=(
+                        "component.knx.config_panel.entities.create.select.knx.options"
+                    ),
+                ),
+            ),
+            vol.Optional(
+                CONF_RESPOND_TO_READ, default=False
+            ): selector.BooleanSelector(),
+            vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        },
+    ),
+    # NumberSelector yields a float - RawValue needs an int.
+    vol.Schema(
+        {vol.Required(CONF_PAYLOAD_LENGTH): vol.Coerce(int)}, extra=vol.ALLOW_EXTRA
+    ),
+    _select_options_validator,
+)
+
 SWITCH_KNX_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_GA_SWITCH): GASelector(write_required=True, valid_dpt="1"),
@@ -814,6 +892,7 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.NOTIFY: NOTIFY_KNX_SCHEMA,
     Platform.NUMBER: NUMBER_KNX_SCHEMA,
     Platform.SCENE: SCENE_KNX_SCHEMA,
+    Platform.SELECT: SELECT_KNX_SCHEMA,
     Platform.SENSOR: SENSOR_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,
     Platform.TEXT: TEXT_KNX_SCHEMA,

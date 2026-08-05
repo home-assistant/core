@@ -2089,6 +2089,95 @@
     'type': 'result',
   })
 # ---
+# name: test_knx_get_schema[select]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_select',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': 0,
+        'name': 'payload_length',
+        'required': True,
+        'selector': dict({
+          'number': dict({
+            'max': 14.0,
+            'min': 0.0,
+            'mode': 'box',
+            'step': 1.0,
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'name': 'options',
+        'required': True,
+        'selector': dict({
+          'object': dict({
+            'fields': dict({
+              'option': dict({
+                'required': True,
+                'selector': dict({
+                  'text': dict({
+                    'multiline': False,
+                    'multiple': False,
+                  }),
+                }),
+              }),
+              'payload': dict({
+                'required': True,
+                'selector': dict({
+                  'number': dict({
+                    'min': 0.0,
+                    'mode': 'box',
+                    'step': 1.0,
+                  }),
+                }),
+              }),
+            }),
+            'label_field': 'option',
+            'multiple': True,
+            'translation_key': 'component.knx.config_panel.entities.create.select.knx.options',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': False,
+        'name': 'respond_to_read',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_knx_get_schema[sensor]
   dict({
     'id': 1,

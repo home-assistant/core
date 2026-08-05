@@ -924,6 +924,31 @@
             }
           }
         },
+        "select": {
+          "description": "The KNX select platform allows selecting a value from a list of options. Each option is assigned a raw payload, so group objects without a standard DPT - like forced control - can be operated.",
+          "knx": {
+            "ga_select": {
+              "description": "Group address the payload of the selected option is sent to.",
+              "label": "Select"
+            },
+            "options": {
+              "description": "Name and payload of every selectable option. Payloads must be unique.",
+              "fields": {
+                "option": {
+                  "name": "Option"
+                },
+                "payload": {
+                  "name": "Payload"
+                }
+              },
+              "label": "Options"
+            },
+            "payload_length": {
+              "description": "Number of bytes sent to the group address. Use 0 for payloads of up to 6 bit - that is what small group objects like DPT 1, 2 and 3 use, for example forced control.",
+              "label": "Payload length"
+            }
+          }
+        },
         "sensor": {
           "description": "Read-only entity for numeric or string datapoints. Temperature, percent etc.",
           "knx": {
