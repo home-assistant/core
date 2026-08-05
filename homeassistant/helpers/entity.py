@@ -1297,15 +1297,13 @@ class Entity(
             if custom:
                 attr |= custom
 
-        context = self.async_get_recent_context()
-
         # Intentionally called with positional args for performance reasons
         self.hass.states.async_set_internal(
             self.entity_id,
             state,
             attr,
             self.force_update,
-            context,
+            self.async_get_recent_context(),
             self._state_info,
             time_now,
         )
