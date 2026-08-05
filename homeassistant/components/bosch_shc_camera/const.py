@@ -63,6 +63,13 @@ def with_jpeg_size(url: str, size: int | None) -> str:
 # inconsistent (CLI 5/15s vs. integration 10s).
 TIMEOUT_SNAP = 10  # GET on signed image / imageUrl
 TIMEOUT_PUT_CONNECTION = 10  # PUT /v11/video_inputs/{id}/connection
+
+# Requested session lifetime for the LOCAL RTSP stream (local_stream.py),
+# substituted into the `rtsp_tunnel` URL's `maxSessionDuration` parameter.
+# This minimal, snapshot-first build has no renewal/rebuild path, so a
+# session that outlives this value simply ends and the entity reports no
+# stream source until the integration is reloaded.
+LOCAL_STREAM_MAX_SESSION_DURATION_SEC = 3600
 TIMEOUT_RCP_099E_PROBE = 2.5  # RCP 0x099e thumbnail probe (GitHub #56 — must not eat the snap.jpg leg's budget)
 RCP_099E_PROBE_FAILURE_MEMO_SEC = (
     3600  # skip the probe for this long per-cam_id after a failure/timeout

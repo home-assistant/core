@@ -1,12 +1,18 @@
 """Bosch Smart Home Camera — Camera Platform.
 
 Each camera discovered via /v11/video_inputs becomes a HA camera entity.
-Images are the latest motion-triggered event snapshots from the cloud API.
+Images are the latest motion-triggered event snapshots from the cloud API,
+fetched via the cloud on-demand snap.jpg endpoint, a cached-Digest-creds
+LOCAL fallback during a cloud outage, and the latest event snapshot as a
+last resort.
 
-This is a still-image-only camera entity: it has no live streaming, no
-stream_source, and no WebRTC/HLS support. Snapshots are fetched via the
-cloud on-demand snap.jpg endpoint, a cached-Digest-creds LOCAL fallback
-during a cloud outage, and the latest event snapshot as a last resort.
+Live streaming is LOCAL-only (see local_stream.py): on startup each entity
+opportunistically opens a LOCAL RTSP session and, if the camera is
+reachable on the LAN, advertises `CameraEntityFeature.STREAM` so HA's
+built-in go2rtc integration can pick it up. There is no REMOTE/cloud-relay
+fallback and no session-renewal/rebuild path — a camera that never becomes
+LAN-reachable, or whose session later dies, stays (or falls back to)
+snapshot-only until the integration is reloaded.
 """
 
 import asyncio
@@ -20,7 +26,7 @@ import aiohttp
 from bosch_shc_camera_client.auth_utils import async_digest_request
 from PIL import Image
 
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -37,6 +43,7 @@ from .const import (
     jpeg_size_for_width,
     with_jpeg_size,
 )
+from .local_stream import async_start_local_stream, async_stop_local_stream
 from .models import (
     get_display_name,  # [S4] hoisted: avoid per-call import binding on hot path
 )
@@ -134,7 +141,9 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
 
     • Shows the latest motion-triggered JPEG snapshot (refreshed every scan_interval)
     • Device groups with sensor and button entities on the same HA device
-    • Still-image-only: no streaming support (no CameraEntityFeature.STREAM)
+    • LOCAL-only live streaming: advertises CameraEntityFeature.STREAM once a
+      LOCAL RTSP session is established (see local_stream.py); stays
+      snapshot-only if the camera never becomes LAN-reachable
     • Image is refreshed on startup and every 30 minutes (snapshot_interval)
     """
 
@@ -170,6 +179,17 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         # this, unloading the entity mid-delay left a network task running
         # against an already-removed entity (bug-hunt 2026-07-27, Copilot review).
         self._image_refresh_task: asyncio.Task[None] | None = None
+
+        # LOCAL RTSP stream (local_stream.py) — best-effort, established once
+        # on startup. `_rtsp_url` is None until a LOCAL session + TLS proxy
+        # are both up; `CameraEntityFeature.STREAM` is only advertised once
+        # it is, so HA's go2rtc integration never tries to auto-register a
+        # camera that can't actually stream. The port/server caches back the
+        # library's TLS proxy for this entity's own cam_id only.
+        self._rtsp_url: str | None = None
+        self._tls_proxy_ports: dict[str, int] = {}
+        self._tls_proxy_servers: dict[str, asyncio.base_events.Server] = {}
+        self._stream_start_task: asyncio.Task[None] | None = None
 
         info = coordinator.data.get(cam_id, {}).get("info", {})
         title = info.get("title", cam_id)
@@ -220,13 +240,67 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             self.async_trigger_image_refresh(delay=2)
         )
 
+        # Best-effort LOCAL stream: runs in the background so a slow/offline
+        # camera never delays entity setup. Failure just means this camera
+        # stays snapshot-only.
+        self._stream_start_task = self.hass.async_create_task(
+            self._async_start_local_stream()
+        )
+
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Called when entity is removed — unregister from coordinator + cancel any pending refresh."""
         self.coordinator.camera_entities.pop(self._cam_id, None)
         if self._image_refresh_task is not None and not self._image_refresh_task.done():
             self._image_refresh_task.cancel()
+        if self._stream_start_task is not None and not self._stream_start_task.done():
+            self._stream_start_task.cancel()
+        await async_stop_local_stream(
+            self._cam_id, self._tls_proxy_ports, self._tls_proxy_servers
+        )
         await super().async_will_remove_from_hass()
+
+    async def _async_start_local_stream(self) -> None:
+        """Open this camera's LOCAL RTSP session and advertise streaming.
+
+        Never raises — a camera that cannot establish a LOCAL session
+        (offline, unreachable LAN, cred rejection) simply stays without
+        `CameraEntityFeature.STREAM`, exactly like it would have if this
+        integration had no streaming support at all.
+        """
+        try:
+            url = await async_start_local_stream(
+                self.coordinator,
+                self._cam_id,
+                self._tls_proxy_ports,
+                self._tls_proxy_servers,
+                on_proxy_died=self._on_local_stream_died,
+            )
+        except Exception as err:  # noqa: BLE001 — best-effort background stream setup; any failure must leave the entity snapshot-only, never crash it
+            _LOGGER.debug("%s: LOCAL stream setup failed: %s", self._display_name, err)
+            return
+        if url is None:
+            return
+        self._rtsp_url = url
+        self._attr_supported_features = CameraEntityFeature.STREAM
+        self.async_write_ha_state()
+
+    def _on_local_stream_died(self) -> None:
+        """TLS-proxy circuit-breaker callback — the camera stopped responding.
+
+        Called from the proxy's own connect-failure-burst detection (see
+        `bosch_shc_camera_client.tls_proxy`). This build has no
+        renewal/rebuild path, so streaming is simply withdrawn until the
+        integration is reloaded.
+        """
+        self._rtsp_url = None
+        self._attr_supported_features = CameraEntityFeature(0)
+        self.async_write_ha_state()
+
+    @override
+    async def stream_source(self) -> str | None:
+        """Return the LOCAL RTSP stream URL, once established."""
+        return self._rtsp_url
 
     @override
     def _handle_coordinator_update(self) -> None:

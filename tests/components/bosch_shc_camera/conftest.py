@@ -87,6 +87,23 @@ def mock_bosch_cloud_session() -> AsyncGenerator[MagicMock]:
         yield session
 
 
+@pytest.fixture(autouse=True)
+def mock_local_stream_start() -> AsyncGenerator[AsyncMock]:
+    """Prevent BoschCamera.async_added_to_hass from opening a real LOCAL session.
+
+    Every full config-entry setup spawns a background task that calls
+    `local_stream.async_start_local_stream`, which opens a real aiohttp
+    connection — blocked by this test suite's socket guard. Tests that
+    specifically exercise LOCAL-stream behavior override this patch's
+    return value or side effect themselves.
+    """
+    with patch(
+        "homeassistant.components.bosch_shc_camera.camera.async_start_local_stream",
+        AsyncMock(return_value=None),
+    ) as mock_start:
+        yield mock_start
+
+
 @pytest.fixture
 def mock_setup_entry() -> AsyncGenerator[AsyncMock]:
     """Mock setting up a config entry so the flow test doesn't run real setup."""
