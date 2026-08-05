@@ -951,6 +951,16 @@ async def batched_entity_service_call(
     return result if return_response else None
 
 
+async def _async_check_admin(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Raise if the user making the service call is not an admin."""
+    if call.context.user_id:
+        user = await hass.auth.async_get_user(call.context.user_id)
+        if user is None:
+            raise UnknownUser(context=call.context)
+        if not user.is_admin:
+            raise Unauthorized(context=call.context)
+
+
 async def _async_admin_handler(
     hass: HomeAssistant,
     service_job: HassJob[
@@ -963,12 +973,7 @@ async def _async_admin_handler(
     call: ServiceCall,
 ) -> ServiceResponse | EntityServiceResponse | None:
     """Run an admin service."""
-    if call.context.user_id:
-        user = await hass.auth.async_get_user(call.context.user_id)
-        if user is None:
-            raise UnknownUser(context=call.context)
-        if not user.is_admin:
-            raise Unauthorized(context=call.context)
+    await _async_check_admin(hass, call)
 
     task = hass.async_run_hass_job(service_job, call)
     if task is not None:
@@ -1182,20 +1187,18 @@ def async_register_entity_service(
         required_features=required_features,
     )
 
-    service_handler = (
-        partial(
-            _async_admin_handler,
-            hass,
-            HassJob(entity_handler, f"admin service {domain}.{name}"),
-        )
-        if admin_only
-        else entity_handler
-    )
+    # The admin check is awaited inline rather than going through
+    # _async_admin_handler, which would run the entity call in its own task and
+    # deadlock any handler that waits for pending tasks to finish.
+    async def admin_entity_handler(call: ServiceCall) -> EntityServiceResponse | None:
+        """Check the user is an admin before handling the entity service call."""
+        await _async_check_admin(hass, call)
+        return await entity_handler(call)
 
     hass.services.async_register(
         domain,
         name,
-        service_handler,
+        admin_entity_handler if admin_only else entity_handler,
         schema,
         supports_response,
         job_type=HassJobType.Coroutinefunction if admin_only else job_type,
