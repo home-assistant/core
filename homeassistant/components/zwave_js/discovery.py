@@ -110,7 +110,7 @@ class ZWaveDiscoverySchema:
     firmware_version_range: FirmwareVersionRange | None = None
     # [optional] the node's generic device class must match ANY of these values
     device_class_generic: set[str] | None = None
-    # [optional] the node's generic device class must NOT match ANY of these values
+    # [optional] the node's or endpoint's generic device class must NOT match ANY of these values
     not_device_class_generic: set[str] | None = None
     # [optional] the node's specific device class must match ANY of these values
     device_class_specific: set[str] | None = None

@@ -191,7 +191,7 @@ class NewZWaveDiscoverySchema:
     device_class_basic: set[str | int] | None = None
     # [optional] the node's generic device class must match ANY of these values
     device_class_generic: set[str | int] | None = None
-    # [optional] the node's generic device class must NOT match ANY of these values
+    # [optional] the node's or endpoint's generic device class must NOT match ANY of these values
     not_device_class_generic: set[str | int] | None = None
     # [optional] the node's specific device class must match ANY of these values
     device_class_specific: set[str | int] | None = None
