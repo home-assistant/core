@@ -59,8 +59,17 @@
     "command_error": {
       "message": "Failed to send command to the device: {error}"
     },
+    "invalid_sound_mode": {
+      "message": "Sound mode \"{sound_mode}\" is not valid. Valid sound modes are listed in the sound_mode_list attribute."
+    },
+    "invalid_source": {
+      "message": "Source \"{source}\" is not valid. Valid sources are listed in the source_list attribute."
+    },
     "unknown_command": {
       "message": "Unknown remote command `{command}`. Valid commands for this device are listed in the integration documentation."
+    },
+    "update_failed": {
+      "message": "Unable to connect to {host}"
     }
   },
   "options": {

@@ -93,10 +93,12 @@ async def coordinator_for_device(
     manageable_by_webhook: bool = False,
 ) -> SwitchBotCoordinator:
     """Instantiate coordinator and adds to list for gathering."""
-    coordinator = coordinators_by_id.setdefault(
-        device.device_id,
-        SwitchBotCoordinator(hass, entry, api, device, manageable_by_webhook),
-    )
+    coordinator = coordinators_by_id.get(device.device_id)
+    if coordinator is None:
+        coordinator = SwitchBotCoordinator(
+            hass, entry, api, device, manageable_by_webhook
+        )
+        coordinators_by_id[device.device_id] = coordinator
 
     if coordinator.data is None:
         await coordinator.async_config_entry_first_refresh()
