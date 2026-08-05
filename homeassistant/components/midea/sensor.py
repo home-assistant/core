@@ -102,12 +102,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
-        key="error_code",
-        translation_key="error_code",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    MideaSensorEntityDescription(
         key="compressor_frequency",
         translation_key="compressor_frequency",
         device_class=SensorDeviceClass.FREQUENCY,
