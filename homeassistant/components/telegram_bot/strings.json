@@ -207,7 +207,13 @@
       "message": "Invalid file name: {file_name}. The file name must not contain `~`, `..`, `/` or `\\`."
     },
     "invalid_inline_keyboard": {
-      "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
+      "message": "Invalid value for inline keyboard. Expected a list of button rows."
+    },
+    "invalid_inline_keyboard_button": {
+      "message": "Each inline keyboard button must have exactly one of \"callback_data\" or \"url\", not both or neither."
+    },
+    "invalid_inline_keyboard_style": {
+      "message": "Invalid button style \"{style}\". Must be one of: {valid_styles}."
     },
     "invalid_notify_entity": {
       "message": "Invalid notify entity: {entity_id}"
@@ -226,6 +232,10 @@
     }
   },
   "issues": {
+    "deprecated_inline_keyboard": {
+      "title": "Deprecated inline_keyboard format",
+      "description": "The Telegram Bot entry \"{entry_title}\" is using a deprecated format for one or more `inline_keyboard` buttons. Only the structured dict format is supported going forward; the comma/colon-separated string format and the `[text, data]` list-of-tuples format are deprecated and cannot safely represent special characters or button styles. They will be removed in Home Assistant 2026.12.\n\nPlease switch to the structured dict format, for example:\n```yaml\ninline_keyboard:\n  - - text: \"Button 1\"\n      callback_data: \"/command1\"\n      style: \"primary\"\n```"
+    },
     "deprecated_timeout_parameter": {
       "fix_flow": {
         "step": {

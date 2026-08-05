@@ -347,9 +347,7 @@ class TelegramNotificationService:
             inline_message_id = msg_data[ATTR_INLINE_MESSAGE_ID]
         return message_id, inline_message_id
 
-    ###########################
-    # Deprecated - remove in 2026.12.0
-    ###########################
+    # Deprecated: remove in 2026.12.0
     def _warn_deprecated_keyboard_format(self) -> None:
         """Create a repair issue warning about a deprecated inline_keyboard format."""
         ir.async_create_issue(
@@ -362,9 +360,6 @@ class TelegramNotificationService:
             translation_key="deprecated_inline_keyboard",
             translation_placeholders={"entry_title": self.config.title},
         )
-    ###########################
-    # End deprecated block
-    ###########################
 
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
@@ -380,9 +375,7 @@ class TelegramNotificationService:
               - also supports urls instead of callback commands
             """
             buttons = []
-            ###########################
-            # Deprecated - remove in 2026.12.0
-            ###########################
+            # Deprecated: remove in 2026.12.0
             if isinstance(row_keyboard, str):
                 self._warn_deprecated_keyboard_format()
                 for key in row_keyboard.split(","):
@@ -403,21 +396,23 @@ class TelegramNotificationService:
                         # commands like: '/cmd' become ('CMD', '/cmd')
                         label = key.strip()[1:].upper()
                         buttons.append(InlineKeyboardButton(label, callback_data=key))
-            ###########################
-            # End deprecated block
-            ###########################
             elif isinstance(row_keyboard, list):
                 for entry in row_keyboard:
                     if isinstance(entry, dict):
                         text = entry.get(ATTR_TEXT)
                         style = entry.get(ATTR_STYLE)
-                        if style is not None and style not in VALID_INLINE_KEYBOARD_BUTTON_STYLES:
+                        if (
+                            style is not None
+                            and style not in VALID_INLINE_KEYBOARD_BUTTON_STYLES
+                        ):
                             raise ServiceValidationError(
                                 translation_domain=DOMAIN,
                                 translation_key="invalid_inline_keyboard_style",
                                 translation_placeholders={
                                     "style": str(style),
-                                    "valid_styles": ", ".join(sorted(VALID_INLINE_KEYBOARD_BUTTON_STYLES)),
+                                    "valid_styles": ", ".join(
+                                        sorted(VALID_INLINE_KEYBOARD_BUTTON_STYLES)
+                                    ),
                                 },
                             )
 
@@ -445,9 +440,7 @@ class TelegramNotificationService:
                                 )
                             )
                         continue
-                    ###########################
-                    # Deprecated - remove in 2026.12.0
-                    ###########################
+                    # Deprecated: remove in 2026.12.0
                     self._warn_deprecated_keyboard_format()
                     text_btn, data_btn = entry
                     if data_btn.startswith(("https://", "http://")):
@@ -456,9 +449,6 @@ class TelegramNotificationService:
                         buttons.append(
                             InlineKeyboardButton(text_btn, callback_data=data_btn)
                         )
-                    ###########################
-                    # End deprecated block
-                    ###########################
             else:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
