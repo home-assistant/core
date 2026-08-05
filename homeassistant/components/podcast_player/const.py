@@ -1,5 +1,10 @@
 """Constants for Podcast Player."""
 
-DOMAIN = "podcast_player"
+from datetime import timedelta
+from typing import Final
 
-MAX_BROWSE_EPISODES = 250
+DOMAIN: Final = "podcast_player"
+
+EVENT_NEW_EPISODE: Final = "new_episode"
+MAX_BROWSE_EPISODES: Final = 250
+SCAN_INTERVAL: Final = timedelta(hours=1)

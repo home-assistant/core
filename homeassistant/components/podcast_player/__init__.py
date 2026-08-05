@@ -1,50 +1,25 @@
 """The Podcast Player integration."""
 
-import asyncio
-from dataclasses import dataclass, field
+from aiopodcast import PodcastConnectionError, PodcastFeedError, PodcastHTTPError
 
-from aiopodcast import (
-    Podcast,
-    PodcastClient,
-    PodcastConnectionError,
-    PodcastFeedError,
-    PodcastHTTPError,
-)
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .client import create_client
 from .const import DOMAIN
+from .coordinator import PodcastConfigEntry, PodcastUpdateCoordinator
 
-
-@dataclass(slots=True)
-class PodcastRuntimeData:
-    """Runtime data for a podcast feed."""
-
-    client: PodcastClient
-    url: str
-    podcast: Podcast
-    _refresh_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
-
-    async def async_refresh(self) -> Podcast:
-        """Fetch the latest podcast feed."""
-        async with self._refresh_lock:
-            self.podcast = await self.client.async_fetch(self.url)
-            return self.podcast
-
-
-type PodcastConfigEntry = ConfigEntry[PodcastRuntimeData]
+PLATFORMS = [Platform.EVENT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PodcastConfigEntry) -> bool:
     """Set up a podcast feed from a config entry."""
     client = create_client(hass)
+    coordinator = PodcastUpdateCoordinator(hass, entry, client)
 
     try:
-        podcast = await client.async_fetch(entry.data[CONF_URL])
+        podcast = await coordinator.async_fetch()
     except (PodcastConnectionError, PodcastHTTPError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -56,14 +31,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PodcastConfigEntry) -> b
             translation_key="invalid_feed",
         ) from err
 
-    entry.runtime_data = PodcastRuntimeData(
-        client=client,
-        url=entry.data[CONF_URL],
-        podcast=podcast,
-    )
+    coordinator.async_set_updated_data(podcast)
+    entry.runtime_data = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: PodcastConfigEntry) -> bool:
     """Unload a podcast feed config entry."""
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -4,8 +4,9 @@ from unittest.mock import AsyncMock
 
 from aiopodcast import InvalidFeedError, PodcastConnectionError
 
-from homeassistant.components.podcast_player import PodcastRuntimeData
+from homeassistant.components.podcast_player.coordinator import PodcastUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -23,7 +24,7 @@ async def test_setup_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert isinstance(mock_config_entry.runtime_data, PodcastRuntimeData)
+    assert isinstance(mock_config_entry.runtime_data, PodcastUpdateCoordinator)
     mock_client.async_fetch.assert_awaited_once()
 
 
@@ -62,7 +63,12 @@ async def test_unload_entry(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test unloading a podcast feed."""
+    assert hass.states.get("event.example_podcast") is not None
+
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
     assert init_integration.state is ConfigEntryState.NOT_LOADED
+    state = hass.states.get("event.example_podcast")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

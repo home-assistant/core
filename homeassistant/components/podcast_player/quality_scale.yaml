@@ -3,9 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: The integration does not register custom actions.
-  appropriate-polling:
-    status: exempt
-    comment: Feeds are fetched during setup and user-initiated browsing.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -20,18 +18,10 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  docs-triggers:
-    status: exempt
-    comment: The integration does not provide triggers.
-  entity-event-setup:
-    status: exempt
-    comment: The integration does not create entities.
-  entity-unique-id:
-    status: exempt
-    comment: The integration does not create entities.
-  has-entity-name:
-    status: exempt
-    comment: The integration does not create entities.
+  docs-triggers: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -46,25 +36,17 @@ rules:
     status: exempt
     comment: The integration does not provide configuration options.
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: The integration does not create entities.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: The integration does not create entities.
-  parallel-updates:
-    status: exempt
-    comment: The integration does not create entities.
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: Podcast feeds do not require account authentication.
   test-coverage: done
 
   # Gold
-  devices:
-    status: exempt
-    comment: The integration does not create devices.
+  devices: done
   diagnostics: todo
   discovery-update-info:
     status: exempt
@@ -83,30 +65,28 @@ rules:
   docs-use-cases: done
   dynamic-devices:
     status: exempt
-    comment: The integration does not create devices.
+    comment: Each config entry represents one fixed podcast service.
   entity-category:
     status: exempt
-    comment: The integration does not create entities.
+    comment: The latest episode event is the integration's primary entity.
   entity-device-class:
     status: exempt
-    comment: The integration does not create entities.
+    comment: No event device class represents a podcast episode.
   entity-disabled-by-default:
     status: exempt
-    comment: The integration does not create entities.
-  entity-translations:
-    status: exempt
-    comment: The integration does not create entities.
+    comment: The integration provides only one primary entity per config entry.
+  entity-translations: done
   exception-translations: done
   icon-translations:
     status: exempt
-    comment: The integration does not create entities.
+    comment: The event entity uses the default event icon.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: The integration has no cases requiring a repair issue.
   stale-devices:
     status: exempt
-    comment: The integration does not create devices.
+    comment: Each config entry represents one fixed podcast service.
 
   # Platinum
   async-dependency: done

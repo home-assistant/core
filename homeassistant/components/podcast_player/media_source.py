@@ -1,10 +1,9 @@
 """Expose podcasts as a media source."""
 
-import hashlib
 import mimetypes
 from typing import override
 
-from aiopodcast import Podcast, PodcastEpisode, PodcastFeedError
+from aiopodcast import Podcast, PodcastEpisode
 
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source import (
@@ -16,19 +15,14 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import PodcastConfigEntry
 from .const import DOMAIN, MAX_BROWSE_EPISODES
+from .coordinator import PodcastConfigEntry
+from .helpers import episode_identifier
 
 
 async def async_get_media_source(hass: HomeAssistant) -> PodcastMediaSource:
     """Set up the Podcast Player media source."""
     return PodcastMediaSource(hass)
-
-
-def _episode_identifier(episode: PodcastEpisode) -> str:
-    """Return a stable identifier for a podcast episode."""
-    value = episode.guid or episode.enclosure.url
-    return hashlib.sha256(value.encode()).hexdigest()[:32]
 
 
 def _episode_mime_type(episode: PodcastEpisode) -> str:
@@ -45,7 +39,7 @@ def _find_episode(podcast: Podcast, identifier: str) -> PodcastEpisode | None:
         (
             episode
             for episode in podcast.episodes
-            if _episode_identifier(episode) == identifier
+            if episode_identifier(episode) == identifier
         ),
         None,
     )
@@ -102,7 +96,7 @@ class PodcastMediaSource(MediaSource):
                         can_play=False,
                         can_expand=True,
                         children_media_class=MediaClass.EPISODE,
-                        thumbnail=entry.runtime_data.podcast.artwork_url,
+                        thumbnail=entry.runtime_data.data.artwork_url,
                     )
                     for entry in sorted(
                         entries, key=lambda entry: entry.title.casefold()
@@ -116,13 +110,13 @@ class PodcastMediaSource(MediaSource):
                 translation_key="path_not_found",
             )
 
-        try:
-            podcast = await entry.runtime_data.async_refresh()
-        except PodcastFeedError as err:
+        await entry.runtime_data.async_refresh()
+        if not entry.runtime_data.last_update_success:
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="feed_unavailable",
-            ) from err
+            ) from entry.runtime_data.last_exception
+        podcast = entry.runtime_data.data
 
         episodes = podcast.episodes[:MAX_BROWSE_EPISODES]
         return BrowseMediaSource(
@@ -139,7 +133,7 @@ class PodcastMediaSource(MediaSource):
             children=[
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=f"{entry.entry_id}/{_episode_identifier(episode)}",
+                    identifier=f"{entry.entry_id}/{episode_identifier(episode)}",
                     media_class=MediaClass.EPISODE,
                     media_content_type=_episode_mime_type(episode),
                     title=episode.title,
@@ -161,15 +155,15 @@ class PodcastMediaSource(MediaSource):
                 translation_key="episode_unavailable",
             )
 
-        episode = _find_episode(entry.runtime_data.podcast, episode_id)
+        episode = _find_episode(entry.runtime_data.data, episode_id)
         if episode is None:
-            try:
-                podcast = await entry.runtime_data.async_refresh()
-            except PodcastFeedError as err:
+            await entry.runtime_data.async_refresh()
+            if not entry.runtime_data.last_update_success:
                 raise Unresolvable(
                     translation_domain=DOMAIN,
                     translation_key="feed_unavailable",
-                ) from err
+                ) from entry.runtime_data.last_exception
+            podcast = entry.runtime_data.data
             episode = _find_episode(podcast, episode_id)
 
         if episode is None:
