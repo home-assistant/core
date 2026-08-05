@@ -50,6 +50,7 @@ MEDIA_CONTENT_ID_FAVORITES = (
 MEDIA_CONTENT_ID_PLAYLISTS = (
     f"{MEDIA_TYPE_WIIM_LIBRARY}/{MEDIA_CONTENT_ID_ROOT}/playlists"
 )
+PARALLEL_UPDATES = 1
 
 
 SDK_TO_HA_STATE: dict[SDKPlayingStatus, MediaPlayerState] = {
@@ -85,6 +86,8 @@ def media_player_exception_wrap[
     _R,
 ](
     func: Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]],
+    *,
+    update_ha_state: bool = True,
 ) -> Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Coroutine[Any, Any, _R]]:
     """Wrap media player commands to handle SDK exceptions consistently."""
 
@@ -114,11 +117,23 @@ def media_player_exception_wrap[
                 },
             ) from err
 
-        self._update_ha_state_from_sdk_cache()
+        if update_ha_state:
+            self._update_ha_state_from_sdk_cache()
 
         return result
 
     return _wrap
+
+
+def browse_media_exception_wrap[
+    _WiimMediaPlayerEntityT: WiimMediaPlayerEntity,
+    **_P,
+    _R,
+](
+    func: Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]],
+) -> Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Coroutine[Any, Any, _R]]:
+    """Wrap browse media calls without refreshing entity state after success."""
+    return media_player_exception_wrap(func, update_ha_state=False)
 
 
 async def async_setup_entry(
@@ -742,6 +757,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             source
         )
 
+    @browse_media_exception_wrap
     @override
     async def async_browse_media(
         self,
