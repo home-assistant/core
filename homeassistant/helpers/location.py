@@ -11,14 +11,14 @@ from homeassistant.util import location as location_util
 _LOGGER = logging.getLogger(__name__)
 
 
-class Location(NamedTuple):
+class Coordinates(NamedTuple):
     """A latitude/longitude coordinate pair."""
 
     latitude: float
     longitude: float
 
 
-def get_location(state: State) -> Location | None:
+def get_state_coordinates(state: State) -> Coordinates | None:
     """Return the state's location, or None.
 
     Returns None if the state does not contain a valid location.
@@ -32,7 +32,7 @@ def get_location(state: State) -> Location | None:
         longitude := state.attributes.get(EntityStateAttribute.LONGITUDE),
         (float, int),
     ):
-        return Location(latitude, longitude)
+        return Coordinates(latitude, longitude)
     return None
 
 
@@ -41,7 +41,7 @@ def has_location(state: State) -> bool:
 
     Async friendly.
     """
-    return isinstance(state, State) and get_location(state) is not None
+    return isinstance(state, State) and get_state_coordinates(state) is not None
 
 
 def closest(latitude: float, longitude: float, states: Iterable[State]) -> State | None:

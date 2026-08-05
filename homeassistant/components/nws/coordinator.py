@@ -12,7 +12,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.location import Location, get_location
+from homeassistant.helpers.location import Coordinates, get_state_coordinates
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -49,7 +49,7 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         nws: SimpleNWS,
         *,
         location_entity_id: str | None = None,
-        initial_position: Location | None = None,
+        initial_position: Coordinates | None = None,
     ) -> None:
         """Initialize."""
         self.nws = nws
@@ -84,7 +84,7 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
             return
         self._location_state_warned = False
 
-        if (location := get_location(state)) is None:
+        if (location := get_state_coordinates(state)) is None:
             _LOGGER.debug(
                 "Location entity %s has no location attributes; skipping location update",
                 self._location_entity_id,

@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.location import get_location
+from homeassistant.helpers.location import get_state_coordinates
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from . import base_unique_id
@@ -113,7 +113,7 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "entity_disabled"
             else:
                 state = self.hass.states.get(location_entity)
-                if state is None or (location := get_location(state)) is None:
+                if state is None or (location := get_state_coordinates(state)) is None:
                     errors["base"] = "entity_no_coordinates"
                 else:
                     data = {
