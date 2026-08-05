@@ -23,6 +23,12 @@ from pyenphase import (
 )
 from pyenphase.const import SupportedFeatures
 from pyenphase.models.dry_contacts import EnvoyDryContactSettings, EnvoyDryContactStatus
+from pyenphase.models.generator import (
+    EnvoyGenerator,
+    EnvoyGeneratorConfig,
+    EnvoyGeneratorMode,
+    EnvoyGeneratorSchedule,
+)
 from pyenphase.models.home import EnvoyInterfaceInformation
 from pyenphase.models.meters import EnvoyMeterData
 from pyenphase.models.tariff import EnvoyStorageSettings, EnvoyTariff
@@ -185,6 +191,7 @@ def load_envoy_fixture(mock_envoy: AsyncMock, fixture_name: str) -> None:
     _load_json_2_inverter_data(mock_envoy.data, json_fixture)
     _load_json_2_encharge_enpower_data(mock_envoy.data, json_fixture)
     _load_json_2_acb_inventory_data(mock_envoy.data, json_fixture)
+    _load_json_2_generator_data(mock_envoy.data, json_fixture)
     _load_json_2_raw_data(mock_envoy.data, json_fixture)
 
     if item := json_fixture.get("interface_information"):
@@ -264,6 +271,20 @@ def _load_json_2_acb_inventory_data(
         mocked_data.acb_inventory = {}
         for sub_item, item_data in item.items():
             mocked_data.acb_inventory[sub_item] = EnvoyACB(**item_data)
+
+
+def _load_json_2_generator_data(
+    mocked_data: EnvoyData, json_fixture: dict[str, Any]
+) -> None:
+    """Fill envoy standby generator data from fixture."""
+    if item := json_fixture["data"].get("generator"):
+        mocked_data.generator = EnvoyGenerator(**item)
+    if item := json_fixture["data"].get("generator_config"):
+        mocked_data.generator_config = EnvoyGeneratorConfig(**item)
+    if item := json_fixture["data"].get("generator_schedule"):
+        mocked_data.generator_schedule = EnvoyGeneratorSchedule(**item)
+    if item := json_fixture["data"].get("generator_mode"):
+        mocked_data.generator_mode = EnvoyGeneratorMode(**item)
 
 
 def _load_json_2_encharge_enpower_data(
