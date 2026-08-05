@@ -24,10 +24,9 @@ async def test_async_setup_entry(
     client = AsyncMock()
     client.__aenter__.return_value = client
     client.__aexit__.return_value = None
-    client.query.side_effect = [
-        _make_report(12),
-        _make_report(345),
-    ]
+
+    client.visitors_online.return_value = _make_report(12)
+    client.time_total.return_value = _make_report(345)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
