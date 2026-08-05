@@ -1381,10 +1381,16 @@ class Recorder(threading.Thread):
         self, dbapi_connection: DBAPIConnection, connection_record: Any
     ) -> None:
         """Dbapi specific connection settings."""
-        assert self.engine is not None
+        if (engine := self.engine) is None:
+            # _close_connection disposes the engine and drops our reference to it, but
+            # dispose() only empties the pool: the engine stays usable, so anything
+            # still holding a reference to it can check out a fresh DBAPI connection
+            # and get here. There is no longer an engine of ours to configure it for.
+            _LOGGER.debug("Ignoring connection setup for a closed database connection")
+            return
         if database_engine := setup_connection_for_dialect(
             self,
-            self.engine.dialect.name,
+            engine.dialect.name,
             dbapi_connection,
             not self._completed_first_database_setup,
         ):
