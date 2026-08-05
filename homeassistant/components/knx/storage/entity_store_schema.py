@@ -662,12 +662,17 @@ SELECT_KNX_SCHEMA = AllSerializeFirst(
     vol.Schema(
         {
             vol.Required(CONF_PAYLOAD_LENGTH): vol.Coerce(int),
-            vol.Required(CONF_OPTIONS): [
-                vol.Schema(
-                    {vol.Required(CONF_PAYLOAD): vol.Coerce(int)},
-                    extra=vol.ALLOW_EXTRA,
-                )
-            ],
+            # An empty list would yield an entity that can never be set. YAML
+            # accepts it, but nothing can rely on that here yet.
+            vol.Required(CONF_OPTIONS): vol.All(
+                [
+                    vol.Schema(
+                        {vol.Required(CONF_PAYLOAD): vol.Coerce(int)},
+                        extra=vol.ALLOW_EXTRA,
+                    )
+                ],
+                vol.Length(min=1),
+            ),
         },
         extra=vol.ALLOW_EXTRA,
     ),

@@ -279,12 +279,14 @@ async def test_select_ui_create(
             [{"option": "A", "payload": "70"}],
             "'payload: 70' for 'option: A' exceeds possible maximum",
         ),
+        ([], "length of value must be at least 1"),
     ],
     ids=[
         "duplicate_option",
         "duplicate_payload",
         "payload_too_large",
         "payload_string_too_large",
+        "no_options",
     ],
 )
 async def test_select_ui_invalid_options(
