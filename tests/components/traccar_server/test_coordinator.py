@@ -1,39 +1,35 @@
 """Test the Traccar Server coordinator."""
 
 import asyncio
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable, Coroutine, Generator
+from datetime import timedelta
 import logging
 import sys
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytraccar import SubscriptionData, TraccarAuthenticationException, TraccarException
 
-from homeassistant.components.traccar_server.coordinator import TraccarServerCoordinator
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import dt as dt_util
 
 from .common import setup_integration
 
-from tests.common import MockConfigEntry, async_capture_events
+from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 
-async def _setup_and_isolate_coordinator(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> TraccarServerCoordinator:
-    """Set up the entry, then detach the coordinator from real-time use.
+def _get_subscription_callback(
+    mock_traccar_api_client: AsyncMock,
+) -> Callable[[SubscriptionData], Awaitable[None]]:
+    """Return the callback our integration registered with client.subscribe().
 
-    async_setup_entry() starts a background task that also calls
-    subscribe(); unloading cancels that task so a test can await
-    coordinator.subscribe() directly without racing it.
+    Reading it off the mock's call args exercises the exact function
+    pytraccar would invoke, instead of calling a coordinator method by name.
     """
-    await setup_integration(hass, config_entry)
-    coordinator = config_entry.runtime_data
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    return coordinator
+    return mock_traccar_api_client.subscribe.call_args.args[0]
 
 
 async def test_update_data_happy_path(
@@ -41,20 +37,19 @@ async def test_update_data_happy_path(
     mock_traccar_api_client: Generator[AsyncMock],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Devices, positions, and geofences are merged into coordinator data."""
+    """Devices, positions, and geofences merged by the coordinator reach the device tracker."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert 0 in coordinator.data
 
-    entry = coordinator.data[0]
-    assert entry["device"]["name"] == "X-Wing"
-    assert entry["position"]["id"] == 0
-    assert entry["geofence"]["name"] == "Tatooine"
+    state = hass.states.get("device_tracker.x_wing")
+    assert state is not None
+    assert state.attributes["latitude"] == 52.0
+    assert state.attributes["longitude"] == 25.0
+    assert state.attributes["gps_accuracy"] == 3.5
     # accuracy (3.5) is below max_accuracy (5.0), so the custom attribute
     # should be included rather than filtered out.
-    assert entry["attributes"]["custom_attr_1"] == "custom_attr_1_value"
+    assert state.attributes["custom_attr_1"] == "custom_attr_1_value"
 
 
 async def test_update_data_auth_failure_triggers_reauth(
@@ -96,24 +91,28 @@ async def test_handle_subscription_data_updates_known_device(
     mock_traccar_api_client: Generator[AsyncMock],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """A subscription update for a known device updates coordinator data."""
+    """A subscription update for a known device updates its device tracker state."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
+    subscription_callback = _get_subscription_callback(mock_traccar_api_client)
 
-    signals: list[str] = []
-    async_dispatcher_connect(
-        hass, f"{mock_config_entry.domain}_0", lambda: signals.append("0")
-    )
+    updated_position = {
+        "id": 0,
+        "deviceId": 0,
+        "latitude": 60.0,
+        "longitude": 30.0,
+        "accuracy": 3.5,
+        "address": "Mos Eisley",
+        "attributes": {"custom_attr_1": "custom_attr_1_value"},
+    }
 
-    updated_position = dict(coordinator.data[0]["position"])
-    updated_position["address"] = "Mos Eisley"
-
-    await coordinator.handle_subscription_data(
+    await subscription_callback(
         {"devices": None, "events": None, "positions": [updated_position]}
     )
+    await hass.async_block_till_done()
 
-    assert coordinator.data[0]["position"]["address"] == "Mos Eisley"
-    assert signals == ["0"]
+    state = hass.states.get("device_tracker.x_wing")
+    assert state.attributes["latitude"] == 60.0
+    assert state.attributes["longitude"] == 30.0
 
 
 async def test_handle_subscription_data_ignores_unknown_device(
@@ -123,21 +122,30 @@ async def test_handle_subscription_data_ignores_unknown_device(
 ) -> None:
     """Subscription data for a device we haven't seen via polling is ignored."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
+    subscription_callback = _get_subscription_callback(mock_traccar_api_client)
 
-    before = dict(coordinator.data)
+    state_before = hass.states.get("device_tracker.x_wing")
 
-    unknown_position = dict(coordinator.data[0]["position"])
-    unknown_position["deviceId"] = 999
-    unknown_position["id"] = 999
+    unknown_position = {
+        "id": 999,
+        "deviceId": 999,
+        "latitude": 60.0,
+        "longitude": 30.0,
+        "accuracy": 3.5,
+        "address": "Mos Eisley",
+        "attributes": {},
+    }
 
-    # Should not raise, and should not touch existing data.
-    await coordinator.handle_subscription_data(
+    # Should not raise, and should not touch the known device's state.
+    await subscription_callback(
         {"devices": None, "events": None, "positions": [unknown_position]}
     )
+    await hass.async_block_till_done()
 
-    assert coordinator.data.keys() == before.keys()
-    assert coordinator.data[0] == before[0]
+    state_after = hass.states.get("device_tracker.x_wing")
+    assert state_after.state == state_before.state
+    assert state_after.attributes == state_before.attributes
+    assert hass.states.get("device_tracker.unknown_999") is None
 
 
 async def test_handle_subscription_data_filters_low_accuracy_position(
@@ -147,20 +155,28 @@ async def test_handle_subscription_data_filters_low_accuracy_position(
 ) -> None:
     """A position update that fails the accuracy filter is skipped."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
+    subscription_callback = _get_subscription_callback(mock_traccar_api_client)
 
-    original_address = coordinator.data[0]["position"]["address"]
+    original_latitude = hass.states.get("device_tracker.x_wing").attributes["latitude"]
 
-    poor_accuracy_position = dict(coordinator.data[0]["position"])
-    poor_accuracy_position["address"] = "Should not be applied"
-    # max_accuracy for this config entry is 5.0.
-    poor_accuracy_position["accuracy"] = 999.0
+    poor_accuracy_position = {
+        "id": 0,
+        "deviceId": 0,
+        "latitude": 60.0,
+        "longitude": 30.0,
+        # max_accuracy for this config entry is 5.0.
+        "accuracy": 999.0,
+        "address": "Should not be applied",
+        "attributes": {"custom_attr_1": "custom_attr_1_value"},
+    }
 
-    await coordinator.handle_subscription_data(
+    await subscription_callback(
         {"devices": None, "events": None, "positions": [poor_accuracy_position]}
     )
+    await hass.async_block_till_done()
 
-    assert coordinator.data[0]["position"]["address"] == original_address
+    state = hass.states.get("device_tracker.x_wing")
+    assert state.attributes["latitude"] == original_latitude
 
 
 async def test_handle_subscription_data_logs_restored_after_failures(
@@ -208,13 +224,12 @@ async def test_import_events_fires_hass_events(
     mock_traccar_api_client: Generator[AsyncMock],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Events returned by the Traccar API are fired on the HA bus."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-
+    """Events returned by the Traccar API are imported on schedule and fired on the HA bus."""
     events = async_capture_events(hass, "traccar_device_moving")
 
-    await coordinator.import_events(None)
+    await setup_integration(hass, mock_config_entry)
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -228,21 +243,38 @@ async def test_subscribe_raises_config_entry_auth_failed(
     mock_traccar_api_client: Generator[AsyncMock],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Authentication failures should stop retrying and bubble up.
+    """An authentication failure must stop retrying, not loop forever."""
+    mock_traccar_api_client.subscribe = AsyncMock(
+        side_effect=TraccarAuthenticationException("Unauthorized")
+    )
 
-    The side_effect must be installed after isolating the coordinator -
-    otherwise the still-running setup background task would hit it
-    first and fail with an unretrieved exception of its own.
-    """
-    coordinator = await _setup_and_isolate_coordinator(hass, mock_config_entry)
+    background_tasks: list[asyncio.Task] = []
+    original_create_background_task = ConfigEntry.async_create_background_task
 
-    async def _unauthorized_subscribe(_callback: object) -> None:
-        raise TraccarAuthenticationException("Unauthorized")
+    def _capture_background_task(
+        self: ConfigEntry,
+        hass: HomeAssistant,
+        target: Coroutine[Any, Any, Any],
+        name: str,
+        eager_start: bool = True,
+    ) -> asyncio.Task:
+        task = original_create_background_task(self, hass, target, name, eager_start)
+        background_tasks.append(task)
+        return task
 
-    mock_traccar_api_client.subscribe = AsyncMock(side_effect=_unauthorized_subscribe)
+    with patch.object(
+        ConfigEntry, "async_create_background_task", _capture_background_task
+    ):
+        await setup_integration(hass, mock_config_entry)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert len(background_tasks) == 1
     with pytest.raises(ConfigEntryAuthFailed):
-        await coordinator.subscribe()
+        background_tasks[0].result()
+
+    # A retryable failure would call subscribe() again after sleep(10);
+    # an auth failure must not retry at all.
+    assert mock_traccar_api_client.subscribe.call_count == 1
 
 
 async def test_subscribe_does_not_recurse_across_reconnects(
