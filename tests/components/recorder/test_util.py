@@ -943,47 +943,68 @@ def test_build_mysqldb_conv() -> None:
     )
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
 async def test_execute_retries_after_lost_connection(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
-    """Test execute recovers when the connection is lost mid-transaction.
+    """Test execute reaches the database again when the connection is lost.
 
-    A lost connection leaves the session's transaction in a state that must be rolled
-    back before the connection can be used again. Without a rollback between attempts,
-    every retry raises PendingRollbackError instead of reconnecting, so the retry loop
-    cannot succeed for the one error class it exists to handle -- and the
-    PendingRollbackError also masks the original error in the log.
+    This test is specific for SQLite: invalidating the in-memory database's only
+    connection discards the database, so the retried query fails with an
+    OperationalError from the database instead of returning rows. Without a rollback
+    between attempts every retry raises PendingRollbackError (an InvalidRequestError,
+    not an OperationalError) without reaching the database, so the retry loop cannot
+    succeed for the one error class it exists to handle -- and the original error is
+    masked in the log.
     """
     hass.states.async_set("sensor.on", "on")
     await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         query = session.query(StatesMeta).limit(1)
-        # Establish the connection, then invalidate it the way a database restart or a
-        # dropped network link does: the session object stays intact and unaware, which
-        # is exactly the state the retry loop is meant to handle.
+        # Invalidate the connection the way a database restart or a dropped network
+        # link does: the session object stays intact and unaware, which is exactly
+        # the state the retry loop is meant to handle.
         session.connection().invalidate()
 
-        # The assertion is about which error escapes, not about the query succeeding.
-        # The default test backend is in-memory SQLite, where invalidating the
-        # connection necessarily discards the database, so a successful reconnect can
-        # only find an empty one. That is fine: the defect is that the retry never
-        # reaches the database at all. Without a rollback between attempts every retry
-        # raises PendingRollbackError (an InvalidRequestError, not an OperationalError),
-        # so requiring an OperationalError here is exactly the fix's signature. On a
-        # file-backed or MySQL database the same fix lets the query return rows.
         with pytest.raises(OperationalError):
             util.execute(query)
 
 
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_execute_recovers_after_lost_connection(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test execute returns rows when the connection is lost mid-transaction.
+
+    This test is specific for MySQL and PostgreSQL, where the database survives the
+    lost connection: the rollback between attempts lets the retry reconnect and
+    return rows. Without it every retry raises PendingRollbackError.
+    """
+    hass.states.async_set("sensor.on", "on")
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        query = session.query(StatesMeta).limit(1)
+        session.connection().invalidate()
+
+        assert len(util.execute(query)) == 1
+
+
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
 async def test_execute_stmt_lambda_element_retries_after_lost_connection(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
-    """Test execute_stmt_lambda_element recovers when the connection is lost.
+    """Test execute_stmt_lambda_element reaches the database after a lost connection.
 
     Same defect as test_execute_retries_after_lost_connection, in the second of the two
     retry loops in this module.
@@ -1006,6 +1027,39 @@ async def test_execute_stmt_lambda_element_retries_after_lost_connection(
         # escapes must be a real database error, not PendingRollbackError.
         with pytest.raises(OperationalError):
             util.execute_stmt_lambda_element(session, stmt)
+
+
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_execute_stmt_lambda_element_recovers_after_lost_connection(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test execute_stmt_lambda_element returns rows after a lost connection.
+
+    Same recovery as test_execute_recovers_after_lost_connection, in the second of the
+    two retry loops in this module.
+    """
+    instance = recorder.get_instance(hass)
+    hass.states.async_set("sensor.on", "on")
+    new_state = hass.states.get("sensor.on")
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
+        start_time_ts = dt_util.utcnow().timestamp()
+        stmt = lambda_stmt(
+            lambda: _get_single_entity_start_time_stmt(
+                start_time_ts, metadata_id, False, False, False
+            )
+        )
+        session.connection().invalidate()
+
+        rows = util.execute_stmt_lambda_element(session, stmt)
+        assert isinstance(rows, list)
+        assert rows[0].state == new_state.state
+        assert rows[0].metadata_id == metadata_id
 
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
