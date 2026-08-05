@@ -2,11 +2,18 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from operator import attrgetter
 from typing import override
 
 from pizone import Controller, Power, PowerChannel, PowerDevice, PowerGroup, Zone
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -30,9 +37,28 @@ class IZoneSensorEntityDescription[SourceT: IZoneSensorSource](SensorEntityDescr
     value_fn: Callable[[SourceT], StateType]
 
 
-CONTROLLER_SENSOR_DESCRIPTIONS: tuple[
-    IZoneSensorEntityDescription[Controller], ...
-] = ()
+CONTROLLER_SENSOR_DESCRIPTIONS: tuple[IZoneSensorEntityDescription[Controller], ...] = (
+    IZoneSensorEntityDescription[Controller](
+        key="supply_temperature",
+        translation_key="supply_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("temp_supply"),
+    ),
+    IZoneSensorEntityDescription[Controller](
+        key="return_temperature",
+        translation_key="return_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("temp_return"),
+    ),
+)
 
 
 async def async_setup_entry(
