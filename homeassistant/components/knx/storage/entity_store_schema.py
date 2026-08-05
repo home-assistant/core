@@ -55,7 +55,7 @@ from ..const import (
     SceneConf,
     SelectConf,
 )
-from ..dpt import get_supported_dpts
+from ..dpt import get_supported_dpts, raw_payload_length
 from ..validation import validate_number_attributes, validate_sensor_attributes
 from .const import (
     CONF_ALWAYS_CALLBACK,
@@ -607,7 +607,7 @@ def _select_options_sub_validator(config: dict) -> dict:
 
     dpt = source[SelectConf.GA_CUSTOM].get(CONF_DPT)
     transcoder = DPTBase.parse_transcoder(dpt) if dpt is not None else None
-    payload_length = transcoder.payload_length if transcoder is not None else None
+    payload_length = raw_payload_length(transcoder) if transcoder is not None else None
 
     options_seen: set[str] = set()
     payloads_seen: set[int] = set()

@@ -359,6 +359,78 @@ async def test_select_ui_create_from_dpt(
     knx.assert_state("select.test", "standby")
 
 
+async def test_select_ui_create_from_binary_dpt(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test a select derived from a binary enum DPT sending binary telegrams."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.SELECT,
+        entity_data={"name": "test"},
+        knx_data={
+            "options_source": {
+                "ga_enum": {"write": "1/1/1", "state": "2/2/2", "dpt": "1.001"},
+            },
+            "sync_state": True,
+        },
+    )
+    # DPT 1 is integrated in the APDU header - not sent as byte array
+    await knx.assert_read("2/2/2", response=True)
+    knx.assert_state("select.test", "on")
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": "select.test", "option": "off"},
+        blocking=True,
+    )
+    await knx.assert_write("1/1/1", False)
+    knx.assert_state("select.test", "off")
+
+
+async def test_select_ui_create_custom_binary_dpt(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test custom options for a binary complex DPT."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.SELECT,
+        entity_data={"name": "test"},
+        knx_data={
+            "options_source": {
+                "ga_custom": {"write": "1/1/1", "dpt": "2.001"},
+                "custom_options": [
+                    {
+                        "option": "No control",
+                        "value": {"control": False, "value": "off"},
+                    },
+                    {
+                        "option": "Control - On",
+                        "value": {"control": True, "value": "on"},
+                    },
+                ],
+            },
+            "sync_state": True,
+        },
+    )
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": "select.test", "option": "Control - On"},
+        blocking=True,
+    )
+    # DPT 2.001 is a 2 bit payload - `control` and `value` bit set
+    await knx.assert_write("1/1/1", 0b11)
+    knx.assert_state("select.test", "Control - On")
+
+    await knx.receive_write("1/1/1", 0b00)
+    knx.assert_state("select.test", "No control")
+
+
 async def test_select_ui_load(knx: KNXTestKit) -> None:
     """Test loading selects for both option sources from storage."""
     await knx.setup_integration(config_store_fixture="config_store_select.json")

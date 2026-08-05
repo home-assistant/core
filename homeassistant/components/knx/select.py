@@ -33,6 +33,7 @@ from .const import (
     KNX_MODULE_KEY,
     SelectConf,
 )
+from .dpt import raw_payload_length
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -90,7 +91,7 @@ def _options_from_enum_dpt(dpt: str) -> tuple[dict[str, int], int]:
     option_payloads = {
         member.name.lower(): member.value for member in transcoder.data_type
     }
-    return option_payloads, transcoder.payload_length
+    return option_payloads, raw_payload_length(transcoder)
 
 
 def _options_from_custom_config(
@@ -104,7 +105,7 @@ def _options_from_custom_config(
     transcoder: type[DPTBase] | None = (
         DPTBase.parse_transcoder(dpt) if dpt is not None else None
     )
-    payload_length = transcoder.payload_length if transcoder is not None else None
+    payload_length = raw_payload_length(transcoder) if transcoder is not None else None
     option_payloads: dict[str, int] = {}
     for option in options:
         name = option[SelectConf.OPTION]
