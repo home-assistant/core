@@ -2,6 +2,7 @@
 
 import logging
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -517,3 +518,41 @@ async def test_cover_ui_position_state_send(
     await knx.receive_write("1/0/2", (0xFF,))
     state = hass.states.get("cover.test")
     assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+
+
+async def test_cover_position_state_send_while_travelling(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test the position is published when the travel calculator advances."""
+    mock_restore_cache(
+        hass,
+        (State("cover.test", CoverState.OPEN, {ATTR_CURRENT_POSITION: 80}),),
+    )
+    # no send cooldown here: xknx creates no cooldown task for 0, so the publish is
+    # immediate and the test does not have to wait for real time to pass
+    with patch("homeassistant.components.knx.cover.POSITION_SEND_COOLDOWN", 0):
+        await knx.setup_integration(
+            {
+                CoverSchema.PLATFORM: {
+                    CONF_NAME: "test",
+                    CoverSchema.CONF_MOVE_LONG_ADDRESS: "1/0/0",
+                    CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
+                    CoverConf.POSITION_STATE_SEND: True,
+                    CoverConf.TRAVELLING_TIME_UP: 10,
+                    CoverConf.TRAVELLING_TIME_DOWN: 10,
+                }
+            }
+        )
+    await knx.assert_write("1/0/2", (0x33,))
+
+    # the travel calculator is driven by xknx in the background, so advance it here
+    device = knx.xknx.devices["test"]
+    device.travelcalculator.set_position(60)
+    device.after_update()
+    await hass.async_block_till_done()
+    await knx.assert_write("1/0/2", (0x99,))
+
+    # standing still does not publish again
+    device.after_update()
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()

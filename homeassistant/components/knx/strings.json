@@ -685,8 +685,8 @@
               "label": "Invert open/close"
             },
             "position_state_send": {
-              "label": "Actively send the calculated position",
-              "description": "Publish the position calculated by Home Assistant to the address above instead of listening on it. For actuators that do not report their position themselves, so displays can show it."
+              "description": "Publish the position calculated by Home Assistant to the address above instead of listening on it. This is meant for actuators that do not report their position themselves, so that displays can show it.",
+              "label": "Actively send the calculated position"
             },
             "section_position_control": {
               "description": "Control cover position.",

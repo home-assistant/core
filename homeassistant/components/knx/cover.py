@@ -165,6 +165,7 @@ class _KnxCover(CoverEntity, RestoreEntity):
         """
         await super().async_added_to_hass()
         if self._position_publisher is not None:
+            self._device.register_device_updated_cb(self._publish_position)
             self._position_publisher.xknx.devices.async_add(self._position_publisher)
         if (last_state := await self.async_get_last_state()) is None or (
             last_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
@@ -189,6 +190,7 @@ class _KnxCover(CoverEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Remove the position publisher from xknx."""
         if self._position_publisher is not None:
+            self._device.unregister_device_updated_cb(self._publish_position)
             self._position_publisher.xknx.devices.async_remove(self._position_publisher)
         await super().async_will_remove_from_hass()
 
@@ -205,15 +207,16 @@ class _KnxCover(CoverEntity, RestoreEntity):
             return 100 - position
         return position
 
-    @override
-    def after_update_callback(self, device: XknxDevice) -> None:
-        """Publish the position when it changed.
+    def _publish_position(self, device: XknxDevice) -> None:
+        """Publish the position after the travel calculator advanced.
 
-        current_position() is the KNX side value already - cover.py inverts it
-        with `100 - pos` when reading, so no conversion is needed here.
+        Registered as an additional device callback rather than overriding
+        after_update_callback: that method comes from the KNX entity mixin, which
+        is only applied in the concrete YAML and UI classes.
 
-        The last published value is cached to avoid creating a task on every
-        travel calculator update; only a real change is worth a telegram.
+        The cached value skips a repeated publish while the cover stands still;
+        skip_unchanged is a redundant second guard against sending an
+        unchanged payload.
         """
         if (
             self._position_publisher is not None
@@ -224,7 +227,6 @@ class _KnxCover(CoverEntity, RestoreEntity):
             self.hass.async_create_task(
                 self._position_publisher.set(position, skip_unchanged=True)
             )
-        super().after_update_callback(device)
 
     @property
     @override
