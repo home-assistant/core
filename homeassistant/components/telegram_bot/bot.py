@@ -47,7 +47,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
@@ -130,6 +129,11 @@ _LOGGER = logging.getLogger(__name__)
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 
 _RETRY_DELAY = 1  # 1 second delay between retries
+
+
+def _is_non_empty_str(value: Any) -> bool:
+    """Return True if value is a string with content."""
+    return isinstance(value, str) and bool(value)
 
 
 def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
@@ -347,20 +351,6 @@ class TelegramNotificationService:
             inline_message_id = msg_data[ATTR_INLINE_MESSAGE_ID]
         return message_id, inline_message_id
 
-    # Deprecated: remove in 2026.12.0
-    def _warn_deprecated_keyboard_format(self) -> None:
-        """Create a repair issue warning about a deprecated inline_keyboard format."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_inline_keyboard_{self.config.entry_id}",
-            breaks_in_ha_version="2026.12.0",
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_inline_keyboard",
-            translation_placeholders={"entry_title": self.config.title},
-        )
-
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
 
@@ -377,7 +367,6 @@ class TelegramNotificationService:
             buttons = []
             # Deprecated: remove in 2026.12.0
             if isinstance(row_keyboard, str):
-                self._warn_deprecated_keyboard_format()
                 for key in row_keyboard.split(","):
                     if ":/" in key:
                         # check if command or URL
@@ -416,32 +405,34 @@ class TelegramNotificationService:
                                 },
                             )
 
-                        has_url = ATTR_URL in entry
-                        has_callback = ATTR_CALLBACK_DATA in entry
-                        if text is None or has_url == has_callback:
-                            # text is required.
-                            # exactly one of callback_data/url is required.
+                        url = entry.get(ATTR_URL)
+                        callback_data = entry.get(ATTR_CALLBACK_DATA)
+                        # `text` is required, and exactly one of `url` /
+                        # `callback_data` must be a non-empty string.
+                        actions = [
+                            value for value in (url, callback_data) if value is not None
+                        ]
+                        if (
+                            not _is_non_empty_str(text)
+                            or len(actions) != 1
+                            or not _is_non_empty_str(actions[0])
+                        ):
                             raise ServiceValidationError(
                                 translation_domain=DOMAIN,
                                 translation_key="invalid_inline_keyboard_button",
                             )
-                        if has_url:
+                        if url is not None:
                             buttons.append(
-                                InlineKeyboardButton(
-                                    text, url=entry[ATTR_URL], style=style
-                                )
+                                InlineKeyboardButton(text, url=url, style=style)
                             )
                         else:
                             buttons.append(
                                 InlineKeyboardButton(
-                                    text,
-                                    callback_data=entry[ATTR_CALLBACK_DATA],
-                                    style=style,
+                                    text, callback_data=callback_data, style=style
                                 )
                             )
                         continue
                     # Deprecated: remove in 2026.12.0
-                    self._warn_deprecated_keyboard_format()
                     text_btn, data_btn = entry
                     if data_btn.startswith(("https://", "http://")):
                         buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
