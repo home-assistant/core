@@ -207,10 +207,19 @@ jobs:
           push: true
           version: ${{ needs.init.outputs.version }}
 
+  run_e2e_tests:
+    name: Run E2E tests
+    if: github.repository_owner == 'home-assistant'
+    needs: ["init", "build_base"]
+    uses: ./.github/workflows/e2e-tests.yml
+    with:
+      version: ${{ needs.init.outputs.version }}
+      per_arch_images: true
+
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
     if: github.repository_owner == 'home-assistant'
-    needs: ["init", "build_base"]
+    needs: ["init", "build_base", "run_e2e_tests"]
     runs-on: ${{ matrix.runs-on }}
     permissions:
       contents: read # To check out the repository
@@ -326,7 +335,7 @@ jobs:
     name: Publish to ${{ matrix.registry }}
     environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
-    needs: ["init", "build_base"]
+    needs: ["init", "build_base", "run_e2e_tests"]
     runs-on: ubuntu-latest
     permissions:
       contents: read # To check out the repository
@@ -461,7 +470,7 @@ jobs:
   build_python:
     name: Build PyPi package
     environment: ${{ needs.init.outputs.channel }}
-    needs: ["init", "build_base"]
+    needs: ["init", "build_base", "run_e2e_tests"]
     runs-on: ubuntu-latest
     permissions:
       contents: read # To check out the repository

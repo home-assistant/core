@@ -8,6 +8,16 @@ on:
         description: "Image tag or digest to test (e.g. dev, 2026.7.1, 2026.8.0b0, sha256:0a1b2c3d…)"
         default: "dev"
         required: true
+  workflow_call:
+    inputs:
+      version:
+        description: "Image tag or digest to test (e.g. dev, 2026.7.1, 2026.8.0b0, sha256:0a1b2c3d…). With per_arch_images, only full version tags are valid (e.g. 2026.7.1)."
+        required: true
+        type: string
+      per_arch_images:
+        description: "Test the per-architecture images instead of the multi-arch manifest"
+        default: false
+        type: boolean
 
 permissions: {}
 
@@ -27,13 +37,16 @@ jobs:
         include:
           - arch: amd64
             runs-on: ubuntu-24.04
+            image_name: amd64-homeassistant
           - arch: aarch64
             runs-on: ubuntu-24.04-arm
+            image_name: aarch64-homeassistant
     env:
       BASE_URL: http://localhost:8123
     services:
       homeassistant:
-        image: ghcr.io/home-assistant/home-assistant${{ startsWith(inputs.version, 'sha256:') && '@' || ':' }}${{ inputs.version }} # zizmor: ignore[unpinned-images]
+        # Digests are referenced with '@', tags with ':'
+        image: ghcr.io/home-assistant/${{ inputs.per_arch_images && matrix.image_name || 'home-assistant' }}${{ startsWith(inputs.version, 'sha256:') && '@' || ':' }}${{ inputs.version }} # zizmor: ignore[unpinned-images]
         ports:
           - 8123:8123
         # Gate steps until Home Assistant answers (60 x 5s ≈ 300s startup budget)
