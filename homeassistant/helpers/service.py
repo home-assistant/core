@@ -1270,7 +1270,7 @@ def async_register_platform_entity_service(
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
-    service_handler = partial(
+    entity_handler = partial(
         entity_service_call,
         hass,
         partial(_get_platform_entities, hass, entity_domain, service_domain),
@@ -1278,12 +1278,16 @@ def async_register_platform_entity_service(
         entity_device_classes=entity_device_classes,
         required_features=required_features,
     )
-    if admin_only:
-        service_handler = partial(
+
+    service_handler = (
+        partial(
             _async_admin_handler,
             hass,
-            HassJob(service_handler, f"admin service {service_domain}.{service_name}"),
+            HassJob(entity_handler, f"admin service {service_domain}.{service_name}"),
         )
+        if admin_only
+        else entity_handler
+    )
 
     hass.services.async_register(
         service_domain,

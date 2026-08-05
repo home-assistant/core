@@ -1895,7 +1895,7 @@ async def test_register_admin_service(
     hass: HomeAssistant, hass_read_only_user: MockUser, hass_admin_user: MockUser
 ) -> None:
     """Test the register admin service."""
-    calls: list[MockEntity] = []
+    calls: list[ServiceCall] = []
 
     async def mock_service(call):
         calls.append(call)
@@ -2863,6 +2863,8 @@ async def test_register_platform_entity_service_admin_only(
     hass_read_only_user: MockUser,
 ) -> None:
     """Test an admin-only platform entity service."""
+    # Grant control of all entities, so the call is only rejected for not being admin
+    hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
     calls: list[MockEntity] = []
 
     @callback
