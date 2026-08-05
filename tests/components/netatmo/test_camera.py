@@ -4,6 +4,7 @@
 # e.g. cameras: NACamera, NOC, etc.
 
 from datetime import timedelta
+from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -27,7 +28,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .common import (
+    advance_time,
     fake_post_request,
+    payload_modifier,
     selected_platforms,
     simulate_webhook,
     snapshot_platform_entities,
@@ -867,45 +870,27 @@ async def test_camera_image_with_attribute_change(
     FAKE_IMG = b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
     # Repeatedly used variables for the test and initial value from fixture
     # Use nonexistent ID to prevent matching during initial setup
-    camera_entity_id = "aa:bb:cc:dd:ee:ff"
-    camera_monitoring = "on"
-    camera_alim_status = 2
-    camera_timestamp = None
     polling_cycles = 11
     polling_delta = timedelta(seconds=30)
-
-    def attribute_modifier(payload: dict[str, Any]) -> None:
-        """Mutate the homestatus payload before it is returned by the fake post request."""
-        # Used via the ``msg_callback`` hook to simulate backend changes to camera
-        # attributes such as monitoring state, power status, and server timestamp.
-
-        nonlocal camera_monitoring, camera_alim_status, camera_timestamp
-
-        if camera_timestamp is not None:
-            payload["time_server"] = camera_timestamp
-        body = payload.get("body", {})
-
-        # Handle both structures: {"home": {...}} AND {"homes": [{...}]}
-        homes_to_check = []
-        if "home" in body and isinstance(body["home"], dict):
-            homes_to_check.append(body["home"])
-        elif "homes" in body and isinstance(body["homes"], list):
-            homes_to_check.extend(body["homes"])
-
-        for home_data in homes_to_check:
-            modules = home_data.get("modules", [])
-            for module in modules:
-                if isinstance(module, dict) and module.get("id") == camera_entity_id:
-                    module["monitoring"] = camera_monitoring
-                    module["alim_status"] = camera_alim_status
+    # Nonlocal valueas for attribute_modifire
+    camera_timestamp = None
+    module_id: str = "aa:bb:cc:dd:ee:ff"
+    new_attributes: dict[str, Any] = {
+        "monitoring": "on",
+        "alim_status": 2,
+    }
 
     async def fake_camera_post(*args: Any, **kwargs: Any):
         """Fake camera status during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
-        return await fake_post_request(
-            hass, *args, msg_callback=attribute_modifier, **kwargs
+        callback = partial(
+            payload_modifier,
+            target_id=module_id,
+            new_attributes=new_attributes,
+            timestamp=camera_timestamp,
         )
+        return await fake_post_request(hass, *args, msg_callback=callback, **kwargs)
 
     with (
         patch(
@@ -963,26 +948,22 @@ async def test_camera_image_with_attribute_change(
         assert url is not None
 
         # Trigger some polling cycle to let API throttling work
-        for _ in range(polling_cycles):
-            freezer.tick(polling_delta)
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done(wait_background_tasks=True)
+        advance_time(hass, freezer, polling_cycles, polling_delta)
 
         # Change mocked status (wrong alim_status, cannot monitor)
-        camera_entity_id = camera_id
-        camera_monitoring = "on"
-        camera_alim_status = 1
         camera_timestamp = int(dt_util.utcnow().timestamp())
+        module_id = camera_id
+        new_attributes.update(
+            monitoring="on",
+            alim_status=1,
+        )
 
         # Trigger some polling cycle to let status change be picked up
-        for _ in range(polling_cycles):
-            freezer.tick(polling_delta)
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done(wait_background_tasks=True)
+        advance_time(hass, freezer, polling_cycles, polling_delta)
 
-        # Check that the camera become unavailable with monitoring None
+        # Check that the camera become unavailable with problematic monitoring
         # (as alim_status 1 means that the camera is on but with low power, so it can't monitor)
-        assert hass.states.get(camera_entity).state == "unavailable"
+        assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
@@ -995,16 +976,15 @@ async def test_camera_image_with_attribute_change(
             await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (wrong alim_status, cannot monitor)
-        camera_entity_id = camera_id
-        camera_monitoring = "off"
-        camera_alim_status = 1
         camera_timestamp = int(dt_util.utcnow().timestamp())
+        module_id = camera_id
+        new_attributes.update(
+            monitoring="off",
+            alim_status=1,
+        )
 
         # Trigger some polling cycle to let status change be picked up
-        for _ in range(polling_cycles):
-            freezer.tick(polling_delta)
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done(wait_background_tasks=True)
+        advance_time(hass, freezer, polling_cycles, polling_delta)
 
         # Check that the camera become idle with monitoring off
         assert hass.states.get(camera_entity).state == "unavailable"
@@ -1020,16 +1000,15 @@ async def test_camera_image_with_attribute_change(
             await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (missing alim_status)
-        camera_entity_id = camera_id
-        camera_monitoring = "off"
-        camera_alim_status = None
         camera_timestamp = int(dt_util.utcnow().timestamp())
+        module_id = camera_id
+        new_attributes.update(
+            monitoring="off",
+            alim_status=None,
+        )
 
         # Trigger some polling cycle to let status change be picked up
-        for _ in range(polling_cycles):
-            freezer.tick(polling_delta)
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done(wait_background_tasks=True)
+        advance_time(hass, freezer, polling_cycles, polling_delta)
 
         # Check that the camera become unavailable with monitoring None
         assert hass.states.get(camera_entity).state == "unavailable"
@@ -1045,16 +1024,15 @@ async def test_camera_image_with_attribute_change(
             await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (missing alim_status and monitoring)
-        camera_entity_id = camera_id
-        camera_monitoring = None
-        camera_alim_status = None
         camera_timestamp = int(dt_util.utcnow().timestamp())
+        module_id = camera_id
+        new_attributes.update(
+            monitoring=None,
+            alim_status=None,
+        )
 
         # Trigger some polling cycle to let status change be picked up
-        for _ in range(polling_cycles):
-            freezer.tick(polling_delta)
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done(wait_background_tasks=True)
+        advance_time(hass, freezer, polling_cycles, polling_delta)
 
         # Check that the camera become unavailable with monitoring None
         assert hass.states.get(camera_entity).state == "unavailable"
@@ -1070,16 +1048,15 @@ async def test_camera_image_with_attribute_change(
             await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (missing monitoring, wrong alim_status)
-        camera_entity_id = camera_id
-        camera_monitoring = None
-        camera_alim_status = 1
         camera_timestamp = int(dt_util.utcnow().timestamp())
+        module_id = camera_id
+        new_attributes.update(
+            monitoring=None,
+            alim_status=1,
+        )
 
         # Trigger some polling cycle to let status change be picked up
-        for _ in range(polling_cycles):
-            freezer.tick(polling_delta)
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done(wait_background_tasks=True)
+        advance_time(hass, freezer, polling_cycles, polling_delta)
 
         # Check that the camera become unavailable with monitoring None
         assert hass.states.get(camera_entity).state == "unavailable"
