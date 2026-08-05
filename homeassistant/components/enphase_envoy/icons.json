@@ -1,6 +1,12 @@
 {
   "entity": {
     "binary_sensor": {
+      "generator_schedule_enabled": {
+        "default": "mdi:calendar-clock",
+        "state": {
+          "off": "mdi:calendar-remove"
+        }
+      },
       "grid_status": {
         "default": "mdi:transmission-tower",
         "state": {
@@ -87,6 +93,21 @@
       },
       "daily_production_phase": {
         "default": "mdi:solar-power"
+      },
+      "generator_admin_state": {
+        "default": "mdi:engine"
+      },
+      "generator_gen_type": {
+        "default": "mdi:engine"
+      },
+      "generator_oper_state": {
+        "default": "mdi:engine"
+      },
+      "generator_requested_mode": {
+        "default": "mdi:engine"
+      },
+      "generator_start_method": {
+        "default": "mdi:engine"
       },
       "grid_status": {
         "default": "mdi:transmission-tower",
