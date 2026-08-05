@@ -1,6 +1,6 @@
 """Tests for the Whois config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -26,6 +26,7 @@ from tests.common import MockConfigEntry
 async def test_full_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    mock_whois: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the full user configuration flow."""
@@ -44,6 +45,7 @@ async def test_full_user_flow(
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2 == snapshot
 
+    mock_whois.assert_called_once_with("example.com", whoisOnly=True)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -110,6 +112,7 @@ async def test_full_flow_with_error(
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert len(mock_whois.mock_calls) == 1
+    mock_whois.assert_called_once_with("example.com", whoisOnly=True)
 
     mock_whois.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
@@ -122,6 +125,10 @@ async def test_full_flow_with_error(
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_whois.mock_calls) == 2
+    assert mock_whois.mock_calls == [
+        call("example.com", whoisOnly=True),
+        call("example.com", whoisOnly=True),
+    ]
 
 
 @pytest.mark.usefixtures("mock_whois")

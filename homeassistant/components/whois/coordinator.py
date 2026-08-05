@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the Whois integration."""
 
+from functools import partial
 from typing import override
 
 from whoisdomain import Domain, query as whoisdomain_query
@@ -40,7 +41,11 @@ class WhoisCoordinator(DataUpdateCoordinator[Domain | None]):
         """Query WHOIS for domain information."""
         try:
             return await self.hass.async_add_executor_job(
-                whoisdomain_query, self.config_entry.data[CONF_DOMAIN]
+                partial(
+                    whoisdomain_query,
+                    self.config_entry.data[CONF_DOMAIN],
+                    whoisOnly=True,
+                )
             )
         except UnknownTldError as ex:
             raise UpdateFailed("Could not set up whois, TLD is unknown") from ex

@@ -1,5 +1,6 @@
 """Config flow to configure the Whois integration."""
 
+from functools import partial
 from typing import Any, override
 
 import voluptuous as vol
@@ -40,7 +41,9 @@ class WhoisFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             try:
-                await self.hass.async_add_executor_job(whoisdomain.query, domain)
+                await self.hass.async_add_executor_job(
+                    partial(whoisdomain.query, domain, whoisOnly=True)
+                )
             except UnknownTldError:
                 errors["base"] = "unknown_tld"
             except WhoisCommandFailedError:
