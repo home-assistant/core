@@ -4200,6 +4200,29 @@ async def test_update_device_via_device_id_self_reference_raises(
     assert device_registry.async_get(device.id).via_device_id is None
 
 
+async def test_update_device_via_device_id_self_reference_raises_before_removal(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A self-referencing via_device_id raises before a removal in the same call."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "device")}
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="A device can not be its own via device"
+    ):
+        device_registry.async_update_device(
+            device.id,
+            remove_config_entry_id=config_entry.entry_id,
+            via_device_id=device.id,
+        )
+
+    # The device was not removed
+    assert device_registry.async_get(device.id) == device
+
+
 async def test_get_or_create_composite_via_device_id_resolved(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

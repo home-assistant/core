@@ -2182,6 +2182,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Can't link device to unknown via device {via_device_id}"
             )
 
+        if via_device_id == device_id:
+            raise HomeAssistantError("A device can not be its own via device")
+
         # A device belongs to exactly one config entry and subentry:
         # - add_config_entry_id (with an optional add_config_subentry_id) records a
         #   transient pending move to that config entry and subentry; on its own it does
@@ -2317,6 +2320,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             via_device_id = self._resolve_via_device_id(
                 via_device_id, effective_config_entry_id
             )
+            # Direct self-references were rejected before the ownership changes above;
+            # this catches a composite via_device_id that resolves to device_id.
             if via_device_id == device_id:
                 raise HomeAssistantError("A device can not be its own via device")
 
