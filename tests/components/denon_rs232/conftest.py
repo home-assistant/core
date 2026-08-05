@@ -99,6 +99,7 @@ def _default_state() -> MockState:
             digital_input=DigitalInputMode.AUTO,
             tuner_band=TunerBand.FM,
             tuner_mode=TunerMode.AUTO,
+            tuner_frequency="009930",
         ),
         zone_2=ZoneState(
             power=True,

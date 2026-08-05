@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -19,7 +18,6 @@ from homeassistant.data_entry_flow import SectionConfig, section
 
 from .const import (
     CONF_MORE_OPTIONS,
-    DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
@@ -81,9 +79,6 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
-                # Name field is no longer allowed in config flow schemas
-                # pylint: disable-next=home-assistant-config-flow-name-field
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Optional(CONF_USERNAME): str,
                 vol.Optional(CONF_PASSWORD): str,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,

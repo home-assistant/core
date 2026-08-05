@@ -13,6 +13,7 @@ from homeassistant.components.device_tracker import (
     ATTR_IN_ZONES,
     ATTR_LOCATION_NAME,
     TrackerEntity,
+    TrackerEntityStateAttribute,
 )
 from homeassistant.components.zone import (
     DOMAIN as ZONE_DOMAIN,
@@ -24,9 +25,8 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     STATE_HOME,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -221,8 +221,11 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
 
         attr = state.attributes
         data = {
-            ATTR_GPS: (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)),
-            ATTR_GPS_ACCURACY: attr.get(ATTR_GPS_ACCURACY),
+            ATTR_GPS: (
+                attr.get(EntityStateAttribute.LATITUDE),
+                attr.get(EntityStateAttribute.LONGITUDE),
+            ),
+            ATTR_GPS_ACCURACY: attr.get(TrackerEntityStateAttribute.GPS_ACCURACY),
             ATTR_BATTERY: attr.get(ATTR_BATTERY_LEVEL),
         }
         data.update({key: attr[key] for key in attr if key in ATTR_KEYS})

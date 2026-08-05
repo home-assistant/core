@@ -4277,6 +4277,37 @@ async def _arm_off_to_on_trigger(
     )
 
 
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_initialize_triggers_home_assistant_start_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test passing the deprecated home_assistant_start parameter is reported."""
+    log = logging.getLogger(__name__)
+
+    @callback
+    def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
+        pass
+
+    # The parameter no longer has any effect; passing it is logged, not raised.
+    assert (
+        await async_initialize_triggers(
+            hass,
+            [],
+            action,
+            "test",
+            "test",
+            log.log,
+            home_assistant_start=True,
+        )
+        is None
+    )
+    assert (
+        "passes `home_assistant_start` to `async_initialize_triggers`, which is "
+        "deprecated and will be removed in Home Assistant 2027.8" in caplog.text
+    )
+
+
 def _set_or_remove_state(
     hass: HomeAssistant, entity_id: str, state: str | None
 ) -> None:
@@ -5866,6 +5897,23 @@ def mock_test_modern_trigger(hass: HomeAssistant) -> None:
             id="calendar",
         ),
         pytest.param(
+            {"platform": "time", "at": "05:00:00"},
+            [],
+            id="time-plain",
+        ),
+        pytest.param(
+            {
+                "platform": "time",
+                "at": [
+                    "05:00:00",
+                    "input_datetime.alarm",
+                    {"entity_id": "sensor.next_alarm", "offset": "-00:05:00"},
+                ],
+            },
+            ["input_datetime.alarm", "sensor.next_alarm"],
+            id="time-entities",
+        ),
+        pytest.param(
             {
                 "platform": "zone",
                 "options": {
@@ -5969,6 +6017,54 @@ async def test_async_extract_entities(
 ) -> None:
     """Test extracting entities from various trigger config shapes."""
     [trigger_conf] = await trigger.async_validate_trigger_config(hass, [trigger_conf])
+    assert trigger.async_extract_entities(trigger_conf) == expected
+
+
+@pytest.mark.parametrize(
+    ("trigger_conf", "expected"),
+    [
+        pytest.param(
+            {
+                "platform": "device",
+                "device_id": "abcdefgh",
+                "domain": "light",
+                "entity_id": "light.kitchen",
+                "type": "turned_on",
+            },
+            ["light.kitchen"],
+            id="resolved-entity-id",
+        ),
+        pytest.param(
+            {
+                "platform": "device",
+                "device_id": "abcdefgh",
+                "domain": "light",
+                "entity_id": "1234567890abcdef1234567890abcdef",
+                "type": "turned_on",
+            },
+            [],
+            id="unresolved-registry-id",
+        ),
+        pytest.param(
+            {
+                "platform": "device",
+                "device_id": "abcdefgh",
+                "domain": "sensor",
+                "type": "battery_level",
+            },
+            [],
+            id="no-entity-id",
+        ),
+    ],
+)
+def test_async_extract_entities_device_trigger(
+    trigger_conf: dict[str, Any], expected: list[str]
+) -> None:
+    """Test extracting entities from device trigger configs.
+
+    Validation resolves the entity registry id to an entity id; extraction
+    ignores unresolved registry ids.
+    """
     assert trigger.async_extract_entities(trigger_conf) == expected
 
 

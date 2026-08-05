@@ -16,7 +16,7 @@ from homeassistant.helpers.trigger import (
     TriggerConfig,
 )
 
-from .const import ATTR_EVENT_TYPE, DOMAIN
+from .const import DOMAIN, EventEntityStateAttribute
 
 CONF_EVENT_TYPE = "event_type"
 
@@ -49,7 +49,10 @@ class EventReceivedTrigger(StatelessEntityTriggerBase):
         report_not_triggered: NotTriggeredReasonReporter,
     ) -> bool:
         """Check if the event type matches one of the configured types."""
-        return state.attributes.get(ATTR_EVENT_TYPE) in self._event_types
+        return (
+            state.attributes.get(EventEntityStateAttribute.EVENT_TYPE)
+            in self._event_types
+        )
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

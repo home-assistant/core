@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from proxmoxer import AuthenticationError
 from proxmoxer.core import ResourceException
 import pytest
@@ -12,14 +13,11 @@ from homeassistant.components.proxmoxve.const import (
     AUTH_OTHER,
     AUTH_PAM,
     CONF_AUTH_METHOD,
-    CONF_CONTAINERS,
-    CONF_NODE,
-    CONF_NODES,
     CONF_REALM,
-    CONF_VMS,
     DOMAIN,
 )
 from homeassistant.components.proxmoxve.coordinator import (
+    DEFAULT_UPDATE_INTERVAL,
     ProxmoxNodesNotFoundError,
     ProxmoxPermissionsError,
 )
@@ -33,52 +31,16 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.issue_registry as ir
-from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_load_json_array_fixture
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_config_import(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test sensor initialization."""
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: [
-                {
-                    CONF_HOST: "127.0.0.1",
-                    CONF_PORT: 8006,
-                    CONF_REALM: "pam",
-                    CONF_USERNAME: "test_user@pam",
-                    CONF_PASSWORD: "test_password",
-                    CONF_VERIFY_SSL: True,
-                    CONF_NODES: [
-                        {
-                            CONF_NODE: "pve1",
-                            CONF_VMS: [100, 101],
-                            CONF_CONTAINERS: [200, 201],
-                        },
-                    ],
-                }
-            ]
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    assert len(issue_registry.issues) == 1
-    assert (HOMEASSISTANT_DOMAIN, "deprecated_yaml") in issue_registry.issues
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
 
 
 @pytest.mark.parametrize(
@@ -219,8 +181,8 @@ async def test_migration_v1_to_v3(
     entry.add_to_hass(hass)
     assert entry.version == 1
 
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     vm_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -441,4 +403,144 @@ async def test_new_container_creates_entity(
             )
         )
         > initial_count
+    )
+
+
+@pytest.mark.parametrize(
+    "child_identifier",
+    ["vm_100", "vm_101", "container_200", "container_201", "storage_local"],
+)
+@pytest.mark.usefixtures("mock_proxmox_client")
+async def test_child_devices_link_to_node(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    child_identifier: str,
+) -> None:
+    """Test that VM/container/storage devices link to their node via via_device_id."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    entry_id = mock_config_entry.entry_id
+    node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_node_node/pve1"), entry_id
+    )
+    assert node_device is not None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_{child_identifier}"), entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == node_device.id
+
+
+async def test_new_node_registers_device_before_children(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a node discovered after setup registers its device before its children.
+
+    Regression test for a race where a newly discovered node's VM/container/
+    storage entities were built before the node's own device was registered,
+    causing via_device_id resolution to raise ValueError.
+
+    Without audit permissions the node surfaces no entities of its own, so the
+    node device is only registered by the coordinator: without that explicit
+    registration its child (the configured VM, whose entities are always
+    created) cannot resolve its via_device_id.
+    """
+    mock_proxmox_client.access.permissions.get.return_value = {}
+
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # setup_integration enables disabled-by-default entities, which schedules a
+    # debounced config entry reload; let it settle so it doesn't coincide with
+    # (and mask, via a fresh setup) the refresh that discovers the new node.
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # A second node, bringing its own VM, appears on the next refresh.
+    pve2_vm = {
+        **(await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN))[0],
+        "vmid": 300,
+        "name": "vm-pve2",
+    }
+    pve2_node_mock = MagicMock()
+    pve2_node_mock.qemu.get.return_value = [pve2_vm]
+    pve2_node_mock.lxc.get.return_value = []
+    pve2_node_mock.storage.get.return_value = []
+    pve2_node_mock.tasks.get.return_value = []
+
+    default_node_mock = mock_proxmox_client._node_mock
+    mock_proxmox_client._nodes_mock.side_effect = lambda node: (
+        pve2_node_mock if node == "pve2" else default_node_mock
+    )
+    mock_proxmox_client.nodes.get.return_value = [
+        node
+        for node in mock_proxmox_client._all_nodes
+        if node["node"] in ("pve1", "pve2")
+    ]
+
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entry_id = mock_config_entry.entry_id
+    node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_node_node/pve2"), entry_id
+    )
+    assert node_device is not None
+
+    vm_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_vm_300"), entry_id
+    )
+    assert vm_device is not None
+    assert vm_device.via_device_id == node_device.id
+
+    # The new node's VM entity was built and populated from the refresh.
+    state = hass.states.get("binary_sensor.vm_pve2_status")
+    assert state is not None
+    assert state.state == STATE_ON
+
+
+async def test_stale_devices_removed(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that devices are removed when their resource disappears."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    entry_id = mock_config_entry.entry_id
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{entry_id}_vm_100")}
+    )
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{entry_id}_vm_101")}
+    )
+
+    # VM 100 is gone, VM 101 remains
+    mock_proxmox_client._node_mock.qemu.get.return_value = [
+        vm
+        for vm in await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
+        if vm["vmid"] != 100
+    ]
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, f"{entry_id}_vm_100")})
+        is None
+    )
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{entry_id}_vm_101")}
     )

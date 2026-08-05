@@ -439,7 +439,7 @@ async def test_update_addon(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -542,7 +542,7 @@ async def test_update_addon_with_backup(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await setup_backup_integration(hass)
@@ -685,7 +685,7 @@ async def test_update_addon_with_backup_removes_old_backups(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await setup_backup_integration(hass)
@@ -748,7 +748,7 @@ async def test_update_core(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -843,7 +843,7 @@ async def test_update_core_with_backup(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await setup_backup_integration(hass)
@@ -882,7 +882,7 @@ async def test_update_addon_with_error(
         assert await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
     await hass.async_block_till_done()
 
@@ -922,7 +922,7 @@ async def test_update_addon_with_backup_and_error(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await setup_backup_integration(hass)
@@ -961,7 +961,7 @@ async def test_update_core_with_error(
         assert await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
     await hass.async_block_till_done()
 
@@ -989,7 +989,7 @@ async def test_update_core_with_backup_and_error(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await setup_backup_integration(hass)
@@ -1019,6 +1019,9 @@ async def test_read_update_config(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test read and update config."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
     assert await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
 

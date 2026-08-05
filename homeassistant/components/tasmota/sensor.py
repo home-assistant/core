@@ -15,15 +15,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfApparentPower,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -32,6 +29,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -211,10 +209,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
 
 SENSOR_UNIT_MAP = {
     hc.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     ),
-    hc.CONCENTRATION_PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
-    hc.CONCENTRATION_PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
+    hc.CONCENTRATION_PARTS_PER_BILLION: UnitOfRatio.PARTS_PER_BILLION,
+    hc.CONCENTRATION_PARTS_PER_MILLION: UnitOfRatio.PARTS_PER_MILLION,
     hc.ELECTRICAL_CURRENT_AMPERE: UnitOfElectricCurrent.AMPERE,
     hc.ELECTRICAL_VOLT_AMPERE: UnitOfApparentPower.VOLT_AMPERE,
     hc.ENERGY_KILO_WATT_HOUR: UnitOfEnergy.KILO_WATT_HOUR,
@@ -222,7 +220,7 @@ SENSOR_UNIT_MAP = {
     hc.LENGTH_CENTIMETERS: UnitOfLength.CENTIMETERS,
     hc.LIGHT_LUX: LIGHT_LUX,
     hc.MASS_KILOGRAMS: UnitOfMass.KILOGRAMS,
-    hc.PERCENTAGE: PERCENTAGE,
+    hc.PERCENTAGE: UnitOfRatio.PERCENTAGE,
     hc.POWER_WATT: UnitOfPower.WATT,
     hc.PRESSURE_HPA: UnitOfPressure.HPA,
     hc.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,

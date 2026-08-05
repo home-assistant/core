@@ -102,7 +102,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     ) -> None:
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
-        self._attr_unique_id = f"{device_id}-climate"
+        self._attr_unique_id = f"{device_id}-climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         self._api = coordinator.api
         gateway_id: str = self._api.gateway_id
@@ -301,7 +301,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             if hvac_mode == HVACMode.AUTO:
                 _check_for_schedule(schedule_is_active, self._last_active_schedule)
                 await self._api.set_schedule_state(
-                    self._location, STATE_ON, desired_schedule
+                    self._location,
+                    desired_schedule,
+                    STATE_ON,
                 )
                 await self._api.set_regulation_mode(self._previous_action_mode)
                 return
@@ -309,7 +311,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             # Transition to manual mode
             if schedule_is_active:
                 await self._api.set_schedule_state(
-                    self._location, STATE_OFF, current_schedule
+                    self._location,
+                    current_schedule,
+                    STATE_OFF,
                 )
                 self._last_active_schedule = current_schedule
             regulation = self._regulation_mode_for_hvac(hvac_mode)
@@ -319,14 +323,16 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         # Common - transition from auto = schedule off
         if self.hvac_mode == HVACMode.AUTO:
             await self._api.set_schedule_state(
-                self._location, STATE_OFF, current_schedule
+                self._location,
+                current_schedule,
+                STATE_OFF,
             )
             self._last_active_schedule = current_schedule
             return
 
         # Common - transition to auto = schedule on
         _check_for_schedule(schedule_is_active, self._last_active_schedule)
-        await self._api.set_schedule_state(self._location, STATE_ON, desired_schedule)
+        await self._api.set_schedule_state(self._location, desired_schedule, STATE_ON)
 
     @plugwise_command
     @override

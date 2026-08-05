@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -31,7 +30,12 @@ from .const import (
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .schema import SwitchSchema
 from .storage.const import CONF_ENTITY, CONF_GA_SWITCH
@@ -79,17 +83,15 @@ class _KnxSwitch(SwitchEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if not self._device.switch.readable and (
-            last_state := await self.async_get_last_state()
-        ):
+        if last_state := await self.async_get_last_state():
             if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 self._device.switch.value = last_state.state == STATE_ON
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return bool(self._device.state)
+        return self._device.state
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -119,9 +121,8 @@ class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.switch.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            unique_id=build_yaml_unique_id(self._device.switch.group_address),
+            entity_config=config,
         )
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 

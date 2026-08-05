@@ -608,7 +608,7 @@ async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=[],
     ):
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
         with pytest.raises(HomeAssistantError):
             await network.async_get_source_ip(hass, MDNS_TARGET_IP)

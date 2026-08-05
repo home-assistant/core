@@ -284,6 +284,12 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         """Send vacuum to a specific target point."""
         await self.send(RoborockCommand.APP_GOTO_TARGET, [x, y])
 
+    async def async_set_vacuum_zoned_cleaning(
+        self, x1: int, y1: int, x2: int, y2: int, repeats: int
+    ) -> None:
+        """Clean the specified zone."""
+        await self.send(RoborockCommand.APP_ZONED_CLEAN, [[x1, y1, x2, y2, repeats]])
+
     @override
     async def async_get_segments(self) -> list[Segment]:
         """Get the segments that can be cleaned."""
@@ -552,6 +558,12 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         """Set the vacuum to go to a specific position."""
         raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)
 
+    async def async_set_vacuum_zoned_cleaning(
+        self, x1: int, y1: int, x2: int, y2: int, repeats: int
+    ) -> None:
+        """Clean the specified zone."""
+        raise ServiceNotSupported(DOMAIN, "set_vacuum_zoned_cleaning", self.entity_id)
+
 
 class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     """Representation of a Roborock Q10 vacuum."""
@@ -565,6 +577,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_AREA
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
@@ -703,6 +716,30 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
             ) from err
 
     @override
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned."""
+        return [
+            Segment(id=str(room.id), name=room.name)
+            for room in self.coordinator.api.map.rooms
+        ]
+
+    @override
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Clean the specified segments."""
+        try:
+            await self.coordinator.api.vacuum.clean_segments(
+                [int(seg_id) for seg_id in segment_ids]
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "clean_segments",
+                },
+            ) from err
+
+    @override
     async def async_send_command(
         self,
         command: str,
@@ -744,3 +781,9 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
         """Set the vacuum to go to a specific position."""
         raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)
+
+    async def async_set_vacuum_zoned_cleaning(
+        self, x1: int, y1: int, x2: int, y2: int, repeats: int
+    ) -> None:
+        """Clean the specified zone."""
+        raise ServiceNotSupported(DOMAIN, "set_vacuum_zoned_cleaning", self.entity_id)

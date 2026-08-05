@@ -111,7 +111,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     for subentry in entry.subentries.values():
         sensor = dict(subentry.data)
-        sensor.update(sensor.pop("advanced", {}))
+        sensor.update(sensor.pop("additional", {}))
         sensor[CONF_UNIQUE_ID] = subentry.subentry_id
         sensor[CONF_NAME] = subentry.title
 

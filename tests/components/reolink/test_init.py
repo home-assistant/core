@@ -339,6 +339,36 @@ async def test_removing_chime(
     assert sorted(device_models) == sorted(expected_models)
 
 
+async def test_via_device_id_chain(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_chime: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the host -> camera -> chime devices are linked via via_device_id."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    host_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_UID), config_entry.entry_id
+    )
+    assert host_device is not None
+
+    camera_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_{TEST_UID_CAM}"), config_entry.entry_id
+    )
+    assert camera_device is not None
+    assert camera_device.via_device_id == host_device.id
+
+    chime_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_chime{reolink_chime.dev_id}"), config_entry.entry_id
+    )
+    assert chime_device is not None
+    assert chime_device.via_device_id == camera_device.id
+
+
 @pytest.mark.parametrize(
     (
         "original_id",
@@ -482,6 +512,74 @@ async def test_migrate_entity_ids(
             is None
         )
     assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
+
+
+async def test_migrate_entity_id_zoom(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity ids that need to be migrated."""
+    domain = Platform.NUMBER
+    original_id = f"{TEST_UID}_0_zoom"
+    new_id = f"{TEST_UID}_1_zoom"
+
+    def mock_supported(ch, capability):
+        if capability == "UID" and ch is None:
+            return True
+        if capability == "UID":
+            return False
+        if capability in ["zoom_basic", "zoom"] and ch == 0:
+            return False
+        return True
+
+    reolink_host.channels = [0]
+    reolink_host.stream_channels = [0, 1]
+    reolink_host.is_dual_lens = True
+    reolink_host.supported = mock_supported
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=new_id,
+        config_entry=config_entry,
+        suggested_object_id=new_id,
+        disabled_by=None,
+        original_name="NEEDS_REMOVAL",
+    )
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=f"{TEST_UID}_0_zoom",
+        config_entry=config_entry,
+        suggested_object_id=original_id,
+        disabled_by=None,
+        original_name="Zoom",
+    )
+
+    entity_registry.async_get_or_create(
+        domain=Platform.UPDATE,
+        platform=DOMAIN,
+        unique_id=f"{TEST_UID}_firmware",
+        config_entry=config_entry,
+        suggested_object_id=f"{TEST_UID}_firmware",
+        disabled_by=None,
+    )
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
+    entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
+    assert entity_registry.async_get(entity_id).original_name == "NEEDS_REMOVAL"
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
+    entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
+    assert entity_registry.async_get(entity_id).original_name == "Zoom"
 
 
 async def test_migrate_with_already_existing_device(

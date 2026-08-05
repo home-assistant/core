@@ -86,7 +86,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
             self._attr_default_language = self._attr_supported_languages[0]
 
         self._attr_name = self._tts_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-tts"
+        self._attr_unique_id = f"{config_entry.entry_id}-tts"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @callback
     @override
