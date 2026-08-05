@@ -35,7 +35,7 @@ async def async_setup_entry(
     # Add a device for the SAM itself.
     sam_uid = names.sam_device_uid(entry)
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    sam_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, sam_uid)},
         manufacturer="Bryant",
@@ -55,7 +55,7 @@ async def async_setup_entry(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, names.system_device_uid(sam_uid, sys_id))},
-            via_device=(DOMAIN, names.sam_device_uid(entry)),
+            via_device_id=sam_device.id,
             manufacturer="Bryant",
             name=f"System {sys_id}",
         )

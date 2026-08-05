@@ -12,6 +12,7 @@ from homeassistant.components.subaru.const import (
     VEHICLE_HAS_REMOTE_SERVICE,
     VEHICLE_HAS_REMOTE_START,
     VEHICLE_HAS_SAFETY_SERVICE,
+    VEHICLE_HEALTH,
     VEHICLE_MODEL_NAME,
     VEHICLE_MODEL_YEAR,
     VEHICLE_NAME,
@@ -107,7 +108,10 @@ VEHICLE_STATUS_EV = {
         "WINDOW_SUNROOF_STATUS": "UNKNOWN",
         "LATITUDE": 40.0,
         "LONGITUDE": -100.0,
-    }
+    },
+    VEHICLE_HEALTH: {
+        "RECOMMENDED_TIRE_PRESSURE": {"FRONT_TIRES": 35, "REAR_TIRES": 33},
+    },
 }
 
 
@@ -144,12 +148,10 @@ VEHICLE_STATUS_G3 = {
 EXPECTED_STATE_EV_IMPERIAL = {
     "AVG_FUEL_CONSUMPTION": "51.1",
     "DISTANCE_TO_EMPTY_FUEL": "170",
-    "EV_CHARGER_STATE_TYPE": "CHARGING",
     "EV_CHARGE_SETTING_AMPERE_TYPE": "MAXIMUM",
     "EV_CHARGE_VOLT_TYPE": "CHARGE_LEVEL_1",
     "EV_DISTANCE_TO_EMPTY": "1",
     "EV_IS_PLUGGED_IN": "UNLOCKED_CONNECTED",
-    "EV_STATE_OF_CHARGE_MODE": "EV_MODE",
     "EV_STATE_OF_CHARGE_PERCENT": "20",
     "EV_TIME_TO_FULLY_CHARGED_UTC": "2020-07-24T03:06:40+00:00",
     "ODOMETER": "1234",
@@ -159,7 +161,9 @@ EXPECTED_STATE_EV_IMPERIAL = {
     "TYRE_PRESSURE_FRONT_RIGHT": "31.9",
     "TYRE_PRESSURE_REAR_LEFT": "32.6",
     "TYRE_PRESSURE_REAR_RIGHT": "unknown",
-    "VEHICLE_STATE_TYPE": "IGNITION_OFF",
+    "VEHICLE_STATE_TYPE": "ignition_off",
+    "recommended_tire_pressure_front": "35",
+    "recommended_tire_pressure_rear": "33",
     "LATITUDE": 40.0,
     "LONGITUDE": -100.0,
 }
@@ -167,12 +171,10 @@ EXPECTED_STATE_EV_IMPERIAL = {
 EXPECTED_STATE_EV_METRIC = {
     "AVG_FUEL_CONSUMPTION": "4.6",
     "DISTANCE_TO_EMPTY_FUEL": "273.59",
-    "EV_CHARGER_STATE_TYPE": "CHARGING",
     "EV_CHARGE_SETTING_AMPERE_TYPE": "MAXIMUM",
     "EV_CHARGE_VOLT_TYPE": "CHARGE_LEVEL_1",
     "EV_DISTANCE_TO_EMPTY": "1.61",
     "EV_IS_PLUGGED_IN": "UNLOCKED_CONNECTED",
-    "EV_STATE_OF_CHARGE_MODE": "EV_MODE",
     "EV_STATE_OF_CHARGE_PERCENT": "20",
     "EV_TIME_TO_FULLY_CHARGED_UTC": "2020-07-24T03:06:40+00:00",
     "ODOMETER": "1985.93",
@@ -182,7 +184,9 @@ EXPECTED_STATE_EV_METRIC = {
     "TYRE_PRESSURE_FRONT_RIGHT": "219.94",
     "TYRE_PRESSURE_REAR_LEFT": "224.77",
     "TYRE_PRESSURE_REAR_RIGHT": "unknown",
-    "VEHICLE_STATE_TYPE": "IGNITION_OFF",
+    "VEHICLE_STATE_TYPE": "ignition_off",
+    "recommended_tire_pressure_front": "241.32",
+    "recommended_tire_pressure_rear": "227.53",
     "LATITUDE": 40.0,
     "LONGITUDE": -100.0,
 }
@@ -191,12 +195,10 @@ EXPECTED_STATE_EV_METRIC = {
 EXPECTED_STATE_EV_UNAVAILABLE = {
     "AVG_FUEL_CONSUMPTION": "unavailable",
     "DISTANCE_TO_EMPTY_FUEL": "unavailable",
-    "EV_CHARGER_STATE_TYPE": "unavailable",
     "EV_CHARGE_SETTING_AMPERE_TYPE": "unavailable",
     "EV_CHARGE_VOLT_TYPE": "unavailable",
     "EV_DISTANCE_TO_EMPTY": "unavailable",
     "EV_IS_PLUGGED_IN": "unavailable",
-    "EV_STATE_OF_CHARGE_MODE": "unavailable",
     "EV_STATE_OF_CHARGE_PERCENT": "unavailable",
     "EV_TIME_TO_FULLY_CHARGED_UTC": "unavailable",
     "ODOMETER": "unavailable",
@@ -207,6 +209,8 @@ EXPECTED_STATE_EV_UNAVAILABLE = {
     "TYRE_PRESSURE_REAR_LEFT": "unavailable",
     "TYRE_PRESSURE_REAR_RIGHT": "unavailable",
     "VEHICLE_STATE_TYPE": "unavailable",
+    "recommended_tire_pressure_front": "unavailable",
+    "recommended_tire_pressure_rear": "unavailable",
     "LATITUDE": "unavailable",
     "LONGITUDE": "unavailable",
 }

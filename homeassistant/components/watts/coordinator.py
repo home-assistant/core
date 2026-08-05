@@ -148,12 +148,11 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         for device_id in stale_device_ids:
             _LOGGER.info("Removing stale device: %s", device_id)
 
-            device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+            device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, device_id), self.config_entry.entry_id
+            )
             if device:
-                device_registry.async_update_device(
-                    device_id=device.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                device_registry.async_remove_device(device.id)
 
     @property
     def device_ids(self) -> list[str]:

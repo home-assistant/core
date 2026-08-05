@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_VIA_DEVICE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
@@ -31,7 +30,10 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    async_get_device_id_by_identifier,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
@@ -834,13 +836,15 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
             identifiers={(DOMAIN, device_unique_id)},
             name=description.device_name,
             manufacturer="HomeWizard",
-            model=coordinator.data.device.product_type,
+            model_id=coordinator.data.device.product_type,
+            model=coordinator.data.device.model_name,
             serial_number=device_unique_id,
         )
         if coordinator.data.device.serial is not None:
-            self._attr_device_info[ATTR_VIA_DEVICE] = (
-                DOMAIN,
-                coordinator.data.device.serial,
+            self._attr_device_info["via_device_id"] = async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.data.device.serial),
+                config_entry_id=coordinator.config_entry.entry_id,
             )
 
     @property

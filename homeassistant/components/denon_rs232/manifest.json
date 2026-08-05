@@ -9,5 +9,5 @@
   "iot_class": "local_push",
   "loggers": ["denon_rs232"],
   "quality_scale": "bronze",
-  "requirements": ["denon-rs232==4.1.0"]
+  "requirements": ["denon-rs232==4.2.1"]
 }

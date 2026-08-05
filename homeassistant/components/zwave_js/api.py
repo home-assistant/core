@@ -90,6 +90,7 @@ from .const import (
 from .helpers import (
     CannotConnect,
     async_enable_statistics,
+    async_get_config_entry_from_node,
     async_get_node_from_device_id,
     async_get_provisioning_entry_from_device_id,
     async_get_version_info,
@@ -777,6 +778,7 @@ async def websocket_add_node(
             node.on("interview started", forward_event),
             node.on("interview completed", forward_event),
             node.on("interview stage completed", forward_stage),
+            node.on("interview progress", forward_progress),
             node.on("interview failed", forward_event),
         ]
         unsubs.extend(interview_unsubs)
@@ -810,6 +812,19 @@ async def websocket_add_node(
         connection.send_message(
             websocket_api.event_message(
                 msg[ID], {"event": event["event"], "stage": event["stageName"]}
+            )
+        )
+
+    @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
             )
         )
 
@@ -1122,6 +1137,14 @@ async def websocket_provision_smart_start_node(
             manufacturer = device_info.manufacturer
             model = device_info.label
 
+        via_device_id: str | None = None
+        if driver.controller.own_node:
+            via_device_id = dr.async_get_device_id_by_identifier(
+                hass,
+                get_device_id(driver, driver.controller.own_node),
+                config_entry_id=entry.entry_id,
+            )
+
         # Create an empty device
         device = dev_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
@@ -1129,9 +1152,7 @@ async def websocket_provision_smart_start_node(
             name=device_name,
             manufacturer=manufacturer,
             model=model,
-            via_device=get_device_id(driver, driver.controller.own_node)
-            if driver.controller.own_node
-            else None,
+            via_device_id=via_device_id,
         )
         dev_reg.async_update_device(
             device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
@@ -1545,6 +1566,19 @@ async def websocket_replace_failed_node(
         )
 
     @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
+            )
+        )
+
+    @callback
     def node_found(event: dict) -> None:
         node = event["node"]
         node_details = {
@@ -1563,6 +1597,7 @@ async def websocket_replace_failed_node(
             node.on("interview started", forward_event),
             node.on("interview completed", forward_event),
             node.on("interview stage completed", forward_stage),
+            node.on("interview progress", forward_progress),
             node.on("interview failed", forward_event),
         ]
         unsubs.extend(interview_unsubs)
@@ -1863,11 +1898,25 @@ async def websocket_refresh_node_info(
             )
         )
 
+    @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
+            )
+        )
+
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         node.on("interview started", forward_event),
         node.on("interview completed", forward_event),
         node.on("interview stage completed", forward_stage),
+        node.on("interview progress", forward_progress),
         node.on("interview failed", forward_event),
     ]
 
@@ -2738,7 +2787,10 @@ def _get_node_statistics_dict(
         """Convert a node to a device id."""
         driver = node.client.driver
         assert driver
-        device = dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
+        entry = async_get_config_entry_from_node(hass, node)
+        device = dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, node), entry.entry_id
+        )
         assert device
         return device.id
 

@@ -43,7 +43,7 @@ class IPWebcamCamera(MjpegCamera):
             username=coordinator.config_entry.data.get(CONF_USERNAME),
             password=coordinator.config_entry.data.get(CONF_PASSWORD, ""),
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-camera"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-camera"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=coordinator.config_entry.data[CONF_HOST],

@@ -5,12 +5,8 @@ from typing import TYPE_CHECKING, override
 from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
 
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
-    ATTR_VIA_DEVICE,
-)
+from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME, ATTR_SUGGESTED_AREA
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -56,7 +52,7 @@ class NexiaThermostatEntity(NexiaEntity):
         thermostat_id = thermostat.thermostat_id
         self._attr_device_info = DeviceInfo(
             configuration_url=self.coordinator.nexia_home.root_url,
-            identifiers={(DOMAIN, thermostat_id)},
+            identifiers={(DOMAIN, thermostat_id)},  # type: ignore[arg-type] # until fix issue #139773
             manufacturer=MANUFACTURER,
             model=thermostat.get_model(),
             name=thermostat.get_name(),
@@ -110,10 +106,14 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         if TYPE_CHECKING:
             assert self._attr_device_info is not None
         self._attr_device_info |= {
-            ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},
+            ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
             ATTR_NAME: zone_name,
             ATTR_SUGGESTED_AREA: zone_name,
-            ATTR_VIA_DEVICE: (DOMAIN, zone.thermostat.thermostat_id),
+            "via_device_id": dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, zone.thermostat.thermostat_id),  # type: ignore[arg-type] # until fix issue #139773
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
         }
         self._zone_signal = f"{SIGNAL_ZONE_UPDATE}-{zone.zone_id}"
 

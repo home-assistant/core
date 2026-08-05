@@ -2,6 +2,7 @@
 
 from typing import override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
@@ -9,6 +10,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
     MediaPlayerState,
 )
 from homeassistant.core import HomeAssistant
@@ -53,7 +55,7 @@ async def async_setup_entry(
 
     async_add_entities(
         TeslemetryVehiclePollingMediaEntity(vehicle, entry.runtime_data.scopes)
-        if vehicle.poll or vehicle.firmware < "2025.2.6"
+        if vehicle.poll or not firmware_at_least(vehicle.firmware, "2025.2.6")
         else TeslemetryStreamingMediaEntity(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
     )
@@ -200,14 +202,30 @@ class TeslemetryStreamingMediaEntity(
                 self._attr_state = MediaPlayerState(state.state)
             except ValueError:
                 self._attr_state = None
-            self._attr_volume_level = state.attributes.get("volume_level")
-            self._attr_media_title = state.attributes.get("media_title")
-            self._attr_media_artist = state.attributes.get("media_artist")
-            self._attr_media_album_name = state.attributes.get("media_album_name")
-            self._attr_media_playlist = state.attributes.get("media_playlist")
-            self._attr_media_duration = state.attributes.get("media_duration")
-            self._attr_media_position = state.attributes.get("media_position")
-            self._attr_source = state.attributes.get("source")
+            self._attr_volume_level = state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
+            )
+            self._attr_media_title = state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_TITLE
+            )
+            self._attr_media_artist = state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_ARTIST
+            )
+            self._attr_media_album_name = state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME
+            )
+            self._attr_media_playlist = state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST
+            )
+            self._attr_media_duration = state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_DURATION
+            )
+            self._attr_media_position = state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_POSITION
+            )
+            self._attr_source = state.attributes.get(
+                MediaPlayerEntityStateAttribute.INPUT_SOURCE
+            )
 
             self.async_write_ha_state()
 

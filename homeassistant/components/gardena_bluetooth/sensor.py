@@ -11,6 +11,7 @@ from gardena_bluetooth.const import (
     Battery,
     EventHistory,
     FlowStatistics,
+    Pump,
     Sensor,
     Spray,
     Valve,
@@ -28,6 +29,8 @@ from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
     EntityCategory,
+    UnitOfPressure,
+    UnitOfTemperature,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
@@ -74,10 +77,14 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=Valve.activation_reason.unique_id,
         translation_key="activation_reason",
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
         char=Valve.activation_reason,
+        get=lambda x: (
+            x.name.lower() if isinstance(x, Valve.activation_reason.enum) else None
+        ),
+        options=[member.name.lower() for member in Valve.activation_reason.enum],
     ),
     GardenaBluetoothSensorEntityDescription(
         key=Battery.battery_level.unique_id,
@@ -163,6 +170,24 @@ DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         char=FlowStatistics.last_reset,
         get=_get_timestamp,
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key=Pump.tank_preassure.unique_id,
+        translation_key="tank_pressure",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
+        suggested_unit_of_measurement=UnitOfPressure.BAR,
+        suggested_display_precision=2,
+        char=Pump.tank_preassure,
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key=Pump.water_temperature.unique_id,
+        translation_key="water_temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        char=Pump.water_temperature,
     ),
     GardenaBluetoothSensorEntityDescription(
         key=Spray.current_distance.unique_id,

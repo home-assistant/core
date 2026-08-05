@@ -61,7 +61,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import MusicAssistantEntity
-from .helpers import catch_musicassistant_error
+from .helpers import async_resolve_mass_username, catch_musicassistant_error
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
@@ -460,22 +460,28 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         username: str | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
-        # verify username availability
-        if username is not None:
-            users = await self.mass.auth.list_users()
+        # An explicit username is validated strictly; when omitted we default to
+        # the Home Assistant user that made the call (best-effort, never raises).
+        user_id = self._context.user_id if self._context is not None else None
+        if username is not None or user_id is not None:
             available_usernames = [
                 user.username
-                for user in users
+                for user in await self.mass.auth.list_users()
                 if user.enabled and user.role != UserRole.GUEST
             ]
-            if username not in available_usernames:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_username",
-                    translation_placeholders={
-                        "username": username,
-                        "available_usernames": ", ".join(available_usernames),
-                    },
+            if username is not None:
+                if username not in available_usernames:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_username",
+                        translation_placeholders={
+                            "username": username,
+                            "available_usernames": ", ".join(available_usernames),
+                        },
+                    )
+            elif user_id is not None:
+                username = await async_resolve_mass_username(
+                    self.hass, user_id, available_usernames
                 )
 
         media_uris: list[str] = []

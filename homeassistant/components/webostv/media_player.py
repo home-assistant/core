@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -155,7 +155,8 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         ):
             self._supported_features = (
                 state.attributes.get(
-                    ATTR_SUPPORTED_FEATURES, MediaPlayerEntityFeature(0)
+                    EntityStateAttribute.SUPPORTED_FEATURES,
+                    MediaPlayerEntityFeature(0),
                 )
                 & ~MediaPlayerEntityFeature.TURN_ON
             )
@@ -173,11 +174,37 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     def _update_states(self) -> None:
         """Update entity state attributes."""
         tv_state = self._client.tv_state
+
+        self._attr_extra_state_attributes = {}
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, cast(str, self.unique_id))},
+            manufacturer="LG",
+            name=self._device_name,
+        )
+
+        if tv_state.is_on or not self._supported_features:
+            supported = SUPPORT_WEBOSTV
+            if tv_state.sound_output == "external_speaker":
+                supported = supported | SUPPORT_WEBOSTV_VOLUME
+            elif tv_state.sound_output != "lineout":
+                supported = (
+                    supported
+                    | SUPPORT_WEBOSTV_VOLUME
+                    | MediaPlayerEntityFeature.VOLUME_SET
+                )
+
+            self._supported_features = supported
+
+        if not tv_state.is_on:
+            self._attr_state = MediaPlayerState.OFF
+            self._attr_assumed_state = False
+            return
+
+        self._attr_state = MediaPlayerState.ON
+
         self._update_sources()
 
-        self._attr_state = (
-            MediaPlayerState.ON if tv_state.is_on else MediaPlayerState.OFF
-        )
         self._attr_is_volume_muted = cast(bool, tv_state.muted)
 
         self._attr_volume_level = None
@@ -206,27 +233,8 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                 icon = tv_state.apps[tv_state.current_app_id]["icon"]
             self._attr_media_image_url = icon
 
-        if self.state != MediaPlayerState.OFF or not self._supported_features:
-            supported = SUPPORT_WEBOSTV
-            if tv_state.sound_output == "external_speaker":
-                supported = supported | SUPPORT_WEBOSTV_VOLUME
-            elif tv_state.sound_output != "lineout":
-                supported = (
-                    supported
-                    | SUPPORT_WEBOSTV_VOLUME
-                    | MediaPlayerEntityFeature.VOLUME_SET
-                )
-
-            self._supported_features = supported
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, cast(str, self.unique_id))},
-            manufacturer="LG",
-            name=self._device_name,
-        )
-
         self._attr_assumed_state = True
-        if tv_state.is_on and tv_state.media_state:
+        if tv_state.media_state:
             self._attr_assumed_state = False
             for entry in tv_state.media_state:
                 if entry.get("playState") == "playing":
@@ -237,20 +245,18 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                     self._attr_state = MediaPlayerState.IDLE
 
         tv_info = self._client.tv_info
-        if self.state != MediaPlayerState.OFF:
-            maj_v = tv_info.software.get("major_ver")
-            min_v = tv_info.software.get("minor_ver")
-            if maj_v and min_v:
-                self._attr_device_info["sw_version"] = f"{maj_v}.{min_v}"
+        maj_v = tv_info.software.get("major_ver")
+        min_v = tv_info.software.get("minor_ver")
+        if maj_v and min_v:
+            self._attr_device_info["sw_version"] = f"{maj_v}.{min_v}"
 
-            if model := tv_info.system.get("modelName"):
-                self._attr_device_info["model"] = model
+        if model := tv_info.system.get("modelName"):
+            self._attr_device_info["model"] = model
 
-            if serial_number := tv_info.system.get("serialNumber"):
-                self._attr_device_info["serial_number"] = serial_number
+        if serial_number := tv_info.system.get("serialNumber"):
+            self._attr_device_info["serial_number"] = serial_number
 
-        self._attr_extra_state_attributes = {}
-        if tv_state.sound_output is not None or self.state != MediaPlayerState.OFF:
+        if tv_state.sound_output is not None:
             self._attr_extra_state_attributes = {
                 ATTR_SOUND_OUTPUT: tv_state.sound_output
             }

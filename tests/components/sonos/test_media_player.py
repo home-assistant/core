@@ -13,6 +13,7 @@ from soco.data_structures import (
     DidlPlaylistContainer,
     SearchResult,
 )
+from soco.exceptions import SoCoUPnPException
 from sonos_websocket.exception import SonosWebsocketError
 from syrupy.assertion import SnapshotAssertion
 
@@ -324,6 +325,69 @@ async def test_play_media_library_content_error(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("error", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            OSError("Network down"),
+            "call_failed",
+            {
+                "target": "media_player.zone_a",
+                "error": "Network down",
+            },
+            id="generic-error",
+        ),
+        pytest.param(
+            SoCoUPnPException("UPnP Error 701 received", "701", ""),
+            "upnp_call_failed",
+            {
+                "target": "media_player.zone_a",
+                "error": "UPnP Error 701 received",
+                "error_code": "701",
+            },
+            id="upnp-error",
+        ),
+        pytest.param(
+            SoCoUPnPException("UPnP Error 800 received", "800", ""),
+            "upnp_call_failed_music_service_unavailable",
+            {
+                "target": "media_player.zone_a",
+                "error": "UPnP Error 800 received",
+                "error_code": "800",
+            },
+            id="upnp-error-800-music-service-unavailable",
+        ),
+    ],
+)
+async def test_play_media_error_translation(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    error: Exception,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> None:
+    """Test play_media surfaces translated error details for failures."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    soco_mock.play_uri.side_effect = error
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "track",
+                ATTR_MEDIA_CONTENT_ID: _track_url,
+                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == translation_placeholders
 
 
 _track_url = "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%I%20Should%20Have%20Known%20Better.mp3"

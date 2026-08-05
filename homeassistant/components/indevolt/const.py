@@ -161,5 +161,7 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         IndevoltSolar.CUMULATIVE_PRODUCTION,
         IndevoltBattery.GEN_2_CYCLE_COUNT,
         IndevoltBattery.GEN_2_TRANSFORMER_TEMPERATURE,
+        IndevoltBattery.REMAINING_CHARGING_TIME,
+        IndevoltBattery.REMAINING_DISCHARGING_TIME,
     ],
 }

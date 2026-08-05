@@ -62,6 +62,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -879,23 +880,41 @@ async def test_reauth_reconnect(
 
 async def test_update_media_state(hass: HomeAssistant, client) -> None:
     """Test updating media state."""
+    client.tv_state.media_state = []
     await setup_webostv(hass)
 
+    # on but no media state, assumed state is set
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == MediaPlayerState.ON
+    assert state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
+
+    # playing state, assumed state is not set
     client.tv_state.media_state = [{"playState": "playing"}]
     await client.mock_state_update()
-    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == MediaPlayerState.PLAYING
+    assert not state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
 
+    # paused state, assumed state is not set
     client.tv_state.media_state = [{"playState": "paused"}]
     await client.mock_state_update()
-    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PAUSED
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == MediaPlayerState.PAUSED
+    assert not state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
 
+    # unloaded state, assumed state is not set
     client.tv_state.media_state = [{"playState": "unloaded"}]
     await client.mock_state_update()
-    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.IDLE
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == MediaPlayerState.IDLE
+    assert not state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
 
+    # off state, assumed state is not set
     client.tv_state.is_on = False
     await client.mock_state_update()
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == MediaPlayerState.OFF
+    assert not state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
 
 
 async def test_availability(

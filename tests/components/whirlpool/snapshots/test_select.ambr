@@ -65,3 +65,216 @@
     'state': '0',
   })
 # ---
+# name: test_all_entities[select.dual_cavity_oven_lower_oven_cook_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.dual_cavity_oven_lower_oven_cook_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lower oven cook mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lower oven cook mode',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_cook_mode_lower',
+    'unique_id': 'said_oven_dual-cook_mode_lower',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.dual_cavity_oven_lower_oven_cook_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual cavity oven Lower oven cook mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dual_cavity_oven_lower_oven_cook_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'bake',
+  })
+# ---
+# name: test_all_entities[select.dual_cavity_oven_upper_oven_cook_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.dual_cavity_oven_upper_oven_cook_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Upper oven cook mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Upper oven cook mode',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_cook_mode_upper',
+    'unique_id': 'said_oven_dual-cook_mode_upper',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.dual_cavity_oven_upper_oven_cook_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual cavity oven Upper oven cook mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dual_cavity_oven_upper_oven_cook_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'bake',
+  })
+# ---
+# name: test_all_entities[select.single_cavity_oven_cook_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.single_cavity_oven_cook_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cook mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cook mode',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_cook_mode',
+    'unique_id': 'said_oven_single-cook_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.single_cavity_oven_cook_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Single cavity oven Cook mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.single_cavity_oven_cook_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'bake',
+  })
+# ---

@@ -20,17 +20,17 @@ from homeassistant.components.portainer.services import (
     ATTR_TIMEOUT,
     SERVICE_PRUNE_IMAGES,
     SERVICE_RECREATE_CONTAINER,
-    _get_endpoint_id,
+    _async_get_device,
 )
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import setup_integration
 from .conftest import TEST_CONTAINER_ID, TEST_CONTAINER_NAME, TEST_ENTRY
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
 
 TEST_ENDPOINT_ID = 1
 TEST_DEVICE_IDENTIFIER = f"{TEST_ENTRY}_{TEST_ENDPOINT_ID}"
@@ -157,20 +157,47 @@ async def test_service_recreate_container(
     )
 
 
+async def test_service_recreate_container_non_admin_rejected(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test recreate container service requires admin access."""
+
+    await setup_integration(hass, mock_config_entry)
+    container = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER)}
+    )
+    assert container is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_RECREATE_CONTAINER,
+        {ATTR_CONTAINER_DEVICE_ID: container.id, ATTR_PULL_IMAGE: True},
+        blocking=False,
+        context=Context(user_id=hass_read_only_user.id),
+    )
+    await hass.async_block_till_done()
+
+    mock_portainer_client.container_recreate.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("exception", "translation_key"),
     [
         (
             PortainerAuthenticationError("auth"),
-            "invalid_auth_no_details",
+            "invalid_auth",
         ),
         (
             PortainerConnectionError("conn"),
-            "cannot_connect_no_details",
+            "cannot_connect",
         ),
         (
             PortainerTimeoutError("timeout"),
-            "timeout_connect_no_details",
+            "timeout_connect",
         ),
     ],
 )
@@ -297,17 +324,14 @@ async def test_service_prune_images_device_gone(
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test _get_endpoint_id raises when the device ID no longer exists in the registry."""
+    """Test _async_get_device raises when the device ID no longer exists in the registry."""
     await setup_integration(hass, mock_config_entry)
-    loaded_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    assert loaded_entry is not None
 
     mock_call = MagicMock()
     mock_call.hass = hass
-    mock_call.data = {ATTR_DEVICE_ID: "nonexistent_device_id"}
 
     with pytest.raises(ServiceValidationError):
-        await _get_endpoint_id(mock_call, loaded_entry)
+        _async_get_device(mock_call, "nonexistent_device_id")
     mock_portainer_client.images_prune.assert_not_called()
 
 
