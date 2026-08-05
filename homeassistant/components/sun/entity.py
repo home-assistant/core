@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
-from astral import Observer
+from astral import Observer, SunDirection
 import astral.sun
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,6 +30,7 @@ from .const import (
     ELEVATION_NAUTICAL,
     SIGNAL_EVENTS_CHANGED,
     SIGNAL_POSITION_CHANGED,
+    SIGNAL_DURATIONS_CHANGED,
     STATE_ABOVE_HORIZON,
     STATE_BELOW_HORIZON,
 )
@@ -49,6 +50,10 @@ STATE_ATTR_NEXT_MIDNIGHT = "next_midnight"
 STATE_ATTR_NEXT_NOON = "next_noon"
 STATE_ATTR_NEXT_RISING = "next_rising"
 STATE_ATTR_NEXT_SETTING = "next_setting"
+STATE_ATTR_DAYLIGHT_DURATION = "daylight_duration"
+STATE_ATTR_NIGHT_DURATION = "night_duration"
+STATE_ATTR_TWILIGHT_SUNRISE_DURATION = "twilight_sunrise_duration"
+STATE_ATTR_TWILIGHT_SUNSET_DURATION = "twilight_sunset_duration"
 
 # The algorithm used here is somewhat complicated. It aims to cut down
 # the number of sensor updates over the day. It's documented best in
@@ -101,6 +106,10 @@ class Sun(Entity):
             STATE_ATTR_NEXT_NOON,
             STATE_ATTR_NEXT_RISING,
             STATE_ATTR_NEXT_SETTING,
+            STATE_ATTR_DAYLIGHT_DURATION,
+            STATE_ATTR_NIGHT_DURATION,
+            STATE_ATTR_TWILIGHT_SUNRISE_DURATION,
+            STATE_ATTR_TWILIGHT_SUNSET_DURATION,
         }
     )
 
@@ -117,6 +126,10 @@ class Sun(Entity):
     solar_elevation: float
     solar_azimuth: float
     rising: bool
+    daylight_duration: timedelta
+    night_duration: timedelta
+    twilight_sunrise_duration: timedelta
+    twilight_sunset_duration: timedelta
     _next_change: datetime
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -127,6 +140,7 @@ class Sun(Entity):
         self._config_listener: CALLBACK_TYPE | None = None
         self._update_events_listener: CALLBACK_TYPE | None = None
         self._update_sun_position_listener: CALLBACK_TYPE | None = None
+        self._update_durations_listener: CALLBACK_TYPE | None = None
         self._config_listener = self.hass.bus.async_listen(
             EVENT_CORE_CONFIG_UPDATE, self.update_location
         )
@@ -144,9 +158,17 @@ class Sun(Entity):
         if not initial and observer == self.observer:
             return
         self.observer = observer
+        # The attributes need to be initialized before the first call to update_events() to avoid an AttributeError.
+        self.daylight_duration = timedelta()
+        self.night_duration = timedelta()
+        self.twilight_sunrise_duration = timedelta()
+        self.twilight_sunset_duration = timedelta()
         if self._update_events_listener:
             self._update_events_listener()
         self.update_events()
+        if self._update_durations_listener:
+            self._update_durations_listener()
+        self.update_durations()
 
     @callback
     def remove_listeners(self) -> None:
@@ -157,6 +179,8 @@ class Sun(Entity):
             self._update_events_listener()
         if self._update_sun_position_listener:
             self._update_sun_position_listener()
+        if self._update_durations_listener:
+            self._update_durations_listener()
 
     @property
     @override
@@ -181,6 +205,10 @@ class Sun(Entity):
             STATE_ATTR_ELEVATION: self.solar_elevation,
             STATE_ATTR_AZIMUTH: self.solar_azimuth,
             STATE_ATTR_RISING: self.rising,
+            STATE_ATTR_DAYLIGHT_DURATION: self.daylight_duration.total_seconds(),
+            STATE_ATTR_NIGHT_DURATION: self.night_duration.total_seconds(),
+            STATE_ATTR_TWILIGHT_SUNRISE_DURATION: self.twilight_sunrise_duration.total_seconds(),
+            STATE_ATTR_TWILIGHT_SUNSET_DURATION: self.twilight_sunset_duration.total_seconds(),
         }
 
     def _check_event(
@@ -311,4 +339,74 @@ class Sun(Entity):
             return
         self._update_sun_position_listener = event.async_track_point_in_utc_time(
             self.hass, self.update_sun_position, utc_point_in_time + delta
+        )
+
+    @callback
+    def update_durations(self, now: datetime | None = None) -> None:
+        """Calculate the daylight, night, sunrise and sunset durations."""
+        # First update sun position to assure the values are up-to-date.
+        if self._update_sun_position_listener:
+            self._update_sun_position_listener()
+        self.update_sun_position()
+
+        # Grab current time in case system clock changed since last time we ran.
+        utc_point_in_time = dt_util.utcnow()
+        try:
+            start, end = astral.sun.daylight(self.observer, dt_util.as_local(utc_point_in_time))
+            self.daylight_duration = end - start
+        except ValueError:  # Catch Polar day / night / twilight.
+            self.daylight_duration = (
+                timedelta(days=1) if self.solar_elevation > ELEVATION_HORIZON else timedelta()
+            )
+        try:
+            start, end = astral.sun.night(self.observer, dt_util.as_local(utc_point_in_time))
+            self.night_duration = end - start
+        except ValueError:  # Catch Polar day / night / twilight.
+            self.night_duration = (
+                timedelta(days=1) if self.solar_elevation <= ELEVATION_CIVIL else timedelta()
+            )
+        try:
+            start, end = astral.sun.twilight(self.observer, dt_util.as_local(utc_point_in_time), SunDirection.RISING)
+            self.twilight_sunrise_duration = end - start
+        except ValueError:  # Catch Polar day / night / twilight.
+            self.twilight_sunrise_duration = (
+                timedelta(hours=12)
+                if self.solar_elevation > ELEVATION_CIVIL and self.solar_elevation <= ELEVATION_HORIZON
+                else timedelta()
+            )
+        try:
+            start, end = astral.sun.twilight(self.observer, dt_util.as_local(utc_point_in_time), SunDirection.SETTING)
+            self.twilight_sunset_duration = end - start
+        except ValueError:  # Catch Polar day / night / twilight.
+            self.twilight_sunset_duration = (
+                timedelta(hours=12)
+                if self.solar_elevation > ELEVATION_CIVIL and self.solar_elevation <= ELEVATION_HORIZON
+                else timedelta()
+            )
+
+        _LOGGER.debug(
+            "sun duarations_update@%s: daylight_duration=%s night_duration=%s twilight_sunrise_duration=%s twilight_sunset_duration=%s",
+            utc_point_in_time.isoformat(),
+            self.daylight_duration.total_seconds(),
+            self.night_duration.total_seconds(),
+            self.twilight_sunrise_duration.total_seconds(),
+            self.twilight_sunset_duration.total_seconds(),
+        )
+        self.async_write_ha_state()
+
+        async_dispatcher_send(self.hass, SIGNAL_DURATIONS_CHANGED)
+
+        # Next update will occur on the beginning of the next day.
+        delta = timedelta(
+            seconds=(
+                (
+                    (24 - dt_util.as_local(utc_point_in_time).hour) * 60
+                    - dt_util.as_local(utc_point_in_time).minute
+                )
+                * 60
+                - dt_util.as_local(utc_point_in_time).second
+            )
+        )
+        self._update_durations_listener = event.async_track_point_in_utc_time(
+            self.hass, self.update_durations, utc_point_in_time + delta
         )

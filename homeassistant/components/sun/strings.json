@@ -86,7 +86,11 @@
       "next_rising": { "name": "Next rising" },
       "next_setting": { "name": "Next setting" },
       "solar_azimuth": { "name": "Solar azimuth" },
-      "solar_elevation": { "name": "Solar elevation" }
+      "solar_elevation": { "name": "Solar elevation" },
+      "daylight_duration": { "name": "Daylight duration" },
+      "night_duration": { "name": "Night duration" },
+      "twilight_sunrise_duration": { "name": "Twilight sunrise duration" },
+      "twilight_sunset_duration": { "name": "Twilight sunset duration" }
     }
   },
   "entity_component": {

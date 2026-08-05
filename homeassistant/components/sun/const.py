@@ -19,6 +19,7 @@ ELEVATION_ASTRONOMICAL: Final[float] = -astral.Depression.ASTRONOMICAL.value
 
 SIGNAL_POSITION_CHANGED = f"{DOMAIN}_position_changed"
 SIGNAL_EVENTS_CHANGED = f"{DOMAIN}_events_changed"
+SIGNAL_DURATIONS_CHANGED = f"{DOMAIN}_durations_changed"
 
 
 STATE_ABOVE_HORIZON = "above_horizon"

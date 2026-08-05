@@ -59,6 +59,18 @@
       },
       "solar_elevation": {
         "default": "mdi:theme-light-dark"
+      },
+      "daylight_duration": {
+        "default": "mdi:weather-sunny"
+      },
+      "night_duration": {
+        "default": "mdi:weather-night"
+      },
+      "twilight_sunrise_duration": {
+        "default": "mdi:weather-sunset-up"
+      },
+      "twilight_sunset_duration": {
+        "default": "mdi:weather-sunset-down"
       }
     }
   },
