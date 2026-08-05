@@ -1059,6 +1059,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1072,6 +1073,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1156,6 +1158,7 @@ async def test_browse_media_unfiltered(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1167,6 +1170,7 @@ async def test_browse_media_unfiltered(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1318,7 +1322,7 @@ async def test_unavailable_device(
 
     # Check attributes are unavailable
     attrs = mock_state.attributes
-    for attr in mp.ATTR_TO_PROPERTY:
+    for attr in mp.PROP_TO_ATTR.values():
         assert attr not in attrs
 
     assert attrs[ha_const.ATTR_FRIENDLY_NAME] == MOCK_DEVICE_NAME
@@ -2081,8 +2085,8 @@ async def test_disappearing_device(
     entity: DlnaDmrEntity = hass.data[mp.DOMAIN].get_entity(mock_disconnected_entity_id)
 
     # Test attribute access
-    for attr in mp.ATTR_TO_PROPERTY:
-        value = getattr(entity, attr)
+    for prop in mp.PROP_TO_ATTR:
+        value = getattr(entity, prop)
         assert value is None
 
     # media_image_url is normally hidden by entity_picture, but we want a direct check

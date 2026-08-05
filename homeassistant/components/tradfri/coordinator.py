@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pytradfri import Gateway
 from pytradfri.api.aiocoap_api import APIFactory
@@ -88,6 +88,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         self.update_interval = timedelta(seconds=5)
         await self.async_request_refresh()
 
+    @override
     async def _async_update_data(self) -> Device:
         """Fetch data from the gateway for a specific device."""
         try:

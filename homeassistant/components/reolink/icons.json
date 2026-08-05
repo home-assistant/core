@@ -141,6 +141,9 @@
       "guard_set": {
         "default": "mdi:crosshairs-gps"
       },
+      "pre_siren": {
+        "default": "mdi:alarm-light"
+      },
       "ptz_auto": {
         "default": "mdi:infinity"
       },
@@ -179,6 +182,9 @@
       },
       "ptz_zoom_out": {
         "default": "mdi:magnify"
+      },
+      "sync_time": {
+        "default": "mdi:clock-outline"
       }
     },
     "light": {
@@ -375,6 +381,9 @@
       }
     },
     "select": {
+      "anti_flicker": {
+        "default": "mdi:camera-iris"
+      },
       "auto_quick_reply_message": {
         "default": "mdi:message-reply-text-outline"
       },
@@ -584,7 +593,16 @@
       "pre_record": {
         "default": "mdi:history"
       },
+      "pre_siren_on_event": {
+        "default": "mdi:alarm-light"
+      },
       "privacy_mask": {
+        "default": "mdi:eye",
+        "state": {
+          "on": "mdi:eye-off"
+        }
+      },
+      "privacy_mask_lens": {
         "default": "mdi:eye",
         "state": {
           "on": "mdi:eye-off"
@@ -616,6 +634,14 @@
       },
       "siren_on_event": {
         "default": "mdi:alarm-light"
+      }
+    },
+    "time": {
+      "floodlight_schedule_end": {
+        "default": "mdi:clock-end"
+      },
+      "floodlight_schedule_start": {
+        "default": "mdi:clock-start"
       }
     }
   },

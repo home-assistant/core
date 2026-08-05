@@ -1622,8 +1622,7 @@ async def test_remove_stale_media(
     event_media = media_files[0]
     assert event_media.name.endswith(".mp4")
 
-    # pylint: disable-next=home-assistant-enforce-utcnow
-    event_time1 = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=8)
+    event_time1 = dt_util.utcnow() - datetime.timedelta(days=8)
     extra_media1 = (
         device_path / f"{int(event_time1.timestamp())}-camera_motion-test.mp4"
     )
@@ -1634,8 +1633,7 @@ async def test_remove_stale_media(
     )
     extra_media2.write_bytes(mp4.getvalue())
     # This event will not be garbage collected because it is too recent
-    # pylint: disable-next=home-assistant-enforce-utcnow
-    event_time3 = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=3)
+    event_time3 = dt_util.utcnow() - datetime.timedelta(days=3)
     extra_media3 = (
         device_path / f"{int(event_time3.timestamp())}-camera_motion-test.mp4"
     )
@@ -1645,8 +1643,7 @@ async def test_remove_stale_media(
 
     # Advance the clock to invoke the garbage collector. This will remove extra
     # files that are not valid events that are old enough.
-    # pylint: disable-next=home-assistant-enforce-utcnow
-    point_in_time = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
+    point_in_time = dt_util.utcnow() + datetime.timedelta(days=1)
     with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
         await hass.async_block_till_done()

@@ -1,6 +1,6 @@
 """Support for the Twitch stream status."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
@@ -56,6 +56,7 @@ class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
         self._attr_name = self.channel.name
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.channel_id in self.coordinator.data
@@ -66,11 +67,13 @@ class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
         return self.coordinator.data[self.channel_id]
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return STATE_STREAMING if self.channel.is_streaming else STATE_OFFLINE
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         channel = self.channel
@@ -93,6 +96,7 @@ class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
         return resp
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the picture of the sensor."""
         if self.channel.is_streaming:

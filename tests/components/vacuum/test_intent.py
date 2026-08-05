@@ -125,7 +125,7 @@ async def test_clean_area(hass: HomeAssistant) -> None:
     """Test HassVacuumCleanArea intent."""
     await vacuum_intent.async_setup_intents(hass)
 
-    area_reg = ar.async_get(hass)
+    area_reg = ar.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     kitchen = area_reg.async_create("Kitchen")
 
     vacuum_1 = f"{DOMAIN}.vacuum_1"
@@ -183,7 +183,7 @@ async def test_clean_area_no_matching_vacuum(hass: HomeAssistant) -> None:
     """Test HassVacuumCleanArea intent with no matching vacuum."""
     await vacuum_intent.async_setup_intents(hass)
 
-    area_reg = ar.async_get(hass)
+    area_reg = ar.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     area_reg.async_create("Kitchen")
 
     # No vacuums at all
@@ -238,7 +238,7 @@ async def test_clean_area_service_failure(hass: HomeAssistant) -> None:
     """Test HassVacuumCleanArea intent when the service call fails."""
     await vacuum_intent.async_setup_intents(hass)
 
-    area_reg = ar.async_get(hass)
+    area_reg = ar.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     area_reg.async_create("Kitchen")
 
     entity_id = f"{DOMAIN}.test_vacuum"

@@ -8,16 +8,22 @@ from aiomelcloudhome.exceptions import (
     MelCloudHomeConnectionError,
     MelCloudHomeTimeoutError,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.melcloud_home.const import DOMAIN
+from homeassistant.components.melcloud_home.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 
 @pytest.mark.usefixtures("mock_melcloud_client")
@@ -35,11 +41,11 @@ async def test_entry_setup_unload(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "setup_state"),
     [
-        MelCloudHomeAuthenticationError("bad creds"),
-        MelCloudHomeConnectionError("cannot connect"),
-        MelCloudHomeTimeoutError("timeout"),
+        (MelCloudHomeAuthenticationError("bad creds"), ConfigEntryState.SETUP_ERROR),
+        (MelCloudHomeConnectionError("cannot connect"), ConfigEntryState.SETUP_RETRY),
+        (MelCloudHomeTimeoutError("timeout"), ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_entry_setup_retry_on_update_failure(
@@ -47,6 +53,7 @@ async def test_entry_setup_retry_on_update_failure(
     mock_config_entry: MockConfigEntry,
     mock_melcloud_client: AsyncMock,
     exception: Exception,
+    setup_state: ConfigEntryState,
 ) -> None:
     """Test setup retries when initial coordinator refresh fails."""
     mock_melcloud_client.get_context.side_effect = exception
@@ -55,7 +62,7 @@ async def test_entry_setup_retry_on_update_failure(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is setup_state
 
 
 async def test_new_ata_unit_callback(
@@ -63,6 +70,7 @@ async def test_new_ata_unit_callback(
     mock_melcloud_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that new ATA units discovered on coordinator refresh create climate entities."""
     fixture = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
@@ -85,7 +93,8 @@ async def test_new_ata_unit_callback(
     assert not ata_entities
 
     mock_melcloud_client.get_context.return_value = UserContext.model_validate(fixture)
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     ata_entities = [
@@ -98,11 +107,50 @@ async def test_new_ata_unit_callback(
     assert ata_entities
 
 
+async def test_stale_devices_removed(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that devices are removed when units disappear from the account."""
+    fixture = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
+    await setup_integration(hass, mock_config_entry)
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "ata-unit-uuid-1")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "atw-unit-uuid-1")})
+
+    # Poof, now they're gone
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(
+        {
+            **fixture,
+            "buildings": [
+                {**building, "airToAirUnits": [], "airToWaterUnits": []}
+                for building in fixture["buildings"]
+            ],
+        }
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "ata-unit-uuid-1")})
+        is None
+    )
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "atw-unit-uuid-1")})
+        is None
+    )
+
+
 async def test_new_atw_unit_callback(
     hass: HomeAssistant,
     mock_melcloud_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that new ATW units discovered on coordinator refresh create climate entities."""
     fixture = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
@@ -125,7 +173,8 @@ async def test_new_atw_unit_callback(
     assert not atw_entities
 
     mock_melcloud_client.get_context.return_value = UserContext.model_validate(fixture)
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     atw_entities = [

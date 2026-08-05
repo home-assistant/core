@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from logging import getLogger
 import socket
+from typing import override
 
 import pycfdns
 
@@ -42,6 +43,7 @@ class CloudflareCoordinator(DataUpdateCoordinator[None]):
             update_interval=timedelta(minutes=DEFAULT_UPDATE_INTERVAL),
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         self.client = pycfdns.Client(
@@ -60,6 +62,7 @@ class CloudflareCoordinator(DataUpdateCoordinator[None]):
         except pycfdns.ComunicationException as e:
             raise UpdateFailed("Error communicating with API") from e
 
+    @override
     async def _async_update_data(self) -> None:
         """Update records."""
         _LOGGER.debug("Starting update for zone %s", self.zone["name"])

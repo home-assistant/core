@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from switchbot_api import (
     AirPurifierCommands,
@@ -58,19 +58,25 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
     _attr_is_on: bool | None = None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return self._attr_is_on
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
 
-        power: str = self.coordinator.data["power"]
+        power: str | None = self.coordinator.data.get(
+            "power"
+        ) or self.coordinator.data.get("powerState")
         mode: str = self.coordinator.data["mode"]
         fan_speed: str = self.coordinator.data["fanSpeed"]
-        self._attr_is_on = power == "on"
+        if TYPE_CHECKING:
+            assert power is not None
+        self._attr_is_on = power.lower() == "on"
         self._attr_preset_mode = mode
         self._attr_percentage = int(fan_speed)
         self._attr_supported_features = (
@@ -81,6 +87,7 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         if self.is_on and self.preset_mode == BatteryCirculatorFanMode.DIRECT.value:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -101,12 +108,14 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self.send_api_command(CommonCommands.OFF)
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         await self.send_api_command(
@@ -116,6 +125,7 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.send_api_command(
@@ -141,10 +151,12 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
     _attr_is_on: bool | None = None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._attr_is_on
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
@@ -156,6 +168,7 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
             AirPurifierMode(mode).name.lower() if mode is not None else None
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the air purifier."""
 
@@ -171,6 +184,7 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -189,6 +203,7 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the air purifier."""
 

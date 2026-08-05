@@ -3,7 +3,7 @@
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import Literal, final
+from typing import Literal, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -162,6 +162,7 @@ class BinarySensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     _attr_is_on: bool | None = None
     _attr_state: None = None
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the binary sensor entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -171,6 +172,7 @@ class BinarySensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
                 " the entity category is set to config"
             )
 
+    @override
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
 
@@ -179,6 +181,7 @@ class BinarySensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         return self.device_class is not None
 
     @cached_property
+    @override
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -194,6 +197,7 @@ class BinarySensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     @final
     @property
+    @override
     def state(self) -> Literal["on", "off"] | None:
         """Return the state of the binary sensor."""
         if (is_on := self.is_on) is None:

@@ -34,7 +34,7 @@ async def test_send_message(
         AsyncMock(
             return_value=Message(
                 message_id=12345,
-                date=datetime.now(),
+                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                 chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
@@ -43,7 +43,7 @@ async def test_send_message(
             NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
+                ATTR_ENTITY_ID: "notify.mock_chat",
                 ATTR_MESSAGE: "mock message",
                 ATTR_TITLE: "mock title",
             },
@@ -64,7 +64,7 @@ async def test_send_message(
             message_thread_id=None,
         )
 
-    state = hass.states.get("notify.mock_title_mock_chat")
+    state = hass.states.get("notify.mock_chat")
     assert state
     assert state.state == "2025-01-09T12:00:00+00:00"
 

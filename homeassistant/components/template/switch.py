@@ -1,6 +1,6 @@
 """Support for switches which integrates with other components."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -10,14 +10,8 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_STATE,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_NAME, CONF_STATE, STATE_ON
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -124,6 +118,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
+    _restore_state_properties = ("_attr_is_on",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -144,6 +139,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
         if (off_action := config.get(CONF_TURN_OFF)) is not None:
             self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Fire the on action."""
         if on_script := self._action_scripts.get(CONF_TURN_ON):
@@ -152,6 +148,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Fire the off action."""
         if off_script := self._action_scripts.get(CONF_TURN_OFF):
@@ -159,6 +156,12 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
         if self._attr_assumed_state:
             self._attr_is_on = False
             self.async_write_ha_state()
+
+    @override
+    def restore_last_state_state(self, last_state: State) -> bool:
+        """Restore the state from the last state."""
+        self._attr_is_on = last_state.state == STATE_ON
+        return True
 
 
 class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
@@ -179,15 +182,6 @@ class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
             assert name is not None
         AbstractTemplateSwitch.__init__(self, name, config)
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        if CONF_STATE not in self._templates:
-            # restore state after startup
-            await super().async_added_to_hass()
-            if state := await self.async_get_last_state():
-                self._attr_is_on = state.state == STATE_ON
-        await super().async_added_to_hass()
-
 
 class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
     """Switch entity based on trigger data."""
@@ -204,16 +198,3 @@ class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
         TriggerEntity.__init__(self, hass, coordinator, config)
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         AbstractTemplateSwitch.__init__(self, name, config)
-
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        if (
-            (last_state := await self.async_get_last_state()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            # The trigger might have fired already while we waited for stored data,
-            # then we should not restore state
-            and self.is_on is None
-        ):
-            self._attr_is_on = last_state.state == STATE_ON
-            self.restore_attributes(last_state)

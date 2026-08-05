@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from python_snoo.containers import SnooData, SnooStates
 
@@ -64,6 +65,7 @@ class SnooSensor(SnooDescriptionEntity, SensorEntity):
     entity_description: SnooSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -1,6 +1,7 @@
 """Support for Buienradar.nl weather service."""
 
 import logging
+from typing import override
 
 from buienradar.constants import (
     CONDCODE,
@@ -201,6 +202,7 @@ class BrWeather(WeatherEntity):
 
         return fcdata_out
 
+    @override
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self._forecast

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -104,6 +104,7 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     entity_description: YouTubeSensorEntityDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.entity_description.available_fn(
@@ -111,11 +112,13 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self._channel_id])
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the value reported by the sensor."""
         if not self.available:
@@ -125,6 +128,7 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the extra state attributes."""
         if self.entity_description.attributes_fn:

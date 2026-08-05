@@ -1,7 +1,7 @@
 """Adds config flow for Workday integration."""
 
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from holidays import PUBLIC, HolidayBase, country_holidays, list_supported_countries
 import voluptuous as vol
@@ -218,12 +218,14 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> WorkdayOptionsFlowHandler:
         """Get the options flow for this handler."""
         return WorkdayOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

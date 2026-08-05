@@ -2,7 +2,7 @@
 # name: test_setup_config_entry[state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My template',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My template',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_template',
@@ -15,7 +15,7 @@
 # name: test_setup_config_entry[value_template]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My template',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My template',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_template',

@@ -75,6 +75,18 @@ def fixture_feed_atom_htmlentities(hass: HomeAssistant) -> bytes:
     return load_fixture_bytes("feedreader10.xml", DOMAIN)
 
 
+@pytest.fixture(name="feed_unsorted")
+def fixture_feed_unsorted(hass: HomeAssistant) -> bytes:
+    """Load test ATOM feed data with HTML Entities."""
+    return load_fixture_bytes("feedreader11.xml", DOMAIN)
+
+
+@pytest.fixture(name="feed_unsorted_update")
+def fixture_feed_unsorted_update(hass: HomeAssistant) -> bytes:
+    """Load test ATOM feed data with HTML Entities."""
+    return load_fixture_bytes("feedreader12.xml", DOMAIN)
+
+
 @pytest.fixture(name="events")
 async def fixture_events(hass: HomeAssistant) -> list[Event]:
     """Fixture that catches alexa events."""

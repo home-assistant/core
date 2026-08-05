@@ -1,6 +1,6 @@
 """Support for SleepIQ switches."""
 
-from typing import Any
+from typing import Any, override
 
 from asyncsleepiq import SleepIQBed
 
@@ -38,17 +38,20 @@ class SleepNumberPrivateSwitch(
         self._attr_name = f"SleepNumber {bed.name} Pause Mode"
         self._attr_unique_id = f"{bed.id}-pause-mode"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self.bed.set_pause_mode(True)
         self._handle_coordinator_update()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self.bed.set_pause_mode(False)
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update switch attributes."""
         self._attr_is_on = self.bed.paused

@@ -1,6 +1,34 @@
 # serializer version: 1
 # name: test_diagnostics_config_entry
   dict({
+    'device_aggregated_data': dict({
+      'DeviceKey_1': dict({
+        'avgMeterValue': 19.101645316666666,
+        'avgWaterLevel': -7.898354683333333,
+        'dateTime': '2026-06-12T07:00:00+00:00',
+        'inFlow': 24.473591893096195,
+        'maxMeterValue': 19.442987,
+        'maxWaterLevel': -7.557013,
+        'minMeterValue': 18.637709,
+        'minWaterLevel': -8.362291,
+        'outVolume': 8.36433457791729,
+        'validGroundMeterValue': None,
+        'validGroundWaterLevel': None,
+      }),
+      'DeviceKey_2': dict({
+        'avgMeterValue': 19.101645316666666,
+        'avgWaterLevel': -7.898354683333333,
+        'dateTime': '2026-06-12T07:00:00+00:00',
+        'inFlow': 24.473591893096195,
+        'maxMeterValue': 19.442987,
+        'maxWaterLevel': -7.557013,
+        'minMeterValue': 18.637709,
+        'minWaterLevel': -8.362291,
+        'outVolume': 8.36433457791729,
+        'validGroundMeterValue': None,
+        'validGroundWaterLevel': None,
+      }),
+    }),
     'device_data': dict({
       'DeviceKey_1': dict({
         'dateTime': '2026-06-14T09:36:06+00:00',

@@ -1,6 +1,6 @@
 """Wyoming switch entities."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import STATE_ON, EntityCategory
@@ -37,6 +37,7 @@ class WyomingSatelliteMuteSwitch(
         entity_category=EntityCategory.CONFIG,
     )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -47,12 +48,14 @@ class WyomingSatelliteMuteSwitch(
         self._attr_is_on = (state is not None) and (state.state == STATE_ON)
         self._device.set_is_muted(self._attr_is_on)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         self._attr_is_on = True
         self.async_write_ha_state()
         self._device.set_is_muted(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         self._attr_is_on = False

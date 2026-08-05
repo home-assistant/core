@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.tessie import EnergySite
 from tessie_api import set_charge_limit, set_charging_amps, set_speed_limit
@@ -146,11 +146,13 @@ class TessieNumberEntity(TessieEntity, NumberEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value reported by the number."""
         return self._value
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         if self.entity_description.min_key:
@@ -161,12 +163,14 @@ class TessieNumberEntity(TessieEntity, NumberEntity):
         return self.entity_description.native_min_value
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         return self.get(
             self.entity_description.max_key, self.entity_description.native_max_value
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.run(
@@ -194,11 +198,13 @@ class TessieEnergyInfoNumberSensorEntity(TessieEnergyEntity, NumberEntity):
         self.entity_description = description
         super().__init__(data, data.info_coordinator, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
         self._attr_icon = icon_for_battery_level(self.native_value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         value = int(value)

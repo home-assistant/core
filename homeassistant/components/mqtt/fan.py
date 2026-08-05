@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -14,7 +14,9 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     FanEntity,
+    FanEntityCapabilityAttribute,
     FanEntityFeature,
+    FanEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -91,12 +93,12 @@ DEFAULT_NAME = "MQTT Fan"
 
 MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
     {
-        fan.ATTR_DIRECTION,
-        fan.ATTR_OSCILLATING,
-        fan.ATTR_PERCENTAGE_STEP,
-        fan.ATTR_PERCENTAGE,
-        fan.ATTR_PRESET_MODE,
-        fan.ATTR_PRESET_MODES,
+        FanEntityStateAttribute.DIRECTION,
+        FanEntityStateAttribute.OSCILLATING,
+        FanEntityStateAttribute.PERCENTAGE_STEP,
+        FanEntityStateAttribute.PERCENTAGE,
+        FanEntityStateAttribute.PRESET_MODE,
+        FanEntityCapabilityAttribute.PRESET_MODES,
     }
 )
 
@@ -224,10 +226,12 @@ class MqttFan(MqttEntity, FanEntity):
     _speed_range: tuple[int, int]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._speed_range = (
@@ -426,6 +430,7 @@ class MqttFan(MqttEntity, FanEntity):
         self._attr_current_direction = str(direction)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
@@ -449,16 +454,19 @@ class MqttFan(MqttEntity, FanEntity):
             {"_attr_current_direction"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         # The default for FanEntity is to compute it based on percentage
         return self._attr_is_on
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -481,6 +489,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity.
 
@@ -494,6 +503,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_is_on = False
             self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan.
 
@@ -510,6 +520,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_percentage = percentage
             self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan.
 
@@ -523,6 +534,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_preset_mode = preset_mode
             self.async_write_ha_state()
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation.
 
@@ -543,6 +555,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_oscillating = oscillating
             self.async_write_ha_state()
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set direction.
 

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
+from typing import override
 
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -27,12 +27,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import DSL_CONNECTION
+from .const import DSL_CONNECTION, LOGGER
 from .coordinator import FritzConfigEntry
 from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 from .models import ConnectionInfo
-
-_LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -145,10 +143,10 @@ def _is_suitable_cpu_temperature(status: FritzStatus) -> bool:
     try:
         cpu_temp = status.get_cpu_temperatures()[0]
     except RequestException, IndexError, FritzConnectionException:
-        _LOGGER.debug("CPU temperature not supported by the device")
+        LOGGER.debug("CPU temperature not supported by the device")
         return False
     if cpu_temp == 0:
-        _LOGGER.debug("CPU temperature returns 0°C, treating as not supported")
+        LOGGER.debug("CPU temperature returns 0°C, treating as not supported")
         return False
     return True
 
@@ -316,7 +314,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    _LOGGER.debug("Setting up FRITZ!Box sensors")
+    LOGGER.debug("Setting up FRITZ!Box sensors")
     avm_wrapper = entry.runtime_data
 
     connection_info = await avm_wrapper.async_get_connection_info()
@@ -348,6 +346,7 @@ class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):
     )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data["entity_states"].get(self.entity_description.key)

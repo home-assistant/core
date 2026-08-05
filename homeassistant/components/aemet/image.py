@@ -1,6 +1,6 @@
 """Support for the AEMET OpenData images."""
 
-from typing import Final
+from typing import Final, override
 
 from aemet_opendata.const import AOD_DATETIME, AOD_IMG_BYTES, AOD_IMG_TYPE, AOD_RADAR
 from aemet_opendata.helpers import dict_nested_value
@@ -68,6 +68,7 @@ class AemetImage(AemetEntity, ImageEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()

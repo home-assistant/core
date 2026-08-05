@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from twitchAPI.helper import first
 from twitchAPI.twitch import Twitch
@@ -28,15 +28,18 @@ class OAuth2FlowHandler(
         self.data: dict[str, Any] = {}
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": " ".join([scope.value for scope in OAUTH_SCOPES])}
 
+    @override
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],

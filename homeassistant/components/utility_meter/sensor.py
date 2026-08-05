@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 import math
-from typing import Any, Self
+from typing import Any, Self, override
 
 from cronsim import CronSim
 import voluptuous as vol
@@ -157,7 +157,6 @@ async def async_setup_entry(
     if not tariffs:
         # Add single sensor, not gated by a tariff selector
         meter_sensor = UtilityMeterSensor(
-            hass,
             cron_pattern=cron_pattern,
             delta_values=delta_values,
             meter_offset=meter_offset,
@@ -171,6 +170,7 @@ async def async_setup_entry(
             tariff=None,
             unique_id=entry_id,
             sensor_always_available=sensor_always_available,
+            device=async_entity_id_to_device(hass, source_entity_id),
         )
         meters.append(meter_sensor)
         entry_meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -178,7 +178,6 @@ async def async_setup_entry(
         # Add sensors for each tariff
         for tariff in tariffs:
             meter_sensor = UtilityMeterSensor(
-                hass,
                 cron_pattern=cron_pattern,
                 delta_values=delta_values,
                 meter_offset=meter_offset,
@@ -192,6 +191,7 @@ async def async_setup_entry(
                 tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
                 sensor_always_available=sensor_always_available,
+                device=async_entity_id_to_device(hass, source_entity_id),
             )
             meters.append(meter_sensor)
             entry_meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -259,7 +259,6 @@ async def async_setup_platform(
         conf_cron_pattern = meter_info.get(CONF_CRON_PATTERN)
         conf_sensor_always_available = meter_info[CONF_SENSOR_ALWAYS_AVAILABLE]
         meter_sensor = UtilityMeterSensor(
-            hass,
             cron_pattern=conf_cron_pattern,
             delta_values=conf_meter_delta_values,
             meter_offset=conf_meter_offset,
@@ -300,6 +299,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
     status: str
     input_device_class: SensorDeviceClass | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the utility sensor data."""
         data = super().as_dict()
@@ -315,6 +315,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         return data
 
     @classmethod
+    @override
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored sensor state from a dict."""
         extra = SensorExtraStoredData.from_dict(restored)
@@ -360,7 +361,6 @@ class UtilityMeterSensor(RestoreSensor):
 
     def __init__(
         self,
-        hass,
         *,
         cron_pattern,
         delta_values,
@@ -376,13 +376,11 @@ class UtilityMeterSensor(RestoreSensor):
         unique_id,
         sensor_always_available,
         suggested_entity_id=None,
+        device=None,
     ):
         """Initialize the Utility Meter sensor."""
         self._attr_unique_id = unique_id
-        self.device_entry = async_entity_id_to_device(
-            hass,
-            source_entity,
-        )
+        self.device_entry = device
         self.entity_id = suggested_entity_id
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
@@ -614,6 +612,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_native_value = Decimal(str(value))
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -694,6 +693,7 @@ class UtilityMeterSensor(RestoreSensor):
             self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, async_track_time_zone)
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._collecting:
@@ -701,6 +701,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._collecting = None
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         if self._input_device_class is not None:
@@ -713,6 +714,7 @@ class UtilityMeterSensor(RestoreSensor):
         return None
 
     @property
+    @override
     def state_class(self) -> SensorStateClass:
         """Return the state class of the sensor."""
         if self._sensor_net_consumption:
@@ -728,6 +730,7 @@ class UtilityMeterSensor(RestoreSensor):
         return SensorStateClass.TOTAL_INCREASING
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         state_attr = {
@@ -750,6 +753,7 @@ class UtilityMeterSensor(RestoreSensor):
         return state_attr
 
     @property
+    @override
     def extra_restore_state_data(self) -> UtilitySensorExtraStoredData:
         """Return sensor specific state data to be restored."""
         return UtilitySensorExtraStoredData(
@@ -762,6 +766,7 @@ class UtilityMeterSensor(RestoreSensor):
             self._input_device_class,
         )
 
+    @override
     async def async_get_last_sensor_data(self) -> UtilitySensorExtraStoredData | None:
         """Restore Utility Meter Sensor Extra Stored Data."""
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:

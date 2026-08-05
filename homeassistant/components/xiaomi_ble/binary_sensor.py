@@ -1,5 +1,7 @@
 """Support for Xiaomi binary sensors."""
 
+from typing import override
+
 from xiaomi_ble.parser import (
     BinarySensorDeviceClass as XiaomiBinarySensorDeviceClass,
     ExtendedBinarySensorDeviceClass,
@@ -161,11 +163,13 @@ class XiaomiBluetoothSensorEntity(
     """Representation of a Xiaomi binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.processor.coordinator.sleepy_device or super().available

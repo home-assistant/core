@@ -44,10 +44,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_platform
 from .const import COMMAND_ERROR, COMMAND_OK
+
+from tests.common import MockConfigEntry
 
 lat = -27.9699373
 lon = 153.3726526
@@ -360,6 +362,7 @@ async def test_services(
 
 async def test_service_validation_errors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Tests that the custom services handle bad data."""
@@ -420,3 +423,53 @@ async def test_service_validation_errors(
             blocking=True,
         )
     assert exc_info.value.translation_key == "set_scheduled_departure_off_peak"
+
+    energy_device = entity_registry.async_get(
+        "sensor.energy_site_battery_power"
+    ).device_id
+
+    # Vehicle-only service targeting an energy-site device -> no vehicle match
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+            {
+                CONF_DEVICE_ID: energy_device,
+                ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "no_vehicle_data_for_device"
+
+    # Energy-only service targeting a vehicle device -> no energy-site match
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_TOU_SETTINGS: {"utility": "test"},
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "no_energy_site_data_for_device"
+
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other", "unrelated")},
+    )
+
+    # Teslemetry service targeting a device with no Teslemetry config entry
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+            {
+                CONF_DEVICE_ID: other_device.id,
+                ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "no_config_entry_for_device"

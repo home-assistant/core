@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import datetime
 from enum import StrEnum
 import logging
+from typing import override
 
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.models.statistics import (
@@ -199,6 +200,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the device."""
 
@@ -208,6 +210,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
             value_type=self.entity_description.value_type,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
         # Perform initial statistics import when sensor is
@@ -217,6 +220,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
         await self.update_statistics()
         await super().async_added_to_hass()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
         asyncio.run_coroutine_threadsafe(self.update_statistics(), self.hass.loop)

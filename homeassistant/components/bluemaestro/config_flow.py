@@ -1,6 +1,6 @@
 """Config flow for bluemaestro ble integration."""
 
-from typing import Any
+from typing import Any, override
 
 from bluemaestro_ble import BlueMaestroBluetoothDeviceData as DeviceData
 import voluptuous as vol
@@ -26,6 +26,7 @@ class BlueMaestroConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: DeviceData | None = None
         self._discovered_devices: dict[str, str] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -58,6 +59,7 @@ class BlueMaestroConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
