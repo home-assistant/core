@@ -29,6 +29,18 @@
   },
   "title": "Button",
   "triggers": {
+    "double_pressed": {
+      "description": "Triggers when one or more buttons are pressed twice in quick succession.",
+      "name": "Button double pressed"
+    },
+    "hold_ended": {
+      "description": "Triggers when one or more buttons stop being held.",
+      "name": "Button hold ended"
+    },
+    "hold_started": {
+      "description": "Triggers when one or more buttons start being held.",
+      "name": "Button hold started"
+    },
     "pressed": {
       "description": "Triggers when one or more buttons are pressed.",
       "name": "Button pressed"

@@ -19,6 +19,15 @@
     }
   },
   "triggers": {
+    "double_pressed": {
+      "trigger": "mdi:gesture-double-tap"
+    },
+    "hold_ended": {
+      "trigger": "mdi:gesture-tap-hold"
+    },
+    "hold_started": {
+      "trigger": "mdi:gesture-tap-hold"
+    },
     "pressed": {
       "trigger": "mdi:gesture-tap-button"
     }
