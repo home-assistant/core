@@ -1,6 +1,12 @@
 {
   "entity": {
     "binary_sensor": {
+      "generator_schedule_enabled": {
+        "default": "mdi:calendar-clock",
+        "state": {
+          "off": "mdi:calendar-remove"
+        }
+      },
       "grid_status": {
         "default": "mdi:transmission-tower",
         "state": {
@@ -28,9 +34,20 @@
         "default": "mdi:sleep-off"
       }
     },
+    "number": {
+      "generator_exercise_duration": {
+        "default": "mdi:timer-outline"
+      },
+      "generator_exercise_interval": {
+        "default": "mdi:calendar-refresh-outline"
+      }
+    },
     "select": {
       "acb_sleep_soc": {
         "default": "mdi:battery-clock"
+      },
+      "generator_exercise_day": {
+        "default": "mdi:calendar-week"
       }
     },
     "sensor": {
@@ -88,6 +105,21 @@
       "daily_production_phase": {
         "default": "mdi:solar-power"
       },
+      "generator_admin_state": {
+        "default": "mdi:engine"
+      },
+      "generator_gen_type": {
+        "default": "mdi:engine"
+      },
+      "generator_oper_state": {
+        "default": "mdi:engine"
+      },
+      "generator_requested_mode": {
+        "default": "mdi:engine"
+      },
+      "generator_start_method": {
+        "default": "mdi:engine"
+      },
       "grid_status": {
         "default": "mdi:transmission-tower",
         "state": {
@@ -118,6 +150,12 @@
       }
     },
     "switch": {
+      "generator_charge_from_generator": {
+        "default": "mdi:battery-charging",
+        "state": {
+          "off": "mdi:battery-off-outline"
+        }
+      },
       "grid_enabled": {
         "default": "mdi:transmission-tower",
         "state": {

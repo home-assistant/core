@@ -29,6 +29,8 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+GENERATOR_EXERCISE_DAY_ENTITY = "select.generator_1234_exercise_day"
+
 
 @pytest.mark.parametrize(
     "mock_envoy",
@@ -335,3 +337,75 @@ async def test_select_storage_modes_if_none(
 
     assert (entity_state := hass.states.get(test_entity))
     assert entity_state.state == "unknown"
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+@pytest.mark.parametrize("day", ["mon", "tue", "wed", "thu", "fri", "sat", "sun"])
+async def test_select_generator_exercise_day(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    day: str,
+) -> None:
+    """Test the standby generator exercise day select entity operation."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, config_entry)
+
+    assert (entity_state := hass.states.get(GENERATOR_EXERCISE_DAY_ENTITY))
+    assert entity_state.state == "thu"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: GENERATOR_EXERCISE_DAY_ENTITY,
+            ATTR_OPTION: day,
+        },
+        blocking=True,
+    )
+    mock_envoy.update_generator_schedule.assert_awaited_once_with(
+        {"exercise_day": day}, refresh=True
+    )
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+async def test_select_generator_exercise_day_with_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the standby generator exercise day select entity with error returned."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, config_entry)
+
+    mock_envoy.update_generator_schedule.side_effect = EnvoyError("Test")
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "Failed to execute async_select_option for "
+            f"{GENERATOR_EXERCISE_DAY_ENTITY}, host"
+        ),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: GENERATOR_EXERCISE_DAY_ENTITY,
+                ATTR_OPTION: "mon",
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+async def test_no_select_generator_exercise_day(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the exercise day select entity is not created without a schedule."""
+    mock_envoy.data.generator_schedule = None
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, config_entry)
+
+    assert hass.states.get(GENERATOR_EXERCISE_DAY_ENTITY) is None

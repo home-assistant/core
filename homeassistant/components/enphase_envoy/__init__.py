@@ -89,6 +89,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
             ),
         )
 
+    if envoy_data and (generator_config := envoy_data.generator_config):
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, f"{envoy.serial_number}_generator")},
+            manufacturer=generator_config.manufacturer,
+            model=generator_config.model,
+            name=f"Generator {envoy.serial_number}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, envoy.serial_number), config_entry_id=entry.entry_id
+            ),
+        )
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -126,6 +138,9 @@ async def async_remove_config_entry_device(
                     return False
         if envoy_data.enpower:
             if str(envoy_data.enpower.serial_number) in dev_ids:
+                return False
+        if envoy_data.generator_config:
+            if f"{envoy_serial_num}_generator" in dev_ids:
                 return False
         if envoy_data.acb_inventory:
             if f"{envoy_serial_num}_acb" in dev_ids:
