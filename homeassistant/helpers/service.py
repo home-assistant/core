@@ -1153,6 +1153,7 @@ def async_register_entity_service(
     domain: str,
     name: str,
     *,
+    admin_only: bool = False,
     description_placeholders: Mapping[str, str] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
     entities: Mapping[str, Entity],
@@ -1172,21 +1173,32 @@ def async_register_entity_service(
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
+    entity_handler = partial(
+        entity_service_call,
+        hass,
+        entities,
+        service_func,
+        entity_device_classes=entity_device_classes,
+        required_features=required_features,
+    )
+
+    service_handler = (
+        partial(
+            _async_admin_handler,
+            hass,
+            HassJob(entity_handler, f"admin service {domain}.{name}"),
+        )
+        if admin_only
+        else entity_handler
+    )
 
     hass.services.async_register(
         domain,
         name,
-        partial(
-            entity_service_call,
-            hass,
-            entities,
-            service_func,
-            entity_device_classes=entity_device_classes,
-            required_features=required_features,
-        ),
+        service_handler,
         schema,
         supports_response,
-        job_type=job_type,
+        job_type=HassJobType.Coroutinefunction if admin_only else job_type,
         description_placeholders=description_placeholders,
     )
 

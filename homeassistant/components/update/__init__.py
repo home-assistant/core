@@ -101,6 +101,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         },
         async_install,
         [UpdateEntityFeature.INSTALL],
+        admin_only=True,
     )
 
     component.async_register_entity_service(
