@@ -14,19 +14,13 @@ for arg in "$@"; do
 done
 
 if [ "$core_path_provided" = false ]; then
-    # Only look for manifest.json in the locations Home Assistant and HACS
-    # actually document as valid for custom integrations:
-    #   - custom_components/<domain>/manifest.json (standard layout)
-    #   - ./manifest.json (HACS "content_in_root" layout)
-    # A repo-wide recursive find picks up unrelated manifest.json files that
-    # happen to share the filename (e.g. browser-extension manifests bundled
-    # alongside the integration), which are not Home Assistant manifests and
-    # cause confusing crashes when hassfest tries to validate them as such.
-    if [ -d custom_components ]; then
-        manifests=$(find custom_components -maxdepth 2 -name "manifest.json")
-    else
-        manifests=$(find . -maxdepth 1 -name "manifest.json")
-    fi
+    # Manifest discovery is limited to the two documented custom-integration
+    # locations rather than anywhere in the repo, to avoid misvalidating
+    # unrelated files that happen to share the filename.
+    manifests=$(
+        { [ -d custom_components ] && find custom_components -mindepth 2 -maxdepth 2 -name "manifest.json"
+          find . -maxdepth 1 -name "manifest.json"; } 2>/dev/null
+    )
 
     for manifest in $manifests; do
         manifest_path=$(realpath "${manifest}")
