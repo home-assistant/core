@@ -24,7 +24,6 @@
   "entity": {
     "event": {
       "latest_episode": {
-        "name": "Latest episode",
         "state_attributes": {
           "duration_seconds": {
             "name": "Duration"

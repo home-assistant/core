@@ -42,6 +42,7 @@ class PodcastEpisodeEvent(CoordinatorEntity[PodcastUpdateCoordinator], EventEnti
     """Represent newly discovered podcast episodes."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, coordinator: PodcastUpdateCoordinator) -> None:
         """Initialize the podcast episode event entity."""
