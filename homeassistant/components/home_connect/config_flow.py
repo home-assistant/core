@@ -29,6 +29,11 @@ class OAuth2FlowHandler(
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @property
+    @override
+    def extra_authorize_data(self) -> dict[str, str]:
+        return {"scope": "Control Monitor Settings IdentifyAppliance Images"}
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
