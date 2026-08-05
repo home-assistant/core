@@ -3,7 +3,12 @@
 from homeassistant.const import Platform
 
 DOMAIN = "blink"
-HARDWARE_ID = "Home Assistant"
+# Every HA install used to send this literal as its OAuth hardware_id.
+# Blink's authorize endpoint now rejects it (HTTP 406); config_flow.py and
+# __init__.py's migration use this only to detect and replace old stored
+# values with a per-install UUID, which blinkpy generates automatically
+# when hardware_id is omitted.
+LEGACY_HARDWARE_ID = "Home Assistant"
 
 CONF_MIGRATE = "migrate"
 CONF_CAMERA = "camera"
