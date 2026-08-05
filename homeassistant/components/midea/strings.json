@@ -202,26 +202,14 @@
       "fan_level": {
         "name": "Fan Level"
       },
-      "filter1_available_days": {
-        "name": "Filter 1 Available Days"
-      },
-      "filter1_life_level": {
-        "name": "Filter 1 Life Level"
-      },
-      "filter2_available_days": {
-        "name": "Filter 2 Available Days"
-      },
-      "filter2_life_level": {
-        "name": "Filter 2 Life Level"
-      },
-      "filter3_available_days": {
-        "name": "Filter 3 Available Days"
-      },
-      "filter3_life_level": {
-        "name": "Filter 3 Life Level"
+      "filter_available_days": {
+        "name": "Filter {filter_number} Available Days"
       },
       "filter_life": {
         "name": "Filter Life"
+      },
+      "filter_life_level": {
+        "name": "Filter {filter_number} Life Level"
       },
       "flex_zone_actual_temperature": {
         "name": "Flex Zone Actual Temperature"
