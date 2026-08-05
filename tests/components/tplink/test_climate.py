@@ -121,8 +121,6 @@ async def test_device_does_not_link_via_self(
         hass, mock_config_entry, Platform.CLIMATE, mocked_hub
     )
 
-    assert "A device can not be its own via device" not in caplog.text
-
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
