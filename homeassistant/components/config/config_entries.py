@@ -119,7 +119,6 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
         remove_task = hass.async_create_task(
             hass.config_entries.async_remove(entry_id),
             f"config entry remove {entry_id}",
-            eager_start=False,
         )
 
         try:
