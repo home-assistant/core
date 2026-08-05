@@ -381,6 +381,9 @@
       }
     },
     "select": {
+      "anti_flicker": {
+        "default": "mdi:camera-iris"
+      },
       "auto_quick_reply_message": {
         "default": "mdi:message-reply-text-outline"
       },
