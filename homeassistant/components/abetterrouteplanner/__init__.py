@@ -157,23 +157,3 @@ async def async_unload_entry(
     if (stream := entry.runtime_data.stream) is not None:
         await stream.stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant,
-    config_entry: AbetterrouteplannerConfigEntry,
-    device_entry: dr.DeviceEntry,
-) -> bool:
-    """Allow deleting a device once its vehicle is no longer selected or present."""
-    selected_ids = {
-        int(vehicle_id) for vehicle_id in config_entry.data[CONF_VEHICLE_IDS]
-    }
-    active_scopes = {
-        f"{config_entry.unique_id}_{raw.vehicle_id}"
-        for raw, _ in config_entry.runtime_data.vehicles
-        if raw.vehicle_id in selected_ids
-    }
-    return not any(
-        identifier[0] == DOMAIN and identifier[1] in active_scopes
-        for identifier in device_entry.identifiers
-    )
