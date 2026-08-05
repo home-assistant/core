@@ -12,6 +12,7 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant.components.esphome import DOMAIN
+from homeassistant.components.esphome.const import CONF_NOISE_PSK
 from homeassistant.components.esphome.entry_data import RuntimeEntryData
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -129,6 +130,12 @@ async def test_migrate_entity_unique_id_downgrade_upgrade(
 async def test_discover_zwave() -> None:
     """Test ESPHome discovery of Z-Wave JS."""
     hass = Mock()
+    # The noise PSK is read from the config entry, not the live client, so that
+    # a dynamically provisioned key that could not be applied to the already
+    # connected client is still passed on to the add-on.
+    hass.config_entries.async_get_entry.return_value = Mock(
+        data={CONF_NOISE_PSK: "mock-noise-psk"}
+    )
     entry_data = RuntimeEntryData(
         "mock-id",
         "mock-title",
@@ -154,6 +161,7 @@ async def test_discover_zwave() -> None:
             device_info,
             None,
         )
+        hass.config_entries.async_get_entry.assert_called_once_with("mock-id")
         mock_create_flow.assert_called_once_with(
             hass,
             "zwave_js",
@@ -163,7 +171,7 @@ async def test_discover_zwave() -> None:
                 zwave_home_id=1234,
                 ip_address="mock-client-address",
                 port=1234,
-                noise_psk=None,
+                noise_psk="mock-noise-psk",
             ),
             discovery_key=discovery_flow.DiscoveryKey(
                 domain="esphome",

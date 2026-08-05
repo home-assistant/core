@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from typing import Any
 
+import attr
 import pytest
 
 from homeassistant.components.device_tracker import (
@@ -23,7 +24,12 @@ from homeassistant.components.device_tracker import (
     TrackingType,
 )
 from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigSubentryData,
+)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_FRIENDLY_NAME,
@@ -116,6 +122,7 @@ async def create_mock_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entities: list[Entity],
+    config_subentry_id: str | None = None,
 ) -> MockConfigEntry:
     """Create a device tracker platform with the specified entities."""
 
@@ -125,7 +132,7 @@ async def create_mock_platform(
         async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test event platform via config entry."""
-        async_add_entities(entities)
+        async_add_entities(entities, config_subentry_id=config_subentry_id)
 
     mock_platform(
         hass,
@@ -1291,7 +1298,7 @@ async def test_scanner_entity_state(
         ATTR_IP: ip_address,
         ATTR_MAC: mac_address,
         ATTR_HOST_NAME: hostname,
-        ATTR_FRIENDLY_NAME: "Device from other integration",
+        ATTR_FRIENDLY_NAME: hostname,
     }
     assert entity_state.state == STATE_NOT_HOME
 
@@ -1609,6 +1616,256 @@ async def test_register_mac_ignored(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
     assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_scanner_entity_attaches_to_split_of_composite_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a scanner entity attaches to its config entry's split device."""
+    mac = TEST_MAC_ADDRESS
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    old_id = "composite00000000000000000000000"
+    own_split = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={(TEST_DOMAIN, "own")},
+    )
+    other_split = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={("other", "x")},
+    )
+    # Simulate a migration split: both devices share the pre-migration composite id
+    device_registry.devices[own_split.id] = attr.evolve(
+        own_split, composite_device_id=old_id
+    )
+    device_registry.devices[other_split.id] = attr.evolve(
+        other_split, composite_device_id=old_id
+    )
+    # async_get_device now resolves the shared MAC to the synthesized composite
+    composite = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert composite is not None
+    assert composite.id == old_id
+    assert old_id not in device_registry.devices
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.composite_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    # Attached to its own split, not the un-assignable composite id
+    entity_entry = entity_registry.async_get("device_tracker.composite_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id == own_split.id
+
+
+async def test_scanner_entity_composite_device_without_own_split(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A composite with no split owned by the scanner's config entry.
+
+    The tracked device is known to other integrations, so the scanner registers
+    its own device instead of attaching to another config entry's split.
+    """
+    mac = TEST_MAC_ADDRESS
+    other_entry_1 = MockConfigEntry(domain="other_1")
+    other_entry_1.add_to_hass(hass)
+    other_entry_2 = MockConfigEntry(domain="other_2")
+    other_entry_2.add_to_hass(hass)
+    old_id = "composite00000000000000000000000"
+    # Both splits belong to other config entries, none to the scanner's
+    for entry, identifier in ((other_entry_1, "one"), (other_entry_2, "two")):
+        split = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            identifiers={("other", identifier)},
+        )
+        device_registry.devices[split.id] = attr.evolve(
+            split, composite_device_id=old_id
+        )
+    composite = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert composite is not None
+    assert composite.id == old_id
+    assert old_id not in device_registry.devices
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.composite_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    # The scanner registers its own device instead of using a foreign split
+    entity_entry = entity_registry.async_get("device_tracker.composite_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id is not None
+    own_device = device_registry.async_get(entity_entry.device_id)
+    assert own_device is not None
+    assert own_device.config_entry_id == config_entry.entry_id
+
+
+async def test_scanner_entity_attaches_to_own_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the scanner reuses its config entry's device when several share the MAC."""
+    mac = TEST_MAC_ADDRESS
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={("other", "x")},
+    )
+    own_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+    )
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.shared_mac_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get("device_tracker.shared_mac_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id == own_device.id
+
+
+@pytest.mark.parametrize(
+    ("hostname", "expected_device_name"),
+    [
+        pytest.param("tracked-host", "tracked-host", id="hostname"),
+        pytest.param(None, TEST_MAC_ADDRESS, id="no-hostname-falls-back-to-mac"),
+    ],
+)
+async def test_scanner_entity_registers_own_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    hostname: str | None,
+    expected_device_name: str,
+) -> None:
+    """Test the scanner registers its own device when the MAC is known elsewhere."""
+    mac = TEST_MAC_ADDRESS
+    foreign_ids = set()
+    for domain in ("other_1", "other_2"):
+        entry = MockConfigEntry(domain=domain)
+        entry.add_to_hass(hass)
+        foreign_ids.add(
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+                identifiers={(domain, "x")},
+            ).id
+        )
+
+    scanner_entity = MockScannerEntity(
+        mac_address=mac, hostname=hostname, unique_id=f"{mac}_scanner"
+    )
+    scanner_entity.entity_id = "device_tracker.shared_mac_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get("device_tracker.shared_mac_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id is not None
+    assert entity_entry.device_id not in foreign_ids
+    own_device = device_registry.async_get(entity_entry.device_id)
+    assert own_device is not None
+    assert own_device.config_entry_id == config_entry.entry_id
+    assert own_device.connections == {(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))}
+    assert own_device.name == expected_device_name
+
+
+async def test_scanner_entity_own_device_in_subentry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the scanner's own device is created in the entity's config subentry."""
+    mac = TEST_MAC_ADDRESS
+    subentry_id = "mock-subentry-id"
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        subentries_data=(
+            ConfigSubentryData(
+                data={},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                title="Mock subentry",
+                unique_id=None,
+            ),
+        ),
+    )
+    config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={("other", "x")},
+    )
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.subentry_scanner"
+    await create_mock_platform(
+        hass, config_entry, [scanner_entity], config_subentry_id=subentry_id
+    )
+
+    entity_entry = entity_registry.async_get("device_tracker.subentry_scanner")
+    assert entity_entry is not None
+    assert entity_entry.config_subentry_id == subentry_id
+    assert entity_entry.device_id is not None
+    own_device = device_registry.async_get(entity_entry.device_id)
+    assert own_device is not None
+    assert own_device.config_entry_id == config_entry.entry_id
+    assert own_device.config_subentry_id == subentry_id
+
+
+async def test_scanner_entity_prunes_composite_identifiers(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test re-registration prunes composite relics from the scanner's split device.
+
+    Splits of a pre-migration composite keep the identifiers and connections copied
+    from the composite until the owning config entry re-registers the device; the
+    scanner's registration provides only the MAC connection, dropping the rest.
+    """
+    mac = TEST_MAC_ADDRESS
+    own_split = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={("other", "copied-identifier")},
+    )
+    device_registry.devices[own_split.id] = attr.evolve(
+        own_split,
+        composite_device_id="composite00000000000000000000000",
+        has_composite_identifiers=True,
+    )
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.composite_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get("device_tracker.composite_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id == own_split.id
+    device = device_registry.async_get(own_split.id)
+    assert device is not None
+    assert device.identifiers == set()
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))}
 
 
 async def test_connected_device_registered(

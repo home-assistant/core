@@ -26,6 +26,7 @@ from homeassistant.components.mqtt.discovery import (
     MQTTDiscoveryPayload,
     async_start,
 )
+from homeassistant.components.mqtt.entity import async_removed_from_device
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.mqtt.schemas import (
     DEVICE_DISCOVERY_SCHEMA,
@@ -50,7 +51,11 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util.signal_type import SignalTypeFormat
 
-from .common import help_all_subscribe_calls, help_test_unload_config_entry
+from .common import (
+    MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+    help_all_subscribe_calls,
+    help_test_unload_config_entry,
+)
 from .conftest import ENTRY_DEFAULT_BIRTH_MESSAGE
 from .test_tag import DEFAULT_TAG_ID, DEFAULT_TAG_SCAN
 
@@ -69,6 +74,21 @@ from tests.typing import (
     MqttMockPahoClient,
     WebSocketGenerator,
 )
+
+
+def _get_device_for_config_entry(
+    device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+    *,
+    identifiers: set[tuple[str, str]] | None = None,
+    connections: set[tuple[str, str]] | None = None,
+) -> dr.DeviceEntry | None:
+    """Return the device for a config entry matching identifiers or connections."""
+    for device in device_registry.devices.get_entries(identifiers, connections):
+        if device.config_entry_id == config_entry_id:
+            return device
+    return None
+
 
 TEST_SINGLE_CONFIGS = [
     (
@@ -2047,15 +2067,24 @@ async def test_cleanup_device_multiple_config_entries(
     )
     await hass.async_block_till_done()
 
-    # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device(
-        connections={("mac", "12:34:56:AB:CD:EF")}
-    )
-    assert device_entry is not None
-    assert device_entry.config_entries == {
+    # Verify device and registry entries are created. Identifiers and connections are
+    # unique per config entry, so MQTT discovery creates a separate device owned by the
+    # MQTT config entry, sharing the connection with the pre-existing device
+    mqtt_device_entry = _get_device_for_config_entry(
+        device_registry,
         mqtt_config_entry.entry_id,
-        config_entry.entry_id,
-    }
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+    assert mqtt_device_entry is not None
+    assert mqtt_device_entry.config_entries == {mqtt_config_entry.entry_id}
+    assert (
+        _get_device_for_config_entry(
+            device_registry,
+            config_entry.entry_id,
+            connections={("mac", "12:34:56:AB:CD:EF")},
+        )
+        is not None
+    )
     entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
 
@@ -2065,7 +2094,7 @@ async def test_cleanup_device_multiple_config_entries(
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     response = await ws_client.remove_device(
-        device_entry.id, mqtt_config_entry.entry_id
+        mqtt_device_entry.id, mqtt_config_entry.entry_id
     )
     assert response["success"]
 
@@ -2165,15 +2194,24 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     )
     await hass.async_block_till_done()
 
-    # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device(
-        connections={("mac", "12:34:56:AB:CD:EF")}
-    )
-    assert device_entry is not None
-    assert device_entry.config_entries == {
+    # Verify device and registry entries are created. Identifiers and connections are
+    # unique per config entry, so MQTT discovery creates a separate device owned by the
+    # MQTT config entry, sharing the connection with the pre-existing device
+    mqtt_device_entry = _get_device_for_config_entry(
+        device_registry,
         mqtt_config_entry.entry_id,
-        config_entry.entry_id,
-    }
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+    assert mqtt_device_entry is not None
+    assert mqtt_device_entry.config_entries == {mqtt_config_entry.entry_id}
+    assert (
+        _get_device_for_config_entry(
+            device_registry,
+            config_entry.entry_id,
+            connections={("mac", "12:34:56:AB:CD:EF")},
+        )
+        is not None
+    )
     entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
 
@@ -3212,6 +3250,12 @@ async def test_discovery_with_late_via_device_discovery(
 
     await hass.async_block_till_done()
 
+    # The child device links to the stub via device by via_device_id
+    stub_id = via_device_entry.id
+    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    assert child_device_entry is not None
+    assert child_device_entry.via_device_id == stub_id
+
     # Now discover the via device (a switch)
     via_device_config = {
         "name": None,
@@ -3233,6 +3277,12 @@ async def test_discovery_with_late_via_device_discovery(
     )
     assert via_device_entry is not None
     assert via_device_entry.name == "My Switch"
+    # The stub merges into the announced device, keeping its id, so the link
+    # from the child device survives
+    assert via_device_entry.id == stub_id
+    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    assert child_device_entry is not None
+    assert child_device_entry.via_device_id == stub_id
 
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
@@ -3288,6 +3338,12 @@ async def test_discovery_with_late_via_device_update(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
+    # The discovery update established the via_device_id link on the child device
+    stub_id = via_device_entry.id
+    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    assert child_device_entry is not None
+    assert child_device_entry.via_device_id == stub_id
+
     # Now discover the via device (a switch)
     via_device_config = {
         "name": None,
@@ -3309,8 +3365,115 @@ async def test_discovery_with_late_via_device_update(
     )
     assert via_device_entry is not None
     assert via_device_entry.name == "My Switch"
+    assert via_device_entry.id == stub_id
+    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    assert child_device_entry is not None
+    assert child_device_entry.via_device_id == stub_id
 
     await help_check_discovered_items(hass, device_registry, tag_mock)
+
+
+async def test_via_device_relinks_after_parent_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test a child re-links to its via device after the parent is removed."""
+    await mqtt_mock_entry()
+
+    parent_config = {
+        "name": "Parent",
+        "command_topic": "test-parent-topic",
+        "unique_id": "parent_unique",
+        "device": {"identifiers": ["parent-id"], "name": "Parent"},
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/switch/parent/config", json.dumps(parent_config)
+    )
+    child_config = {
+        "name": "Child",
+        "state_topic": "test-child-topic",
+        "event_types": ["press"],
+        "unique_id": "child_unique",
+        "device": {"identifiers": ["child-id"], "via_device": "parent-id"},
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/event/child/config", json.dumps(child_config)
+    )
+    await hass.async_block_till_done()
+
+    parent = device_registry.async_get_device({("mqtt", "parent-id")})
+    child = device_registry.async_get_device({("mqtt", "child-id")})
+    assert parent is not None
+    assert child is not None
+    assert child.via_device_id == parent.id
+
+    # Removing the parent clears the child's via_device_id
+    device_registry.async_remove_device(parent.id)
+    await hass.async_block_till_done()
+    child = device_registry.async_get_device({("mqtt", "child-id")})
+    assert child is not None
+    assert child.via_device_id is None
+
+    # A child discovery update re-creates the via device stub and re-links
+    child_config["name"] = "Child updated"
+    async_fire_mqtt_message(
+        hass, "homeassistant/event/child/config", json.dumps(child_config)
+    )
+    await hass.async_block_till_done()
+
+    parent_stub = device_registry.async_get_device({("mqtt", "parent-id")})
+    child = device_registry.async_get_device({("mqtt", "child-id")})
+    assert parent_stub is not None
+    assert child is not None
+    assert child.via_device_id == parent_stub.id
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            config_entries.ConfigSubentryData(
+                data=MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+                subentry_type="device",
+                title="Parent subentry device",
+            ),
+        )
+    ],
+)
+async def test_via_device_across_subentries(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test via_device resolves across subentries within one config entry."""
+    await mqtt_mock_entry()
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    subentry_id = next(iter(config_entry.subentries))
+    parent = device_registry.async_get_device({(DOMAIN, subentry_id)})
+    assert parent is not None
+    assert parent.config_subentry_id == subentry_id
+
+    child_config = {
+        "name": "Child",
+        "state_topic": "test-child-topic",
+        "event_types": ["press"],
+        "unique_id": "child_unique",
+        "device": {"identifiers": ["child-id"], "via_device": subentry_id},
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/event/child/config", json.dumps(child_config)
+    )
+    await hass.async_block_till_done()
+
+    child = device_registry.async_get_device({(DOMAIN, "child-id")})
+    assert child is not None
+    # The parent lives in a subentry and the discovered child does not, yet the
+    # link resolves because lookups are scoped to the config entry.
+    assert child.config_subentry_id is None
+    assert child.config_entry_id == parent.config_entry_id
+    assert child.via_device_id == parent.id
 
 
 async def test_shared_options_in_sync_with_device_schema() -> None:
@@ -3462,3 +3625,40 @@ async def test_shared_qos_with_device_discovery(
     mqtt_mock.async_subscribe.assert_has_calls(
         [call("foobar/sensors/bla2/state", ANY, qos, "utf-8", ANY)]
     )
+
+
+@pytest.mark.parametrize(
+    ("event_data", "expected"),
+    [
+        pytest.param(
+            {"action": "remove", "device_id": "abc", "device": {}},
+            True,
+            id="remove",
+        ),
+        pytest.param(
+            {
+                "action": "update",
+                "device_id": "abc",
+                "changes": {"config_entry_id": "mqtt_entry_id"},
+            },
+            False,
+            id="update-config-entry",
+        ),
+        pytest.param(
+            {"action": "update", "device_id": "abc", "changes": {"name": "New name"}},
+            False,
+            id="update-other",
+        ),
+    ],
+)
+async def test_async_removed_from_device(
+    event_data: dr.EventDeviceRegistryUpdatedData,
+    expected: bool,
+) -> None:
+    """MQTT leaves a device only when the device is removed.
+
+    A device belongs to a single config entry, so a config-entry change on an update
+    event is not a removal; only a 'remove' action is.
+    """
+    event = Event(dr.EVENT_DEVICE_REGISTRY_UPDATED, event_data)
+    assert async_removed_from_device(event) is expected

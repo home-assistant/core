@@ -8,7 +8,12 @@ import inspect
 from typing import TYPE_CHECKING, Any, Final, overload
 
 import knx_frontend as knx_panel
-from knx_telegram_store import KnxTelegramStoreException, TelegramQuery
+from knx_telegram_store import (
+    BufferedPostgresStore,
+    BufferedSqliteStore,
+    KnxTelegramStoreException,
+    TelegramQuery,
+)
 import voluptuous as vol
 from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
@@ -200,7 +205,11 @@ def ws_get_base_data(
         "connected": knx.xknx.connection_manager.connected.is_set(),
         "current_address": str(knx.xknx.current_address),
         "telegram_backend": (
-            "sqlite" if knx.telegrams.store is not None else "unknown"
+            "sqlite"
+            if isinstance(knx.telegrams.store, BufferedSqliteStore)
+            else "postgres"
+            if isinstance(knx.telegrams.store, BufferedPostgresStore)
+            else "unknown"
         ),
         "telegram_retention": knx.telegrams.store.retention_days
         if knx.telegrams.store is not None

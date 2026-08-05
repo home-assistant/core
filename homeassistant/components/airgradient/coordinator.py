@@ -75,8 +75,8 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
             ) from error
         if measures.firmware_version != self._current_version:
             device_registry = dr.async_get(self.hass)
-            device_entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, self.serial_number)}
+            device_entry = device_registry.async_get_device_by_identifier(
+                (DOMAIN, self.serial_number), self.config_entry.entry_id
             )
             assert device_entry
             device_registry.async_update_device(

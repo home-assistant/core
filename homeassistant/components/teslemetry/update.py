@@ -6,7 +6,11 @@ from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.components.update import (
+    UpdateEntity,
+    UpdateEntityFeature,
+    UpdateEntityStateAttribute,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -154,10 +158,18 @@ class TeslemetryStreamingUpdateEntity(
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
-            self._attr_in_progress = state.attributes.get("in_progress", False)
-            self._attr_update_percentage = state.attributes.get("update_percentage")
-            self._attr_installed_version = state.attributes.get("installed_version")
-            self._attr_latest_version = state.attributes.get("latest_version")
+            self._attr_in_progress = state.attributes.get(
+                UpdateEntityStateAttribute.IN_PROGRESS, False
+            )
+            self._attr_update_percentage = state.attributes.get(
+                UpdateEntityStateAttribute.UPDATE_PERCENTAGE
+            )
+            self._attr_installed_version = state.attributes.get(
+                UpdateEntityStateAttribute.INSTALLED_VERSION
+            )
+            self._attr_latest_version = state.attributes.get(
+                UpdateEntityStateAttribute.LATEST_VERSION
+            )
             self._attr_supported_features = UpdateEntityFeature(
                 state.attributes.get(
                     "supported_features", self._attr_supported_features

@@ -1649,6 +1649,30 @@
     'type': 'result',
   })
 # ---
+# name: test_knx_get_schema[notify]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_send',
+        'options': dict({
+          'dptClasses': list([
+            'string',
+          ]),
+          'passive': False,
+          'state': False,
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_knx_get_schema[number]
   dict({
     'id': 1,
