@@ -147,16 +147,10 @@
         "name": "Compressor Voltage"
       },
       "condenser_temperature": {
-        "name": "Condenser Temperature (T3)"
+        "name": "Condenser Temperature"
       },
       "current_energy_consumption": {
         "name": "Current Energy Consumption"
-      },
-      "current_humidity": {
-        "name": "Current Humidity"
-      },
-      "current_temperature": {
-        "name": "Current Temperature"
       },
       "dehydration_speed": {
         "name": "Dehydration Speed"
@@ -174,7 +168,7 @@
         "name": "Dirty Degree"
       },
       "discharge_pipe_temperature": {
-        "name": "Discharge Pipe Temperature (TP)"
+        "name": "Discharge Pipe Temperature"
       },
       "door_warn": {
         "name": "Door Warning"
@@ -206,7 +200,7 @@
         }
       },
       "evaporator_temperature": {
-        "name": "Evaporator Temperature (T2)"
+        "name": "Evaporator Temperature"
       },
       "fan_level": {
         "name": "Fan Level"
@@ -259,9 +253,6 @@
       "heating_time_remaining": {
         "name": "Heating Time Remaining"
       },
-      "humidity": {
-        "name": "Humidity"
-      },
       "humidity_compensate": {
         "name": "Humidity Compensate"
       },
@@ -272,7 +263,7 @@
         "name": "In TDS"
       },
       "indoor_coil_temperature": {
-        "name": "Indoor Coil Temperature (T1)"
+        "name": "Indoor Coil Temperature"
       },
       "indoor_fan_speed": {
         "name": "Indoor Fan Speed"
@@ -282,9 +273,6 @@
       },
       "indoor_temperature": {
         "name": "Indoor Temperature"
-      },
-      "instant_power0": {
-        "name": "Current Power"
       },
       "intensity": {
         "name": "Intensity"
@@ -314,7 +302,7 @@
         "name": "Out TDS"
       },
       "outdoor_ambient_temperature": {
-        "name": "Outdoor Ambient Temperature (T4)"
+        "name": "Outdoor Ambient Temperature"
       },
       "outdoor_temperature": {
         "name": "Outdoor Temperature"
@@ -323,7 +311,7 @@
         "name": "PM 2.5"
       },
       "pmv": {
-        "name": "PMV"
+        "name": "Predicted Mean Vote"
       },
       "program_da": {
         "name": "Program"
@@ -558,9 +546,6 @@
       },
       "temp_tw_out": {
         "name": "Water Outlet Temperature"
-      },
-      "temperature": {
-        "name": "Temperature"
       },
       "temperature_compensate": {
         "name": "Temperature Compensate"

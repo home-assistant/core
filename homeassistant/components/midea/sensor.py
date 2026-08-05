@@ -1,4 +1,4 @@
-"""Midea Sensor entries."""
+"""Midea Sensor entities."""
 
 from dataclasses import dataclass
 from typing import cast, override
@@ -242,7 +242,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     ),
     MideaSensorEntityDescription(
         key="instant_power0",
-        translation_key="instant_power0",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -260,21 +259,18 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     ),
     MideaSensorEntityDescription(
         key="current_temperature",
-        translation_key="current_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
         key="current_humidity",
-        translation_key="current_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
         key="humidity",
-        translation_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -296,7 +292,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     ),
     MideaSensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
