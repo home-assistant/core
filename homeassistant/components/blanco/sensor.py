@@ -195,19 +195,26 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.dev_id}_{description.key}"
-        system_params: dict[str, Any] = coordinator.data.get("system", {}).get(
+        # device_info is implemented as a property below so that sw_version
+        # (and dev_name) stay current across coordinator updates.
+
+    @override
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info built from the latest coordinator data."""
+        system_params: dict[str, Any] = self.coordinator.data.get("system", {}).get(
             "params", {}
         )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.dev_id)},
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.dev_id)},
             name=system_params.get("dev_name", "BLANCO"),
             manufacturer="BLANCO",
             model=(
-                BLANCO_DEVICE_NAMES.get(coordinator.dev_type)
-                if coordinator.dev_type is not None
+                BLANCO_DEVICE_NAMES.get(self.coordinator.dev_type)
+                if self.coordinator.dev_type is not None
                 else None
             ),
-            serial_number=coordinator.serial,
+            serial_number=self.coordinator.serial,
             sw_version=system_params.get("sw_ver_main_con"),
         )
 
