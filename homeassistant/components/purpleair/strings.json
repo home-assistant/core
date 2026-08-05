@@ -133,7 +133,11 @@
       },
       "settings": {
         "data": {
+          "scan_interval": "Polling interval (minutes)",
           "show_on_map": "Show configured sensor locations on the map"
+        },
+        "data_description": {
+          "scan_interval": "How often to query PurpleAir for updated sensor data"
         },
         "title": "[%key:component::purpleair::options::step::init::menu_options::settings%]"
       }

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import pytest
 
-from homeassistant.components.purpleair.const import DOMAIN
+from homeassistant.components.purpleair.const import CONF_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -319,12 +319,15 @@ async def test_options_settings(
     assert result["step_id"] == "settings"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"show_on_map": True}
+        result["flow_id"], user_input={"scan_interval": 15, "show_on_map": True}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "sensor_indices": [TEST_SENSOR_INDEX1],
+        "scan_interval": 15,
         "show_on_map": True,
     }
 
     assert config_entry.options["show_on_map"] is True
+    assert config_entry.options[CONF_SCAN_INTERVAL] == 15
+    assert config_entry.runtime_data.update_interval.total_seconds() == 15 * 60

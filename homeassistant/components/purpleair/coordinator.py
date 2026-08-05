@@ -14,7 +14,12 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SENSOR_INDICES, LOGGER
+from .const import (
+    CONF_SCAN_INTERVAL,
+    CONF_SENSOR_INDICES,
+    DEFAULT_SCAN_INTERVAL,
+    LOGGER,
+)
 
 SENSOR_FIELDS_TO_RETRIEVE = [
     "0.3_um_count",
@@ -42,9 +47,6 @@ SENSOR_FIELDS_TO_RETRIEVE = [
     "voc",
 ]
 
-UPDATE_INTERVAL = timedelta(minutes=5)
-
-
 type PurpleAirConfigEntry = ConfigEntry[PurpleAirDataUpdateCoordinator]
 
 
@@ -65,7 +67,9 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
             LOGGER,
             config_entry=entry,
             name=entry.title,
-            update_interval=UPDATE_INTERVAL,
+            update_interval=timedelta(
+                minutes=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            ),
         )
 
     @override

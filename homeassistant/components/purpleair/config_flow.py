@@ -32,13 +32,22 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
+from .const import (
+    CONF_SCAN_INTERVAL,
+    CONF_SENSOR_INDICES,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    LOGGER,
+)
 
 CONF_DISTANCE = "distance"
 CONF_NEARBY_SENSOR_OPTIONS = "nearby_sensor_options"
@@ -331,7 +340,17 @@ class PurpleAirOptionsFlowHandler(OptionsFlowWithReload):
                             CONF_SHOW_ON_MAP
                         )
                     },
-                ): bool
+                ): bool,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=1,
+                        max=60,
+                        step=1,
+                        mode=NumberSelectorMode.BOX,
+                    )
+                ),
             }
         )
 
