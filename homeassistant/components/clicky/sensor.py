@@ -28,7 +28,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="timeTotal",
         name="Total Time Spent",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
 )
