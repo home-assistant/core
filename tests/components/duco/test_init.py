@@ -20,12 +20,13 @@ from duco_connectivity import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.duco.const import SCAN_INTERVAL
+from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import setup_platform_integration
 from .conftest import (
     TEST_HOST,
     TEST_MAC,
@@ -135,6 +136,36 @@ async def test_setup_entry_success(
 ) -> None:
     """Test successful setup of the Duco integration."""
     assert init_integration.state is ConfigEntryState.LOADED
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a sub-node added before the box still links to it via via_device_id."""
+    # Force the child-before-parent race: return a sub-node ahead of the box node
+    # and set up only the sensor platform (the fan platform would otherwise create
+    # the box first). This only resolves because the box is pre-registered in
+    # async_setup_entry before the platforms build their entities.
+    box_node = next(node for node in mock_nodes if node.node_id == BOX_NODE_ID)
+    child_node = next(node for node in mock_nodes if node.node_id != BOX_NODE_ID)
+    mock_duco_client.async_get_nodes.return_value = [child_node, box_node]
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    box_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_MAC}_{BOX_NODE_ID}"), mock_config_entry.entry_id
+    )
+    assert box_device is not None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_MAC}_{child_node.node_id}"), mock_config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == box_device.id
 
 
 @pytest.mark.parametrize(
