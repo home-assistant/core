@@ -346,6 +346,11 @@ def generate_rest_openapi(
             operation_id = slug(
                 f"{endpoint.integration}_{endpoint.class_name}_{endpoint.method}"
             )
+            fallback = operation_id
+            suffix = 2
+            while operation_id in operation_ids:
+                operation_id = f"{fallback}_{suffix}"
+                suffix += 1
         operation_ids.add(operation_id)
         paths.setdefault(endpoint.path, {})[endpoint.method] = endpoint.render(
             operation_id
