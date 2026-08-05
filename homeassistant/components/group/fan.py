@@ -288,7 +288,9 @@ class FanGroup(GroupEntity, FanEntity):
         percentage_states = self._async_states_by_support_flag(
             FanEntityFeature.SET_SPEED
         )
-        self._percentage = reduce_attribute(percentage_states, ATTR_PERCENTAGE)
+        self._percentage = reduce_attribute(
+            percentage_states, FanEntityStateAttribute.PERCENTAGE
+        )
         if (
             percentage_states
             and percentage_states[0].attributes.get(
