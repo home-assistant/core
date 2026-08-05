@@ -915,6 +915,17 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': False,
+        'name': 'position_state_send',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
         'name': 'invert_position',
         'optional': True,
         'required': False,
