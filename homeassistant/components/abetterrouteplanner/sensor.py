@@ -77,7 +77,8 @@ class AbrpNumericSensorEntityDescription(AbrpTelemetrySensorEntityDescription[fl
 class AbrpEnumSensorEntityDescription(AbrpTelemetrySensorEntityDescription[str]):
     """Description for the categorical ENUM telemetry sensor (charging_state)."""
 
-    value_fn: Callable[[Telemetry], MetricValue[ChargingState] | None]  # type: ignore[assignment]
+    # unused-ignore: the assignment error only appears in a partial mypy run.
+    value_fn: Callable[[Telemetry], MetricValue[ChargingState] | None]  # type: ignore[assignment, unused-ignore]
 
 
 SENSORS: tuple[
