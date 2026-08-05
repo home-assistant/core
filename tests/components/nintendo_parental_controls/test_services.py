@@ -175,7 +175,9 @@ async def test_update_pin_code_requires_admin(
 ) -> None:
     """Test updating the PIN code requires administrator access."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "testdevid")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "testdevid"), mock_config_entry.entry_id
+    )
     assert device_entry
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
