@@ -315,8 +315,6 @@ class RoborockDockActionButtonEntity(RoborockEntityV1, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        # `send` already raises HomeAssistantError with the command_failed
-        # translation key on a RoborockException.
         await self.send(
             self.entity_description.command,
             self.entity_description.param,
