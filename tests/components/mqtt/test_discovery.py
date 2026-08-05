@@ -51,7 +51,11 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util.signal_type import SignalTypeFormat
 
-from .common import help_all_subscribe_calls, help_test_unload_config_entry
+from .common import (
+    MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+    help_all_subscribe_calls,
+    help_test_unload_config_entry,
+)
 from .conftest import ENTRY_DEFAULT_BIRTH_MESSAGE
 from .test_tag import DEFAULT_TAG_ID, DEFAULT_TAG_SCAN
 
@@ -3246,6 +3250,12 @@ async def test_discovery_with_late_via_device_discovery(
 
     await hass.async_block_till_done()
 
+    # The child device links to the stub via device by via_device_id
+    stub_id = via_device_entry.id
+    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    assert child_device_entry is not None
+    assert child_device_entry.via_device_id == stub_id
+
     # Now discover the via device (a switch)
     via_device_config = {
         "name": None,
@@ -3267,6 +3277,12 @@ async def test_discovery_with_late_via_device_discovery(
     )
     assert via_device_entry is not None
     assert via_device_entry.name == "My Switch"
+    # The stub merges into the announced device, keeping its id, so the link
+    # from the child device survives
+    assert via_device_entry.id == stub_id
+    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    assert child_device_entry is not None
+    assert child_device_entry.via_device_id == stub_id
 
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
@@ -3322,6 +3338,12 @@ async def test_discovery_with_late_via_device_update(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
+    # The discovery update established the via_device_id link on the child device
+    stub_id = via_device_entry.id
+    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    assert child_device_entry is not None
+    assert child_device_entry.via_device_id == stub_id
+
     # Now discover the via device (a switch)
     via_device_config = {
         "name": None,
@@ -3343,8 +3365,115 @@ async def test_discovery_with_late_via_device_update(
     )
     assert via_device_entry is not None
     assert via_device_entry.name == "My Switch"
+    assert via_device_entry.id == stub_id
+    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    assert child_device_entry is not None
+    assert child_device_entry.via_device_id == stub_id
 
     await help_check_discovered_items(hass, device_registry, tag_mock)
+
+
+async def test_via_device_relinks_after_parent_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test a child re-links to its via device after the parent is removed."""
+    await mqtt_mock_entry()
+
+    parent_config = {
+        "name": "Parent",
+        "command_topic": "test-parent-topic",
+        "unique_id": "parent_unique",
+        "device": {"identifiers": ["parent-id"], "name": "Parent"},
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/switch/parent/config", json.dumps(parent_config)
+    )
+    child_config = {
+        "name": "Child",
+        "state_topic": "test-child-topic",
+        "event_types": ["press"],
+        "unique_id": "child_unique",
+        "device": {"identifiers": ["child-id"], "via_device": "parent-id"},
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/event/child/config", json.dumps(child_config)
+    )
+    await hass.async_block_till_done()
+
+    parent = device_registry.async_get_device({("mqtt", "parent-id")})
+    child = device_registry.async_get_device({("mqtt", "child-id")})
+    assert parent is not None
+    assert child is not None
+    assert child.via_device_id == parent.id
+
+    # Removing the parent clears the child's via_device_id
+    device_registry.async_remove_device(parent.id)
+    await hass.async_block_till_done()
+    child = device_registry.async_get_device({("mqtt", "child-id")})
+    assert child is not None
+    assert child.via_device_id is None
+
+    # A child discovery update re-creates the via device stub and re-links
+    child_config["name"] = "Child updated"
+    async_fire_mqtt_message(
+        hass, "homeassistant/event/child/config", json.dumps(child_config)
+    )
+    await hass.async_block_till_done()
+
+    parent_stub = device_registry.async_get_device({("mqtt", "parent-id")})
+    child = device_registry.async_get_device({("mqtt", "child-id")})
+    assert parent_stub is not None
+    assert child is not None
+    assert child.via_device_id == parent_stub.id
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            config_entries.ConfigSubentryData(
+                data=MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+                subentry_type="device",
+                title="Parent subentry device",
+            ),
+        )
+    ],
+)
+async def test_via_device_across_subentries(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test via_device resolves across subentries within one config entry."""
+    await mqtt_mock_entry()
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    subentry_id = next(iter(config_entry.subentries))
+    parent = device_registry.async_get_device({(DOMAIN, subentry_id)})
+    assert parent is not None
+    assert parent.config_subentry_id == subentry_id
+
+    child_config = {
+        "name": "Child",
+        "state_topic": "test-child-topic",
+        "event_types": ["press"],
+        "unique_id": "child_unique",
+        "device": {"identifiers": ["child-id"], "via_device": subentry_id},
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/event/child/config", json.dumps(child_config)
+    )
+    await hass.async_block_till_done()
+
+    child = device_registry.async_get_device({(DOMAIN, "child-id")})
+    assert child is not None
+    # The parent lives in a subentry and the discovered child does not, yet the
+    # link resolves because lookups are scoped to the config entry.
+    assert child.config_subentry_id is None
+    assert child.config_entry_id == parent.config_entry_id
+    assert child.via_device_id == parent.id
 
 
 async def test_shared_options_in_sync_with_device_schema() -> None:
