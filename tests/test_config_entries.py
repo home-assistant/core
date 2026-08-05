@@ -3774,6 +3774,139 @@ async def test_reload_entry_entity_registry_works(
     assert len(mock_unload_entry.mock_calls) == 1
 
 
+async def test_reload_entry_entity_registry_removed_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a config entry removed while its reload is scheduled is skipped.
+
+    Reloads are debounced by RELOAD_AFTER_UPDATE_DELAY seconds. An entry removed
+    inside that window is still in the batch when the timer fires, and must not
+    stop the other entries in the batch from being reloaded.
+    """
+
+    class MockFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+    handler = config_entries.EntityRegistryDisabledHandler(hass)
+    handler.async_setup()
+
+    unload_entry_mocks = {}
+    entries = {}
+    for domain in ("comp_removed", "comp_kept"):
+        config_entry = MockConfigEntry(
+            domain=domain, state=config_entries.ConfigEntryState.LOADED
+        )
+        config_entry.supports_unload = True
+        config_entry.add_to_hass(hass)
+        unload_entry_mocks[domain] = AsyncMock(return_value=True)
+        mock_integration(
+            hass,
+            MockModule(
+                domain,
+                async_setup_entry=AsyncMock(return_value=True),
+                async_unload_entry=unload_entry_mocks[domain],
+            ),
+        )
+        mock_platform(hass, f"{domain}.config_flow", None)
+        entries[domain] = config_entry
+
+        # Disabling and re-enabling an entity schedules a reload of its entry
+        entity_entry = entity_registry.async_get_or_create(
+            "light", domain, "123", config_entry=config_entry
+        )
+        entity_registry.async_update_entity(
+            entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+        )
+        await hass.async_block_till_done()
+        entity_registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
+        await hass.async_block_till_done()
+
+    assert handler.changed == {
+        entries["comp_removed"].entry_id,
+        entries["comp_kept"].entry_id,
+    }
+    assert handler._remove_call_later is not None
+
+    # The entry is removed before the debounce timer fires
+    await hass.config_entries.async_remove(entries["comp_removed"].entry_id)
+    await hass.async_block_till_done()
+    unload_entry_mocks["comp_removed"].reset_mock()
+
+    with (
+        mock_config_flow("comp_removed", MockFlow),
+        mock_config_flow("comp_kept", MockFlow),
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
+        await hass.async_block_till_done()
+
+    assert "UnknownEntry" not in caplog.text
+    # The entry that still exists is reloaded
+    assert len(unload_entry_mocks["comp_kept"].mock_calls) == 1
+    assert len(unload_entry_mocks["comp_removed"].mock_calls) == 0
+
+
+async def test_reload_entry_entity_registry_only_removed_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test nothing is reloaded or logged when the only pending entry is removed."""
+    handler = config_entries.EntityRegistryDisabledHandler(hass)
+    handler.async_setup()
+
+    config_entry = MockConfigEntry(
+        domain="comp", state=config_entries.ConfigEntryState.LOADED
+    )
+    config_entry.supports_unload = True
+    config_entry.add_to_hass(hass)
+    mock_unload_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=mock_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    entity_entry = entity_registry.async_get_or_create(
+        "light", "comp", "123", config_entry=config_entry
+    )
+    entity_registry.async_update_entity(
+        entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+    assert handler.changed == {config_entry.entry_id}
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_unload_entry.reset_mock()
+    caplog.clear()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow()
+        + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    assert "UnknownEntry" not in caplog.text
+    assert "Reloading configuration entries" not in caplog.text
+    assert len(mock_unload_entry.mock_calls) == 0
+    assert not handler.changed
+
+
 async def test_unique_id_persisted(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
