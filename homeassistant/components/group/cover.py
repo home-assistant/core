@@ -18,7 +18,6 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -32,6 +31,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER_TILT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -148,7 +148,7 @@ class CoverGroup(GroupEntity, CoverEntity):
                 values.discard(entity_id)
             return
 
-        features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = new_state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
             self._covers[KEY_OPEN_CLOSE].add(entity_id)
