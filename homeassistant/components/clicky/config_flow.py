@@ -15,7 +15,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN, METRICS
+from .const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     # Validate the API connection (and auth details) by making one API call
     try:
-        await client.query(METRICS["visitorsOnline"])
+        await client.visitors_online()
     except AuthenticationError as error:
         raise InvalidAuth from error
     except ConnectionError as error:

@@ -40,7 +40,7 @@ async def test_async_update_data_auth_failure(hass: HomeAssistant) -> None:
     client.__aenter__.return_value = client
     client.__aexit__.return_value = None
 
-    client.query.side_effect = AuthenticationError("Invalid credentials")
+    client.visitors_online.side_effect = AuthenticationError
 
     coordinator = ClickyCoordinator(
         hass=hass,
@@ -60,10 +60,8 @@ async def test_async_update_data_success(hass: HomeAssistant) -> None:
     client.__aenter__.return_value = client
     client.__aexit__.return_value = None
 
-    client.query.side_effect = [
-        _make_report(12),
-        _make_report(345),
-    ]
+    client.visitors_online.return_value = _make_report(12)
+    client.time_total.return_value = _make_report(345)
 
     coordinator = ClickyCoordinator(
         hass=hass,
@@ -78,7 +76,8 @@ async def test_async_update_data_success(hass: HomeAssistant) -> None:
         "timeTotal": 345,
     }
 
-    assert client.query.await_count == 2
+    assert client.visitors_online.await_count == 1
+    assert client.time_total.await_count == 1
 
 
 @pytest.mark.asyncio
@@ -89,7 +88,7 @@ async def test_async_update_data_failure(hass: HomeAssistant) -> None:
     client.__aenter__.return_value = client
     client.__aexit__.return_value = None
 
-    client.query.side_effect = ClickyAPIError("Unexpected Error")
+    client.visitors_online.side_effect = ClickyAPIError("Unexpected Error")
 
     coordinator = ClickyCoordinator(
         hass=hass,
