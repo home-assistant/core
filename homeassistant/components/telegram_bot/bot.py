@@ -411,19 +411,16 @@ class TelegramNotificationService:
                     if isinstance(entry, dict):
                         text = entry.get(ATTR_TEXT)
                         style = entry.get(ATTR_STYLE)
-                        if style is None:
-                            style = "primary"
-                        elif style not in VALID_INLINE_KEYBOARD_BUTTON_STYLES:
+                        if style is not None and style not in VALID_INLINE_KEYBOARD_BUTTON_STYLES:
                             raise ServiceValidationError(
                                 translation_domain=DOMAIN,
                                 translation_key="invalid_inline_keyboard_style",
                                 translation_placeholders={
                                     "style": str(style),
-                                    "valid_styles": ", ".join(
-                                        sorted(VALID_INLINE_KEYBOARD_BUTTON_STYLES)
-                                    ),
+                                    "valid_styles": ", ".join(sorted(VALID_INLINE_KEYBOARD_BUTTON_STYLES)),
                                 },
                             )
+
                         has_url = ATTR_URL in entry
                         has_callback = ATTR_CALLBACK_DATA in entry
                         if text is None or has_url == has_callback:
