@@ -274,6 +274,8 @@ async def async_setup_entry(
         vehicle_id = raw.vehicle_id
         # Recreate wake-only metrics so a parked vehicle doesn't flash Unavailable.
         for description in SENSORS:
+            if (vehicle_id, description.metric) in added:
+                continue
             unique_id = _telemetry_unique_id(entry, vehicle_id, description.key)
             entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
             if entity_id is None:

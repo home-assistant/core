@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aioabrp import Telemetry
+from aioabrp import AbrpVehicle, Telemetry
 from freezegun import freeze_time
 import pytest
 
@@ -15,8 +15,11 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    MOCK_PAINT,
     MOCK_VEHICLE_ID,
     MOCK_VEHICLE_ID_2,
+    MOCK_VEHICLE_MODEL,
+    MOCK_VEHICLE_NAME,
     SENSOR_TEST_SUB,
     build_metric_value,
 )
@@ -554,6 +557,44 @@ async def test_foreign_config_entry_voltage_row_skipped_by_eager_probe(
     refetched = entity_registry.async_get(foreign_row.entity_id)
     assert refetched is not None
     assert refetched.config_entry_id == foreign_entry.entry_id
+
+
+@pytest.mark.parametrize(
+    "preseed_registry_keys",
+    [
+        pytest.param(["voltage"], id="one_metric"),
+        pytest.param(["voltage", "soc"], id="several_metrics"),
+    ],
+)
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+async def test_repeated_garage_vehicle_restores_one_entity_per_metric(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    preseed_registry_keys: list[str],
+) -> None:
+    """A garage repeating a vehicle must not rebuild its restored sensors twice."""
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
+    mock_abrp_client.return_value = [
+        AbrpVehicle(
+            vehicle_id=MOCK_VEHICLE_ID,
+            name=MOCK_VEHICLE_NAME,
+            vehicle_model=MOCK_VEHICLE_MODEL,
+            paint=MOCK_PAINT,
+        )
+    ] * 2
+
+    await _restart_setup(
+        hass,
+        config_entry_with_vehicles,
+        entity_registry=entity_registry,
+        preseed_registry_keys=preseed_registry_keys,
+    )
+
+    assert "does not generate unique IDs" not in caplog.text
+    assert len(hass.states.async_entity_ids("sensor")) == len(preseed_registry_keys)
 
 
 @pytest.mark.parametrize(
