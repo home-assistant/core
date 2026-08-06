@@ -3,18 +3,16 @@
 from abc import ABC, abstractmethod
 import logging
 from typing import Any, cast, override
+import xml.etree.ElementTree as ET
 
 import defusedxml.ElementTree as defused_ET
 
 from ..client import PapouchHTTPClient, PapouchTransport
-from ..exceptions import DeviceParseError
+from ..exceptions import DeviceParseError, DeviceResponseError
 from .base import PapouchDevice, find_tag
 
 _LOGGER = logging.getLogger(__name__)
 TEMP_MULTIPLICATIVE_CONST = 10
-
-# There is only 1 sensor of the temperature and its type is always 4 (temperature)
-ITEM_ID = "1"
 
 
 class TMEBase(PapouchDevice, ABC):
@@ -349,7 +347,64 @@ class TMERadioMulti(TMEBase):
 
     @override
     async def switch_to_web_mode(self) -> None:
-        """TODO."""
+        """Switch the device network mode to WEB using its current settings."""
+        box = self.settings_root.find(".//set[@box='1']")
+        if box is None:
+            raise DeviceParseError(
+                f"Box for network mode is not found, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            )
+
+        def pad_ip(ip_str: str) -> str:
+            return ".".join(part.zfill(3) for part in ip_str.split("."))
+
+        save_root = ET.Element("root")
+        ET.SubElement(
+            save_root,
+            "set",
+            box="1",
+            ip1=pad_ip(box.get("ip", "0.0.0.0")),
+            ip2=pad_ip(box.get("mask", "0.0.0.0")),
+            ip3=pad_ip(box.get("gate", "0.0.0.0")),
+            ip5=pad_ip(box.get("dip", "0.0.0.0")),
+            num2=box.get("wport", "80").zfill(5),
+            num4="3",
+            num5=box.get("com", "0"),
+            num7=box.get("mport", "502").zfill(5),
+            num1=box.get("lport", "10001").zfill(5),
+            ip4=pad_ip(box.get("rip", "0.0.0.0")),
+            num3=box.get("rport", "0").zfill(5),
+        )
+
+        xml_payload = ET.tostring(save_root, encoding="unicode")
+        response = await self.api_client.write_command(
+            xml_payload, f"{self.name} ({self.location})"
+        )
+
+        self._check_sensor_response(response, "2", "setting to WEB mode")
+
+    def _check_sensor_response(
+        self, response_text: str, expected_status: str, action_msg: str
+    ) -> int:
+        try:
+            root = defused_ET.fromstring(response_text)
+            result_tag = find_tag(root, "result")
+
+            if result_tag is None:
+                raise DeviceParseError(
+                    f"Response doesn't have result tag!, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+                )
+
+            if result_tag.attrib.get("status") != expected_status:
+                raise DeviceResponseError(
+                    f"{self.name} ({self.location}) - {self.api_client.ip_address} returned an error while {action_msg}, whole response: {response_text}"
+                )
+
+            return int(result_tag.attrib.get("typesens", "0"))
+
+        except defused_ET.ParseError as exception:
+            raise DeviceParseError(
+                f"Invalid XML response from device: {exception}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            ) from exception
 
 
 async def async_setup_tme(transport: PapouchTransport) -> TMEBase | None:
