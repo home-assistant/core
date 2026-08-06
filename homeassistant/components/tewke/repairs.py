@@ -1,6 +1,6 @@
 """Repairs for the Tewke integration."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.helpers import issue_registry as ir
@@ -16,13 +16,9 @@ if TYPE_CHECKING:
 
     from .data import TewkeConfigEntry
 
-# Maximum scenes handled in one batch step;
-# must match the scene_N entries in strings.json.
-_MAX_BATCH_SCENES = 50
-
 
 class TewkeNewSceneRepairFlow(RepairsFlow):
-    """Flow to configure pending scenes for a device, up to one batch per invocation."""
+    """Flow to configure pending scenes for a device."""
 
     def __init__(self, entry: TewkeConfigEntry) -> None:
         """Initialise the flow."""
@@ -30,8 +26,10 @@ class TewkeNewSceneRepairFlow(RepairsFlow):
         self._pending_list: list[tuple[str, Scene]] = []
         self._pending_scene_config: dict[str, dict[str, str | bool]] | None = None
 
-    async def async_step_init(self, _) -> RepairsFlowResult:
-        """Load pending scenes and hand off to the batch configuration step."""
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> RepairsFlowResult:
+        """Load pending scenes and show a confirmation form."""
         pending: dict[str, Scene] = (
             self.entry.runtime_data.pending_scenes
             if hasattr(self.entry, "runtime_data")
@@ -39,38 +37,40 @@ class TewkeNewSceneRepairFlow(RepairsFlow):
         )
 
         if not pending:
-            return self.async_abort(reason="no_new_scenes")
+            return self.async_abort(
+                reason="no_new_scenes",
+                description_placeholders={"name": self.entry.title},
+            )
 
-        self._pending_list = list(pending.items())[:_MAX_BATCH_SCENES]
-        return await self._async_apply_results()
+        if user_input is not None:
+            return await self._async_apply_results()
+
+        self._pending_list = list(pending.items())
+        scene_list = "\n".join(f"- {scene.name}" for _, scene in self._pending_list)
+
+        return self.async_show_form(
+            step_id="init",
+            description_placeholders={
+                "name": self.entry.title,
+                "scene_list": scene_list,
+            },
+        )
 
     async def _async_apply_results(
         self,
     ) -> FlowResult:
-        """Commit all configured scene control types and update HA state."""
-        scene_configs: list[str] = []
-        for i, _ in enumerate(self._pending_list):
-            scene_configs.append(f"scene_section_{i}")
+        """Commit all configured scenes and update HA state."""
         pending: dict[str, Scene] = self.entry.runtime_data.pending_scenes
         current_scenes = self.entry.runtime_data.scenes.copy()
         added_scenes: list[Scene] = []
-        index_name_to_id = {
-            f"scene_section_{i}": sid for i, (sid, _) in enumerate(self._pending_list)
-        }
 
-        for index_name in scene_configs:
-            if index_name not in index_name_to_id:
-                continue
-
-            scene_id = index_name_to_id[index_name]
+        for scene_id, _ in self._pending_list:
             if scene_id not in pending:
                 LOGGER.warning("Scene %s no longer pending; skipping", scene_id)
                 continue
 
             added_scenes.append(pending[scene_id])
-
             current_scenes[scene_id] = pending[scene_id]
-
             del pending[scene_id]
 
         self.hass.config_entries.async_update_entry(

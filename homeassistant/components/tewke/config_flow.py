@@ -11,7 +11,6 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, LOGGER
 
@@ -21,7 +20,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
-class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):  # pylint: disable=home-assistant-missing-test-before-configure
+class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tewke."""
 
     VERSION = 1
@@ -81,6 +80,15 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):  # pylint: disable=home-assist
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Show confirmation before creating the config entry."""
+        errors: dict[str, str] = {}
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="confirmation",
+                description_placeholders={"name": self._discovered_name},
+                errors=errors,
+            )
+
         tap = self._tap if self._tap is not None else pytewke.Tap(self._discovered_host)
         self._tap = tap
 
@@ -89,15 +97,14 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):  # pylint: disable=home-assist
                 await tap.discover()
 
             scenes = await tap.get_scenes()
-        except PyTewkeDiscoveryError as err:
+        except PyTewkeDiscoveryError:
             await tap.close()
-            msg = f"Unable to connect to Tewke device at {self._discovered_host}"
-            raise ConfigEntryNotReady(msg) from err
+            self._tap = None
+            errors["base"] = "cannot_connect"
+        else:
+            self._scenes = scenes
+            LOGGER.debug("Discovered scenes: %s", scenes)
 
-        self._scenes = scenes
-        LOGGER.debug("Discovered scenes: %s", scenes)
-
-        if user_input is not None:
             data = {
                 CONF_HOST: self._discovered_host,
                 CONF_NAME: self._discovered_name,
@@ -123,4 +130,5 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):  # pylint: disable=home-assist
         return self.async_show_form(
             step_id="confirmation",
             description_placeholders={"name": self._discovered_name},
+            errors=errors,
         )
