@@ -82,6 +82,7 @@ def mock_immich_albums() -> AsyncMock:
     """Mock the Immich server."""
     mock = AsyncMock(spec=ImmichAlbums)
     mock.async_get_all_albums.return_value = [ALBUM_DATA]
+    mock.async_get_album_info.return_value = ALBUM_DATA
     mock.async_add_assets_to_album.return_value = [
         ImmichAddAssetsToAlbumResponse.from_dict(
             {"id": "abcdef-0123456789", "success": True}
