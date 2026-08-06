@@ -105,7 +105,7 @@ async def test_setup_token_refresh_auth_failure(
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """A 4xx from the token endpoint surfaces as SETUP_ERROR (no reauth flow)."""
+    """A terminal 4xx from the token endpoint surfaces as SETUP_ERROR."""
     config_entry.add_to_hass(hass)
 
     aioclient_mock.post(OAUTH2_TOKEN, status=HTTPStatus.UNAUTHORIZED)
@@ -122,6 +122,7 @@ async def test_setup_token_refresh_auth_failure(
     [
         pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, None, id="server_error"),
         pytest.param(None, ClientError("boom"), id="client_error"),
+        pytest.param(None, TimeoutError("boom"), id="timeout"),
     ],
 )
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
@@ -132,7 +133,7 @@ async def test_setup_token_refresh_transient_failure(
     status: HTTPStatus | None,
     exc: Exception | None,
 ) -> None:
-    """A 5xx or connection error surfaces as SETUP_RETRY."""
+    """A 5xx, connection error or timeout surfaces as SETUP_RETRY."""
     config_entry.add_to_hass(hass)
 
     aioclient_mock.post(OAUTH2_TOKEN, status=status, exc=exc)

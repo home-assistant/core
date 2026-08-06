@@ -1,13 +1,18 @@
 """Tests for the HA-side OAuth2Session-backed AbstractAuth."""
 
-from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
 from aioabrp import AbrpAuthError
-from aiohttp import ClientError, ClientResponseError
+from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.abetterrouteplanner.auth import AbetterrouteplannerAuth
+from homeassistant.components.abetterrouteplanner.const import DOMAIN
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 
@@ -19,13 +24,15 @@ def _mock_session(token: dict | None = None) -> MagicMock:
     return session
 
 
-def _response_error(status: int) -> ClientResponseError:
-    """Build a ClientResponseError with the given HTTP status."""
-    return ClientResponseError(
-        request_info=MagicMock(),
-        history=(),
-        status=status,
-    )
+def _token_error(
+    error_type: type[OAuth2TokenRequestError],
+) -> OAuth2TokenRequestError:
+    """Build one of the helper's token-refresh errors.
+
+    The adapter dispatches on the error's type, so the HTTP status the helper
+    classified it from carries no meaning here.
+    """
+    return error_type(request_info=MagicMock(), history=(), domain=DOMAIN)
 
 
 async def test_async_get_access_token_returns_token() -> None:
@@ -39,20 +46,10 @@ async def test_async_get_access_token_returns_token() -> None:
     session.async_ensure_token_valid.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize(
-    "status",
-    [
-        pytest.param(HTTPStatus.BAD_REQUEST, id="400_invalid_grant"),
-        pytest.param(HTTPStatus.UNAUTHORIZED, id="401_unauthorized"),
-        pytest.param(HTTPStatus.FORBIDDEN, id="403_forbidden"),
-    ],
-)
-async def test_credential_refresh_failure_raises_abrp_auth_error(
-    status: HTTPStatus,
-) -> None:
-    """A credential-related refusal maps to the terminal AbrpAuthError."""
+async def test_reauth_refresh_failure_raises_abrp_auth_error() -> None:
+    """The helper's terminal verdict maps to the terminal AbrpAuthError."""
     session = _mock_session()
-    err = _response_error(status)
+    err = _token_error(OAuth2TokenRequestReauthError)
     session.async_ensure_token_valid.side_effect = err
     auth = AbetterrouteplannerAuth(session)
 
@@ -63,23 +60,22 @@ async def test_credential_refresh_failure_raises_abrp_auth_error(
 
 
 @pytest.mark.parametrize(
-    "status",
+    "error_type",
     [
-        pytest.param(HTTPStatus.REQUEST_TIMEOUT, id="408_timeout"),
-        pytest.param(HTTPStatus.TOO_MANY_REQUESTS, id="429_rate_limited"),
-        pytest.param(HTTPStatus.SERVICE_UNAVAILABLE, id="503_unavailable"),
+        pytest.param(OAuth2TokenRequestTransientError, id="transient"),
+        pytest.param(OAuth2TokenRequestError, id="unclassified"),
     ],
 )
-async def test_transient_refresh_failure_propagates_unchanged(
-    status: HTTPStatus,
+async def test_non_terminal_refresh_failure_propagates_unchanged(
+    error_type: type[OAuth2TokenRequestError],
 ) -> None:
-    """A transient refusal propagates so the library's backoff can recover."""
+    """A non-terminal refusal propagates so the library's backoff can recover."""
     session = _mock_session()
-    err = _response_error(status)
+    err = _token_error(error_type)
     session.async_ensure_token_valid.side_effect = err
     auth = AbetterrouteplannerAuth(session)
 
-    with pytest.raises(ClientResponseError) as exc_info:
+    with pytest.raises(OAuth2TokenRequestError) as exc_info:
         await auth.async_get_access_token()
 
     assert exc_info.value is err

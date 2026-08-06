@@ -1,14 +1,18 @@
 """The A Better Routeplanner integration."""
 
-from http import HTTPStatus
 import logging
 
 from aioabrp import AbrpClient, TelemetryStream
-from aiohttp import ClientError, ClientResponseError
+from aiohttp import ClientError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -69,17 +73,12 @@ async def async_setup_entry(
 
     try:
         await session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if HTTPStatus.BAD_REQUEST <= err.status < HTTPStatus.INTERNAL_SERVER_ERROR:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="oauth2_session_not_valid",
-            ) from err
-        raise ConfigEntryNotReady(
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
-            translation_key="oauth2_token_refresh_failed",
+            translation_key="oauth2_session_not_valid",
         ) from err
-    except ClientError as err:
+    except (OAuth2TokenRequestError, ClientError, TimeoutError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="oauth2_token_refresh_failed",
