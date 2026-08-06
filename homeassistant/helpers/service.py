@@ -961,6 +961,27 @@ async def _async_check_admin(hass: HomeAssistant, call: ServiceCall) -> None:
             raise Unauthorized(context=call.context)
 
 
+def _admin_only_entity_handler(
+    hass: HomeAssistant,
+    entity_handler: Callable[
+        [ServiceCall], Coroutine[Any, Any, EntityServiceResponse | None]
+    ],
+) -> Callable[[ServiceCall], Coroutine[Any, Any, EntityServiceResponse | None]]:
+    """Wrap an entity service handler with an admin check.
+
+    The check is awaited inline instead of using _async_admin_handler, which
+    runs the wrapped job in a separate tracked task; a handler waiting for
+    tracked tasks (e.g. async_block_till_done in tests) would deadlock on its
+    own ancestor, and the extra task boundary breaks cancellation propagation.
+    """
+
+    async def admin_entity_handler(call: ServiceCall) -> EntityServiceResponse | None:
+        await _async_check_admin(hass, call)
+        return await entity_handler(call)
+
+    return admin_entity_handler
+
+
 async def _async_admin_handler(
     hass: HomeAssistant,
     service_job: HassJob[
@@ -1178,7 +1199,9 @@ def async_register_entity_service(
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
-    entity_handler = partial(
+    entity_handler: Callable[
+        [ServiceCall], Coroutine[Any, Any, EntityServiceResponse | None]
+    ] = partial(
         entity_service_call,
         hass,
         entities,
@@ -1187,18 +1210,13 @@ def async_register_entity_service(
         required_features=required_features,
     )
 
-    # The admin check is awaited inline rather than going through
-    # _async_admin_handler, which would run the entity call in its own task and
-    # deadlock any handler that waits for pending tasks to finish.
-    async def admin_entity_handler(call: ServiceCall) -> EntityServiceResponse | None:
-        """Check the user is an admin before handling the entity service call."""
-        await _async_check_admin(hass, call)
-        return await entity_handler(call)
+    if admin_only:
+        entity_handler = _admin_only_entity_handler(hass, entity_handler)
 
     hass.services.async_register(
         domain,
         name,
-        admin_entity_handler if admin_only else entity_handler,
+        entity_handler,
         schema,
         supports_response,
         job_type=HassJobType.Coroutinefunction if admin_only else job_type,
@@ -1285,7 +1303,9 @@ def async_register_platform_entity_service(
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
-    entity_handler = partial(
+    entity_handler: Callable[
+        [ServiceCall], Coroutine[Any, Any, EntityServiceResponse | None]
+    ] = partial(
         entity_service_call,
         hass,
         partial(_get_platform_entities, hass, entity_domain, service_domain),
@@ -1294,20 +1314,13 @@ def async_register_platform_entity_service(
         required_features=required_features,
     )
 
-    service_handler = (
-        partial(
-            _async_admin_handler,
-            hass,
-            HassJob(entity_handler, f"admin service {service_domain}.{service_name}"),
-        )
-        if admin_only
-        else entity_handler
-    )
+    if admin_only:
+        entity_handler = _admin_only_entity_handler(hass, entity_handler)
 
     hass.services.async_register(
         service_domain,
         service_name,
-        service_handler,
+        entity_handler,
         schema,
         supports_response,
         job_type=HassJobType.Coroutinefunction,
