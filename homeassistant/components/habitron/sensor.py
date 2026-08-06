@@ -84,7 +84,7 @@ def _ekey_finger_value(module: Any, idx: int) -> str | None:
     return None
 
 
-async def async_setup_entry(  # noqa: C901
+async def async_setup_entry(
     hass: HomeAssistant,
     entry: HabitronConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
@@ -114,216 +114,71 @@ async def async_setup_entry(  # noqa: C901
     }
 
     new_devices: list[SensorEntity] = []
+
+    def add_described(
+        owner: Any,
+        member: Any,
+        descriptions: tuple[HbtnSensorEntityDescription, ...],
+        initial_area_id: str | None = None,
+    ) -> None:
+        """Create one entity per description for this bus member."""
+        for description in descriptions:
+            new_devices.append(
+                HbtnDescribedSensor(
+                    owner,
+                    member,
+                    hbtn_cord,
+                    len(new_devices),
+                    description,
+                    initial_area_id=initial_area_id,
+                )
+            )
+
     for smhub_sensor in smhub.sensors:
-        if smhub_sensor.name == "Memory usage":
-            new_devices.append(
-                HbtnDescribedSensor(
-                    smhub, smhub_sensor, hbtn_cord, len(new_devices), MEMORY_DESCRIPTION
-                )
-            )
-        if smhub_sensor.name == "Disk usage":
-            new_devices.append(
-                HbtnDescribedSensor(
-                    smhub, smhub_sensor, hbtn_cord, len(new_devices), DISK_DESCRIPTION
-                )
-            )
+        add_described(smhub, smhub_sensor, HUB_SENSORS.get(smhub_sensor.name, ()))
     for smhub_diag in smhub.diags:
-        if smhub_diag.name == "CPU Frequency":
-            new_devices.append(
-                HbtnDescribedSensor(
-                    smhub,
-                    smhub_diag,
-                    hbtn_cord,
-                    len(new_devices),
-                    CPU_FREQUENCY_DESCRIPTION,
-                )
-            )
-        if smhub_diag.name == "CPU load":
-            new_devices.append(
-                HbtnDescribedSensor(
-                    smhub, smhub_diag, hbtn_cord, len(new_devices), CPU_LOAD_DESCRIPTION
-                )
-            )
-        if smhub_diag.name == "CPU Temperature":
-            new_devices.append(
-                HbtnDescribedSensor(
-                    smhub,
-                    smhub_diag,
-                    hbtn_cord,
-                    len(new_devices),
-                    CPU_TEMPERATURE_DESCRIPTION,
-                )
-            )
+        add_described(smhub, smhub_diag, HUB_DIAGS.get(smhub_diag.name, ()))
 
     for hbt_module in hbtn_rt.modules:
         # The library only populates ``analogins`` for modules that have analog
         # inputs, so iterate it directly instead of hard-coding module types --
         # ``type == 3`` marks a real (enabled) analog input.
         for ain in hbt_module.analogins:
-            if ain.type == 3:
-                # ain.area == 0 means "the module's own area"; only a value that
-                # differs is a real deviation, and only stamp it on first
-                # creation (unique_id not yet registered) so a later user area
-                # choice survives reloads.
-                analog_uid = (
-                    f"Mod_{hbt_module.uid}_snsr{ain.nmbr}_{ANALOG_DESCRIPTION.key}"
-                )
-                deviating_area = (
-                    area_ids.get(ain.area)
-                    if ain.area not in (0, hbt_module.area)
-                    and analog_uid not in known_unique_ids
-                    else None
-                )
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        ain,
-                        hbtn_cord,
-                        len(new_devices),
-                        ANALOG_DESCRIPTION,
-                        initial_area_id=deviating_area,
-                    )
-                )
+            if ain.type != 3:
+                continue
+            # ain.area == 0 means "the module's own area"; only a value that
+            # differs is a real deviation, and only stamp it on first creation
+            # (unique_id not yet registered) so a later user area choice
+            # survives reloads.
+            analog_uid = f"Mod_{hbt_module.uid}_snsr{ain.nmbr}_{ANALOG_DESCRIPTION.key}"
+            deviating_area = (
+                area_ids.get(ain.area)
+                if ain.area not in (0, hbt_module.area)
+                and analog_uid not in known_unique_ids
+                else None
+            )
+            add_described(
+                hbt_module, ain, (ANALOG_DESCRIPTION,), initial_area_id=deviating_area
+            )
         for mod_sensor in hbt_module.sensors:
-            if mod_sensor.name[0:11] == "Temperature":
-                # The external probe is disabled by default; the two descriptions
-                # differ only in entity_registry_enabled_default.
-                temp_description = (
-                    TEMP_EXT_DESCRIPTION
-                    if mod_sensor.name == "Temperature ext."
-                    else TEMP_DESCRIPTION
-                )
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        mod_sensor,
-                        hbtn_cord,
-                        len(new_devices),
-                        temp_description,
-                    )
-                )
-            elif mod_sensor.name == "Humidity":
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        mod_sensor,
-                        hbtn_cord,
-                        len(new_devices),
-                        HUMIDITY_DESCRIPTION,
-                    )
-                )
-            elif mod_sensor.name == "Illuminance":
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        mod_sensor,
-                        hbtn_cord,
-                        len(new_devices),
-                        ILLUMINANCE_DESCRIPTION,
-                    )
-                )
-            elif mod_sensor.name in ("Wind", "Windpeak"):
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        mod_sensor,
-                        hbtn_cord,
-                        len(new_devices),
-                        WIND_DESCRIPTION,
-                    )
-                )
-            elif mod_sensor.name == "Airquality":
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        mod_sensor,
-                        hbtn_cord,
-                        len(new_devices),
-                        AIRQUALITY_DESCRIPTION,
-                    )
-                )
-            elif mod_sensor.name == "Identifier":
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        mod_sensor,
-                        hbtn_cord,
-                        len(new_devices),
-                        EKEY_ID_DESCRIPTION,
-                    )
-                )
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        mod_sensor,
-                        hbtn_cord,
-                        len(new_devices),
-                        EKEY_USER_NAME_DESCRIPTION,
-                    )
-                )
-            elif mod_sensor.name == "Finger":
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        mod_sensor,
-                        hbtn_cord,
-                        len(new_devices),
-                        EKEY_FINGER_DESCRIPTION,
-                    )
-                )
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        mod_sensor,
-                        hbtn_cord,
-                        len(new_devices),
-                        EKEY_FINGER_NAME_DESCRIPTION,
-                    )
-                )
+            add_described(
+                hbt_module, mod_sensor, MODULE_SENSORS.get(mod_sensor.name, ())
+            )
         for mod_logic in hbt_module.logic:
             if mod_logic.type > 0:
                 new_devices.append(
                     LogicSensor(hbt_module, mod_logic, hbtn_cord, len(new_devices))
                 )
         for mod_diag in hbt_module.diags:
-            if mod_diag.name == "Status":
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        mod_diag,
-                        hbtn_cord,
-                        len(new_devices),
-                        STATUS_DESCRIPTION,
-                    )
-                )
-            elif mod_diag.name == "PowerTemp":
-                new_devices.append(
-                    HbtnDescribedSensor(
-                        hbt_module,
-                        mod_diag,
-                        hbtn_cord,
-                        len(new_devices),
-                        POWER_TEMP_DESCRIPTION,
-                    )
-                )
-    for time_out in hbtn_rt.chan_timeouts:
-        new_devices.append(
-            HbtnDescribedSensor(
-                hbtn_rt, time_out, hbtn_cord, len(new_devices), TIMEOUT_DESCRIPTION
-            )
-        )
-    for ch_curr in hbtn_rt.chan_currents:
-        new_devices.append(
-            HbtnDescribedSensor(
-                hbtn_rt, ch_curr, hbtn_cord, len(new_devices), CURRENT_DESCRIPTION
-            )
-        )
-    for rt_vtg in hbtn_rt.voltages:
-        new_devices.append(
-            HbtnDescribedSensor(
-                hbtn_rt, rt_vtg, hbtn_cord, len(new_devices), VOLTAGE_DESCRIPTION
-            )
-        )
+            add_described(hbt_module, mod_diag, MODULE_DIAGS.get(mod_diag.name, ()))
+
+    for router_members, router_description in (
+        (hbtn_rt.chan_timeouts, TIMEOUT_DESCRIPTION),
+        (hbtn_rt.chan_currents, CURRENT_DESCRIPTION),
+        (hbtn_rt.voltages, VOLTAGE_DESCRIPTION),
+    ):
+        for router_member in router_members:
+            add_described(hbtn_rt, router_member, (router_description,))
 
     if new_devices:
         async_add_entities(new_devices)
@@ -701,3 +556,38 @@ LOGIC_DESCRIPTION = HbtnSensorEntityDescription(
     value_fn=lambda module, idx: module.logic[idx].value,
     subscribe_fn=lambda module, idx: module.logic[idx],
 )
+
+
+# Which entity descriptions a bus member's name maps to. Keyed by the name the
+# library gives the member; the ekey members produce two entities each -- the
+# raw value and the resolved name. A member whose name is not listed simply
+# gets no entity.
+HUB_SENSORS: dict[str, tuple[HbtnSensorEntityDescription, ...]] = {
+    "Memory usage": (MEMORY_DESCRIPTION,),
+    "Disk usage": (DISK_DESCRIPTION,),
+}
+
+HUB_DIAGS: dict[str, tuple[HbtnSensorEntityDescription, ...]] = {
+    "CPU Frequency": (CPU_FREQUENCY_DESCRIPTION,),
+    "CPU load": (CPU_LOAD_DESCRIPTION,),
+    "CPU Temperature": (CPU_TEMPERATURE_DESCRIPTION,),
+}
+
+MODULE_SENSORS: dict[str, tuple[HbtnSensorEntityDescription, ...]] = {
+    # The external probe is disabled by default; the two descriptions differ
+    # only in entity_registry_enabled_default.
+    "Temperature": (TEMP_DESCRIPTION,),
+    "Temperature ext.": (TEMP_EXT_DESCRIPTION,),
+    "Humidity": (HUMIDITY_DESCRIPTION,),
+    "Illuminance": (ILLUMINANCE_DESCRIPTION,),
+    "Wind": (WIND_DESCRIPTION,),
+    "Windpeak": (WIND_DESCRIPTION,),
+    "Airquality": (AIRQUALITY_DESCRIPTION,),
+    "Identifier": (EKEY_ID_DESCRIPTION, EKEY_USER_NAME_DESCRIPTION),
+    "Finger": (EKEY_FINGER_DESCRIPTION, EKEY_FINGER_NAME_DESCRIPTION),
+}
+
+MODULE_DIAGS: dict[str, tuple[HbtnSensorEntityDescription, ...]] = {
+    "Status": (STATUS_DESCRIPTION,),
+    "PowerTemp": (POWER_TEMP_DESCRIPTION,),
+}
