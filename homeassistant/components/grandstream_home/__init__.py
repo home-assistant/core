@@ -1,14 +1,8 @@
 """The Grandstream Home integration."""
 
-from dataclasses import dataclass
 import logging
 
-from grandstream_home_api import (
-    GDSPhoneAPI,
-    GNSNasAPI,
-    attempt_login,
-    create_api_instance,
-)
+from grandstream_home_api import GDSPhoneAPI, attempt_login, create_device_api_instance
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -28,23 +22,15 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
-from .coordinator import GrandstreamConfigEntry, GrandstreamCoordinator
+from .coordinator import (
+    GrandstreamConfigEntry,
+    GrandstreamCoordinator,
+    GrandstreamRuntimeData,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-
-
-@dataclass
-class GrandstreamRuntimeData:
-    """Runtime data for Grandstream config entry."""
-
-    api: GDSPhoneAPI | GNSNasAPI
-    coordinator: GrandstreamCoordinator
-    device_info: DeviceInfo
-    device_model: str
-    product_model: str | None
-    unique_id: str
 
 
 def _get_display_model(device_model: str, product_model: str | None) -> str:
@@ -73,15 +59,12 @@ def _create_device_info(
         identifiers={(DOMAIN, unique_id)},
         manufacturer="Grandstream",
         model=display_model,
-        suggested_area="Entry",
         sw_version=firmware_version,
         connections=connections,
     )
 
 
-async def _setup_api(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> GDSPhoneAPI | GNSNasAPI:
+async def _setup_api(hass: HomeAssistant, entry: ConfigEntry) -> GDSPhoneAPI:
     """Set up and initialize API with error handling."""
     host = entry.data[CONF_HOST]
     username = entry.data[CONF_USERNAME]
@@ -91,7 +74,7 @@ async def _setup_api(
     device_model = entry.data[CONF_TYPE]
 
     # Create API instance using library function
-    api = create_api_instance(
+    api = create_device_api_instance(
         device_type=device_model,
         host=host,
         username=username,

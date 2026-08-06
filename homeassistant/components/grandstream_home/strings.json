@@ -2,16 +2,13 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "missing_data": "Missing required data",
-      "not_grandstream_device": "Not a Grandstream device"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "ha_control_disabled": "Failed to add. Please enable Home Assistant control in the device web interface",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_host": "Invalid host address",
-      "invalid_port": "Invalid port number",
+      "missing_data": "Missing required data",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",

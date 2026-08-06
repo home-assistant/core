@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -91,11 +92,11 @@ class GrandstreamDeviceSensor(CoordinatorEntity[GrandstreamCoordinator], SensorE
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        assert coordinator.config_entry is not None
         self._attr_device_info = device_info
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
+    @override
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
