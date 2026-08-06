@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from hotspring import Heater, Spa, SpaInfo
+from hotspring import Heater, Spa, SpaBrand, SpaInfo, Versions
 import pytest
 
 from homeassistant.components.hotspring.const import DOMAIN
@@ -40,10 +40,26 @@ def device_fixture() -> Spa:
         hostname="ConnectedSpa_DDEEFF",
         root_topic="mySpaAABBCCDDEEFF",
         sna_ready=True,
+        brand=SpaBrand.HOTSPRING,
         brand_name="Hot Spring",
-        collection_type="Highlife",
-        model_type="Relay",
+        collection="Highlife",
+        model_name="Relay",
+        brand_id="1",
+        collection_id="1",
+        model_id="1",
         volume=335,
+    )
+    spa.versions = Versions(
+        control_box="3.0.0",
+        control_panel="2.0.0",
+        fwss="",
+        fwiq="",
+        btxr="",
+        cool_zone="",
+        wifi_dongle="1.0.0",
+        amp="",
+        dosing="",
+        logolight="",
     )
     heater = MagicMock(spec=Heater)
     heater.current_temperature = 102.0

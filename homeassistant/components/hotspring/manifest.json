@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["hotspring"],
   "quality_scale": "silver",
-  "requirements": ["python-hotspring==1.2.0"]
+  "requirements": ["python-hotspring==1.3.0"]
 }

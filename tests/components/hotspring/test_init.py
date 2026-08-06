@@ -5,8 +5,10 @@ from unittest.mock import MagicMock
 from hotspring import HotSpringConnectionError, HotSpringError, Spa
 import pytest
 
+from homeassistant.components.hotspring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -20,6 +22,21 @@ async def test_async_setup_entry(
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
     assert init_integration.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test device registry entry creation with updated info."""
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "AA:BB:CC:DD:EE:FF")}
+    )
+    assert device is not None
+    assert device.manufacturer == "Hot Spring"
+    assert device.model == "Relay"
+    assert device.sw_version == "1.0.0"
 
 
 @pytest.mark.parametrize(

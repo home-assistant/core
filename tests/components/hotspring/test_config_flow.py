@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError, HotSpringError, Spa, SpaInfo
+from hotspring import HotSpringConnectionError, HotSpringError, Spa, SpaBrand, SpaInfo
 import pytest
 
 from homeassistant.components.hotspring.const import DOMAIN
@@ -98,9 +98,13 @@ async def test_form_no_mac_address(
         hostname="ConnectedSpa_DDEEFF",
         root_topic="unknownTopic123",
         sna_ready=True,
+        brand=SpaBrand.HOTSPRING,
         brand_name="Hot Spring",
-        collection_type="Highlife",
-        model_type="Relay",
+        collection="Highlife",
+        model_name="Relay",
+        brand_id="1",
+        collection_id="1",
+        model_id="1",
         volume=335,
     )
     result = await hass.config_entries.flow.async_init(
