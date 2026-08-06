@@ -54,7 +54,7 @@ class PortainerContainerButtonDescription(ButtonEntityDescription):
         [Portainer, int, str],
         Coroutine[Any, Any, DockerContainer | None],
     ]
-    available_fn: Callable[[PortainerContainerData], bool] = lambda _: True
+    available_fn: Callable[[PortainerContainerData], bool]
 
 
 ENDPOINT_BUTTONS: tuple[PortainerEndpointButtonDescription, ...] = (
