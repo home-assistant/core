@@ -36,9 +36,7 @@ rules:
     status: exempt
     comment: This integration does not provide any actions.
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: This integration does not have an options flow.
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
@@ -63,9 +61,7 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices:
-    status: todo
-    comment: Clients connecting after setup are not added until Home Assistant restarts.
+  dynamic-devices: done
   entity-category:
     status: exempt
     comment: This integration only creates device tracker entities.
@@ -83,9 +79,7 @@ rules:
     status: exempt
     comment: Device tracker entities use the icon of their source type.
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: This integration has no repairs beyond the deprecated YAML import issue.
+  repair-issues: done
   stale-devices:
     status: todo
     comment: Clients that stop connecting are not removed automatically.
