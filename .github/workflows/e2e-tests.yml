@@ -8,10 +8,22 @@ on:
         description: "Image tag to test (e.g. dev, 2026.7.1, 2026.8.0b0)"
         default: "dev"
         required: true
+      images:
+        description: "JSON array of machine images to test"
+        default: >-
+          ["generic-x86-64", "khadas-vim3", "odroid-c2", "odroid-c4",
+          "odroid-m1", "odroid-n2", "qemuarm-64", "qemux86-64",
+          "raspberrypi3-64", "raspberrypi4-64", "raspberrypi5-64",
+          "yellow", "green"]
+        required: true
   workflow_call:
     inputs:
       version:
         description: "Image tag to test (e.g. dev, 2026.7.1, 2026.8.0b0)"
+        required: true
+        type: string
+      images:
+        description: "JSON array of machine images to test"
         required: true
         type: string
 
@@ -25,34 +37,13 @@ jobs:
   boot_check:
     name: Boot check ${{ matrix.machine }} image
     if: github.repository_owner == 'home-assistant'
-    runs-on: ${{ matrix.runs-on }}
+    # amd64 machines need an x86 runner; all others are aarch64
+    runs-on: ${{ contains(fromJson('["generic-x86-64", "qemux86-64"]'), matrix.machine) && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        # Keep in sync with the build_machine matrix in builder.yml
-        machine:
-          - generic-x86-64
-          - khadas-vim3
-          - odroid-c2
-          - odroid-c4
-          - odroid-m1
-          - odroid-n2
-          - qemuarm-64
-          - qemux86-64
-          - raspberrypi3-64
-          - raspberrypi4-64
-          - raspberrypi5-64
-          - yellow
-          - green
-        include:
-          # Default: aarch64 on native ARM runner
-          - runs-on: ubuntu-24.04-arm
-          # Overrides for amd64 machines
-          - machine: generic-x86-64
-            runs-on: ubuntu-24.04
-          - machine: qemux86-64
-            runs-on: ubuntu-24.04
+        machine: ${{ fromJson(inputs.images) }}
     env:
       BASE_URL: http://localhost:8123
     services:
