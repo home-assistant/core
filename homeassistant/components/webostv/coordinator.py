@@ -5,7 +5,7 @@ from typing import override
 
 from aiowebostv import WebOsClient, WebOsTvPairError, WebOsTvState
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -51,7 +51,7 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.client.connect()
         except WEBOSTV_EXCEPTIONS as error:
-            if not self.turn_on:
+            if not self.turn_on and self.config_entry.state is ConfigEntryState.LOADED:
                 # can't recover if the TV is disconnected and no turn_on action
                 raise UpdateFailed(
                     translation_domain=DOMAIN,

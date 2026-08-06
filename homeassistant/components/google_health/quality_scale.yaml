@@ -72,13 +72,11 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration does not raise repair issues.
-  stale-devices:
-    status: exempt
-    comment: This integration has a static device.
+  stale-devices: done
 
   # Platinum
   async-dependency: done
