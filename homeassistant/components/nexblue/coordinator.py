@@ -1,6 +1,5 @@
 """Data update coordinator for NexBlue."""
 
-from dataclasses import dataclass
 from typing import override
 
 from nexblue_api import (
@@ -22,27 +21,17 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_REFRESH_TOKEN, LOGGER, UPDATE_INTERVAL
 
 
-@dataclass(kw_only=True, slots=True)
-class NexBlueRuntimeData:
-    """Runtime-only data for a NexBlue config entry."""
-
-    coordinator: NexBlueDataUpdateCoordinator
-
-
-type NexBlueConfigEntry = ConfigEntry[NexBlueRuntimeData]
-
-
 class NexBlueDataUpdateCoordinator(
     DataUpdateCoordinator[dict[str, ChargerStatus | None]]
 ):
     """Fetch all charger telemetry in a coordinated update."""
 
-    config_entry: NexBlueConfigEntry
+    config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: NexBlueConfigEntry,
+        entry: ConfigEntry,
         client: NexBlueClient,
     ) -> None:
         """Initialize the coordinator."""
@@ -106,3 +95,6 @@ class NexBlueDataUpdateCoordinator(
                     CONF_REFRESH_TOKEN: token.refresh_token,
                 },
             )
+
+
+type NexBlueConfigEntry = ConfigEntry[NexBlueDataUpdateCoordinator]

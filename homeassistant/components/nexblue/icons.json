@@ -1,26 +1,50 @@
 {
   "entity": {
+    "binary_sensor": {
+      "is_disable": {
+        "default": "mdi:power-off"
+      },
+      "is_lock": {
+        "default": "mdi:lock-check"
+      }
+    },
     "sensor": {
-      "access_level": { "default": "mdi:account-lock" },
-      "brightness": { "default": "mdi:brightness-percent" },
-      "cable_current_limit": { "default": "mdi:current-ac" },
-      "cable_lock_mode": { "default": "mdi:lock-clock" },
-      "charging_state": { "default": "mdi:ev-station" },
-      "circuit_fuse": { "default": "mdi:fuse" },
-      "current_1": { "default": "mdi:current-ac" },
-      "current_2": { "default": "mdi:current-ac" },
-      "current_3": { "default": "mdi:current-ac" },
-      "current_limit": { "default": "mdi:current-ac" },
-      "energy": { "default": "mdi:lightning-bolt" },
-      "is_disable": { "default": "mdi:check-circle-outline" },
-      "is_lock": { "default": "mdi:lock-check" },
-      "lifetime_energy": { "default": "mdi:counter" },
-      "network_status": { "default": "mdi:network-outline" },
-      "phase_charging": { "default": "mdi:sine-wave" },
-      "power": { "default": "mdi:flash" },
-      "voltage_1": { "default": "mdi:sine-wave" },
-      "voltage_2": { "default": "mdi:sine-wave" },
-      "voltage_3": { "default": "mdi:sine-wave" }
+      "access_level": {
+        "default": "mdi:account-lock"
+      },
+      "brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "cable_current_limit": {
+        "default": "mdi:current-ac"
+      },
+      "cable_lock_mode": {
+        "default": "mdi:lock-clock"
+      },
+      "charging_state": {
+        "default": "mdi:ev-station"
+      },
+      "circuit_fuse": {
+        "default": "mdi:fuse"
+      },
+      "current": {
+        "default": "mdi:current-ac"
+      },
+      "current_limit": {
+        "default": "mdi:current-ac"
+      },
+      "lifetime_energy": {
+        "default": "mdi:counter"
+      },
+      "network_status": {
+        "default": "mdi:network-outline"
+      },
+      "phase_charging": {
+        "default": "mdi:sine-wave"
+      },
+      "voltage": {
+        "default": "mdi:sine-wave"
+      }
     }
   }
 }

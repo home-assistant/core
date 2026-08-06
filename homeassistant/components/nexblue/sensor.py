@@ -26,41 +26,41 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
 
 
-def _enum_value(values: dict[int, str], value: int | None) -> str | None:
-    """Return a known text value or a safe fallback for a protocol value."""
+def _enum_value(values: dict[int, str], value: int | None) -> str:
+    """Return a translated state key for a protocol value."""
     if value is None:
-        return None
-    return values.get(value, f"Unknown ({value})")
-
-
-def _bool_value(value: bool | None, *, true_value: str, false_value: str) -> str | None:
-    """Return a text value for an optional boolean."""
-    if value is None:
-        return None
-    return true_value if value else false_value
+        return "unknown"
+    return values.get(value, "unknown")
 
 
 CHARGING_STATE_MAP = {
-    0: "Connect cable to charge",
-    1: "Ready to charge",
-    2: "Charging",
-    3: "Charging complete",
-    4: "Charging unavailable",
-    5: "Waiting for available power",
-    6: "Schedule waiting",
-    7: "Waiting for car response",
+    0: "idle",
+    1: "connected",
+    2: "charging",
+    3: "finished",
+    4: "error",
+    5: "lb_waiting",
+    6: "delay_waiting",
+    7: "ev_waiting",
 }
 
-NETWORK_STATUS_MAP = {0: "None", 1: "Wi-Fi", 2: "4G", 3: "Ethernet"}
+NETWORK_STATUS_MAP = {0: "none", 1: "wifi", 2: "modem", 3: "ethernet"}
 
-CABLE_LOCK_MODE_MAP = {0: "Locked while charging", 1: "Always locked"}
+CABLE_LOCK_MODE_MAP = {
+    0: "locked_while_charging",
+    1: "always_locked",
+}
 
-ACCESS_LEVEL_MAP = {0: "Authorized users only", 1: "No restrictions"}
+ACCESS_LEVEL_MAP = {
+    0: "authorized_users_only",
+    1: "no_restrictions",
+}
 
-PHASE_CHARGING_MAP = {0: "Three-phase", 1: "Single-phase"}
+PHASE_CHARGING_MAP = {0: "three_phase", 1: "single_phase"}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,53 +68,50 @@ class NexBlueSensorEntityDescription(SensorEntityDescription):
     """Describe a NexBlue charger sensor."""
 
     value_fn: Callable[[ChargerStatus], StateType]
+    phase: int | None = None
+
+
+def _enum_options(values: dict[int, str]) -> list[str]:
+    """Return options for an enum sensor, including unknown protocol values."""
+    return [*values.values(), "unknown"]
 
 
 SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
     NexBlueSensorEntityDescription(
         key="charging_state",
         translation_key="charging_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=_enum_options(CHARGING_STATE_MAP),
         value_fn=lambda status: _enum_value(CHARGING_STATE_MAP, status.charging_state),
-    ),
-    NexBlueSensorEntityDescription(
-        key="is_lock",
-        translation_key="is_lock",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda status: _bool_value(
-            status.is_lock, true_value="Locked", false_value="Unlocked"
-        ),
     ),
     NexBlueSensorEntityDescription(
         key="cable_lock_mode",
         translation_key="cable_lock_mode",
+        device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        options=_enum_options(CABLE_LOCK_MODE_MAP),
         value_fn=lambda status: _enum_value(
             CABLE_LOCK_MODE_MAP, status.cable_lock_mode
         ),
     ),
     NexBlueSensorEntityDescription(
-        key="is_disable",
-        translation_key="is_disable",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda status: _bool_value(
-            status.is_disable, true_value="Disabled", false_value="Enabled"
-        ),
-    ),
-    NexBlueSensorEntityDescription(
         key="access_level",
         translation_key="access_level",
+        device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        options=_enum_options(ACCESS_LEVEL_MAP),
         value_fn=lambda status: _enum_value(ACCESS_LEVEL_MAP, status.access_level),
     ),
     NexBlueSensorEntityDescription(
         key="phase_charging",
         translation_key="phase_charging",
+        device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        options=_enum_options(PHASE_CHARGING_MAP),
         value_fn=lambda status: _enum_value(PHASE_CHARGING_MAP, status.phase_charging),
     ),
     NexBlueSensorEntityDescription(
         key="power",
-        translation_key="power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -122,7 +119,6 @@ SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
     ),
     NexBlueSensorEntityDescription(
         key="energy",
-        translation_key="energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
@@ -165,12 +161,13 @@ SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
     *(
         NexBlueSensorEntityDescription(
             key=f"current_{phase}",
-            translation_key=f"current_{phase}",
+            translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=value_fn,
+            phase=phase,
         )
         for phase, value_fn in (
             (1, lambda status: status.current_a[0]),
@@ -181,12 +178,13 @@ SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
     *(
         NexBlueSensorEntityDescription(
             key=f"voltage_{phase}",
-            translation_key=f"voltage_{phase}",
+            translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=value_fn,
+            phase=phase,
         )
         for phase, value_fn in (
             (1, lambda status: status.voltage_v[0]),
@@ -197,7 +195,9 @@ SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
     NexBlueSensorEntityDescription(
         key="network_status",
         translation_key="network_status",
+        device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        options=_enum_options(NETWORK_STATUS_MAP),
         value_fn=lambda status: _enum_value(NETWORK_STATUS_MAP, status.network_status),
     ),
     NexBlueSensorEntityDescription(
@@ -217,7 +217,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NexBlue sensors for every discovered charger."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     async_add_entities(
         NexBlueStatusSensor(coordinator, serial_number, description)
         for serial_number in coordinator.data
@@ -244,20 +244,20 @@ class NexBlueStatusSensor(
         self._serial_number = serial_number
         self.entity_description = description
         self._attr_unique_id = f"{serial_number}_{description.key}"
+        if description.phase is not None:
+            self._attr_translation_placeholders = {"phase": f"L{description.phase}"}
         self._attr_device_info = DeviceInfo(
-            identifiers={("nexblue", serial_number)},
+            identifiers={(DOMAIN, serial_number)},
             manufacturer="NexBlue",
             name=serial_number,
+            serial_number=serial_number,
         )
 
     @property
     @override
     def available(self) -> bool:
         """Return whether this charger is currently reachable."""
-        return (
-            super().available
-            and self.coordinator.data.get(self._serial_number) is not None
-        )
+        return super().available and self._serial_number in self.coordinator.data
 
     @property
     @override

@@ -21,11 +21,10 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test charger telemetry is exposed as sensors with unique IDs."""
-    assert hass.states.get("sensor.nb123456_charging_state").state == "Charging"
-    assert hass.states.get("sensor.nb123456_charging_power").state == "7.2"
-    assert hass.states.get("sensor.nb123456_session_energy").state == "1.5"
-    assert hass.states.get("sensor.nb123456_cable_lock_state").state == "Locked"
-    assert hass.states.get("sensor.nb123456_network_status").state == "Wi-Fi"
+    assert hass.states.get("sensor.nb123456_charging_state").state == "charging"
+    assert hass.states.get("sensor.nb123456_power").state == "7.2"
+    assert hass.states.get("sensor.nb123456_energy").state == "1.5"
+    assert hass.states.get("sensor.nb123456_network_status").state == "wifi"
 
     brightness = hass.states.get("sensor.nb123456_led_brightness")
     assert brightness.state == "100"
@@ -37,6 +36,7 @@ async def test_sensors(
     )
     assert device is not None
     assert device.name == CHARGER.serial_number
+    assert device.serial_number == CHARGER.serial_number
 
     assert (
         entity_registry.async_get_entity_id(
@@ -54,7 +54,7 @@ async def test_charger_error_does_not_block_other_chargers(
     error: type[Exception],
 ) -> None:
     """Test a single charger error does not prevent other chargers updating."""
-    second_charger = CHARGER.__class__(serial_number="NB654321")
+    second_charger = type(CHARGER)(serial_number="NB654321")
     mock_client.async_list_chargers.return_value = [CHARGER, second_charger]
     mock_client.async_get_charger_status.side_effect = [
         CHARGER_STATUS,
@@ -65,8 +65,8 @@ async def test_charger_error_does_not_block_other_chargers(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.nb123456_charging_state").state == "Charging"
-    assert hass.states.get("sensor.nb654321_charging_state").state == "unavailable"
+    assert hass.states.get("sensor.nb123456_charging_state").state == "charging"
+    assert hass.states.get("sensor.nb654321_charging_state").state == "unknown"
 
 
 async def test_sensors_unavailable_when_coordinator_update_fails(
@@ -74,7 +74,7 @@ async def test_sensors_unavailable_when_coordinator_update_fails(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test a failed coordinator update makes all charger entities unavailable."""
-    coordinator = init_integration.runtime_data.coordinator
+    coordinator = init_integration.runtime_data
     coordinator.last_update_success = False
     coordinator.async_update_listeners()
     await hass.async_block_till_done()

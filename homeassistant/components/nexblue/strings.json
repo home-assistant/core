@@ -11,8 +11,8 @@
     "step": {
       "user": {
         "data": {
-          "password": "Password",
-          "username": "Username"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "password": "The password for your NexBlue account.",
@@ -23,67 +23,72 @@
     }
   },
   "entity": {
-    "sensor": {
-      "access_level": {
-        "name": "Access level"
-      },
-      "brightness": {
-        "name": "LED brightness"
-      },
-      "cable_current_limit": {
-        "name": "Cable rating"
-      },
-      "cable_lock_mode": {
-        "name": "Cable lock mode"
-      },
-      "charging_state": {
-        "name": "Charging state"
-      },
-      "circuit_fuse": {
-        "name": "Circuit fuse"
-      },
-      "current_1": {
-        "name": "Current L1"
-      },
-      "current_2": {
-        "name": "Current L2"
-      },
-      "current_3": {
-        "name": "Current L3"
-      },
-      "current_limit": {
-        "name": "Current limit"
-      },
-      "energy": {
-        "name": "Session energy"
-      },
+    "binary_sensor": {
       "is_disable": {
-        "name": "Availability"
+        "name": "Availability",
+        "state": { "off": "Unavailable", "on": "Available" }
       },
       "is_lock": {
-        "name": "Cable lock state"
+        "name": "Cable lock state",
+        "state": { "off": "Unlocked", "on": "Locked" }
+      }
+    },
+    "sensor": {
+      "access_level": {
+        "name": "Access level",
+        "state": {
+          "authorized_users_only": "Authorized users only",
+          "no_restrictions": "No restrictions",
+          "unknown": "Unknown"
+        }
       },
-      "lifetime_energy": {
-        "name": "Lifetime energy"
+      "brightness": { "name": "LED brightness" },
+      "cable_current_limit": { "name": "Cable rating" },
+      "cable_lock_mode": {
+        "name": "Cable lock mode",
+        "state": {
+          "always_locked": "Always locked",
+          "locked_while_charging": "Locked while charging",
+          "unknown": "Unknown"
+        }
       },
+      "charging_state": {
+        "name": "Charging state",
+        "state": {
+          "charging": "Charging",
+          "connected": "Ready to charge",
+          "delay_waiting": "Schedule waiting",
+          "error": "Charging unavailable",
+          "ev_waiting": "Waiting for car response",
+          "finished": "Charging complete",
+          "idle": "Connect cable to charge",
+          "lb_waiting": "Waiting for available power",
+          "unknown": "Unknown"
+        }
+      },
+      "circuit_fuse": { "name": "Circuit fuse" },
+      "current": { "name": "Current {phase}" },
+      "current_limit": { "name": "Current limit" },
+      "lifetime_energy": { "name": "Lifetime energy" },
       "network_status": {
-        "name": "Network status"
+        "name": "Network status",
+        "state": {
+          "ethernet": "Ethernet",
+          "modem": "4G",
+          "none": "None",
+          "unknown": "Unknown",
+          "wifi": "Wi-Fi"
+        }
       },
       "phase_charging": {
-        "name": "Phase charging"
+        "name": "Phase charging",
+        "state": {
+          "single_phase": "Single-phase",
+          "three_phase": "Three-phase",
+          "unknown": "Unknown"
+        }
       },
-      "power": {
-        "name": "Charging power"
-      },
-      "voltage_1": {
-        "name": "Voltage L1"
-      },
-      "voltage_2": {
-        "name": "Voltage L2"
-      },
-      "voltage_3": {
-        "name": "Voltage L3"
-      }
+      "voltage": { "name": "Voltage {phase}" }
     }
   }
 }
