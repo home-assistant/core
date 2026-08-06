@@ -1578,3 +1578,241 @@ async def test_user_flow_picks_up_serial_from_discovery_probe(
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "SERIAL-X"
+
+
+# --------------------------------------------------------------------------- #
+# Identity matrix                                                              #
+#                                                                              #
+# Every path keys a hub by its MAC; serial, UDN and host are fallbacks for a    #
+# hub that cannot be reached for it. These cases enumerate that space instead   #
+# of leaving it to be discovered one report at a time: which identity the hub   #
+# offers x what is already configured x whether the address moved.             #
+# --------------------------------------------------------------------------- #
+
+_HUB_MAC = "d83addbae72e"
+
+
+@pytest.mark.parametrize(
+    (
+        "case",
+        "hub_mac",
+        "probed",
+        "stored_id",
+        "stored_host",
+        "expect_created",
+        "expect_id",
+    ),
+    [
+        # -- nothing configured yet -------------------------------------------
+        ("no entry, MAC readable", _HUB_MAC, None, None, None, True, _HUB_MAC),
+        ("no entry, only a serial", None, MOCK_SERIAL, None, None, True, MOCK_SERIAL),
+        (
+            "no entry, nothing at all",
+            None,
+            None,
+            None,
+            None,
+            True,
+            f"habitron_{MOCK_HOST}",
+        ),
+        # -- the same hub, already configured ---------------------------------
+        (
+            "same MAC, same address",
+            _HUB_MAC,
+            None,
+            _HUB_MAC,
+            MOCK_HOST,
+            False,
+            _HUB_MAC,
+        ),
+        (
+            "same MAC, address moved",
+            _HUB_MAC,
+            None,
+            _HUB_MAC,
+            "192.168.1.99",
+            False,
+            _HUB_MAC,
+        ),
+        # A pre-MAC entry: the address still matches, so it is recognised.
+        (
+            "legacy serial id, same address",
+            _HUB_MAC,
+            None,
+            MOCK_SERIAL,
+            MOCK_HOST,
+            False,
+            MOCK_SERIAL,
+        ),
+        # -- a different hub --------------------------------------------------
+        (
+            "other hub configured",
+            _HUB_MAC,
+            None,
+            "001122334455",
+            "192.168.1.99",
+            True,
+            _HUB_MAC,
+        ),
+    ],
+)
+async def test_user_flow_identity_matrix(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+    mock_hub_mac: AsyncMock,
+    case: str,
+    hub_mac: str | None,
+    probed: str | None,
+    stored_id: str | None,
+    stored_host: str | None,
+    expect_created: bool,
+    expect_id: str,
+) -> None:
+    """The manual flow keys on the MAC and recognises what is already there."""
+    mock_hub_mac.return_value = hub_mac
+    if stored_id:
+        MockConfigEntry(
+            domain=DOMAIN,
+            title=MOCK_NAME,
+            unique_id=stored_id,
+            data={CONF_HOST: stored_host},
+        ).add_to_hass(hass)
+
+    devices = [{"ip": MOCK_HOST, "serial": probed}] if probed else []
+    with patch(
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=devices),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+        )
+        await hass.async_block_till_done()
+
+    if expect_created:
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == expect_id
+    else:
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        assert entry.unique_id == expect_id
+        # A hub found again always carries the address it answered at.
+        assert entry.data[CONF_HOST] == MOCK_HOST
+
+
+@pytest.mark.parametrize(
+    (
+        "case",
+        "hub_mac",
+        "upnp",
+        "stored_id",
+        "stored_host",
+        "expect_abort",
+        "expect_id",
+    ),
+    [
+        # -- nothing configured yet -------------------------------------------
+        (
+            "no entry, MAC readable",
+            _HUB_MAC,
+            {ATTR_UPNP_UDN: MOCK_UDN},
+            None,
+            None,
+            False,
+            _HUB_MAC,
+        ),
+        (
+            "no entry, only a UDN",
+            None,
+            {ATTR_UPNP_UDN: MOCK_UDN},
+            None,
+            None,
+            False,
+            MOCK_UDN,
+        ),
+        (
+            "no entry, only a UPnP serial",
+            None,
+            {ATTR_UPNP_SERIAL: MOCK_SERIAL},
+            None,
+            None,
+            False,
+            MOCK_SERIAL,
+        ),
+        # -- the same hub, already configured ---------------------------------
+        (
+            "same MAC, address moved",
+            _HUB_MAC,
+            {ATTR_UPNP_UDN: MOCK_UDN},
+            _HUB_MAC,
+            "192.168.1.99",
+            True,
+            _HUB_MAC,
+        ),
+        (
+            "legacy host id, same address",
+            _HUB_MAC,
+            {ATTR_UPNP_UDN: MOCK_UDN},
+            f"habitron_{MOCK_HOST}",
+            MOCK_HOST,
+            True,
+            _HUB_MAC,
+        ),
+    ],
+)
+async def test_ssdp_flow_identity_matrix(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+    mock_hub_mac: AsyncMock,
+    case: str,
+    hub_mac: str | None,
+    upnp: dict[str, str],
+    stored_id: str | None,
+    stored_host: str | None,
+    expect_abort: bool,
+    expect_id: str,
+) -> None:
+    """Discovery derives the same identity as the manual flow."""
+    mock_hub_mac.return_value = hub_mac
+    if stored_id:
+        MockConfigEntry(
+            domain=DOMAIN,
+            title=MOCK_NAME,
+            unique_id=stored_id,
+            data={CONF_HOST: stored_host},
+        ).add_to_hass(hass)
+
+    discovery = SsdpServiceInfo(
+        ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp=upnp,
+    )
+    with patch(
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=discovery
+        )
+        if not expect_abort:
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={}
+            )
+        await hass.async_block_till_done()
+
+    if expect_abort:
+        assert result["type"] is FlowResultType.ABORT
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        assert entry.unique_id == expect_id
+    else:
+        assert result["result"].unique_id == expect_id
