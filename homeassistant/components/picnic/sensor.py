@@ -46,9 +46,9 @@ from .coordinator import (
     PicnicUpdateCoordinator,
 )
 
-_EMPTY_DATA: dict[str, Any] = {
-    "next_delivery_data": NextDeliveryData(),
-    "last_order_data": LastOrderData(),
+_EMPTY_DATA_FACTORIES: dict[str, Callable[[], Any]] = {
+    "next_delivery_data": NextDeliveryData,
+    "last_order_data": LastOrderData,
 }
 
 
@@ -272,8 +272,10 @@ class PicnicSensor(SensorEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         data = self.coordinator.data or {}
-        data_set = data.get(
-            self.entity_description.data_type,
-            _EMPTY_DATA.get(self.entity_description.data_type),
-        )
+        data_type = self.entity_description.data_type
+        if data_type in data:
+            data_set = data[data_type]
+        else:
+            factory = _EMPTY_DATA_FACTORIES.get(data_type)
+            data_set = factory() if factory else None
         return self.entity_description.value_fn(data_set)
