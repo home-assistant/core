@@ -5,20 +5,14 @@ built-in ``client_id`` instead of using the Application Credentials platform,
 and PKCE secures the token exchange in place of a client secret.
 """
 
-from typing import Any, override
+from typing import override
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     LocalOAuth2ImplementationWithPkce,
 )
 
-from .const import (
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_CLIENT_ID,
-    OAUTH2_SCOPES,
-    OAUTH2_TOKEN,
-)
+from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_CLIENT_ID, OAUTH2_TOKEN
 
 
 class AbetterrouteplannerOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
@@ -40,9 +34,3 @@ class AbetterrouteplannerOAuth2Implementation(LocalOAuth2ImplementationWithPkce)
     def name(self) -> str:
         """Name of the implementation."""
         return "A Better Routeplanner"
-
-    @property
-    @override
-    def extra_authorize_data(self) -> dict[str, Any]:
-        """Extra data appended to the authorize URL."""
-        return {"scope": " ".join(OAUTH2_SCOPES), **super().extra_authorize_data}

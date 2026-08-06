@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ABRP_APP_KEY, DOMAIN
+from .const import ABRP_APP_KEY, DOMAIN, OAUTH2_SCOPES
 from .oauth import AbetterrouteplannerOAuth2Implementation
 
 
@@ -32,6 +32,16 @@ class AbetterrouteplannerFlowHandler(
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
+
+    @property
+    @override
+    def extra_authorize_data(self) -> dict[str, Any]:
+        """Extra data appended to the authorize URL.
+
+        Scopes belong on the flow, not the implementation, so they still apply
+        when cloud account linking supplies the implementation.
+        """
+        return {**super().extra_authorize_data, "scope": " ".join(OAUTH2_SCOPES)}
 
     @override
     async def async_step_user(
