@@ -62,17 +62,12 @@ class HbtnComm:
         self._version: str = ""
         self._network_ip: str = ""
 
-        # CRC change-detection key for the bus status stream (the coordinator
-        # tick). Other read streams (firmware, single-module status, …) keep
-        # their own per-target CRC in ``_stream_crc`` so they cannot clobber
-        # this one — sharing a single field made unrelated reads invalidate each
-        # other's dedup (extra reads, occasionally a missed status change).
+        # Compact-status CRC handed back to the library on each poll so an
+        # unchanged bus skips the module re-parse.
         self.crc: int = 0
-        self._stream_crc: dict[str, int] = {}
         # Empty model until ``set_router`` stores the built one.
         self._rtr: Router = Router()
         self.update_suspended: bool = False
-        self._last_status: bytes = b""  # last compact status, for change detection
         self.is_addon: bool = True  # will be set in get_smhub_info()
         self.slugname: str = ""
         self.info: dict[str, str] = {}

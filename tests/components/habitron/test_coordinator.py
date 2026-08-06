@@ -18,7 +18,7 @@ def _make_comm(hass: HomeAssistant) -> MagicMock:
     comm = MagicMock()
     comm._config = MagicMock()
     comm.update_suspended = False
-    comm.async_system_update = AsyncMock(return_value=b"compact-status")
+    comm.async_system_update = AsyncMock(return_value=4711)  # the status CRC
     # The coordinator builds a SmartHub around this comm; its ``update`` reads
     # ``get_smhub_update`` — return no data so the hub-diag refresh is a no-op.
     comm.get_smhub_update = AsyncMock(return_value=None)
@@ -30,7 +30,7 @@ async def test_coordinator_normal_update(hass: HomeAssistant) -> None:
     comm = _make_comm(hass)
     coord = HbtnCoordinator(hass, MagicMock(), comm)
     result = await coord._async_update_data()
-    assert result == b"compact-status"
+    assert result == 4711
     comm.async_system_update.assert_awaited_once()
 
 

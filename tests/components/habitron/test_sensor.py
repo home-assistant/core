@@ -40,6 +40,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
 from tests.common import MockConfigEntry
 
 
@@ -372,7 +373,6 @@ def test_logic_sensor_value_uses_idx_not_nmbr() -> None:
 @pytest.mark.parametrize(
     ("description", "source", "name"),
     [
-        (ANALOG_DESCRIPTION, "analogins", "AIn 1"),
         (EKEY_ID_DESCRIPTION, "sensors", "Identifier"),
         (EKEY_FINGER_DESCRIPTION, "sensors", "Finger"),
         (EKEY_USER_NAME_DESCRIPTION, "sensors", "Identifier"),
@@ -416,7 +416,6 @@ async def test_described_sensor_add_listener(
 @pytest.mark.parametrize(
     ("description", "source", "name"),
     [
-        (ANALOG_DESCRIPTION, "analogins", "AIn 1"),
         (EKEY_ID_DESCRIPTION, "sensors", "Identifier"),
         (EKEY_FINGER_DESCRIPTION, "sensors", "Finger"),
     ],
@@ -436,13 +435,26 @@ async def test_described_sensor_remove_listener(
     getattr(mod, source)[0].remove_listener.assert_called()
 
 
-async def test_polled_sensor_does_not_subscribe() -> None:
+@pytest.mark.parametrize(
+    ("description", "source", "name"),
+    [
+        (HUMIDITY_DESCRIPTION, "sensors", "Humidity"),
+        # Analogue values live in the compact status mirror and reach the
+        # entity through the coordinator; subscribing would write twice.
+        (ANALOG_DESCRIPTION, "analogins", "AIn 1"),
+    ],
+)
+async def test_polled_sensor_does_not_subscribe(
+    description: HbtnSensorEntityDescription,
+    source: str,
+    name: str,
+) -> None:
     """A coordinator-polled description (no subscribe_fn) adds no listener."""
     mod = _make_module()
-    mod.sensors[0] = MagicMock()
-    sensor_desc = _make_sensor_descriptor(name="Humidity")
+    getattr(mod, source)[0] = MagicMock()
+    sensor_desc = _make_sensor_descriptor(name=name)
     coord = MagicMock(spec=DataUpdateCoordinator)
-    entity = HbtnDescribedSensor(mod, sensor_desc, coord, 0, HUMIDITY_DESCRIPTION)
+    entity = HbtnDescribedSensor(mod, sensor_desc, coord, 0, description)
     entity.async_write_ha_state = MagicMock()
     with patch(
         "homeassistant.helpers.update_coordinator."
@@ -450,7 +462,7 @@ async def test_polled_sensor_does_not_subscribe() -> None:
         new=AsyncMock(),
     ):
         await entity.async_added_to_hass()
-    mod.sensors[0].add_listener.assert_not_called()
+    getattr(mod, source)[0].add_listener.assert_not_called()
 
 
 async def test_logic_sensor_push_add_and_remove_listener() -> None:
