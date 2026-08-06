@@ -29,7 +29,7 @@
         "name": "Exported energy"
       },
       "illuminance": {
-        "name": "Illuminance"
+        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
       "last_motion": {
         "name": "Last motion"
