@@ -153,6 +153,7 @@ class GeoSphereSensor(GeoSphereEntity, SensorEntity):
         return self.entity_description.value_fn(warnings)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return warning details as entity attributes."""
         warnings = self.entity_description.warnings_fn(self.coordinator.data)
