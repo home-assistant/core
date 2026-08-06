@@ -94,6 +94,12 @@ async def test_auto_add_devices(
         identifiers={(DOMAIN, str(controller2.id))}
     )
     assert new_controller_device is not None
+
+    # The new controller's own entities must also be added, not just its device.
+    # Registering the controller device must not make _add_remove_zones treat the
+    # controller as already-known and skip the new-controller callbacks.
+    assert hass.states.get("binary_sensor.home_controller_2_connectivity") is not None
+
     for zone in zones2:
         new_zone_device = device_registry.async_get_device(
             identifiers={(DOMAIN, str(zone.id))}
@@ -110,6 +116,38 @@ async def test_auto_add_devices(
     # newly added zones, even though the water-use coordinator hasn't refreshed.
     assert hass.states.get("sensor.zone_one_2_daily_active_watering_time") is not None
     assert hass.states.get("sensor.zone_two_2_daily_active_watering_time") is not None
+
+
+async def test_setup_clears_self_referential_via_device(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+) -> None:
+    """Test setup clears a self-referential via_device left by older versions.
+
+    Older versions linked the controller device to itself via its rain sensor
+    entity, which persists in the device registry across upgrades.
+    """
+    mock_config_entry.add_to_hass(hass)
+    controller = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "52496")},
+        name="Home Controller",
+    )
+    controller = device_registry.async_update_device(
+        controller.id, via_device_id=controller.id
+    )
+    assert controller.via_device_id == controller.id
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    controller = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "52496"), mock_config_entry.entry_id
+    )
+    assert controller is not None
+    assert controller.via_device_id is None
 
 
 async def test_auto_remove_devices(

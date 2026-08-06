@@ -32,14 +32,17 @@ from .const import (
     DOMAIN,
     HEALTH,
     IDENTITY,
+    INTERFACE,
     IS_CAPSMAN,
     IS_WIFI,
     IS_WIFIWAVE2,
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
+    POE,
     RESOURCE,
     ROUTERBOARD,
+    UPDATE,
     WIFI,
     WIFIWAVE2,
     WIRELESS,
@@ -76,13 +79,58 @@ class MikrotikData:
         self.serial_number: str = ""
         self.sensors: dict[str, Any] = {}
         self.system: dict[str, Any] = {}
+        self.interfaces: list[dict[str, Any]] = []
 
-    def _get_system_details(self) -> None:
+    def _get_system_details(self, during_setup: bool = False) -> None:
         """Retrieve system and routerboard details from Mikrotik API."""
-        self.system[IDENTITY] = (self.command(MIKROTIK_SERVICES[IDENTITY]) or [{}])[0]
-        self.system[ROUTERBOARD] = (
-            self.command(MIKROTIK_SERVICES[ROUTERBOARD], suppress_errors=True) or [{}]
+        self.system[IDENTITY] = (
+            self.command(MIKROTIK_SERVICES[IDENTITY], during_setup=during_setup) or [{}]
         )[0]
+        self.system[ROUTERBOARD] = (
+            self.command(
+                MIKROTIK_SERVICES[ROUTERBOARD],
+                suppress_errors=True,
+                during_setup=during_setup,
+            )
+            or [{}]
+        )[0]
+
+    def _get_interfaces_details(self) -> None:
+        """Get interfaces details."""
+        all_interfs = self.command(MIKROTIK_SERVICES[INTERFACE])
+
+        fields = {
+            ".id",
+            "name",
+            "type",
+            "mac-address",
+            "running",
+            "disabled",
+        }
+
+        poe_interfs = self.command(MIKROTIK_SERVICES[POE], suppress_errors=True) or []
+
+        poe_by_id = {
+            poe_interf[".id"]: poe_interf.get("poe-out", "off")
+            for poe_interf in poe_interfs
+        }
+
+        existing_by_id = {interf[".id"]: interf for interf in self.interfaces}
+
+        interfaces = []
+        for interf in all_interfs:
+            if interf.get("type") == "loopback":
+                continue
+            data = {key: interf.get(key) for key in fields}
+            if (poe_out := poe_by_id.get(data[".id"])) is not None:
+                data["poe-out"] = poe_out
+            if existing := existing_by_id.get(data[".id"]):
+                existing.update(data)
+                interfaces.append(existing)
+            else:
+                interfaces.append(data)
+
+        self.interfaces = interfaces
 
     @staticmethod
     def load_mac(devices: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -106,22 +154,32 @@ class MikrotikData:
 
     def get_hub_details(self) -> None:
         """Get Hub info."""
-        self._get_system_details()
+        self._get_system_details(during_setup=True)
         self.hostname = str(self.system[IDENTITY].get(NAME))
         self.model = str(self.system[ROUTERBOARD].get(ATTR_MODEL))
         self.firmware = str(self.system[ROUTERBOARD].get(ATTR_ROUTERBOARD_FIRMWARE))
         self.serial_number = str(self.system[ROUTERBOARD].get(ATTR_SERIAL_NUMBER))
         self.support_capsman = bool(
-            self.command(MIKROTIK_SERVICES[IS_CAPSMAN], suppress_errors=True)
+            self.command(
+                MIKROTIK_SERVICES[IS_CAPSMAN], suppress_errors=True, during_setup=True
+            )
         )
         self.support_wireless = bool(
-            self.command(MIKROTIK_SERVICES[IS_WIRELESS], suppress_errors=True)
+            self.command(
+                MIKROTIK_SERVICES[IS_WIRELESS], suppress_errors=True, during_setup=True
+            )
         )
         self.support_wifiwave2 = bool(
-            self.command(MIKROTIK_SERVICES[IS_WIFIWAVE2], suppress_errors=True)
+            self.command(
+                MIKROTIK_SERVICES[IS_WIFIWAVE2],
+                suppress_errors=True,
+                during_setup=True,
+            )
         )
         self.support_wifi = bool(
-            self.command(MIKROTIK_SERVICES[IS_WIFI], suppress_errors=True)
+            self.command(
+                MIKROTIK_SERVICES[IS_WIFI], suppress_errors=True, during_setup=True
+            )
         )
 
     def get_list_from_interface(self, interface: str) -> dict[str, dict[str, Any]]:
@@ -169,12 +227,18 @@ class MikrotikData:
             # get hub details and system info
             self._get_system_details()
 
+            self.system[UPDATE] = (
+                self.command(MIKROTIK_SERVICES[UPDATE], suppress_errors=True) or [{}]
+            )[0]
+
             self.sensors[HEALTH] = (
                 self.command(MIKROTIK_SERVICES[HEALTH], suppress_errors=True) or []
             )
             self.sensors[RESOURCE] = (
                 self.command(MIKROTIK_SERVICES[RESOURCE], suppress_errors=True) or []
             )
+
+            self._get_interfaces_details()
 
         if not device_list:
             return
@@ -233,10 +297,13 @@ class MikrotikData:
         cmd: str,
         params: dict[str, Any] | None = None,
         suppress_errors: bool = False,
+        during_setup: bool = False,
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
         _LOGGER.debug("Running command %s", cmd)
-        with mikrotik_config_entry_errors(suppress_errors=suppress_errors):
+        with mikrotik_config_entry_errors(
+            suppress_errors=suppress_errors, during_setup=during_setup
+        ):
             if params:
                 return list(self.api(cmd, **params))
             return list(self.api(cmd))

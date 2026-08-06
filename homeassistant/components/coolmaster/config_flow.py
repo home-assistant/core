@@ -86,6 +86,8 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
+        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
         errors = {}
 
         host = user_input[CONF_HOST]

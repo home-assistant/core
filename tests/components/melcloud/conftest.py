@@ -27,7 +27,9 @@ def _build_mock_zone(zone_index: int) -> MagicMock:
     zone.operation_mode = "heat-flow"
     zone.operation_modes = ["heat-thermostat", "heat-flow", "curve"]
     zone.target_temperature = 21.0
+    zone.target_flow_temperature = 40.0
     zone.set_operation_mode = AsyncMock()
+    zone.set_target_flow_temperature = AsyncMock()
     return zone
 
 

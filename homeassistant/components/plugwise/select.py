@@ -1,7 +1,10 @@
 """Plugwise Select component for Home Assistant."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import override
+
+from plugwise import Smile
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import STATE_ON, EntityCategory
@@ -9,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DHW_MODE,
     LOCATION,
     SELECT_DHW_MODE,
     SELECT_GATEWAY_MODE,
@@ -31,37 +35,62 @@ class PlugwiseSelectEntityDescription(SelectEntityDescription):
 
     key: SelectType
     options_key: SelectOptionsType
+    set_value_fn: Callable[[Smile, str, str, str, int | str | None], Awaitable[None]]
 
 
 SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
-        key=SELECT_SCHEDULE,
-        translation_key=SELECT_SCHEDULE,
-        options_key="available_schedules",
-    ),
-    PlugwiseSelectEntityDescription(
-        key=SELECT_REGULATION_MODE,
-        translation_key=SELECT_REGULATION_MODE,
+        key=DHW_MODE,
+        translation_key=SELECT_DHW_MODE,
         entity_category=EntityCategory.CONFIG,
-        options_key="regulation_modes",
+        options_key="dhw_modes",
+        set_value_fn=lambda api, key, appl_id, option, length: api.set_dhw_mode(
+            key, appl_id, option, length
+        ),
     ),
     PlugwiseSelectEntityDescription(
         key=SELECT_DHW_MODE,
         translation_key=SELECT_DHW_MODE,
         entity_category=EntityCategory.CONFIG,
         options_key="dhw_modes",
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
+            key, appl_or_loc_id, option, state
+        ),
     ),
     PlugwiseSelectEntityDescription(
         key=SELECT_GATEWAY_MODE,
         translation_key=SELECT_GATEWAY_MODE,
         entity_category=EntityCategory.CONFIG,
         options_key="gateway_modes",
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
+            key, appl_or_loc_id, option, state
+        ),
+    ),
+    PlugwiseSelectEntityDescription(
+        key=SELECT_REGULATION_MODE,
+        translation_key=SELECT_REGULATION_MODE,
+        entity_category=EntityCategory.CONFIG,
+        options_key="regulation_modes",
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
+            key, appl_or_loc_id, option, state
+        ),
+    ),
+    PlugwiseSelectEntityDescription(
+        key=SELECT_SCHEDULE,
+        translation_key=SELECT_SCHEDULE,
+        options_key="available_schedules",
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
+            key, appl_or_loc_id, option, state
+        ),
     ),
     PlugwiseSelectEntityDescription(
         key=SELECT_ZONE_PROFILE,
         translation_key=SELECT_ZONE_PROFILE,
         entity_category=EntityCategory.CONFIG,
         options_key="zone_profiles",
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
+            key, appl_or_loc_id, option, state
+        ),
     ),
 )
 
@@ -76,7 +105,7 @@ async def async_setup_entry(
 
     @callback
     def _add_entities() -> None:
-        """Add Entities."""
+        """Add entities."""
         if not coordinator.new_devices:
             return
 
@@ -84,7 +113,11 @@ async def async_setup_entry(
             PlugwiseSelectEntity(coordinator, device_id, description)
             for device_id in coordinator.new_devices
             for description in SELECT_TYPES
-            if coordinator.data[device_id].get(description.options_key)
+            if (device := coordinator.data[device_id]).get(description.key)
+            and (
+                description.key not in (DHW_MODE, SELECT_DHW_MODE)
+                or len(device[description.options_key]) > 2
+            )
         )
 
     _add_entities()
@@ -104,7 +137,10 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
     ) -> None:
         """Initialise the selector."""
         super().__init__(coordinator, device_id)
-        self._attr_unique_id = f"{device_id}-{entity_description.key}"
+        suffix = entity_description.key
+        if entity_description.key == DHW_MODE:
+            suffix = SELECT_DHW_MODE
+        self._attr_unique_id = f"{device_id}-{suffix}"
         self.entity_description = entity_description
 
         self._device_or_location = device_id
@@ -135,6 +171,13 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         The location ID is required for the thermostat schedule and zone_profile selects.
         STATE_ON is required for the thermostat schedule select.
         """
-        await self.coordinator.api.set_select(
-            self.entity_description.key, self._device_or_location, option, STATE_ON
+        options_count_or_state: int | str | None = len(self.options)
+        if self.entity_description.key != DHW_MODE:
+            options_count_or_state = STATE_ON
+        await self.entity_description.set_value_fn(
+            self.coordinator.api,
+            self.entity_description.key,
+            self._device_or_location,
+            option,
+            options_count_or_state,
         )
