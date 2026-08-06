@@ -1,10 +1,9 @@
-"""Support for De Lijn (Flemish public transport) information."""
+"""Sensor for De Lijn (Flemish public transport) departure information."""
 
 from datetime import datetime
-import logging
+from typing import Any, override
 
-from pydelijn.api import Passages
-from pydelijn.common import HttpException
+from pydelijn import Passage
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -12,22 +11,32 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_NUMBER_OF_DEPARTURES,
+    CONF_STOP_ID,
+    CONF_STOP_NUMBER,
+    DOMAIN,
+    MANUFACTURER,
+)
+from .coordinator import DeLijnConfigEntry, DeLijnCoordinator
 
-ATTRIBUTION = "Data provided by data.delijn.be"
+PARALLEL_UPDATES = 0
 
 CONF_NEXT_DEPARTURE = "next_departure"
-CONF_STOP_ID = "stop_id"
-CONF_NUMBER_OF_DEPARTURES = "number_of_departures"
-
-DEFAULT_NAME = "De Lijn"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -41,15 +50,6 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     }
 )
 
-AUTO_ATTRIBUTES = (
-    "line_number_public",
-    "line_transport_type",
-    "final_destination",
-    "due_at_schedule",
-    "due_at_realtime",
-    "is_realtime",
-)
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -57,69 +57,157 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Create the sensor."""
-    api_key = config[CONF_API_KEY]
-
-    session = async_get_clientsession(hass)
-
-    async_add_entities(
-        (
-            DeLijnPublicTransportSensor(
-                Passages(
-                    nextpassage[CONF_STOP_ID],
-                    nextpassage[CONF_NUMBER_OF_DEPARTURES],
-                    api_key,
-                    session,
-                    True,
-                )
+    """Import the legacy YAML configuration into config entries."""
+    for departure in config[CONF_NEXT_DEPARTURE]:
+        stop_id = departure[CONF_STOP_ID]
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_API_KEY: config[CONF_API_KEY],
+                CONF_STOP_ID: stop_id,
+                CONF_NUMBER_OF_DEPARTURES: departure[CONF_NUMBER_OF_DEPARTURES],
+            },
+        )
+        if (
+            result.get("type") is FlowResultType.ABORT
+            and result.get("reason") != "already_configured"
+        ):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{stop_id}_{result.get('reason')}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "De Lijn",
+                    "stop_id": stop_id,
+                },
             )
-            for nextpassage in config[CONF_NEXT_DEPARTURE]
-        ),
-        True,
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={"domain": DOMAIN, "integration_title": "De Lijn"},
     )
 
 
-class DeLijnPublicTransportSensor(SensorEntity):
-    """Representation of a Ruter sensor."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: DeLijnConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the De Lijn sensor from a config entry."""
+    async_add_entities([DeLijnSensor(entry.runtime_data, entry)])
 
-    _attr_attribution = ATTRIBUTION
+
+def _due_in_minutes(due_at: datetime | None) -> int | None:
+    """Return the number of minutes from now until due_at."""
+    if due_at is None:
+        return None
+    return round((due_at - dt_util.utcnow()).total_seconds() / 60)
+
+
+def _passage_attributes(index: int, passage: Passage) -> dict[str, Any]:
+    """Return the legacy attribute mapping for a single passage."""
+    line = passage.line
+    return {
+        "passage": index,
+        "line_number": line.number,
+        "direction": passage.direction,
+        "final_destination": passage.destination,
+        "due_at_schedule": (
+            passage.due_at_schedule.isoformat() if passage.due_at_schedule else None
+        ),
+        "due_at_realtime": (
+            passage.due_at_realtime.isoformat() if passage.due_at_realtime else None
+        ),
+        "due_in_min": _due_in_minutes(passage.due_at),
+        "is_realtime": passage.is_realtime,
+        "cancelled": passage.cancelled,
+        "line_number_public": line.public_number,
+        "line_desc": line.description,
+        "line_transport_type": line.transport_type,
+        "line_number_colourFront": line.colour_front_hex,
+        "line_number_colourFrontHex": line.colour_front_hex,
+        "line_number_colourBack": line.colour_back_hex,
+        "line_number_colourBackHex": line.colour_back_hex,
+        "line_number_colourFrontBorder": line.colour_front_border_hex,
+        "line_number_colourFrontBorderHex": line.colour_front_border_hex,
+        "line_number_colourBackBorder": line.colour_back_border_hex,
+        "line_number_colourBackBorderHex": line.colour_back_border_hex,
+    }
+
+
+class DeLijnSensor(CoordinatorEntity[DeLijnCoordinator], SensorEntity):
+    """Representation of the next De Lijn departure at a stop."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "next_departure"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_icon = "mdi:bus"
 
-    def __init__(self, line):
+    def __init__(
+        self, coordinator: DeLijnCoordinator, entry: DeLijnConfigEntry
+    ) -> None:
         """Initialize the sensor."""
-        self.line = line
-        self._attr_extra_state_attributes = {}
+        super().__init__(coordinator)
+        stop_number = entry.data[CONF_STOP_NUMBER]
+        self._attr_unique_id = f"{entry.unique_id}_next_departure"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, stop_number)},
+            name=entry.title,
+            manufacturer=MANUFACTURER,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
-    async def async_update(self) -> None:
-        """Get the latest data from the De Lijn API."""
-        try:
-            await self.line.get_passages()
-            self._attr_name = await self.line.get_stopname()
-        except HttpException:
-            self._attr_available = False
-            _LOGGER.error("De Lijn http error")
-            return
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        """Return the due time of the next passage."""
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data[0].due_at
 
-        self._attr_extra_state_attributes["stopname"] = self._attr_name
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return backward-compatible attributes for the community Lovelace card."""
+        passages = self.coordinator.data
+        if not passages:
+            return {
+                "line_number_public": None,
+                "line_transport_type": None,
+                "final_destination": None,
+                "due_at_schedule": None,
+                "due_at_realtime": None,
+                "is_realtime": None,
+                "cancelled": None,
+                "next_passages": [],
+            }
 
-        if not self.line.passages:
-            self._attr_available = False
-            return
-
-        try:
-            first = self.line.passages[0]
-            if (first_passage := first["due_at_realtime"]) is None:
-                first_passage = first["due_at_schedule"]
-            self._attr_native_value = datetime.strptime(
-                first_passage, "%Y-%m-%dT%H:%M:%S%z"
-            )
-
-            for key in AUTO_ATTRIBUTES:
-                self._attr_extra_state_attributes[key] = first[key]
-            self._attr_extra_state_attributes["next_passages"] = self.line.passages
-
-            self._attr_available = True
-        except KeyError as error:
-            _LOGGER.error("Invalid data received from De Lijn: %s", error)
-            self._attr_available = False
+        first = passages[0]
+        return {
+            "line_number_public": first.line.public_number,
+            "line_transport_type": first.line.transport_type,
+            "final_destination": first.destination,
+            "due_at_schedule": (
+                first.due_at_schedule.isoformat() if first.due_at_schedule else None
+            ),
+            "due_at_realtime": (
+                first.due_at_realtime.isoformat() if first.due_at_realtime else None
+            ),
+            "is_realtime": first.is_realtime,
+            "cancelled": first.cancelled,
+            "next_passages": [
+                _passage_attributes(index, passage)
+                for index, passage in enumerate(passages)
+            ],
+        }

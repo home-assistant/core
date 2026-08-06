@@ -1,0 +1,74 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This stop is already configured.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_stop": "Unknown stop number.",
+      "no_results": "No stops found matching that search.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your De Lijn open data API key."
+        }
+      },
+      "stop": {
+        "data": {
+          "stop": "Stop"
+        },
+        "data_description": {
+          "stop": "A De Lijn stop number, or part of a stop name to search for."
+        }
+      },
+      "pick": {
+        "data": {
+          "stop": "Stop"
+        },
+        "data_description": {
+          "stop": "The stop to monitor."
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your De Lijn open data API key."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_departure": {
+        "name": "Next departure"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nWhile importing your configuration for stop {stop_id}, an error occurred when trying to connect to the De Lijn API. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "{integration_title} YAML configuration deprecated"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "number_of_departures": "Number of departures"
+        },
+        "data_description": {
+          "number_of_departures": "How many upcoming departures to keep as sensor attributes."
+        }
+      }
+    }
+  }
+}
