@@ -32,6 +32,25 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+async def mock_config_entry_with_product_model(hass: HomeAssistant) -> MockConfigEntry:
+    """Mock config entry with product_model in config data."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="GDS3710 EC74D79753C5",
+        unique_id="ec:74:d7:97:53:c5",
+        data={
+            "host": "192.168.1.100",
+            "username": "gdsha",
+            "password": "password",
+            "type": "GDS",
+            "model": "GDS3710",
+            "port": 443,
+            "verify_ssl": False,
+        },
+    )
+
+
+@pytest.fixture
 def mock_gds_api() -> Generator[MagicMock]:
     """Mock Grandstream API and related functions."""
     api_instance = MagicMock()
@@ -42,11 +61,11 @@ def mock_gds_api() -> Generator[MagicMock]:
 
     with (
         patch(
-            "homeassistant.components.grandstream_home.create_api_instance",
+            "homeassistant.components.grandstream_home.create_device_api_instance",
             return_value=api_instance,
         ) as mock_create,
         patch(
-            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
+            "homeassistant.components.grandstream_home.config_flow.create_device_api_instance",
             new=mock_create,
         ),
         patch(

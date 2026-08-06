@@ -1202,7 +1202,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.grandstream_home
-grandstream-home-api==0.1.5
+grandstream-home-api==0.1.7
 
 # homeassistant.components.gree
 greeclimate==2.1.4
