@@ -1,5 +1,6 @@
 """Config flow for Habitron integration."""
 
+from collections.abc import Mapping
 import contextlib
 import logging
 import socket
@@ -181,48 +182,59 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_probe_host(self, host: str) -> str:
         """Return an address the hub client can actually dial.
 
-        ``local`` is our own sentinel, not a name any resolver knows -- unlike
-        ``HbtnComm``, the direct client calls here would just fail on it, and
-        with them the stable-id fallback and the legacy-MAC lookup.
+        ``local`` is our own sentinel, not a name any resolver knows, and the
+        UDP probe answers with the address it was reached at -- so a name is
+        resolved too, or its reply cannot be matched.
         """
         if host == CONF_DEFAULT_HOST:
             return await network.async_get_source_ip(self.hass)
-        return host
-
-    async def _async_resolved_host(self, host: str) -> str:
-        """Return ``host`` as an address, or unchanged when it does not resolve.
-
-        Unlike ``_async_canonical_host`` this keeps a local address as-is: the
-        UDP probe reports the address it answered at, so a hub on this machine
-        has to be matched by that address, not by the ``local`` sentinel -- the
-        sentinel is mapped to that address first, since no resolver knows it.
-        """
-        host = await self._async_probe_host(host)
         with contextlib.suppress(OSError):
             return await self.hass.async_add_executor_job(socket.gethostbyname, host)
         return host
 
-    async def _async_mac_matching_entry(
-        self, host: str
-    ) -> config_entries.ConfigEntry | None:
-        """Return an entry keyed by this hub's MAC, if there is one.
+    async def _async_hub_identity(self, host: str) -> str | None:
+        """Return the id this hub is keyed by: its MAC, or ``None``.
 
-        Entries created by the custom (HACS) integration use the hub's MAC as
-        their unique id, which this flow never derives -- it keys on the UPnP
-        serial, the UDN or the host. Without this the same hub is offered as a
-        new device once its address changes, because neither the unique id nor
-        the stored host matches any more. Probing costs one request, so it runs
-        only after the cheaper checks came up empty.
+        One identity for every path. The MAC is the only identifier both the
+        manual and the discovery flow can obtain, it survives every address
+        change, and the custom (HACS) integration already keys its entries by
+        it -- so an installation moving to core is recognised instead of being
+        offered a second time. Serial, UDN and host are fallbacks only, used
+        when the hub cannot be reached for its MAC; a successful setup then
+        rewrites the entry onto the MAC (see ``async_setup_entry``).
         """
-        macs = {
-            _normalised_mac(entry.unique_id): entry
-            for entry in self._async_current_entries(include_ignore=True)
-            if entry.unique_id
-        }
-        if not macs:
-            return None
-        hub_mac = await _async_hub_mac(await self._async_probe_host(host))
-        return macs.get(hub_mac) if hub_mac else None
+        return await _async_hub_mac(await self._async_probe_host(host))
+
+    async def _async_identity_or_fallback(
+        self,
+        host: str,
+        *,
+        upnp: Mapping[str, Any] | None = None,
+        probed: Mapping[str, str] | None = None,
+    ) -> str:
+        """Return the hub's identity, or the best fallback available.
+
+        The MAC is what every path keys on. The rest only applies when the hub
+        cannot be reached for it -- an advertised serial, a probed one, a UDN,
+        and finally the host, which changes with the DHCP lease and is
+        therefore the last resort.
+        """
+        if identity := await self._async_hub_identity(host):
+            return identity
+        upnp = upnp or {}
+        fallback = (
+            upnp.get(ATTR_UPNP_SERIAL)
+            or (probed or {}).get("serial")
+            or upnp.get(ATTR_UPNP_UDN)
+        )
+        if fallback:
+            _LOGGER.debug("Hub at %s gave no MAC; keying on %s", host, fallback)
+            return str(fallback)
+        _LOGGER.warning(
+            "Habitron at %s exposed no MAC, serial or UDN; using the host as id",
+            host,
+        )
+        return f"habitron_{await self._async_stored_host(host)}"
 
     async def _async_matching_entry(
         self,
@@ -284,39 +296,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_host_in_ssdp")
         host_str = str(host)
 
-        # Prefer stable identifiers from the UPnP description; fall back
-        # to a discovery probe (which may return a serial), and only use the
-        # host as last resort. A host-based id changes on DHCP-lease
-        # renewals and would otherwise look like a new device.
-        upnp = discovery_info.upnp or {}
-        unique_id: str | None = upnp.get(ATTR_UPNP_SERIAL)
-        target_device: dict[str, str] | None = None
-
-        if not unique_id:
-            # Ask the UDP probe for a serial before considering the UDN. The
-            # manual path keys on that serial, and two paths keying the same hub
-            # differently is exactly what lets it be added a second time once
-            # its address changes: neither the ids nor the stored hosts match
-            # then.
-            devices = await self._cached_discover()
-            target_device = next((d for d in devices if d.get("ip") == host_str), None)
-            if target_device:
-                unique_id = target_device.get("serial") or None
-        if not unique_id:
-            unique_id = upnp.get(ATTR_UPNP_UDN)
-
+        devices = await self._cached_discover()
+        target_device = next((d for d in devices if d.get("ip") == host_str), None)
         self._discovered_device = target_device or {"ip": host_str}
 
-        if not unique_id:
-            # No stable id advertised: the MAC still identifies the hub across
-            # address changes, the host does not.
-            unique_id = await _async_hub_mac(host_str)
-        if not unique_id:
-            _LOGGER.warning(
-                "Habitron at %s exposed no UDN/serial/MAC; using host as fallback id",
-                host_str,
-            )
-            unique_id = f"habitron_{host_str}"
+        unique_id = await self._async_identity_or_fallback(
+            host_str,
+            upnp=discovery_info.upnp or {},
+            probed=target_device,
+        )
 
         await self.async_set_unique_id(unique_id)
         # The entry registers an update listener that reloads on a data change,
@@ -357,17 +345,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "habitron_"
             ):
                 self.hass.config_entries.async_update_entry(entry, unique_id=unique_id)
-            return self.async_abort(reason="already_configured")
-
-        # Last resort: an entry the custom integration created keys on the hub's
-        # MAC, so neither the id nor -- after an address change -- the host
-        # matches. Adopt the discovered id, which this flow can derive again.
-        if entry := await self._async_mac_matching_entry(host_str):
-            self.hass.config_entries.async_update_entry(
-                entry,
-                unique_id=unique_id,
-                data={**entry.data, CONF_HOST: await self._async_stored_host(host_str)},
-            )
             return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {"name": host_str}
@@ -424,71 +401,40 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 default_host = valid_devices[0].get("ip", CONF_DEFAULT_HOST)
 
         if user_input is not None:
-            # Try a discovery probe to obtain a stable serial-based unique_id;
-            # fall back to the host string when no probe response arrives.
             host_input = user_input[CONF_HOST]
-            # The probe reports the address it was reached at, so match it
-            # against what the user submitted -- canonicalising first would
-            # discard the serial of a hub running on this machine.
-            unique_id: str | None = None
-            devices = await self._cached_discover()
-            # The probe answers with an address, so a submitted host name has to
-            # be resolved before comparing -- otherwise its serial is dropped and
-            # the hub gets a host-based id that a later address change breaks.
-            probe_hosts = {host_input, await self._async_resolved_host(host_input)}
-            target = next((d for d in devices if d.get("ip") in probe_hosts), None)
-            if target:
-                # An empty serial is no identifier: it would collide with every
-                # other hub that reports a blank one.
-                unique_id = target.get("serial") or None
             stored_host = await self._async_stored_host(host_input)
-            if unique_id is None:
-                # The MAC identifies the hub across address changes; a
-                # host-based id would produce a second entry for the same hub
-                # after every DHCP lease change.
-                unique_id = await _async_hub_mac(
-                    await self._async_probe_host(host_input)
-                )
-            if unique_id is None:
-                unique_id = f"habitron_{stored_host}"
+            # The probe answers with the address it was reached at, so compare
+            # against the dialled form as well as what the user typed.
+            probe_hosts = {host_input, await self._async_probe_host(host_input)}
+            probed = next(
+                (
+                    d
+                    for d in await self._cached_discover()
+                    if d.get("ip") in probe_hosts
+                ),
+                None,
+            )
 
+            unique_id = await self._async_identity_or_fallback(
+                host_input, probed=probed
+            )
             await self.async_set_unique_id(unique_id)
             # Re-entering a known hub at a new address updates the stored host,
             # so a DHCP change does not leave the entry on the old one. The
-            # entry's update listener handles the reload.
+            # entry's update listener handles the reload. An ignored entry is
+            # deliberately let through here: adding it by hand is how
+            # un-ignoring works, and the new entry replaces it.
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: stored_host}, reload_on_update=False
             )
 
-            # A hub already added via SSDP is keyed by its UDN, so the serial-
-            # or host-based unique_id derived here does not match it. Guard
-            # against a duplicate entry (and a second connection to the same
-            # hub) by also checking the entered host/IP against existing entries.
-            probed_ip = target.get("ip") if target else None
-            # Use the canonicalized host: an own-IP entry is stored as ``local``,
-            # so an SSDP entry that was likewise canonicalized is only matched
-            # when we compare against ``host_input`` rather than the raw input.
-            if await self._is_device_already_configured(host_input, probed_ip):
+            # The id did not match. An entry created before the hub could be
+            # reached for its MAC carries a serial-, UDN- or host-based id, so
+            # fall back to comparing the address.
+            if await self._is_device_already_configured(
+                host_input, probed.get("ip") if probed else None
+            ):
                 return self.async_abort(reason="already_configured")
-
-            # An entry from the custom integration is keyed by the hub's MAC;
-            # re-adding the same hub at a new address would otherwise duplicate
-            # it, since neither its id nor its stored host still matches.
-            if entry := await self._async_mac_matching_entry(host_input):
-                if entry.source == config_entries.SOURCE_IGNORE:
-                    # Adding an ignored hub by hand is how un-ignoring works --
-                    # core lets the new entry replace the ignored one. Adopt its
-                    # MAC as our id so the replacement is recognised, and carry
-                    # on to create the entry instead of aborting.
-                    await self.async_set_unique_id(entry.unique_id)
-                else:
-                    # Only the address needs correcting: the entry is already
-                    # keyed by the MAC, the most stable id available here --
-                    # replacing it with a host-based fallback would undo that.
-                    self.hass.config_entries.async_update_entry(
-                        entry, data={**entry.data, CONF_HOST: stored_host}
-                    )
-                    return self.async_abort(reason="already_configured")
 
             try:
                 info = await validate_input(self.hass, user_input)

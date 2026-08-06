@@ -209,6 +209,54 @@ async def test_update_swallows_habitron_error(smart_hub_stub: SmartHub) -> None:
     assert smart_hub_stub.host_diags_valid is False
 
 
+async def test_setup_without_a_mac_keeps_the_entry_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A hub reporting no MAC does not get an empty identifier.
+
+    The config flow accepts that case and keys the entry by its host, so setup
+    has to carry that id instead of prefixing every device and entity with an
+    empty string -- and it must not register a blank MAC connection.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="habitron_192.168.1.50",
+        data=MOCK_CONFIG_DATA,
+        options=MOCK_CONFIG_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+
+    client = AsyncMock(spec=HabitronClient)
+    client.host = MOCK_HOST
+    client.get_smhub_info = AsyncMock(return_value=_smhub_info("none", ""))
+    router = Router(uid="rt_1")
+    with (
+        patch(
+            "homeassistant.components.habitron.communicate.HabitronClient",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.habitron.smart_hub.async_build_system",
+            new=AsyncMock(return_value=router),
+        ),
+        patch(
+            "homeassistant.components.habitron.coordinator."
+            "HbtnCoordinator._async_update_data",
+            new=AsyncMock(return_value=0),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "habitron_192.168.1.50")}
+    )
+    assert device is not None
+    assert device.connections == set()
+
+
 async def test_update_short_circuits_when_no_diags(smart_hub_stub: SmartHub) -> None:
     """update() skips the query entirely when self.diags is empty.
 

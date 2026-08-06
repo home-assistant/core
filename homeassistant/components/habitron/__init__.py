@@ -1,9 +1,11 @@
 """The Habitron integration."""
 
+import logging
+
 from habitron_client import HabitronError, HabitronTimeoutError
 
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -12,6 +14,8 @@ from .communicate import HbtnComm
 from .const import DOMAIN
 from .coordinator import HabitronConfigEntry, HbtnCoordinator
 from .smart_hub import SmartHub
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -52,6 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> 
 
         entry.async_on_unload(entry.add_update_listener(update_listener))
 
+        _async_adopt_hub_identity(hass, entry, coordinator.smart_hub)
         _async_cleanup_stale_devices(hass, entry, coordinator.smart_hub)
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -130,6 +135,31 @@ async def update_listener(hass: HomeAssistant, entry: HabitronConfigEntry) -> No
     # Reload unconditionally so host, interval and token changes are picked up
     # via the normal setup path.
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+@callback
+def _async_adopt_hub_identity(
+    hass: HomeAssistant,
+    entry: HabitronConfigEntry,
+    smhub: SmartHub,
+) -> None:
+    """Move the entry onto the hub's MAC, the one identity every path derives.
+
+    An entry can carry an older id: the custom (HACS) integration falls back to
+    a serial or the host when the hub is unreachable while it is set up, and so
+    does this config flow. Now that the hub has answered we know its MAC, so
+    rewrite the entry -- from here on the plain unique-id check recognises it,
+    whatever address it moves to, and no extra matcher is needed.
+    """
+    if not smhub.has_mac_uid or entry.unique_id == smhub.uid:
+        return
+    _LOGGER.debug(
+        "Adopting hub identity for %s: %s -> %s",
+        entry.title,
+        entry.unique_id,
+        smhub.uid,
+    )
+    hass.config_entries.async_update_entry(entry, unique_id=smhub.uid)
 
 
 def _async_cleanup_stale_devices(
