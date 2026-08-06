@@ -55,9 +55,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
     ) -> dict[int, Plant]:
         """Fetch data from API endpoint."""
 
-        if self.fyta.expiration is None or self.fyta.expiration < dt_util.as_local(
-            dt_util.now()
-        ):
+        if self.fyta.expiration is None or self.fyta.expiration < dt_util.now():
             await self.renew_authentication()
 
         try:
