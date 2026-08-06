@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
             "municipality_not_found": "No Austrian municipality was found at the selected location.",
-            "unknown": "[%key:common::config_flow::error::unknown%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {
@@ -14,15 +14,15 @@
                 "data_description": {
                     "location": "Warnings are provided for the Austrian municipality at this location."
                 },
-                "description": "Select the location to monitor for official GeoSphere Austria weather warnings.",
+                "description": "Select the location to monitor for official GeoSphere Austria weather warnings."
             }
-        },
+        }
     },
     "entity": {
         "sensor": {
             "active_warnings": {
                 "name": "Active warnings",
-                "unit_of_measurement": "warnings",
+                "unit_of_measurement": "warnings"
             },
             "warning_level": {
                 "name": "Warning level",
@@ -30,11 +30,11 @@
                     "none": "No warning",
                     "orange": "Orange",
                     "red": "Red",
-                    "yellow": "Yellow",
-                },
+                    "yellow": "Yellow"
+                }
             },
             "current_warning_level": {"name": "Current warning level"},
-            "advance_warning_level": {"name": "Advance warning level"},
+            "advance_warning_level": {"name": "Advance warning level"}
         }
     },
     "exceptions": {
@@ -46,6 +46,6 @@
         },
         "municipality_not_found": {
             "message": "No Austrian municipality was found for the configured location"
-        },
-    },
+        }
+    }
 }
