@@ -19,6 +19,7 @@ from .const import (
     DEV_MODEL_FLEX_FOB_YS3604_UC,
     DEV_MODEL_FLEX_FOB_YS3614_EC,
     DEV_MODEL_FLEX_FOB_YS3614_UC,
+    DEV_MODEL_MINI_FOB_YS3615_UC,
     DEV_MODEL_SWITCH_YS5708_EC,
     DEV_MODEL_SWITCH_YS5708_UC,
     DEV_MODEL_SWITCH_YS5709_EC,
@@ -50,16 +51,27 @@ FLEX_BUTTONS_2 = {
     f"{CONF_BUTTON_2}_{CONF_LONG_PRESS}",
 }
 
+# The Mini On/Off Fob only ever reports button 1 as a short press and
+# button 2 as a long press, regardless of actual press duration or
+# click count. Unlike the Flex Fob, it has no real short/long
+# distinction per button and no multi-click detection, so it gets its
+# own smaller trigger set instead of FLEX_BUTTONS_2.
+MINI_FOB_BUTTONS = {
+    f"{CONF_BUTTON_1}_{CONF_SHORT_PRESS}",
+    f"{CONF_BUTTON_2}_{CONF_LONG_PRESS}",
+}
+
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {vol.Required(CONF_TYPE): vol.In(FLEX_BUTTONS_4)}
 )
 
-# YoLink Remotes YS3604/YS3614, Switch YS5708/YS5709
+# YoLink Remotes YS3604/YS3614/YS3615, Switch YS5708/YS5709
 TRIGGER_MAPPINGS: dict[str, set[str]] = {
     DEV_MODEL_FLEX_FOB_YS3604_EC: FLEX_BUTTONS_4,
     DEV_MODEL_FLEX_FOB_YS3604_UC: FLEX_BUTTONS_4,
     DEV_MODEL_FLEX_FOB_YS3614_UC: FLEX_BUTTONS_2,
     DEV_MODEL_FLEX_FOB_YS3614_EC: FLEX_BUTTONS_2,
+    DEV_MODEL_MINI_FOB_YS3615_UC: MINI_FOB_BUTTONS,
     DEV_MODEL_SWITCH_YS5708_EC: FLEX_BUTTONS_2,
     DEV_MODEL_SWITCH_YS5708_UC: FLEX_BUTTONS_2,
     DEV_MODEL_SWITCH_YS5709_EC: FLEX_BUTTONS_2,
