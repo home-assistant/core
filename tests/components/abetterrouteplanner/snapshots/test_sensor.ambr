@@ -342,7 +342,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power',
+    'translation_key': None,
     'unique_id': 'abrp-test-sub_941349991303_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -642,7 +642,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage',
+    'translation_key': None,
     'unique_id': 'abrp-test-sub_941349991303_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })

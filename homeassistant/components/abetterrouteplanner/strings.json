@@ -54,9 +54,6 @@
       "odometer": {
         "name": "Odometer"
       },
-      "power": {
-        "name": "Power"
-      },
       "range": {
         "name": "Range"
       },
@@ -68,9 +65,6 @@
       },
       "soh": {
         "name": "State of health"
-      },
-      "voltage": {
-        "name": "Voltage"
       }
     }
   },

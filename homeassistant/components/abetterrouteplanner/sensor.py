@@ -92,7 +92,6 @@ SENSORS: tuple[
     ),
     AbrpNumericSensorEntityDescription(
         key="power",
-        translation_key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -101,7 +100,6 @@ SENSORS: tuple[
     ),
     AbrpNumericSensorEntityDescription(
         key="voltage",
-        translation_key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
