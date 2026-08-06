@@ -1,17 +1,20 @@
 """Test KNX devices."""
 
 from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.storage.config_store import (
     STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
 )
-from homeassistant.const import Platform
+from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import KNXTestKit
+from .conftest import KNXTestKit, _patch_telegram_store
 
 from tests.typing import WebSocketGenerator
 
@@ -140,3 +143,62 @@ async def test_remove_device_ignores_foreign_platform_entities(
     response = await client.remove_device(device_id, knx.mock_config_entry.entry_id)
     assert response["success"]
     assert not device_registry.async_get(device_id)
+
+
+@pytest.mark.parametrize("entity_count", [1, 2])
+async def test_yaml_device_name_updates_on_reload(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    device_registry: dr.DeviceRegistry,
+    entity_count: int,
+) -> None:
+    """Renaming a YAML `device` and reloading updates the device registry.
+
+    The current YAML `name` wins on every (re-)setup - it is not fixed to
+    whatever was configured when the device was first created. This holds
+    regardless of how many entities reference the device.
+    """
+
+    def _config(device_name: str) -> dict[str, Any]:
+        entities = [
+            {
+                "name": "a",
+                KNX_ADDRESS: "1/1/1",
+                "device": {"id": "as_df", "name": device_name},
+            }
+        ]
+        if entity_count > 1:
+            # No `name` here: this entity must not block the rename.
+            entities.append(
+                {"name": "b", KNX_ADDRESS: "1/1/2", "device": {"id": "as_df"}}
+            )
+        return {Platform.SWITCH: entities}
+
+    await knx.setup_integration(_config("Initial name"))
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "as_df"), knx.mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == "Initial name"
+    device_id = device.id
+
+    with (
+        patch(
+            "homeassistant.config.async_hass_config_yaml",
+            AsyncMock(return_value={DOMAIN: _config("My device")}),
+        ),
+        _patch_telegram_store(real_store=False),
+        patch(
+            "xknx.xknx.knx_interface_factory",
+            return_value=Mock(
+                start=AsyncMock(), stop=AsyncMock(), gateway_info=AsyncMock()
+            ),
+        ),
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    # Same device is updated in place, not duplicated.
+    device = device_registry.async_get(device_id)
+    assert device is not None
+    assert device.name == "My device"
