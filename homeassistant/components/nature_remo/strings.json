@@ -23,10 +23,10 @@
   "entity": {
     "sensor": {
       "cumulative_energy_normal": {
-        "name": "Purchased energy"
+        "name": "Imported energy"
       },
       "cumulative_energy_reverse": {
-        "name": "Sold energy"
+        "name": "Exported energy"
       },
       "illuminance": {
         "name": "Illuminance"

@@ -170,5 +170,5 @@ async def test_smart_meter_without_reverse_direction(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.smart_meter_purchased_energy") is not None
-    assert hass.states.get("sensor.smart_meter_sold_energy") is None
+    assert hass.states.get("sensor.smart_meter_imported_energy") is not None
+    assert hass.states.get("sensor.smart_meter_exported_energy") is None
