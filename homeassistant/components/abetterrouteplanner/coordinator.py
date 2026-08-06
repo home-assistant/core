@@ -176,9 +176,10 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         ABRP closes idle streams (~200 s) as steady state, so a disconnect only
         logs and never marks entities unavailable. ``AUTH_FAILED`` is the one
         exception: the library stops the stream for good, so entities stop
-        claiming values nothing will refresh. That flag is cleared only by a
-        successful reconnect, since the stream may still emit ``DISCONNECTED``
-        after the terminal failure and that is not a recovery.
+        claiming values nothing will refresh. Clearing that flag on a reconnect
+        rather than on any later event is defensive: aioabrp returns from its
+        run loop once it has dispatched ``AUTH_FAILED``, so today nothing
+        follows it at all.
         """
         previous = self.last_connection_event
         changed = previous is None or previous.state is not event.state

@@ -240,7 +240,12 @@ async def test_terminal_auth_failure_sets_and_clears_stream_auth_failed(
     hass: HomeAssistant,
     telemetry_coordinator: AbrpTelemetryCoordinator,
 ) -> None:
-    """AUTH_FAILED latches the terminal flag; only a reconnect clears it."""
+    """AUTH_FAILED latches the terminal flag; only a reconnect clears it.
+
+    aioabrp returns from its run loop once it has dispatched ``AUTH_FAILED``,
+    so the later events driven here cannot occur today. They pin the latch's
+    own state machine against a future library that does emit them.
+    """
     coordinator = telemetry_coordinator
 
     assert coordinator.stream_auth_failed is False
@@ -251,8 +256,6 @@ async def test_terminal_auth_failure_sets_and_clears_stream_auth_failed(
     await hass.async_block_till_done()
     assert coordinator.stream_auth_failed is True
 
-    # The stream may still report a disconnect after the terminal failure;
-    # that is not a recovery.
     coordinator.on_connection_change(
         ConnectionEvent(ConnectionState.DISCONNECTED, "idle close")
     )

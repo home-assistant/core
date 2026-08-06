@@ -783,7 +783,7 @@ async def test_terminal_auth_failure_makes_sensors_unavailable(
     config_entry_with_vehicles: MockConfigEntry,
     fake_stream: Any,
 ) -> None:
-    """A value that nothing can refresh stops being reported, then comes back."""
+    """A value that nothing can refresh stops being reported."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
     fake_stream.fire_frame(
@@ -795,7 +795,3 @@ async def test_terminal_auth_failure_makes_sensors_unavailable(
     fake_stream.fire_connection(ConnectionEvent(ConnectionState.AUTH_FAILED, "401"))
     await hass.async_block_till_done()
     assert hass.states.get(POWER_ENTITY_ID).state == "unavailable"
-
-    fake_stream.fire_connection(ConnectionEvent(ConnectionState.CONNECTED))
-    await hass.async_block_till_done()
-    assert hass.states.get(POWER_ENTITY_ID).state == "12000.0"
