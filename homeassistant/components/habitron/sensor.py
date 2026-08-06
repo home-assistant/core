@@ -32,7 +32,6 @@ from .const import DOMAIN
 from .coordinator import HabitronConfigEntry, HbtnCoordinator
 
 PARALLEL_UPDATES = 0
-TYPE_DIAG = 10  # diagnostic entity, hidden by default (was interfaces.TYPE_DIAG)
 
 # Stable, language-independent enum keys ordered by the hub's raw finger value
 # (1..10). Localized labels live in strings.json under
@@ -283,7 +282,7 @@ class HbtnDescribedSensor(HbtnSensor):
         if description.translated_name:
             # Let the translation_key (not the bus name) drive the display name.
             del self._attr_name
-        if description.diag_check and abs(sensor.type) == TYPE_DIAG:
+        if description.diag_check and sensor.is_diagnostic:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
             self._attr_entity_registry_enabled_default = False
 

@@ -27,7 +27,6 @@ from homeassistant.components.habitron.sensor import (
     TEMP_DESCRIPTION,
     TEMP_EXT_DESCRIPTION,
     TIMEOUT_DESCRIPTION,
-    TYPE_DIAG,
     VOLTAGE_DESCRIPTION,
     WIND_DESCRIPTION,
     HbtnDescribedSensor,
@@ -41,7 +40,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
 from tests.common import MockConfigEntry
 
 
@@ -198,7 +196,8 @@ def test_categorical_descriptions_have_no_state_class(
 def test_described_sensor_marks_diagnostic_entity_when_flagged() -> None:
     """A sensor whose descriptor type is DIAG is hidden by default."""
     module = _make_module()
-    sensor_desc = _make_sensor_descriptor(name="Iload", type_=TYPE_DIAG)
+    # 10 is the bus role code the library reports as ``is_diagnostic``.
+    sensor_desc = _make_sensor_descriptor(name="Iload", type_=10)
     coord = MagicMock(spec=DataUpdateCoordinator)
     entity = HbtnDescribedSensor(module, sensor_desc, coord, 0, CURRENT_DESCRIPTION)
     assert entity.entity_description is CURRENT_DESCRIPTION
