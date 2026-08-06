@@ -73,6 +73,7 @@ def mock_conexa_smgw(
     """Mock the Theben Conexa API surface used by the integration."""
     mock_smgw = MagicMock()
     mock_smgw.gatewayInfo.smgwID = "test-gateway-id"
+    mock_smgw.gatewayInfo.firmwareVersion = "test-gateway-fw-version"
     mock_smgw.getLatestValues = AsyncMock(return_value={})
     mock_create.return_value = mock_smgw
 

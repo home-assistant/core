@@ -1,10 +1,11 @@
 """Test the Theben Conexa Smartmeter gateway config flow."""
 
-from typing import Any
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
+from theben_conexa_smgw import ConexaSMGW
 
 from homeassistant import config_entries
 from homeassistant.components.theben_conexa.const import DOMAIN
@@ -22,9 +23,9 @@ TEST_CONFIG_DATA = {
 
 
 def _assert_create_entry_result(
-    result: dict[str, Any],
+    result: config_entries.ConfigFlowResult,
     expected_data: dict[str, str],
-    mock_conexa_client: Any,
+    mock_conexa_client: ConexaSMGW,
 ) -> None:
     """Assert a successful create-entry result uses the expected unique ID."""
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -38,7 +39,7 @@ def _assert_create_entry_result(
 async def test_full_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_conexa_smgw: Any,
+    mock_conexa_smgw: SimpleNamespace,
 ) -> None:
     """Test full flow."""
 
@@ -72,7 +73,7 @@ async def test_full_flow(
 async def test_form_exceptions(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_conexa_smgw: Any,
+    mock_conexa_smgw: SimpleNamespace,
     side_effect: type[Exception],
     expected_error: str,
 ) -> None:
@@ -113,7 +114,7 @@ async def test_form_exceptions(
 async def test_form_cannot_connect(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_conexa_smgw: Any,
+    mock_conexa_smgw: SimpleNamespace,
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -172,7 +173,7 @@ async def test_form_already_configured(
 async def test_same_gateway_different_user(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_conexa_smgw: Any,
+    mock_conexa_smgw: SimpleNamespace,
 ) -> None:
     """Test that same gateway with a different username can still be configured."""
     result = await hass.config_entries.flow.async_init(

@@ -9,8 +9,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -40,7 +38,7 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await checkNetworkConnection(user_input[CONF_HOST])
-            except (OSError, aiohttp.ClientError) as e:
+            except OSError, aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             else:
                 try:
@@ -55,7 +53,7 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(
                         f"{local_api.gatewayInfo.smgwID}-{user_input[CONF_USERNAME]}"
                     )
-                except (OSError, aiohttp.ClientError) as e:
+                except OSError, aiohttp.ClientError:
                     # The smgw unfortunately does not reply with invalid auth it just times out
                     # So after we checked that connection is possible we assume Invalid auth if something happens
                     errors["base"] = "invalid_auth"
@@ -74,11 +72,3 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
