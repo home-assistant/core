@@ -7,13 +7,29 @@ from openwrt_luci_rpc import OpenWrtRpc
 from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    UnitOfTime,
+)
+from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
 )
 
 from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
@@ -37,6 +53,15 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenWrt (luci)."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> LuciOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return LuciOptionsFlowHandler()
 
     @override
     async def async_step_user(
@@ -123,6 +148,40 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=import_data[CONF_HOST],
             data=import_data,
+        )
+
+
+class LuciOptionsFlowHandler(OptionsFlowWithReload):
+    """Handle an options flow for OpenWrt (luci)."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_CONSIDER_HOME,
+                        default=self.config_entry.options.get(
+                            CONF_CONSIDER_HOME,
+                            DEFAULT_CONSIDER_HOME.total_seconds(),
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            max=900,
+                            step=1,
+                            mode=NumberSelectorMode.BOX,
+                            unit_of_measurement=UnitOfTime.SECONDS,
+                        )
+                    ),
+                }
+            ),
         )
 
 
