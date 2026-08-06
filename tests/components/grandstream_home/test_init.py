@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.grandstream_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceRegistry
 
 from tests.common import MockConfigEntry
 
@@ -120,6 +120,7 @@ async def test_setup_with_product_model(
     hass: HomeAssistant,
     mock_config_entry_with_product_model: MockConfigEntry,
     mock_gds_api: MagicMock,
+    device_registry: DeviceRegistry,
 ) -> None:
     """Test setup with product_model in config data."""
     mock_config_entry_with_product_model.add_to_hass(hass)
@@ -127,7 +128,6 @@ async def test_setup_with_product_model(
     await hass.config_entries.async_setup(mock_config_entry_with_product_model.entry_id)
     await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "ec:74:d7:97:53:c5")}
     )
@@ -166,7 +166,9 @@ async def test_coordinator_update_failed_exception(
 
 
 async def test_coordinator_firmware_update(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    device_registry: DeviceRegistry,
 ) -> None:
     """Test coordinator updates firmware version in device registry."""
     with patch(
@@ -176,7 +178,6 @@ async def test_coordinator_firmware_update(
         await init_integration.runtime_data.coordinator.async_request_refresh()
         await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, init_integration.unique_id)}
     )
