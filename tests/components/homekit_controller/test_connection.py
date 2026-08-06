@@ -748,3 +748,28 @@ async def test_async_setup_handles_unparsable_response(
     # though initial polling failed
     state = hass.states.get("light.testdevice")
     assert state is not None
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test bridged accessories link to the bridge via via_device_id."""
+    accessories = await setup_accessories_from_file(
+        hass, "ryse_smart_bridge_four_shades.json"
+    )
+    config_entry, _ = await setup_test_accessories(hass, accessories)
+
+    bridge_device = device_registry.async_get_device_by_identifier(
+        (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1"), config_entry.entry_id
+    )
+    assert bridge_device is not None
+    assert bridge_device.via_device_id is None
+
+    for aid in (2, 3, 4, 5):
+        shade_device = device_registry.async_get_device_by_identifier(
+            (IDENTIFIER_ACCESSORY_ID, f"00:00:00:00:00:00:aid:{aid}"),
+            config_entry.entry_id,
+        )
+        assert shade_device is not None
+        assert shade_device.via_device_id == bridge_device.id

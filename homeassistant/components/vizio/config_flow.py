@@ -35,7 +35,6 @@ from .const import (
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
     CONF_INCLUDE_OR_EXCLUDE,
     CONF_VOLUME_STEP,
-    DEFAULT_DEVICE_CLASS,
     DEFAULT_NAME,
     DEFAULT_VOLUME_STEP,
     DEVICE_ID,
@@ -64,14 +63,6 @@ def _get_config_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
                 CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
             ): str,
             vol.Required(CONF_HOST, default=input_dict.get(CONF_HOST)): str,
-            vol.Required(
-                CONF_DEVICE_CLASS,
-                default=input_dict.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
-            ): vol.All(
-                str,
-                vol.Lower,
-                vol.In([MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.SPEAKER]),
-            ),
             vol.Optional(
                 CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
             ): str,
@@ -106,6 +97,17 @@ def _get_device(
         device_type=VIZIO_DEVICE_CLASSES[MediaPlayerDeviceClass(device_class)],
         auth_token=auth_token,
         session=async_get_clientsession(hass, False),
+    )
+
+
+async def _async_detect_device_class(
+    hass: HomeAssistant, host: str
+) -> MediaPlayerDeviceClass:
+    """Detect whether the device at host is a TV or a speaker."""
+    return (
+        MediaPlayerDeviceClass.TV
+        if await async_is_tv(host, session=async_get_clientsession(hass, False))
+        else MediaPlayerDeviceClass.SPEAKER
     )
 
 
@@ -248,6 +250,11 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
             self._user_schema = _get_config_schema(user_input)
+            # Zeroconf discovery provides the device class; detect it otherwise
+            if CONF_DEVICE_CLASS not in user_input:
+                user_input[CONF_DEVICE_CLASS] = await _async_detect_device_class(
+                    self.hass, user_input[CONF_HOST]
+                )
             if self.unique_id is None:
                 unique_id = await _async_get_unique_id(
                     self.hass, user_input[CONF_HOST], user_input[CONF_DEVICE_CLASS]
@@ -308,11 +315,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         num_chars_to_strip = len(discovery_info.type) + 1
         name = discovery_info.name[:-num_chars_to_strip]
 
-        device_class = (
-            MediaPlayerDeviceClass.TV
-            if await async_is_tv(host)
-            else MediaPlayerDeviceClass.SPEAKER
-        )
+        device_class = await _async_detect_device_class(self.hass, host)
 
         # Set unique ID early for discovery flow so we can abort if needed
         unique_id = await _async_get_unique_id(self.hass, host, device_class)
