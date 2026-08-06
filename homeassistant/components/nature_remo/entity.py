@@ -77,12 +77,11 @@ class NatureRemoDeviceEntity(CoordinatorEntity[NatureRemoCoordinator]):
         and must stay available. An explicit False means the hub is
         unreachable and its last readings are stale.
         """
-        if (
-            not super().available
-            or self._device_id not in self.coordinator.data.devices
-        ):
-            return False
-        return self.device.online is not False
+        return (
+            super().available
+            and self._device_id in self.coordinator.data.devices
+            and self.device.online is not False
+        )
 
 
 class NatureRemoApplianceEntity(CoordinatorEntity[NatureRemoCoordinator]):
