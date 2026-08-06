@@ -29,7 +29,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import DEFAULT_CHANNEL, DOMAIN
 from .util import (
-    DATASET_LOCK,
+    async_get_dataset_lock,
     compose_default_network_name,
     generate_random_pan_id,
     get_allowed_channel,
@@ -91,13 +91,13 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         # Held across the read and the write: the preferred dataset this adopts
         # can be repointed by a network migration, and a router provisioned from
         # the old pointer would come up on the network everything else just left.
-        async with DATASET_LOCK:
+        async with async_get_dataset_lock(self.hass):
             await self._async_set_dataset(api, otbr_url)
 
     async def _async_set_dataset(
         self, api: python_otbr_api.OTBR, otbr_url: str
     ) -> None:
-        """Create or apply a dataset. The caller holds DATASET_LOCK."""
+        """Create or apply a dataset. The caller holds the dataset lock."""
         if await api.get_active_dataset_tlvs() is None:
             allowed_channel = await get_allowed_channel(self.hass, otbr_url)
 
