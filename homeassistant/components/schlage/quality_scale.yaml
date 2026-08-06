@@ -37,7 +37,11 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: todo
+    comment: |
+      The lock, switch, and select platform actions do not translate pyschlage
+      failures into HomeAssistantError.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
