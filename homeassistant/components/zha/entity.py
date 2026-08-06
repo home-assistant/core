@@ -129,8 +129,6 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         zha_device_info = self.entity_data.device_proxy.device_info
         ieee = zha_device_info["ieee"]
 
-        # The via device link is set where the device itself is registered, in
-        # ZHAGatewayProxy._async_get_or_create_device_proxy.
         return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
