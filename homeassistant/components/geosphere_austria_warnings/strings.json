@@ -10,7 +10,9 @@
     },
     "step": {
       "user": {
-        "data": { "location": "[%key:common::config_flow::data::location%]" },
+        "data": {
+          "location": "[%key:common::config_flow::data::location%]"
+        },
         "data_description": {
           "location": "Warnings are provided for the Austrian municipality at this location."
         },
@@ -24,8 +26,19 @@
         "name": "Active warnings",
         "unit_of_measurement": "warnings"
       },
-      "advance_warning_level": { "name": "Advance warning level" },
-      "current_warning_level": { "name": "Current warning level" },
+      "advance_warning_level": {
+        "name": "Advance warning level",
+        "state": {
+          "none": "No warning",
+          "orange": "Orange",
+          "red": "Red",
+          "yellow": "Yellow"
+        }
+      },
+      "advance_warnings": {
+        "name": "Advance warnings",
+        "unit_of_measurement": "warnings"
+      },
       "warning_level": {
         "name": "Warning level",
         "state": {
@@ -46,6 +59,18 @@
     },
     "municipality_not_found": {
       "message": "No Austrian municipality was found for the configured location"
+    }
+  },
+  "services": {
+    "get_warnings": {
+      "name": "Get warnings",
+      "description": "Return the cached active and advance weather warnings.",
+      "fields": {
+        "config_entry": {
+          "name": "Location",
+          "description": "The GeoSphere Austria Warnings configuration entry to query."
+        }
+      }
     }
   }
 }

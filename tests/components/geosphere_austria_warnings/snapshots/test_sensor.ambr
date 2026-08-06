@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.schwechat_active_warnings-entry]
+# name: test_sensor_set_and_active_warning[sensor.schwechat_active_warnings-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -38,7 +38,7 @@
     'unit_of_measurement': 'warnings',
   })
 # ---
-# name: test_sensors[sensor.schwechat_active_warnings-state]
+# name: test_sensor_set_and_active_warning[sensor.schwechat_active_warnings-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GeoSphere Austria',
@@ -54,13 +54,20 @@
     'state': '1',
   })
 # ---
-# name: test_sensors[sensor.schwechat_advance_warning_level-entry]
+# name: test_sensor_set_and_active_warning[sensor.schwechat_advance_warning_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'yellow',
+        'orange',
+        'red',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -79,7 +86,7 @@
     'object_id_base': 'Advance warning level',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Advance warning level',
     'platform': 'geosphere_austria_warnings',
@@ -91,43 +98,40 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.schwechat_advance_warning_level-state]
+# name: test_sensor_set_and_active_warning[sensor.schwechat_advance_warning_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GeoSphere Austria',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      'end': '2023-03-28T16:00:00+00:00',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Schwechat Advance warning level',
-      'municipality': 'Schwechat',
-      'warning_1_change_id': 2,
-      'warning_1_color': 'yellow',
-      'warning_1_course_id': 1,
-      'warning_1_description': 'Yellow rain warning from Tue, 28.03.2023 08:00 until Tue, 28.03.2023 18:00',
-      'warning_1_end': '2023-03-28T16:00:00+00:00',
-      'warning_1_impacts': '* Local flooding is possible.',
-      'warning_1_instruction': '* Avoid underpasses and flooded roads!',
-      'warning_1_level': 1,
-      'warning_1_meteo_text': 'Persistent rain with amounts between 40 and 60 mm.',
-      'warning_1_name': 'Rain',
-      'warning_1_start': '2023-03-28T06:00:00+00:00',
-      'warning_1_type': 2,
-      'warning_1_update_reason': '',
-      'warning_1_warning_id': 4150,
-      'warning_count': 1,
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'yellow',
+        'orange',
+        'red',
+      ]),
+      'start': '2023-03-28T06:00:00+00:00',
+      'type': 'storm',
+      'warning_id': 4149,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.schwechat_advance_warning_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': 'orange',
   })
 # ---
-# name: test_sensors[sensor.schwechat_current_warning_level-entry]
+# name: test_sensor_set_and_active_warning[sensor.schwechat_advance_warnings-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -135,7 +139,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.schwechat_current_warning_level',
+    'entity_id': 'sensor.schwechat_advance_warnings',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -143,52 +147,38 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current warning level',
+    'object_id_base': 'Advance warnings',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current warning level',
+    'original_name': 'Advance warnings',
     'platform': 'geosphere_austria_warnings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'current_warning_level',
-    'unique_id': '30740-current_warning_level',
-    'unit_of_measurement': None,
+    'translation_key': 'advance_warnings',
+    'unique_id': '30740-advance_warnings',
+    'unit_of_measurement': 'warnings',
   })
 # ---
-# name: test_sensors[sensor.schwechat_current_warning_level-state]
+# name: test_sensor_set_and_active_warning[sensor.schwechat_advance_warnings-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GeoSphere Austria',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Schwechat Current warning level',
-      'municipality': 'Schwechat',
-      'warning_1_change_id': 6,
-      'warning_1_color': 'orange',
-      'warning_1_course_id': 2,
-      'warning_1_description': 'Orange wind warning from Mon, 27.03.2023 08:00 until Mon, 27.03.2023 18:00',
-      'warning_1_end': '2023-03-27T16:00:00+00:00',
-      'warning_1_impacts': '* Branches may fall and objects may be thrown around.',
-      'warning_1_instruction': '* Be careful in forests, parks and avenues!',
-      'warning_1_level': 2,
-      'warning_1_meteo_text': 'Strong northwest winds with gusts between 60 and 80 km/h.',
-      'warning_1_name': 'Storm',
-      'warning_1_start': '2023-03-27T06:00:00+00:00',
-      'warning_1_type': 1,
-      'warning_1_update_reason': '',
-      'warning_1_warning_id': 4149,
-      'warning_count': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Schwechat Advance warnings',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'warnings',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.schwechat_current_warning_level',
+    'entity_id': 'sensor.schwechat_advance_warnings',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '5',
   })
 # ---
-# name: test_sensors[sensor.schwechat_warning_level-entry]
+# name: test_sensor_set_and_active_warning[sensor.schwechat_warning_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -232,11 +222,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.schwechat_warning_level-state]
+# name: test_sensor_set_and_active_warning[sensor.schwechat_warning_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GeoSphere Austria',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      'end': '2023-03-27T18:00:00+00:00',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Schwechat Warning level',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
@@ -244,6 +235,9 @@
         'orange',
         'red',
       ]),
+      'start': '2023-03-27T08:00:00+00:00',
+      'type': 'storm',
+      'warning_id': 4149,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.schwechat_warning_level',
