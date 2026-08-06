@@ -88,10 +88,12 @@ def async_get_tools(
     floor: fr.FloorEntry | None = None
     area: ar.AreaEntry | None = None
     if llm_context.device_id and (
-        device := dr.async_get(hass).async_get(llm_context.device_id)
+        device := (device_reg := dr.async_get(hass)).async_get(llm_context.device_id)
     ):
         area_reg = ar.async_get(hass)
-        if device.area_id and (area := area_reg.async_get_area(device.area_id)):
+        if (device_area_id := device_reg.async_get_effective_area_id(device)) and (
+            area := area_reg.async_get_area(device_area_id)
+        ):
             if area.floor_id:
                 floor = fr.async_get(hass).async_get_floor(area.floor_id)
 

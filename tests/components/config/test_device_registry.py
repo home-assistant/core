@@ -78,6 +78,7 @@ async def test_list_devices(
             "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
+            "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
@@ -103,6 +104,7 @@ async def test_list_devices(
             "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
+            "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
@@ -141,6 +143,7 @@ async def test_list_devices(
             "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
+            "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
@@ -885,3 +888,266 @@ async def test_list_linked_devices_unknown_device(
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
     assert msg["error"]["message"] == "Device not found"
+
+
+async def _create_parent_and_child(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    *,
+    domain: str = "test",
+) -> tuple[MockConfigEntry, dr.DeviceEntry, dr.ChildDeviceEntry]:
+    """Create a config entry with a parent device and one child device."""
+    entry = MockConfigEntry(domain=domain, title="Test")
+    entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+    return entry, parent, child_device
+
+
+async def test_list_devices_with_child_devices(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test child devices are included in the device list."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    entry, parent, child_device = await _create_parent_and_child(hass, device_registry)
+
+    await client.send_json_auto_id({"type": "config/device_registry/list"})
+    msg = await client.receive_json()
+
+    assert msg["result"] == [
+        {
+            "area_id": None,
+            "config_entries": [entry.entry_id],
+            "config_entries_subentries": {entry.entry_id: [None]},
+            "config_entry_id": entry.entry_id,
+            "config_subentry_id": None,
+            "configuration_url": None,
+            "connections": [],
+            "created_at": parent.created_at.timestamp(),
+            "disabled_by": None,
+            "entry_type": None,
+            "hw_version": None,
+            "id": parent.id,
+            "identifiers": [["test", "strip"]],
+            "labels": [],
+            "manufacturer": None,
+            "model": None,
+            "model_id": None,
+            "modified_at": parent.modified_at.timestamp(),
+            "name_by_user": None,
+            "name": "Power strip",
+            "parent_device_id": None,
+            "primary_config_entry": entry.entry_id,
+            "serial_number": None,
+            "sw_version": None,
+            "via_device_id": None,
+        },
+        {
+            "area_id": None,
+            "config_entries": [entry.entry_id],
+            "config_entries_subentries": {entry.entry_id: [None]},
+            "config_entry_id": entry.entry_id,
+            "config_subentry_id": None,
+            "created_at": child_device.created_at.timestamp(),
+            "disabled_by": None,
+            "id": child_device.id,
+            "identifiers": [["test", "strip_outlet_1"]],
+            "labels": [],
+            "modified_at": child_device.modified_at.timestamp(),
+            "name_by_user": None,
+            "name": "Outlet 1",
+            "parent_device_id": parent.id,
+            "primary_config_entry": entry.entry_id,
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    ("payload_key", "payload_value"),
+    [
+        pytest.param("area_id", "garden", id="area_id"),
+        pytest.param("labels", ["label1"], id="labels"),
+        pytest.param("name_by_user", "Garden lamp", id="name_by_user"),
+        pytest.param("disabled_by", "user", id="disabled_by"),
+    ],
+)
+async def test_update_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    payload_key: str,
+    payload_value: Any,
+) -> None:
+    """Test updating a child device through the websocket API."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    _, _, child_device = await _create_parent_and_child(hass, device_registry)
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": child_device.id,
+            payload_key: payload_value,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"][payload_key] == payload_value
+    assert msg["result"]["parent_device_id"] == child_device.parent_device_id
+
+
+async def test_update_child_device_area_round_trip(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test overriding and re-inheriting a child device area via the API."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    _, parent, child_device = await _create_parent_and_child(hass, device_registry)
+    device_registry.async_update_device(parent.id, area_id="garage")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": child_device.id,
+            "area_id": "garden",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["area_id"] == "garden"
+
+    # Clearing the area restores inheriting the parent's area
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": child_device.id,
+            "area_id": None,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["area_id"] is None
+    updated_child = device_registry.async_get_child(child_device.id)
+    assert updated_child is not None
+    assert device_registry.async_get_effective_area_id(updated_child) == "garage"
+
+
+async def test_remove_config_entry_from_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing a child device via the websocket API."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    can_remove = False
+    removed_devices: list[str] = []
+
+    async def async_remove_config_entry_device(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        device_entry: dr.DeviceEntry | dr.ChildDeviceEntry,
+    ) -> bool:
+        removed_devices.append(device_entry.id)
+        return can_remove
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp1", async_remove_config_entry_device=async_remove_config_entry_device
+        ),
+    )
+    entry, parent, child_device = await _create_parent_and_child(
+        hass, device_registry, domain="comp1"
+    )
+    entry.supports_remove_device = True
+
+    # Rejected by the integration
+    response = await ws_client.remove_device(child_device.id, entry.entry_id)
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert removed_devices == [child_device.id]
+
+    can_remove = True
+    removed_devices.clear()
+
+    # The integration hook receives the child device entry
+    response = await ws_client.remove_device(child_device.id, entry.entry_id)
+    assert response["success"]
+    assert removed_devices == [child_device.id]
+    assert device_registry.async_get(child_device.id) is None
+    assert device_registry.async_get(parent.id) is not None
+
+
+async def test_remove_config_entry_from_parent_with_children(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing a parent device consults the hook once and cascades."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    consulted_devices: list[str] = []
+
+    async def async_remove_config_entry_device(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        device_entry: dr.DeviceEntry | dr.ChildDeviceEntry,
+    ) -> bool:
+        consulted_devices.append(device_entry.id)
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp1", async_remove_config_entry_device=async_remove_config_entry_device
+        ),
+    )
+    entry, parent, child_device = await _create_parent_and_child(
+        hass, device_registry, domain="comp1"
+    )
+    entry.supports_remove_device = True
+
+    response = await ws_client.remove_device(parent.id, entry.entry_id)
+    assert response["success"]
+    # The hook is consulted once, with the parent; child devices cascade
+    assert consulted_devices == [parent.id]
+    assert device_registry.async_get(parent.id) is None
+    assert device_registry.async_get(child_device.id) is None
+
+
+async def test_list_linked_devices_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test list_linked_devices for a child device."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    _, _, child_device = await _create_parent_and_child(hass, device_registry)
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/list_linked_devices",
+            "device_id": child_device.id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"linked_devices": []}

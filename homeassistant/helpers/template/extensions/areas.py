@@ -105,12 +105,14 @@ class AreaExtension(BaseTemplateExtension):
                 if (
                     entity.device_id
                     and (device := dev_reg.async_get(entity.device_id))
-                    and device.area_id
+                    and (area_id := dev_reg.async_get_effective_area_id(device))
                 ):
-                    return self._get_area_name(area_reg, device.area_id)
+                    return self._get_area_name(area_reg, area_id)
 
-        if (device := dev_reg.async_get(lookup_value)) and device.area_id:
-            return self._get_area_name(area_reg, device.area_id)
+        if (device := dev_reg.async_get(lookup_value)) and (
+            area_id := dev_reg.async_get_effective_area_id(device)
+        ):
+            return self._get_area_name(area_reg, area_id)
 
         return None
 

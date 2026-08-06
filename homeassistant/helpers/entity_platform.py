@@ -948,7 +948,7 @@ class EntityPlatform:
                     entity.add_to_platform_abort()
                     return
 
-            device: dr.DeviceEntry | None
+            device: dr.AnyDeviceEntry | None
             if self.config_entry:
                 if device_info := entity.device_info:
                     try:

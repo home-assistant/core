@@ -325,7 +325,7 @@ class Searcher:
 
     @callback
     def _async_add_automations_and_scripts_for_device(
-        self, device_entry: dr.DeviceEntry
+        self, device_entry: dr.AnyDeviceEntry
     ) -> None:
         """Add automations and scripts referencing a device.
 
@@ -335,7 +335,10 @@ class Searcher:
         references to a sibling are not matched.
         """
         device_ids = {device_entry.id}
-        if device_entry.composite_device_id is not None:
+        if (
+            isinstance(device_entry, dr.DeviceEntry)
+            and device_entry.composite_device_id is not None
+        ):
             device_ids.add(device_entry.composite_device_id)
         for device_id in device_ids:
             self._add(
@@ -590,16 +593,18 @@ class Searcher:
         )
 
     @callback
-    def _async_resolve_up_device(self, device_id: str) -> dr.DeviceEntry | None:
+    def _async_resolve_up_device(self, device_id: str) -> dr.AnyDeviceEntry | None:
         """Resolve up from a device.
 
         Above a device is an area or floor.
         Above a device is also the config entry.
         """
         if device_entry := self._device_registry.async_get(device_id):
-            if device_entry.area_id:
-                self._add(ItemType.AREA, device_entry.area_id)
-                self._async_resolve_up_area(device_entry.area_id)
+            if area_id := self._device_registry.async_get_effective_area_id(
+                device_entry
+            ):
+                self._add(ItemType.AREA, area_id)
+                self._async_resolve_up_area(area_id)
 
             self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
             for config_entry_id in device_entry.config_entries:
@@ -625,9 +630,11 @@ class Searcher:
             elif entity_entry.device_id and (
                 device_entry := self._device_registry.async_get(entity_entry.device_id)
             ):
-                if device_entry.area_id:
-                    self._add(ItemType.AREA, device_entry.area_id)
-                    self._async_resolve_up_area(device_entry.area_id)
+                if area_id := self._device_registry.async_get_effective_area_id(
+                    device_entry
+                ):
+                    self._add(ItemType.AREA, area_id)
+                    self._async_resolve_up_area(area_id)
 
             # Add device that provided this entity
             self._add(ItemType.DEVICE, entity_entry.device_id)

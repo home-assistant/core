@@ -515,14 +515,13 @@ def _async_get_full_entity_name(
 
     elif not use_legacy_naming or name is None:
         device_name: str | None = None
-        if (
-            device_id is not None
-            and (device := dr.async_get(hass).async_get(device_id)) is not None
-        ):
-            device_name = device.name_by_user or device.name
+        if device_id is not None:
+            device_registry = dr.async_get(hass)
+            if (device := device_registry.async_get(device_id)) is not None:
+                device_name = device.name_by_user or device.name
 
-            if area_id is None:
-                area_id = device.area_id
+                if area_id is None:
+                    area_id = device_registry.async_get_effective_area_id(device)
 
         area_name: str | None = None
         floor_name: str | None = None
@@ -1168,7 +1167,10 @@ def _validate_item(
             )
     if device_id and device_id is not UNDEFINED:
         device_registry = dr.async_get(hass)
-        if device_id not in device_registry.devices:
+        if (
+            device_id not in device_registry.devices
+            and device_id not in device_registry.child_devices
+        ):
             raise ValueError(f"Device {device_id} does not exist")
     if (
         disabled_by
@@ -2514,6 +2516,25 @@ def async_entries_for_area(
 ) -> list[RegistryEntry]:
     """Return entries that match an area."""
     return registry.entities.get_entries_for_area_id(area_id)
+
+
+@callback
+def async_get_effective_area_id(
+    hass: HomeAssistant, entry: RegistryEntry
+) -> str | None:
+    """Return the effective area of an entity.
+
+    An entity without an area of its own inherits its device's effective area
+    (which a child device in turn inherits from its parent device).
+    """
+    if entry.area_id is not None:
+        return entry.area_id
+    if entry.device_id is None:
+        return None
+    device_registry = dr.async_get(hass)
+    if (device := device_registry.async_get(entry.device_id)) is None:
+        return None
+    return device_registry.async_get_effective_area_id(device)
 
 
 @callback

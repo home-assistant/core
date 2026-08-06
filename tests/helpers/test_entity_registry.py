@@ -2268,6 +2268,7 @@ async def test_migration_1_21(
         "version": dr.STORAGE_VERSION_MAJOR,
         "minor_version": dr.STORAGE_VERSION_MINOR,
         "data": {
+            "child_devices": [],
             "devices": [
                 {
                     "area_id": None,
@@ -6174,3 +6175,121 @@ async def test_async_entries_for_device_composite_id(
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, old_id)
     } == {entity_1.entity_id, entity_2.entity_id}
+
+
+async def test_async_get_effective_area_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test effective area resolution for entities on child devices."""
+    config_entry = MockConfigEntry(title=None)
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_update_device(parent.id, area_id="garage")
+    child_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+
+    entry = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "outlet_1",
+        config_entry=config_entry,
+        device_id=child_device.id,
+    )
+
+    # The entity inherits the child device's effective area (the parent's area)
+    assert er.async_get_effective_area_id(hass, entry) == "garage"
+
+    # An explicitly set child device area overrides the inherited one
+    device_registry.async_update_device(child_device.id, area_id="garden")
+    assert er.async_get_effective_area_id(hass, entry) == "garden"
+
+    # An explicitly set entity area overrides the device area
+    entry = entity_registry.async_update_entity(entry.entity_id, area_id="attic")
+    assert er.async_get_effective_area_id(hass, entry) == "attic"
+
+
+async def test_disable_child_device_disables_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabling a parent device disables entities on its child devices."""
+    config_entry = MockConfigEntry(title=None)
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+    entry = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "outlet_1",
+        config_entry=config_entry,
+        device_id=child_device.id,
+    )
+
+    device_registry.async_update_device(
+        parent.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    updated_entry = entity_registry.async_get(entry.entity_id)
+    assert updated_entry is not None
+    assert updated_entry.disabled_by is er.RegistryEntryDisabler.DEVICE
+
+    device_registry.async_update_device(parent.id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    updated_entry = entity_registry.async_get(entry.entity_id)
+    assert updated_entry is not None
+    assert updated_entry.disabled_by is None
+
+
+async def test_remove_child_device_removes_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing a parent device removes entities on its child devices."""
+    config_entry = MockConfigEntry(title=None)
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+    entry = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "outlet_1",
+        config_entry=config_entry,
+        device_id=child_device.id,
+    )
+
+    device_registry.async_remove_device(parent.id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entry.entity_id) is None

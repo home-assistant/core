@@ -494,11 +494,15 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
         for device_id in referenced.referenced_devices:
             if not (dev_reg_ent := dev_reg.async_get(device_id)):
                 raise HomeAssistantError(f"No device found for device id: {device_id}")
-            macs = [
-                cval
-                for ctype, cval in dev_reg_ent.connections
-                if ctype == dr.CONNECTION_NETWORK_MAC
-            ]
+            macs = (
+                [
+                    cval
+                    for ctype, cval in dev_reg_ent.connections
+                    if ctype == dr.CONNECTION_NETWORK_MAC
+                ]
+                if isinstance(dev_reg_ent, dr.DeviceEntry)
+                else []
+            )
             matching_instances = [
                 homekit
                 for homekit in _async_all_homekit_instances(hass)
@@ -1087,7 +1091,7 @@ class HomeKit:
             )
         ).items():
             device = dev_reg.async_get(device_id)
-            assert device is not None
+            assert isinstance(device, dr.DeviceEntry)
             valid_device_triggers: list[dict[str, Any]] = []
             for trigger in device_triggers:
                 try:
@@ -1216,7 +1220,11 @@ class HomeKit:
         """Set attributes that will be used for homekit device info."""
         ent_cfg = self._config[entity_id]
         if ent_reg_ent.device_id:
-            if dev_reg_ent := dev_reg.async_get(ent_reg_ent.device_id):
+            dev_reg_ent = dev_reg.async_get(ent_reg_ent.device_id)
+            if isinstance(dev_reg_ent, dr.ChildDeviceEntry):
+                # A child device has no hardware info of its own; use the parent's
+                dev_reg_ent = dev_reg.devices.get(dev_reg_ent.parent_device_id)
+            if dev_reg_ent is not None:
                 self._fill_config_from_device_registry_entry(dev_reg_ent, ent_cfg)
         if ATTR_MANUFACTURER not in ent_cfg:
             try:

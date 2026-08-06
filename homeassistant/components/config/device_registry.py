@@ -92,7 +92,8 @@ def websocket_list_devices(
     inner = b",".join(
         [
             entry.json_repr
-            for entry in registry.devices.values()
+            for container in (registry.devices, registry.child_devices)
+            for entry in container.values()
             if entry.json_repr is not None
         ]
     )
@@ -130,7 +131,10 @@ def websocket_list_linked_devices(
     linked_devices = [
         entry.id
         for entry in registry.async_get_devices(
-            identifiers=device.identifiers, connections=device.connections
+            identifiers=device.identifiers,
+            connections=(
+                device.connections if isinstance(device, DeviceEntry) else None
+            ),
         )
         if entry.id != device_id
     ]
@@ -170,7 +174,7 @@ def websocket_update_device(
         # Convert labels to a set
         msg["labels"] = set(msg["labels"])
 
-    entry = cast(DeviceEntry, registry.async_update_device(**msg))
+    entry = cast(dr.AnyDeviceEntry, registry.async_update_device(**msg))
 
     connection.send_message(websocket_api.result_message(msg_id, entry.dict_repr))
 

@@ -2952,3 +2952,109 @@ async def test_add_entity_unknown_subentry(
         "Can't add entities to unknown subentry unknown-subentry "
         "of config entry super-mock-id"
     ) in caplog.text
+
+
+async def test_device_info_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a child device info creates a child device and binds the entity."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(config_entry.domain, "strip")},
+        name="Power strip",
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="power",
+                    has_entity_name=True,
+                    name="Power",
+                    device_info={
+                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
+                        "name": "Outlet 1",
+                        "parent_device_id": parent.id,
+                    },
+                ),
+            ]
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    child_device = device_registry.async_get_child_device_by_identifier(
+        (config_entry.domain, "strip_outlet_1"), config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.parent_device_id == parent.id
+    assert child_device.name == "Outlet 1"
+
+    entity_id = entity_registry.async_get_entity_id(
+        "test_domain", config_entry.domain, "power"
+    )
+    # The child device's name is the device part of the generated entity id
+    assert entity_id == "test_domain.outlet_1_power"
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.device_id == child_device.id
+
+    # The child device's name is the device part of the entity name
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == "Outlet 1 Power"
+
+
+async def test_device_info_child_device_invalid(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an entity with an invalid child device info is not added."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="power",
+                    device_info={
+                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
+                        "name": "Outlet 1",
+                        "parent_device_id": "nonexistent-device-id",
+                    },
+                ),
+            ]
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert not hass.states.async_entity_ids()
+    assert not device_registry.child_devices
+    assert "Not adding entity with invalid device info" in caplog.text
