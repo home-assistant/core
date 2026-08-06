@@ -9,7 +9,6 @@ import pytest
 from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from tests.common import MockConfigEntry
 
 from .const import (
     MOCK_CONFIG_DATA,
@@ -21,6 +20,8 @@ from .const import (
     MOCK_UID,
     MOCK_VERSION,
 )
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

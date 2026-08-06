@@ -400,13 +400,17 @@ TEMP_EXT_DESCRIPTION = HbtnSensorEntityDescription(
     entity_registry_enabled_default=False,
     value_fn=lambda module, idx: module.sensors[idx].value,
 )
+# No ``subscribe_fn``: analogue values live in the compact status mirror (the
+# Smart In reads all six from it, the Smart Controller its two), and nothing
+# else ever writes them -- push events do not carry them at all. A change
+# therefore always moves the status CRC and reaches the entity through the
+# coordinator; subscribing as well would only write the state a second time.
 ANALOG_DESCRIPTION = HbtnSensorEntityDescription(
     key="analog",
     translation_key="analog_sensor",
     native_unit_of_measurement=PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
     value_fn=lambda module, idx: module.analogins[idx].value,
-    subscribe_fn=lambda module, idx: module.analogins[idx],
 )
 CURRENT_DESCRIPTION = HbtnSensorEntityDescription(
     key="current",

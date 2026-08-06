@@ -21,9 +21,10 @@ from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 from .const import MOCK_HOST, MOCK_MAC
+
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 class _ReplayClient:
