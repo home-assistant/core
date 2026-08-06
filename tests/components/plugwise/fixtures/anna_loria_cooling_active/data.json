@@ -1,7 +1,11 @@
 {
   "582dfbdace4d4aeb832923ce7d1ddda0": {
     "active_preset": "home",
-    "available_schedules": ["off", "Winter", "Test "],
+    "available_schedules": [
+      "off",
+      "Winter",
+      "Test "
+    ],
     "climate_mode": "auto",
     "control_state": "cooling",
     "dev_class": "thermostat",
@@ -10,7 +14,13 @@
     "location": "15da035090b847e7a21f93e08c015ebc",
     "model": "ThermoTouch",
     "name": "Anna",
-    "preset_modes": ["away", "vacation", "no_frost", "home", "asleep"],
+    "preset_modes": [
+      "away",
+      "vacation",
+      "no_frost",
+      "home",
+      "asleep"
+    ],
     "select_schedule": "Winter",
     "sensors": {
       "illuminance": 45.0,
