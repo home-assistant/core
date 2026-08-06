@@ -118,7 +118,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
                     str(err),
                 )
                 errors["base"] = "unknown"
-        except TimeoutError, ConnectionError:
+        except (TimeoutError, ConnectionError):
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")

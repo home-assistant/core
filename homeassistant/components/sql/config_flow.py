@@ -229,11 +229,11 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
                 description_placeholders = {"column": column}
-            except MultipleResultsFound, MultipleQueryError:
+            except (MultipleResultsFound, MultipleQueryError):
                 errors["query"] = "multiple_queries"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except NotSelectQueryError, UnknownQueryTypeError:
+            except (NotSelectQueryError, UnknownQueryTypeError):
                 errors["query"] = "query_no_read_only"
             except (TemplateError, EmptyQueryError, InvalidSqlQuery) as err:
                 _LOGGER.debug("Invalid query: %s", err)
@@ -287,11 +287,11 @@ class SQLOptionsFlowHandler(OptionsFlowWithReload):
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
                 description_placeholders = {"column": column}
-            except MultipleResultsFound, MultipleQueryError:
+            except (MultipleResultsFound, MultipleQueryError):
                 errors["query"] = "multiple_queries"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except NotSelectQueryError, UnknownQueryTypeError:
+            except (NotSelectQueryError, UnknownQueryTypeError):
                 errors["query"] = "query_no_read_only"
             except (TemplateError, EmptyQueryError, InvalidSqlQuery) as err:
                 _LOGGER.debug("Invalid query: %s", err)

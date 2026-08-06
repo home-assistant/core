@@ -107,7 +107,7 @@ def _to_index(raw: Any) -> int | None:
         return None
     try:
         return int(raw)
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         return None
 
 

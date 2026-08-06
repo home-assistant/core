@@ -898,6 +898,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/integration/ @dgomes
 /homeassistant/components/intelliclima/ @dvdinth
 /tests/components/intelliclima/ @dvdinth
+/homeassistant/components/intellidwell/ @TannerNelson16
+/tests/components/intellidwell/ @TannerNelson16
 /homeassistant/components/intellifire/ @jeeftor
 /tests/components/intellifire/ @jeeftor
 /homeassistant/components/intent/ @home-assistant/core @synesthesiam @arturpragacz

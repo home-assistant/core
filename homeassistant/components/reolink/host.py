@@ -302,7 +302,7 @@ class ReolinkHost:
             if self._api.supported(None, "bc_webhook"):
                 self.register_webhook(BC)
             await self._api.baichuan.subscribe_events(self._webhook_url.get(BC, ""))
-        except ReolinkError, ReolinkWebhookException:
+        except (ReolinkError, ReolinkWebhookException):
             await self._async_check_tcp_push()
         else:
             self._cancel_tcp_push_check = async_call_later(

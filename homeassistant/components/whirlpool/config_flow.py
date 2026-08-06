@@ -55,7 +55,7 @@ async def authenticate(
         await auth.do_auth()
     except WhirlpoolAccountLocked:
         return "account_locked"
-    except TimeoutError, ClientError:
+    except (TimeoutError, ClientError):
         return "cannot_connect"
     except Exception:
         _LOGGER.exception("Unexpected exception")

@@ -61,7 +61,7 @@ class TypeCastExtension(BaseTemplateExtension):
         """Try to convert value to a float."""
         try:
             return float(value)
-        except ValueError, TypeError:
+        except (ValueError, TypeError):
             if default is _SENTINEL:
                 raise_no_default("float", value)
             return default
@@ -79,7 +79,7 @@ class TypeCastExtension(BaseTemplateExtension):
         """Try to convert value to a float."""
         try:
             fvalue = float(value)
-        except ValueError, TypeError:
+        except (ValueError, TypeError):
             return False
         if not math.isfinite(fvalue):
             return False

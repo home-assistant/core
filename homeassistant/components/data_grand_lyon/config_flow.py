@@ -173,7 +173,7 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
             if err.status in (401, 403):
                 return "invalid_auth"
             return "cannot_connect"
-        except ClientError, TimeoutError:
+        except (ClientError, TimeoutError):
             return "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected error testing Data Grand Lyon connection")
@@ -272,7 +272,7 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             if err.status in (401, 403):
                 return "invalid_auth"
             return "cannot_connect"
-        except ClientError, TimeoutError:
+        except (ClientError, TimeoutError):
             return "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected error fetching Data Grand Lyon TCL stops")
@@ -382,7 +382,7 @@ class VelovStationSubentryFlowHandler(ConfigSubentryFlow):
             if err.status in (401, 403):
                 return "invalid_auth"
             return "cannot_connect"
-        except ClientError, TimeoutError:
+        except (ClientError, TimeoutError):
             return "cannot_connect"
         except Exception:
             _LOGGER.exception(
@@ -467,7 +467,7 @@ class ParkAndRideSubentryFlowHandler(ConfigSubentryFlow):
             if err.status in (401, 403):
                 return "invalid_auth"
             return "cannot_connect"
-        except ClientError, TimeoutError:
+        except (ClientError, TimeoutError):
             return "cannot_connect"
         except Exception:
             _LOGGER.exception(

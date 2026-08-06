@@ -49,7 +49,7 @@ def _max_electrolysis(coordinator: VistapoolDataUpdateCoordinator) -> float:
         return 50.0
     try:
         return float(raw) / 10
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         return 50.0
 
 
@@ -235,7 +235,7 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
             return None
         try:
             value = float(raw)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return None
         return value / self.entity_description.scale
 

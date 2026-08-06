@@ -1198,5 +1198,5 @@ def _parse_dsn(dsn: str) -> dict[str, Any]:
             CONF_KNX_TELEGRAM_DB_DATABASE: unquote(url.path.lstrip("/")),
             CONF_KNX_TELEGRAM_DB_TLS: "sslmode=require" in url.query,
         }
-    except ValueError, AttributeError:
+    except (ValueError, AttributeError):
         return {}

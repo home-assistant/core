@@ -117,7 +117,7 @@ def validate_is_number(value):
     try:
         if math.isfinite(float(value)):
             return value
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         pass
     raise vol.Invalid("Value is not a number")
 

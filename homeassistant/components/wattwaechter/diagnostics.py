@@ -40,7 +40,7 @@ async def async_get_config_entry_diagnostics(
     system: dict[str, dict[str, Any]] | None = None
     try:
         system = _flatten_system(await coordinator.client.system_info())
-    except WattwaechterConnectionError, WattwaechterAuthenticationError:
+    except (WattwaechterConnectionError, WattwaechterAuthenticationError):
         system = None
 
     return async_redact_data(

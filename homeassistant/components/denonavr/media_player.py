@@ -193,7 +193,7 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
                     self._receiver.host,
                 )
                 self._attr_available = False
-        except AvrInvalidResponseError, AvrIncompleteResponseError:
+        except (AvrInvalidResponseError, AvrIncompleteResponseError):
             available = False
             if self.available:
                 _LOGGER.warning(

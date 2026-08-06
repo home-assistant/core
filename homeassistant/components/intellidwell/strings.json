@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please check your network connection and try again.",
+      "unknown": "An unexpected error occurred."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your sprinkler controller."
+        },
+        "description": "Please enter the host name or IP address of your IntelliDwell Sprinkler Controller."
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "rain_delay": {
+        "name": "Rain delay"
+      }
+    },
+    "switch": {
+      "zone": {
+        "name": "Zone {zone_number}"
+      },
+      "zone_schedule": {
+        "name": "Zone {zone_number} schedule"
+      }
+    }
+  }
+}

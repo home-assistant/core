@@ -97,7 +97,7 @@ def _convert_temperature(
         return None
     try:
         raw_centi = int(raw)
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         return None
     raw_value = raw_centi / 100.0
     if raw_value in DISABLED_TEMP_ENTITIES:

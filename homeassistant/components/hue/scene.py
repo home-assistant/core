@@ -57,7 +57,7 @@ async def async_setup_entry(
                 entity = HueSmartSceneEntity(bridge, api.scenes, resource)
             else:
                 entity = HueSceneEntity(bridge, api.scenes, resource)
-        except KeyError, StopIteration:
+        except (KeyError, StopIteration):
             LOGGER.exception("Unable to create Hue scene entity for %s", resource.id)
             return
 

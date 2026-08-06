@@ -47,7 +47,7 @@ class UhooConfigFlow(ConfigFlow, domain=DOMAIN):
             client = Client(user_input[CONF_API_KEY], session, debug=True)
             try:
                 await client.login()
-            except UnauthorizedError, ForbiddenError:
+            except (UnauthorizedError, ForbiddenError):
                 errors["base"] = "invalid_auth"
             except UhooError:
                 errors["base"] = "cannot_connect"
@@ -84,7 +84,7 @@ class UhooConfigFlow(ConfigFlow, domain=DOMAIN):
             client = Client(user_input[CONF_API_KEY], session, debug=True)
             try:
                 await client.login()
-            except UnauthorizedError, ForbiddenError:
+            except (UnauthorizedError, ForbiddenError):
                 errors["base"] = "invalid_auth"
             except UhooError:
                 errors["base"] = "cannot_connect"

@@ -44,7 +44,7 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
                     session=async_get_clientsession(self.hass),
                 )
                 await huum.status()
-            except Forbidden, NotAuthenticated:
+            except (Forbidden, NotAuthenticated):
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unknown error")
@@ -74,7 +74,7 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
                     session=async_get_clientsession(self.hass),
                 )
                 await huum.status()
-            except Forbidden, NotAuthenticated:
+            except (Forbidden, NotAuthenticated):
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unknown error")
@@ -116,7 +116,7 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await huum.status()
-            except Forbidden, NotAuthenticated:
+            except (Forbidden, NotAuthenticated):
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unknown error")

@@ -270,7 +270,7 @@ class _ZoneOccupancyConditionBase(EntityConditionBase):
         """Return the zone's persons-in-zone count; None if unparsable."""
         try:
             return int(entity_state.state)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return None
 
     @classmethod

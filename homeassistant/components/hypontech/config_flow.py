@@ -86,7 +86,7 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
             return await hypon.get_admin_info(), errors
         except AuthenticationError:
             errors["base"] = "invalid_auth"
-        except TimeoutError, ConnectionError:
+        except (TimeoutError, ConnectionError):
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")

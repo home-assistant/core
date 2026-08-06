@@ -174,7 +174,7 @@ async def async_migrate_entry(
         client = WaterFurnace(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
         try:
             await hass.async_add_executor_job(client.login)
-        except WFCredentialError, WFException:
+        except (WFCredentialError, WFException):
             _LOGGER.error("Failed to login during migration to account_id")
             return False
 

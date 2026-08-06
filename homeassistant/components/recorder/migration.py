@@ -714,7 +714,7 @@ def _modify_columns(
             connection.execute(
                 text(f"ALTER TABLE {table_name} {', '.join(columns_def)}")
             )
-        except InternalError, OperationalError:
+        except (InternalError, OperationalError):
             _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
         else:
             return
@@ -724,7 +724,7 @@ def _modify_columns(
             try:
                 connection = session.connection()
                 connection.execute(text(f"ALTER TABLE {table_name} {column_def}"))
-            except InternalError, OperationalError:
+            except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not modify column %s in table %s", column_def, table_name
                 )
@@ -789,7 +789,7 @@ def _update_states_table_with_foreign_key_options(
                         add_constraint = AddConstraint(fkc)
                         fkc._create_rule = create_rule  # noqa: SLF001
                         connection.execute(add_constraint)
-            except InternalError, OperationalError:
+            except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not update foreign options in %s table", TABLE_STATES
                 )
@@ -825,7 +825,7 @@ def _drop_foreign_key_constraints(
             try:
                 connection = session.connection()
                 connection.execute(DropConstraint(drop))
-            except InternalError, OperationalError:
+            except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
                     TABLE_STATES,
@@ -905,7 +905,7 @@ def _add_constraint(
         try:
             connection = session.connection()
             connection.execute(add_constraint)
-        except InternalError, OperationalError:
+        except (InternalError, OperationalError):
             _LOGGER.exception("Could not update foreign options in %s table", table)
             raise
 

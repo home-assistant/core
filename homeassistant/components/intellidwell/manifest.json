@@ -1,0 +1,11 @@
+{
+  "domain": "intellidwell",
+  "name": "IntelliDwell Sprinkler Controller",
+  "codeowners": ["@TannerNelson16"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/intellidwell",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pyintellidwell==1.0.0"]
+}

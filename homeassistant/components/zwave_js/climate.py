@@ -230,7 +230,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         """Optionally return the temperature value of a setpoint."""
         try:
             temp = self._setpoint_value_or_raise(setpoint_type)
-        except IndexError, ValueError:
+        except (IndexError, ValueError):
             return None
         return get_value_of_zwave_value(temp)
 

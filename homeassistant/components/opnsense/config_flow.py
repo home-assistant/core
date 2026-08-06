@@ -148,7 +148,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_url"
         except OPNsenseSSLError:
             errors["base"] = "ssl_error"
-        except OPNsenseConnectionError, OPNsenseTimeoutError:
+        except (OPNsenseConnectionError, OPNsenseTimeoutError):
             errors["base"] = "cannot_connect"
         except OPNsenseUnknownFirmware:
             errors["base"] = "unknown_version"
@@ -208,7 +208,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._abort_import(reason="privilege_missing")
         except OPNsenseSSLError:
             return self._abort_import(reason="ssl_error")
-        except OPNsenseConnectionError, OPNsenseTimeoutError:
+        except (OPNsenseConnectionError, OPNsenseTimeoutError):
             return self._abort_import(reason="cannot_connect")
         except OPNsenseUnknownFirmware:
             return self._abort_import(reason="unknown_version")

@@ -85,7 +85,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self._errors["base"] = "cannot_connect"
             return False
-        except TimeoutError, ClientError:
+        except (TimeoutError, ClientError):
             self._errors["base"] = "cannot_connect"
             return False
         return True

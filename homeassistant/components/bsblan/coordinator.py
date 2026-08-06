@@ -118,7 +118,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                     states[circuit] = await self.client.state(
                         include=STATE_INCLUDE, circuit=circuit
                     )
-                except BSBLANAuthError, BSBLANConnectionError:
+                except (BSBLANAuthError, BSBLANConnectionError):
                     raise
                 except BSBLANError as err:
                     raise UpdateFailed(
@@ -201,7 +201,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
                 return self.data
             # First fetch failed, return empty data
             return BSBLanSlowData()
-        except BSBLANError, AttributeError:
+        except (BSBLANError, AttributeError):
             # Device does not support DHW functionality
             LOGGER.debug(
                 "DHW (Domestic Hot Water) not available on device at %s",

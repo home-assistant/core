@@ -134,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
                 hass, entry, airos_device
             )
             await firmware_coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady, ConfigEntryAuthFailed:
+    except (ConfigEntryNotReady, ConfigEntryAuthFailed):
         await close_session()
         raise
     except Exception as err:

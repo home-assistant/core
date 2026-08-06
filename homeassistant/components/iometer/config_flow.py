@@ -42,7 +42,7 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
             status = await client.get_current_status()
         except IOmeterNoStatusError:
             return self.async_abort(reason="no_status")
-        except IOmeterTimeoutError, IOmeterConnectionError:
+        except (IOmeterTimeoutError, IOmeterConnectionError):
             return self.async_abort(reason="cannot_connect")
 
         if not status.meter:
@@ -82,7 +82,7 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
                 status = await client.get_current_status()
             except IOmeterNoStatusError:
                 errors["base"] = "no_status"
-            except IOmeterTimeoutError, IOmeterConnectionError:
+            except (IOmeterTimeoutError, IOmeterConnectionError):
                 errors["base"] = "cannot_connect"
             else:
                 if not status.meter:

@@ -46,7 +46,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 devices = await wolf_client.fetch_system_list()
-            except RequestError, FetchFailed:
+            except (RequestError, FetchFailed):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"

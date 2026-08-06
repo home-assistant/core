@@ -73,7 +73,7 @@ async def validate_host(host: str) -> KaleidescapeDeviceInfo:
 
     try:
         await device.connect()
-    except KaleidescapeError, ConnectionError:
+    except (KaleidescapeError, ConnectionError):
         await device.disconnect()
         raise
 

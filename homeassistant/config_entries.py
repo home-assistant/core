@@ -895,7 +895,7 @@ class ConfigEntry[_DataT = Any]:
             )
 
         # pylint: disable-next=broad-except
-        except SystemExit, Exception:
+        except (SystemExit, Exception):
             logger.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )

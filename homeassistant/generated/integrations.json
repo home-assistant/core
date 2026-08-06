@@ -3341,6 +3341,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "intellidwell": {
+      "name": "IntelliDwell Sprinkler Controller",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "intellifire": {
       "name": "IntelliFire",
       "integration_type": "device",

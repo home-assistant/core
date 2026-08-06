@@ -279,7 +279,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         humidity = data.get(CONTROL4_HUMIDITY)
         try:
             return int(humidity) if humidity is not None else None
-        except ValueError, TypeError:
+        except (ValueError, TypeError):
             return None
 
     @property

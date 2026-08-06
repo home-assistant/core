@@ -184,7 +184,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             device_data = await self._async_get_device_data(user_input[CONF_HOST])
         except TimeoutError:
             errors["base"] = "timeout"
-        except ConnectionError, ClientError:
+        except (ConnectionError, ClientError):
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unknown error occurred while verifying device")

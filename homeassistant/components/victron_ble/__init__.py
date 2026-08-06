@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 is_recognizable = (
                     raw_data[:1] == b"\x10" and detect_device_type(raw_data) is not None
                 )
-            except struct_error, IndexError:
+            except (struct_error, IndexError):
                 is_recognizable = False
 
             if is_recognizable:

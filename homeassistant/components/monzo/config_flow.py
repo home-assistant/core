@@ -74,7 +74,7 @@ class MonzoFlowHandler(
             await self.approval_task
         except TimeoutError:
             return self.async_show_progress_done(next_step_id="approval_timeout")
-        except ClientError, InvalidMonzoAPIResponseError:
+        except (ClientError, InvalidMonzoAPIResponseError):
             return self.async_show_progress_done(next_step_id="connection_error")
         finally:
             self.approval_task = None

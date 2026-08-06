@@ -38,7 +38,7 @@ async def _async_probe(user_input: dict[str, Any]) -> tuple[str | None, str | No
             unit_id=user_input["unit_id"],
             framer=user_input["modbus_framer"],
         )
-    except NeoPoolConnectionError, NeoPoolTimeoutError:
+    except (NeoPoolConnectionError, NeoPoolTimeoutError):
         return None, "cannot_connect"
     except NeoPoolModbusError:
         return None, "cannot_read_modbus"

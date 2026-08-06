@@ -477,7 +477,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             try:
                 prefix, image_data = thumb.split(",", 1)
                 mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
-            except IndexError, ValueError:
+            except (IndexError, ValueError):
                 pass
             else:
                 if mime in ALLOWED_IMAGE_MIME_TYPES:

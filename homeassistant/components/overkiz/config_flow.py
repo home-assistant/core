@@ -248,7 +248,7 @@ class OverkizConfigFlow(
                     errors["base"] = "unsupported_hardware"
                 else:
                     errors["base"] = "invalid_auth"
-            except TimeoutError, ClientError:
+            except (TimeoutError, ClientError):
                 errors["base"] = "cannot_connect"
             except MaintenanceError:
                 errors["base"] = "server_in_maintenance"
@@ -376,7 +376,7 @@ class OverkizConfigFlow(
 
         try:
             self._rexel_gateways = await client.discover_gateways()
-        except TimeoutError, ClientError:
+        except (TimeoutError, ClientError):
             return self.async_abort(reason="cannot_connect")
 
         if not self._rexel_gateways:

@@ -127,7 +127,7 @@ async def async_get_actions(
     """List device actions."""
     try:
         zha_device = async_get_zha_device_proxy(hass, device_id).device
-    except KeyError, AttributeError:
+    except (KeyError, AttributeError):
         return []
     cluster_ids = {
         cluster_id
@@ -160,7 +160,7 @@ async def _execute_siren_service(
 ) -> None:
     try:
         zha_device = async_get_zha_device_proxy(hass, config[CONF_DEVICE_ID]).device
-    except KeyError, AttributeError:
+    except (KeyError, AttributeError):
         return
     await hass.services.async_call(
         DOMAIN,

@@ -67,7 +67,7 @@ class Usage:
         try:
             kwh = float(usage[3])
             cost = float(usage[4])
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return None
         start_time = (
             parsed.replace(tzinfo=PHOENIX_ZONE_INFO)

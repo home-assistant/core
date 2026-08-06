@@ -581,7 +581,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 data[WeatherEntityStateAttribute.TEMPERATURE] = round_temperature(
                     value_temp, precision
                 )
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 data[WeatherEntityStateAttribute.TEMPERATURE] = temperature
 
         if (apparent_temperature := self.native_apparent_temperature) is not None:
@@ -595,7 +595,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 data[WeatherEntityStateAttribute.APPARENT_TEMPERATURE] = (
                     round_temperature(value_apparent_temp, precision)
                 )
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 data[WeatherEntityStateAttribute.APPARENT_TEMPERATURE] = (
                     apparent_temperature
                 )
@@ -611,7 +611,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 data[WeatherEntityStateAttribute.DEW_POINT] = round_temperature(
                     value_dew_point, precision
                 )
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 data[WeatherEntityStateAttribute.DEW_POINT] = dew_point
 
         data[WeatherEntityStateAttribute.TEMPERATURE_UNIT] = self._temperature_unit
@@ -639,7 +639,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 data[WeatherEntityStateAttribute.PRESSURE] = round(
                     value_pressure, ROUNDING_PRECISION
                 )
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 data[WeatherEntityStateAttribute.PRESSURE] = pressure
 
         data[WeatherEntityStateAttribute.PRESSURE_UNIT] = self._pressure_unit
@@ -658,7 +658,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 data[WeatherEntityStateAttribute.WIND_GUST_SPEED] = round(
                     value_wind_gust_speed, ROUNDING_PRECISION
                 )
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 data[WeatherEntityStateAttribute.WIND_GUST_SPEED] = wind_gust_speed
 
         if (wind_speed := self.native_wind_speed) is not None:
@@ -672,7 +672,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 data[WeatherEntityStateAttribute.WIND_SPEED] = round(
                     value_wind_speed, ROUNDING_PRECISION
                 )
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 data[WeatherEntityStateAttribute.WIND_SPEED] = wind_speed
 
         data[WeatherEntityStateAttribute.WIND_SPEED_UNIT] = self._wind_speed_unit
@@ -688,7 +688,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 data[WeatherEntityStateAttribute.VISIBILITY] = round(
                     value_visibility, ROUNDING_PRECISION
                 )
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 data[WeatherEntityStateAttribute.VISIBILITY] = visibility
 
         data[WeatherEntityStateAttribute.VISIBILITY_UNIT] = self._visibility_unit

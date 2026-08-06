@@ -126,7 +126,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 model, serial = await validate_input(self.hass, user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
-            except ConnectionError, TimeoutError:
+            except (ConnectionError, TimeoutError):
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"
@@ -211,7 +211,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input, entry.unique_id)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
-            except ConnectionError, TimeoutError:
+            except (ConnectionError, TimeoutError):
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"
