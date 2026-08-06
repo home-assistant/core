@@ -48,15 +48,13 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery:
-    status: exempt
-    comment: >-
-      Integration is cloud-API-only; setup needs a Nature account token that
-      no local-network discovery signal could supply, so a
-      discovery-triggered flow would still just prompt for the same token.
+  discovery: todo
   discovery-update-info:
     status: exempt
-    comment: No discovery.
+    comment: >-
+      Discovery would only prompt setting up the cloud account; the
+      integration connects through the cloud API, so there is no network
+      information to update.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
