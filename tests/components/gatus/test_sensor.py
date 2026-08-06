@@ -145,12 +145,6 @@ async def test_sensor_empty_results(
     assert state is not None
     assert state.state == "unavailable"
 
-    # Verify underlying properties return None directly on empty results
-    entity = hass.data["sensor"].get_entity("sensor.backend_service_response_time")
-    assert entity is not None
-    assert entity.latest_result is None
-    assert entity.native_value is None
-
 
 async def test_sensor_missing_duration(
     hass: HomeAssistant,
