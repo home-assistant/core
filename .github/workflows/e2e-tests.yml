@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Image tag to test (e.g. dev, 2026.7.1, 2026.8.0b0)"
+        description: "Image tag or digest to test (e.g. dev, 2026.7.1, 2026.8.0b0, sha256:0a1b2c3d…)"
         default: "dev"
         required: true
       images:
@@ -48,7 +48,8 @@ jobs:
       BASE_URL: http://localhost:8123
     services:
       homeassistant:
-        image: ghcr.io/home-assistant/${{ matrix.machine }}-homeassistant:${{ inputs.version }} # zizmor: ignore[unpinned-images]
+        # Digests are referenced with '@', tags with ':'
+        image: ghcr.io/home-assistant/${{ matrix.machine }}-homeassistant${{ startsWith(inputs.version, 'sha256:') && '@' || ':' }}${{ inputs.version }} # zizmor: ignore[unpinned-images]
         ports:
           - 8123:8123
         # Gate steps until Home Assistant answers (60 x 5s ≈ 300s startup budget)
