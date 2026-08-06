@@ -12,7 +12,16 @@ import logging
 import os
 import shutil
 import time
-from typing import TYPE_CHECKING, Any, Final, Literal, NamedTuple, TypedDict, Unpack, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    NamedTuple,
+    TypedDict,
+    Unpack,
+    override,
+)
 
 import attr
 from yarl import URL
@@ -127,7 +136,7 @@ class DeviceInfoAttribute:
     SERIAL_NUMBER: Final = "serial_number"
     SUGGESTED_AREA: Final = "suggested_area"
     SW_VERSION: Final = "sw_version"
-    VIA_DEVICE: Final = "via_device"
+    VIA_DEVICE_ID: Final = "via_device_id"
 
 
 class DeviceInfo(TypedDict, total=False):
