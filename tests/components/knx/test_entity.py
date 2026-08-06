@@ -163,4 +163,4 @@ async def test_yaml_entity_device_grouping(
     device = device_registry.async_get(entity_a.device_id)
     assert device.name == "Living room"
     assert device.manufacturer == "KNX"
-    assert (DOMAIN, "knx_yaml_device_living_room") in device.identifiers
+    assert (DOMAIN, "Living room") in device.identifiers

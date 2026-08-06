@@ -2,10 +2,11 @@
 
 from typing import Any
 
-from homeassistant.components.knx.const import DOMAIN
+from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.storage.config_store import (
     STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -79,3 +80,34 @@ async def test_remove_device(
     )
     assert not entity_registry.entities.get_entries_for_device_id(device_id)
     assert not hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["entities"].get("switch")
+
+
+async def test_remove_yaml_device_blocked(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A device with YAML-configured entities can not be removed from the UI."""
+    assert await async_setup_component(hass, "config", {})
+    await knx.setup_integration(
+        {
+            Platform.SWITCH: {
+                "name": "test",
+                KNX_ADDRESS: "1/1/1",
+                "device": "Living room",
+            }
+        }
+    )
+    client = await hass_ws_client(hass)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "Living room"), knx.mock_config_entry.entry_id
+    )
+    assert device is not None
+
+    response = await client.remove_device(device.id, knx.mock_config_entry.entry_id)
+    assert not response["success"]
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "Living room"), knx.mock_config_entry.entry_id
+    )

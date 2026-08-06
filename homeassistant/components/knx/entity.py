@@ -21,7 +21,6 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 from homeassistant.helpers.entity_registry import RegistryEntry
-from homeassistant.util import slugify
 
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN
 from .storage.config_store import PlatformControllerBase
@@ -202,11 +201,11 @@ class KnxYamlEntity(_KnxEntityBase):
         self._attr_entity_category = entity_config.get(CONF_ENTITY_CATEGORY)
 
         if device_name := entity_config.get(CONF_DEVICE):
-            # Entities sharing the same device name are grouped into one device.
-            # The `knx_yaml_device_` prefix keeps the identifier separate from
-            # UI-created devices (`knx_vdev_`).
+            # Entities sharing the same `device` are grouped into one device.
+            # The value is used verbatim as the identifier so YAML entities can
+            # also join a UI-created device by referencing its identifier.
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"knx_yaml_device_{slugify(device_name)}")},
+                identifiers={(DOMAIN, device_name)},
                 name=device_name,
                 manufacturer="KNX",
             )
