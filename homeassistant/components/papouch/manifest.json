@@ -1,7 +1,7 @@
 {
   "domain": "papouch",
   "name": "Papouch",
-  "codeowners": [],
+  "codeowners": ["@VladislavLevitskii"],
   "config_flow": true,
   "dhcp": [
     {
