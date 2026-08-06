@@ -19,8 +19,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_CHANNEL, DOMAIN
 from .util import (
-    DATASET_LOCK,
     OTBRData,
+    async_get_dataset_lock,
     compose_default_network_name,
     generate_random_pan_id,
     get_allowed_channel,
@@ -152,7 +152,7 @@ async def websocket_create_network(
     """Create a new Thread network."""
     # Held from the first read: the channel this picks and the dataset it
     # creates must not be decided from state another writer is replacing.
-    async with DATASET_LOCK:
+    async with async_get_dataset_lock(hass):
         channel = await get_allowed_channel(hass, data.url) or DEFAULT_CHANNEL
 
         try:
@@ -223,7 +223,7 @@ async def websocket_set_network(
     # Held from the first read: the dataset read here is what gets written
     # below, so a concurrent writer must not replace it in between -- a key
     # rotation landing in that window would push the superseded credentials.
-    async with DATASET_LOCK:
+    async with async_get_dataset_lock(hass):
         dataset_tlv = await async_get_dataset(hass, msg["dataset_id"])
 
         if not dataset_tlv:
@@ -297,7 +297,7 @@ async def websocket_set_channel(
     delay: float = PENDING_DATASET_DELAY_TIMER / 1000
 
     # Serialized against other dataset writers; a channel change is a pending-dataset write.
-    async with DATASET_LOCK:
+    async with async_get_dataset_lock(hass):
         try:
             await data.set_channel(channel)
         except HomeAssistantError as exc:

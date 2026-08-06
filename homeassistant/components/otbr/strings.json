@@ -21,6 +21,9 @@
     "channel_conflict": {
       "message": "The target network uses channel {target_channel}, but another radio pins the Thread channel to {allowed_channel}."
     },
+    "dataset_discarded": {
+      "message": "The network is migrating, but Home Assistant could not record its credentials: credentials for the same network, at least as new as these, were stored while the border router was being updated. Check the Thread panel; the stored network may not match the one the mesh is switching to."
+    },
     "incomplete_dataset": {
       "message": "The dataset must describe the target network completely; it is missing {missing}. A partial dataset would be filled in by the border router with settings nobody picked."
     },

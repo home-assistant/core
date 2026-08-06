@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
-from .util import DATASET_LOCK, OTBRData
+from .util import OTBRData, async_get_dataset_lock
 
 if TYPE_CHECKING:
     from . import OTBRConfigEntry
@@ -72,7 +72,7 @@ async def async_change_channel(
     """
     # Held across the write and the read-back, so the dataset imported below
     # is the one this call created.
-    async with DATASET_LOCK:
+    async with async_get_dataset_lock(hass):
         await data.set_channel(channel, delay)
 
         # Import the new dataset
