@@ -48,6 +48,10 @@ async def test_sensors_without_active_warning(
     assert state.state == "none"
     assert (state := hass.states.get(ACTIVE_WARNINGS_ENTITY_ID))
     assert state.state == "0"
+    assert (state := hass.states.get("sensor.schwechat_current_warning_level"))
+    assert state.state == "0"
+    assert (state := hass.states.get("sensor.schwechat_advance_warning_level"))
+    assert state.state == "1"
 
 
 @pytest.mark.freeze_time("2023-03-27 12:00:00+00:00")
