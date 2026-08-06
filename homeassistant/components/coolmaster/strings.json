@@ -21,7 +21,14 @@
           "swing_support": "[%key:component::coolmaster::config::step::user::data::swing_support%]"
         },
         "data_description": {
-          "host": "[%key:component::coolmaster::config::step::user::data_description::host%]"
+          "cool": "[%key:component::coolmaster::config::step::user::data_description::cool%]",
+          "dry": "[%key:component::coolmaster::config::step::user::data_description::dry%]",
+          "fan_only": "[%key:component::coolmaster::config::step::user::data_description::fan_only%]",
+          "heat": "[%key:component::coolmaster::config::step::user::data_description::heat%]",
+          "heat_cool": "[%key:component::coolmaster::config::step::user::data_description::heat_cool%]",
+          "host": "[%key:component::coolmaster::config::step::user::data_description::host%]",
+          "off": "[%key:component::coolmaster::config::step::user::data_description::off%]",
+          "swing_support": "[%key:component::coolmaster::config::step::user::data_description::swing_support%]"
         },
         "description": "Update your CoolMasterNet connection details and supported modes.",
         "sections": {
@@ -48,7 +55,14 @@
           "swing_support": "Control swing mode"
         },
         "data_description": {
-          "host": "The hostname or IP address of your CoolMasterNet device."
+          "cool": "Enable if your units can cool.",
+          "dry": "Enable if your units have a dry (dehumidify) mode.",
+          "fan_only": "Enable if your units can run the fan without heating or cooling.",
+          "heat": "Enable if your units can heat.",
+          "heat_cool": "Enable if your units can switch between heating and cooling automatically.",
+          "host": "The hostname or IP address of your CoolMasterNet device.",
+          "off": "Allow the units to be turned off from Home Assistant.",
+          "swing_support": "Expose a swing mode control. This adds one request per unit on every update, so polling is slower."
         },
         "description": "Set up your CoolMasterNet connection details.",
         "sections": {
