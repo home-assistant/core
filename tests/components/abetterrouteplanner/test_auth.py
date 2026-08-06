@@ -1,5 +1,6 @@
 """Tests for the HA-side OAuth2Session-backed AbstractAuth."""
 
+from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
 from aioabrp import AbrpAuthError
@@ -38,22 +39,18 @@ async def test_async_get_access_token_returns_token() -> None:
     session.async_ensure_token_valid.assert_awaited_once_with()
 
 
-async def test_4xx_refresh_raises_abrp_auth_error() -> None:
-    """A 400 refresh (revoked/rotated token) maps to a terminal AbrpAuthError."""
-    session = _mock_session()
-    err = _response_error(400)
-    session.async_ensure_token_valid.side_effect = err
-    auth = AbetterrouteplannerAuth(session)
-
-    with pytest.raises(AbrpAuthError) as exc_info:
-        await auth.async_get_access_token()
-
-    assert exc_info.value.__cause__ is err
-
-
-@pytest.mark.parametrize("status", [401, 403, 499])
-async def test_other_4xx_refresh_raises_abrp_auth_error(status: int) -> None:
-    """401/403 (and the rest of the 4xx range) also map to AbrpAuthError."""
+@pytest.mark.parametrize(
+    "status",
+    [
+        pytest.param(HTTPStatus.BAD_REQUEST, id="400_invalid_grant"),
+        pytest.param(HTTPStatus.UNAUTHORIZED, id="401_unauthorized"),
+        pytest.param(HTTPStatus.FORBIDDEN, id="403_forbidden"),
+    ],
+)
+async def test_credential_refresh_failure_raises_abrp_auth_error(
+    status: HTTPStatus,
+) -> None:
+    """A credential-related refusal maps to the terminal AbrpAuthError."""
     session = _mock_session()
     err = _response_error(status)
     session.async_ensure_token_valid.side_effect = err
@@ -65,10 +62,20 @@ async def test_other_4xx_refresh_raises_abrp_auth_error(status: int) -> None:
     assert exc_info.value.__cause__ is err
 
 
-async def test_5xx_refresh_propagates_as_client_response_error() -> None:
-    """A 5xx refresh is transient — it propagates unchanged, not AbrpAuthError."""
+@pytest.mark.parametrize(
+    "status",
+    [
+        pytest.param(HTTPStatus.REQUEST_TIMEOUT, id="408_timeout"),
+        pytest.param(HTTPStatus.TOO_MANY_REQUESTS, id="429_rate_limited"),
+        pytest.param(HTTPStatus.SERVICE_UNAVAILABLE, id="503_unavailable"),
+    ],
+)
+async def test_transient_refresh_failure_propagates_unchanged(
+    status: HTTPStatus,
+) -> None:
+    """A transient refusal propagates so the library's backoff can recover."""
     session = _mock_session()
-    err = _response_error(503)
+    err = _response_error(status)
     session.async_ensure_token_valid.side_effect = err
     auth = AbetterrouteplannerAuth(session)
 

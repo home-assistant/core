@@ -422,9 +422,11 @@ class AbrpTelemetrySensor[T: (float, str)](
         """Return True whenever a live or restored value is surfacing.
 
         Decoupled from ``CoordinatorEntity.available``: ABRP goes silent between
-        vehicle wakes, which is steady state rather than a failure.
+        vehicle wakes, which is steady state rather than a failure. A terminal
+        stream auth failure is the exception — nothing will refresh the value,
+        so it stops being reported rather than going stale indefinitely.
         """
-        return self.native_value is not None
+        return not self.coordinator.stream_auth_failed and self.native_value is not None
 
 
 class AbrpNumericSensor(AbrpTelemetrySensor[float]):

@@ -132,6 +132,7 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         self.last_connection_event: ConnectionEvent | None = None
         self.last_connection_at: datetime | None = None
         self.connect_count: int = 0
+        self.stream_auth_failed: bool = False
 
     @callback
     def _apply_metrics(self, vehicle_id: int, delta: Telemetry) -> None:
@@ -169,7 +170,9 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
 
         Availability is value-based and deliberately ignores connection state:
         ABRP closes idle streams (~200 s) as steady state, so a disconnect only
-        logs and never marks entities unavailable.
+        logs and never marks entities unavailable. ``AUTH_FAILED`` is the one
+        exception: the library stops the stream for good, so entities stop
+        claiming values nothing will refresh.
         """
         previous = self.last_connection_event
         changed = previous is None or previous.state is not event.state
@@ -191,6 +194,15 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
                     "ABRP telemetry stream auth failed (%s)",
                     event.reason or "no reason given",
                 )
+
+            # Cleared only by a successful reconnect: the stream may still emit
+            # DISCONNECTED after the terminal failure, which is not a recovery.
+            if event.state is ConnectionState.AUTH_FAILED:
+                self.stream_auth_failed = True
+                self.async_update_listeners()
+            elif event.state is ConnectionState.CONNECTED and self.stream_auth_failed:
+                self.stream_auth_failed = False
+                self.async_update_listeners()
 
     async def async_seed(self, client: AbrpClient, vehicle_ids: Iterable[int]) -> None:
         """Best-effort seed of the per-vehicle map via one-shot telemetry."""

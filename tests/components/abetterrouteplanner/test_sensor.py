@@ -6,7 +6,15 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock
 
-from aioabrp import AbrpVehicle, ChargingState, Metric, Telemetry, VehicleModelDisplay
+from aioabrp import (
+    AbrpVehicle,
+    ChargingState,
+    ConnectionEvent,
+    ConnectionState,
+    Metric,
+    Telemetry,
+    VehicleModelDisplay,
+)
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -765,3 +773,29 @@ def test_charging_state_options_cross_pinned() -> None:
     icons_states = icons["entity"]["sensor"]["charging_state"]["state"]
     assert set(CHARGING_STATE_OPTIONS.values()) == set(strings_states)
     assert set(CHARGING_STATE_OPTIONS.values()) == set(icons_states)
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+)
+async def test_terminal_auth_failure_makes_sensors_unavailable(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
+) -> None:
+    """A value that nothing can refresh stops being reported, then comes back."""
+    await _setup_integration(hass, config_entry_with_vehicles)
+
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID, Telemetry(power=build_metric_value(12000.0))
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_ENTITY_ID).state == "12000.0"
+
+    fake_stream.fire_connection(ConnectionEvent(ConnectionState.AUTH_FAILED, "401"))
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_ENTITY_ID).state == "unavailable"
+
+    fake_stream.fire_connection(ConnectionEvent(ConnectionState.CONNECTED))
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_ENTITY_ID).state == "12000.0"

@@ -18,7 +18,7 @@ import pytest
 from homeassistant.components.abetterrouteplanner.coordinator import (
     AbrpTelemetryCoordinator,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .conftest import MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2, build_metric_value
 
@@ -234,3 +234,60 @@ async def test_async_seed_reraises_non_abrp_base_exception(
 
     with pytest.raises(_FatalSignal):
         await coordinator.async_seed(client, [MOCK_VEHICLE_ID])
+
+
+async def test_terminal_auth_failure_sets_and_clears_stream_auth_failed(
+    hass: HomeAssistant,
+    telemetry_coordinator: AbrpTelemetryCoordinator,
+) -> None:
+    """AUTH_FAILED latches the terminal flag; only a reconnect clears it."""
+    coordinator = telemetry_coordinator
+
+    assert coordinator.stream_auth_failed is False
+
+    coordinator.on_connection_change(
+        ConnectionEvent(ConnectionState.AUTH_FAILED, "401")
+    )
+    await hass.async_block_till_done()
+    assert coordinator.stream_auth_failed is True
+
+    # The stream may still report a disconnect after the terminal failure;
+    # that is not a recovery.
+    coordinator.on_connection_change(
+        ConnectionEvent(ConnectionState.DISCONNECTED, "idle close")
+    )
+    await hass.async_block_till_done()
+    assert coordinator.stream_auth_failed is True
+
+    coordinator.on_connection_change(ConnectionEvent(ConnectionState.CONNECTED))
+    await hass.async_block_till_done()
+    assert coordinator.stream_auth_failed is False
+
+
+async def test_terminal_auth_failure_notifies_listeners(
+    hass: HomeAssistant,
+    telemetry_coordinator: AbrpTelemetryCoordinator,
+) -> None:
+    """Entities are told to re-evaluate availability on the terminal failure."""
+    coordinator = telemetry_coordinator
+    notified = 0
+
+    @callback
+    def _listener() -> None:
+        nonlocal notified
+        notified += 1
+
+    coordinator.async_add_listener(_listener)
+
+    coordinator.on_connection_change(
+        ConnectionEvent(ConnectionState.AUTH_FAILED, "401")
+    )
+    await hass.async_block_till_done()
+    assert notified == 1
+
+    # Latched: a repeat of the same terminal state is not a fresh transition.
+    coordinator.on_connection_change(
+        ConnectionEvent(ConnectionState.AUTH_FAILED, "401")
+    )
+    await hass.async_block_till_done()
+    assert notified == 1
