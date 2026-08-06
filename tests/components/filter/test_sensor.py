@@ -554,6 +554,14 @@ def test_time_sma(values: list[State]) -> None:
     assert filtered.state == 21.5
 
 
+def test_time_sma_without_samples_has_no_expiry() -> None:
+    """Test a filter that has not seen a sample yet does not ask for a wake up."""
+    filt = TimeSMAFilter(
+        window_size=timedelta(minutes=2), precision=2, entity=None, type="last"
+    )
+    assert filt.next_expiry is None
+
+
 async def test_time_sma_expiring_sample(
     recorder_mock: Recorder,
     hass: HomeAssistant,
