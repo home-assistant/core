@@ -364,6 +364,9 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     def disconnect(self):
         """Server disconnected."""
         super().disconnect()
+        if self._check_announcement_pickup_task is not None:
+            self._check_announcement_pickup_task.cancel()
+            self._check_announcement_pickup_task = None
         if self._check_hangup_task is not None:
             self._check_hangup_task.cancel()
             self._check_hangup_task = None
