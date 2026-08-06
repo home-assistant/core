@@ -289,17 +289,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # host as last resort. A host-based id changes on DHCP-lease
         # renewals and would otherwise look like a new device.
         upnp = discovery_info.upnp or {}
-        # Serial first: the manual and UDP paths key on the serial, so choosing
-        # the UDN here would leave the same hub unmatched -- and offered as a
-        # duplicate -- once its IP changes.
-        unique_id: str | None = upnp.get(ATTR_UPNP_SERIAL) or upnp.get(ATTR_UPNP_UDN)
+        unique_id: str | None = upnp.get(ATTR_UPNP_SERIAL)
         target_device: dict[str, str] | None = None
 
-        if unique_id is None:
+        if not unique_id:
+            # Ask the UDP probe for a serial before considering the UDN. The
+            # manual path keys on that serial, and two paths keying the same hub
+            # differently is exactly what lets it be added a second time once
+            # its address changes: neither the ids nor the stored hosts match
+            # then.
             devices = await self._cached_discover()
             target_device = next((d for d in devices if d.get("ip") == host_str), None)
             if target_device:
-                unique_id = target_device.get("serial")
+                unique_id = target_device.get("serial") or None
+        if not unique_id:
+            unique_id = upnp.get(ATTR_UPNP_UDN)
 
         self._discovered_device = target_device or {"ip": host_str}
 
@@ -471,13 +475,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # re-adding the same hub at a new address would otherwise duplicate
             # it, since neither its id nor its stored host still matches.
             if entry := await self._async_mac_matching_entry(host_input):
-                # Only the address needs correcting: the entry is already keyed
-                # by the MAC, which is the most stable id available here --
-                # replacing it with a host-based fallback would undo that.
-                self.hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, CONF_HOST: stored_host}
-                )
-                return self.async_abort(reason="already_configured")
+                if entry.source == config_entries.SOURCE_IGNORE:
+                    # Adding an ignored hub by hand is how un-ignoring works --
+                    # core lets the new entry replace the ignored one. Adopt its
+                    # MAC as our id so the replacement is recognised, and carry
+                    # on to create the entry instead of aborting.
+                    await self.async_set_unique_id(entry.unique_id)
+                else:
+                    # Only the address needs correcting: the entry is already
+                    # keyed by the MAC, the most stable id available here --
+                    # replacing it with a host-based fallback would undo that.
+                    self.hass.config_entries.async_update_entry(
+                        entry, data={**entry.data, CONF_HOST: stored_host}
+                    )
+                    return self.async_abort(reason="already_configured")
 
             try:
                 info = await validate_input(self.hass, user_input)
