@@ -543,10 +543,9 @@ async def test_ssdp_adopts_an_entry_keyed_by_the_hub_mac(
 ) -> None:
     """A hub added by the custom integration is not offered a second time.
 
-    Those entries use the hub's colon-stripped MAC as their unique id, which
-    this flow never derives. Once the hub's address changes, neither the id nor
-    the stored host matches -- without the MAC probe the same hub would be
-    offered as a new device.
+    Those entries are keyed by the hub's MAC -- and so is everything this flow
+    creates, so the plain unique-id check recognises them, even after the
+    address changed and no host matches any more.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -575,8 +574,8 @@ async def test_ssdp_adopts_an_entry_keyed_by_the_hub_mac(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    # The entry moves to the id and address this flow can derive again.
-    assert entry.unique_id == MOCK_UDN
+    # The id it already had *is* the identity, so only the address moves.
+    assert entry.unique_id == "d83addbae72e"
     assert entry.data[CONF_HOST] == MOCK_HOST
 
 

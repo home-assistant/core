@@ -49,6 +49,7 @@ class SmartHub:
 
         # Temporary placeholders until async_setup runs
         self._mac = "00:00:00:00:00:00"
+        self._uid_from_mac = False
         self.uid = "pending"
         self._version = "0.0.0"
         self._type = "Unknown"
@@ -86,6 +87,15 @@ class SmartHub:
         """Configured name of the SmartHub (the config entry title)."""
         return self._name
 
+    @property
+    def has_mac_uid(self) -> bool:
+        """Whether ``uid`` was derived from the hub's MAC (its true identity).
+
+        False until ``async_setup`` has actually read a MAC, so nothing keys on
+        the placeholder the instance starts with.
+        """
+        return self._uid_from_mac
+
     async def async_setup(self) -> None:
         """Connect, register the hub device and build the bus model."""
         # 1. Open the client connection and fetch hub info (mac/version/host).
@@ -100,7 +110,15 @@ class SmartHub:
         # uid and writes it lower case, and both share this domain's registry.
         # Upper-casing here would give every migrating installation a fresh set
         # of devices and entities, orphaning their history.
-        self.uid = self._mac.replace(":", "").replace("-", "").lower()
+        mac_uid = self._mac.replace(":", "").replace("-", "").lower()
+        self._uid_from_mac = bool(mac_uid)
+        if not mac_uid:
+            # A hub that reports no MAC is accepted by the config flow, which
+            # then keys the entry by its host. Carrying an empty uid from here
+            # would give every device the same blank identifier.
+            mac_uid = self.config.unique_id or self.config.entry_id
+            _LOGGER.debug("Hub reported no MAC; using %s as uid", mac_uid)
+        self.uid = mac_uid
         self._version = self.comm.com_version
         self._type = self.comm.com_hwtype
         self.host = self.comm.com_ip
@@ -117,7 +135,11 @@ class SmartHub:
         device_registry.async_get_or_create(
             config_entry_id=self.config.entry_id,
             configuration_url=conf_url,
-            connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
+            # An empty MAC is not a connection; registering one would collide
+            # with every other device that reports none.
+            connections=(
+                {(dr.CONNECTION_NETWORK_MAC, self._mac)} if self._mac else set()
+            ),
             identifiers={(DOMAIN, self.uid)},
             manufacturer="Habitron GmbH",
             suggested_area="House",

@@ -6,6 +6,7 @@ from habitron_client import HabitronError, HabitronTimeoutError
 import pytest
 
 from homeassistant.components.habitron import (
+    _async_adopt_hub_identity,
     _async_cleanup_stale_devices,
     async_remove_config_entry_device,
 )
@@ -15,7 +16,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import MOCK_HOST, MOCK_NAME, MOCK_UDN
+from .const import MOCK_HOST, MOCK_NAME, MOCK_UDN, MOCK_UID
 
 from tests.common import MockConfigEntry
 
@@ -293,6 +294,46 @@ async def test_migrate_v1_entry_without_the_old_key_is_a_no_op(
 
     assert entry.version == 2
     assert entry.data == {CONF_HOST: MOCK_HOST}
+
+
+@pytest.mark.parametrize(
+    ("stored_id", "has_mac", "expected"),
+    [
+        # A host-based fallback from a flow that could not reach the hub.
+        ("habitron_192.168.1.50", True, MOCK_UID),
+        # A serial, as the custom integration falls back to.
+        ("HBT-123456", True, MOCK_UID),
+        # Already the identity: nothing to do.
+        (MOCK_UID, True, MOCK_UID),
+        # No MAC read at all: there is no identity to adopt.
+        ("habitron_192.168.1.50", False, "habitron_192.168.1.50"),
+    ],
+)
+async def test_setup_adopts_the_hub_identity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    stored_id: str,
+    has_mac: bool,
+    expected: str,
+) -> None:
+    """A successful setup moves the entry onto the hub's MAC.
+
+    Every path derives that MAC, so once the entry carries it the plain
+    unique-id check recognises the hub at any address -- no extra matcher.
+
+    Driven directly: the config-entry fixtures stub the first refresh, and
+    ``SmartHub.async_setup`` -- which reads the MAC -- runs inside it.
+    """
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=stored_id)
+
+    smhub = MagicMock()
+    smhub.uid = MOCK_UID
+    smhub.has_mac_uid = has_mac
+
+    _async_adopt_hub_identity(hass, mock_config_entry, smhub)
+
+    assert mock_config_entry.unique_id == expected
 
 
 async def test_cleanup_keeps_a_device_with_one_live_identifier(

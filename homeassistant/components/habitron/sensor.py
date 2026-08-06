@@ -201,7 +201,6 @@ class HbtnSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
         self.idx = idx
         self._module: Module = module
         self._sensor_idx = sensor.nmbr
-        self._value = 0
         self._attr_unique_id = f"Mod_{self._module.uid}_snsr{sensor.nmbr}"
         self._attr_name = sensor.name
 
@@ -317,6 +316,7 @@ class HbtnDescribedSensor(HbtnSensor):
             subscribe_fn(self._module, self._sensor_idx).remove_listener(
                 self._handle_coordinator_update
             )
+        await super().async_will_remove_from_hass()
 
     @callback
     @override
@@ -433,7 +433,6 @@ VOLTAGE_DESCRIPTION = HbtnSensorEntityDescription(
 TIMEOUT_DESCRIPTION = HbtnSensorEntityDescription(
     key="timeout",
     translation_key="time_out",
-    native_unit_of_measurement="",
     state_class=SensorStateClass.MEASUREMENT,
     value_fn=lambda module, idx: module.chan_timeouts[idx].value,
     subscribe_fn=lambda module, idx: module.chan_timeouts[idx],
@@ -553,7 +552,6 @@ CPU_TEMPERATURE_DESCRIPTION = HbtnSensorEntityDescription(
 LOGIC_DESCRIPTION = HbtnSensorEntityDescription(
     key="logic_state",
     translation_key="logic_state",
-    native_unit_of_measurement="",
     state_class=SensorStateClass.MEASUREMENT,
     translated_name=True,
     value_fn=lambda module, idx: module.logic[idx].value,
