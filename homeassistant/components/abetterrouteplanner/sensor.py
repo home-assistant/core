@@ -5,10 +5,9 @@ library enum, so a library-side value change cannot alter a reported state.
 """
 
 from collections.abc import Callable
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, override
+from typing import Any, Self, override
 
 from aioabrp import ChargingState, Metric, MetricValue, Telemetry
 
@@ -17,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -34,6 +34,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import AbetterrouteplannerConfigEntry, AbrpTelemetryCoordinator
@@ -53,6 +54,45 @@ CHARGING_STATE_OPTIONS: dict[ChargingState, str] = {
 def _is_clean_provider_str(value: object) -> bool:
     """Reject a padded or empty provider rather than normalising it."""
     return isinstance(value, str) and bool(value) and value == value.strip()
+
+
+@dataclass
+class AbrpSensorExtraStoredData(SensorExtraStoredData):
+    """Sensor restore data carrying the metric's staleness metadata."""
+
+    last_reported_at: datetime | None
+    provider: str | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable representation of the stored data."""
+        return {
+            **super().as_dict(),
+            "last_reported_at": (
+                self.last_reported_at.isoformat()
+                if self.last_reported_at is not None
+                else None
+            ),
+            "provider": self.provider,
+        }
+
+    @classmethod
+    @override
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Rebuild the stored data, dropping anything that no longer parses."""
+        if (base := SensorExtraStoredData.from_dict(restored)) is None:
+            return None
+        stamp: datetime | None = None
+        stamp_raw = restored.get("last_reported_at")
+        if isinstance(stamp_raw, str) and stamp_raw:
+            stamp = dt_util.parse_datetime(stamp_raw)
+        provider_raw = restored.get("provider")
+        return cls(
+            base.native_value,
+            base.native_unit_of_measurement,
+            stamp,
+            provider_raw if _is_clean_provider_str(provider_raw) else None,
+        )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -363,20 +403,32 @@ class AbrpTelemetrySensor[T: (float, str)](
         """Coerce a live ``MetricValue`` to this sensor's display ``T``."""
         raise NotImplementedError
 
+    @property
+    @override
+    def extra_restore_state_data(self) -> AbrpSensorExtraStoredData:
+        """Persist the staleness metadata in the same channel as the value.
+
+        Attributes are only written while the entity is available, so keeping
+        the stamp there would lose it exactly when the value stops refreshing.
+        """
+        return AbrpSensorExtraStoredData(
+            self.native_value,
+            self.native_unit_of_measurement,
+            self._current_last_reported_at(),
+            self._current_provider(),
+        )
+
     @override
     async def async_added_to_hass(self) -> None:
         """Lift recorder-cached value + stamp into per-instance restore slots."""
         await super().async_added_to_hass()
-        if (last := await self.async_get_last_sensor_data()) is not None:
-            self._restored_native_value = self._restore_native_value(last.native_value)
-        if (state := await self.async_get_last_state()) is not None:
-            stamp_raw = state.attributes.get("last_reported_at")
-            if isinstance(stamp_raw, str) and stamp_raw:
-                with suppress(ValueError):
-                    self._restored_last_reported_at = datetime.fromisoformat(stamp_raw)
-            provider_raw = state.attributes.get("provider")
-            if _is_clean_provider_str(provider_raw):
-                self._restored_provider = provider_raw
+        if (last_extra := await self.async_get_last_extra_data()) is None:
+            return
+        if (last := AbrpSensorExtraStoredData.from_dict(last_extra.as_dict())) is None:
+            return
+        self._restored_native_value = self._restore_native_value(last.native_value)
+        self._restored_last_reported_at = last.last_reported_at
+        self._restored_provider = last.provider
 
     @property
     @override
@@ -395,6 +447,20 @@ class AbrpTelemetrySensor[T: (float, str)](
                     return live
         return self._restored_native_value
 
+    def _current_last_reported_at(self) -> datetime | None:
+        """Live receipt stamp when present, falling back to the restored one."""
+        live = self.coordinator.last_reported_at.get(self._vehicle_id, {}).get(
+            self._metric
+        )
+        return live if live is not None else self._restored_last_reported_at
+
+    def _current_provider(self) -> str | None:
+        """Live provider when present, falling back to the restored one."""
+        live = self.coordinator.last_provider.get(self._vehicle_id, {}).get(
+            self._metric
+        )
+        return live if live is not None else self._restored_provider
+
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -403,21 +469,9 @@ class AbrpTelemetrySensor[T: (float, str)](
         The live-to-restored fallback is per-attribute, not whole-dict.
         """
         attrs: dict[str, Any] = {}
-        live_stamp = self.coordinator.last_reported_at.get(self._vehicle_id, {}).get(
-            self._metric
-        )
-        stamp = (
-            live_stamp if live_stamp is not None else self._restored_last_reported_at
-        )
-        if stamp is not None:
+        if (stamp := self._current_last_reported_at()) is not None:
             attrs["last_reported_at"] = stamp
-        live_provider = self.coordinator.last_provider.get(self._vehicle_id, {}).get(
-            self._metric
-        )
-        provider = (
-            live_provider if live_provider is not None else self._restored_provider
-        )
-        if provider is not None:
+        if (provider := self._current_provider()) is not None:
             attrs["provider"] = provider
         return attrs or None
 

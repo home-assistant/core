@@ -9,7 +9,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.abetterrouteplanner.const import DOMAIN
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -67,20 +67,21 @@ def _voltage_restored_state(
     last_reported_at: str | None = RESTORED_STAMP_ISO,
     provider: Any = _PROVIDER_UNSET,
 ) -> tuple[State, dict[str, Any]]:
-    """Build a (State, extra_data) tuple for ``mock_restore_cache_with_extra_data``."""
-    attributes: dict[str, Any] = {}
-    if last_reported_at is not None:
-        attributes["last_reported_at"] = last_reported_at
-    if provider is not _PROVIDER_UNSET:
-        attributes["provider"] = provider
+    """Build a (State, extra_data) tuple for ``mock_restore_cache_with_extra_data``.
+
+    The staleness metadata is seeded only into the extra data, never into the
+    state attributes, so these tests fail if the entity ever reads it back from
+    attributes — a channel HA drops while an entity is unavailable.
+    """
     state = State(
         VOLTAGE_ENTITY_ID,
         str(native_value) if native_value is not None else "unknown",
-        attributes=attributes,
     )
     extra_data: dict[str, Any] = {
         "native_value": native_value,
         "native_unit_of_measurement": "V",
+        "last_reported_at": last_reported_at,
+        "provider": None if provider is _PROVIDER_UNSET else provider,
     }
     return state, extra_data
 
@@ -640,3 +641,39 @@ async def test_setup_polls_only_vehicles_without_registered_sensors(
     assert stream is not None
     assert stream.seed is None
     assert set(stream.vehicle_ids) == {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+async def test_staleness_survives_restart_after_terminal_auth_failure(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A value stored while unavailable keeps the stamp that says how old it is.
+
+    A terminal auth failure marks entities unavailable, and Home Assistant
+    writes no attributes for an unavailable entity. Persisting the stamp as
+    extra data instead is what stops the restored value coming back with no
+    indication of its age.
+    """
+    unavailable_state = State(VOLTAGE_ENTITY_ID, STATE_UNAVAILABLE)
+    extra_data: dict[str, Any] = {
+        "native_value": RESTORED_VOLTAGE,
+        "native_unit_of_measurement": "V",
+        "last_reported_at": RESTORED_STAMP_ISO,
+        "provider": RESTORED_PROVIDER,
+    }
+
+    await _restart_setup(
+        hass,
+        config_entry_with_vehicles,
+        entity_registry=entity_registry,
+        preseed_registry_keys=["voltage"],
+        restored_states=[(unavailable_state, extra_data)],
+    )
+
+    state = hass.states.get(VOLTAGE_ENTITY_ID)
+    assert state is not None
+    assert state.state == str(RESTORED_VOLTAGE)
+    assert state.attributes.get("last_reported_at") == RESTORED_STAMP_DT
+    assert state.attributes.get("provider") == RESTORED_PROVIDER

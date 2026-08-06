@@ -650,20 +650,20 @@ def _charging_restored_state(
     last_reported_at: str | None = None,
     provider: str | None = None,
 ) -> tuple[State, dict[str, Any]]:
-    """Build a (State, extra_data) tuple for ``mock_restore_cache_with_extra_data``."""
-    attributes: dict[str, Any] = {}
-    if last_reported_at is not None:
-        attributes["last_reported_at"] = last_reported_at
-    if provider is not None:
-        attributes["provider"] = provider
+    """Build a (State, extra_data) tuple for ``mock_restore_cache_with_extra_data``.
+
+    Staleness metadata goes only into the extra data, matching where the entity
+    persists it — state attributes are dropped whenever an entity is unavailable.
+    """
     state = State(
         CHARGING_STATE_ENTITY_ID,
         native_value if native_value is not None else "unknown",
-        attributes=attributes,
     )
     extra_data: dict[str, Any] = {
         "native_value": native_value,
         "native_unit_of_measurement": None,
+        "last_reported_at": last_reported_at,
+        "provider": provider,
     }
     return state, extra_data
 
