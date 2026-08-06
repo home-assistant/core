@@ -134,14 +134,13 @@ async def async_setup_entry(
     """Set up sensors for the devices and smart meters present at setup."""
     coordinator = entry.runtime_data
     data = coordinator.data
-    entities: list[SensorEntity] = []
     # A Remo only gets the sensors matching the events it reports.
-    for device_id, device in data.devices.items():
-        entities.extend(
-            NatureRemoDeviceSensor(coordinator, device_id, description)
-            for description in DEVICE_SENSORS
-            if description.event_key in device.events
-        )
+    entities: list[SensorEntity] = [
+        NatureRemoDeviceSensor(coordinator, device_id, description)
+        for device_id, device in data.devices.items()
+        for description in DEVICE_SENSORS
+        if description.event_key in device.events
+    ]
     # Smart meters only get the ECHONET properties they publish.
     for appliance_id, appliance in data.appliances.items():
         if (
