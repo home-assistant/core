@@ -850,6 +850,80 @@ async def test_user_step_can_reconfigure_an_ignored_hub(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_ssdp_prefers_the_probed_serial_over_the_udn(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+) -> None:
+    """A UDN is only used when no serial can be had at all.
+
+    The manual path keys on the UDP serial. If discovery keyed the same hub by
+    its UDN instead, an address change would leave neither the ids nor the
+    stored hosts matching -- and the hub could be added twice.
+    """
+    discovery = SsdpServiceInfo(
+        ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp={ATTR_UPNP_UDN: MOCK_UDN},
+    )
+    with patch(
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[{"ip": MOCK_HOST, "serial": MOCK_SERIAL}]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=discovery,
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result["result"].unique_id == MOCK_SERIAL
+
+
+async def test_user_step_unignores_a_mac_keyed_hub(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+    mock_hub_mac: AsyncMock,
+) -> None:
+    """An ignored hub keyed by its MAC can be added by hand again.
+
+    Core lets a new entry replace an ignored one with the same unique id, so
+    the flow adopts that MAC instead of aborting.
+    """
+    mock_hub_mac.return_value = "d83addbae72e"
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="d83addbae72e",
+        source=config_entries.SOURCE_IGNORE,
+        data={CONF_HOST: MOCK_HOST},
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[{"ip": MOCK_HOST, "serial": MOCK_SERIAL}]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "d83addbae72e"
+
+
 async def test_ssdp_no_host(
     hass: HomeAssistant,
     setup_homeassistant: None,
