@@ -15,6 +15,11 @@ from yarl import URL
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import DOMAIN
 
@@ -30,8 +35,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 STEP_REAUTH_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_USERNAME): TextSelector(),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
     }
 )
 
@@ -124,11 +131,7 @@ class OumanEh800ConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_REAUTH_DATA_SCHEMA,
-                # The device has a single user whose username and password are
-                # both freely settable strings, so either one may be what
-                # changed. Suggest both so only the changed field needs typing.
-                user_input or reauth_entry.data,
+                STEP_REAUTH_DATA_SCHEMA, user_input or reauth_entry.data
             ),
             errors=errors,
         )
