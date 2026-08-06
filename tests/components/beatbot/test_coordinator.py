@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
@@ -228,87 +227,6 @@ async def test_device_event_ignores_non_state_event(hass: HomeAssistant) -> None
     assert coordinator.data == {"dev-1": device}
 
 
-async def test_post_control_refresh_fetches_only_target_device(
-    hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A delayed fallback GET applies state for the controlled device."""
-    monkeypatch.setattr(coord_mod, "POST_CONTROL_REFRESH_DELAY", 0)
-    device = _device("dev-1", SUPPORTED_PRODUCT)
-    api = SimpleNamespace(
-        get_device_state=AsyncMock(
-            return_value={
-                "states": {"vacuum.state": 5},
-                "is_online": True,
-            }
-        )
-    )
-    coordinator = BeatbotCoordinator(hass, api, _entry())
-    coordinator.async_set_updated_data({"dev-1": device})
-
-    with caplog.at_level(
-        logging.DEBUG, logger="homeassistant.components.beatbot.coordinator"
-    ):
-        coordinator.async_schedule_device_state_refresh("dev-1")
-        task = coordinator._refresh_tasks["dev-1"]
-        await task
-
-    api.get_device_state.assert_awaited_once_with("dev-1")
-    assert device.work_status == 5
-    assert "source=post_control" in caplog.text
-    assert "states={'vacuum.state': 5}" in caplog.text
-    assert "Applying Beatbot state update" in caplog.text
-    assert coordinator._refresh_tasks == {}
-
-
-async def test_post_control_refresh_debounces_per_device(
-    hass: HomeAssistant,
-) -> None:
-    """A later command cancels the older pending refresh for that device."""
-    coordinator = BeatbotCoordinator(hass, SimpleNamespace(), _entry())
-    started = asyncio.Event()
-    release = asyncio.Event()
-
-    async def _refresh(_device_id: str) -> None:
-        started.set()
-        await release.wait()
-
-    refresh = AsyncMock(side_effect=_refresh)
-    coordinator.async_refresh_device_state = refresh
-
-    coordinator.async_schedule_device_state_refresh("dev-1")
-    first = coordinator._refresh_tasks["dev-1"]
-    await started.wait()
-    coordinator.async_schedule_device_state_refresh("dev-1")
-    second = coordinator._refresh_tasks["dev-1"]
-    release.set()
-    await second
-    await asyncio.gather(first, return_exceptions=True)
-
-    assert first.cancelled()
-    assert refresh.await_count == 2
-    refresh.assert_awaited_with("dev-1")
-    assert coordinator._refresh_tasks == {}
-
-
-async def test_cancel_pending_post_control_refreshes(
-    hass: HomeAssistant,
-) -> None:
-    """Unload cancellation prevents delayed requests from outliving the API."""
-    coordinator = BeatbotCoordinator(hass, SimpleNamespace(), _entry())
-
-    coordinator.async_schedule_device_state_refresh("dev-1")
-    coordinator.async_schedule_device_state_refresh("dev-2")
-    tasks = list(coordinator._refresh_tasks.values())
-
-    coordinator.async_cancel_pending_refreshes()
-    await asyncio.gather(*tasks, return_exceptions=True)
-
-    assert all(task.cancelled() for task in tasks)
-    assert coordinator._refresh_tasks == {}
-
-
 async def test_poll_keeps_device_until_three_successful_discovery_misses(
     hass: HomeAssistant,
 ) -> None:
@@ -482,7 +400,7 @@ def test_coordinator_finds_and_removes_registered_device(
         "async_entries_for_device",
         Mock(
             return_value=[
-                SimpleNamespace(config_entry_id="entry", entity_id="vacuum.beatbot"),
+                SimpleNamespace(config_entry_id="entry", entity_id="sensor.beatbot"),
                 SimpleNamespace(config_entry_id="other", entity_id="sensor.other"),
             ]
         ),
@@ -496,7 +414,7 @@ def test_coordinator_finds_and_removes_registered_device(
     device_registry.async_get_device_by_identifier.assert_called_once_with(
         (coord_mod.DOMAIN, "dev-1"), "entry"
     )
-    entity_registry.async_remove.assert_called_once_with("vacuum.beatbot")
+    entity_registry.async_remove.assert_called_once_with("sensor.beatbot")
     device_registry.async_update_device.assert_called_once_with(
         "registry-device-id", remove_config_entry_id="entry"
     )

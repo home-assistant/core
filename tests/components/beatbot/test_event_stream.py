@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-import json
 from types import SimpleNamespace
 from typing import Protocol
 from unittest.mock import AsyncMock, Mock, patch
 
+from beatbot_cloud import BeatbotEvent
 import pytest
 
 from homeassistant.components.beatbot.event_stream import (
@@ -19,7 +19,7 @@ from homeassistant.exceptions import OAuth2TokenRequestReauthError
 
 
 class EventFactory(Protocol):
-    """Create a serialized Beatbot event."""
+    """Create a validated Beatbot event."""
 
     def __call__(
         self,
@@ -27,8 +27,8 @@ class EventFactory(Protocol):
         event_type: str,
         payload: dict | None,
         device_id: str = "dev-1",
-    ) -> str:
-        """Serialize one Beatbot event."""
+    ) -> BeatbotEvent:
+        """Create one Beatbot event."""
 
 
 @pytest.fixture
@@ -54,16 +54,8 @@ def event_factory() -> EventFactory:
         event_type: str,
         payload: dict | None,
         device_id: str = "dev-1",
-    ) -> str:
-        return json.dumps(
-            {
-                "eventId": event_id,
-                "type": event_type,
-                "deviceId": device_id,
-                "occurredAt": "2026-07-01T08:00:00Z",
-                "payload": payload,
-            }
-        )
+    ) -> BeatbotEvent:
+        return BeatbotEvent(event_id, event_type, device_id, payload)
 
     return _event
 
@@ -102,7 +94,7 @@ def test_property_event_routes_incremental_state(
     """Route a property event to the coordinator."""
     client, coordinator = event_client
 
-    client._handle_text_message(
+    client._handle_event(
         event_factory(
             "event-1",
             "properties_changed",
@@ -122,7 +114,7 @@ def test_status_event_routes_online_state(
     """Route a status event to the coordinator."""
     client, coordinator = event_client
 
-    client._handle_text_message(event_factory("event-2", "status", {"online": False}))
+    client._handle_event(event_factory("event-2", "status", {"online": False}))
 
     coordinator.async_apply_device_event.assert_called_once()
     event = coordinator.async_apply_device_event.call_args.args[0]
@@ -141,28 +133,19 @@ def test_duplicate_event_is_applied_once(
         {"interfaceInfo": "sensor.error", "value": 4},
     )
 
-    client._handle_text_message(message)
-    client._handle_text_message(message)
+    client._handle_event(message)
+    client._handle_event(message)
 
     coordinator.async_apply_device_event.assert_called_once()
 
 
-def test_malformed_and_unknown_events_do_not_route(
+def test_unknown_event_does_not_route(
     event_client: tuple[BeatbotEventClient, Mock], event_factory: EventFactory
 ) -> None:
-    """Ignore malformed and unsupported events."""
+    """Ignore unsupported events returned by the library."""
     client, coordinator = event_client
 
-    client._handle_text_message("not-json")
-    client._handle_text_message(
-        event_factory(
-            "event-missing-value",
-            "properties_changed",
-            {"interfaceInfo": "sensor.error"},
-        )
-    )
-    client._handle_text_message(event_factory("event-4", "status", {"online": "yes"}))
-    client._handle_text_message(event_factory("event-5", "future_type", {}))
+    client._handle_event(event_factory("event-5", "future_type", {}))
 
     coordinator.async_apply_device_event.assert_not_called()
 
@@ -201,7 +184,7 @@ async def test_device_added_reloads_entry(
     client, coordinator = event_client
     hass.config_entries.async_schedule_reload = Mock()
 
-    client._handle_text_message(
+    client._handle_event(
         event_factory(
             "event-added",
             "device_added",
@@ -225,25 +208,9 @@ async def test_device_removed_with_null_payload_reloads_entry(
     client, coordinator = event_client
     hass.config_entries.async_schedule_reload = Mock()
 
-    client._handle_text_message(event_factory("event-removed", "device_removed", None))
+    client._handle_event(event_factory("event-removed", "device_removed", None))
     hass.config_entries.async_schedule_reload.assert_called_once_with("entry")
     coordinator.async_apply_device_event.assert_not_called()
-
-
-async def test_malformed_device_lifecycle_events_do_not_reload(
-    hass: HomeAssistant,
-    event_client: tuple[BeatbotEventClient, Mock],
-    event_factory: EventFactory,
-) -> None:
-    """Ignore malformed device lifecycle events."""
-    client, _ = event_client
-    hass.config_entries.async_schedule_reload = Mock()
-
-    client._handle_text_message(
-        event_factory("bad-added", "device_added", {"deviceId": "another-device"})
-    )
-    client._handle_text_message(event_factory("bad-removed", "device_removed", {}))
-    hass.config_entries.async_schedule_reload.assert_not_called()
 
 
 async def test_stop_is_idempotent(

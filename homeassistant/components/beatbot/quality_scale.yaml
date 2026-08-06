@@ -1,6 +1,8 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: This integration does not provide custom actions.
   appropriate-polling:
     status: done
     comment: WebSocket push is primary; a 10 minute coordinator poll reconciles discovery and missed events.
@@ -9,7 +11,9 @@ rules:
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide custom actions.
   docs-conditions:
     status: exempt
     comment: This integration does not provide conditions.
@@ -28,7 +32,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide actions.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -38,7 +44,7 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
@@ -50,7 +56,7 @@ rules:
   docs-examples: todo
   docs-known-limitations: todo
   docs-supported-devices: done
-  docs-supported-functions: done
+  docs-supported-functions: todo
   docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices: done

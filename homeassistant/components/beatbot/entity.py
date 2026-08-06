@@ -1,15 +1,7 @@
 """Shared base entity for the Beatbot integration."""
 
-from collections.abc import Awaitable, Callable
-from typing import Any
+from beatbot_cloud import BeatbotDeviceData
 
-from beatbot_cloud import (
-    BeatbotAuthenticationError,
-    BeatbotConnectionError,
-    BeatbotDeviceData,
-)
-
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -41,30 +33,3 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
     def data(self) -> BeatbotDeviceData:
         """Return the latest data for this device."""
         return self.coordinator.data[self._device_id]
-
-    async def _async_send_command(self, command: Callable[[], Awaitable[Any]]) -> None:
-        """Run without retrying and translate library errors for Home Assistant."""
-        if not self.data.is_online:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="device_offline",
-                translation_placeholders={
-                    "device": self.data.name or self._device_id,
-                },
-            )
-        try:
-            await command()
-        except BeatbotAuthenticationError as err:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_error",
-            ) from err
-        except BeatbotConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="control_connection_error",
-                translation_placeholders={
-                    "device": self.data.name or self._device_id,
-                },
-            ) from err

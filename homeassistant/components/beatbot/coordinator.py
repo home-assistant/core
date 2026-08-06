@@ -1,6 +1,5 @@
 """Data coordinator for the Beatbot integration."""
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -19,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, NETWORK_REFRESH_INTERVAL, POST_CONTROL_REFRESH_DELAY
+from .const import DOMAIN, NETWORK_REFRESH_INTERVAL
 
 if TYPE_CHECKING:
     from . import BeatbotConfigEntry
@@ -50,10 +49,6 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         self.api = api
         self._missing_device_counts: dict[str, int] = {}
         self._reload_scheduled = False
-        # One delayed post-control reconciliation task per device. A later
-        # command replaces the pending task for that device (debounce), while
-        # commands for different devices remain independent.
-        self._refresh_tasks: dict[str, asyncio.Task[None]] = {}
 
     @override
     async def _async_update_data(self) -> dict[str, BeatbotDeviceData]:
@@ -199,42 +194,6 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         self._reload_scheduled = True
         self.hass.config_entries.async_schedule_reload(entry_id)
 
-    async def async_refresh_device_state(self, device_id: str) -> None:
-        """Refresh one device after allowing its control action to settle."""
-        await asyncio.sleep(POST_CONTROL_REFRESH_DELAY)
-        try:
-            state = await self.api.get_device_state(device_id)
-        except BeatbotAuthenticationError as err:
-            raise ConfigEntryAuthFailed from err
-        except BeatbotConnectionError as err:
-            _LOGGER.warning(
-                "Single-device state fetch failed for %s: %s", device_id, err
-            )
-            return
-
-        device = self.data.get(device_id)
-        if device is None:
-            return
-        state_values = state.get("states")
-        is_online = state.get("is_online")
-        _LOGGER.debug(
-            "Beatbot state pull completed "
-            "(source=post_control, deviceId=%s, states=%r, online=%s)",
-            device_id,
-            state_values,
-            is_online,
-        )
-        self._apply_state_with_logging(
-            device_id,
-            device,
-            state_values,
-            is_online,
-            source="post_control",
-        )
-        # Push the in-place update to listeners and reset the poll timer so
-        # we don't double-fetch right after this manual update.
-        self.async_set_updated_data(self.data)
-
     @callback
     def async_apply_device_event(
         self,
@@ -274,47 +233,3 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
             device_id,
         )
         device.apply_state(states, is_online)
-
-    @callback
-    def async_schedule_device_state_refresh(self, device_id: str) -> None:
-        """Schedule a delayed single-device state refresh without blocking.
-
-        WebSocket events remain the primary real-time update path. This
-        delayed GET is a reconciliation fallback for dropped or delayed push
-        events. Repeated commands for one device are debounced so only the
-        latest scheduled GET runs.
-        """
-        previous = self._refresh_tasks.get(device_id)
-        if previous is not None:
-            previous.cancel()
-
-        async def _refresh() -> None:
-            try:
-                await self.async_refresh_device_state(device_id)
-            except ConfigEntryAuthFailed:
-                _LOGGER.warning(
-                    "Post-control refresh authorization failed for %s; "
-                    "starting reauthentication",
-                    device_id,
-                )
-                self.config_entry.async_start_reauth(self.hass)
-            finally:
-                current = asyncio.current_task()
-                if self._refresh_tasks.get(device_id) is current:
-                    self._refresh_tasks.pop(device_id, None)
-
-        self._refresh_tasks[device_id] = self.hass.async_create_task(
-            _refresh(), f"beatbot_post_control_refresh_{device_id}"
-        )
-
-    @callback
-    def async_cancel_pending_refreshes(self) -> None:
-        """Cancel any in-flight post-control refresh tasks.
-
-        Call from async_unload_entry so a refresh sleeping inside its
-        POST_CONTROL_REFRESH_DELAY window is cancelled rather than left to
-        run against a coordinator/api/session that is being torn down.
-        """
-        for task in self._refresh_tasks.values():
-            task.cancel()
-        self._refresh_tasks.clear()

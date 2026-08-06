@@ -89,10 +89,10 @@ async def test_async_setup_entry_starts_runtime_objects(
     assert entry.runtime_data.event_client is event_client
 
 
-async def test_async_setup_entry_loads_vacuum_platform(
+async def test_async_setup_entry_loads_sensor_platform(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Load pool cleaners through the config entry vacuum platform."""
+    """Load pool cleaners through the config entry sensor platform."""
     entry = _entry()
     entry.add_to_hass(hass)
     device = BeatbotDeviceData(
@@ -124,11 +124,21 @@ async def test_async_setup_entry_loads_vacuum_platform(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.VACUUM, DOMAIN, "pool-cleaner-1"
+    status_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, "pool-cleaner-1_status"
     )
-    assert entity_id is not None
-    assert hass.states.get(entity_id) is not None
+    battery_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, "pool-cleaner-1_battery"
+    )
+    error_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, "pool-cleaner-1_error"
+    )
+    assert status_entity_id is not None
+    assert battery_entity_id is not None
+    assert error_entity_id is not None
+    assert hass.states.get(status_entity_id) is not None
+    assert hass.states.get(battery_entity_id) is not None
+    assert hass.states.get(error_entity_id) is not None
 
 
 async def test_request_adapter_translates_oauth_refresh_rejection(
@@ -193,14 +203,13 @@ async def test_request_adapter_translates_oauth_refresh_rejection(
 async def test_async_unload_entry_stops_events_and_unloads_platforms(
     hass: HomeAssistant,
 ) -> None:
-    """Unload stops the event stream and cancels pending refresh tasks."""
+    """Unload stops the event stream after unloading platforms."""
     entry = _entry()
     entry.add_to_hass(hass)
     hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
     coordinator = Mock()
     coordinator.async_config_entry_first_refresh = AsyncMock()
-    coordinator.async_cancel_pending_refreshes = Mock()
     event_client = Mock()
     event_client.async_start = Mock()
     event_client.async_stop = AsyncMock()
@@ -220,7 +229,6 @@ async def test_async_unload_entry_stops_events_and_unloads_platforms(
         assert await hass.config_entries.async_unload(entry.entry_id)
 
     event_client.async_stop.assert_awaited_once()
-    coordinator.async_cancel_pending_refreshes.assert_called_once()
     hass.config_entries.async_unload_platforms.assert_awaited_once_with(
         entry, PLATFORMS
     )
@@ -236,7 +244,6 @@ async def test_async_unload_failure_keeps_runtime_services(
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=False)
     coordinator = Mock()
     coordinator.async_config_entry_first_refresh = AsyncMock()
-    coordinator.async_cancel_pending_refreshes = Mock()
     event_client = Mock()
     event_client.async_start = Mock()
     event_client.async_stop = AsyncMock()
@@ -256,7 +263,6 @@ async def test_async_unload_failure_keeps_runtime_services(
         assert not await hass.config_entries.async_unload(entry.entry_id)
 
     event_client.async_stop.assert_not_awaited()
-    coordinator.async_cancel_pending_refreshes.assert_not_called()
 
 
 async def _assert_first_refresh_failure(

@@ -1,6 +1,5 @@
 """Config flow for the Beatbot integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -16,7 +15,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -51,26 +50,6 @@ class BeatbotConfigFlow(
         )
         return await super().async_step_user(user_input)
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Start reauthentication for an existing config entry."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm that the user wants to reauthenticate."""
-        reauth_entry = self._get_reauth_entry()
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                description_placeholders={"account": reauth_entry.title},
-            )
-        return await self.async_step_pick_implementation(
-            user_input={"implementation": reauth_entry.data["auth_implementation"]}
-        )
-
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create the config entry using identity and region token claims."""
@@ -87,16 +66,9 @@ class BeatbotConfigFlow(
         if data.get("region") not in REGION_API_BASE_URL:
             return self.async_abort(reason="unknown_region")
 
-        if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch(reason="wrong_account")
-        else:
-            self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured()
         if abort_result := await self._async_validate_resource_api(data):
             return abort_result
-        if self.source == SOURCE_REAUTH:
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
-            )
         return self.async_create_entry(title="Beatbot", data=data)
 
     async def _async_validate_resource_api(

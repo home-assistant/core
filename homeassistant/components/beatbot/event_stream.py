@@ -31,12 +31,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    DOMAIN,
-    EVENT_DEDUP_CACHE_SIZE,
-    EVENT_HEARTBEAT_INTERVAL,
-    EVENT_HEARTBEAT_TIMEOUT,
-)
+from .const import DOMAIN, EVENT_DEDUP_CACHE_SIZE
 from .coordinator import BeatbotCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -218,8 +213,6 @@ class BeatbotEventClient:
             async_get_clientsession(self._hass),
             self._api.event_stream_url,
             token,
-            heartbeat=EVENT_HEARTBEAT_INTERVAL,
-            receive_timeout=EVENT_HEARTBEAT_TIMEOUT,
         )
         self._stream = stream
         try:
@@ -251,13 +244,6 @@ class BeatbotEventClient:
         stream, self._stream = self._stream, None
         if stream is not None:
             await stream.close()
-
-    def _handle_text_message(self, raw: str) -> None:
-        """Parse and dispatch one text event."""
-        try:
-            self._handle_event(BeatbotEventStream.parse_event(raw))
-        except BeatbotConnectionError as err:
-            _LOGGER.warning("Ignoring malformed Beatbot event: %s", err)
 
     def _handle_event(self, event: BeatbotEvent) -> None:
         """Apply one validated event to Home Assistant state."""
