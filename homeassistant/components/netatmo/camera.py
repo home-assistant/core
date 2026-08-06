@@ -267,10 +267,10 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         """Return True if entity is available."""
         # Webhook override
         if self._webhook_connection is not None:
-            return self._webhook_connection
+            return self._webhook_connection and super().available
 
         # Fallback to pyatmo property
-        return bool(
+        return super().available and bool(
             getattr(self.device, "alim_status", None) == NETATMO_ALIM_STATUS_ONLINE
         )
 
