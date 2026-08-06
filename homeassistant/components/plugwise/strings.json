@@ -98,12 +98,6 @@
       }
     },
     "number": {
-      "max_dhw_temperature": {
-        "name": "Domestic hot water setpoint"
-      },
-      "maximum_boiler_temperature": {
-        "name": "Maximum boiler temperature setpoint"
-      },
       "temperature_offset": {
         "name": "Temperature offset"
       }
@@ -307,7 +301,10 @@
       }
     },
     "water_heater": {
-      "max_dhw_temperature": {
+      "boiler_temperature": {
+        "name": "Boiler"
+      },
+      "dhw_temperature": {
         "name": "Domestic hot water",
         "state": {
           "auto": "[%key:common::state::auto%]",
@@ -316,9 +313,6 @@
           "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
           "off": "[%key:common::state::off%]"
         }
-      },
-      "maximum_boiler_temperature": {
-        "name": "Boiler"
       }
     }
   },

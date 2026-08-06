@@ -69,8 +69,8 @@ type SelectOptionsType = Literal[
     "zone_profiles",
 ]
 type WaterHeaterType = Literal[
-    "maximum_boiler_temperature",
-    "max_dhw_temperature",
+    "boiler_temperature",
+    "dhw_temperature",
 ]
 type WaterHeaterOptionsType = Literal["dhw_modes"]
 
@@ -97,7 +97,7 @@ SELECT_SCHEDULE: Final = "select_schedule"
 SELECT_ZONE_PROFILE: Final = "select_zone_profile"
 
 # Water_heater constants
-BOILER_TEMP: Final = "maximum_boiler_temperature"
+BOILER_TEMP: Final = "boiler_temperature"
 DHW_MODE: Final = "dhw_mode"
 DHW_MODES: Final = "dhw_modes"
-DHW_TEMP: Final = "max_dhw_temperature"
+DHW_TEMP: Final = "dhw_temperature"
