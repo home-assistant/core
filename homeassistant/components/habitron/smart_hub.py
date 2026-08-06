@@ -96,7 +96,11 @@ class SmartHub:
         # The hub reports its MAC with either separator and in either case, and
         # the uid becomes the device identifier plus every entity's unique id
         # prefix -- so normalise it, or the same hub can end up with two sets.
-        self.uid = self._mac.replace(":", "").replace("-", "").upper()
+        # Lower case on purpose: the custom (HACS) integration derives the same
+        # uid and writes it lower case, and both share this domain's registry.
+        # Upper-casing here would give every migrating installation a fresh set
+        # of devices and entities, orphaning their history.
+        self.uid = self._mac.replace(":", "").replace("-", "").lower()
         self._version = self.comm.com_version
         self._type = self.comm.com_hwtype
         self.host = self.comm.com_ip

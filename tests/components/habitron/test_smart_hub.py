@@ -84,7 +84,9 @@ def _smhub_info(slug: str = "", mac: str = "AA:BB:CC:DD:EE:FF") -> dict:
     # The uid derived from this becomes the device identifier and prefixes
     # every entity unique id, so all three spellings have to land on one uid --
     # a hub switching notation after a firmware update must not produce a
-    # second set of devices and entities.
+    # second set of devices and entities. The expected form is lower case
+    # because the custom (HACS) integration writes it that way into this very
+    # registry; diverging would orphan a migrating installation's history.
     ["AA:BB:CC:DD:EE:FF", "aa-bb-cc-dd-ee-ff", "aabbccddeeff"],
 )
 async def test_setup_registers_hub_device(
@@ -144,7 +146,7 @@ async def test_setup_registers_hub_device(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "AABBCCDDEEFF")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_UID)})
     assert device is not None
     assert device.manufacturer == "Habitron GmbH"
     assert device.sw_version == "9.9.9"
