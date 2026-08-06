@@ -54,7 +54,7 @@ from .const import (
     ATTR_USERNAME,
     DOMAIN,
 )
-from .helpers import async_verify_mass_username_availability, get_music_assistant_client
+from .helpers import catch_user_not_found, get_music_assistant_client
 from .schemas import (
     LIBRARY_RESULTS_SCHEMA,
     SEARCH_RESULT_SCHEMA,
@@ -187,23 +187,20 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
     search_artist = call.data.get(ATTR_SEARCH_ARTIST)
     search_album = call.data.get(ATTR_SEARCH_ALBUM)
     search_username = call.data.get(ATTR_USERNAME)
-    if search_username is not None:
-        await async_verify_mass_username_availability(
-            mass=mass, username=search_username
-        )
     if search_album and search_artist:
         search_name = f"{search_artist} - {search_album} - {search_name}"
     elif search_album:
         search_name = f"{search_album} - {search_name}"
     elif search_artist:
         search_name = f"{search_artist} - {search_name}"
-    search_results = await mass.music.search(
-        search_query=search_name,
-        media_types=call.data.get(ATTR_MEDIA_TYPE, MediaType.ALL),
-        limit=call.data[ATTR_LIMIT],
-        library_only=call.data[ATTR_LIBRARY_ONLY],
-        user=search_username,
-    )
+    with catch_user_not_found(search_username):
+        search_results = await mass.music.search(
+            search_query=search_name,
+            media_types=call.data.get(ATTR_MEDIA_TYPE, MediaType.ALL),
+            limit=call.data[ATTR_LIMIT],
+            library_only=call.data[ATTR_LIBRARY_ONLY],
+            user=search_username,
+        )
     response: ServiceResponse = SEARCH_RESULT_SCHEMA(
         {
             ATTR_ARTISTS: [
@@ -247,8 +244,6 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
     offset = call.data.get(ATTR_OFFSET, DEFAULT_OFFSET)
     order_by = call.data.get(ATTR_ORDER_BY, DEFAULT_SORT_ORDER)
     username = call.data.get(ATTR_USERNAME)
-    if username is not None:
-        await async_verify_mass_username_availability(mass=mass, username=username)
     base_params = {
         "favorite": call.data.get(ATTR_FAVORITE),
         "search": call.data.get(ATTR_SEARCH),
@@ -266,38 +261,39 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
         | list[Audiobook]
         | list[Podcast]
     )
-    if media_type == MediaType.ALBUM:
-        library_result = await mass.music.get_library_albums(
-            **base_params,
-            album_types=call.data.get(ATTR_ALBUM_TYPE),
-        )
-    elif media_type == MediaType.ARTIST:
-        library_result = await mass.music.get_library_artists(
-            **base_params,
-            album_artists_only=bool(call.data.get(ATTR_ALBUM_ARTISTS_ONLY)),
-        )
-    elif media_type == MediaType.TRACK:
-        library_result = await mass.music.get_library_tracks(
-            **base_params,
-        )
-    elif media_type == MediaType.RADIO:
-        library_result = await mass.music.get_library_radios(
-            **base_params,
-        )
-    elif media_type == MediaType.PLAYLIST:
-        library_result = await mass.music.get_library_playlists(
-            **base_params,
-        )
-    elif media_type == MediaType.AUDIOBOOK:
-        library_result = await mass.music.get_library_audiobooks(
-            **base_params,
-        )
-    elif media_type == MediaType.PODCAST:
-        library_result = await mass.music.get_library_podcasts(
-            **base_params,
-        )
-    else:
-        raise ServiceValidationError(f"Unsupported media type {media_type}")
+    with catch_user_not_found(username):
+        if media_type == MediaType.ALBUM:
+            library_result = await mass.music.get_library_albums(
+                **base_params,
+                album_types=call.data.get(ATTR_ALBUM_TYPE),
+            )
+        elif media_type == MediaType.ARTIST:
+            library_result = await mass.music.get_library_artists(
+                **base_params,
+                album_artists_only=bool(call.data.get(ATTR_ALBUM_ARTISTS_ONLY)),
+            )
+        elif media_type == MediaType.TRACK:
+            library_result = await mass.music.get_library_tracks(
+                **base_params,
+            )
+        elif media_type == MediaType.RADIO:
+            library_result = await mass.music.get_library_radios(
+                **base_params,
+            )
+        elif media_type == MediaType.PLAYLIST:
+            library_result = await mass.music.get_library_playlists(
+                **base_params,
+            )
+        elif media_type == MediaType.AUDIOBOOK:
+            library_result = await mass.music.get_library_audiobooks(
+                **base_params,
+            )
+        elif media_type == MediaType.PODCAST:
+            library_result = await mass.music.get_library_podcasts(
+                **base_params,
+            )
+        else:
+            raise ServiceValidationError(f"Unsupported media type {media_type}")
 
     response: ServiceResponse = LIBRARY_RESULTS_SCHEMA(
         {
