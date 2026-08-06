@@ -203,7 +203,7 @@ class PapouchHTTPClient(PapouchTransport):
         return -1
 
     def _check_exceptions_device_web_mode(self, device_name: str) -> bool:
-        if "TME" in device_name:
+        if device_name == "TME":
             return True
         if "Papago" in device_name and "ETH" in device_name:
             return True
