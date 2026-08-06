@@ -54,28 +54,24 @@
       "device_volume": {
         "name": "Volume",
         "state": {
-          "0": "[%key:common::state::low%]",
-          "1": "[%key:common::state::medium%]",
-          "2": "[%key:common::state::high%]",
-          "99": "Mute"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "mute": "Mute"
         }
       },
       "mode": {
         "name": "Mode",
         "state": {
-          "0": "[%key:common::state::home%]",
-          "1": "[%key:common::state::not_home%]",
-          "2": "Disarm"
+          "away": "[%key:common::state::not_home%]",
+          "disarm": "Disarm",
+          "home": "[%key:common::state::home%]"
         }
       },
       "night_vision_mode": {
         "name": "Night vision mode",
         "state": {
-          "0": "Smart night vision",
-          "1": "Bright color night vision",
-          "2": "Infrared night vision",
-          "3": "[%key:common::state::off%]",
-          "4": "Custom mode",
+          "custom": "Custom mode",
           "fullcolor": "Bright color night vision",
           "infrared": "Infrared night vision",
           "intelligent": "Smart night vision",
