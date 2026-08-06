@@ -191,6 +191,9 @@
     "damper": {
       "name": "Damper"
     },
+    "desk": {
+      "name": "Desk"
+    },
     "door": {
       "name": "Door"
     },
@@ -205,6 +208,9 @@
     },
     "shutter": {
       "name": "Shutter"
+    },
+    "sofa": {
+      "name": "Sofa"
     },
     "window": {
       "name": "Window"
