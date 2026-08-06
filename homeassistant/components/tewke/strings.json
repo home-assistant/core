@@ -1,0 +1,91 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_identify": "Unable to determine a unique ID for this device. Please check your device and network configuration.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "zeroconf_confirm": {
+        "description": "You are setting up the Tewke device **{name}**{room_suffix}. Click Submit to continue.",
+        "title": "Tewke device found"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "run_in_status": { "name": "Run-in status" },
+      "stabilisation_status": { "name": "Stabilisation status" }
+    },
+    "number": {
+      "energy_override": { "name": "Energy override" }
+    },
+    "sensor": {
+      "actual_power": { "name": "Actual power" },
+      "breath_voc_equivalent": { "name": "Breath VOC equivalent" },
+      "gas_percentage": { "name": "Gas percentage" },
+      "iaq": { "name": "Air quality" },
+      "iaq_accuracy": { "name": "IAQ accuracy" },
+      "radar_far_hysteresis": { "name": "Radar far hysteresis" },
+      "radar_far_threshold": { "name": "Radar far threshold" },
+      "radar_near_hysteresis": { "name": "Radar near hysteresis" },
+      "radar_near_threshold": { "name": "Radar near threshold" },
+      "radar_proximity": {
+        "name": "Radar proximity",
+        "state": {
+          "far": "Far",
+          "near": "Near",
+          "none": "None"
+        }
+      },
+      "raw_gas": { "name": "Raw gas resistance" },
+      "raw_humidity": { "name": "Raw humidity" },
+      "raw_temperature": { "name": "Raw temperature" },
+      "static_iaq": { "name": "Static IAQ" }
+    }
+  },
+  "exceptions": {
+    "action_failed": {
+      "message": "Error {action} Tewke {identifier}: {error}"
+    },
+    "action_internal": {
+      "message": "Internal error {action} Tewke {identifier}: {error}"
+    },
+    "communication_error": {
+      "message": "Error communicating with Tewke Tap: {error}"
+    },
+    "device_swap": {
+      "message": "Device swap detected! Coordinator expected {expected_dock_id} but IP is reporting {reported_dock_id}. Waiting for Zeroconf update."
+    },
+    "discovery_error": {
+      "message": "Unable to connect to Tewke device at {host}"
+    },
+    "missing_wall_dock_id": {
+      "message": "Tewke device at {host} missing wall_dock_id"
+    },
+    "not_connected_to_wall_dock": {
+      "message": "Attempted to set {name} while not connected to Wall Dock."
+    },
+    "restart_failed": {
+      "message": "Error restarting Tewke Tap Panel: {error}"
+    },
+    "restart_internal": {
+      "message": "Internal error restarting Tewke Tap Panel: {error}"
+    },
+    "set_energy_override_failed": {
+      "message": "Error setting energy override: {error}"
+    },
+    "set_energy_override_internal": {
+      "message": "Internal error setting energy override: {error}"
+    },
+    "set_energy_override_timeout": {
+      "message": "Setting energy override timed out."
+    }
+  }
+}
