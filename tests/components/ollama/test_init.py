@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import attr
 from httpx import ConnectError
 from ollama import ResponseError
 import pytest
@@ -1046,13 +1047,19 @@ async def test_migrate_entry_from_v3_2(
     conversation_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=device_disabled_by,
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="Ollama",
         model="Ollama",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # A stale disabled_by flag can't be set through the registry API, which
+    # validates it against the config entry's disabled state; write it
+    # directly to simulate existing storage.
+    conversation_device = attr.evolve(
+        conversation_device, disabled_by=device_disabled_by
+    )
+    device_registry.devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

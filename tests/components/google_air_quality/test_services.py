@@ -29,7 +29,7 @@ async def test_get_forecast_service(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test fetching a forecast for a subentry."""
-    device = dr.async_get(hass).async_get_device(
+    device = dr.async_get(hass).async_get_device(  # pylint: disable=home-assistant-tests-registry-fixtures
         identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_home-subentry-id")}
     )
     assert device is not None

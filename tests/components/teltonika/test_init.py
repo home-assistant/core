@@ -65,9 +65,12 @@ async def test_setup_errors(
 @pytest.mark.usefixtures("init_integration")
 async def test_device_registry_creation(
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device registry creation."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "1234567890")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890"), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device == snapshot
