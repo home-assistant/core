@@ -814,6 +814,42 @@ async def test_user_step_probes_the_resolved_ip_for_the_local_sentinel(
     assert result["result"].unique_id == "d83addbae72e"
 
 
+async def test_user_step_can_reconfigure_an_ignored_hub(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+) -> None:
+    """A hub the user ignored can still be added by hand later.
+
+    Core lets ``_abort_if_unique_id_configured`` pass for an ignored entry in a
+    user flow -- that is how un-ignoring works. The extra host check must not
+    abort behind its back, or the hub could never be configured again.
+    """
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        source=config_entries.SOURCE_IGNORE,
+        data={CONF_HOST: MOCK_HOST},
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[{"ip": MOCK_HOST, "serial": MOCK_SERIAL}]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_ssdp_no_host(
     hass: HomeAssistant,
     setup_homeassistant: None,
