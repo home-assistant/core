@@ -1,4 +1,4 @@
-"""Test the Mobility Database coordinators through observable behavior."""
+"""Test the MobilityData coordinators through observable behavior."""
 
 from datetime import timedelta
 from unittest.mock import MagicMock
@@ -8,7 +8,7 @@ from aiomobilitydatabase.feeds import SourceAuthenticationError, SourceConnectio
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.mobility_database.const import (
+from homeassistant.components.mobilitydata.const import (
     CONF_HEADSIGNS,
     CONF_ROUTE_IDS,
     CONF_STOP_IDS,

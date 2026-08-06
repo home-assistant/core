@@ -1,4 +1,4 @@
-"""Coordinators for the Mobility Database integration."""
+"""Coordinators for the MobilityData integration."""
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -41,19 +41,19 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-type MobilityDatabaseConfigEntry = ConfigEntry[MobilityDatabaseRuntimeData]
+type MobilityDataConfigEntry = ConfigEntry[MobilityDataRuntimeData]
 
 
 @dataclass
-class MobilityDatabaseRuntimeData:
-    """Runtime data for a Mobility Database config entry."""
+class MobilityDataRuntimeData:
+    """Runtime data for a MobilityData config entry."""
 
     client: MobilityFeedsClient
     static_coordinator: StaticCoordinator
     arrivals_coordinator: ArrivalsCoordinator
 
 
-def stop_subentries(entry: MobilityDatabaseConfigEntry) -> dict[str, ConfigSubentry]:
+def stop_subentries(entry: MobilityDataConfigEntry) -> dict[str, ConfigSubentry]:
     """Return the entry's stop subentries keyed by subentry id."""
     return {
         subentry_id: subentry
@@ -72,12 +72,12 @@ class StaticCoordinator(DataUpdateCoordinator[TransitFeedHandle]):
     vanished from the feed.
     """
 
-    config_entry: MobilityDatabaseConfigEntry
+    config_entry: MobilityDataConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: MobilityDatabaseConfigEntry,
+        config_entry: MobilityDataConfigEntry,
         client: MobilityFeedsClient,
     ) -> None:
         """Initialize the static coordinator."""
@@ -147,12 +147,12 @@ class ArrivalsCoordinator(DataUpdateCoordinator[dict[str, list[StopArrival]]]):
     feed family has a trip-updates capable realtime source, else every five.
     """
 
-    config_entry: MobilityDatabaseConfigEntry
+    config_entry: MobilityDataConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: MobilityDatabaseConfigEntry,
+        config_entry: MobilityDataConfigEntry,
         static_coordinator: StaticCoordinator,
     ) -> None:
         """Initialize the arrivals coordinator."""

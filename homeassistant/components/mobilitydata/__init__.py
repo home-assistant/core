@@ -1,4 +1,4 @@
-"""The Mobility Database integration."""
+"""The MobilityData integration."""
 
 from pathlib import Path
 
@@ -12,8 +12,8 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from .const import CONF_FEED_ID, CONF_REFRESH_TOKEN, DOMAIN
 from .coordinator import (
     ArrivalsCoordinator,
-    MobilityDatabaseConfigEntry,
-    MobilityDatabaseRuntimeData,
+    MobilityDataConfigEntry,
+    MobilityDataRuntimeData,
     StaticCoordinator,
 )
 
@@ -25,9 +25,9 @@ def _cache_dir(hass: HomeAssistant) -> Path:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: MobilityDatabaseConfigEntry
+    hass: HomeAssistant, entry: MobilityDataConfigEntry
 ) -> bool:
-    """Set up Mobility Database from a config entry."""
+    """Set up MobilityData from a config entry."""
     client = MobilityFeedsClient(
         entry.data[CONF_REFRESH_TOKEN],
         session=async_get_clientsession(hass),
@@ -35,7 +35,7 @@ async def async_setup_entry(
     )
     static_coordinator = StaticCoordinator(hass, entry, client)
     arrivals_coordinator = ArrivalsCoordinator(hass, entry, static_coordinator)
-    entry.runtime_data = MobilityDatabaseRuntimeData(
+    entry.runtime_data = MobilityDataRuntimeData(
         client=client,
         static_coordinator=static_coordinator,
         arrivals_coordinator=arrivals_coordinator,
@@ -58,7 +58,7 @@ async def async_setup_entry(
 
 
 async def _async_update_listener(
-    hass: HomeAssistant, entry: MobilityDatabaseConfigEntry
+    hass: HomeAssistant, entry: MobilityDataConfigEntry
 ) -> None:
     """Reload the entry when its data or subentries change."""
     await hass.config_entries.async_reload(entry.entry_id)
@@ -73,7 +73,7 @@ async def _async_initial_refresh(
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, entry: MobilityDatabaseConfigEntry
+    hass: HomeAssistant, entry: MobilityDataConfigEntry
 ) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -85,7 +85,7 @@ async def async_unload_entry(
 
 
 async def async_remove_entry(
-    hass: HomeAssistant, entry: MobilityDatabaseConfigEntry
+    hass: HomeAssistant, entry: MobilityDataConfigEntry
 ) -> None:
     """Purge the cached GTFS index when the entry is removed."""
     client = MobilityFeedsClient(

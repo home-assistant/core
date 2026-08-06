@@ -1,4 +1,4 @@
-"""Test the Mobility Database config flow."""
+"""Test the MobilityData config flow."""
 
 import asyncio
 from unittest.mock import MagicMock, patch
@@ -23,7 +23,7 @@ from aiomobilitydatabase.feeds import (
 )
 import pytest
 
-from homeassistant.components.mobility_database.const import (
+from homeassistant.components.mobilitydata.const import (
     CONF_FEED_ID,
     CONF_HEADSIGNS,
     CONF_REFRESH_TOKEN,
@@ -940,7 +940,7 @@ async def test_reauth_token_updates_sibling_entries(
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_token"
     with patch(
-        "homeassistant.components.mobility_database.async_setup_entry",
+        "homeassistant.components.mobilitydata.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(

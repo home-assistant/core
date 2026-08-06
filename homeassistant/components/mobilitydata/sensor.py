@@ -1,4 +1,4 @@
-"""Sensor platform for the Mobility Database integration.
+"""Sensor platform for the MobilityData integration.
 
 Three timestamp sensors per configured stop — the next three departures —
 honoring the stop subentry's route and headsign filters.
@@ -17,18 +17,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_FEED_ID, CONF_STOP_IDS, CONF_STOP_NAME, DOMAIN
-from .coordinator import (
-    ArrivalsCoordinator,
-    MobilityDatabaseConfigEntry,
-    stop_subentries,
-)
+from .coordinator import ArrivalsCoordinator, MobilityDataConfigEntry, stop_subentries
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: MobilityDatabaseConfigEntry,
+    entry: MobilityDataConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up departure sensors for each stop subentry."""
@@ -36,16 +32,14 @@ async def async_setup_entry(
     for subentry_id, subentry in stop_subentries(entry).items():
         async_add_entities(
             [
-                MobilityDatabaseDepartureSensor(coordinator, subentry, index)
+                MobilityDataDepartureSensor(coordinator, subentry, index)
                 for index in range(3)
             ],
             config_subentry_id=subentry_id,
         )
 
 
-class MobilityDatabaseDepartureSensor(
-    CoordinatorEntity[ArrivalsCoordinator], SensorEntity
-):
+class MobilityDataDepartureSensor(CoordinatorEntity[ArrivalsCoordinator], SensorEntity):
     """An upcoming departure at a configured stop."""
 
     _attr_has_entity_name = True

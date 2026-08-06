@@ -1,4 +1,4 @@
-"""Config flow for the Mobility Database integration."""
+"""Config flow for the MobilityData integration."""
 
 import asyncio
 from collections.abc import Mapping
@@ -63,7 +63,7 @@ from .const import (
     DOMAIN,
     SUBENTRY_TYPE_STOP,
 )
-from .coordinator import MobilityDatabaseConfigEntry
+from .coordinator import MobilityDataConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,8 +126,8 @@ def _auth_info_url(rt_feeds: list[GtfsRtFeed], feed_id: str) -> str | None:
     return None
 
 
-class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Mobility Database."""
+class MobilityDataConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for MobilityData."""
 
     VERSION = 1
 
@@ -475,7 +475,7 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
 
     def _get_handle(self) -> TransitFeedHandle | None:
         """Return the entry's transit feed handle, or None if not ready."""
-        entry: MobilityDatabaseConfigEntry = self._get_entry()
+        entry: MobilityDataConfigEntry = self._get_entry()
         if entry.state is not ConfigEntryState.LOADED:
             return None
         return entry.runtime_data.static_coordinator.data

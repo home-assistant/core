@@ -1,8 +1,8 @@
-"""Constants for the Mobility Database integration."""
+"""Constants for the MobilityData integration."""
 
 from datetime import timedelta
 
-DOMAIN = "mobility_database"
+DOMAIN = "mobilitydata"
 
 CONF_REFRESH_TOKEN = "refresh_token"
 CONF_FEED_ID = "feed_id"

@@ -31,16 +31,16 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "[%key:component::mobility_database::config::step::api_key::data_description::api_key%]"
+          "api_key": "[%key:component::mobilitydata::config::step::api_key::data_description::api_key%]"
         },
         "description": "The transit provider rejected the configured API key. Enter a new one. See [the provider's instructions]({authentication_info_url}) for how to get one."
       },
       "reauth_token": {
         "data": {
-          "refresh_token": "[%key:component::mobility_database::config::step::user::data::refresh_token%]"
+          "refresh_token": "[%key:component::mobilitydata::config::step::user::data::refresh_token%]"
         },
         "data_description": {
-          "refresh_token": "[%key:component::mobility_database::config::step::user::data_description::refresh_token%]"
+          "refresh_token": "[%key:component::mobilitydata::config::step::user::data_description::refresh_token%]"
         },
         "description": "Your Mobility Database refresh token is no longer valid. Enter a new one."
       },

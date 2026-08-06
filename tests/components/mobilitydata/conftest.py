@@ -1,4 +1,4 @@
-"""Common fixtures for the Mobility Database tests."""
+"""Common fixtures for the MobilityData tests."""
 
 from collections.abc import Generator
 from datetime import UTC, datetime
@@ -26,7 +26,7 @@ from aiomobilitydatabase.feeds import (
 )
 import pytest
 
-from homeassistant.components.mobility_database.const import (
+from homeassistant.components.mobilitydata.const import (
     CONF_FEED_ID,
     CONF_HEADSIGNS,
     CONF_REFRESH_TOKEN,
@@ -230,11 +230,11 @@ def mock_feeds_client(mock_client: MagicMock) -> Generator[MagicMock]:
     """Patch MobilityFeedsClient at both import sites."""
     with (
         patch(
-            "homeassistant.components.mobility_database.MobilityFeedsClient",
+            "homeassistant.components.mobilitydata.MobilityFeedsClient",
             return_value=mock_client,
         ),
         patch(
-            "homeassistant.components.mobility_database.config_flow.MobilityFeedsClient",
+            "homeassistant.components.mobilitydata.config_flow.MobilityFeedsClient",
             return_value=mock_client,
         ),
     ):

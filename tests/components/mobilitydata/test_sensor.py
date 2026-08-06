@@ -1,4 +1,4 @@
-"""Test the Mobility Database sensors."""
+"""Test the MobilityData sensors."""
 
 from unittest.mock import MagicMock
 

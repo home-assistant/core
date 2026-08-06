@@ -1,4 +1,4 @@
-"""Test Mobility Database integration setup and teardown."""
+"""Test MobilityData integration setup and teardown."""
 
 from datetime import timedelta
 from unittest.mock import MagicMock
@@ -9,7 +9,7 @@ from aiomobilitydatabase import (
 )
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.mobility_database.const import DOMAIN
+from homeassistant.components.mobilitydata.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 

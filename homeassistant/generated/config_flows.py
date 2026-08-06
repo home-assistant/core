@@ -483,7 +483,7 @@ FLOWS = {
         "mjpeg",
         "moat",
         "mobile_app",
-        "mobility_database",
+        "mobilitydata",
         "modem_callerid",
         "modern_forms",
         "moehlenhoff_alpha2",
