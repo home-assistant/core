@@ -6,6 +6,9 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "step": {
       "confirmation": {
         "description": "Your Tewke device **{name}** is ready to be added to Home Assistant. Click Submit to complete the setup.",
