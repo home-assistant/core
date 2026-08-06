@@ -245,12 +245,12 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
     def get_supported_buttons(self) -> list[dict[str, Any]]:
         buttons = []
 
-        for base_id, sensor_data in self.sensors.items():
-            sensor_name = sensor_data.get("name", f"Sensor {base_id}")
+        for item_id in self.sensors_types:
+            sensor_name = self.sensors.get(item_id, {}).get("name", f"Sensor {item_id}")
             buttons.append(
                 {
                     "name": f"Set {sensor_name} automatically",
-                    "cmd": f"set_sensor_{base_id}",
+                    "cmd": f"set_sensor_{item_id}",
                 }
             )
 
@@ -419,16 +419,33 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                         )
 
                     case self.RAIN_SNS_TYPE:
-                        sensors.append(
-                            {
-                                "item_id": sub_id,
-                                "type": "sensor",
-                                "name": f"{sensor_name} Rainfall",
-                                "device_class": "precipitation",
-                                "state_class": "total_increasing",
-                                "unit": self._get_unit(sns_type, unit_code),
-                            }
-                        )
+                        unit_str = self._get_unit(sns_type, unit_code)
+
+                        if unit_code == "0":
+                            time_label = "15 Min"
+                            dev_class = None
+                        elif unit_code == "1":
+                            time_label = "Hourly"
+                            dev_class = "precipitation_intensity"
+                        elif unit_code == "2":
+                            time_label = "Daily"
+                            dev_class = "precipitation_intensity"
+                        else:
+                            time_label = ""
+                            dev_class = None
+
+                        sensor_def = {
+                            "item_id": sub_id,
+                            "type": "sensor",
+                            "name": f"{sensor_name} Rainfall {time_label}".strip(),
+                            "state_class": "measurement",
+                            "unit": unit_str,
+                        }
+
+                        if dev_class:
+                            sensor_def["device_class"] = dev_class
+
+                        sensors.append(sensor_def)
 
         return sensors
 
@@ -539,6 +556,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                     self.sensors_types[s_id] = sns_type
 
     async def _set_sensor_type(self, item_id: str, type_idx: str) -> None:
+        """Set sensor type by sensor id and type index (exact number that will be send to Meteo)."""
+
         await self._update_settings()
 
         def format_val(val: str) -> str:
@@ -918,21 +937,93 @@ class PapagoETH_METEO(PapagoETH):
         ("str09", "hyst3"),
     ]
 
-    SENSOR_TYPES = [
-        "Unused",
-        "Temperature (DS)",
-        "Temperature / Humidity (TH3x)",
-        "Temperature (TMP)",
-        "CO2 concentration (T6713)",
-        "CO2 concentration (SCD4x)",
-        "Rain gauge",
-        "Atmospheric pressure",
-    ]
+    SENSOR_TYPES_AB = {
+        "0": "Unused",
+        "2": "Temperature (DS)",
+        "3": "Temperature / Humidity (TH3x)",
+        "4": "Temperature (TMP)",
+        "5": "CO2 concentration (T6713)",
+        "7": "Atmospheric pressure",
+        "9": "CO2 concentration (SCD4x)",
+        "10": "Rain gauge",
+    }
+
+    SENSOR_TYPES_C = {
+        "0": "Unused",
+        "6": "Davis",
+    }
 
     @override
     def _process_box(self, box_num: int, element: defused_ET.Element) -> None:
         if self.BOX_SENSOR_BASE <= box_num <= self.BOX_SENSOR_BASE + 2:
             self._parse_standard_sensor_setting(box_num, element, self.BOX_SENSOR_BASE)
+
+    @override
+    def get_supported_buttons(self) -> list[dict[str, Any]]:
+        buttons = []
+
+        for item_id in self.sensors_types:
+            if item_id == "3":
+                continue
+            sensor_name = self.sensors.get(item_id, {}).get("name", f"Sensor {item_id}")
+            buttons.append(
+                {
+                    "name": f"Set {sensor_name} automatically",
+                    "cmd": f"set_sensor_{item_id}",
+                }
+            )
+
+        return buttons
+
+    @override
+    def get_supported_selects(self) -> list[dict[str, Any]]:
+        """Unique for Papago Meteo since it has 2 types of selects."""
+        selects = []
+        for item_id in self.sensors_types:
+            sensor_name = self.sensors.get(item_id, {}).get("name", f"Sensor {item_id}")
+
+            options_dict = (
+                self.SENSOR_TYPES_C if item_id == "3" else self.SENSOR_TYPES_AB
+            )
+
+            selects.append(
+                {
+                    "item_id": item_id,
+                    "category": "sensor_type",
+                    "name": f"{sensor_name} type",
+                    "options": list(options_dict.values()),
+                }
+            )
+        return selects
+
+    @override
+    def get_select_option(self, category: str, item_id: str) -> str | None:
+        """Unique for Papago Meteo since it has 2 types of selects."""
+        if category == "sensor_type":
+            sns_type_code = self.sensors_types.get(item_id)
+            if sns_type_code is not None:
+                options_dict = (
+                    self.SENSOR_TYPES_C if item_id == "3" else self.SENSOR_TYPES_AB
+                )
+                return options_dict.get(sns_type_code)
+        return None
+
+    @override
+    async def set_select_option(self, category: str, item_id: str, option: str) -> None:
+        """Unique for Papago Meteo since it has 2 types of selects."""
+        if category == "sensor_type":
+            options_dict = (
+                self.SENSOR_TYPES_C if item_id == "3" else self.SENSOR_TYPES_AB
+            )
+
+            type_idx = None
+            for code, text in options_dict.items():
+                if text == option:
+                    type_idx = code
+                    break
+
+            if type_idx is not None:
+                await self._set_sensor_type(item_id, type_idx)
 
 
 async def async_setup_papago(transport: PapouchTransport) -> PapagoETH | None:

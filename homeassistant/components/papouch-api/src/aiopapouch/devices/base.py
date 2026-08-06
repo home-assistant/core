@@ -122,17 +122,17 @@ class PapouchDevice(ABC):
             "2": "K",
         },
         CO2_SNS_TYPE: {"0": "ppm"},
-        PRESSURE_SNS_TYPE: {"0": "Pa", "1": "hPa", "2": "psi", "3": "atm"},
+        PRESSURE_SNS_TYPE: {"0": "hPa"},
         WIND_DIRECTION_SNS_TYPE: {
             "0": "°",
             "1": "",  # METEO returns integer value that maps to a string (e.g. 2 is NNE)
         },
-        WIND_SPEED_SNS_TYPE: {"0": "m/s", "1": "km/h", "2": "mph", "3": "knots"},
-        RAIN_SNS_TYPE: {"0": "mm", "1": "in"},
+        WIND_SPEED_SNS_TYPE: {"0": "m/s", "1": "km/h"},
+        RAIN_SNS_TYPE: {"0": "mm/15 min", "1": "mm/h", "2": "mm/d"},
     }
 
     def _get_unit(self, sns_type: str, unit_code: str) -> str:
-        """Get unit from unit matrix. Raises DeviceLogicError if missing."""
+        """Get unit from unit matrix. Raise DeviceLogicError if missing."""
         try:
             return self.UNIT_MAP[sns_type][unit_code]
         except KeyError as err:
