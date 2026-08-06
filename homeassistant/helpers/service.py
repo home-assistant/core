@@ -1212,6 +1212,7 @@ def async_register_entity_service(
 
     if admin_only:
         entity_handler = _admin_only_entity_handler(hass, entity_handler)
+        job_type = HassJobType.Coroutinefunction
 
     hass.services.async_register(
         domain,
@@ -1219,7 +1220,7 @@ def async_register_entity_service(
         entity_handler,
         schema,
         supports_response,
-        job_type=HassJobType.Coroutinefunction if admin_only else job_type,
+        job_type=job_type,
         description_placeholders=description_placeholders,
     )
 
