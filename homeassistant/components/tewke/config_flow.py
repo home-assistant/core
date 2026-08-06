@@ -99,6 +99,7 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
             scenes = await tap.get_scenes()
         except PyTewkeDiscoveryError:
             await tap.close()
+            self._tap = None
             errors["base"] = "cannot_connect"
         else:
             self._scenes = scenes

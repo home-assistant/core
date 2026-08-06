@@ -133,7 +133,13 @@ async def test_zeroconf_flow_connection_error(
     hass: HomeAssistant, mock_tap: AsyncMock
 ) -> None:
     """Test zeroconf discovery flow handles connection error."""
-    mock_tap.return_value.discover.side_effect = PyTewkeDiscoveryError
+    tap_1 = AsyncMock()
+    tap_1.resources = {}
+    tap_1.discover.side_effect = PyTewkeDiscoveryError
+    tap_2 = AsyncMock()
+    tap_2.resources = {}
+    tap_2.get_scenes.return_value = {"scene1": "Mock Scene"}
+    mock_tap.side_effect = [tap_1, tap_2]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -171,9 +177,9 @@ async def test_zeroconf_flow_connection_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirmation"
     assert result["errors"] == {"base": "cannot_connect"}
+    tap_1.close.assert_called_once()
 
     # Recover
-    mock_tap.return_value.discover.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={},
@@ -181,3 +187,4 @@ async def test_zeroconf_flow_connection_error(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Tewke Switch"
+    tap_2.discover.assert_called_once()
