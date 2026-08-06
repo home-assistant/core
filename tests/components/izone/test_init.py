@@ -283,6 +283,8 @@ async def test_setup_missing_host_not_found_retries(
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "controller_not_found"
+    assert entry.error_reason_translation_placeholders == {"uid": "000000001"}
     mock_discovery_service.create_controller.assert_not_awaited()
 
 
@@ -307,6 +309,7 @@ async def test_setup_legacy_domain_unique_id_discovery_oserror_retries(
         assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "discovery_failed_legacy"
 
 
 async def test_setup_missing_host_discover_oserror_retries(
@@ -329,14 +332,33 @@ async def test_setup_missing_host_discover_oserror_retries(
         assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "discovery_failed_host"
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state"),
+    ("side_effect", "expected_state", "translation_key", "placeholders"),
     [
-        (ConnectionError("offline"), ConfigEntryState.SETUP_RETRY),
-        (UnpairedBridgeError("unpaired"), ConfigEntryState.SETUP_ERROR),
-        (ControllerCommandError("rejected"), ConfigEntryState.SETUP_ERROR),
+        pytest.param(
+            ConnectionError("offline"),
+            ConfigEntryState.SETUP_RETRY,
+            "cannot_connect",
+            {"host": "192.0.2.1"},
+            id="connection-error",
+        ),
+        pytest.param(
+            UnpairedBridgeError("unpaired"),
+            ConfigEntryState.SETUP_ERROR,
+            "bridge_unpaired",
+            None,
+            id="unpaired-bridge",
+        ),
+        pytest.param(
+            ControllerCommandError("rejected"),
+            ConfigEntryState.SETUP_ERROR,
+            "setup_rejected",
+            {"host": "192.0.2.1"},
+            id="command-rejected",
+        ),
     ],
 )
 async def test_setup_create_controller_errors(
@@ -346,6 +368,8 @@ async def test_setup_create_controller_errors(
     mock_discovery_service: Mock,
     side_effect: Exception,
     expected_state: ConfigEntryState,
+    translation_key: str,
+    placeholders: dict[str, str] | None,
 ) -> None:
     """create_controller failures map to retry vs error entry states."""
     mock_config_entry.add_to_hass(hass)
@@ -353,6 +377,8 @@ async def test_setup_create_controller_errors(
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is expected_state
+    assert mock_config_entry.error_reason_translation_key == translation_key
+    assert mock_config_entry.error_reason_translation_placeholders == placeholders
 
 
 async def test_setup_discovery_bind_failure_retries(
@@ -375,17 +401,26 @@ async def test_setup_discovery_bind_failure_retries(
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "discovery_start_failed"
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(ConnectionError("gone"), id="connection-error"),
+        pytest.param(ControllerCommandError("rejected"), id="command-rejected"),
+    ],
+)
 async def test_setup_first_refresh_failure_closes_controller(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
+    side_effect: Exception,
 ) -> None:
     """A failed first refresh closes the controller and retries setup."""
     mock_config_entry.add_to_hass(hass)
-    mock_controller.refresh_all = AsyncMock(side_effect=ConnectionError("gone"))
+    mock_controller.refresh_all = AsyncMock(side_effect=side_effect)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

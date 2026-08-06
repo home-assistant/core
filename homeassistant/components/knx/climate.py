@@ -46,6 +46,7 @@ from .entity import (
     KnxUiEntityPlatformController,
     KnxYamlEntity,
     _KnxEntityBase,
+    build_yaml_unique_id,
 )
 from .knx_module import KNXModule
 from .schema import ClimateSchema
@@ -665,11 +666,11 @@ class KnxYamlClimate(_KnxClimate, KnxYamlEntity):
         self._device = _create_climate_yaml(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            unique_id=(
-                f"{self._device.temperature.group_address_state}_"
-                f"{self._device.target_temperature.group_address_state}_"
-                f"{self._device.target_temperature.group_address}_"
-                f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
+            unique_id=build_yaml_unique_id(
+                self._device.temperature.group_address_state,
+                self._device.target_temperature.group_address_state,
+                self._device.target_temperature.group_address,
+                self._device._setpoint_shift.group_address,  # noqa: SLF001
             ),
             entity_config=config,
         )

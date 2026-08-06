@@ -145,6 +145,28 @@ async def test_device_in_dr(
     assert device_entry.sw_version == "4.4.2"
 
 
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_adam_heat_cool: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that a non-gateway device links to the gateway via via_device_id."""
+    gateway_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "da224107914542988a88561b4452b0f6"), mock_config_entry.entry_id
+    )
+    assert gateway_device is not None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6"), mock_config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == gateway_device.id
+
+
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize(

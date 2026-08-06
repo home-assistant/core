@@ -1256,6 +1256,7 @@ def async_register_platform_entity_service(
     service_domain: str,
     service_name: str,
     *,
+    admin_only: bool = False,
     description_placeholders: Mapping[str, str] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
     entity_domain: str,
@@ -1269,18 +1270,29 @@ def async_register_platform_entity_service(
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
+    entity_handler = partial(
+        entity_service_call,
+        hass,
+        partial(_get_platform_entities, hass, entity_domain, service_domain),
+        service_func,
+        entity_device_classes=entity_device_classes,
+        required_features=required_features,
+    )
+
+    service_handler = (
+        partial(
+            _async_admin_handler,
+            hass,
+            HassJob(entity_handler, f"admin service {service_domain}.{service_name}"),
+        )
+        if admin_only
+        else entity_handler
+    )
 
     hass.services.async_register(
         service_domain,
         service_name,
-        partial(
-            entity_service_call,
-            hass,
-            partial(_get_platform_entities, hass, entity_domain, service_domain),
-            service_func,
-            entity_device_classes=entity_device_classes,
-            required_features=required_features,
-        ),
+        service_handler,
         schema,
         supports_response,
         job_type=HassJobType.Coroutinefunction,

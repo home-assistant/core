@@ -36,8 +36,8 @@ class MQTTDeviceEntryMigration(RepairsFlow):
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             device_registry = dr.async_get(self.hass)
-            subentry_device = device_registry.async_get_device(
-                identifiers={(DOMAIN, self.subentry_id)}
+            subentry_device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, self.subentry_id), self.entry_id
             )
             entry = self.hass.config_entries.async_get_entry(self.entry_id)
             if TYPE_CHECKING:
