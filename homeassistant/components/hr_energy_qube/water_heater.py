@@ -87,9 +87,7 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target DHW temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
+        temperature = kwargs[ATTR_TEMPERATURE]
         try:
             success = await self.coordinator.client.write_setpoint(
                 DHW_SETPOINT_KEY, temperature
