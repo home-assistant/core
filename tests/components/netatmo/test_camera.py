@@ -68,23 +68,68 @@ async def test_entity(
 async def test_monitoring_component(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     netatmo_auth: AsyncMock,
     camera_type: str,
     camera_id: str,
     camera_entity: str,
 ) -> None:
     """Test monitoring on/off component with webhook and action."""
-    with selected_platforms([Platform.CAMERA]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    fake_post_hits = 0
+    # Repeatedly used variables for the test and initial value from fixture
+    # Use nonexistent ID to prevent matching during initial setup
+    polling_cycles = 11
+    polling_delta = timedelta(seconds=30)
+    # Mock data for payload_modifier to simulate camera status change
+    mock_state = {
+        "module_id": "aa:bb:cc:dd:ee:ff",
+        "timestamp": None,
+        "attributes": {"monitoring": "on", "alim_status": 2},
+    }
 
-        await hass.async_block_till_done()
+    async def fake_camera_post(*args: Any, **kwargs: Any):
+        """Fake camera status during requesting backend data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        # Use partial to pass the current values of the nonlocal variables to the payload_modifier
+        callback = partial(
+            payload_modifier,
+            target_id=mock_state["module_id"],
+            new_attributes=dict(mock_state["attributes"]),
+            timestamp=mock_state["timestamp"],
+        )
+        return await fake_post_request(hass, *args, msg_callback=callback, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            ["camera"],
+        ),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook_generate_url",
+        ) as mock_webhook,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_camera_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_webhook.return_value = "https://example.com"
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     await hass.async_block_till_done()
 
-    # Test on/off camera events
+    # Check initial state
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+
+    # Test off camera event
     response = {
         "event_type": "off",
         "device_id": camera_id,
@@ -97,6 +142,7 @@ async def test_monitoring_component(
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
+    # Test on camera event
     response = {
         "event_type": "on",
         "device_id": camera_id,
@@ -125,8 +171,18 @@ async def test_monitoring_component(
                 ]
             }
         )
-        assert hass.states.get(camera_entity).state == "idle"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+    assert hass.states.get(camera_entity).state == "idle"
+
+    # Change mocked status (sync optimistic off) to simulate camera status change after the service call
+    mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+    mock_state["module_id"] = camera_id
+    mock_state["attributes"] = {
+        "monitoring": "off",
+    }
+
+    # Trigger some polling cycle to let status change be picked up
+    await advance_time(hass, freezer, polling_cycles, polling_delta)
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
     # Test turn_off services while camera was off (early return, no call to pyatmo)
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
@@ -155,6 +211,16 @@ async def test_monitoring_component(
             }
         )
     assert hass.states.get(camera_entity).state == "idle"
+
+    # Change mocked status (sync optimistic on) to simulate camera status change after the service call
+    mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+    mock_state["module_id"] = camera_id
+    mock_state["attributes"] = {
+        "monitoring": "on",
+    }
+
+    # Trigger some polling cycle to let status change be picked up
+    await advance_time(hass, freezer, polling_cycles, polling_delta)
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
     # Test turn_on services while camera was on (early return, no call to pyatmo)
@@ -872,23 +938,23 @@ async def test_camera_image_with_attribute_change(
     # Use nonexistent ID to prevent matching during initial setup
     polling_cycles = 11
     polling_delta = timedelta(seconds=30)
-    # Nonlocal valueas for attribute_modifire
-    camera_timestamp = None
-    module_id: str = "aa:bb:cc:dd:ee:ff"
-    new_attributes: dict[str, Any] = {
-        "monitoring": "on",
-        "alim_status": 2,
+    # Mock data for payload_modifier to simulate camera status change
+    mock_state = {
+        "module_id": "aa:bb:cc:dd:ee:ff",
+        "timestamp": None,
+        "attributes": {"monitoring": "on", "alim_status": 2},
     }
 
     async def fake_camera_post(*args: Any, **kwargs: Any):
         """Fake camera status during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
+        # Use partial to pass the current values of the nonlocal variables to the payload_modifier
         callback = partial(
             payload_modifier,
-            target_id=module_id,
-            new_attributes=new_attributes,
-            timestamp=camera_timestamp,
+            target_id=mock_state["module_id"],
+            new_attributes=dict(mock_state["attributes"]),
+            timestamp=mock_state["timestamp"],
         )
         return await fake_post_request(hass, *args, msg_callback=callback, **kwargs)
 
@@ -948,22 +1014,25 @@ async def test_camera_image_with_attribute_change(
         assert url is not None
 
         # Trigger some polling cycle to let API throttling work
-        advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, polling_cycles, polling_delta)
 
         # Change mocked status (wrong alim_status, cannot monitor)
-        camera_timestamp = int(dt_util.utcnow().timestamp())
-        module_id = camera_id
-        new_attributes.update(
-            monitoring="on",
-            alim_status=1,
-        )
+        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+        mock_state["module_id"] = camera_id
+        if camera_type == "NDB":
+            mock_state["attributes"] = {"alim_status": 1}
+        else:
+            mock_state["attributes"] = {
+                "monitoring": "on",
+                "alim_status": 1,
+            }
 
         # Trigger some polling cycle to let status change be picked up
-        advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, polling_cycles, polling_delta)
 
         # Check that the camera become unavailable with problematic monitoring
         # (as alim_status 1 means that the camera is on but with low power, so it can't monitor)
-        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
@@ -976,15 +1045,19 @@ async def test_camera_image_with_attribute_change(
             await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (wrong alim_status, cannot monitor)
-        camera_timestamp = int(dt_util.utcnow().timestamp())
-        module_id = camera_id
-        new_attributes.update(
-            monitoring="off",
-            alim_status=1,
-        )
+        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+        mock_state["module_id"] = camera_id
+        mock_state["attributes"]["alim_status"] = 1
+        if camera_type == "NDB":
+            mock_state["attributes"] = {"alim_status": 1}
+        else:
+            mock_state["attributes"] = {
+                "monitoring": "off",
+                "alim_status": 1,
+            }
 
         # Trigger some polling cycle to let status change be picked up
-        advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, polling_cycles, polling_delta)
 
         # Check that the camera become idle with monitoring off
         assert hass.states.get(camera_entity).state == "unavailable"
@@ -1000,15 +1073,18 @@ async def test_camera_image_with_attribute_change(
             await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (missing alim_status)
-        camera_timestamp = int(dt_util.utcnow().timestamp())
-        module_id = camera_id
-        new_attributes.update(
-            monitoring="off",
-            alim_status=None,
-        )
+        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+        mock_state["module_id"] = camera_id
+        if camera_type == "NDB":
+            mock_state["attributes"] = {"alim_status": None}
+        else:
+            mock_state["attributes"] = {
+                "monitoring": "off",
+                "alim_status": None,
+            }
 
         # Trigger some polling cycle to let status change be picked up
-        advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, polling_cycles, polling_delta)
 
         # Check that the camera become unavailable with monitoring None
         assert hass.states.get(camera_entity).state == "unavailable"
@@ -1024,15 +1100,18 @@ async def test_camera_image_with_attribute_change(
             await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (missing alim_status and monitoring)
-        camera_timestamp = int(dt_util.utcnow().timestamp())
-        module_id = camera_id
-        new_attributes.update(
-            monitoring=None,
-            alim_status=None,
-        )
+        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+        mock_state["module_id"] = camera_id
+        if camera_type == "NDB":
+            mock_state["attributes"] = {"alim_status": None}
+        else:
+            mock_state["attributes"] = {
+                "monitoring": None,
+                "alim_status": None,
+            }
 
         # Trigger some polling cycle to let status change be picked up
-        advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, polling_cycles, polling_delta)
 
         # Check that the camera become unavailable with monitoring None
         assert hass.states.get(camera_entity).state == "unavailable"
@@ -1048,15 +1127,19 @@ async def test_camera_image_with_attribute_change(
             await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (missing monitoring, wrong alim_status)
-        camera_timestamp = int(dt_util.utcnow().timestamp())
-        module_id = camera_id
-        new_attributes.update(
-            monitoring=None,
-            alim_status=1,
-        )
+        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+        mock_state["module_id"] = camera_id
+        mock_state["attributes"]["alim_status"] = 1
+        if camera_type == "NDB":
+            mock_state["attributes"] = {"alim_status": 1}
+        else:
+            mock_state["attributes"] = {
+                "monitoring": None,
+                "alim_status": 1,
+            }
 
         # Trigger some polling cycle to let status change be picked up
-        advance_time(hass, freezer, polling_cycles, polling_delta)
+        await advance_time(hass, freezer, polling_cycles, polling_delta)
 
         # Check that the camera become unavailable with monitoring None
         assert hass.states.get(camera_entity).state == "unavailable"
