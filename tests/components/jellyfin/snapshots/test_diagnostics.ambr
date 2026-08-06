@@ -10,6 +10,22 @@
       }),
       'title': 'Jellyfin',
     }),
+    'known_devices': list([
+      dict({
+        'client_name': 'Jellyfin for Developers',
+        'client_version': '1.0.0',
+        'device_id': 'DEVICE-UUID',
+        'device_name': 'JELLYFIN-DEVICE',
+        'online': True,
+      }),
+      dict({
+        'client_name': 'Jellyfin for Developers',
+        'client_version': '1.0.0',
+        'device_id': 'DEVICE-UUID-TWO',
+        'device_name': 'JELLYFIN-DEVICE-TWO',
+        'online': True,
+      }),
+    ]),
     'server': dict({
       'id': 'SERVER-UUID',
       'name': 'JELLYFIN-SERVER',

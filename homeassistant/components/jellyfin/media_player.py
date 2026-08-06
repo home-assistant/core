@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
@@ -37,13 +38,29 @@ async def async_setup_entry(
 
     @callback
     def handle_coordinator_update() -> None:
-        """Add media player per session."""
+        """Add a media player for each known and ephemeral device."""
+        # Prune ephemeral device IDs whose session has ended so new entities
+        # can be created if the device reconnects with a fresh device ID.
+        coordinator.device_player_ids -= {
+            did
+            for did in coordinator.device_player_ids
+            if did not in coordinator.known_devices
+            and did not in coordinator.ephemeral_devices
+        }
         entities: list[MediaPlayerEntity] = []
-        for session_id in coordinator.data:
-            if session_id not in coordinator.session_ids:
-                entity: MediaPlayerEntity = JellyfinMediaPlayer(coordinator, session_id)
-                LOGGER.debug("Creating media player for session: %s", session_id)
-                coordinator.session_ids.add(session_id)
+        for device_id in coordinator.known_devices:
+            if device_id not in coordinator.device_player_ids:
+                entity: MediaPlayerEntity = JellyfinMediaPlayer(coordinator, device_id)
+                LOGGER.debug("Creating media player for device: %s", device_id)
+                coordinator.device_player_ids.add(device_id)
+                entities.append(entity)
+        for device_id in coordinator.ephemeral_devices:
+            if device_id not in coordinator.device_player_ids:
+                entity = JellyfinMediaPlayer(coordinator, device_id)
+                LOGGER.debug(
+                    "Creating ephemeral media player for device: %s", device_id
+                )
+                coordinator.device_player_ids.add(device_id)
                 entities.append(entity)
         async_add_entities(entities)
 
@@ -58,25 +75,31 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     def __init__(
         self,
         coordinator: JellyfinDataUpdateCoordinator,
-        session_id: str,
+        device_id: str,
     ) -> None:
         """Initialize the Jellyfin Media Player entity."""
-        super().__init__(coordinator, session_id)
-        self._attr_unique_id = f"{coordinator.server_id}-{session_id}"
-
-        self.now_playing: dict[str, Any] | None = self.session_data.get(
-            "NowPlayingItem"
+        super().__init__(coordinator, device_id)
+        self._attr_unique_id = (
+            f"{coordinator.server_id}-{coordinator.user_id}-{device_id}"
         )
-        self.play_state: dict[str, Any] | None = self.session_data.get("PlayState")
+
+        session = self.session_data
+        self.now_playing: dict[str, Any] | None = (
+            session.get("NowPlayingItem") if session else None
+        )
+        self.play_state: dict[str, Any] | None = (
+            session.get("PlayState") if session else None
+        )
 
         self._update_from_session_data()
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        if self.available:
-            self.now_playing = self.session_data.get("NowPlayingItem")
-            self.play_state = self.session_data.get("PlayState")
+        session = self.session_data
+        if session is not None:
+            self.now_playing = session.get("NowPlayingItem")
+            self.play_state = session.get("PlayState")
         else:
             self.now_playing = None
             self.play_state = None
@@ -104,13 +127,17 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         volume_muted = False
         volume_level = None
 
-        if self.available:
+        session = self.session_data
+        if session is not None:
             state = MediaPlayerState.IDLE
             media_position_updated = (
-                parse_datetime(self.session_data["LastPlaybackCheckIn"])
+                parse_datetime(session["LastPlaybackCheckIn"])
                 if self.now_playing
                 else None
             )
+        elif self.available:
+            # Server is reachable but device is offline.
+            state = MediaPlayerState.OFF
 
         if self.now_playing is not None:
             state = MediaPlayerState.PLAYING
@@ -217,35 +244,41 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
 
         return features
 
+    def _require_session(self) -> str:
+        """Return the active session ID or raise if the device is offline."""
+        if (sid := self.session_id) is None:
+            raise HomeAssistantError("Device is offline")
+        return sid
+
     @override
     def media_seek(self, position: float) -> None:
         """Send seek command."""
         self.coordinator.api_client.jellyfin.remote_seek(
-            self.session_id, int(position * 10000000)
+            self._require_session(), int(position * 10000000)
         )
 
     @override
     def media_pause(self) -> None:
         """Send pause command."""
-        self.coordinator.api_client.jellyfin.remote_pause(self.session_id)
+        self.coordinator.api_client.jellyfin.remote_pause(self._require_session())
         self._attr_state = MediaPlayerState.PAUSED
         self.schedule_update_ha_state()
 
     @override
     def media_play(self) -> None:
         """Send play command."""
-        self.coordinator.api_client.jellyfin.remote_unpause(self.session_id)
+        self.coordinator.api_client.jellyfin.remote_unpause(self._require_session())
         self._attr_state = MediaPlayerState.PLAYING
         self.schedule_update_ha_state()
 
     def media_play_pause(self) -> None:
         """Send the PlayPause command to the session."""
-        self.coordinator.api_client.jellyfin.remote_playpause(self.session_id)
+        self.coordinator.api_client.jellyfin.remote_playpause(self._require_session())
 
     @override
     def media_stop(self) -> None:
         """Send stop command."""
-        self.coordinator.api_client.jellyfin.remote_stop(self.session_id)
+        self.coordinator.api_client.jellyfin.remote_stop(self._require_session())
         self._attr_state = MediaPlayerState.IDLE
         self.schedule_update_ha_state()
 
@@ -261,20 +294,20 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         elif enqueue == MediaPlayerEnqueue.ADD:
             command = "PlayLast"
         self.coordinator.api_client.jellyfin.remote_play_media(
-            self.session_id, [media_id], command
+            self._require_session(), [media_id], command
         )
 
     def play_media_shuffle(self, media_content_id: str) -> None:
         """Play a piece of media on shuffle."""
         self.coordinator.api_client.jellyfin.remote_play_media(
-            self.session_id, [media_content_id], "PlayShuffle"
+            self._require_session(), [media_content_id], "PlayShuffle"
         )
 
     @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.coordinator.api_client.jellyfin.remote_set_volume(
-            self.session_id, int(volume * 100)
+            self._require_session(), int(volume * 100)
         )
         self._attr_volume_level = volume
         self.schedule_update_ha_state()
@@ -282,10 +315,11 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     @override
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
+        sid = self._require_session()
         if mute:
-            self.coordinator.api_client.jellyfin.remote_mute(self.session_id)
+            self.coordinator.api_client.jellyfin.remote_mute(sid)
         else:
-            self.coordinator.api_client.jellyfin.remote_unmute(self.session_id)
+            self.coordinator.api_client.jellyfin.remote_unmute(sid)
         self._attr_is_volume_muted = mute
         self.schedule_update_ha_state()
 
