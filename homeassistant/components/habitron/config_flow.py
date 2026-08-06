@@ -40,9 +40,10 @@ def _normalised_mac(value: str) -> str:
 async def _async_hub_mac(host: str) -> str | None:
     """Return the hub's MAC, or ``None`` when it cannot be read.
 
-    Only used to recognise an entry that was created by the custom (HACS)
-    integration, which keys its entries by the hub's colon-stripped MAC -- an
-    id this flow never produces itself.
+    This is the identity every path keys on: it is the same whichever interface
+    the hub currently uses, and the custom (HACS) integration derives it the
+    same way, so an installation moving to core is recognised rather than
+    offered a second time.
     """
     try:
         async with HabitronClient(host) as client:
@@ -67,11 +68,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # falls through to the sentinel branch below).
     own_ips = {str(ip) for ip in await network.async_get_enabled_source_ips(hass)}
     if host_input in own_ips:
-        host_input = "local"
-        data[CONF_HOST] = "local"
+        host_input = CONF_DEFAULT_HOST
+        data[CONF_HOST] = CONF_DEFAULT_HOST
 
     host_to_test = host_input
-    if host_to_test == "local":
+    if host_to_test == CONF_DEFAULT_HOST:
         # Resolve the sentinel to a concrete local IP for the probe.
         host_to_test = await network.async_get_source_ip(hass)
 

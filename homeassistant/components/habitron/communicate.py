@@ -20,7 +20,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 
-from .const import DOMAIN
+from .const import CONF_DEFAULT_HOST, DOMAIN
 
 DATA_FILES_ADDON_DIR = "/addon_configs/"
 DEF_TOKEN_FILE = "def_token.set"
@@ -147,7 +147,7 @@ class HbtnComm:
         connection is kept open afterwards.
         """
         if not self._host:
-            if self._host_conf == "local":
+            if self._host_conf == CONF_DEFAULT_HOST:
                 # get_own_ip is a plain blocking socket call, so it runs in the
                 # executor. get_host_ip resolves the name itself with async DNS,
                 # so it must be awaited directly -- handing it to the executor
