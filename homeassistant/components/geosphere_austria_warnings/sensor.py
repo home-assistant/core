@@ -60,22 +60,24 @@ def _warning_attributes(
     }
 
     for index, warning in enumerate(sorted_warnings, start=1):
-        attributes[f"warning_{index}"] = {
-            "level": warning.level.value,
-            "color": warning.level.name.lower(),
-            "type": warning.warning_type.value,
-            "name": warning.warning_type.name.lower(),
-            "start": warning.start.isoformat(),
-            "end": warning.end.isoformat(),
-            "description": warning.text,
-            "impacts": warning.impacts,
-            "instruction": warning.recommendations,
-            "meteo_text": warning.meteo_text,
-            "update_reason": warning.update_reason,
-            "warning_id": warning.warning_id,
-            "change_id": warning.change_id,
-            "course_id": warning.course_id,
-        }
+        attributes.update(
+            {
+                f"warning_{index}_level": warning.level.value,
+                f"warning_{index}_color": warning.level.name.lower(),
+                f"warning_{index}_type": warning.warning_type.value,
+                f"warning_{index}_name": warning.warning_type.name.capitalize(),
+                f"warning_{index}_start": warning.start.isoformat(),
+                f"warning_{index}_end": warning.end.isoformat(),
+                f"warning_{index}_description": warning.text,
+                f"warning_{index}_impacts": warning.impacts,
+                f"warning_{index}_instruction": warning.recommendations,
+                f"warning_{index}_meteo_text": warning.meteo_text,
+                f"warning_{index}_update_reason": warning.update_reason,
+                f"warning_{index}_warning_id": warning.warning_id,
+                f"warning_{index}_change_id": warning.change_id,
+                f"warning_{index}_course_id": warning.course_id,
+            }
+        )
 
     return attributes
 
