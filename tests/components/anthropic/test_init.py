@@ -237,12 +237,15 @@ async def test_migration_from_v1_to_v2(
     assert migrated_entity.unique_id == subentry.subentry_id
 
     # Check device migration
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+        )
+        is None
     )
     assert (
-        migrated_device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        migrated_device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert migrated_device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -436,11 +439,17 @@ async def test_migration_from_v1_disabled(
         assert subentry.data == options
         assert "Claude" in subentry.title
 
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+        )
+        is None
     )
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_config_entry_2.entry_id), mock_config_entry_2.entry_id
+        )
+        is None
     )
 
     for idx, subentry in enumerate(conversation_subentries):
@@ -452,8 +461,9 @@ async def test_migration_from_v1_disabled(
         assert entity.disabled_by is subentry_data["entity_disabled_by"]
 
         assert (
-            device := device_registry.async_get_device(
-                identifiers={(DOMAIN, subentry.subentry_id)}
+            device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, subentry.subentry_id),
+                mock_config_entries[main_config_entry].entry_id,
             )
         )
         assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -549,8 +559,8 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
         assert subentry.data == options
         assert subentry.title == f"Claude {idx + 1}"
 
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, list(entry.subentries.values())[0].subentry_id), entry.entry_id
         )
         assert dev is not None
         assert dev.config_entries == {entry.entry_id}
@@ -650,8 +660,8 @@ async def test_migration_from_v1_to_v2_with_same_keys(
         assert subentry.data == options
 
         # Check devices were migrated correctly
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
         assert dev is not None
         assert dev.config_entries == {mock_config_entry.entry_id}
@@ -777,12 +787,15 @@ async def test_migration_from_v2_1_to_v2_2(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+        )
+        is None
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -798,12 +811,15 @@ async def test_migration_from_v2_1_to_v2_2(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+        )
+        is None
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
