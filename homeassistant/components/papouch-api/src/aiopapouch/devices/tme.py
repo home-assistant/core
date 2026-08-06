@@ -44,15 +44,12 @@ class TMEBase(PapouchDevice, ABC):
         """Return device's MAC address."""
         return self._mac_address
 
-    def __init__(
-        self, api_client: PapouchTransport, info: str, fresh: str, settings: str
-    ) -> None:
+    def __init__(self, api_client: PapouchTransport, info: str, settings: str) -> None:
         """Constructor for TME device."""
 
         self.api_client = cast(PapouchHTTPClient, api_client)
 
         self.info_root = defused_ET.fromstring(info)
-        self.fresh_root = defused_ET.fromstring(fresh)
 
         # We need settings only for MAC address so None value is solved there
         if settings:
@@ -118,10 +115,6 @@ class TMEBase(PapouchDevice, ABC):
             box_12 = self.settings_root.find(".//set[@box='12']")
             if box_12 is not None and "mac" in box_12.attrib:
                 return str(box_12.attrib["mac"])
-
-        status_tag = find_tag(self.fresh_root, "status")
-        if status_tag is not None and "mac" in status_tag.attrib:
-            return str(status_tag.attrib["mac"])
 
         raise DeviceParseError(
             f"The device doesn't have a MAC address in settings.xml nor fresh.xml, "
@@ -361,8 +354,8 @@ class TMERadioMulti(TMEBase):
 
 async def async_setup_tme(transport: PapouchTransport) -> TMEBase | None:
     """Async factory for TME device."""
-    fresh = await transport.fetch_data()
     info = await transport.fetch_info()
+    settings = await transport.fetch_settings()
 
     # if transport.protocol == "http":
 
@@ -375,11 +368,9 @@ async def async_setup_tme(transport: PapouchTransport) -> TMEBase | None:
     device_name = heartbeat_tag.attrib.get("device")
 
     if device_name == "TME":
-        # For some reason TME needs mandatory basic auth (even when there is no passrowd set)
-        return TME(transport, info, fresh, "")
+        return TME(transport, info, settings)
     if device_name in {"TME radio", "TME MULTI"}:
-        settings = await transport.fetch_settings()
-        return TMERadioMulti(transport, info, fresh, settings)
+        return TMERadioMulti(transport, info, settings)
 
     _LOGGER.error("Unsupported TME: %s", device_name)
     return None

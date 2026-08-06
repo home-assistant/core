@@ -72,11 +72,18 @@ class PapouchTransport(ABC):
 class PapouchHTTPClient(PapouchTransport):
     """API client for communicating with a device."""
 
-    def __init__(self, ip_address: str, session: aiohttp.ClientSession) -> None:
+    def __init__(
+        self, ip_address: str, session: aiohttp.ClientSession, password: str = ""
+    ) -> None:
         """Constructor for API client."""
         self.base_url = f"http://{ip_address}/"
         self.session = session
         self.ip_address = ip_address
+
+        if password != "":
+            self._auth = aiohttp.BasicAuth("admin", password)
+
+        self._auth = aiohttp.BasicAuth("", "")
 
     @property
     @override
@@ -84,7 +91,9 @@ class PapouchHTTPClient(PapouchTransport):
         return "http"
 
     async def _fetch(self, endpoint: str) -> str:
-        async with self.session.get(self.base_url + endpoint) as response:
+        async with self.session.get(
+            self.base_url + endpoint, auth=self._auth
+        ) as response:
             response.raise_for_status()
             raw_xml = await response.text()
             return re.sub(r'\s+xmlns="[^"]+"', "", raw_xml)
