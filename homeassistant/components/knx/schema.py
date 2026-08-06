@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
     CONF_EVENT,
+    CONF_ID,
     CONF_MODE,
     CONF_NAME,
     CONF_PAYLOAD,
@@ -210,7 +211,12 @@ def _entity_base_schema(platform: Platform) -> vol.Schema:
     return vol.Schema(
         {
             vol.Optional(CONF_NAME, default=""): cv.string,
-            vol.Optional(CONF_DEVICE): cv.string,
+            vol.Optional(CONF_DEVICE): vol.Schema(
+                {
+                    vol.Required(CONF_ID): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional(CONF_NAME): cv.string,
+                }
+            ),
             vol.Optional(CONF_DEFAULT_ENTITY_ID): vol.All(
                 cv.entity_id, cv.entity_domain(platform)
             ),

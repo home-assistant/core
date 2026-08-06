@@ -23,7 +23,9 @@ rules:
   has-entity-name:
     status: exempt
     comment: |
-      YAML entities don't support devices. UI entities do and use `has_entity_name`.
+      UI entities use `has_entity_name`. YAML entities can be assigned to a
+      device but intentionally keep their configured full name for backwards
+      compatibility, so they don't use `has_entity_name`.
   runtime-data:
     status: exempt
     comment: |
@@ -63,10 +65,7 @@ rules:
       Integration has no authentication.
   test-coverage: done
   # Gold
-  devices:
-    status: exempt
-    comment: |
-      YAML entities don't support devices. UI entities support user-defined devices.
+  devices: done
   diagnostics: done
   discovery-update-info:
     status: exempt

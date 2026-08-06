@@ -131,17 +131,17 @@ async def test_yaml_entity_device_grouping(
                 {
                     "default_entity_id": "switch.a",
                     KNX_ADDRESS: "1/1/1",
-                    "device": "Living room",
+                    "device": {"id": "living_room", "name": "Living room"},
                 },
                 {
                     "default_entity_id": "switch.b",
                     KNX_ADDRESS: "1/1/2",
-                    "device": "Living room",
+                    "device": {"id": "living_room", "name": "Living room"},
                 },
                 {
                     "default_entity_id": "switch.c",
                     KNX_ADDRESS: "1/1/3",
-                    "device": "Bedroom",
+                    "device": {"id": "bedroom"},  # name is optional
                 },
                 {"default_entity_id": "switch.d", KNX_ADDRESS: "1/1/4"},
             ]
@@ -153,14 +153,16 @@ async def test_yaml_entity_device_grouping(
     entity_c = entity_registry.async_get("switch.c")
     entity_d = entity_registry.async_get("switch.d")
 
-    # Same `device` name shares one device; a different name is a separate device.
     assert entity_a.device_id is not None
     assert entity_a.device_id == entity_b.device_id
     assert entity_c.device_id not in (None, entity_a.device_id)
-    # Without `device` the entity is not attached to any device.
     assert entity_d.device_id is None
 
     device = device_registry.async_get(entity_a.device_id)
     assert device.name == "Living room"
     assert device.manufacturer == "KNX"
-    assert (DOMAIN, "Living room") in device.identifiers
+    assert (DOMAIN, "living_room") in device.identifiers
+
+    # `name` is optional; the device is still created keyed by its `id`.
+    bedroom = device_registry.async_get(entity_c.device_id)
+    assert (DOMAIN, "bedroom") in bedroom.identifiers

@@ -95,19 +95,19 @@ async def test_remove_yaml_device_blocked(
             Platform.SWITCH: {
                 "name": "test",
                 KNX_ADDRESS: "1/1/1",
-                "device": "Living room",
+                "device": {"id": "living_room", "name": "Living room"},
             }
         }
     )
     client = await hass_ws_client(hass)
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "Living room"), knx.mock_config_entry.entry_id
+        (DOMAIN, "living_room"), knx.mock_config_entry.entry_id
     )
     assert device is not None
 
     response = await client.remove_device(device.id, knx.mock_config_entry.entry_id)
     assert not response["success"]
     assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, "Living room"), knx.mock_config_entry.entry_id
+        (DOMAIN, "living_room"), knx.mock_config_entry.entry_id
     )
