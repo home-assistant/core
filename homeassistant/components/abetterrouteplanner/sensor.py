@@ -1,4 +1,8 @@
-"""Sensor platform for the A Better Routeplanner integration."""
+"""Sensor platform for the A Better Routeplanner integration.
+
+The ``charging_state`` option strings are HA-owned rather than derived from the
+library enum, so a library-side value change cannot alter a reported state.
+"""
 
 from collections.abc import Callable
 from contextlib import suppress
@@ -37,7 +41,6 @@ from .coordinator import AbetterrouteplannerConfigEntry, AbrpTelemetryCoordinato
 PARALLEL_UPDATES = 0
 
 
-# HA-owned option strings, so a library enum-value change can't alter entity state.
 CHARGING_STATE_OPTIONS: dict[ChargingState, str] = {
     ChargingState.CHARGING_AC: "charging_ac",
     ChargingState.CHARGING_DC: "charging_dc",
@@ -71,9 +74,12 @@ class AbrpNumericSensorEntityDescription(AbrpTelemetrySensorEntityDescription[fl
 
 @dataclass(frozen=True, kw_only=True)
 class AbrpEnumSensorEntityDescription(AbrpTelemetrySensorEntityDescription[str]):
-    """Description for the categorical ENUM telemetry sensor (charging_state)."""
+    """Description for the categorical ENUM telemetry sensor (charging_state).
 
-    # unused-ignore: the assignment error only appears in a partial mypy run.
+    The ``unused-ignore`` below is needed because the narrowed ``value_fn``
+    assignment error only appears in a partial mypy run.
+    """
+
     value_fn: Callable[[Telemetry], MetricValue[ChargingState] | None]  # type: ignore[assignment, unused-ignore]
 
 
@@ -134,8 +140,7 @@ SENSORS: tuple[
         device_class=SensorDeviceClass.ENERGY_DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfEnergyDistance.WATT_HOUR_PER_KM,
-        # HA defaults this device class to 0 decimals, which renders the
-        # locale-converted 5.71 km/kWh as "6".
+        # HA defaults this device class to 0 decimals, rendering 5.71 km/kWh as "6".
         suggested_display_precision=1,
         metric=Metric.CALIBRATED_REF_CONS,
         value_fn=lambda t: t.calibrated_ref_cons,

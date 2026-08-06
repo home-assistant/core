@@ -47,7 +47,13 @@ type AbetterrouteplannerConfigEntry = ConfigEntry[AbrpData]
 async def async_fetch_garage(
     client: AbrpClient,
 ) -> list[tuple[AbrpVehicle, VehicleModelDisplay | None]]:
-    """Fetch the garage once at setup, pairing each vehicle with its display."""
+    """Fetch the garage once at setup, pairing each vehicle with its display.
+
+    A display-metadata failure degrades only that vehicle's card, so unlike the
+    garage fetch itself it is logged rather than escalated. It is caught as
+    ``BaseException`` so that ``CancelledError`` / ``SystemExit`` propagate
+    instead of degrading to "no display".
+    """
     try:
         raw_vehicles = await client.async_get_vehicles()
     except AbrpAuthError as err:
@@ -71,8 +77,6 @@ async def async_fetch_garage(
     paired: list[tuple[AbrpVehicle, VehicleModelDisplay | None]] = []
     for raw, result in zip(raw_vehicles, results, strict=True):
         if isinstance(result, AbrpAuthError):
-            # Not escalated, unlike the garage fetch above: a display miss
-            # degrades only this vehicle's card.
             _LOGGER.debug(
                 "Display metadata for typecode %s rejected (%s); device "
                 "card falls back to the raw typecode",
@@ -91,8 +95,6 @@ async def async_fetch_garage(
             paired.append((raw, None))
             continue
         if isinstance(result, BaseException):
-            # ``BaseException`` so ``CancelledError`` / ``SystemExit`` propagate
-            # instead of degrading to "no display".
             if isinstance(result, Exception):
                 _LOGGER.warning(
                     "Unexpected display-metadata failure for typecode %s: %s",
@@ -154,8 +156,10 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
 
     @callback
     def on_update(self, vehicle_id: int, telemetry: Telemetry) -> None:
-        """Apply one stream frame and notify coordinator listeners."""
-        # Guard again here so an empty frame doesn't trigger the notify fan-out.
+        """Apply one stream frame and notify coordinator listeners.
+
+        An empty frame is dropped before the notify fan-out.
+        """
         if next(telemetry.items(), None) is None:
             return
         self._apply_metrics(vehicle_id, telemetry)
@@ -172,7 +176,9 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         ABRP closes idle streams (~200 s) as steady state, so a disconnect only
         logs and never marks entities unavailable. ``AUTH_FAILED`` is the one
         exception: the library stops the stream for good, so entities stop
-        claiming values nothing will refresh.
+        claiming values nothing will refresh. That flag is cleared only by a
+        successful reconnect, since the stream may still emit ``DISCONNECTED``
+        after the terminal failure and that is not a recovery.
         """
         previous = self.last_connection_event
         changed = previous is None or previous.state is not event.state
@@ -195,8 +201,6 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
                     event.reason or "no reason given",
                 )
 
-            # Cleared only by a successful reconnect: the stream may still emit
-            # DISCONNECTED after the terminal failure, which is not a recovery.
             if event.state is ConnectionState.AUTH_FAILED:
                 self.stream_auth_failed = True
                 self.async_update_listeners()
@@ -205,7 +209,12 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
                 self.async_update_listeners()
 
     async def async_seed(self, client: AbrpClient, vehicle_ids: Iterable[int]) -> None:
-        """Best-effort seed of the per-vehicle map via one-shot telemetry."""
+        """Best-effort seed of the per-vehicle map via one-shot telemetry.
+
+        A rejected seed only logs at debug level: the garage fetch is the
+        authoritative auth signal, so a revoked token must not emit one warning
+        per vehicle here.
+        """
         ids = list(vehicle_ids)
         if not ids:
             return
@@ -215,8 +224,6 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         )
         for vehicle_id, result in zip(ids, results, strict=True):
             if isinstance(result, AbrpAuthError):
-                # The garage fetch is the authoritative auth signal; DEBUG so a
-                # revoked token doesn't emit one warning per vehicle.
                 _LOGGER.debug(
                     "Telemetry seed for vehicle %d rejected (%s); stream will retry",
                     vehicle_id,

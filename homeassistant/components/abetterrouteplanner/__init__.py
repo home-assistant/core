@@ -46,7 +46,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant, entry: AbetterrouteplannerConfigEntry
 ) -> bool:
-    """Set up A Better Routeplanner from a config entry."""
+    """Set up A Better Routeplanner from a config entry.
+
+    Devices are created, and the stream's teardown registered, before the
+    platform forward: a vehicle that never reports telemetry still gets a card,
+    and a setup failure — which never reaches ``async_unload_entry`` — still
+    stops the stream.
+    """
     try:
         implementation = (
             await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -85,12 +91,10 @@ async def async_setup_entry(
 
     vehicles = await async_fetch_garage(client)
 
-    # Create devices before forwarding platforms so silent vehicles get a card.
     device_registry = dr.async_get(hass)
     for raw, display in vehicles:
         scope = f"{entry.unique_id}_{raw.vehicle_id}"
         if display is None:
-            # INFO, not DEBUG: a catalog miss should be greppable by default.
             _LOGGER.info(
                 "No display metadata for vehicle %d (typecode %s); device card "
                 "shows the raw typecode until the entry is reloaded",
@@ -114,11 +118,8 @@ async def async_setup_entry(
     # endpoint rejects as a whole if it is malformed.
     vehicle_ids = list(dict.fromkeys(raw.vehicle_id for raw, _ in vehicles))
 
-    # The stream re-delivers current state for every vehicle in its connect
-    # snapshot, so freshness needs no poll however long the instance was down.
-    # The seed only covers setup timing: a new vehicle has no registry rows to
-    # probe, so without a value here it would finish setup with no entities.
-    # Seeded first so the snapshot merges onto it rather than the reverse.
+    # The stream's connect snapshot re-delivers current state, so the seed only
+    # covers setup timing; seeded first so the snapshot merges onto it.
     stream: TelemetryStream | None = None
     if vehicle_ids:
         new_vehicles = vehicles_without_sensors(hass, entry, vehicle_ids)
@@ -134,8 +135,6 @@ async def async_setup_entry(
             name=entry.title,
         )
         await stream.start()
-        # Registered before the platform forward so a setup failure, which never
-        # reaches async_unload_entry, still tears the stream down.
         entry.async_on_unload(stream.stop)
 
     entry.runtime_data = AbrpData(
