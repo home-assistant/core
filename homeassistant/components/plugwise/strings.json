@@ -98,6 +98,12 @@
       }
     },
     "number": {
+      "max_dhw_temperature": {
+        "name": "Domestic hot water setpoint"
+      },
+      "maximum_boiler_temperature": {
+        "name": "Maximum boiler temperature setpoint"
+      },
       "temperature_offset": {
         "name": "Temperature offset"
       }
