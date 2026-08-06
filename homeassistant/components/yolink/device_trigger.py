@@ -51,11 +51,7 @@ FLEX_BUTTONS_2 = {
     f"{CONF_BUTTON_2}_{CONF_LONG_PRESS}",
 }
 
-# The Mini On/Off Fob only ever reports button 1 as a short press and
-# button 2 as a long press, regardless of actual press duration or
-# click count. Unlike the Flex Fob, it has no real short/long
-# distinction per button and no multi-click detection, so it gets its
-# own smaller trigger set instead of FLEX_BUTTONS_2.
+# YS3615 reports a fixed press type for each button.
 MINI_FOB_BUTTONS = {
     f"{CONF_BUTTON_1}_{CONF_SHORT_PRESS}",
     f"{CONF_BUTTON_2}_{CONF_LONG_PRESS}",
