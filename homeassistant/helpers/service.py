@@ -679,6 +679,7 @@ async def _resolve_entity_service_call_entities(
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
+    admin_only: bool = False,
 ) -> list[Entity] | None:
     """Resolve and filter entities for an entity service call."""
     entity_perms: Callable[[str, str], bool] | None = None
@@ -688,6 +689,8 @@ async def _resolve_entity_service_call_entities(
         if user is None:
             raise UnknownUser(context=call.context)
         if not user.is_admin:
+            if admin_only:
+                raise Unauthorized(context=call.context)
             entity_perms = user.permissions.check_entity
 
     target_all_entities = call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL
@@ -884,6 +887,7 @@ async def entity_service_call(
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
     *,
+    admin_only: bool = False,
     entity_device_classes: Iterable[str | None] | None = None,
 ) -> EntityServiceResponse | None:
     """Handle an entity service call.
@@ -891,7 +895,12 @@ async def entity_service_call(
     Calls all platforms simultaneously.
     """
     entities = await _resolve_entity_service_call_entities(
-        hass, registered_entities, call, required_features, entity_device_classes
+        hass,
+        registered_entities,
+        call,
+        required_features,
+        entity_device_classes,
+        admin_only=admin_only,
     )
     if entities is None:
         return None
@@ -1153,6 +1162,7 @@ def async_register_entity_service(
     domain: str,
     name: str,
     *,
+    admin_only: bool = False,
     description_placeholders: Mapping[str, str] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
     entities: Mapping[str, Entity],
@@ -1181,6 +1191,7 @@ def async_register_entity_service(
             hass,
             entities,
             service_func,
+            admin_only=admin_only,
             entity_device_classes=entity_device_classes,
             required_features=required_features,
         ),
@@ -1270,29 +1281,19 @@ def async_register_platform_entity_service(
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
-    entity_handler = partial(
-        entity_service_call,
-        hass,
-        partial(_get_platform_entities, hass, entity_domain, service_domain),
-        service_func,
-        entity_device_classes=entity_device_classes,
-        required_features=required_features,
-    )
-
-    service_handler = (
-        partial(
-            _async_admin_handler,
-            hass,
-            HassJob(entity_handler, f"admin service {service_domain}.{service_name}"),
-        )
-        if admin_only
-        else entity_handler
-    )
 
     hass.services.async_register(
         service_domain,
         service_name,
-        service_handler,
+        partial(
+            entity_service_call,
+            hass,
+            partial(_get_platform_entities, hass, entity_domain, service_domain),
+            service_func,
+            admin_only=admin_only,
+            entity_device_classes=entity_device_classes,
+            required_features=required_features,
+        ),
         schema,
         supports_response,
         job_type=HassJobType.Coroutinefunction,
