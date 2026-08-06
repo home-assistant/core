@@ -2,11 +2,8 @@
 
 import asyncio
 from contextlib import suppress
-from email.mime.application import MIMEApplication
-from email.mime.audio import MIMEAudio
-from email.mime.image import MIMEImage
+from email.message import EmailMessage
 from email.mime.multipart import MIMEMultipart
-from email.mime.nonmultipart import MIMENonMultipart
 from email.mime.text import MIMEText
 import email.utils
 import logging
@@ -207,7 +204,8 @@ class MailNotifyEntity(NotifyEntity):
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send an email message via notify.send_message action."""
 
-        msg = MIMEText(message)
+        msg = EmailMessage()
+        msg.set_content(message)
         msg["Subject"] = title or ATTR_TITLE_DEFAULT
 
         self._send_email(msg=msg)
@@ -219,18 +217,12 @@ class MailNotifyEntity(NotifyEntity):
         **kwargs: Any,
     ) -> None:
         """Send an email message via smtp.send_message action."""
-        msg = MIMEMultipart("related")
+        msg = EmailMessage()
+        msg.set_content(message)
         msg["Subject"] = title or ATTR_TITLE_DEFAULT
 
-        alternative_parts = MIMEMultipart("alternative")
-        alternative_parts.attach(MIMEText(message, _charset="utf-8"))
-
         if ATTR_HTML in kwargs:
-            alternative_parts.attach(
-                MIMEText(kwargs[ATTR_HTML], "html", _charset="utf-8")
-            )
-
-        msg.attach(alternative_parts)
+            msg.add_alternative(kwargs[ATTR_HTML], subtype="html")
 
         attachments = kwargs.get(ATTR_ATTACHMENTS, [])
 
@@ -244,20 +236,10 @@ class MailNotifyEntity(NotifyEntity):
         for file, (content, mime_type, filename) in zip(
             attachments, resolved, strict=True
         ):
-            main_type, _, subtype = (
-                mime_type.partition("/")
+            main_type, subtype = (
+                mime_type.split("/", 1)
                 if mime_type is not None
-                else (None, None, None)
-            )
-
-            attachment: MIMENonMultipart
-
-            attachment = (
-                MIMEImage(content, _subtype=subtype)
-                if main_type == "image"
-                else MIMEAudio(content, _subtype=subtype)
-                if main_type == "audio"
-                else MIMEApplication(content)
+                else ("application", "octet-stream")
             )
 
             if not (target_filename := file.get(ATTR_FILENAME, filename)):
@@ -268,22 +250,20 @@ class MailNotifyEntity(NotifyEntity):
                         "media_content_id": file[ATTR_MEDIA_SOURCE]["media_content_id"]
                     },
                 )
-            if cid := file.get(ATTR_CONTENT_ID):
-                attachment.add_header("Content-ID", f"<{cid}>")
-                attachment.add_header(
-                    "Content-Disposition", "inline", filename=target_filename
-                )
-            else:
-                attachment.add_header(
-                    "Content-Disposition", "attachment", filename=target_filename
-                )
 
-            msg.attach(attachment)
+            msg.add_attachment(
+                content,
+                maintype=main_type,
+                subtype=subtype,
+                filename=target_filename,
+                cid=file.get(ATTR_CONTENT_ID),
+                disposition="inline" if ATTR_CONTENT_ID in file else "attachment",
+            )
 
         await self.hass.async_add_executor_job(self._send_email, msg)
         self._async_record_notification()
 
-    def _send_email(self, msg: MIMEMultipart | MIMEText) -> None:
+    def _send_email(self, msg: EmailMessage) -> None:
         """Send the message."""
         if TYPE_CHECKING:
             assert self._subentry.unique_id
