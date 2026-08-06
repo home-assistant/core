@@ -51,6 +51,23 @@ API_PROMPT = (
 type _ToolFunc = Callable[["KNXModule", dict[str, Any]], Awaitable[Any]]
 
 
+def _coerce_int(value: Any) -> int:
+    """Coerce to int, rejecting fractional floats instead of truncating them.
+
+    ``vol.Coerce(int)`` calls ``int(value)``, which truncates a float like
+    ``5.5`` to ``5`` instead of raising. That silently discards data, and in a
+    ``int | float`` union (e.g. a KNX group value) it makes the int validator
+    swallow every float before the float validator is ever tried. Only pass
+    through floats that are exactly representable as int (``5.0``).
+    """
+    if isinstance(value, float) and not value.is_integer():
+        raise vol.Invalid("value has a fractional part; not a valid int")
+    try:
+        return int(value)
+    except (ValueError, TypeError) as err:
+        raise vol.Invalid("expected int") from err
+
+
 def _validator(annotation: Any) -> Any:
     """Map a dataclass field annotation to a voluptuous validator."""
     origin = get_origin(annotation)
@@ -68,7 +85,7 @@ def _validator(annotation: Any) -> Any:
     if annotation is bool:
         return bool
     if annotation is int:
-        return vol.Coerce(int)
+        return _coerce_int
     if annotation is float:
         return vol.Coerce(float)
     if origin is list:

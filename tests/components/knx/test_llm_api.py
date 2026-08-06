@@ -108,6 +108,29 @@ def test_schema_coercion_and_nullable(args: dict, expected: int | None) -> None:
     assert tool.parameters(args)["main"] == expected
 
 
+@pytest.mark.parametrize(
+    ("value", "expected", "expected_type"),
+    [
+        (True, True, bool),
+        (5, 5, int),
+        (5.5, 5.5, float),  # not truncated to 5 by the int branch of the union
+        (5.0, 5, int),  # losslessly representable as int
+        ("on", "on", str),
+        ([1, 2], [1, 2], list),
+    ],
+)
+def test_schema_union_preserves_numeric_types(
+    value: object, expected: object, expected_type: type
+) -> None:
+    """A `bool | int | float | ...` union field keeps each type distinct."""
+    tool = _tool(
+        llm_api._build_tools(None, include_bus_tools=True), "send_group_value_write"
+    )
+    result = tool.parameters({"group_address": "1/2/3", "value": value})
+    assert result["value"] == expected
+    assert type(result["value"]) is expected_type
+
+
 def test_schema_required_field_is_enforced() -> None:
     """A field without a default (ad-hoc arg) is required."""
     tool = _tool(llm_api._build_tools(None, include_bus_tools=False), "describe_dpt")
