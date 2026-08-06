@@ -98,6 +98,11 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self.device_id = device_id
         self.entity_description = description
 
+        native_step = self.device[description.key]["resolution"]
+        if description.key != "temperature_offset":
+            native_step = max(native_step, 0.5)
+        self._attr_native_step = native_step
+
     @property
     @override
     def native_value(self) -> float:
