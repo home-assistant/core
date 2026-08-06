@@ -23,13 +23,14 @@ from homeassistant.components.input_number import (
     DOMAIN as INPUT_NUMBER_DOMAIN,
     SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
 )
-from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
+from homeassistant.components.input_select import SERVICE_SELECT_OPTION
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     SERVICE_DOCK,
     SERVICE_START_MOWING,
     LawnMowerActivity,
 )
+from homeassistant.components.select import SelectEntityCapabilityAttribute
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -40,7 +41,6 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
@@ -50,6 +50,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.event import async_call_later
@@ -234,7 +235,7 @@ class Vacuum(Switch):
         state = self.hass.states.get(self.entity_id)
         assert state
 
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if value:
             sup_start = features & VacuumEntityFeature.START
@@ -527,7 +528,7 @@ class SelectSwitch(HomeAccessory):
         assert state
 
         self.select_chars: dict[str, Characteristic] = {}
-        options = state.attributes[ATTR_OPTIONS]
+        options = state.attributes[SelectEntityCapabilityAttribute.OPTIONS]
         for option in options:
             serv_option = self.add_preload_service(
                 SERV_OUTLET,

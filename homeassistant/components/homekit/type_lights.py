@@ -7,9 +7,7 @@ from typing import Any, override
 from pyhap.const import CATEGORY_LIGHTBULB
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
-    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
@@ -20,6 +18,8 @@ from homeassistant.components.light import (
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightEntityCapabilityAttribute,
+    LightEntityStateAttribute,
     brightness_supported,
     color_supported,
     color_temp_supported,
@@ -88,9 +88,9 @@ class Light(HomeAccessory):
         assert state
         attributes = state.attributes
         self.color_modes = color_modes = (
-            attributes.get(ATTR_SUPPORTED_COLOR_MODES) or []
+            attributes.get(LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES) or []
         )
-        self._previous_color_mode = attributes.get(ATTR_COLOR_MODE)
+        self._previous_color_mode = attributes.get(LightEntityStateAttribute.COLOR_MODE)
         self.color_supported = color_supported(color_modes)
         self.color_temp_supported = color_temp_supported(color_modes)
         self.rgbw_supported = ColorMode.RGBW in color_modes
@@ -121,10 +121,16 @@ class Light(HomeAccessory):
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
             min_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN, DEFAULT_MAX_COLOR_TEMP)
+                attributes.get(
+                    LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
+                    DEFAULT_MAX_COLOR_TEMP,
+                )
             )
             max_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN, DEFAULT_MIN_COLOR_TEMP)
+                attributes.get(
+                    LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
+                    DEFAULT_MIN_COLOR_TEMP,
+                )
             )
             # Ensure min is less than max
             self.min_mireds, self.max_mireds = get_min_max(min_mireds, max_mireds)
@@ -250,7 +256,7 @@ class Light(HomeAccessory):
         # Handle State
         state = new_state.state
         attributes = new_state.attributes
-        color_mode = attributes.get(ATTR_COLOR_MODE)
+        color_mode = attributes.get(LightEntityStateAttribute.COLOR_MODE)
         self.char_on.set_value(int(state == STATE_ON))
         color_mode_changed = self._previous_color_mode != color_mode
         self._previous_color_mode = color_mode
@@ -258,7 +264,8 @@ class Light(HomeAccessory):
         # Handle Brightness
         if (
             self.brightness_supported
-            and (brightness := attributes.get(ATTR_BRIGHTNESS)) is not None
+            and (brightness := attributes.get(LightEntityStateAttribute.BRIGHTNESS))
+            is not None
             and isinstance(brightness, (int, float))
         ):
             brightness = round(brightness / 255 * 100, 0)
@@ -281,12 +288,14 @@ class Light(HomeAccessory):
         # Handle Color - color must always be set before color temperature
         # or the iOS UI will not display it correctly.
         if self.color_supported:
-            if color_temp := attributes.get(ATTR_COLOR_TEMP_KELVIN):
+            if color_temp := attributes.get(
+                LightEntityStateAttribute.COLOR_TEMP_KELVIN
+            ):
                 hue, saturation = color_temperature_to_hs(color_temp)
             elif color_mode == ColorMode.WHITE:
                 hue, saturation = 0, 0
             elif (
-                (hue_sat := attributes.get(ATTR_HS_COLOR))
+                (hue_sat := attributes.get(LightEntityStateAttribute.HS_COLOR))
                 and isinstance(hue_sat, (list, tuple))
                 and len(hue_sat) == 2
             ):
@@ -306,7 +315,9 @@ class Light(HomeAccessory):
         if CHAR_COLOR_TEMPERATURE in self.chars:
             color_temp = None
             if self.color_temp_supported:
-                color_temp_kelvin = attributes.get(ATTR_COLOR_TEMP_KELVIN)
+                color_temp_kelvin = attributes.get(
+                    LightEntityStateAttribute.COLOR_TEMP_KELVIN
+                )
                 if color_temp_kelvin is not None:
                     color_temp = color_temperature_kelvin_to_mired(color_temp_kelvin)
             elif color_mode == ColorMode.WHITE:

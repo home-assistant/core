@@ -41,6 +41,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfTemperature,
     __version__,
 )
@@ -148,14 +149,14 @@ def climate_controls_target_humidity(state: State) -> bool:
     HeaterCooler cannot control a humidity setpoint; entities that
     expose one (e.g. econet) stay on the Thermostat, which can.
     """
-    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
     return bool(features & ClimateEntityFeature.TARGET_HUMIDITY)
 
 
 def climate_supports_heater_cooler(state: State) -> bool:
     """Return True when a climate entity fits the HeaterCooler accessory."""
     attributes = state.attributes
-    features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
     # Timing fan modes like auto or circulate do not count as speeds.
     has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and (
         len(get_fan_modes_and_speeds(attributes)[1]) >= 2
@@ -254,7 +255,7 @@ def get_accessory(  # noqa: C901
 
     a_type = None
     name = config.get(CONF_NAME, state.name)
-    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
     if state.domain == "alarm_control_panel":
         a_type = "SecuritySystem"
@@ -267,7 +268,7 @@ def get_accessory(  # noqa: C901
         a_type = CLIMATE_TYPES[config.get(CONF_TYPE, TYPE_THERMOSTAT)]
 
     elif state.domain == "cover":
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
 
         if device_class in (
             CoverDeviceClass.GARAGE,
@@ -311,7 +312,7 @@ def get_accessory(  # noqa: C901
         a_type = "Lock"
 
     elif state.domain == "media_player":
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         feature_list = config.get(CONF_FEATURE_LIST, [])
 
         if device_class == MediaPlayerDeviceClass.RECEIVER:
@@ -325,8 +326,8 @@ def get_accessory(  # noqa: C901
             a_type = "MediaPlayer"
 
     elif state.domain == "sensor":
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+        unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
         if device_class == SensorDeviceClass.TEMPERATURE or unit in (
             UnitOfTemperature.CELSIUS,
@@ -373,7 +374,10 @@ def get_accessory(  # noqa: C901
     elif state.domain == "switch":
         if switch_type := config.get(CONF_TYPE):
             a_type = SWITCH_TYPES[switch_type]
-        elif state.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.OUTLET:
+        elif (
+            state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+            == SwitchDeviceClass.OUTLET
+        ):
             a_type = "Outlet"
         else:
             a_type = "Switch"

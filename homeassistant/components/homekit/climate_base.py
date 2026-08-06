@@ -12,7 +12,6 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
-    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
@@ -30,14 +29,15 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_MODE,
     SWING_OFF,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import State, callback
 from homeassistant.util.percentage import percentage_to_ordered_list_item
@@ -112,7 +112,7 @@ class HomeKitClimateAccessory(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
         assert state
         attributes = state.attributes
-        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         # ``fan_modes`` maps lowercased names to their original casing;
         # ``ordered_fan_speeds`` holds the predefined speeds in HomeKit order.
@@ -275,7 +275,8 @@ class HomeKitClimateAccessory(HomeAccessory):
             self.ordered_fan_speeds
             and (
                 speed := fan_mode_to_speed(
-                    self.ordered_fan_speeds, attributes.get(ATTR_FAN_MODE)
+                    self.ordered_fan_speeds,
+                    attributes.get(ClimateEntityStateAttribute.FAN_MODE),
                 )
             )
             is not None
@@ -286,7 +287,7 @@ class HomeKitClimateAccessory(HomeAccessory):
         """Update the swing characteristic from the current swing mode."""
         # An absent swing mode keeps the last value; there is nothing to show.
         if self.swing_on_mode is not None and (
-            swing_mode := attributes.get(ATTR_SWING_MODE)
+            swing_mode := attributes.get(ClimateEntityStateAttribute.SWING_MODE)
         ):
             self.char_swing.set_value(1 if is_swing_on(swing_mode) else 0)
 
@@ -363,13 +364,13 @@ class HomeKitClimateAccessory(HomeAccessory):
         self._update_swing_char(attributes)
         self._update_fan_speed_char(attributes)
 
-        fan_mode = attributes.get(ATTR_FAN_MODE)
+        fan_mode = attributes.get(ClimateEntityStateAttribute.FAN_MODE)
         fan_mode_lower = fan_mode.lower() if isinstance(fan_mode, str) else None
         if CHAR_TARGET_FAN_STATE in self.fan_chars:
             self.char_target_fan_state.set_value(1 if fan_mode_lower == FAN_AUTO else 0)
 
         if CHAR_CURRENT_FAN_STATE in self.fan_chars and (
-            hvac_action := attributes.get(ATTR_HVAC_ACTION)
+            hvac_action := attributes.get(ClimateEntityStateAttribute.HVAC_ACTION)
         ):
             self.char_current_fan_state.set_value(
                 HC_HASS_TO_HOMEKIT_FAN_STATE[hvac_action]

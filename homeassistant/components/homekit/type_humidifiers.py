@@ -7,7 +7,6 @@ from pyhap.const import CATEGORY_HUMIDIFIER
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.humidifier import (
-    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -16,6 +15,8 @@ from homeassistant.components.humidifier import (
     DOMAIN as HUMIDIFIER_DOMAIN,
     SERVICE_SET_HUMIDITY,
     HumidifierDeviceClass,
+    HumidifierEntityCapabilityAttribute,
+    HumidifierEntityStateAttribute,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -287,10 +288,22 @@ class HumidifierDehumidifier(HomeAccessory):
         """Return min and max humidity range."""
         attributes = state.attributes
         min_humidity = max(
-            round(attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)), 0
+            round(
+                attributes.get(
+                    HumidifierEntityCapabilityAttribute.MIN_HUMIDITY,
+                    DEFAULT_MIN_HUMIDITY,
+                )
+            ),
+            0,
         )
         max_humidity = min(
-            round(attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)), 100
+            round(
+                attributes.get(
+                    HumidifierEntityCapabilityAttribute.MAX_HUMIDITY,
+                    DEFAULT_MAX_HUMIDITY,
+                )
+            ),
+            100,
         )
         return min_humidity, max_humidity
 
@@ -315,9 +328,11 @@ class HumidifierDehumidifier(HomeAccessory):
         self.char_current_humidifier_dehumidifier.set_value(current_state)
 
         # Update target humidity
-        target_humidity = attributes.get(ATTR_HUMIDITY)
+        target_humidity = attributes.get(HumidifierEntityStateAttribute.HUMIDITY)
         if isinstance(target_humidity, (int, float)):
             self.char_target_humidity.set_value(target_humidity)
-        current_humidity = attributes.get(ATTR_CURRENT_HUMIDITY)
+        current_humidity = attributes.get(
+            HumidifierEntityStateAttribute.CURRENT_HUMIDITY
+        )
         if isinstance(current_humidity, (int, float)):
             self.char_current_humidity.set_value(current_humidity)
