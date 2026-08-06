@@ -389,7 +389,7 @@ async def test_unload_stops_stream(
     config_entry_with_vehicles: MockConfigEntry,
     fake_stream: Any,
 ) -> None:
-    """Unloading an entry with a live stream stops it before unloading platforms."""
+    """Unloading an entry with a live stream stops it once the platforms unload."""
     config_entry_with_vehicles.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
@@ -404,6 +404,80 @@ async def test_unload_stops_stream(
 
     assert config_entry_with_vehicles.state is ConfigEntryState.NOT_LOADED
     assert stream.stopped is True
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_stream_stopped_when_platform_setup_raises(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
+) -> None:
+    """A platform setup failure must not leak the stream's background task.
+
+    Home Assistant does not call ``async_unload_entry`` for an entry that never
+    finished setting up, so the stop has to be registered as an on-unload hook.
+    """
+    config_entry_with_vehicles.add_to_hass(hass)
+
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("platform setup blew up"),
+    ):
+        assert not await hass.config_entries.async_setup(
+            config_entry_with_vehicles.entry_id
+        )
+        await hass.async_block_till_done()
+
+    assert config_entry_with_vehicles.state is ConfigEntryState.SETUP_ERROR
+
+    stream = fake_stream.stream
+    assert stream is not None
+    assert stream.started is True
+    assert stream.stopped is True
+
+
+@pytest.mark.parametrize(
+    ("platforms_unloaded", "expected_state", "expected_stopped"),
+    [
+        pytest.param(True, ConfigEntryState.NOT_LOADED, True, id="platforms_unloaded"),
+        pytest.param(
+            False, ConfigEntryState.FAILED_UNLOAD, False, id="platforms_still_loaded"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_stream_survives_a_failed_platform_unload(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
+    platforms_unloaded: bool,
+    expected_state: ConfigEntryState,
+    expected_stopped: bool,
+) -> None:
+    """The stream outlives an unload that left the entry's platforms loaded."""
+    config_entry_with_vehicles.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
+    await hass.async_block_till_done()
+
+    stream = fake_stream.stream
+    assert stream is not None
+    assert stream.stopped is False
+
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms",
+        return_value=platforms_unloaded,
+    ):
+        unloaded = await hass.config_entries.async_unload(
+            config_entry_with_vehicles.entry_id
+        )
+        await hass.async_block_till_done()
+
+    assert unloaded is platforms_unloaded
+    assert config_entry_with_vehicles.state is expected_state
+    assert stream.stopped is expected_stopped
 
 
 @pytest.mark.usefixtures("mock_abrp_client")

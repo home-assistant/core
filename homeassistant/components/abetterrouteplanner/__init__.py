@@ -134,6 +134,9 @@ async def async_setup_entry(
             name=entry.title,
         )
         await stream.start()
+        # Registered before the platform forward so a setup failure, which never
+        # reaches async_unload_entry, still tears the stream down.
+        entry.async_on_unload(stream.stop)
 
     entry.runtime_data = AbrpData(
         session=session,
@@ -150,6 +153,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: AbetterrouteplannerConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    if (stream := entry.runtime_data.stream) is not None:
-        await stream.stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
