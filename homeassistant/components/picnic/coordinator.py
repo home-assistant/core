@@ -48,7 +48,7 @@ class LastOrderData:
     """The most recent delivery, with its total price."""
 
     delivery: DeliverySummary | None = None
-    total_price: float = 0
+    total_price: int = 0
     delivery_time_start: str | None = None
 
 
