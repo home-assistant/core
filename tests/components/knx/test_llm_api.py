@@ -131,6 +131,20 @@ def test_schema_union_preserves_numeric_types(
     assert type(result["value"]) is expected_type
 
 
+@pytest.mark.parametrize(
+    ("result", "expected"),
+    [
+        ({"a": 1}, {"a": 1}),  # mapping passes through unchanged
+        (5, {"result": 5}),  # bare scalar is wrapped
+        ("text", {"result": "text"}),
+        (None, {"result": None}),
+    ],
+)
+def test_serialize_always_returns_an_object(result: object, expected: dict) -> None:
+    """`_serialize` wraps non-dataclass, non-list, non-dict results."""
+    assert llm_api._serialize(result) == expected
+
+
 def test_schema_required_field_is_enforced() -> None:
     """A field without a default (ad-hoc arg) is required."""
     tool = _tool(llm_api._build_tools(None, include_bus_tools=False), "describe_dpt")

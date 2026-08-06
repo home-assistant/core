@@ -15,7 +15,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Union,
-    cast,
     get_args,
     get_origin,
     get_type_hints,
@@ -120,7 +119,7 @@ def _schema_from_dataclass(input_type: type) -> vol.Schema:
 
 
 def _serialize(result: Any) -> JsonObjectType:
-    """Serialize a library result (dataclass or list) to a JSON object."""
+    """Serialize a library result (dataclass, list or mapping) to a JSON object."""
     if is_dataclass(result) and not isinstance(result, type):
         return asdict(result)
     if isinstance(result, list):
@@ -132,7 +131,11 @@ def _serialize(result: Any) -> JsonObjectType:
                 for item in result
             ]
         }
-    return cast(JsonObjectType, result)
+    if isinstance(result, dict):
+        return result
+    # A library function returning a bare scalar (or None): wrap it so the
+    # tool's return value always satisfies the JsonObjectType contract.
+    return {"result": result}
 
 
 class KNXTool(llm.Tool):
