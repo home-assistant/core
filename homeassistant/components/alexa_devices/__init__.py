@@ -1,7 +1,10 @@
 """Alexa Devices integration."""
 
+from collections.abc import Awaitable, Callable
+
 from homeassistant.const import CONF_COUNTRY, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv, httpx_client
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
@@ -31,6 +34,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _async_initial_sync(sync_call: Callable[[], Awaitable[None]]) -> None:
+    """Run an initial best-effort sync call.
+
+    These syncs are not required for setup to succeed: a failing Amazon API
+    call must not prevent the other syncs from running or abort setup.
+    """
+    try:
+        await sync_call()
+    except ConfigEntryNotReady as err:
+        LOGGER.warning(
+            "Initial sync failed for %s: %s. Data may be missing or incomplete until updates are pushed by Amazon",
+            sync_call.__name__,
+            err,
+        )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Set up Alexa Devices platform."""
 
@@ -39,9 +58,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
     await coordinator.async_config_entry_first_refresh()
 
-    await coordinator.sync_todo_list_items()
-    await coordinator.sync_history_state()
-    await coordinator.sync_media_state()
+    for sync_call in (
+        coordinator.sync_todo_list_items,
+        coordinator.sync_history_state,
+        coordinator.sync_media_state,
+    ):
+        await _async_initial_sync(sync_call)
 
     async def _on_http2_reauth_required() -> None:
         entry.async_start_reauth(hass)
