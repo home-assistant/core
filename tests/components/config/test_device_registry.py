@@ -385,12 +385,12 @@ async def test_update_device_labels(
         assert getattr(device, key) == value
 
 
-async def test_remove_config_entry_from_device(
+async def test_remove_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test removing config entry from device."""
+    """Test removing a device."""
     assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
@@ -443,9 +443,8 @@ async def test_remove_config_entry_from_device(
     assert device_entry_1.id != device_entry.id
     assert device_entry.config_entries == {entry_2.entry_id}
 
-    # Try removing the config entry from the device, it should fail because
-    # async_remove_config_entry_device returns False
-    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
+    # Removal is rejected while async_remove_config_entry_device returns False
+    response = await ws_client.remove_device(device_entry.id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -453,14 +452,12 @@ async def test_remove_config_entry_from_device(
     # Make async_remove_config_entry_device return True
     can_remove = True
 
-    # Remove the config entry, this was the device's only config entry so the
-    # device is removed
-    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
+    # The device is removed
+    response = await ws_client.remove_device(device_entry.id)
 
     assert response["success"]
     assert response["result"] is None
 
-    # This was the only config entry, the device is removed
     assert not device_registry.async_get(device_entry.id)
 
     # The device belonging to the other config entry is untouched
@@ -469,12 +466,12 @@ async def test_remove_config_entry_from_device(
     }
 
 
-async def test_remove_config_entry_from_device_fails(
+async def test_remove_device_fails(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test removing config entry from device failing cases."""
+    """Test removing a device failing cases."""
     assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
@@ -535,20 +532,18 @@ async def test_remove_config_entry_from_device_fails(
     assert device_entry_2.config_entries == {entry_2.entry_id}
     assert device_entry_3.config_entries == {entry_3.entry_id}
 
-    fake_entry_id = "abc123"
-    assert entry_1.entry_id != fake_entry_id
     fake_device_id = "abc123"
     assert device_entry_3.id != fake_device_id
 
-    # Try removing a non existing config entry from the device
-    response = await ws_client.remove_device(device_entry_3.id, fake_entry_id)
+    # Try removing a device which does not exist
+    response = await ws_client.remove_device(fake_device_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
-    assert response["error"]["message"] == "Unknown config entry"
+    assert response["error"]["message"] == "Unknown device"
 
-    # Try removing a config entry which does not support removal from the device
-    response = await ws_client.remove_device(device_entry_1.id, entry_1.entry_id)
+    # Try removing a device whose config entry does not support device removal
+    response = await ws_client.remove_device(device_entry_1.id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -556,44 +551,29 @@ async def test_remove_config_entry_from_device_fails(
         response["error"]["message"] == "Config entry does not support device removal"
     )
 
-    # Try removing a config entry from a device which does not exist
-    response = await ws_client.remove_device(fake_device_id, entry_2.entry_id)
-
-    assert not response["success"]
-    assert response["error"]["code"] == "home_assistant_error"
-    assert response["error"]["message"] == "Unknown device"
-
-    # Try removing a config entry from a device which it's not connected to
-    response = await ws_client.remove_device(device_entry_3.id, entry_2.entry_id)
-
-    assert not response["success"]
-    assert response["error"]["code"] == "home_assistant_error"
-    assert response["error"]["message"] == "Config entry not in device"
-
-    # Removing a config entry which supports removal removes the device, since it is
-    # the device's only config entry
-    response = await ws_client.remove_device(device_entry_2.id, entry_2.entry_id)
+    # Removing a device whose config entry supports removal removes the device
+    response = await ws_client.remove_device(device_entry_2.id)
 
     assert response["success"]
     assert response["result"] is None
     assert not device_registry.async_get(device_entry_2.id)
 
-    # Try removing a config entry which can't be loaded from a device - allowed
-    response = await ws_client.remove_device(device_entry_3.id, entry_3.entry_id)
+    # Try removing a device whose integration can't be loaded
+    response = await ws_client.remove_device(device_entry_3.id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Integration not found"
 
 
-async def test_remove_config_entry_from_device_if_integration_remove(
+async def test_remove_device_if_integration_removes(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test removing config entry from device.
+    """Test removing a device.
 
-    Should not error when the integration removes the entry.
+    Should not error when the integration removes the device itself.
     """
     assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
@@ -649,9 +629,8 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     assert device_entry_1.id != device_entry.id
     assert device_entry.config_entries == {entry_2.entry_id}
 
-    # Try removing the config entry from the device, it should fail because
-    # async_remove_config_entry_device returns False
-    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
+    # Removal is rejected while async_remove_config_entry_device returns False
+    response = await ws_client.remove_device(device_entry.id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -659,14 +638,12 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     # Make async_remove_config_entry_device return True
     can_remove = True
 
-    # Remove the config entry, this was the device's only config entry so the
-    # device is removed
-    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
+    # The device is removed by the integration itself
+    response = await ws_client.remove_device(device_entry.id)
 
     assert response["success"]
     assert response["result"] is None
 
-    # This was the only config entry, the device is removed
     assert not device_registry.async_get(device_entry.id)
 
     # The device belonging to the other config entry is untouched
@@ -676,12 +653,12 @@ async def test_remove_config_entry_from_device_if_integration_remove(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_remove_config_entry_from_composite_device(
+async def test_remove_device_composite(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test removing a config entry from a pre-migration composite device id fails."""
+    """Test removing a pre-migration composite device id fails."""
     entry_1 = MockConfigEntry()
     entry_1.add_to_hass(hass)
     entry_2 = MockConfigEntry()
@@ -713,11 +690,14 @@ async def test_remove_config_entry_from_composite_device(
     registry = dr.async_get(hass)
     assert registry.async_is_composite_device_id(composite_id) is True
 
-    response = await client.remove_device(composite_id, entry_1.entry_id)
+    await client.send_json_auto_id(
+        {"type": "config/device_registry/remove", "device_id": composite_id}
+    )
+    msg = await client.receive_json()
 
-    assert not response["success"]
-    assert response["error"]["code"] == "home_assistant_error"
-    assert response["error"]["message"] == "Cannot remove a composite device"
+    assert not msg["success"]
+    assert msg["error"]["code"] == "home_assistant_error"
+    assert msg["error"]["message"] == "Cannot remove a composite device"
 
 
 async def test_list_linked_devices(
