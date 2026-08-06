@@ -1244,6 +1244,38 @@ async def test_media_player_supported_features(
     assert state.attributes["supported_features"] == expected_features
 
 
+async def test_media_player_group_members_without_grouping(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test group members are published for a player that can not be regrouped."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_group_player_1"
+    mass_player_id = "test_group_player_1"
+    expected_members = [
+        "media_player.test_player_1",
+        "media_player.my_super_test_player_2",
+    ]
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_GROUP_MEMBERS] == expected_members
+
+    # a group with a fixed member list can not be regrouped and so drops GROUPING,
+    # but its members are still known and must remain readable
+    music_assistant_client.players._players[mass_player_id].supported_features.remove(
+        PlayerFeature.SET_MEMBERS
+    )
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.PLAYER_CONFIG_UPDATED, mass_player_id
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert (
+        not state.attributes["supported_features"] & MediaPlayerEntityFeature.GROUPING
+    )
+    assert state.attributes[ATTR_GROUP_MEMBERS] == expected_members
+
+
 async def test_media_image_prefers_current_media(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,

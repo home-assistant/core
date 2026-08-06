@@ -29,6 +29,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
     MediaPlayerState,
     MediaType as HAMediaType,
     RepeatMode,
@@ -196,6 +197,11 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             ATTR_ACTIVE_QUEUE: (
                 self.active_queue.queue_id if self.active_queue else None
             ),
+            # Every Music Assistant player reports its members, but the base entity
+            # only publishes them when GROUPING is supported. Groups with a fixed
+            # member list cannot be regrouped and so do not advertise GROUPING,
+            # which would otherwise hide their members entirely.
+            MediaPlayerEntityStateAttribute.GROUP_MEMBERS: self.group_members,
         }
 
     @override
