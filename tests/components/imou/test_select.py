@@ -67,8 +67,8 @@ async def test_select_entities_snapshot(
                         PARAM_OPTIONS: ["0", "1"],
                     },
                     PARAM_NIGHT_VISION_MODE: {
-                        PARAM_CURRENT_OPTION: "0",
-                        PARAM_OPTIONS: ["0", "1", "2", "3"],
+                        PARAM_CURRENT_OPTION: "intelligent",
+                        PARAM_OPTIONS: ["intelligent", "fullcolor", "infrared", "off"],
                     },
                 },
             )
@@ -92,7 +92,6 @@ async def test_setup_ignores_unknown_select_types(
 
 
 @pytest.mark.parametrize("imou_mock_devices", [select_mock_devices], indirect=True)
-@pytest.mark.usefixtures("init_integration")
 async def test_select_option_via_domain_service(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -112,7 +111,7 @@ async def test_select_option_via_domain_service(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: mode_entry.entity_id, ATTR_OPTION: "1"},
+        {ATTR_ENTITY_ID: mode_entry.entity_id, ATTR_OPTION: "away"},
         blocking=True,
     )
 
@@ -120,12 +119,11 @@ async def test_select_option_via_domain_service(
     call = init_integration.async_select_option.await_args
     assert call is not None
     assert call.args[1] == PARAM_MODE
-    assert call.args[2] == "1"
-    assert hass.states.get(mode_entry.entity_id).state == "1"
+    assert call.args[2] == "away"
+    assert hass.states.get(mode_entry.entity_id).state == "away"
 
 
 @pytest.mark.parametrize("imou_mock_devices", [select_mock_devices], indirect=True)
-@pytest.mark.usefixtures("init_integration")
 async def test_select_option_propagates_api_error(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -147,7 +145,7 @@ async def test_select_option_propagates_api_error(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: mode_entry.entity_id, ATTR_OPTION: "1"},
+            {ATTR_ENTITY_ID: mode_entry.entity_id, ATTR_OPTION: "away"},
             blocking=True,
         )
 
@@ -162,8 +160,8 @@ async def test_select_option_propagates_api_error(
                 button_keys=(),
                 selects={
                     PARAM_NIGHT_VISION_MODE: {
-                        PARAM_CURRENT_OPTION: "0",
-                        PARAM_OPTIONS: ["0", "1", "2", "3"],
+                        PARAM_CURRENT_OPTION: "intelligent",
+                        PARAM_OPTIONS: ["intelligent", "fullcolor", "infrared", "off"],
                     }
                 },
             )
@@ -171,7 +169,6 @@ async def test_select_option_propagates_api_error(
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures("init_integration")
 async def test_select_option_unavailable_offline_device(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -204,7 +201,7 @@ async def test_select_option_unavailable_offline_device(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: night_entry.entity_id, ATTR_OPTION: "1"},
+        {ATTR_ENTITY_ID: night_entry.entity_id, ATTR_OPTION: "fullcolor"},
         blocking=True,
     )
 

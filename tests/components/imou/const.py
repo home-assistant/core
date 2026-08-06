@@ -54,16 +54,16 @@ UNKNOWN_SELECT_KEY = "legacy_unknown_select"
 
 DEFAULT_SELECTS = {
     PARAM_NIGHT_VISION_MODE: {
-        PARAM_CURRENT_OPTION: "0",
-        PARAM_OPTIONS: ["0", "1", "2", "3"],
+        PARAM_CURRENT_OPTION: "intelligent",
+        PARAM_OPTIONS: ["intelligent", "fullcolor", "infrared", "off"],
     },
     PARAM_MODE: {
-        PARAM_CURRENT_OPTION: "0",
-        PARAM_OPTIONS: ["0", "1", "2"],
+        PARAM_CURRENT_OPTION: "home",
+        PARAM_OPTIONS: ["home", "away", "disarm"],
     },
     PARAM_DEVICE_VOLUME: {
-        PARAM_CURRENT_OPTION: "1",
-        PARAM_OPTIONS: ["99", "0", "1", "2"],
+        PARAM_CURRENT_OPTION: "medium",
+        PARAM_OPTIONS: ["mute", "low", "medium", "high"],
     },
 }
 

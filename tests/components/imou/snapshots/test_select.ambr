@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        '0',
-        '1',
-        '2',
+        'home',
+        'away',
+        'disarm',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -47,9 +47,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        '0',
-        '1',
-        '2',
+        'home',
+        'away',
+        'disarm',
       ]),
     }),
     'context': <ANY>,
@@ -57,7 +57,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'home',
   })
 # ---
 # name: test_select_entities_snapshot[select_mock_devices-platforms0][select.device_1_night_vision_mode-entry]
@@ -68,10 +68,10 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        '0',
-        '1',
-        '2',
-        '3',
+        'intelligent',
+        'fullcolor',
+        'infrared',
+        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -109,10 +109,10 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Night vision mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        '0',
-        '1',
-        '2',
-        '3',
+        'intelligent',
+        'fullcolor',
+        'infrared',
+        'off',
       ]),
     }),
     'context': <ANY>,
@@ -120,7 +120,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'intelligent',
   })
 # ---
 # name: test_select_entities_snapshot[select_mock_devices-platforms0][select.device_1_volume-entry]
@@ -131,10 +131,10 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        '99',
-        '0',
-        '1',
-        '2',
+        'mute',
+        'low',
+        'medium',
+        'high',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -172,10 +172,10 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        '99',
-        '0',
-        '1',
-        '2',
+        'mute',
+        'low',
+        'medium',
+        'high',
       ]),
     }),
     'context': <ANY>,
@@ -183,6 +183,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': 'medium',
   })
 # ---
