@@ -287,12 +287,12 @@ async def async_remove_config_entry_device(
     ):
         # can not remove interface device
         return False
-    ui_entity_ids = {
-        entity.entity_id for entity in knx_module.config_store.get_entity_entries()
+    ui_unique_ids = {
+        entry.unique_id for entry in knx_module.config_store.get_entity_entries()
     }
     entity_registry = er.async_get(hass)
     if any(
-        entity.entity_id not in ui_entity_ids
+        entity.unique_id not in ui_unique_ids
         for entity in er.async_entries_for_device(entity_registry, device_entry.id)
     ):
         # device still has YAML-configured entities; only YAML can remove them
