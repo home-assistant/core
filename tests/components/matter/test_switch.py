@@ -337,3 +337,61 @@ async def test_eve_child_lock(
         ),
         value=False,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+async def test_window_covering_reverse_motor_direction(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test switch entity for the WindowCovering MotorDirectionReversed mode bit."""
+    entity_id = "switch.mock_full_window_covering_reverse_motor_direction"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    set_node_attribute(matter_node, 1, 258, 23, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+
+    # set an unrelated mode bit (LedFeedback) to check it is preserved on write
+    set_node_attribute(matter_node, 1, 258, 23, 8)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.Mode,
+        ),
+        value=9,
+    )
+
+    set_node_attribute(matter_node, 1, 258, 23, 9)
+    await trigger_subscription_callback(hass, matter_client)
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.Mode,
+        ),
+        value=8,
+    )
