@@ -7,6 +7,7 @@ from python_otbr_api.tlv_parser import MeshcopTLVType
 import voluptuous as vol
 
 from homeassistant.components.thread import (
+    DatasetAddResult,
     async_add_dataset,
     async_get_preferred_dataset,
     async_get_store,
@@ -17,7 +18,7 @@ from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import DOMAIN
-from .util import DATASET_LOCK, get_allowed_channel, update_issues
+from .util import async_get_dataset_lock, get_allowed_channel, update_issues
 
 if TYPE_CHECKING:
     from .types import OTBRConfigEntry
@@ -167,7 +168,7 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
     data = entry.runtime_data
     delay: int = call.data[ATTR_DELAY]
 
-    async with DATASET_LOCK:
+    async with async_get_dataset_lock(call.hass):
         # Resolved under the lock: a queued no-dataset call must see the
         # preferred dataset as repointed by the migration it waited for,
         # or it would migrate the router straight back.
@@ -294,7 +295,7 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
         del pending[MeshcopTLVType.PENDINGTIMESTAMP]
         del pending[MeshcopTLVType.DELAYTIMER]
         migrated_tlvs = bytes.fromhex(tlv_parser.encode_tlv(pending))
-        await async_add_dataset(
+        result = await async_add_dataset(
             call.hass,
             DOMAIN,
             migrated_tlvs.hex(),
@@ -307,6 +308,20 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
         if (source_xpan := active.get(MeshcopTLVType.EXTPANID)) is not None:
             await _async_repoint_preferred_dataset(
                 call.hass, str(source_xpan), str(target[MeshcopTLVType.EXTPANID])
+            )
+        if result is DatasetAddResult.DISCARDED:
+            # Newer credentials for this network were stored while the router
+            # was being written to. The mesh is migrating to the dataset above
+            # and cannot be called back, so say so rather than report a success
+            # Home Assistant cannot back up.
+            #
+            # Reported after the two calls above on purpose: they describe
+            # which network is being adopted rather than with which
+            # credentials, so they are right either way and must still run --
+            # in particular the preferred pointer, which this action's own
+            # default target reads.
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="dataset_discarded"
             )
 
     name_item = pending[MeshcopTLVType.NETWORKNAME]
