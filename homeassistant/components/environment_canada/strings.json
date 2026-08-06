@@ -121,6 +121,7 @@
     "step": {
       "init": {
         "data": {
+          "radar_colors": "Colour scale",
           "radar_duration": "Loop duration",
           "radar_fps": "Loop frame rate",
           "radar_layer": "Radar type",
@@ -130,6 +131,7 @@
           "radar_timestamp": "Show timestamp"
         },
         "data_description": {
+          "radar_colors": "Number of colours in the rain/snow radar scale (has no effect on the precipitation type layer)",
           "radar_duration": "How far back the radar animation goes, in minutes (0 for the full available history)",
           "radar_fps": "Frame rate of the radar animation",
           "radar_opacity": "Opacity of the radar layer overlay (0-100)",
@@ -140,6 +142,12 @@
     }
   },
   "selector": {
+    "radar_colors": {
+      "options": {
+        "8": "8 colours",
+        "14": "14 colours"
+      }
+    },
     "radar_layer": {
       "options": {
         "precip_type": "Precipitation type",

@@ -40,6 +40,13 @@
           'current-firmware': '7.18.2',
           'model': 'RB5009',
           'serial-number': 'ABC123',
+          'upgrade-firmware': '7.19.1',
+        }),
+        'update': dict({
+          'channel': 'stable',
+          'installed-version': '7.18.2',
+          'latest-version': '7.19.1',
+          'status': 'System is already up to date',
         }),
       }),
     }),

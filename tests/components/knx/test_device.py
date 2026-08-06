@@ -39,7 +39,9 @@ async def test_create_device(
     assert res["result"]["config_entries"][0] == knx.mock_config_entry.entry_id
 
     device_identifier = res["result"]["identifiers"][0][1]
-    assert device_registry.async_get_device({(DOMAIN, device_identifier)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_identifier), knx.mock_config_entry.entry_id
+    )
     device_id = res["result"]["id"]
     assert device_registry.async_get(device_id)
 
@@ -61,8 +63,9 @@ async def test_remove_device(
     await knx.assert_read("1/0/45", response=True, ignore_order=True)  # test switch
 
     assert hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["entities"].get("switch")
-    test_device = device_registry.async_get_device(
-        {(DOMAIN, "knx_vdev_4c80a564f5fe5da701ed293966d6384d")}
+    test_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "knx_vdev_4c80a564f5fe5da701ed293966d6384d"),
+        knx.mock_config_entry.entry_id,
     )
     device_id = test_device.id
     device_entities = entity_registry.entities.get_entries_for_device_id(device_id)
@@ -70,8 +73,9 @@ async def test_remove_device(
 
     response = await client.remove_device(device_id, knx.mock_config_entry.entry_id)
     assert response["success"]
-    assert not device_registry.async_get_device(
-        {(DOMAIN, "knx_vdev_4c80a564f5fe5da701ed293966d6384d")}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "knx_vdev_4c80a564f5fe5da701ed293966d6384d"),
+        knx.mock_config_entry.entry_id,
     )
     assert not entity_registry.entities.get_entries_for_device_id(device_id)
     assert not hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["entities"].get("switch")
