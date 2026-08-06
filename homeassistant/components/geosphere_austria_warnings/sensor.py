@@ -31,7 +31,6 @@ def _max_level(active_warnings: list[WeatherWarning]) -> str:
     return max(warning.level for warning in active_warnings).name.lower()
 
 
-# return max numeric warn level for current and advance warnings
 def _max_numeric_level(warnings: list[WeatherWarning]) -> int:
     """Return the highest warning level as an integer."""
     return max((warning.level.value for warning in warnings), default=0)
