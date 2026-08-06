@@ -35,8 +35,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 1>,
-    'translation_key': 'maximum_boiler_temperature',
-    'unique_id': 'e4684553153b44afbef2200885f379dc-maximum_boiler_temperature',
+    'translation_key': 'boiler_temperature',
+    'unique_id': 'e4684553153b44afbef2200885f379dc-boiler_temperature',
     'unit_of_measurement': None,
   })
 # ---
@@ -101,8 +101,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 3>,
-    'translation_key': 'max_dhw_temperature',
-    'unique_id': 'e4684553153b44afbef2200885f379dc-max_dhw_temperature',
+    'translation_key': 'dhw_temperature',
+    'unique_id': 'e4684553153b44afbef2200885f379dc-dhw_temperature',
     'unit_of_measurement': None,
   })
 # ---
@@ -168,8 +168,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 1>,
-    'translation_key': 'maximum_boiler_temperature',
-    'unique_id': 'bfb5ee0a88e14e5f97bfa725a760cc49-maximum_boiler_temperature',
+    'translation_key': 'boiler_temperature',
+    'unique_id': 'bfb5ee0a88e14e5f97bfa725a760cc49-boiler_temperature',
     'unit_of_measurement': None,
   })
 # ---
@@ -237,8 +237,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 11>,
-    'translation_key': 'max_dhw_temperature',
-    'unique_id': 'bfb5ee0a88e14e5f97bfa725a760cc49-max_dhw_temperature',
+    'translation_key': 'dhw_temperature',
+    'unique_id': 'bfb5ee0a88e14e5f97bfa725a760cc49-dhw_temperature',
     'unit_of_measurement': None,
   })
 # ---
