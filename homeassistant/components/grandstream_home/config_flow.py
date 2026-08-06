@@ -1,17 +1,17 @@
 """Config flow for Grandstream Home."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from grandstream_home_api import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DEVICE_TYPE_GDS,
     DEVICE_TYPE_GSC,
+    GDSPhoneAPI,
     attempt_login,
-    create_api_instance,
+    create_device_api_instance,
     extract_mac_from_name,
-    validate_port,
 )
 import voluptuous as vol
 
@@ -51,14 +51,13 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device_model: str = DEVICE_TYPE_GDS
         self._product_model: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle the initial step for manual addition."""
         if user_input is not None:
             self._host = user_input[CONF_HOST].strip()
-            self._port = DEFAULT_PORT
-            # Name will be set after successful authentication from device info
             self._name = ""
 
             _LOGGER.debug(
@@ -78,6 +77,7 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
@@ -137,7 +137,7 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _validate_credentials(
         self, username: str, password: str, port: int, verify_ssl: bool
-    ) -> tuple[Any | None, str | None]:
+    ) -> tuple[GDSPhoneAPI | None, str | None]:
         """Validate credentials by attempting to connect to the device.
 
         Returns: (api_instance, error_string)
@@ -148,7 +148,7 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
             return None, "missing_data"
 
         try:
-            api = create_api_instance(
+            api = create_device_api_instance(
                 device_type=self._device_model,
                 host=self._host,
                 username=username,
@@ -186,51 +186,44 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_auth_form(errors)
 
-        # Validate port number
-        port_value = user_input.get(CONF_PORT, str(DEFAULT_PORT))
-        is_valid, port = validate_port(port_value)
-        if not is_valid:
-            errors["port"] = "invalid_port"
-            return self._show_auth_form(errors)
+        # Allow overriding port from discovery
+        if CONF_PORT in user_input:
+            self._port = user_input[CONF_PORT]
 
         # Validate credentials (username is fixed to "gdsha")
         verify_ssl = user_input.get(CONF_VERIFY_SSL, False)
         username = DEFAULT_USERNAME
         password = user_input[CONF_PASSWORD]
 
-        api, validation_result = await self._validate_credentials(
-            username, password, port, verify_ssl
+        _, validation_result = await self._validate_credentials(
+            username, password, self._port, verify_ssl
         )
 
         if validation_result:
             errors["base"] = validation_result
             return self._show_auth_form(errors)
 
-        # Set device name from API if not already set (e.g., from zeroconf)
-        if not self._name:
-            # Use device MAC or host as name for manual configuration
-            if api:
-                self._name = f"{self._device_model.upper()} {self._mac or self._host}"
-            else:
-                self._name = "Grandstream Device"
-
         # Set unique_id before creating entry (prefer MAC if available)
         if not self.unique_id:
             if self._mac:
                 await self.async_set_unique_id(format_mac(self._mac))
+                self._abort_if_unique_id_configured()
             else:
-                # Use _async_abort_entries_match to prevent duplicates
-                # when MAC is not available (manual configuration)
                 self._async_abort_entries_match(
-                    {CONF_HOST: self._host, CONF_PORT: port}
+                    {CONF_HOST: self._host, CONF_PORT: self._port}
                 )
+                await self.async_set_unique_id(f"{self._host}:{self._port}")
+
+        # Set device name from API if not already set (e.g., from zeroconf)
+        if not self._name:
+            self._name = f"{self._device_model.upper()} {self._mac or self._host}"
 
         # Create config entry (username is fixed, store password directly)
         return self.async_create_entry(
             title=self._name,
             data={
                 CONF_HOST: self._host,
-                CONF_PORT: port,
+                CONF_PORT: self._port,
                 CONF_USERNAME: DEFAULT_USERNAME,
                 CONF_PASSWORD: password,
                 CONF_VERIFY_SSL: verify_ssl,
@@ -249,9 +242,11 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="auth",
             data_schema=vol.Schema(
                 {
-                    # Username is fixed to "gdsha", only password is required
+                    # Username is fixed to "gdsha", port defaults from discovery
                     vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Required(CONF_PORT, default=str(self._port)): cv.string,
+                    vol.Optional(CONF_PORT, default=self._port): vol.All(
+                        vol.Coerce(int), vol.Range(min=1, max=65535)
+                    ),
                     vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
                 }
             ),

@@ -1,34 +1,47 @@
 """Data update coordinator for Grandstream devices."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import override
 
-from grandstream_home_api import GDSPhoneAPI, GNSNasAPI, fetch_gds_status
+from grandstream_home_api import GDSPhoneAPI, fetch_gds_status
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import COORDINATOR_UPDATE_INTERVAL, DOMAIN
-
-if TYPE_CHECKING:
-    from . import GrandstreamRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
 type GrandstreamConfigEntry = ConfigEntry["GrandstreamRuntimeData"]
 
 
+@dataclass
+class GrandstreamRuntimeData:
+    """Runtime data for Grandstream config entry."""
+
+    api: GDSPhoneAPI
+    coordinator: GrandstreamCoordinator
+    device_info: DeviceInfo
+    device_model: str
+    product_model: str | None
+    unique_id: str
+
+
 class GrandstreamCoordinator(DataUpdateCoordinator[str]):
     """Class to manage fetching data from Grandstream device."""
+
+    config_entry: GrandstreamConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: GrandstreamConfigEntry,
-        api: GDSPhoneAPI | GNSNasAPI,
+        api: GDSPhoneAPI,
         discovery_version: str | None = None,
     ) -> None:
         """Initialize the coordinator."""
@@ -47,9 +60,7 @@ class GrandstreamCoordinator(DataUpdateCoordinator[str]):
         if not version:
             return
 
-        assert self.config_entry is not None
         assert self.config_entry.unique_id is not None
-        # Update firmware version in device registry
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device(
             identifiers={(DOMAIN, self.config_entry.unique_id)}
@@ -58,10 +69,10 @@ class GrandstreamCoordinator(DataUpdateCoordinator[str]):
             device_registry.async_update_device(device.id, sw_version=version)
             _LOGGER.debug("Updated firmware version to %s", version)
 
+    @override
     async def _async_update_data(self) -> str:
         """Fetch data from API endpoint (polling)."""
         try:
-            # Fetch data from device (GDS and GSC use same API)
             result = await self.hass.async_add_executor_job(fetch_gds_status, self._api)
         except (RuntimeError, ValueError, OSError, KeyError) as e:
             raise UpdateFailed(
@@ -76,7 +87,6 @@ class GrandstreamCoordinator(DataUpdateCoordinator[str]):
                 translation_key="no_status",
             )
 
-        # Update firmware version (doesn't raise exceptions)
         self._update_firmware_version(result.get("version") or self._discovery_version)
 
         return result["phone_status"]

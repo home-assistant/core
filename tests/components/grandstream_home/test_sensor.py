@@ -43,7 +43,7 @@ async def test_sensor_unavailable_mapping(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.entry_gds3710_ec74d79753c5_device_status")
+    state = hass.states.get("sensor.gds3710_ec74d79753c5_device_status")
     assert state is not None
     assert state.state == "no_available_account"
 
@@ -64,6 +64,6 @@ async def test_sensor_unknown_returns_none(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.entry_gds3710_ec74d79753c5_device_status")
+    state = hass.states.get("sensor.gds3710_ec74d79753c5_device_status")
     assert state is not None
     assert state.state == "unknown"

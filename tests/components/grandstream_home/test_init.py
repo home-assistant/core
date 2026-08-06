@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.grandstream_home.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -21,7 +22,7 @@ async def test_setup_entry(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is not None
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_unload_entry(
@@ -33,10 +34,10 @@ async def test_unload_entry(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result is True
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_api_ha_control_disabled(
@@ -52,7 +53,7 @@ async def test_setup_api_ha_control_disabled(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state.name == "SETUP_RETRY"
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_api_offline(
@@ -74,7 +75,7 @@ async def test_setup_api_offline(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state.name == "LOADED"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_api_account_locked(
@@ -96,7 +97,7 @@ async def test_setup_api_account_locked(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state.name == "LOADED"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_api_exception(
@@ -112,30 +113,18 @@ async def test_setup_api_exception(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state.name == "SETUP_RETRY"
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_with_product_model(
-    hass: HomeAssistant, mock_gds_api: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry_with_product_model: MockConfigEntry,
+    mock_gds_api: MagicMock,
 ) -> None:
     """Test setup with product_model in config data."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="GDS3710 EC74D79753C5",
-        unique_id="ec:74:d7:97:53:c5",
-        data={
-            "host": "192.168.1.100",
-            "username": "gdsha",
-            "password": "password",
-            "type": "GDS",
-            "model": "GDS3710",
-            "port": 443,
-            "verify_ssl": False,
-        },
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry_with_product_model.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry_with_product_model.entry_id)
     await hass.async_block_till_done()
 
     device_registry = dr.async_get(hass)
@@ -159,17 +148,33 @@ async def test_setup_api_invalid_auth_error(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state.name == "SETUP_RETRY"
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_update_failed_exception(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Test coordinator handles exception during update."""
+    with patch(
+        "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
+        side_effect=RuntimeError("Connection error"),
+    ):
+        await init_integration.runtime_data.coordinator.async_request_refresh()
+        await hass.async_block_till_done()
+
+    assert init_integration.runtime_data.coordinator.last_update_success is False
 
 
 async def test_coordinator_firmware_update(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test coordinator updates firmware version in device registry."""
-    coordinator = init_integration.runtime_data.coordinator
-
-    await coordinator.async_request_refresh()
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
+        return_value={"phone_status": "available", "version": "1.0.0"},
+    ):
+        await init_integration.runtime_data.coordinator.async_request_refresh()
+        await hass.async_block_till_done()
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
@@ -179,33 +184,15 @@ async def test_coordinator_firmware_update(
     assert device.sw_version == "1.0.0"
 
 
-async def test_coordinator_update_failed_exception(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Test coordinator handles exception during update."""
-    coordinator = init_integration.runtime_data.coordinator
-
-    with patch(
-        "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
-        side_effect=RuntimeError("Connection error"),
-    ):
-        await coordinator.async_request_refresh()
-        await hass.async_block_till_done()
-
-    assert coordinator.last_update_success is False
-
-
 async def test_coordinator_null_result(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test coordinator handles None result from fetch."""
-    coordinator = init_integration.runtime_data.coordinator
-
     with patch(
         "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
         return_value=None,
     ):
-        await coordinator.async_request_refresh()
+        await init_integration.runtime_data.coordinator.async_request_refresh()
         await hass.async_block_till_done()
 
-    assert coordinator.last_update_success is False
+    assert init_integration.runtime_data.coordinator.last_update_success is False

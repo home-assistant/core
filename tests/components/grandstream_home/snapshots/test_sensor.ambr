@@ -1,12 +1,12 @@
 # serializer version: 1
-# name: test_sensors[sensor.entry_gds3710_ec74d79753c5_device_status-entry]
+# name: test_sensors[sensor.gds3710_ec74d79753c5_device_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'available',
         'no_available_account',
         'busy',
@@ -22,7 +22,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.entry_gds3710_ec74d79753c5_device_status',
+    'entity_id': 'sensor.gds3710_ec74d79753c5_device_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -45,13 +45,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.entry_gds3710_ec74d79753c5_device_status-state]
+# name: test_sensors[sensor.gds3710_ec74d79753c5_device_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'GDS3710 EC74D79753C5 Device status',
-      'icon': 'mdi:account-badge',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GDS3710 EC74D79753C5 Device status',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:account-badge',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'available',
         'no_available_account',
         'busy',
@@ -61,7 +61,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.entry_gds3710_ec74d79753c5_device_status',
+    'entity_id': 'sensor.gds3710_ec74d79753c5_device_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
