@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from pyintelliclima.api import IntelliClimaAPIError
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -32,6 +33,6 @@ async def test_setup_succeeds_when_filter_status_unavailable(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("fan.test_vmc") is not None
 
-    state = hass.states.get("binary_sensor.filter_cleaning_required")
+    state = hass.states.get("binary_sensor.test_vmc_filter_cleaning_required")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE

@@ -6,6 +6,14 @@
     'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'bluetooth',
+        '00:11:22:33:44:55',
+      ),
+      tuple(
+        'mac',
+        '00:11:22:33:44:55',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -19,17 +27,17 @@
     }),
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Fantini Cosmi',
+    'model': 'ECOCOMFORT 2.0',
     'model_id': None,
-    'name': None,
+    'name': 'Test VMC',
     'name_by_user': None,
-    'serial_number': None,
-    'sw_version': None,
+    'serial_number': '11223344',
+    'sw_version': '0.6.8',
     'via_device_id': None,
   })
 # ---
-# name: test_all_binary_sensor_entities[binary_sensor.filter_cleaning_required-entry]
+# name: test_all_binary_sensor_entities[binary_sensor.test_vmc_filter_cleaning_required-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -43,7 +51,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.filter_cleaning_required',
+    'entity_id': 'binary_sensor.test_vmc_filter_cleaning_required',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -66,14 +74,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_binary_sensor_entities[binary_sensor.filter_cleaning_required-state]
+# name: test_all_binary_sensor_entities[binary_sensor.test_vmc_filter_cleaning_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Filter cleaning required',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test VMC Filter cleaning required',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.filter_cleaning_required',
+    'entity_id': 'binary_sensor.test_vmc_filter_cleaning_required',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

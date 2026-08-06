@@ -79,6 +79,6 @@ async def test_filter_cleaning_unavailable_when_tracking_disabled(
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.filter_cleaning_required")
+    state = hass.states.get("binary_sensor.test_vmc_filter_cleaning_required")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
