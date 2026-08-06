@@ -21,8 +21,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class CollectionImageConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Collection Image."""
 
-    VERSION = 1
-    MINOR_VERSION = 1
 
     @override
     async def async_step_user(
