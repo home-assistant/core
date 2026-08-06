@@ -17,13 +17,9 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 def _async_register_devices(hass: HomeAssistant, entry: NatureRemoConfigEntry) -> None:
     """Register the Remo hubs and the appliances this platform exposes.
 
-    Hubs are registered up front because an energy-only hub (Remo E /
-    E lite) reports no sensor events, so no entity would ever create its
-    device and the ``via_device`` of the appliances behind it would
-    dangle. Appliances are limited to the ones that get entities here, so
-    that no empty devices appear; later platforms register the appliances
-    they expose. Re-registering on every poll is what lets a nickname
-    edited in the Nature app reach the device registry.
+    Registration is eager because an energy-only hub (Remo E / E lite)
+    has no entities to create its device, and repeats on every poll so
+    renames in the Nature app reach the device registry.
     """
     coordinator = entry.runtime_data
     device_registry = dr.async_get(hass)
