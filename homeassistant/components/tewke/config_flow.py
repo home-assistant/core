@@ -1,11 +1,13 @@
 """Config flow for the Tewke integration."""
 
-from typing import TYPE_CHECKING, override
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, override
 
 import pytewke
 from pytewke.error import PyTewkeDiscoveryError
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
@@ -59,6 +61,31 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self.context["title_placeholders"] = {"name": display_name}
         return await self.async_step_zeroconf_confirm()
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle initiation of re-authentication with Tewke Tap Panel."""
+        self._discovered_host = entry_data[CONF_HOST]
+        self._discovered_name = entry_data[CONF_NAME]
+        self._room_name = entry_data.get("room_name")
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_confirmation(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        entry = self._get_reconfigure_entry()
+        self._discovered_host = entry.data[CONF_HOST]
+        self._discovered_name = entry.data[CONF_NAME]
+        self._room_name = entry.data.get("room_name")
+        return await self.async_step_confirmation()
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, str] | None = None
@@ -120,6 +147,13 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
                     entry,
                     data=data,
                     options=options,
+                )
+
+            if self.source == SOURCE_REAUTH:
+                entry = self._get_reauth_entry()
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data=data,
                 )
 
             return self.async_create_entry(

@@ -37,6 +37,8 @@ if TYPE_CHECKING:
     from .coordinator import TewkeCoordinator
     from .data import TewkeConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TewkeSensorEntityDescription(SensorEntityDescription):
@@ -204,6 +206,12 @@ class TewkeSensor(TewkeEntity, SensorEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return True if the sensor is available, False otherwise."""
+        return super().available and self.coordinator.data.get("sensors") is not None
+
+    @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the sensor reading."""
         sensors: SensorData | None = self.coordinator.data.get("sensors")
@@ -278,6 +286,12 @@ class TewkeRadarSensor(TewkeEntity, SensorEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return True if the sensor is available, False otherwise."""
+        return super().available and self.coordinator.data.get("radar") is not None
+
+    @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the sensor reading."""
         radar: RadarData | None = self.coordinator.data.get("radar")
@@ -333,6 +347,12 @@ class TewkeEnergySensor(TewkeEntity, SensorEntity):
         assert config is not None
         hardware_id = config.hardware_id
         self._attr_unique_id = f"{hardware_id}_{description.key}"
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if the sensor is available, False otherwise."""
+        return super().available and self.coordinator.data.get("energy") is not None
 
     @property
     @override

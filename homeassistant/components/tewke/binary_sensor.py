@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from .coordinator import TewkeCoordinator
     from .data import TewkeConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TewkeBinarySensorEntityDescription(BinarySensorEntityDescription):

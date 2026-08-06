@@ -21,8 +21,8 @@ from pytewke.error import (
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 
-from .const import LOGGER
 from .entity import TewkeEntity
 from .util import _ha_to_tewke_brightness, _tewke_to_ha_brightness
 
@@ -30,6 +30,9 @@ if TYPE_CHECKING:
     from pytewke.data import Scene
 
     from .coordinator import TewkeCoordinator
+
+
+PARALLEL_UPDATES = 0
 
 
 class TewkeSceneEntity(TewkeEntity):
@@ -108,19 +111,22 @@ class TewkeSceneEntity(TewkeEntity):
                 self._brightness = brightness
             self.async_write_ha_state()
             await self.coordinator.async_request_refresh()
-        except PyTewkeInvalidWallDockError:
-            LOGGER.error("Attempted to set Scene while not connected to Wall Dock")
-        except PyTewkeInvalidRequestError, RuntimeError:
+        except PyTewkeInvalidWallDockError as e:
+            msg = "Attempted to set Scene while not connected to Wall Dock"
+            raise HomeAssistantError(msg) from e
+        except (PyTewkeInvalidRequestError, RuntimeError) as e:
             action = "activating" if state else "deactivating"
-            LOGGER.exception("Internal error %s Tewke scene %s", action, self._scene_id)
+            msg = f"Internal error {action} Tewke scene {self._scene_id}: {e}"
+            raise HomeAssistantError(msg) from e
         except (
             PyTewkeCoapError,
             PyTewkeInvalidResponseError,
             PyTewkeUnknownError,
             TimeoutError,
-        ):
+        ) as e:
             action = "activating" if state else "deactivating"
-            LOGGER.exception("Error %s Tewke scene %s", action, self._scene_id)
+            msg = f"Error {action} Tewke scene {self._scene_id}: {e}"
+            raise HomeAssistantError(msg) from e
 
 
 # pylint: disable-next=home-assistant-enforce-class-module

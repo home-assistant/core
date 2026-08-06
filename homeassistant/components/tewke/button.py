@@ -24,6 +24,8 @@ if TYPE_CHECKING:
     from .coordinator import TewkeCoordinator
     from .data import TewkeConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     _hass: HomeAssistant,

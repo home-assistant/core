@@ -21,8 +21,8 @@ from pytewke.error import (
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 
-from .const import LOGGER
 from .entity import TewkeEntity
 from .util import _ha_to_tewke_brightness, _tewke_to_ha_brightness
 
@@ -122,22 +122,20 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
             self._brightness = tewke_brightness
             self.async_write_ha_state()
             await self.coordinator.async_request_refresh()
-        except PyTewkeInvalidWallDockError:
-            LOGGER.error(
-                "Attempted to set Target %s while not connected to Wall Dock",
-                self._target_index,
-            )
+        except PyTewkeInvalidWallDockError as e:
+            msg = f"Attempted to set Target {self._target_index} while not connected to Wall Dock"
+            raise HomeAssistantError(msg) from e
         except (PyTewkeInvalidRequestError, RuntimeError) as e:
-            LOGGER.error(
-                "Internal error activating Tewke target %s: %s", self._target_index, e
-            )
+            msg = f"Internal error activating Tewke target {self._target_index}: {e}"
+            raise HomeAssistantError(msg) from e
         except (
             PyTewkeCoapError,
             PyTewkeInvalidResponseError,
             PyTewkeUnknownError,
             TimeoutError,
         ) as e:
-            LOGGER.error("Error activating Tewke target %s: %s", self._target_index, e)
+            msg = f"Error activating Tewke target {self._target_index}: {e}"
+            raise HomeAssistantError(msg) from e
 
     @override
     async def async_turn_off(self, **_kwargs: object) -> None:
@@ -150,19 +148,17 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
             self._brightness = 0
             self.async_write_ha_state()
             await self.coordinator.async_request_refresh()
-        except PyTewkeInvalidWallDockError:
-            LOGGER.error(
-                "Attempted to set Target %s while not connected to Wall Dock",
-                self._target_index,
-            )
+        except PyTewkeInvalidWallDockError as e:
+            msg = f"Attempted to set Target {self._target_index} while not connected to Wall Dock"
+            raise HomeAssistantError(msg) from e
         except (PyTewkeInvalidRequestError, RuntimeError) as e:
-            LOGGER.error(
-                "Internal error turning off Tewke target %s: %s", self._target_index, e
-            )
+            msg = f"Internal error turning off Tewke target {self._target_index}: {e}"
+            raise HomeAssistantError(msg) from e
         except (
             PyTewkeCoapError,
             PyTewkeInvalidResponseError,
             PyTewkeUnknownError,
             TimeoutError,
         ) as e:
-            LOGGER.error("Error turning off Tewke target %s: %s", self._target_index, e)
+            msg = f"Error turning off Tewke target {self._target_index}: {e}"
+            raise HomeAssistantError(msg) from e

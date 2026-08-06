@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 
     from .data import TewkeConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
