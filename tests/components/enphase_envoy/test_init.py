@@ -716,13 +716,9 @@ async def test_coordinator_interface_information_no_device(
     )
 
     # update device to force no device found in mac verification
-    envoy_device = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                mock_envoy.serial_number,
-            )
-        }
+    envoy_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_envoy.serial_number),
+        config_entry.entry_id,
     )
     device_registry.async_update_device(
         device_id=envoy_device.id,
@@ -764,13 +760,9 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
         manufacturer="Enphase Energy",
     )
 
-    envoy_device = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                mock_envoy.serial_number,
-            )
-        }
+    envoy_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_envoy.serial_number),
+        config_entry.entry_id,
     )
     assert envoy_device
 
