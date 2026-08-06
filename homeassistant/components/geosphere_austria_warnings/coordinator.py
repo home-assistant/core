@@ -100,9 +100,7 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
                 for warning in location_warnings.warnings
                 if warning.is_active(now)
             ],
-            advance_warnings = [
-                warning
-                for warning in location_warnings.warnings
-                if now < warning.start
+            advance_warnings=[
+                warning for warning in location_warnings.warnings if now < warning.start
             ],
         )

@@ -30,10 +30,12 @@ def _max_level(active_warnings: list[WeatherWarning]) -> str:
         return LEVEL_NONE
     return max(warning.level for warning in active_warnings).name.lower()
 
+
 # return max numeric warn level for current and advance warnings
 def _max_numeric_level(warnings: list[WeatherWarning]) -> int:
     """Return the highest warning level as an integer."""
     return max((warning.level.value for warning in warnings), default=0)
+
 
 def _warning_attributes(
     data: GeoSphereData,
@@ -78,16 +80,20 @@ def _warning_attributes(
 
     return attributes
 
+
 @dataclass(frozen=True, kw_only=True)
 class GeoSphereSensorDescription(SensorEntityDescription):
     """Describes a GeoSphere Austria Warnings sensor."""
 
     warnings_fn: Callable[[GeoSphereData], list[WeatherWarning]]
     value_fn: Callable[[list[WeatherWarning]], StateType]
-    attributes_fn: Callable[
-        [GeoSphereData, list[WeatherWarning]],
-        Mapping[str, Any],
-    ] | None = None
+    attributes_fn: (
+        Callable[
+            [GeoSphereData, list[WeatherWarning]],
+            Mapping[str, Any],
+        ]
+        | None
+    ) = None
 
 
 SENSORS: tuple[GeoSphereSensorDescription, ...] = (
@@ -119,7 +125,7 @@ SENSORS: tuple[GeoSphereSensorDescription, ...] = (
         warnings_fn=lambda data: data.advance_warnings,
         value_fn=_max_numeric_level,
         attributes_fn=_warning_attributes,
-    )
+    ),
 )
 
 
@@ -155,4 +161,7 @@ class GeoSphereSensor(GeoSphereEntity, SensorEntity):
         if self.entity_description.attributes_fn is None:
             return {}
 
-        return self.entity_description.attributes_fn(self.coordinator.data, warnings,)
+        return self.entity_description.attributes_fn(
+            self.coordinator.data,
+            warnings,
+        )
