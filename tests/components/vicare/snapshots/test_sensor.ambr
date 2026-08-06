@@ -1257,7 +1257,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_mode',
-    'unique_id': 'gateway11_zigbee_################-active_mode',
+    'unique_id': 'fht_gateway_zigbee_################-active_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -1315,7 +1315,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'zigbee_signal_strength',
-    'unique_id': 'gateway11_zigbee_################-zigbee_signal_strength',
+    'unique_id': 'fht_gateway_zigbee_################-zigbee_signal_strength',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -1372,7 +1372,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supply_temperature',
-    'unique_id': 'gateway11_zigbee_################-supply_temperature',
+    'unique_id': 'fht_gateway_zigbee_################-supply_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
