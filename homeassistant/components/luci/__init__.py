@@ -1,8 +1,16 @@
 """The luci component."""
 
+from collections.abc import Mapping
+from datetime import timedelta
+from typing import Any
+
 from openwrt_luci_rpc import OpenWrtRpc
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
+from homeassistant.components.device_tracker.legacy import (
+    YAML_DEVICES,
+    async_load_config,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -12,8 +20,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 
-from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, PLATFORMS
+from .const import (
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    ISSUE_LEGACY_KNOWN_DEVICES,
+    PLATFORMS,
+)
 from .coordinator import LuciConfigEntry, LuciCoordinator
 
 
@@ -49,9 +64,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool
 
     entry.runtime_data = coordinator
 
+    await _async_check_legacy_known_devices(hass, coordinator.data)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def _async_check_legacy_known_devices(
+    hass: HomeAssistant, tracked: Mapping[str, Any]
+) -> None:
+    """Report leftover known_devices.yaml entries for devices we now track.
+
+    Legacy trackers are not in the entity registry, so they silently claim the
+    entity IDs our entities are registered under and those entities get dropped.
+    """
+    legacy_devices = await async_load_config(
+        hass.config.path(YAML_DEVICES), hass, timedelta(0)
+    )
+    # async_load_config upper cases the MAC addresses it reads.
+    macs = {mac.upper() for mac in tracked}
+    conflicting = sorted(
+        device.dev_id
+        for device in legacy_devices
+        if device.track and device.mac in macs
+    )
+
+    if not conflicting:
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES)
+        return
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_LEGACY_KNOWN_DEVICES,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_LEGACY_KNOWN_DEVICES,
+        translation_placeholders={
+            "path": YAML_DEVICES,
+            "devices": "\n".join(f"- `{dev_id}`" for dev_id in conflicting),
+        },
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool:

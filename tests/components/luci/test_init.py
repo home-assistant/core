@@ -1,17 +1,21 @@
 """Tests for the luci integration."""
 
-from unittest.mock import MagicMock
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.luci.const import DOMAIN
+from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.luci.const import DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
+
+from .conftest import MOCK_DEVICE_1, MOCK_DEVICE_2
 
 from tests.common import MockConfigEntry
 
@@ -108,3 +112,55 @@ async def test_yaml_import_cannot_connect(
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {"host": "192.168.1.1"}
+
+
+@pytest.mark.usefixtures("mock_luci_client")
+async def test_legacy_known_devices_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an issue is raised for known_devices.yaml entries we now track."""
+    legacy_devices = [
+        Device(hass, timedelta(0), True, "router_phone", MOCK_DEVICE_2.mac),
+        Device(hass, timedelta(0), True, "homeserver", MOCK_DEVICE_1.mac),
+    ]
+
+    with patch(
+        "homeassistant.components.luci.async_load_config",
+        return_value=legacy_devices,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES)
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {
+        "path": "known_devices.yaml",
+        "devices": "- `homeserver`\n- `router_phone`",
+    }
+
+
+@pytest.mark.usefixtures("mock_luci_client")
+async def test_legacy_known_devices_no_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test untracked and unrelated known_devices.yaml entries are ignored."""
+    legacy_devices = [
+        Device(hass, timedelta(0), False, "homeserver", MOCK_DEVICE_1.mac),
+        Device(hass, timedelta(0), True, "other_router_device", "99:99:99:99:99:99"),
+    ]
+
+    with patch(
+        "homeassistant.components.luci.async_load_config",
+        return_value=legacy_devices,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES) is None
