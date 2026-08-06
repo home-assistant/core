@@ -9,9 +9,7 @@ rules:
     comment: |
       This integration does not poll.
   brands: done
-  common-modules:
-    status: exempt
-    comment: This integration has only one platform
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -65,7 +63,7 @@ rules:
   test-coverage: todo
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
