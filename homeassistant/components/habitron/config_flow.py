@@ -256,10 +256,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _is_device_already_configured(
         self, host: str, ip: str | None = None
     ) -> bool:
-        """Check if a device with this host or IP is already configured."""
+        """Check if a device with this host or IP is already configured.
+
+        ``_async_current_entries`` skips ignored entries in a user flow, which
+        is what makes an ignored hub configurable again by hand: core lets
+        ``_abort_if_unique_id_configured`` through for that case, so this check
+        must not abort behind its back.
+        """
         return (
             await self._async_matching_entry(
-                self.hass.config_entries.async_entries(DOMAIN), host, ip
+                list(self._async_current_entries()), host, ip
             )
             is not None
         )

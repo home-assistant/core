@@ -22,7 +22,7 @@
         "data_description": {
           "host": "DNS name or IPv4 address of the SmartHub. Use \"local\" if Home Assistant runs on the SmartCenter itself."
         },
-        "title": "Setup communication"
+        "title": "Set up communication"
       }
     }
   },
