@@ -1134,7 +1134,9 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the state attributes."""
         state_attr: dict[str, Any] = {}
 
-        if self.support_grouping:
+        # Members can be known for a player that can not be regrouped, in which case
+        # GROUPING is (correctly) not supported but the members are still readable.
+        if self.support_grouping or self.group_members is not None:
             state_attr[MediaPlayerEntityStateAttribute.GROUP_MEMBERS] = (
                 self.group_members
             )
