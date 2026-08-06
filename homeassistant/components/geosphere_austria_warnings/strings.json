@@ -34,6 +34,12 @@
           "red": "Red",
           "yellow": "Yellow"
         }
+      },
+      "current_warning_level": {
+        "name": "Current warning level"
+      },
+      "advance_warning_level": {
+        "name": "Advance warning level"
       }
     }
   },

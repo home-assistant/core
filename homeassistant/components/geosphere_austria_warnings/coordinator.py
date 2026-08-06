@@ -37,6 +37,7 @@ class GeoSphereData:
 
     location_warnings: LocationWarnings
     active_warnings: list[WeatherWarning]
+    advance_warnings: list[WeatherWarning]
 
 
 class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
@@ -98,5 +99,10 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
                 warning
                 for warning in location_warnings.warnings
                 if warning.is_active(now)
+            ],
+            advance_warnings = [
+                warning
+                for warning in location_warnings.warnings
+                if now < warning.start
             ],
         )
