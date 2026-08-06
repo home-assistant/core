@@ -247,3 +247,42 @@ async def test_sensor_missing_optional_data(
         assert state is not None
         # We don't necessarily assert state is unknown for ALL of them, just that they load without error
         # The specific ones with missing data (like ambient_light) will be unknown
+
+async def test_native_value_when_none(
+    hass: HomeAssistant,
+    mock_tap_with_sensors,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that native_value returns None when data is missing."""
+    mock_tap = mock_tap_with_sensors
+    mock_tap.get_sensors.return_value = None
+    mock_tap.get_radar.return_value = None
+    mock_tap.get_energy.return_value = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The entities will still be registered but unavailable
+    # Let's get the objects and call native_value directly
+    from homeassistant.components.tewke.sensor import TewkeSensor, TewkeRadarSensor, TewkeEnergySensor
+    from homeassistant.helpers import entity_registry as er
+    
+    coordinator = mock_config_entry.runtime_data.coordinator
+    
+    # Just need to fetch the entity objects. Wait, HA doesn't expose the entity objects easily.
+    # We can just instantiate them directly for the test.
+    from homeassistant.components.tewke.sensor import SENSOR_DESCRIPTIONS, RADAR_SENSOR_DESCRIPTIONS, ENERGY_SENSOR_DESCRIPTIONS
+    
+    # 1. Sensor
+    sensor = TewkeSensor(coordinator, SENSOR_DESCRIPTIONS[0])
+    assert sensor.native_value is None
+    
+    # 2. Radar
+    radar = TewkeRadarSensor(coordinator, RADAR_SENSOR_DESCRIPTIONS[0])
+    assert radar.native_value is None
+    
+    # 3. Energy
+    energy = TewkeEnergySensor(coordinator, ENERGY_SENSOR_DESCRIPTIONS[0])
+    assert energy.native_value is None
