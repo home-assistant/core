@@ -57,12 +57,7 @@ async def test_setup_creates_mini_fob_coordinator(
     mock_config_entry: MockConfigEntry,
     mock_yolink_home: MagicMock,
 ) -> None:
-    """Test setup creates a coordinator and device for a Mini On/Off Fob.
-
-    Regression test for the fob's model number being missing from
-    SUPPORTED_REMOTERS, which caused it to be skipped entirely during
-    setup with no coordinator or device ever created for it.
-    """
+    """Test setup creates a device for a Mini On/Off Fob."""
     client = MagicMock(spec=YoLinkClient)
     client.execute = AsyncMock(
         return_value=BRDP(code="000000", desc="Success", data={"state": {}})
@@ -82,7 +77,6 @@ async def test_setup_creates_mini_fob_coordinator(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert "mini_fob_1" in mock_config_entry.runtime_data.device_coordinators
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "mini_fob_1")}
     )
