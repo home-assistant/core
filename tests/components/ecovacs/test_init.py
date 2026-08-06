@@ -155,13 +155,14 @@ async def test_migrate_entry_keeps_device_id(
 async def test_devices_in_dr(
     device_registry: dr.DeviceRegistry,
     controller: EcovacsController,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test all devices are in the device registry."""
     for device in controller.devices:
         assert (
-            device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, device.device_info["did"])}
+            device_entry := device_registry.async_get_device_by_identifier(
+                (DOMAIN, device.device_info["did"]), mock_config_entry.entry_id
             )
         )
         assert device_entry == snapshot(name=device.device_info["did"])

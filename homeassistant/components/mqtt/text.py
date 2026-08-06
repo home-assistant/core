@@ -8,7 +8,7 @@ from typing import Any, override
 import voluptuous as vol
 
 from homeassistant.components import text
-from homeassistant.components.text import TextEntity
+from homeassistant.components.text import TextEntity, TextEntityCapabilityAttribute
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
@@ -51,10 +51,10 @@ DEFAULT_NAME = "MQTT Text"
 
 MQTT_TEXT_ATTRIBUTES_BLOCKED = frozenset(
     {
-        text.ATTR_MAX,
-        text.ATTR_MIN,
-        text.ATTR_MODE,
-        text.ATTR_PATTERN,
+        TextEntityCapabilityAttribute.MAX,
+        TextEntityCapabilityAttribute.MIN,
+        TextEntityCapabilityAttribute.MODE,
+        TextEntityCapabilityAttribute.PATTERN,
     }
 )
 
