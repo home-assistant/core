@@ -15,7 +15,7 @@ from homeassistant.components import abetterrouteplanner as abrp_module
 from homeassistant.components.abetterrouteplanner.const import DOMAIN
 from homeassistant.components.abetterrouteplanner.sensor import (
     CHARGING_STATE_OPTIONS,
-    SENSORS_BY_METRIC,
+    SENSORS,
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
@@ -49,6 +49,11 @@ CHARGING_STATE_UNIQUE_ID = f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_charging_state"
 # The source files, not the generated ``translations/en.json``, so a missing
 # label or icon fails loudly.
 _INTEGRATION_DIR = Path(abrp_module.__file__).parent
+
+
+def _description_for(metric: Metric) -> Any:
+    """Return the sensor description bound to a metric."""
+    return next(description for description in SENSORS if description.metric is metric)
 
 
 async def _setup_integration(
@@ -548,7 +553,7 @@ def test_charging_state_options_map_every_member(
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
-async def test_charging_state_lazy_create_via_dispatcher(
+async def test_charging_state_lazy_create_on_first_frame(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     fake_stream: Any,
@@ -580,7 +585,7 @@ async def test_charging_state_registry_shape(
     fake_stream: Any,
 ) -> None:
     """The enum sensor is ENUM device_class, the 5 options, and no state_class."""
-    description = SENSORS_BY_METRIC[Metric.CHARGING_STATE]
+    description = _description_for(Metric.CHARGING_STATE)
     assert description.device_class is SensorDeviceClass.ENUM
     assert description.options == list(CHARGING_STATE_OPTIONS.values())
     assert description.state_class is None
@@ -748,7 +753,7 @@ def test_charging_state_options_cross_pinned() -> None:
     """Option map matches ChargingState, the description options, strings and icons."""
     assert set(CHARGING_STATE_OPTIONS) == set(ChargingState)
 
-    description = SENSORS_BY_METRIC[Metric.CHARGING_STATE]
+    description = _description_for(Metric.CHARGING_STATE)
     assert description.options is not None
     assert set(CHARGING_STATE_OPTIONS.values()) == set(description.options)
 

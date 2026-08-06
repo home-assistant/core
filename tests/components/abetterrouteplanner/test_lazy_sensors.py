@@ -1,4 +1,4 @@
-"""Tests for lazy / dispatcher entity creation on the aioabrp telemetry driver."""
+"""Tests for lazy entity creation on the aioabrp telemetry driver."""
 
 from typing import Any
 from unittest.mock import AsyncMock
@@ -95,7 +95,7 @@ async def test_stream_only_metric_creates_entity(
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
-async def test_post_setup_dispatcher_creates_entity(
+async def test_post_setup_frame_creates_entity(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
@@ -131,7 +131,7 @@ async def test_post_setup_dispatcher_creates_entity(
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
-async def test_dispatcher_idempotent_on_repeated_frames(
+async def test_lazy_create_idempotent_on_repeated_frames(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,

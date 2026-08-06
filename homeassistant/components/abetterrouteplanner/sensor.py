@@ -27,12 +27,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, signal_new_metric
+from .const import DOMAIN
 from .coordinator import AbetterrouteplannerConfigEntry, AbrpTelemetryCoordinator
 
 PARALLEL_UPDATES = 0
@@ -196,10 +195,6 @@ SENSORS: tuple[
     ),
 )
 
-SENSORS_BY_METRIC: dict[
-    Metric, AbrpNumericSensorEntityDescription | AbrpEnumSensorEntityDescription
-] = {description.metric: description for description in SENSORS}
-
 
 def _telemetry_unique_id(
     entry: AbetterrouteplannerConfigEntry, vehicle_id: int, key: str
@@ -268,11 +263,10 @@ async def async_setup_entry(
     vehicles = runtime.vehicles
     telemetry_coordinator = runtime.telemetry_coordinator
 
-    present_ids = {raw.vehicle_id for raw, _ in vehicles}
-
     entity_registry = er.async_get(hass)
     added: set[tuple[int, Metric]] = set()
-    entities: list[SensorEntity] = []
+
+    restored: list[SensorEntity] = []
     for raw, _ in vehicles:
         vehicle_id = raw.vehicle_id
         # Recreate wake-only metrics so a parked vehicle doesn't flash Unavailable.
@@ -285,67 +279,41 @@ async def async_setup_entry(
             entry_row = entity_registry.async_get(entity_id)
             if entry_row is None or entry_row.config_entry_id != entry.entry_id:
                 continue
-            entities.append(
+            restored.append(
                 _build_telemetry_sensor(
                     telemetry_coordinator, entry, vehicle_id, description
                 )
             )
             added.add((vehicle_id, description.metric))
-            telemetry_coordinator.mark_metric_seen(vehicle_id, description.metric)
-        tlm = telemetry_coordinator.data.get(vehicle_id)
-        if tlm is None:
-            continue
-        for description in SENSORS:
-            if (vehicle_id, description.metric) in added:
-                continue
-            metric_value = description.value_fn(tlm)
-            if metric_value is None:
-                continue
-            if _extract_value(description, metric_value) is None:
-                continue
-            entities.append(
-                _build_telemetry_sensor(
-                    telemetry_coordinator, entry, vehicle_id, description
-                )
-            )
-            added.add((vehicle_id, description.metric))
-            telemetry_coordinator.mark_metric_seen(vehicle_id, description.metric)
-
-    # Must run after the ``mark_metric_seen`` calls above, or the next pushed
-    # update double-creates an already-added entity.
-    telemetry_coordinator.register_presence_predicates(
-        {description.metric for description in SENSORS}
-    )
+    async_add_entities(restored)
 
     @callback
-    def _on_new_metric(vehicle_id: int, metric: Metric) -> None:
-        """Create a metric sensor on its first observed non-None frame."""
-        # The dispatcher is shared, so another platform's metric lands here too.
-        if metric not in SENSORS_BY_METRIC:
-            return
-        if (vehicle_id, metric) in added:
-            return
-        if vehicle_id not in present_ids:
-            return
-        description = SENSORS_BY_METRIC[metric]
-        added.add((vehicle_id, metric))
-        async_add_entities(
-            [
-                _build_telemetry_sensor(
-                    telemetry_coordinator, entry, vehicle_id, description
+    def _add_new_sensors() -> None:
+        """Create a sensor per ``(vehicle, metric)`` pair that now carries a value."""
+        entities: list[SensorEntity] = []
+        for raw, _ in vehicles:
+            vehicle_id = raw.vehicle_id
+            tlm = telemetry_coordinator.data.get(vehicle_id)
+            if tlm is None:
+                continue
+            for description in SENSORS:
+                if (vehicle_id, description.metric) in added:
+                    continue
+                metric_value = description.value_fn(tlm)
+                if metric_value is None:
+                    continue
+                if _extract_value(description, metric_value) is None:
+                    continue
+                entities.append(
+                    _build_telemetry_sensor(
+                        telemetry_coordinator, entry, vehicle_id, description
+                    )
                 )
-            ]
-        )
-        # Deferred until after the add so a transient skip doesn't permanently
-        # suppress this pair.
-        telemetry_coordinator.mark_metric_seen(vehicle_id, metric)
+                added.add((vehicle_id, description.metric))
+        async_add_entities(entities)
 
-    entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, signal_new_metric(entry.entry_id), _on_new_metric
-        )
-    )
-    async_add_entities(entities)
+    entry.async_on_unload(telemetry_coordinator.async_add_listener(_add_new_sensors))
+    _add_new_sensors()
 
 
 class AbrpTelemetrySensor[T: (float, str)](

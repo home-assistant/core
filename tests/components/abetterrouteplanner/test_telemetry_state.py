@@ -15,12 +15,10 @@ from aioabrp import (
 )
 import pytest
 
-from homeassistant.components.abetterrouteplanner.const import signal_new_metric
 from homeassistant.components.abetterrouteplanner.coordinator import (
     AbrpTelemetryCoordinator,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2, build_metric_value
 
@@ -113,65 +111,6 @@ async def test_last_reported_at_is_receipt_time_not_wire_time(
     stamp = coordinator.last_reported_at[MOCK_VEHICLE_ID][Metric.SOC]
     assert stamp == receipt
     assert stamp != wire_time
-
-
-async def test_presence_dispatch_fires_on_first_seen_for_registered_metrics(
-    hass: HomeAssistant,
-    telemetry_coordinator: AbrpTelemetryCoordinator,
-) -> None:
-    """``signal_new_metric`` fires per first-seen ``(vid, Metric)`` pair."""
-    coordinator = telemetry_coordinator
-    coordinator.register_presence_predicates({Metric.SOC})
-
-    signal = signal_new_metric(coordinator.config_entry.entry_id)
-    dispatched: list[tuple[int, Metric]] = []
-
-    @callback
-    def _record(vehicle_id: int, metric: Metric) -> None:
-        dispatched.append((vehicle_id, metric))
-
-    unsub = async_dispatcher_connect(hass, signal, _record)
-    try:
-        coordinator.on_update(MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(0.5)))
-        coordinator.on_update(
-            MOCK_VEHICLE_ID, Telemetry(voltage=build_metric_value(400.0))
-        )
-        await hass.async_block_till_done()
-        assert dispatched == [(MOCK_VEHICLE_ID, Metric.SOC)]
-
-        # Once the platform marks the pair seen, a later frame must not re-fire.
-        coordinator.mark_metric_seen(MOCK_VEHICLE_ID, Metric.SOC)
-        coordinator.on_update(MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(0.6)))
-        await hass.async_block_till_done()
-        assert dispatched == [(MOCK_VEHICLE_ID, Metric.SOC)]
-    finally:
-        unsub()
-
-
-async def test_mark_metric_seen_suppresses_dispatch(
-    hass: HomeAssistant,
-    telemetry_coordinator: AbrpTelemetryCoordinator,
-) -> None:
-    """``mark_metric_seen`` pre-marks a pair so the next frame does not dispatch."""
-    coordinator = telemetry_coordinator
-    coordinator.register_presence_predicates({Metric.SOC})
-
-    signal = signal_new_metric(coordinator.config_entry.entry_id)
-    dispatched: list[tuple[int, Metric]] = []
-
-    @callback
-    def _record(vehicle_id: int, metric: Metric) -> None:
-        dispatched.append((vehicle_id, metric))
-
-    unsub = async_dispatcher_connect(hass, signal, _record)
-    try:
-        coordinator.mark_metric_seen(MOCK_VEHICLE_ID, Metric.SOC)
-        coordinator.on_update(MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(0.5)))
-        await hass.async_block_till_done()
-
-        assert dispatched == []
-    finally:
-        unsub()
 
 
 async def test_auth_failed_connection_event_logs_warning(

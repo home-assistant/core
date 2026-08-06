@@ -23,11 +23,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, signal_new_metric
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,8 +125,6 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
             update_interval=None,
         )
         self.data = {}
-        self._presence_metrics: set[Metric] = set()
-        self._presence_seen: set[tuple[int, Metric]] = set()
         # Receipt time, not the wire timestamp.
         self.last_reported_at: dict[int, dict[Metric, datetime]] = {}
         # Sticky on omission: a frame without a provider keeps the prior value.
@@ -135,16 +132,6 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         self.last_connection_event: ConnectionEvent | None = None
         self.last_connection_at: datetime | None = None
         self.connect_count: int = 0
-
-    @callback
-    def register_presence_predicates(self, metrics: Iterable[Metric]) -> None:
-        """Register the metrics whose first appearance triggers entity creation."""
-        self._presence_metrics.update(metrics)
-
-    @callback
-    def mark_metric_seen(self, vehicle_id: int, metric: Metric) -> None:
-        """Record a ``(vehicle_id, Metric)`` pair as already-emitted."""
-        self._presence_seen.add((vehicle_id, metric))
 
     @callback
     def _apply_metrics(self, vehicle_id: int, delta: Telemetry) -> None:
@@ -159,16 +146,10 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         self.data[vehicle_id] = delta if stored is None else stored.merge(delta)
         reported = self.last_reported_at.setdefault(vehicle_id, {})
         providers = self.last_provider.setdefault(vehicle_id, {})
-        signal = signal_new_metric(self.config_entry.entry_id)
         for metric, metric_value in delta.items():
             reported[metric] = now
             if metric_value.provider is not None:
                 providers[metric] = metric_value.provider
-            if (
-                metric in self._presence_metrics
-                and (vehicle_id, metric) not in self._presence_seen
-            ):
-                async_dispatcher_send(self.hass, signal, vehicle_id, metric)
 
     @callback
     def on_update(self, vehicle_id: int, telemetry: Telemetry) -> None:
