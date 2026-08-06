@@ -30,15 +30,15 @@ on:
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.version }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.version }}-${{ inputs.images }}
   cancel-in-progress: true
 
 jobs:
   boot_check:
     name: Boot check ${{ matrix.machine }} image
     if: github.repository_owner == 'home-assistant'
-    # amd64 machines need an x86 runner; all others are aarch64
-    runs-on: ${{ contains(fromJson('["generic-x86-64", "qemux86-64"]'), matrix.machine) && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    # amd64 images need an x86 runner; all others are aarch64
+    runs-on: ${{ contains(fromJson('["amd64", "generic-x86-64", "qemux86-64"]'), matrix.machine) && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
