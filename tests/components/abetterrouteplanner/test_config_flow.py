@@ -20,6 +20,7 @@ from homeassistant.components.abetterrouteplanner.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from .conftest import REDIRECT_URI, USER_SUB, build_id_token, complete_oauth_callback
@@ -65,6 +66,11 @@ def _compute_expected_challenge(verifier: str) -> str:
     """Recompute the PKCE S256 challenge from a verifier."""
     digest = hashlib.sha256(verifier.encode("ascii")).digest()
     return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+
+
+def _code_challenge(authorize_url: str) -> str:
+    """Pull the PKCE challenge out of an authorize URL."""
+    return parse_qs(urlparse(authorize_url).query)["code_challenge"][0]
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -126,6 +132,40 @@ async def test_full_flow(
     assert isinstance(code_verifier, str)
     assert code_verifier
     assert _compute_expected_challenge(code_verifier) == code_challenge
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_pkce_verifier_is_per_authorization(hass: HomeAssistant) -> None:
+    """RFC 7636 requires a fresh verifier per authorization request."""
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert first["type"] is FlowResultType.EXTERNAL_STEP
+    assert second["type"] is FlowResultType.EXTERNAL_STEP
+    assert _code_challenge(first["url"]) != _code_challenge(second["url"])
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_pkce_verifier_never_the_setup_implementation(
+    hass: HomeAssistant,
+) -> None:
+    """The implementation kept for token refresh never authorizes a flow."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    kept = next(iter(implementations.values()))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert _code_challenge(result["url"]) != kept.extra_authorize_data["code_challenge"]
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
