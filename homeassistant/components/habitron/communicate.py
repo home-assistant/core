@@ -7,6 +7,7 @@ from typing import Any, cast
 from habitron_client import (
     HabitronClient,
     HabitronTimeoutError,
+    HostDiagnostics,
     Router,
     async_refresh_system,
     get_host_ip,
@@ -229,12 +230,9 @@ class HbtnComm:
         else:
             return cast("dict[str, Any]", info)
 
-    async def get_smhub_update(self) -> dict[str, Any]:
-        """Get current sensor and status values."""
-        return cast(
-            "dict[str, Any]",
-            await self.client.get_smhub_update(self._hbtn_version),
-        )
+    async def get_host_diagnostics(self) -> HostDiagnostics:
+        """Get the hub's host readings, already typed by the library."""
+        return await self.client.get_host_diagnostics(self._hbtn_version)
 
     async def async_system_update(self) -> int:
         """Poll the bus and update the model in place via the library.

@@ -24,6 +24,7 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
+from tests.common import MockConfigEntry
 
 from .const import (
     MOCK_CONFIG_DATA,
@@ -33,8 +34,6 @@ from .const import (
     MOCK_SERIAL,
     MOCK_UDN,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(

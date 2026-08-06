@@ -15,14 +15,15 @@ from collections import deque
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from habitron_client import HostDiagnostics
+
 from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 from .const import MOCK_HOST, MOCK_MAC
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 class _ReplayClient:
@@ -52,9 +53,17 @@ class _ReplayClient:
         """Return the recorded hub info dict."""
         return self._info
 
-    async def get_smhub_update(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        """Skip host diagnostics in the replay (returns no data)."""
-        return {}
+    async def get_host_diagnostics(self, *args: Any, **kwargs: Any) -> HostDiagnostics:
+        """Skip host diagnostics in the replay with neutral readings."""
+        return HostDiagnostics(
+            cpu_frequency=0.0,
+            cpu_load=0.0,
+            cpu_temperature=0.0,
+            memory_usage=0.0,
+            disk_usage=0.0,
+            log_level_console=0,
+            log_level_file=0,
+        )
 
     async def reinit_hub(self, *args: Any, **kwargs: Any) -> None:
         """No-op control call."""

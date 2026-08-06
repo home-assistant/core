@@ -2,17 +2,24 @@
 
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from habitron_client import Diagnostic, HabitronClient, HabitronError, Router, Sensor
+from habitron_client import (
+    Diagnostic,
+    HabitronClient,
+    HabitronError,
+    HabitronProtocolError,
+    HostDiagnostics,
+    Router,
+    Sensor,
+)
 import pytest
 
 from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.components.habitron.smart_hub import SmartHub
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from tests.common import MockConfigEntry
 
 from .const import MOCK_CONFIG_DATA, MOCK_CONFIG_OPTIONS, MOCK_HOST, MOCK_NAME, MOCK_UID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -29,7 +36,7 @@ def smart_hub_stub() -> SmartHub:
     comm.async_setup = AsyncMock()
     comm.async_close = AsyncMock()
     comm.get_smhub_info = AsyncMock()
-    comm.get_smhub_update = AsyncMock()
+    comm.get_host_diagnostics = AsyncMock()
     comm.reinit_hub = AsyncMock()
     comm.send_network_info = AsyncMock()
     comm.send_devregid = AsyncMock()
@@ -156,17 +163,15 @@ def test_smhub_public_properties(smart_hub_stub: SmartHub) -> None:
     assert smart_hub_stub.smhub_name == "Living room hub"
 
 
-async def test_update_short_circuits_when_no_info(smart_hub_stub: SmartHub) -> None:
-    """update() returns early when get_smhub_update yields no data."""
-    smart_hub_stub.comm.get_smhub_update.return_value = None
-    smart_hub_stub.diags = [Diagnostic(name="Status", nmbr=0, type=1)]
-    await smart_hub_stub.update()
-    smart_hub_stub.comm.get_smhub_update.assert_awaited_once()
-
-
 @pytest.mark.parametrize(
     "raised",
-    [HabitronError("bus"), OSError("no route"), TimeoutError()],
+    [
+        HabitronError("bus"),
+        # The library raises this for a payload it cannot read.
+        HabitronProtocolError("cpu.load is not a number"),
+        OSError("no route"),
+        TimeoutError(),
+    ],
 )
 async def test_update_swallows_transport_errors(
     smart_hub_stub: SmartHub, raised: Exception
@@ -178,7 +183,7 @@ async def test_update_swallows_transport_errors(
     unavailable -- for readings the contract calls non-essential.
     """
     smart_hub_stub.diags = [Diagnostic(name="Status", nmbr=0, type=1)]
-    smart_hub_stub.comm.get_smhub_update.side_effect = raised
+    smart_hub_stub.comm.get_host_diagnostics.side_effect = raised
 
     await smart_hub_stub.update()
 
@@ -192,10 +197,10 @@ async def test_update_swallows_habitron_error(smart_hub_stub: SmartHub) -> None:
     must not fail the coordinator tick or abort setup, so update() catches the
     library error and keeps the last values.
     """
-    smart_hub_stub.comm.get_smhub_update.side_effect = HabitronError("boom")
+    smart_hub_stub.comm.get_host_diagnostics.side_effect = HabitronError("boom")
     smart_hub_stub.diags = [Diagnostic(name="Status", nmbr=0, type=1)]
     await smart_hub_stub.update()  # must not raise
-    smart_hub_stub.comm.get_smhub_update.assert_awaited_once()
+    smart_hub_stub.comm.get_host_diagnostics.assert_awaited_once()
     # Nothing was read, so the host readings must stay unknown rather than
     # publishing the zero defaults as if they were measurements.
     assert smart_hub_stub.host_diags_valid is False
@@ -209,25 +214,22 @@ async def test_update_short_circuits_when_no_diags(smart_hub_stub: SmartHub) -> 
     """
     smart_hub_stub.diags = []
     await smart_hub_stub.update()
-    smart_hub_stub.comm.get_smhub_update.assert_not_awaited()
+    smart_hub_stub.comm.get_host_diagnostics.assert_not_awaited()
 
 
 async def test_update_writes_diag_sensor_and_log_levels(
     smart_hub_stub: SmartHub,
 ) -> None:
     """A fully-populated info dict is parsed into the descriptor lists."""
-    smart_hub_stub.comm.get_smhub_update.return_value = {
-        "hardware": {
-            "cpu": {
-                "frequency current": "1500MHz",
-                "load": "12%",
-                "temperature": "55.5°C",
-            },
-            "memory": {"percent": "60%"},
-            "disk": {"percent": "30%"},
-        },
-        "software": {"loglevel": {"console": "3", "file": "4"}},
-    }
+    smart_hub_stub.comm.get_host_diagnostics.return_value = HostDiagnostics(
+        cpu_frequency=1500,
+        cpu_load=12,
+        cpu_temperature=55.5,
+        memory_usage=60,
+        disk_usage=30,
+        log_level_console=3,
+        log_level_file=4,
+    )
     smart_hub_stub.diags = [
         Diagnostic(name="CPU Frequency", nmbr=0, type=10),
         Diagnostic(name="CPU load", nmbr=1, type=10),
@@ -265,18 +267,15 @@ async def test_update_notifies_all_members_on_first_success(
     not notify on their own, and with an otherwise idle bus their entities
     would stay ``unknown`` indefinitely.
     """
-    smart_hub_stub.comm.get_smhub_update.return_value = {
-        "hardware": {
-            "cpu": {
-                "frequency current": "1500MHz",
-                "load": "12%",
-                "temperature": "55.5°C",
-            },
-            "memory": {"percent": "60%"},
-            "disk": {"percent": "30%"},
-        },
-        "software": {"loglevel": {"console": "0", "file": "0"}},
-    }
+    smart_hub_stub.comm.get_host_diagnostics.return_value = HostDiagnostics(
+        cpu_frequency=1500,
+        cpu_load=12,
+        cpu_temperature=55.5,
+        memory_usage=60,
+        disk_usage=30,
+        log_level_console=0,
+        log_level_file=0,
+    )
     # Seed every member with the value the read will return, so no _set() call
     # sees a change and none of them notifies by itself.
     smart_hub_stub.diags = [
@@ -327,18 +326,15 @@ async def test_recovery_notifies_every_member_exactly_once(
     only the members that still match their placeholder -- otherwise every
     normal reading produces a duplicate entity state write.
     """
-    smart_hub_stub.comm.get_smhub_update.return_value = {
-        "hardware": {
-            "cpu": {
-                "frequency current": "1500MHz",
-                "load": "12%",
-                "temperature": "55.5°C",
-            },
-            "memory": {"percent": "60%"},
-            "disk": {"percent": "30%"},
-        },
-        "software": {"loglevel": {"console": "0", "file": "0"}},
-    }
+    smart_hub_stub.comm.get_host_diagnostics.return_value = HostDiagnostics(
+        cpu_frequency=1500,
+        cpu_load=12,
+        cpu_temperature=55.5,
+        memory_usage=60,
+        disk_usage=30,
+        log_level_console=0,
+        log_level_file=0,
+    )
     # Mixed on purpose: the CPU members change, the rest already match what the
     # read returns.
     smart_hub_stub.diags = [
@@ -369,56 +365,179 @@ async def test_recovery_notifies_every_member_exactly_once(
         assert member.notify.call_count == 1
 
 
-@pytest.mark.parametrize(
-    "payload",
-    [
-        # Whole section missing.
-        {"software": {"loglevel": {"console": "0", "file": "0"}}},
-        # Section present but truncated.
-        {
-            "hardware": {"cpu": {"load": "12%"}},
-            "software": {"loglevel": {"console": "0", "file": "0"}},
-        },
-        # Right shape, unusable value.
-        {
-            "hardware": {
-                "cpu": {
-                    "frequency current": "n/a",
-                    "load": "12%",
-                    "temperature": "55.5°C",
-                },
-                "memory": {"percent": "60%"},
-                "disk": {"percent": "30%"},
-            },
-            "software": {"loglevel": {"console": "0", "file": "0"}},
-        },
-        # Right shape, wrong type.
-        {
-            "hardware": {
-                "cpu": {"frequency current": None, "load": "12%", "temperature": "5°C"},
-                "memory": {"percent": "60%"},
-                "disk": {"percent": "30%"},
-            },
-            "software": {"loglevel": {"console": "0", "file": "0"}},
-        },
-    ],
-)
-async def test_update_swallows_unusable_payload(
-    smart_hub_stub: SmartHub, payload: dict
-) -> None:
-    """A malformed diagnostics payload is skipped, not raised.
+async def test_update_swallows_habitron_error(smart_hub_stub: SmartHub) -> None:
+    """A library error during the diagnostics read is non-fatal (swallowed).
 
-    ``update()`` runs during setup and inside the coordinator tick, so a
-    raising host-diagnostics read would abort the entry or mark every bus
-    entity unavailable -- these readings are explicitly non-essential.
+    Host diagnostics are decoupled from the bus status: a dropped/bad response
+    must not fail the coordinator tick or abort setup, so update() catches the
+    library error and keeps the last values.
     """
+    smart_hub_stub.comm.get_host_diagnostics.side_effect = HabitronError("boom")
     smart_hub_stub.diags = [Diagnostic(name="Status", nmbr=0, type=1)]
-    smart_hub_stub.comm.get_smhub_update.return_value = payload
+    await smart_hub_stub.update()  # must not raise
+    smart_hub_stub.comm.get_host_diagnostics.assert_awaited_once()
+    # Nothing was read, so the host readings must stay unknown rather than
+    # publishing the zero defaults as if they were measurements.
+    assert smart_hub_stub.host_diags_valid is False
+
+
+async def test_update_short_circuits_when_no_diags(smart_hub_stub: SmartHub) -> None:
+    """update() skips the query entirely when self.diags is empty.
+
+    Non-Raspberry-Pi hubs have no host diagnostics, so it must not fetch and
+    discard a SmartHub update on every tick.
+    """
+    smart_hub_stub.diags = []
+    await smart_hub_stub.update()
+    smart_hub_stub.comm.get_host_diagnostics.assert_not_awaited()
+
+
+async def test_update_writes_diag_sensor_and_log_levels(
+    smart_hub_stub: SmartHub,
+) -> None:
+    """A fully-populated info dict is parsed into the descriptor lists."""
+    smart_hub_stub.comm.get_host_diagnostics.return_value = HostDiagnostics(
+        cpu_frequency=1500,
+        cpu_load=12,
+        cpu_temperature=55.5,
+        memory_usage=60,
+        disk_usage=30,
+        log_level_console=3,
+        log_level_file=4,
+    )
+    smart_hub_stub.diags = [
+        Diagnostic(name="CPU Frequency", nmbr=0, type=10),
+        Diagnostic(name="CPU load", nmbr=1, type=10),
+        Diagnostic(name="CPU Temperature", nmbr=2, type=10),
+    ]
+    smart_hub_stub.sensors = [
+        Sensor(name="Memory usage", nmbr=0, type=2, value=0),
+        Sensor(name="Disk usage", nmbr=1, type=2, value=0),
+    ]
+    smart_hub_stub.loglvl = [
+        Sensor(name="Logging level console", nmbr=0, type=2, value=0),
+        Sensor(name="Logging level file", nmbr=1, type=2, value=0),
+    ]
 
     await smart_hub_stub.update()
 
-    # Still invalid, so the next good read publishes every member.
-    assert smart_hub_stub.host_diags_valid is False
+    assert smart_hub_stub.diags[0].value == 1500.0
+    assert smart_hub_stub.diags[1].value == 12.0
+    assert smart_hub_stub.diags[2].value == 55.5
+    assert smart_hub_stub.sensors[0].value == 60.0
+    assert smart_hub_stub.sensors[1].value == 30.0
+    assert smart_hub_stub.loglvl[0].value == 3
+    assert smart_hub_stub.loglvl[1].value == 4
+    assert smart_hub_stub.host_diags_valid is True
+
+
+async def test_update_notifies_all_members_on_first_success(
+    smart_hub_stub: SmartHub,
+) -> None:
+    """The first successful read notifies every member, even unchanged ones.
+
+    When the setup-time reads failed, the entities report ``unknown``. A later
+    successful read must publish *all* host readings, including members whose
+    value happens to equal the placeholder they were seeded with -- those do
+    not notify on their own, and with an otherwise idle bus their entities
+    would stay ``unknown`` indefinitely.
+    """
+    smart_hub_stub.comm.get_host_diagnostics.return_value = HostDiagnostics(
+        cpu_frequency=1500,
+        cpu_load=12,
+        cpu_temperature=55.5,
+        memory_usage=60,
+        disk_usage=30,
+        log_level_console=0,
+        log_level_file=0,
+    )
+    # Seed every member with the value the read will return, so no _set() call
+    # sees a change and none of them notifies by itself.
+    smart_hub_stub.diags = [
+        Diagnostic(name="CPU Frequency", nmbr=0, type=10, value=1500.0),
+        Diagnostic(name="CPU load", nmbr=1, type=10, value=12.0),
+        Diagnostic(name="CPU Temperature", nmbr=2, type=10, value=55.5),
+    ]
+    smart_hub_stub.sensors = [
+        Sensor(name="Memory usage", nmbr=0, type=2, value=60.0),
+        Sensor(name="Disk usage", nmbr=1, type=2, value=30.0),
+    ]
+    smart_hub_stub.loglvl = [
+        Sensor(name="Logging level console", nmbr=0, type=2, value=0),
+        Sensor(name="Logging level file", nmbr=1, type=2, value=0),
+    ]
+    members = [
+        *smart_hub_stub.diags,
+        *smart_hub_stub.sensors,
+        *smart_hub_stub.loglvl,
+    ]
+    for member in members:
+        member.notify = Mock()
+    smart_hub_stub.host_diags_valid = False
+
+    await smart_hub_stub.update()
+
+    assert smart_hub_stub.host_diags_valid is True
+    for member in members:
+        assert member.notify.call_count == 1
+
+    # A subsequent unchanged read must not re-notify: the entities are already
+    # showing these values.
+    for member in members:
+        member.notify.reset_mock()
+
+    await smart_hub_stub.update()
+
+    for member in members:
+        member.notify.assert_not_called()
+
+
+async def test_recovery_notifies_every_member_exactly_once(
+    smart_hub_stub: SmartHub,
+) -> None:
+    """On recovery a changed member is not written twice.
+
+    ``_set`` already notifies what it changed, so the catch-up loop must cover
+    only the members that still match their placeholder -- otherwise every
+    normal reading produces a duplicate entity state write.
+    """
+    smart_hub_stub.comm.get_host_diagnostics.return_value = HostDiagnostics(
+        cpu_frequency=1500,
+        cpu_load=12,
+        cpu_temperature=55.5,
+        memory_usage=60,
+        disk_usage=30,
+        log_level_console=0,
+        log_level_file=0,
+    )
+    # Mixed on purpose: the CPU members change, the rest already match what the
+    # read returns.
+    smart_hub_stub.diags = [
+        Diagnostic(name="CPU Frequency", nmbr=0, type=10, value=0.0),
+        Diagnostic(name="CPU load", nmbr=1, type=10, value=0.0),
+        Diagnostic(name="CPU Temperature", nmbr=2, type=10, value=0.0),
+    ]
+    smart_hub_stub.sensors = [
+        Sensor(name="Memory usage", nmbr=0, type=2, value=60.0),
+        Sensor(name="Disk usage", nmbr=1, type=2, value=30.0),
+    ]
+    smart_hub_stub.loglvl = [
+        Sensor(name="Logging level console", nmbr=0, type=2, value=0),
+        Sensor(name="Logging level file", nmbr=1, type=2, value=0),
+    ]
+    members = [
+        *smart_hub_stub.diags,
+        *smart_hub_stub.sensors,
+        *smart_hub_stub.loglvl,
+    ]
+    for member in members:
+        member.notify = Mock()
+    smart_hub_stub.host_diags_valid = False
+
+    await smart_hub_stub.update()
+
+    for member in members:
+        assert member.notify.call_count == 1
 
 
 async def test_async_close_delegates_to_comm(

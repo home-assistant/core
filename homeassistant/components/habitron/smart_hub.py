@@ -215,39 +215,24 @@ class SmartHub:
             # instead of fetching and discarding it every tick.
             return
         try:
-            info = await self.comm.get_smhub_update()
+            host = await self.comm.get_host_diagnostics()
         except (HabitronError, OSError, TimeoutError) as err:
             # The coordinator calls this outside its guarded bus refresh, so a
-            # socket error or timeout on these non-essential readings would
-            # otherwise fail the whole tick and mark every entity unavailable.
+            # socket error, a timeout or a payload the library cannot read
+            # (``HabitronProtocolError``) would otherwise fail the whole tick
+            # and mark every entity unavailable. ``host_diags_valid`` stays
+            # False, so the next good read still publishes every member.
             _LOGGER.debug("SmartHub diagnostics update skipped: %s", err)
             return
-        if not info:
-            return
-        try:
-            hardware = info["hardware"]
-            software = info["software"]
-            readings: tuple[tuple[Diagnostic | Sensor, float], ...] = (
-                (
-                    self.diags[0],
-                    float(hardware["cpu"]["frequency current"].rstrip("MHz")),
-                ),
-                (self.diags[1], float(hardware["cpu"]["load"].rstrip("%"))),
-                (self.diags[2], float(hardware["cpu"]["temperature"].rstrip("°C"))),
-                (self.sensors[0], float(hardware["memory"]["percent"].rstrip("%"))),
-                (self.sensors[1], float(hardware["disk"]["percent"].rstrip("%"))),
-                (self.loglvl[0], int(software["loglevel"]["console"])),
-                (self.loglvl[1], int(software["loglevel"]["file"])),
-            )
-        except (KeyError, TypeError, ValueError, AttributeError) as err:
-            # A truncated or oddly typed payload must not escape: this method
-            # also runs during setup and inside the coordinator tick, so a
-            # raising diagnostics read would abort the entry or mark every bus
-            # entity unavailable -- exactly what the contract above rules out.
-            # ``host_diags_valid`` stays False, so the next good read still
-            # publishes every member.
-            _LOGGER.debug("SmartHub diagnostics payload unusable: %s", err)
-            return
+        readings: tuple[tuple[Diagnostic | Sensor, float], ...] = (
+            (self.diags[0], host.cpu_frequency),
+            (self.diags[1], host.cpu_load),
+            (self.diags[2], host.cpu_temperature),
+            (self.sensors[0], host.memory_usage),
+            (self.sensors[1], host.disk_usage),
+            (self.loglvl[0], host.log_level_console),
+            (self.loglvl[1], host.log_level_file),
+        )
         was_valid = self.host_diags_valid
         self.host_diags_valid = True
         unchanged = [

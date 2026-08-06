@@ -14,10 +14,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from tests.common import MockConfigEntry
 
 from .const import MOCK_HOST, MOCK_NAME, MOCK_UDN
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(
