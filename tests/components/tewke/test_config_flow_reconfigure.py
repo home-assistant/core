@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock
 
 from homeassistant.components.tewke.const import DOMAIN
-from homeassistant.config_entries import SOURCE_RECONFIGURE
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,7 +24,7 @@ async def test_reconfigure_flow(hass: HomeAssistant, mock_tap: AsyncMock) -> Non
     mock_entry.add_to_hass(hass)
 
     result = await mock_entry.start_reconfigure_flow(hass)
-    
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirmation"
 

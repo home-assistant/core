@@ -1,10 +1,7 @@
 """Test the Tewke integration."""
-from unittest.mock import patch, MagicMock
 
-import pytest
 from pytewke.error import PyTewkeDiscoveryError
 
-from homeassistant.components.tewke.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -27,6 +24,7 @@ async def test_setup_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     assert mock_tap.close.call_count == 1
 
+
 async def test_setup_discovery_error(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap
 ) -> None:
@@ -38,6 +36,7 @@ async def test_setup_discovery_error(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
+
 async def test_setup_missing_wall_dock_id(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap
 ) -> None:
@@ -48,6 +47,7 @@ async def test_setup_missing_wall_dock_id(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
 
 async def test_async_reload_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap
@@ -62,4 +62,3 @@ async def test_async_reload_entry(
     assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
-

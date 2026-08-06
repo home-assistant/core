@@ -1,8 +1,12 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from homeassistant.components.tewke.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
+
 from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def mock_tap():
@@ -17,9 +21,10 @@ def mock_tap():
         tap_instance.get_radar = AsyncMock(return_value=None)
         tap_instance.get_energy = AsyncMock(return_value=None)
         tap_instance.get_energy_override = AsyncMock(return_value=None)
-        
+
         # We need a valid ConfigData object because binary_sensor assumes it exists to get hardware_id
         from pytewke import ConfigData
+
         mock_config = ConfigData.model_construct(
             hardwareId="test_dock_id",
             # Add other defaults if needed
@@ -30,6 +35,7 @@ def mock_tap():
         tap_instance.wall_dock_id = "test_dock_id"
         mock_tap_class.return_value = tap_instance
         yield tap_instance
+
 
 @pytest.fixture
 def mock_config_entry():

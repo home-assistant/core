@@ -1,17 +1,22 @@
 from unittest.mock import AsyncMock
+
 import pytest
+from pytewke.data import ConfigData
+from pytewke.error import (
+    PyTewkeCoapError,
+    PyTewkeInvalidRequestError,
+    PyTewkeUnknownError,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.exceptions import HomeAssistantError
-
-from pytewke.data import ConfigData
-from pytewke.error import PyTewkeCoapError, PyTewkeInvalidRequestError, PyTewkeUnknownError
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def mock_tap_with_button(mock_tap):
@@ -24,6 +29,7 @@ def mock_tap_with_button(mock_tap):
     )
     mock_tap.restart = AsyncMock()
     return mock_tap
+
 
 async def test_button(
     hass: HomeAssistant,
@@ -69,6 +75,7 @@ async def test_button(
     )
 
     mock_tap_with_button.restart.assert_called_once()
+
 
 @pytest.mark.parametrize(
     ("exception", "expected_message"),

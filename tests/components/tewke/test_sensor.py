@@ -1,4 +1,3 @@
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 import pytest
@@ -7,13 +6,17 @@ from pytewke.data.radar import RadarProximity, RadarThreshold, RadarThresholds
 from pytewke.data.sensors import AmbientLight
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.tewke.const import DOMAIN
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
+from homeassistant.components.tewke.sensor import (
+    ENERGY_SENSOR_DESCRIPTIONS,
+    RADAR_SENSOR_DESCRIPTIONS,
+    SENSOR_DESCRIPTIONS,
+)
 
 @pytest.fixture
 def mock_tap_with_sensors(mock_tap):
@@ -248,6 +251,7 @@ async def test_sensor_missing_optional_data(
         # We don't necessarily assert state is unknown for ALL of them, just that they load without error
         # The specific ones with missing data (like ambient_light) will be unknown
 
+
 async def test_native_value_when_none(
     hass: HomeAssistant,
     mock_tap_with_sensors,
@@ -266,23 +270,24 @@ async def test_native_value_when_none(
 
     # The entities will still be registered but unavailable
     # Let's get the objects and call native_value directly
-    from homeassistant.components.tewke.sensor import TewkeSensor, TewkeRadarSensor, TewkeEnergySensor
-    from homeassistant.helpers import entity_registry as er
-    
+    from homeassistant.components.tewke.sensor import (
+        TewkeEnergySensor,
+        TewkeRadarSensor,
+        TewkeSensor,
+    )
+
     coordinator = mock_config_entry.runtime_data.coordinator
-    
+
     # Just need to fetch the entity objects. Wait, HA doesn't expose the entity objects easily.
     # We can just instantiate them directly for the test.
-    from homeassistant.components.tewke.sensor import SENSOR_DESCRIPTIONS, RADAR_SENSOR_DESCRIPTIONS, ENERGY_SENSOR_DESCRIPTIONS
-    
     # 1. Sensor
     sensor = TewkeSensor(coordinator, SENSOR_DESCRIPTIONS[0])
     assert sensor.native_value is None
-    
+
     # 2. Radar
     radar = TewkeRadarSensor(coordinator, RADAR_SENSOR_DESCRIPTIONS[0])
     assert radar.native_value is None
-    
+
     # 3. Energy
     energy = TewkeEnergySensor(coordinator, ENERGY_SENSOR_DESCRIPTIONS[0])
     assert energy.native_value is None

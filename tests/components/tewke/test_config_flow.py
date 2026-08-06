@@ -1,18 +1,16 @@
 """Test the Tewke config flow."""
 
 import ipaddress
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-import pytest
 from pytewke.error import PyTewkeDiscoveryError
 
 from homeassistant.components.tewke.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
 
 from tests.common import MockConfigEntry
 
@@ -132,7 +130,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_tap: AsyncMock) -> None:
     mock_entry.add_to_hass(hass)
 
     result = await mock_entry.start_reauth_flow(hass)
-    
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirmation"
 
@@ -143,7 +141,8 @@ async def test_reauth_flow(hass: HomeAssistant, mock_tap: AsyncMock) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    
+
+
 async def test_zeroconf_flow_connection_error(
     hass: HomeAssistant, mock_tap: AsyncMock
 ) -> None:

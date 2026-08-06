@@ -3,10 +3,8 @@
 from typing import Any
 
 from pytewke.data import Scene
-import pytest
 
-from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
-from homeassistant.components.tewke.const import DISPATCHER_ADD_SCENES, DOMAIN
+from homeassistant.components.tewke.const import DOMAIN
 from homeassistant.components.tewke.repairs import async_create_fix_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -30,10 +28,12 @@ async def test_new_scene_repair_flow(
             id="pending_scene_1",
             name="Pending Scene",
             created_at=123,
-            device_id="device1", isActive=False, brightness=100,
+            device_id="device1",
+            isActive=False,
+            brightness=100,
         )
     }
-    
+
     # Create the issue
     ir.async_create_issue(
         hass,
@@ -45,9 +45,11 @@ async def test_new_scene_repair_flow(
         translation_placeholders={"name": "Tewke"},
         data={"entry_id": mock_config_entry.entry_id},
     )
-    
+
     # Get the issue
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, f"new_scenes_found_{mock_config_entry.entry_id}")
+    issue = ir.async_get(hass).async_get_issue(
+        DOMAIN, f"new_scenes_found_{mock_config_entry.entry_id}"
+    )
     assert issue is not None
 
     flow = await async_create_fix_flow(hass, issue.issue_id, issue.data)
@@ -61,9 +63,11 @@ async def test_new_scene_repair_flow(
     result = await flow.async_step_init(user_input={})
     assert result["type"] == "create_entry"
     assert result["data"] == {}
-    
+
     # Issue should be deleted
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, f"new_scenes_found_{mock_config_entry.entry_id}")
+    issue = ir.async_get(hass).async_get_issue(
+        DOMAIN, f"new_scenes_found_{mock_config_entry.entry_id}"
+    )
     assert issue is None
 
 
@@ -82,11 +86,11 @@ async def test_no_new_scenes_abort(
     flow = await async_create_fix_flow(
         hass,
         f"new_scenes_found_{mock_config_entry.entry_id}",
-        {"entry_id": mock_config_entry.entry_id}
+        {"entry_id": mock_config_entry.entry_id},
     )
     assert flow is not None
     flow.hass = hass
-    
+
     result = await flow.async_step_init()
     assert result["type"] == "abort"
     assert result["reason"] == "no_new_scenes"
@@ -98,7 +102,7 @@ async def test_invalid_issues(
 ) -> None:
     """Test invalid issue handling in repair flow."""
     mock_config_entry.add_to_hass(hass)
-    
+
     # Unhandled issue ID
     flow = await async_create_fix_flow(hass, "unknown_issue", {})
     assert flow is None
@@ -112,7 +116,9 @@ async def test_invalid_issues(
     assert flow is None
 
     # Missing entry
-    flow = await async_create_fix_flow(hass, "new_scenes_found_123", {"entry_id": "nonexistent_entry"})
+    flow = await async_create_fix_flow(
+        hass, "new_scenes_found_123", {"entry_id": "nonexistent_entry"}
+    )
     assert flow is None
 
 
@@ -149,7 +155,7 @@ async def test_scene_no_longer_pending(
     flow = await async_create_fix_flow(
         hass,
         f"new_scenes_found_{mock_config_entry.entry_id}",
-        {"entry_id": mock_config_entry.entry_id}
+        {"entry_id": mock_config_entry.entry_id},
     )
     flow.hass = hass
 

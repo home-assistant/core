@@ -1,4 +1,3 @@
-from datetime import datetime
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -32,11 +31,13 @@ async def test_coordinator_setup_observe_fails(hass, mock_config_entry, mock_tap
     coordinator = TewkeCoordinator(
         hass, logging.getLogger(__name__), "Tewke Tap", mock_config_entry
     )
-    with patch.object(
-        coordinator, "_setup_observe", side_effect=Exception("Test Exception")
+    with (
+        patch.object(
+            coordinator, "_setup_observe", side_effect=Exception("Test Exception")
+        ),
+        pytest.raises(UpdateFailed),
     ):
-        with pytest.raises(UpdateFailed):
-            await coordinator._async_update_data()
+        await coordinator._async_update_data()
 
 
 async def test_coordinator_device_swap(hass, mock_config_entry, mock_tap):

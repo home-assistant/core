@@ -1,8 +1,8 @@
 """Tests for the Tewke number platform."""
 
-from unittest.mock import AsyncMock, patch
-import pytest
+from unittest.mock import AsyncMock
 
+import pytest
 from pytewke import EnergyOverrideData
 from pytewke.error import (
     PyTewkeCoapError,
@@ -10,7 +10,11 @@ from pytewke.error import (
     PyTewkeUnknownError,
 )
 
-from homeassistant.components.number import ATTR_VALUE, DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -20,7 +24,10 @@ from tests.common import MockConfigEntry
 
 
 async def test_number_platform(
-    hass: HomeAssistant, mock_tap: AsyncMock, mock_config_entry: MockConfigEntry, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    mock_tap: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test number platform setup and setting values."""
     entity_registry.async_get_or_create(
@@ -39,7 +46,7 @@ async def test_number_platform(
     await hass.async_block_till_done()
 
     entity_id = "number.living_room_tewke_switch_energy_override"
-    
+
     # State should be 42.5
     state = hass.states.get(entity_id)
     assert state is not None
@@ -55,12 +62,14 @@ async def test_number_platform(
         {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 0.0},
         blocking=True,
     )
-    
+
     mock_tap.set_energy_override.assert_called_once_with(None)
-    
+
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "unknown"  # when inactive, native_value returns None, which maps to "unknown"
+    assert (
+        state.state == "unknown"
+    )  # when inactive, native_value returns None, which maps to "unknown"
 
     # Set value > 0
     mock_tap.set_energy_override.reset_mock()
@@ -73,9 +82,9 @@ async def test_number_platform(
         {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 10.0},
         blocking=True,
     )
-    
+
     mock_tap.set_energy_override.assert_called_once_with(10.0)
-    
+
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "10.0"
@@ -128,7 +137,10 @@ async def test_number_set_value_exceptions(
 
 
 async def test_number_inactive(
-    hass: HomeAssistant, mock_tap: AsyncMock, mock_config_entry: MockConfigEntry, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    mock_tap: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test number entity when energy override is inactive."""
     entity_registry.async_get_or_create(
@@ -147,7 +159,7 @@ async def test_number_inactive(
     await hass.async_block_till_done()
 
     entity_id = "number.living_room_tewke_switch_energy_override"
-    
+
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unknown"
@@ -164,6 +176,6 @@ async def test_number_setup_none(
     await hass.async_block_till_done()
 
     entity_id = "number.living_room_tewke_switch_energy_override"
-    
+
     state = hass.states.get(entity_id)
     assert state is None

@@ -1,14 +1,15 @@
 from unittest.mock import AsyncMock
+
 import pytest
+from pytewke.data import ConfigData, RadarData, SensorData
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, STATE_ON, STATE_OFF
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from pytewke.data import ConfigData, RadarData, SensorData
-
 from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def mock_tap_with_binary_sensors(mock_tap):
@@ -31,6 +32,7 @@ def mock_tap_with_binary_sensors(mock_tap):
         )
     )
     return mock_tap
+
 
 async def test_binary_sensors(
     hass: HomeAssistant,
@@ -74,6 +76,7 @@ async def test_binary_sensors(
         assert state is not None
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
+
 async def test_binary_sensor_data_becomes_none(
     hass: HomeAssistant,
     mock_tap_with_binary_sensors: AsyncMock,
@@ -93,7 +96,7 @@ async def test_binary_sensor_data_becomes_none(
         suggested_object_id="living_room_tewke_switch_stabilisation_status",
         disabled_by=None,
     )
-    
+
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -116,7 +119,9 @@ async def test_binary_sensor_data_becomes_none(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.living_room_tewke_switch_stabilisation_status")
+    state = hass.states.get(
+        "binary_sensor.living_room_tewke_switch_stabilisation_status"
+    )
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
