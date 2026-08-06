@@ -16,6 +16,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit, _patch_telegram_store
 
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
@@ -137,6 +138,38 @@ async def test_remove_device_ignores_foreign_platform_entities(
         "sensor",
         "other_integration",
         "other_unique_id",
+        device_id=device_id,
+    )
+
+    response = await client.remove_device(device_id, knx.mock_config_entry.entry_id)
+    assert response["success"]
+    assert not device_registry.async_get(device_id)
+
+
+async def test_remove_device_ignores_other_config_entry_knx_entities(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A knx-platform entity owned by a different config entry does not block removal."""
+    assert await async_setup_component(hass, "config", {})
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "knx/create_device", "name": "Test Device"})
+    res = await client.receive_json()
+    assert res["success"], res
+    device_id = res["result"]["id"]
+
+    other_entry = MockConfigEntry(domain=DOMAIN)
+    other_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "other_config_entry_unique_id",
+        config_entry=other_entry,
         device_id=device_id,
     )
 
