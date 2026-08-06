@@ -9,7 +9,7 @@ on:
         default: "dev"
         required: true
       images:
-        description: "JSON array of machine images to test"
+        description: "JSON array of machine or base images to test"
         default: >-
           ["generic-x86-64", "khadas-vim3", "odroid-c2", "odroid-c4",
           "odroid-m1", "odroid-n2", "qemuarm-64", "qemux86-64",
@@ -23,7 +23,7 @@ on:
         required: true
         type: string
       images:
-        description: "JSON array of machine images to test"
+        description: "JSON array of machine or base images to test"
         required: true
         type: string
 
