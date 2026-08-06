@@ -206,7 +206,12 @@ def vehicles_without_sensors(
     entry: AbetterrouteplannerConfigEntry,
     vehicle_ids: list[int],
 ) -> list[int]:
-    """Return the vehicles that have no telemetry sensor in the entity registry."""
+    """Return the vehicles that have no telemetry sensor in the entity registry.
+
+    These are the vehicles the registry probe in ``async_setup_entry`` cannot
+    recreate entities for, so they are the ones that need a seeded value to
+    have any entity by the end of setup.
+    """
     registry = er.async_get(hass)
     return [
         vehicle_id

@@ -114,10 +114,13 @@ async def async_setup_entry(
     # endpoint rejects as a whole if it is malformed.
     vehicle_ids = list(dict.fromkeys(raw.vehicle_id for raw, _ in vehicles))
 
-    # Seed before starting the stream so the snapshot is the merge baseline.
+    # The stream re-delivers current state for every vehicle in its connect
+    # snapshot, so freshness needs no poll however long the instance was down.
+    # The seed only covers setup timing: a new vehicle has no registry rows to
+    # probe, so without a value here it would finish setup with no entities.
+    # Seeded first so the snapshot merges onto it rather than the reverse.
     stream: TelemetryStream | None = None
     if vehicle_ids:
-        # Known vehicles restore via the registry probe + ``RestoreSensor``.
         new_vehicles = vehicles_without_sensors(hass, entry, vehicle_ids)
         if new_vehicles:
             await telemetry_coordinator.async_seed(client, new_vehicles)
