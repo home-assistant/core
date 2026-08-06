@@ -5,6 +5,7 @@
 # e.g. cameras: NACamera, NOC, etc.
 from datetime import timedelta
 from functools import partial
+import importlib
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -35,6 +36,9 @@ from .common import (
     simulate_webhook,
     snapshot_platform_entities,
 )
+
+
+importlib.import_module("homeassistant.components.netatmo.data_handler")
 
 
 async def test_entity(
