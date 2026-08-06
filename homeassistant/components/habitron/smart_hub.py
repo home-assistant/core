@@ -153,7 +153,7 @@ class SmartHub:
         )
 
         # 3. Hub diagnostics (depends on the platform type).
-        if self._type[:12] == "Raspberry Pi":
+        if self._type.startswith("Raspberry Pi"):
             self.diags = [
                 Diagnostic(name="CPU Frequency", nmbr=0, type=10),
                 Diagnostic(name="CPU load", nmbr=1, type=10),
