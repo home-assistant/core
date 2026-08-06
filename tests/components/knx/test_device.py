@@ -111,3 +111,32 @@ async def test_remove_yaml_device_blocked(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, "living_room"), knx.mock_config_entry.entry_id
     )
+
+
+async def test_remove_device_ignores_foreign_platform_entities(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """An entity from another integration on the device does not block removal."""
+    assert await async_setup_component(hass, "config", {})
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "knx/create_device", "name": "Test Device"})
+    res = await client.receive_json()
+    assert res["success"], res
+    device_id = res["result"]["id"]
+
+    entity_registry.async_get_or_create(
+        "sensor",
+        "other_integration",
+        "other_unique_id",
+        device_id=device_id,
+    )
+
+    response = await client.remove_device(device_id, knx.mock_config_entry.entry_id)
+    assert response["success"]
+    assert not device_registry.async_get(device_id)
