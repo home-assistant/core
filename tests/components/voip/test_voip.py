@@ -1069,6 +1069,58 @@ async def test_announce_disconnect(
 
 
 @pytest.mark.usefixtures("socket_enabled")
+async def test_announce_disconnect_before_pickup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
+) -> None:
+    """Test announcement disconnected before pickup."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    assert (
+        satellite.supported_features
+        & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
+    )
+
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
+    announcement = assist_satellite.AssistSatelliteAnnouncement(
+        message="test announcement",
+        media_id=_MEDIA_ID,
+        tts_token=mock_tts_result_stream.token,
+        original_media_id=_MEDIA_ID,
+        media_id_source="tts",
+    )
+
+    # Protocol has already been mocked, but "outgoing_call" is not async
+    mock_protocol: AsyncMock = config_entry.runtime_data.domain_data.protocol
+    mock_protocol.outgoing_call = Mock()
+
+    announce_task = hass.async_create_background_task(
+        satellite.async_announce(announcement), "voip_announce"
+    )
+    await asyncio.sleep(0)
+    satellite.connection_made(Mock())
+    mock_protocol.outgoing_call.assert_called_once()
+
+    # No audio has been received, so the pickup checker should still
+    # be waiting for the caller to answer.
+    assert satellite._last_chunk_time is None
+    assert satellite._check_announcement_pickup_task is not None
+    assert not satellite._check_announcement_pickup_task.done()
+
+    # Disconnect before the pickup checker detects a timeout.
+    satellite.disconnect()
+
+    assert satellite._check_announcement_pickup_task is None
+    assert satellite._announcement is None
+
+    async with asyncio.timeout(2):
+        await announce_task
+
+
+@pytest.mark.usefixtures("socket_enabled")
 async def test_start_conversation(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

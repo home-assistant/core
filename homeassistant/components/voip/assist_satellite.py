@@ -297,6 +297,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             # Stop ringing
             _LOGGER.debug("Caller did not pick up in time")
             sip_protocol.cancel_call(call_info)
+            self.disconnect()
             raise
 
     async def _check_announcement_pickup(self) -> None:
@@ -370,8 +371,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         if self._check_hangup_task is not None:
             self._check_hangup_task.cancel()
             self._check_hangup_task = None
-        # Clean up announcement state in case it wasn't cleaned up by the check
-        # hangup task
+        # Clean up announcement state
         self.voip_device.set_is_active(False)
         self._announcement = None
         if self._run_pipeline_task is not None:
@@ -387,7 +387,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Server is ready."""
         super().connection_made(transport)
         self.voip_device.set_is_active(True)
-        self._last_chunk_time = time.monotonic()
         # Check if caller hung up
         self._check_hangup_task = self.config_entry.async_create_background_task(
             self.hass,
