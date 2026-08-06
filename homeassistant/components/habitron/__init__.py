@@ -54,9 +54,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> 
         # devices) via the coordinator, then the first bus poll.
         await coordinator.async_config_entry_first_refresh()
 
+        # Before the update listener exists: adopting rewrites the entry, and
+        # ``async_update_entry`` fires the listeners -- which would schedule a
+        # reload while this very setup is still running.
+        _async_adopt_hub_identity(hass, entry, coordinator.smart_hub)
+
         entry.async_on_unload(entry.add_update_listener(update_listener))
 
-        _async_adopt_hub_identity(hass, entry, coordinator.smart_hub)
         _async_cleanup_stale_devices(hass, entry, coordinator.smart_hub)
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

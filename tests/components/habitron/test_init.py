@@ -336,6 +336,48 @@ async def test_setup_adopts_the_hub_identity(
     assert mock_config_entry.unique_id == expected
 
 
+async def test_setup_adopts_before_the_update_listener_exists(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+) -> None:
+    """Rewriting the entry must not reload the entry that is still setting up.
+
+    ``async_update_entry`` fires the update listeners, and ours reloads
+    unconditionally -- so the identity has to be adopted before that listener
+    is registered.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="habitron_192.168.1.50",
+        version=2,
+        data={CONF_HOST: MOCK_HOST},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch.object(
+            type(hass.config_entries),
+            "async_reload",
+            new=AsyncMock(return_value=True),
+        ) as reload,
+        patch(
+            "homeassistant.components.habitron._async_adopt_hub_identity",
+            side_effect=lambda hass, entry, smhub: (
+                hass.config_entries.async_update_entry(entry, unique_id=MOCK_UID)
+            ),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.unique_id == MOCK_UID
+    reload.assert_not_called()
+
+
 async def test_cleanup_keeps_a_device_with_one_live_identifier(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
