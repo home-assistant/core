@@ -4223,6 +4223,43 @@ async def test_update_device_via_device_id_self_reference_raises_before_removal(
     assert device_registry.async_get(device.id) == device
 
 
+async def test_update_device_composite_via_device_id_self_reference_raises_before_removal(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A composite via_device_id self-reference raises before a removal in one call."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    # old_id resolves to device_1 (the split owned by entry_1), so linking device_1 to
+    # it is a self-reference; it must raise before the removal deletes the device.
+    with pytest.raises(
+        HomeAssistantError, match="A device can not be its own via device"
+    ):
+        device_registry.async_update_device(
+            device_1.id,
+            remove_config_entry_id=entry_1.entry_id,
+            via_device_id=old_id,
+        )
+
+    assert device_1.id in device_registry.devices
+
+
 async def test_get_or_create_composite_via_device_id_resolved(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

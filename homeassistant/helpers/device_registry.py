@@ -2250,6 +2250,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 ):
                     move_target = None
                 if move_target is None:
+                    # A composite via_device_id resolves to the split owned by the
+                    # entry being removed, i.e. this device, so it is a self-reference;
+                    # reject it before deleting, atomically like the direct-id check
+                    # before the ownership changes above.
+                    if (
+                        via_device_id is not UNDEFINED
+                        and via_device_id is not None
+                        and via_device_id == old.composite_device_id
+                    ):
+                        raise HomeAssistantError(
+                            "A device can not be its own via device"
+                        )
                     self.async_remove_device(device_id)
                     return None
                 target_config_entry_id = move_target.config_entry_id
