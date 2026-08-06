@@ -20,9 +20,10 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     is_multiprotocol_url,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 
@@ -32,13 +33,24 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-# Serializes dataset mutations across all config entries. Acquired by callers
-# rather than by the OTBRData methods, so a sequence that reads the router's
-# state and writes it back stays atomic: concurrent writers would otherwise
-# work from state the other has already replaced, and the mesh silently
-# ignores whichever pending dataset is not the newest while its writer still
-# reports success.
-DATASET_LOCK = asyncio.Lock()
+DATASET_LOCK_KEY: HassKey[asyncio.Lock] = HassKey("otbr_dataset_lock")
+
+
+@callback
+def async_get_dataset_lock(hass: HomeAssistant) -> asyncio.Lock:
+    """Return the lock serializing dataset mutations.
+
+    It covers every config entry, and is acquired by callers rather than by
+    the OTBRData methods, so a sequence that reads the router's state and
+    writes it back stays atomic: concurrent writers would otherwise work from
+    state the other has already replaced, and the mesh silently ignores
+    whichever pending dataset is not the newest while its writer still
+    reports success.
+    """
+    if (lock := hass.data.get(DATASET_LOCK_KEY)) is None:
+        lock = hass.data[DATASET_LOCK_KEY] = asyncio.Lock()
+    return lock
+
 
 INSECURE_NETWORK_KEYS = (
     # Thread web UI default

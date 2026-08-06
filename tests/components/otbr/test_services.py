@@ -12,7 +12,10 @@ from python_otbr_api.tlv_parser import DelayTimer, MeshcopTLVType, Timestamp
 from homeassistant.components.otbr import (
     silabs_multiprotocol as otbr_silabs_multiprotocol,
 )
-from homeassistant.components.otbr.util import DATASET_LOCK, INSECURE_NETWORK_KEYS
+from homeassistant.components.otbr.util import (
+    INSECURE_NETWORK_KEYS,
+    async_get_dataset_lock,
+)
 from homeassistant.components.thread import async_add_dataset
 from homeassistant.components.thread.dataset_store import async_get_store
 from homeassistant.core import HomeAssistant
@@ -562,7 +565,7 @@ async def test_channel_change_waits_for_dataset_lock(
             return_value=DATASET_CH16,
         ),
     ):
-        async with DATASET_LOCK:
+        async with async_get_dataset_lock(hass):
             task = hass.async_create_task(
                 otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=300)
             )
@@ -637,3 +640,72 @@ async def test_migration_refreshes_repair_issues(
     assert issue_registry.async_get_issue(
         domain="otbr", issue_id=f"insecure_thread_network_{otbr_config_entry_multipan}"
     )
+
+
+async def test_migration_reports_a_discarded_store_write(
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    aioclient_mock: AiohttpClientMocker,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a store write lost to a concurrent writer is reported.
+
+    The router has already been told to migrate and cannot be called back, so
+    the repair issues and the preferred dataset must still be brought up to
+    date before the failure is raised.
+    """
+    mock_pending_endpoint(aioclient_mock)
+    await async_add_dataset(hass, "test", DATASET_CH16.hex())
+    store = await async_get_store(hass)
+    store.preferred_dataset = next(iter(store.datasets.values())).id
+
+    # Migrate onto insecure credentials, so the repair issue below can only
+    # exist if update_issues ran before the failure was raised.
+    insecure = dict(tlv_parser.parse_tlv(TARGET))
+    insecure[MeshcopTLVType.NETWORKKEY] = tlv_parser.MeshcopTLVItem(
+        MeshcopTLVType.NETWORKKEY, INSECURE_NETWORK_KEYS[0]
+    )
+
+    async def store_newer_dataset(
+        dataset: bytes, *, allow_replace: bool = False
+    ) -> None:
+        """Store newer credentials for the target network mid-migration."""
+        interloper = dict(tlv_parser.parse_tlv(TARGET))
+        interloper[MeshcopTLVType.ACTIVETIMESTAMP] = Timestamp.from_values(
+            MeshcopTLVType.ACTIVETIMESTAMP, seconds=2000
+        )
+        await async_add_dataset(hass, "other", tlv_parser.encode_tlv(interloper))
+
+    with (
+        patch(
+            "homeassistant.components.otbr.util.OTBRData.set_pending_dataset_tlvs",
+            side_effect=store_newer_dataset,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await call_migrate(hass, dataset=tlv_parser.encode_tlv(insecure))
+
+    assert exc_info.value.translation_key == "dataset_discarded"
+
+    # The store kept the newer credentials ...
+    stored = next(
+        entry
+        for entry in store.datasets.values()
+        if entry.extended_pan_id.lower() == "1111111122222222"
+    )
+    assert _timestamp_parts_seconds(stored.tlv) == 2000
+    # ... and the preferred pointer and repair issues still followed the
+    # network the mesh is switching to.
+    assert store.datasets[store.preferred_dataset].extended_pan_id.lower() == (
+        "1111111122222222"
+    )
+    assert issue_registry.async_get_issue(
+        domain="otbr", issue_id=f"insecure_thread_network_{otbr_config_entry_multipan}"
+    )
+
+
+def _timestamp_parts_seconds(tlv: str) -> int:
+    """Return the active timestamp seconds of a dataset."""
+    stamp = tlv_parser.parse_tlv(tlv)[MeshcopTLVType.ACTIVETIMESTAMP]
+    assert isinstance(stamp, Timestamp)
+    return stamp.seconds
