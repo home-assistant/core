@@ -51,6 +51,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -646,12 +647,13 @@ async def test_setup_with_apps_additional_apps_config(
         CUSTOM_CONFIG_OBJ,
     )
 
-    # Test that invalid app does nothing
+    # Test that invalid app raises
     with (
         patch("homeassistant.components.vizio.Vizio.launch_app") as service_call1,
         patch(
             "homeassistant.components.vizio.Vizio.launch_app_config"
         ) as service_call2,
+        pytest.raises(ServiceValidationError, match='Source "_" is not valid'),
     ):
         await hass.services.async_call(
             MP_DOMAIN,
@@ -659,8 +661,8 @@ async def test_setup_with_apps_additional_apps_config(
             service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "_"},
             blocking=True,
         )
-        assert not service_call1.called
-        assert not service_call2.called
+    assert not service_call1.called
+    assert not service_call2.called
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps")
@@ -881,3 +883,47 @@ async def test_sound_mode_list_cached(
         attr = hass.states.get(ENTITY_ID).attributes
         # Sound mode list should still be the original cached list
         assert attr["sound_mode_list"] == EQ_LIST
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_select_invalid_sound_mode(
+    hass: HomeAssistant, mock_speaker_config_entry: MockConfigEntry
+) -> None:
+    """Test selecting an invalid sound mode raises."""
+    await _test_setup_speaker(hass, mock_speaker_config_entry, True)
+
+    with (
+        patch("homeassistant.components.vizio.Vizio.set_setting") as set_setting,
+        pytest.raises(
+            ServiceValidationError, match='Sound mode "invalid" is not valid'
+        ),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_SELECT_SOUND_MODE,
+            service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "invalid"},
+            blocking=True,
+        )
+    set_setting.assert_not_called()
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_command_error_raises(
+    hass: HomeAssistant, mock_speaker_config_entry: MockConfigEntry
+) -> None:
+    """Test a device command failure raises HomeAssistantError."""
+    await _test_setup_speaker(hass, mock_speaker_config_entry, True)
+
+    with (
+        patch(
+            "homeassistant.components.vizio.Vizio.power_on",
+            side_effect=VizioConnectionError("cannot connect"),
+        ),
+        pytest.raises(HomeAssistantError, match="Failed to send command"),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_TURN_ON,
+            service_data={ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )

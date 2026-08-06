@@ -13,15 +13,11 @@ from pyhap.accessory import Accessory
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import (
-    binary_sensor,
-    input_number,
-    media_player,
-    persistent_notification,
-    sensor,
-)
+from homeassistant.components import persistent_notification
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -29,6 +25,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntityFeature
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -146,9 +143,9 @@ VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 BASIC_INFO_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
         vol.Optional(CONF_LINKED_BATTERY_CHARGING_SENSOR): cv.entity_domain(
-            binary_sensor.DOMAIN
+            BINARY_SENSOR_DOMAIN
         ),
         vol.Optional(
             CONF_LOW_BATTERY_THRESHOLD, default=DEFAULT_LOW_BATTERY_THRESHOLD
@@ -189,16 +186,16 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
             CONF_VIDEO_PACKET_SIZE, default=DEFAULT_VIDEO_PACKET_SIZE
         ): cv.positive_int,
         vol.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(
-            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+            [BINARY_SENSOR_DOMAIN, EVENT_DOMAIN]
         ),
         vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
-            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+            [BINARY_SENSOR_DOMAIN, EVENT_DOMAIN]
         ),
     }
 )
 
 HUMIDIFIER_SCHEMA = BASIC_INFO_SCHEMA.extend(
-    {vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN)}
+    {vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(SENSOR_DOMAIN)}
 )
 
 FAN_SCHEMA = BASIC_INFO_SCHEMA.extend(
@@ -212,20 +209,20 @@ FAN_SCHEMA = BASIC_INFO_SCHEMA.extend(
                 )
             ),
         ),
-        vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN),
-        vol.Optional(CONF_LINKED_PM25_SENSOR): cv.entity_domain(sensor.DOMAIN),
-        vol.Optional(CONF_LINKED_TEMPERATURE_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
+        vol.Optional(CONF_LINKED_PM25_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
+        vol.Optional(CONF_LINKED_TEMPERATURE_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
         vol.Optional(CONF_LINKED_FILTER_CHANGE_INDICATION): cv.entity_domain(
-            binary_sensor.DOMAIN
+            BINARY_SENSOR_DOMAIN
         ),
-        vol.Optional(CONF_LINKED_FILTER_LIFE_LEVEL): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_FILTER_LIFE_LEVEL): cv.entity_domain(SENSOR_DOMAIN),
     }
 )
 
 COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
         vol.Optional(CONF_LINKED_OBSTRUCTION_SENSOR): cv.entity_domain(
-            binary_sensor.DOMAIN
+            BINARY_SENSOR_DOMAIN
         )
     }
 )
@@ -252,7 +249,7 @@ CODE_SCHEMA = BASIC_INFO_SCHEMA.extend(
 LOCK_SCHEMA = CODE_SCHEMA.extend(
     {
         vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
-            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+            [BINARY_SENSOR_DOMAIN, EVENT_DOMAIN]
         ),
     }
 )
@@ -288,8 +285,8 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
                 )
             ),
         ),
-        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
-        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(INPUT_NUMBER_DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(SENSOR_DOMAIN),
     }
 )
 
@@ -311,8 +308,8 @@ VALVE_SCHEMA = BASIC_INFO_SCHEMA.extend(
             [cv.entity_domain("valve")],
         ),
         vol.Optional(CONF_IRRIGATION_CONTROLLER): cv.entity_domain("valve"),
-        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
-        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(INPUT_NUMBER_DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(SENSOR_DOMAIN),
     }
 )
 
@@ -465,7 +462,43 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
         config = _validate_entity_domain_config(entity, domain, config)
 
-        entities[entity] = config
+        elif domain == MEDIA_PLAYER_DOMAIN:
+            config = FEATURE_SCHEMA(config)
+            feature_list = {}
+            for feature in config[CONF_FEATURE_LIST]:
+                params = MEDIA_PLAYER_SCHEMA(feature)
+                key = params.pop(CONF_FEATURE)
+                if key in feature_list:
+                    raise vol.Invalid(f"A feature can be added only once for {entity}")
+                feature_list[key] = params
+            config[CONF_FEATURE_LIST] = feature_list
+
+        elif domain == "camera":
+            config = CAMERA_SCHEMA(config)
+
+        elif domain == "lock":
+            config = LOCK_SCHEMA(config)
+
+        elif domain == "switch":
+            config = SWITCH_TYPE_SCHEMA(config)
+
+        elif domain == "humidifier":
+            config = HUMIDIFIER_SCHEMA(config)
+
+        elif domain == "climate":
+            config = CLIMATE_SCHEMA(config)
+
+        elif domain == "cover":
+            config = COVER_SCHEMA(config)
+
+        elif domain == "fan":
+            config = FAN_SCHEMA(config)
+
+        elif domain == "sensor":
+            config = SENSOR_SCHEMA(config)
+
+        elif domain == "valve":
+            config = VALVE_SCHEMA(config)
 
     _validate_irrigation_relationships(entities)
 
