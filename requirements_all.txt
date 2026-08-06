@@ -669,7 +669,7 @@ bleak-smlight==1.1.0
 bleak==3.0.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.5
+blebox-uniapi==2.5.6
 
 # homeassistant.components.blink
 blinkpy==0.25.9
