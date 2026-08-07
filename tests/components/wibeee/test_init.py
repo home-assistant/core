@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from unittest.mock import MagicMock
-from xml.etree.ElementTree import ParseError as XMLParseError
 
 import aiohttp
 import pytest
@@ -54,7 +53,6 @@ async def test_setup_entry_device_info_none(
     [
         pytest.param(TimeoutError("timeout"), id="timeout"),
         pytest.param(aiohttp.ClientError("boom"), id="client_error"),
-        pytest.param(XMLParseError("bad xml"), id="xml_parse_error"),
     ],
 )
 async def test_setup_entry_initial_data_error(

@@ -2,7 +2,6 @@
 
 import logging
 from typing import Any, override
-from xml.etree.ElementTree import ParseError as XMLParseError
 
 import aiohttp
 from pywibeee import WibeeeAPI, WibeeeDeviceInfo
@@ -62,7 +61,7 @@ class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
         """Fetch data from the Wibeee device."""
         try:
             data = await self.api.async_fetch_sensors_data(retries=2)
-        except (TimeoutError, aiohttp.ClientError, XMLParseError) as exc:
+        except (TimeoutError, aiohttp.ClientError) as exc:
             raise UpdateFailed(
                 f"Error fetching data from {self.api.host}: {exc}"
             ) from exc
