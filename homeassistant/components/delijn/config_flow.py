@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
+    CONF_STOP,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -48,7 +49,6 @@ from .const import (
 )
 from .coordinator import DeLijnConfigEntry
 
-CONF_STOP = "stop"
 MAX_SEARCH_RESULTS = 10
 PREVIEW_PASSAGES = 3
 
@@ -306,7 +306,6 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    @override
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
