@@ -58,7 +58,7 @@ def _ranking_level(warning: WeatherWarning) -> int:
     return warning.level.value - demotion
 
 
-def warning_sort_key(warning: WeatherWarning) -> tuple[int, datetime, int, int, int, str]:
+def warning_sort_key(warning: WeatherWarning) -> tuple[int, datetime, datetime, int, int, int, str]:
     """Return the deterministic ordering key for a warning.
 
     Warnings with a higher level sort first. For equal levels, the warning with
