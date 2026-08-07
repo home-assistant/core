@@ -19,12 +19,12 @@ from homeassistant.components.humidifier import (
     HumidifierEntityStateAttribute,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     PERCENTAGE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -112,7 +112,7 @@ class HumidifierDehumidifier(HomeAccessory):
         state = states.get(self.entity_id)
         assert state
         device_class = state.attributes.get(
-            ATTR_DEVICE_CLASS, HumidifierDeviceClass.HUMIDIFIER
+            EntityStateAttribute.DEVICE_CLASS, HumidifierDeviceClass.HUMIDIFIER
         )
         self._hk_device_class = HC_HASS_TO_HOMEKIT_DEVICE_CLASS[device_class]
 
