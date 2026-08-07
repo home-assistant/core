@@ -46,6 +46,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfElectricCurrent,
@@ -57,7 +58,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, patch
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    patch,
+)
 
 
 async def test_default_setup(
@@ -2423,3 +2429,84 @@ async def test_no_averaging_when_update_interval_is_zero(
     telegram_callback(_create_power_and_energy_telegram("15.0", "100.0"))
     await hass.async_block_till_done()
     assert hass.states.get(POWER_ENTITY_ID).state == "15.0"
+
+
+@patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)
+async def test_failing_reconnects_keep_entities_unavailable(
+    hass: HomeAssistant,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test failed reconnect attempts do not flap the entities back to unknown.
+
+    The connected state is published only once the reader is actually up, so a
+    retry loop against an unreachable meter leaves the entities `unavailable`
+    for its whole duration instead of alternating with `unknown` per attempt.
+    """
+    (_connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    closed = asyncio.Event()
+    protocol.wait_closed = closed.wait
+
+    attempts = 0
+    retried = asyncio.Event()
+    forever = asyncio.Event()
+
+    async def connect(*args, **kwargs) -> tuple[MagicMock, MagicMock]:
+        """Connect once, then fail every retry."""
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return (transport, protocol)
+        if attempts <= 3:
+            raise OSError
+        # Park the retry loop once it has retried enough for the assertion,
+        # so it stops spinning on the patched zero reconnect interval.
+        retried.set()
+        await forever.wait()
+        raise OSError
+
+    connection_factory = MagicMock(wraps=connect)
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data={
+            "port": "/dev/ttyUSB0",
+            "dsmr_version": "2.2",
+            "serial_id": "1234",
+            "serial_id_gas": "5678",
+        },
+        options={"time_between_update": 0},
+    )
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.dsmr.sensor.create_dsmr_reader", connection_factory
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        telegram_callback = connection_factory.call_args_list[0][0][2]
+        telegram_callback(_create_power_and_energy_telegram("35.0", "100.0"))
+        await hass.async_block_till_done()
+        assert hass.states.get(POWER_ENTITY_ID).state == "35.0"
+
+        events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+        # Drop the connection and let the retry loop fail a few times.
+        closed.set()
+        await retried.wait()
+        await hass.async_block_till_done()
+
+        # The disconnect publishes `unavailable` once; the failed attempts that
+        # follow publish nothing at all.
+        assert [
+            event.data["new_state"].state
+            for event in events
+            if event.data["entity_id"] == POWER_ENTITY_ID
+        ] == [STATE_UNAVAILABLE]
+        assert hass.states.get(POWER_ENTITY_ID).state == STATE_UNAVAILABLE
+
+        await hass.config_entries.async_unload(mock_entry.entry_id)
+
+    assert mock_entry.state is ConfigEntryState.NOT_LOADED

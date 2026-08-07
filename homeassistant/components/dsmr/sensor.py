@@ -933,15 +933,16 @@ async def async_setup_entry(
 
         while hass.state is CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
-
-            # Reflect connected state in devices state by setting an
-            # empty telegram resulting in `unknown` states
-            receive_telegram({})
-
             try:
                 transport, protocol = await reader_factory()
 
                 if transport:
+                    # Reflect connected state in devices state by setting an
+                    # empty telegram resulting in `unknown` states. Only after
+                    # the reader is up, so a failing retry keeps the entities
+                    # `unavailable` instead of flapping back to `unknown`.
+                    receive_telegram({})
+
                     # Register listener to close transport on HA shutdown
                     @callback
                     def close_transport(_event: Event) -> None:
