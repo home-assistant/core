@@ -1,7 +1,7 @@
 """Blebox button entities tests."""
 
 import logging
-from unittest.mock import PropertyMock
+from unittest.mock import Mock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -78,7 +78,9 @@ def gatebox_second_output_fixture(caplog: pytest.LogCaptureFixture):
 
 
 async def test_gatebox_second_output_init(
-    gatebox_second_output, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    gatebox_second_output: tuple[Mock, str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test gateBox second output button initialisation."""
     caplog.set_level(logging.ERROR)
