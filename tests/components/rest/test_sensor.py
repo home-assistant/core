@@ -717,7 +717,7 @@ async def test_update_with_json_attrs_no_data(
     state = hass.states.get("sensor.foo")
     assert state.state == STATE_UNKNOWN
     assert state.attributes == {"unit_of_measurement": "MB", "friendly_name": "foo"}
-    assert "Empty reply" in caplog.text
+    assert "Expected REST result was empty" in caplog.text
 
 
 async def test_update_with_json_attrs_not_dict(
@@ -795,7 +795,7 @@ async def test_update_with_json_attrs_bad_JSON(
     state = hass.states.get("sensor.foo")
     assert state.state == STATE_UNKNOWN
     assert state.attributes == {"unit_of_measurement": "MB", "friendly_name": "foo"}
-    assert "Erroneous JSON" in caplog.text
+    assert "REST result could not be parsed as JSON" in caplog.text
 
 
 async def test_update_with_json_attrs_with_json_attrs_path(
@@ -979,8 +979,8 @@ async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_temp
 @pytest.mark.parametrize(
     ("content", "error_message"),
     [
-        ("", "Empty reply"),
-        ("<open></close>", "Erroneous JSON"),
+        ("", "Expected REST result was empty"),
+        ("<open></close>", "REST result could not be parsed as JSON"),
     ],
 )
 async def test_update_with_xml_convert_bad_xml(
@@ -1060,7 +1060,7 @@ async def test_update_with_failed_get(
 
     assert state.state == STATE_UNKNOWN
     assert "REST xml result could not be parsed" in caplog.text
-    assert "Empty reply" in caplog.text
+    assert "Expected REST result was empty" in caplog.text
 
 
 async def test_query_param_dict_value(

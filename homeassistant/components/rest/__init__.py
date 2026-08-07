@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Coroutine
 import contextlib
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from types import MappingProxyType
@@ -14,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_HEADERS,
@@ -41,7 +39,6 @@ from homeassistant.helpers.reload import (
     async_reload_integration_platforms,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
@@ -54,10 +51,9 @@ from .const import (
     DEFAULT_SSL_CIPHER_LIST,
     DOMAIN,
     PLATFORM_IDX,
-    REST,
-    REST_DATA,
     REST_IDX,
 )
+from .coordinator import RestConfigEntry, RestCoordinator
 from .data import RestData
 from .schema import CONFIG_SCHEMA, RESOURCE_SCHEMA  # noqa: F401
 
@@ -71,17 +67,6 @@ PLATFORMS = [
 ]
 
 COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
-
-
-@dataclass
-class RestRuntimeData:
-    """Hold the runtime data for the integration."""
-
-    coordinator: DataUpdateCoordinator[None]
-    rest: RestData
-
-
-RestConfigEntry = ConfigEntry[RestRuntimeData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -110,22 +95,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 @callback
 def _async_setup_shared_data(hass: HomeAssistant) -> None:
     """Create shared data for platform config and rest coordinators."""
-    hass.data[DOMAIN] = {key: [] for key in (REST_DATA, *COORDINATOR_AWARE_PLATFORMS)}  # pylint: disable=home-assistant-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
+    hass.data[DOMAIN] = {key: [] for key in (COORDINATOR, *COORDINATOR_AWARE_PLATFORMS)}
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: RestConfigEntry) -> bool:
     """Setup config entry."""
 
     rest: RestData = create_rest_data_from_config_entry(hass, config_entry.data)
-
-    await rest.async_update()
-
-    if rest.last_exception:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="endpoint_error",
-            translation_placeholders={"error_message": str(rest.last_exception)},
-        ) from rest.last_exception
 
     resource_template: template.Template = template.Template(
         config_entry.data[CONF_RESOURCE], hass
@@ -135,16 +112,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: RestConfigEntry) 
         if config_entry.data.get(CONF_PAYLOAD)
         else None
     )
-
-    coordinator: DataUpdateCoordinator[None] = _rest_coordinator(
+    coordinator = RestCoordinator(
         hass,
         rest,
+        config_entry,
         resource_template,
         payload_template,
         DEFAULT_SCAN_INTERVAL,
     )
 
-    config_entry.runtime_data = RestRuntimeData(coordinator, rest)
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as ex:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="endpoint_error",
+            translation_placeholders={"error_message": str(ex)},
+        ) from ex
+
+    config_entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(
         config_entry, CONFIG_ENTRY_PLATFORMS
@@ -163,12 +149,9 @@ async def _async_entry_updated(
 
 async def async_unload_entry(hass: HomeAssistant, entry: RestConfigEntry) -> bool:
     """Unload a config entry."""
-    unloaded = await hass.config_entries.async_unload_platforms(
+    return await hass.config_entries.async_unload_platforms(
         entry, CONFIG_ENTRY_PLATFORMS
     )
-    if unloaded:
-        await entry.runtime_data.coordinator.async_shutdown()
-    return unloaded
 
 
 async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -184,19 +167,22 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
         resource_template: template.Template | None = conf.get(CONF_RESOURCE_TEMPLATE)
         payload_template: template.Template | None = conf.get(CONF_PAYLOAD_TEMPLATE)
         rest = create_rest_data_from_config(hass, conf)
-        coordinator = _rest_coordinator(
-            hass, rest, resource_template, payload_template, scan_interval
+        coordinator = RestCoordinator(
+            hass, rest, None, resource_template, payload_template, scan_interval
         )
         refresh_coroutines.append(coordinator.async_refresh())
-        hass.data[DOMAIN][REST_DATA].append({REST: rest, COORDINATOR: coordinator})  # pylint: disable=home-assistant-use-runtime-data
+        # pylint: disable-next=home-assistant-use-runtime-data
+        hass.data[DOMAIN][COORDINATOR].append(coordinator)
 
         for platform_domain in COORDINATOR_AWARE_PLATFORMS:
             if platform_domain not in conf:
                 continue
 
             for platform_conf in conf[platform_domain]:
-                hass.data[DOMAIN][platform_domain].append(platform_conf)  # pylint: disable=home-assistant-use-runtime-data
-                platform_idx = len(hass.data[DOMAIN][platform_domain]) - 1  # pylint: disable=home-assistant-use-runtime-data
+                # pylint: disable=home-assistant-use-runtime-data
+                hass.data[DOMAIN][platform_domain].append(platform_conf)
+                platform_idx = len(hass.data[DOMAIN][platform_domain]) - 1
+                # pylint: enable=home-assistant-use-runtime-data
 
                 load_coroutine = discovery.async_load_platform(
                     hass,
@@ -218,52 +204,23 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
 
 async def async_get_config_and_coordinator(
     hass: HomeAssistant, platform_domain: str, discovery_info: DiscoveryInfoType
-) -> tuple[ConfigType, DataUpdateCoordinator[None], RestData]:
+) -> tuple[ConfigType, RestCoordinator, RestData]:
     """Get the config and coordinator for the platform from discovery."""
-    shared_data = hass.data[DOMAIN][REST_DATA][discovery_info[REST_IDX]]  # pylint: disable=home-assistant-use-runtime-data
-    conf: ConfigType = hass.data[DOMAIN][platform_domain][discovery_info[PLATFORM_IDX]]  # pylint: disable=home-assistant-use-runtime-data
-    coordinator: DataUpdateCoordinator[None] = shared_data[COORDINATOR]
-    rest: RestData = shared_data[REST]
-    if rest.data is None:
+    # pylint: disable=home-assistant-use-runtime-data
+    coordinator: RestCoordinator = hass.data[DOMAIN][COORDINATOR][
+        discovery_info[REST_IDX]
+    ]
+    conf: ConfigType = hass.data[DOMAIN][platform_domain][discovery_info[PLATFORM_IDX]]
+    # pylint: enable=home-assistant-use-runtime-data
+    if coordinator.rest.data is None:
         await coordinator.async_request_refresh()
-    return conf, coordinator, rest
+    return conf, coordinator, coordinator.rest
 
 
-def _rest_coordinator(
-    hass: HomeAssistant,
-    rest: RestData,
-    resource_template: template.Template | None,
-    payload_template: template.Template | None,
-    update_interval: timedelta,
-) -> DataUpdateCoordinator[None]:
-    """Wrap a DataUpdateCoordinator around the rest object."""
-    if resource_template or payload_template:
-
-        async def _async_refresh_with_templates() -> None:
-            if resource_template:
-                rest.set_url(resource_template.async_render(parse_result=False))
-            if payload_template:
-                rest.set_payload(payload_template.async_render(parse_result=False))
-            await rest.async_update()
-
-        update_method = _async_refresh_with_templates
-    else:
-        update_method = rest.async_update
-
-    return DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=None,
-        name="rest data",
-        update_method=update_method,
-        update_interval=update_interval,
-    )
-
-
-def create_rest_data_from_config_entry(
-    hass: HomeAssistant, config: dict[str, Any] | MappingProxyType[str, Any]
-) -> RestData:
-    """Create RestData from user input or config entry data."""
+def convert_config_to_legacy_format(
+    config: dict[str, Any] | MappingProxyType[str, Any],
+) -> ConfigType:
+    """Convert config entry data to legacy .yaml structure."""
     mutable_config: dict[str, Any] = {**config}
     mutable_config[CONF_RESOURCE_TEMPLATE] = mutable_config.pop(CONF_RESOURCE)
     if mutable_config.get(CONF_PAYLOAD):
@@ -273,13 +230,19 @@ def create_rest_data_from_config_entry(
             mutable_config[key] = {
                 param["key"]: param["value"] for param in mutable_config[key]
             }
-    # Flatten to match .yaml format
     ssl: dict[str, Any] = mutable_config.pop(CONF_SSL_SECTION)
     auth: dict[str, Any] = mutable_config.pop(CONF_AUTHENTICATION)
+    return mutable_config | ssl | auth
+
+
+def create_rest_data_from_config_entry(
+    hass: HomeAssistant, config: dict[str, Any] | MappingProxyType[str, Any]
+) -> RestData:
+    """Create RestData from user input or config entry data."""
     return create_rest_data_from_config(
         hass,
         vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(
-            mutable_config | ssl | auth
+            convert_config_to_legacy_format(config)
         ),  # To convert templates
     )
 

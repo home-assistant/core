@@ -1,46 +1,44 @@
 """Support for RESTful API sensors."""
 
 import logging
-import ssl
 from typing import Any, override
 from xml.parsers.expat import ExpatError
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
 )
 from homeassistant.const import (
-    CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
-    CONF_ICON,
-    CONF_NAME,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
     CONF_UNIQUE_ID,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.trigger_template_entity import (
-    CONF_AVAILABILITY,
-    CONF_PICTURE,
     ManualTriggerSensorEntity,
     ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import async_get_config_and_coordinator, create_rest_data_from_config
-from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME
+from . import convert_config_to_legacy_format
+from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME, DOMAIN
+from .coordinator import RestConfigEntry, RestCoordinator
 from .data import RestData
-from .entity import RestEntity
+from .entity import (
+    RestEntity,
+    async_get_config_rest_data_and_coordinator,
+    async_get_trigger_entity_config,
+)
 from .schema import RESOURCE_SCHEMA, SENSOR_SCHEMA
 from .util import parse_json_attributes
 
@@ -51,16 +49,6 @@ PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
 )
 
-TRIGGER_ENTITY_OPTIONS = (
-    CONF_AVAILABILITY,
-    CONF_DEVICE_CLASS,
-    CONF_ICON,
-    CONF_PICTURE,
-    CONF_UNIQUE_ID,
-    CONF_STATE_CLASS,
-    CONF_UNIT_OF_MEASUREMENT,
-)
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -69,39 +57,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the RESTful sensor."""
-    # Must update the sensor now (including fetching the rest resource) to
-    # ensure it's updating its state.
-    if discovery_info is not None:
-        conf, coordinator, rest = await async_get_config_and_coordinator(
-            hass, SENSOR_DOMAIN, discovery_info
-        )
-    else:
-        conf = config
-        coordinator = None
-        rest = create_rest_data_from_config(hass, conf)
-        await rest.async_update(log_errors=False)
-
-    if rest.data is None:
-        if rest.last_exception:
-            if isinstance(rest.last_exception, ssl.SSLError):
-                _LOGGER.error(
-                    "Error connecting %s failed with %s",
-                    rest.url,
-                    rest.last_exception,
-                )
-                return
-            raise PlatformNotReady from rest.last_exception
-        raise PlatformNotReady
-
-    name = conf.get(CONF_NAME) or Template(DEFAULT_SENSOR_NAME, hass)
-
-    trigger_entity_config = {CONF_NAME: name}
-
-    for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in conf:
-            continue
-        trigger_entity_config[key] = conf[key]
-
+    conf, rest, coordinator = await async_get_config_rest_data_and_coordinator(
+        hass, config, SENSOR_DOMAIN, discovery_info
+    )
+    trigger_entity_config = async_get_trigger_entity_config(
+        hass, conf, DEFAULT_SENSOR_NAME
+    )
     async_add_entities(
         [
             RestSensor(
@@ -115,13 +76,51 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: RestConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Setup entities from Config Entry."""
+
+    for subentry_id, subentry in config_entry.subentries.items():
+        if subentry.subentry_type != Platform.SENSOR:
+            continue
+
+        config: ConfigType = {**subentry.data}
+        if CONF_JSON_ATTRS in config:
+            config[CONF_JSON_ATTRS] = [item["item"] for item in config[CONF_JSON_ATTRS]]
+        config = vol.Schema(SENSOR_SCHEMA, extra=vol.REMOVE_EXTRA)(
+            convert_config_to_legacy_format(config_entry.data)
+            | config
+            | {CONF_UNIQUE_ID: f"{DOMAIN}_{subentry_id}"}
+        )
+        trigger_entity_config = async_get_trigger_entity_config(
+            hass,
+            config,
+            DEFAULT_SENSOR_NAME,
+        )
+        async_add_entities(
+            [
+                RestSensor(
+                    hass,
+                    config_entry.runtime_data,
+                    config_entry.runtime_data.rest,
+                    config,
+                    trigger_entity_config,
+                )
+            ],
+            config_subentry_id=subentry_id,
+        )
+
+
 class RestSensor(ManualTriggerSensorEntity, RestEntity):
     """Implementation of a REST sensor."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: DataUpdateCoordinator[None] | None,
+        coordinator: RestCoordinator | None,
         rest: RestData,
         config: ConfigType,
         trigger_entity_config: ConfigType,

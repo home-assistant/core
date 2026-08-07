@@ -10,7 +10,13 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
@@ -26,6 +32,7 @@ from homeassistant.const import (
     CONF_RESOURCE_TEMPLATE,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
@@ -47,13 +54,11 @@ from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
     CONF_ENCODING,
-    CONF_INITIAL_SUBENTRY_TYPE,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
     CONF_PAYLOAD_TEMPLATE,
     CONF_SSL_CIPHER_LIST,
     CONF_SSL_SECTION,
-    CONFIG_ENTRY_PLATFORMS,
     DEFAULT_ENCODING,
     DEFAULT_FORCE_UPDATE,
     DEFAULT_METHOD,
@@ -61,7 +66,6 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     METHODS,
-    OPTION_NONE,
 )
 from .data import DEFAULT_TIMEOUT
 
@@ -144,7 +148,7 @@ class _TemplateURLSelector(selector.TemplateSelector):
         try:
             cv.url(template.async_render())
         except TemplateError as ex:
-            raise vol.Invalid(f"template render error: {ex!s}") from ex
+            raise vol.Invalid(str(ex)) from ex
         return template.template
 
 
@@ -190,7 +194,6 @@ class _auth_section(section):
             for error in ex.errors:
                 if isinstance(error, vol.InclusiveInvalid):
                     raise vol.Invalid("credentials_missing") from error
-            raise
 
 
 def RESOURCE_FLOW_SCHEMA(collapse_auth: bool = True) -> vol.Schema:
@@ -276,27 +279,13 @@ def RESOURCE_FLOW_SCHEMA(collapse_auth: bool = True) -> vol.Schema:
     )
 
 
-CREATE_ENTRY_SCHEMA = vol.Schema(
-    {
-        vol.Required(
-            CONF_INITIAL_SUBENTRY_TYPE, default=OPTION_NONE
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[*CONFIG_ENTRY_PLATFORMS, OPTION_NONE],
-                sort=True,
-                translation_key="entity_platforms",
-            )
-        )
-    }
-)
-
 SUBENTRY_FLOW_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): selector.TemplateSelector(),
         vol.Optional(CONF_ICON): selector.TemplateSelector(),
         vol.Optional(CONF_PICTURE): selector.TemplateSelector(),
         vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
-        vol.Optional(
+        vol.Required(
             CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
         ): selector.BooleanSelector(),
     }
@@ -313,6 +302,52 @@ BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA = SUBENTRY_FLOW_SCHEMA.extend(
                 translation_key="binary_sensor_device_class",
                 sort=True,
             ),
+        ),
+    }
+).extend(_AVAILABILITY_SCHEMA)
+
+SENSOR_SUBENTRY_FLOW_SCHEMA = SUBENTRY_FLOW_SCHEMA.extend(
+    {
+        vol.Optional(CONF_JSON_ATTRS, default=[]): selector.ObjectSelector(
+            selector.ObjectSelectorConfig(
+                multiple=True,
+                fields={
+                    "item": selector.ObjectSelectorField(
+                        required=True, selector=selector.TextSelector()
+                    )
+                },
+                translation_key=CONF_JSON_ATTRS,
+            )
+        ),
+        vol.Optional(CONF_JSON_ATTRS_PATH): selector.TextSelector(),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    str(unit)
+                    for units in DEVICE_CLASS_UNITS.values()
+                    for unit in units
+                    if unit is not None
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                custom_value=True,
+                sort=True,
+            )
+        ),
+        vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[cls.value for cls in SensorDeviceClass],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key="sensor_device_class",
+                sort=True,
+            ),
+        ),
+        vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[cls.value for cls in SensorStateClass],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key="sensor_state_class",
+                sort=True,
+            )
         ),
     }
 ).extend(_AVAILABILITY_SCHEMA)

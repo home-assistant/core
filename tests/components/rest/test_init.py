@@ -562,8 +562,7 @@ async def test_setup_entry_bad_resource(
 
     entry = await async_setup_entry(hass, get_config_entry_data)
 
+    await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.SETUP_RETRY
     assert entry.error_reason_translation_key == "endpoint_error"
-    assert entry.error_reason_translation_placeholders == {
-        "error_message": "client error"
-    }
+    assert "client error" in entry.reason

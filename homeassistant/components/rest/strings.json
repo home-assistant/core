@@ -1,16 +1,14 @@
 {
   "common": {
-    "availability": "Availability Template",
     "availability_description": "Defines a template to get the `available` state of the entity, see [Template integration documentation]({docs_url_availability}). If omitted will default to `available` if the last resource update was successful.",
     "availability_section": "Availability Options",
-    "device_class": "Device Class",
     "force_update": "Force Update",
     "force_update_description": "If enabled, state changes will be reported even if the value is the same as the previous value.",
     "icon": "Icon",
     "icon_description": "Defines a template for the icon of the entity.",
     "picture": "Picture",
     "picture_description": "Defines a template for the picture of the entity.",
-    "value_template": "Template",
+    "value_template": "Value Template",
     "value_template_description": "Defines a [template]({docs_url_template_data_processing}) to extract the value. `value` or `value_json` can be used."
   },
   "config": {
@@ -29,9 +27,12 @@
       "user": "Add RESTful Resource"
     },
     "step": {
-      "create_entry": {
-        "data": {
-          "initial_subentry_type": "Select entity type to create"
+      "subentries_menu": {
+        "description": "Select a type of entity to create for the resource `{entry_title}`.",
+        "menu_options": {
+          "binary_sensor": "[%key:component::binary_sensor::title%]",
+          "none": "None, create RESTful resource only",
+          "sensor": "[%key:component::sensor::title%]"
         }
       },
       "user": {
@@ -81,15 +82,15 @@
       "abort": {
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
-      "entry_type": "Binary Sensor",
+      "entry_type": "[%key:component::binary_sensor::title%]",
       "initiate_flow": {
-        "user": "Add Binary Sensor"
+        "user": "Add binary sensor"
       },
       "step": {
         "user": {
           "data": {
-            "availability": "[%key:component::rest::common::availability%]",
-            "device_class": "[%key:component::rest::common::device_class%]",
+            "availability": "[%key:component::template::common::availability%]",
+            "device_class": "[%key:component::template::common::device_class%]",
             "force_update": "[%key:component::rest::common::force_update%]",
             "icon": "[%key:component::rest::common::icon%]",
             "name": "[%key:common::config_flow::data::name%]",
@@ -108,7 +109,7 @@
           "sections": {
             "availability": {
               "data": {
-                "availability": "[%key:component::rest::common::availability%]"
+                "availability": "[%key:component::template::common::availability%]"
               },
               "data_description": {
                 "availability": "[%key:component::rest::common::availability_description%]"
@@ -116,17 +117,84 @@
               "name": "[%key:component::rest::common::availability_section%]"
             }
           },
-          "title": "RESTful Binary Sensor"
+          "title": "RESTful binary sensor"
+        }
+      }
+    },
+    "sensor": {
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "[%key:component::sensor::title%]",
+      "error": {
+        "attrs_not_found": "[%key:component::rest::exceptions::attrs_not_found::message%]",
+        "invalid_result": "[%key:component::rest::exceptions::invalid_result::message%]",
+        "no_json": "[%key:component::rest::exceptions::no_json::message%]",
+        "parse_error": "[%key:component::rest::exceptions::parse_error::message%]"
+      },
+      "initiate_flow": {
+        "user": "Add sensor"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "availability": "[%key:component::template::common::availability%]",
+            "device_class": "[%key:component::template::common::device_class%]",
+            "force_update": "[%key:component::rest::common::force_update%]",
+            "icon": "[%key:component::rest::common::icon%]",
+            "json_attributes": "JSON Attributes",
+            "json_attributes_path": "JSON Attributes Path",
+            "name": "[%key:common::config_flow::data::name%]",
+            "picture": "[%key:component::rest::common::picture%]",
+            "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
+            "unit_of_measurement": "[%key:component::template::common::unit_of_measurement%]",
+            "value_template": "[%key:component::rest::common::value_template%]"
+          },
+          "data_description": {
+            "availability": "[%key:component::rest::common::availability_description%]",
+            "force_update": "[%key:component::rest::common::force_update_description%]",
+            "icon": "[%key:component::rest::common::icon_description%]",
+            "json_attributes_path": "A [JSONPath]({docs_url_jsonpath}) that references the location of the JSON attributes in the JSON content.",
+            "name": "Name of the RESTful sensor, supports templates.",
+            "picture": "[%key:component::rest::common::picture_description%]",
+            "unit_of_measurement": "[%key:component::template::config::step::sensor::data_description::unit_of_measurement%]",
+            "value_template": "[%key:component::rest::common::value_template_description%]"
+          },
+          "description": "Configure a sensor using the `{entry_title}` resource",
+          "sections": {
+            "availability": {
+              "data": {
+                "availability": "[%key:component::template::common::availability%]"
+              },
+              "data_description": {
+                "availability": "[%key:component::rest::common::availability_description%]"
+              },
+              "name": "[%key:component::rest::common::availability_section%]"
+            }
+          },
+          "title": "RESTful sensor"
         }
       }
     }
   },
   "exceptions": {
+    "attrs_not_found": {
+      "message": "JSON attributes \"{json_attrs}\" not found in: {rest_data}"
+    },
     "endpoint_error": {
       "message": "Error communicating with resource: {error_message}"
     },
     "error_communicating": {
       "message": "Error communicating with {resource}"
+    },
+    "invalid_result": {
+      "message": "JSON @ \"{json_path}\" was not a dictionary or list with with a dictionary @ the 0th element but was: {rest_data}"
+    },
+    "no_json": {
+      "message": "Expected REST result was empty"
+    },
+    "parse_error": {
+      "message": "REST result could not be parsed as JSON: {rest_data} with error: {parse_error_message}"
     },
     "turn_off_failed": {
       "message": "Failed to turn off {resource}"
@@ -174,22 +242,101 @@
         "window": "[%key:component::binary_sensor::entity_component::window::name%]"
       }
     },
-    "entity_platforms": {
-      "options": {
-        "binary_sensor": "[%key:component::binary_sensor::title%]",
-        "z_none": "None, create RESTful resource only"
-      }
-    },
     "headers": {
       "fields": {
         "key": "HTTP Header",
         "value": "Header Value"
       }
     },
+    "json_attributes": {
+      "fields": {
+        "item": {
+          "description": "A key to extract from a JSON dictionary result and then set as a sensor attribute. If the endpoint returns XML with the text/xml, application/xml or application/xhtml+xml content type, it will automatically be converted to JSON (see integration documentation for details).",
+          "name": "JSON Attribute"
+        }
+      }
+    },
     "params": {
       "fields": {
         "key": "Query Parameter",
         "value": "Parameter Value"
+      }
+    },
+    "sensor_device_class": {
+      "options": {
+        "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
+        "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
+        "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
+        "area": "[%key:component::sensor::entity_component::area::name%]",
+        "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
+        "battery": "[%key:component::sensor::entity_component::battery::name%]",
+        "blood_glucose_concentration": "[%key:component::sensor::entity_component::blood_glucose_concentration::name%]",
+        "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+        "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+        "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
+        "current": "[%key:component::sensor::entity_component::current::name%]",
+        "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
+        "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
+        "date": "[%key:component::sensor::entity_component::date::name%]",
+        "distance": "[%key:component::sensor::entity_component::distance::name%]",
+        "duration": "[%key:component::sensor::entity_component::duration::name%]",
+        "energy": "[%key:component::sensor::entity_component::energy::name%]",
+        "energy_distance": "[%key:component::sensor::entity_component::energy_distance::name%]",
+        "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
+        "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
+        "gas": "[%key:component::sensor::entity_component::gas::name%]",
+        "humidity": "[%key:component::sensor::entity_component::humidity::name%]",
+        "illuminance": "[%key:component::sensor::entity_component::illuminance::name%]",
+        "irradiance": "[%key:component::sensor::entity_component::irradiance::name%]",
+        "moisture": "[%key:component::sensor::entity_component::moisture::name%]",
+        "monetary": "[%key:component::sensor::entity_component::monetary::name%]",
+        "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+        "nitrogen_monoxide": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
+        "nitrous_oxide": "[%key:component::sensor::entity_component::nitrous_oxide::name%]",
+        "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
+        "ph": "[%key:component::sensor::entity_component::ph::name%]",
+        "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+        "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
+        "power": "[%key:component::sensor::entity_component::power::name%]",
+        "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
+        "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
+        "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
+        "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
+        "reactive_energy": "[%key:component::sensor::entity_component::reactive_energy::name%]",
+        "reactive_power": "[%key:component::sensor::entity_component::reactive_power::name%]",
+        "signal_strength": "[%key:component::sensor::entity_component::signal_strength::name%]",
+        "sound_pressure": "[%key:component::sensor::entity_component::sound_pressure::name%]",
+        "speed": "[%key:component::sensor::entity_component::speed::name%]",
+        "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
+        "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+        "temperature_delta": "[%key:component::sensor::entity_component::temperature_delta::name%]",
+        "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
+        "uptime": "[%key:component::sensor::entity_component::uptime::name%]",
+        "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
+        "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
+        "volume": "[%key:component::sensor::entity_component::volume::name%]",
+        "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
+        "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
+        "water": "[%key:component::sensor::entity_component::water::name%]",
+        "weight": "[%key:component::sensor::entity_component::weight::name%]",
+        "wind_direction": "[%key:component::sensor::entity_component::wind_direction::name%]",
+        "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
+      }
+    },
+    "sensor_state_class": {
+      "options": {
+        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+        "measurement_angle": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement_angle%]",
+        "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
+        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
+      }
+    },
+    "sensor_unit_of_measurement": {
+      "options": {
+        "none": "No unit of measurement"
       }
     }
   },
