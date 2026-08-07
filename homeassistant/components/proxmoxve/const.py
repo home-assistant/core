@@ -44,6 +44,8 @@ class ProxmoxPermission(StrEnum):
     SYSAUDIT = "Sys.Audit"
     SYSPOWER = "Sys.PowerMgmt"
     VMAUDIT = "VM.Audit"
+    VMGUESTAUDIT = "VM.GuestAgent.Audit"
+    VMGUESTUNRESTRICTED = "VM.GuestAgent.Unrestricted"
 
 
 class ProxmoxAgentState(StrEnum):
