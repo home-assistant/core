@@ -167,7 +167,7 @@ async def test_zeroconf_flow(
     assert result["data"] == expected_data
     # A read proves the credentials grant access, not just that MPD greeted us.
     assert mock_mpd_client.status.called
-    # The address deduplicates flows only; it must not be persisted.
+    # The DNS-SD instance name deduplicates flows only; it is not an identity.
     assert result["result"].unique_id is None
     assert len(mock_setup_entry.mock_calls) == 1
 

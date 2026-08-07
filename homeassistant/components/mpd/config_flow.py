@@ -103,10 +103,10 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         # one on each announcement, so match them all.
         for host in (*discovery_info.addresses, hostname, self._name):
             self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: self._port})
-        # MPD exposes no stable identifier, over zeroconf or its protocol. The
-        # advertised name is stable across dual-stack reannouncements, unlike the
-        # selected address, and is cleared before the entry is created so that
-        # nothing discovery-derived is persisted.
+        # MPD exposes no identifier tied to the device, so the entry gets no
+        # unique id. The DNS-SD instance name deduplicates flows for one server
+        # across reannouncements, unlike the selected address, and is cleared
+        # before the entry is created.
         await self.async_set_unique_id(discovery_info.name)
         self._abort_if_unique_id_configured()
 
