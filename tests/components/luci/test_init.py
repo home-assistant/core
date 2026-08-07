@@ -3,21 +3,23 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.luci.const import DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES
+from homeassistant.components.luci.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_DEVICE_1, MOCK_DEVICE_2
+from .conftest import MOCK_DEVICE_1, MOCK_DEVICE_2, MOCK_DEVICE_3
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 YAML_CONFIG = {
     DEVICE_TRACKER_DOMAIN: {
@@ -164,3 +166,44 @@ async def test_legacy_known_devices_no_issue(
         await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES) is None
+
+
+async def test_legacy_known_devices_issue_on_new_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_luci_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the issue is raised for a device that only shows up after setup."""
+    mock_luci_client.get_all_connected_devices.return_value = [MOCK_DEVICE_1]
+    legacy_devices = [
+        Device(hass, timedelta(0), True, "late_arrival", MOCK_DEVICE_3.mac),
+    ]
+
+    with patch(
+        "homeassistant.components.luci.async_load_config",
+        return_value=legacy_devices,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert (
+            issue_registry.async_get_issue(DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES) is None
+        )
+
+        mock_luci_client.get_all_connected_devices.return_value = [
+            MOCK_DEVICE_1,
+            MOCK_DEVICE_3,
+        ]
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES)
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "path": "known_devices.yaml",
+        "devices": "- `late_arrival`",
+    }

@@ -1,8 +1,7 @@
 """The luci component."""
 
-from collections.abc import Mapping
+from collections.abc import Collection
 from datetime import timedelta
-from typing import Any
 
 from openwrt_luci_rpc import OpenWrtRpc
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -18,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 
@@ -64,7 +63,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool
 
     entry.runtime_data = coordinator
 
-    await _async_check_legacy_known_devices(hass, coordinator.data)
+    seen_macs = set(coordinator.data)
+
+    @callback
+    def _async_check_new_devices() -> None:
+        """Re-check conflicts when the router reports a MAC we haven't seen."""
+        if not coordinator.data.keys() - seen_macs:
+            return
+        seen_macs.update(coordinator.data)
+        entry.async_create_task(
+            hass, _async_check_legacy_known_devices(hass, set(seen_macs))
+        )
+
+    await _async_check_legacy_known_devices(hass, seen_macs)
+    entry.async_on_unload(coordinator.async_add_listener(_async_check_new_devices))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -72,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool
 
 
 async def _async_check_legacy_known_devices(
-    hass: HomeAssistant, tracked: Mapping[str, Any]
+    hass: HomeAssistant, tracked: Collection[str]
 ) -> None:
     """Report leftover known_devices.yaml entries for devices we now track.
 
