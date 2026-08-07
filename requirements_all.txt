@@ -2128,7 +2128,7 @@ pydeako==0.6.0
 pydeconz==120
 
 # homeassistant.components.delijn
-pydelijn==2.0.0
+pydelijn==2.0.1
 
 # homeassistant.components.dexcom
 pydexcom==0.5.1
