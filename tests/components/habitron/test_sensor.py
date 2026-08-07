@@ -457,8 +457,13 @@ async def test_polled_sensor_does_not_subscribe(
     getattr(mod, source)[0].add_listener.assert_not_called()
 
 
-async def test_logic_sensor_push_add_and_remove_listener() -> None:
-    """LogicSensor registers and removes the logic callback via subscribe_fn."""
+async def test_logic_sensor_does_not_subscribe() -> None:
+    """LogicSensor leaves the update to the coordinator, without subscribing.
+
+    Counter values come from the compact status mirror, which the module CRC
+    covers, so the coordinator already fans out on a change; a subscription
+    would write the state a second time.
+    """
     mod = _make_module()
     mod.logic = {0: MagicMock()}
     logic = MagicMock()
@@ -475,9 +480,7 @@ async def test_logic_sensor_push_add_and_remove_listener() -> None:
         new=AsyncMock(),
     ):
         await entity.async_added_to_hass()
-    mod.logic[0].add_listener.assert_called()
-    await entity.async_will_remove_from_hass()
-    mod.logic[0].remove_listener.assert_called()
+    mod.logic[0].add_listener.assert_not_called()
 
 
 def _ekey_module() -> MagicMock:
@@ -814,6 +817,28 @@ async def test_analog_deviating_area_not_restamped_on_reload(
 
     analog = next(e for e in captured if e.unique_id == _ANALOG_UNIQUE_ID)
     assert analog._initial_area_id is None
+
+
+async def test_bus_areas_are_not_created_up_front(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """A reload does not resurrect bus areas the user has since removed.
+
+    ``async_get_or_create`` matches by name, so creating every bus area on each
+    setup would recreate one the user renamed or deleted. Only the area an
+    entity is actually being stamped with may be created.
+    """
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    # The analog input matches its module's area, so no area has to be stamped.
+    entry.runtime_data = _analog_coordinator(ain_area=1, module_area=1)
+
+    await async_setup_entry(hass, entry, _registering_add(entity_registry, entry))  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
+
+    assert area_registry.async_get_area_by_name("Living") is None
+    assert area_registry.async_get_area_by_name("Kitchen") is None
 
 
 @pytest.mark.parametrize("ain_area", [0, 1])

@@ -94,10 +94,18 @@ async def async_setup_entry(
     hbtn_rt = smhub.router
 
     area_reg = ar.async_get(hass)
-    # Map each bus area number to its HA area-registry id (creating the area on
-    # first sight). Used to place analog inputs whose area deviates from their
-    # module's area (see below).
-    area_ids = {a.nmbr: area_reg.async_get_or_create(a.name).id for a in hbtn_rt.areas}
+    bus_area_names = {area.nmbr: area.name for area in hbtn_rt.areas}
+
+    def bus_area_id(area_no: int) -> str | None:
+        """Return the HA area for a bus area, creating it only when needed.
+
+        Creating them all up front would run on every reload and resurrect an
+        area the user has since renamed or deleted -- ``async_get_or_create``
+        matches by name, so a renamed area is not found and is recreated under
+        its old bus name.
+        """
+        name = bus_area_names.get(area_no)
+        return area_reg.async_get_or_create(name).id if name else None
 
     # Snapshot the entities already registered for this entry. The deviating
     # analog-input area is stamped only at first creation, never on a reload:
@@ -151,7 +159,7 @@ async def async_setup_entry(
             # survives reloads.
             analog_uid = f"Mod_{hbt_module.uid}_snsr{ain.nmbr}_{ANALOG_DESCRIPTION.key}"
             deviating_area = (
-                area_ids.get(ain.area)
+                bus_area_id(ain.area)
                 if ain.area not in (0, hbt_module.area)
                 and analog_uid not in known_unique_ids
                 else None
@@ -560,8 +568,10 @@ LOGIC_DESCRIPTION = HbtnSensorEntityDescription(
     translation_key="logic_state",
     state_class=SensorStateClass.MEASUREMENT,
     translated_name=True,
+    # No ``subscribe_fn``: counter values come from the compact status mirror,
+    # which the module CRC covers, so a change already moves the coordinator's
+    # data and updates the entity. Subscribing would write the state twice.
     value_fn=lambda module, idx: module.logic[idx].value,
-    subscribe_fn=lambda module, idx: module.logic[idx],
 )
 
 

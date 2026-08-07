@@ -9,7 +9,7 @@ here.
 from datetime import timedelta
 from typing import Final
 
-DOMAIN = "habitron"  # internal name of the integration, matches the directory
+DOMAIN = "habitron"
 CONF_DEFAULT_HOST = "local"  # default host string of SmartCenter, uses own ip
 
 # Heartbeat interval used by the coordinator. Not user-configurable per
