@@ -24,7 +24,7 @@ from .services import async_setup_services
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 # Suppress logs from the library, it logs unneeded on error
-logging.getLogger("tuya_sharing").setLevel(logging.CRITICAL)
+logging.getLogger("tuya_sharing").setLevel(logging.WARNING)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
