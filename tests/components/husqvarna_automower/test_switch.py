@@ -77,9 +77,7 @@ async def test_work_area_and_stay_out_zone_entities_unavailable_without_data(
     """Test entities become unavailable when capability data disappears."""
     await setup_integration(hass, mock_config_entry)
 
-    values[TEST_MOWER_ID].capabilities.work_areas = False
     values[TEST_MOWER_ID].work_areas = None
-    values[TEST_MOWER_ID].capabilities.stay_out_zones = False
     values[TEST_MOWER_ID].stay_out_zones = None
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)

@@ -152,9 +152,7 @@ class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
     @property
     def stay_out_zone(self) -> Zone | None:
         """Return the specific stay out zone."""
-        if (
-            stay_out_zones := self.stay_out_zones
-        ) is None or stay_out_zones.zones is None:
+        if (stay_out_zones := self.stay_out_zones) is None:
             return None
         return stay_out_zones.zones.get(self.stay_out_zone_uid)
 
