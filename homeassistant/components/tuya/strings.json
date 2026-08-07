@@ -974,6 +974,9 @@
       "uv_runtime": {
         "name": "UV runtime"
       },
+      "valve_opening_state": {
+        "name": "Valve opening state"
+      },
       "voc": {
         "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
       },
