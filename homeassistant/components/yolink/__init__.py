@@ -80,8 +80,8 @@ class YoLinkHomeMessageListener(MessageListener):
             and msg_data.get("event") is not None
         ):
             device_registry = dr.async_get(self._hass)
-            device_entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, device_coordinator.device.device_id)}
+            device_entry = device_registry.async_get_device_by_identifier(
+                (DOMAIN, device_coordinator.device.device_id), self._entry.entry_id
             )
             if device_entry is None:
                 return

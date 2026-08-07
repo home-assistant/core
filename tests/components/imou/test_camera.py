@@ -16,7 +16,7 @@ from homeassistant.components.imou.camera import (
 )
 from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -61,8 +61,11 @@ def _camera_entity_id(
     ],
     indirect=True,
 )
+@pytest.mark.parametrize("platforms", [[Platform.CAMERA]], indirect=True)
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "init_integration_stable_camera"
+    "entity_registry_enabled_by_default",
+    "mock_camera_access_token",
+    "init_integration",
 )
 async def test_camera_entities_snapshot(
     hass: HomeAssistant,
@@ -93,7 +96,7 @@ async def test_no_camera_without_channel(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Devices without a channel do not get a camera entity."""
-    registry = er.async_get(hass)
+    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
     assert not any(entry.domain == "camera" for entry in entries)
 
@@ -245,7 +248,9 @@ async def test_camera_image(
     indirect=True,
 )
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "init_integration_stable_camera"
+    "entity_registry_enabled_by_default",
+    "mock_camera_access_token",
+    "init_integration",
 )
 async def test_camera_state(
     hass: HomeAssistant,

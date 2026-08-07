@@ -32,7 +32,7 @@ class SpotifyFlowHandler(
     @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
-        return {"scope": ",".join(SPOTIFY_SCOPES)}
+        return {"scope": ",".join(SPOTIFY_SCOPES), "show_dialog": "true"}
 
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
@@ -58,6 +58,7 @@ class SpotifyFlowHandler(
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), title=name, data=data
             )
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=name, data={**data, CONF_NAME: name})
 
     async def async_step_reauth(

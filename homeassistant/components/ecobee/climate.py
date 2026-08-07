@@ -40,12 +40,12 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import EcobeeConfigEntry, EcobeeData
 from .const import (
-    _LOGGER,
     ATTR_ACTIVE_SENSORS,
     ATTR_AVAILABLE_SENSORS,
     DOMAIN,
     ECOBEE_AUX_HEAT_ONLY,
     ECOBEE_MODEL_TO_NAME,
+    LOGGER,
     MANUFACTURER,
 )
 from .services import (
@@ -154,7 +154,7 @@ async def async_setup_entry(
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
         if thermostat["modelNumber"] not in ECOBEE_MODEL_TO_NAME:
-            _LOGGER.error(
+            LOGGER.error(
                 (
                     "Model number for ecobee thermostat %s not recognized. "
                     "Please visit this link to open a new issue: "
@@ -565,7 +565,7 @@ class Thermostat(ClimateEntity):
                     preset_mode = climate_ref
                     break
             else:
-                _LOGGER.warning("Received unknown preset mode: %s", preset_mode)
+                LOGGER.warning("Received unknown preset mode: %s", preset_mode)
 
             self.data.ecobee.set_climate_hold(
                 self.thermostat_index,
@@ -612,7 +612,7 @@ class Thermostat(ClimateEntity):
             self.hold_preference(),
             self.hold_hours(),
         )
-        _LOGGER.debug(
+        LOGGER.debug(
             "Setting ecobee hold_temp to: heat=%s, is=%s, cool=%s, is=%s",
             heat_temp,
             isinstance(heat_temp, (int, float)),
@@ -624,20 +624,38 @@ class Thermostat(ClimateEntity):
 
     @override
     def set_fan_mode(self, fan_mode: str) -> None:
-        """Set the fan mode.  Valid values are "on" or "auto"."""
+        """Set the fan mode.  Valid values are "on" or "auto".
+
+        Ecobee's setHold accepts a fan-only payload (HTTP 200) but does not
+        actually change desiredFanMode unless heatHoldTemp/coolHoldTemp are
+        included — see https://www.ecobee.com/home/developer/api/examples/ex7.shtml
+        Pass the current runtime setpoints so the fan hold sticks without
+        altering the temperature the thermostat is already holding.
+        """
         if fan_mode.lower() not in (FAN_ON, FAN_AUTO):
             error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
-            _LOGGER.error(error)
+            LOGGER.error(error)
             return
+
+        cool_temp = self.thermostat["runtime"]["desiredCool"] / 10.0
+        heat_temp = self.thermostat["runtime"]["desiredHeat"] / 10.0
 
         self.data.ecobee.set_fan_mode(
             self.thermostat_index,
             fan_mode,
             self.hold_preference(),
             holdHours=self.hold_hours(),
+            coolHoldTemp=cool_temp,
+            heatHoldTemp=heat_temp,
         )
 
-        _LOGGER.debug("Setting fan mode to: %s", fan_mode)
+        LOGGER.debug(
+            "Setting fan mode to: %s (preserving heat=%s cool=%s)",
+            fan_mode,
+            heat_temp,
+            cool_temp,
+        )
+        self.update_without_throttle = True
 
     def set_temp_hold(self, temp):
         """Set temperature hold in modes other than auto.
@@ -673,7 +691,7 @@ class Thermostat(ClimateEntity):
         elif temp is not None:
             self.set_temp_hold(temp)
         else:
-            _LOGGER.error("Missing valid arguments for set_temperature in %s", kwargs)
+            LOGGER.error("Missing valid arguments for set_temperature in %s", kwargs)
 
     @override
     def set_humidity(self, humidity: int) -> None:
@@ -691,7 +709,7 @@ class Thermostat(ClimateEntity):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         ecobee_value = HASS_TO_ECOBEE_HVAC.get(hvac_mode)
         if ecobee_value is None:
-            _LOGGER.error("Invalid mode for set_hvac_mode: %s", hvac_mode)
+            LOGGER.error("Invalid mode for set_hvac_mode: %s", hvac_mode)
             return
         self.data.ecobee.set_hvac_mode(self.thermostat_index, ecobee_value)
         self.update_without_throttle = True
@@ -777,7 +795,7 @@ class Thermostat(ClimateEntity):
         # Check if sensors are currently used on the climate for the thermostat.
         current_sensors_in_climate = self._sensors_in_preset_mode(preset_mode)
         if set(sensor_names) == set(current_sensors_in_climate):
-            _LOGGER.debug(
+            LOGGER.debug(
                 "This action would not be an update, current sensors"
                 " on climate (%s) are: %s",
                 preset_mode,
@@ -785,7 +803,7 @@ class Thermostat(ClimateEntity):
             )
             return
 
-        _LOGGER.debug(
+        LOGGER.debug(
             "Setting sensors %s to be used on thermostat %s for program %s",
             sensor_names,
             self.device_info.get("name"),
@@ -881,7 +899,7 @@ class Thermostat(ClimateEntity):
             if value is not None
         }
 
-        _LOGGER.debug(
+        LOGGER.debug(
             (
                 "Creating a vacation on thermostat %s with name %s, cool temp %s, heat"
                 " temp %s, and the following other parameters: %s"
@@ -898,7 +916,7 @@ class Thermostat(ClimateEntity):
 
     def delete_vacation(self, vacation_name):
         """Delete a vacation with the specified name."""
-        _LOGGER.debug(
+        LOGGER.debug(
             "Deleting a vacation on thermostat %s with name %s",
             self.name,
             vacation_name,
@@ -908,7 +926,7 @@ class Thermostat(ClimateEntity):
     @override
     def turn_on(self) -> None:
         """Set the thermostat to the last active HVAC mode."""
-        _LOGGER.debug(
+        LOGGER.debug(
             "Turning on ecobee thermostat %s in %s mode",
             self.name,
             self._last_active_hvac_mode,

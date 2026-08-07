@@ -49,8 +49,9 @@ def override_vehicle_type(request: pytest.FixtureRequest) -> str:
 def get_device_id(hass: HomeAssistant) -> str:
     """Get device_id."""
     device_registry = dr.async_get(hass)
-    identifiers = {(DOMAIN, "VF1ZOE40VIN")}
-    device = device_registry.async_get_device(identifiers=identifiers)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "VF1ZOE40VIN"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     return device.id
 
 
@@ -429,8 +430,8 @@ async def test_service_invalid_device_id2(
         identifiers={(DOMAIN, "VF1AAAAA111222333")},
         name="REG-NUMBER",
     )
-    device_id = device_registry.async_get_device(
-        identifiers={(DOMAIN, "VF1AAAAA111222333")},
+    device_id = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "VF1AAAAA111222333"), config_entry.entry_id
     ).id
 
     data = {RenaultServiceArgument.VEHICLE: device_id}

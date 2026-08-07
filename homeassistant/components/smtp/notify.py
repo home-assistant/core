@@ -1,7 +1,12 @@
 """Mail (SMTP) notification service."""
 
+import asyncio
 from contextlib import suppress
+from email.mime.application import MIMEApplication
+from email.mime.audio import MIMEAudio
+from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
+from email.mime.nonmultipart import MIMENonMultipart
 from email.mime.text import MIMEText
 import email.utils
 import logging
@@ -42,7 +47,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -52,8 +61,12 @@ from homeassistant.util.ssl import create_client_context
 
 from . import SmtpConfigEntry
 from .const import (
+    ATTR_ATTACHMENTS,
+    ATTR_CONTENT_ID,
+    ATTR_FILENAME,
     ATTR_HTML,
     ATTR_IMAGES,
+    ATTR_MEDIA_SOURCE,
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
     CONF_SERVER,
@@ -65,8 +78,14 @@ from .const import (
     DOMAIN,
     ENCRYPTION_OPTIONS,
 )
-from .helpers import SmtpClient, _build_html_msg, _build_multipart_msg, _build_text_msg
-from .issue import async_deprecate_yaml_issue
+from .helpers import (
+    SmtpClient,
+    _build_html_msg,
+    _build_multipart_msg,
+    _build_text_msg,
+    _resolve_media,
+)
+from .issue import async_deprecate_yaml_issue, deprecated_notify_action_call
 
 PLATFORMS = [Platform.NOTIFY]
 
@@ -193,6 +212,77 @@ class MailNotifyEntity(NotifyEntity):
 
         self._send_email(msg=msg)
 
+    async def smtp_send_message(
+        self,
+        message: str,
+        title: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Send an email message via smtp.send_message action."""
+        msg = MIMEMultipart("related")
+        msg["Subject"] = title or ATTR_TITLE_DEFAULT
+
+        alternative_parts = MIMEMultipart("alternative")
+        alternative_parts.attach(MIMEText(message, _charset="utf-8"))
+
+        if ATTR_HTML in kwargs:
+            alternative_parts.attach(
+                MIMEText(kwargs[ATTR_HTML], "html", _charset="utf-8")
+            )
+
+        msg.attach(alternative_parts)
+
+        attachments = kwargs.get(ATTR_ATTACHMENTS, [])
+
+        resolved = await asyncio.gather(
+            *(
+                _resolve_media(self.hass, file[ATTR_MEDIA_SOURCE])
+                for file in attachments
+            )
+        )
+
+        for file, (content, mime_type, filename) in zip(
+            attachments, resolved, strict=True
+        ):
+            main_type, _, subtype = (
+                mime_type.partition("/")
+                if mime_type is not None
+                else (None, None, None)
+            )
+
+            attachment: MIMENonMultipart
+
+            attachment = (
+                MIMEImage(content, _subtype=subtype)
+                if main_type == "image"
+                else MIMEAudio(content, _subtype=subtype)
+                if main_type == "audio"
+                else MIMEApplication(content)
+            )
+
+            if not (target_filename := file.get(ATTR_FILENAME, filename)):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="media_source_missing_filename",
+                    translation_placeholders={
+                        "media_content_id": file[ATTR_MEDIA_SOURCE]["media_content_id"]
+                    },
+                )
+            if cid := file.get(ATTR_CONTENT_ID):
+                attachment.add_header("Content-ID", f"<{cid}>")
+                attachment.add_header(
+                    "Content-Disposition", "inline", filename=target_filename
+                )
+            else:
+                attachment.add_header(
+                    "Content-Disposition", "attachment", filename=target_filename
+                )
+
+            msg.attach(attachment)
+
+        await self.hass.async_add_executor_job(self._send_email, msg)
+        self._async_record_notification()
+
     def _send_email(self, msg: MIMEMultipart | MIMEText) -> None:
         """Send the message."""
         if TYPE_CHECKING:
@@ -275,6 +365,7 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
         Will send plain text normally, with pictures as attachments if images config is
         defined, or will build a multipart HTML if html config is defined.
         """
+
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         msg: MIMEMultipart | MIMEText
@@ -314,6 +405,8 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
 
     def _send_email(self, msg: MIMEMultipart | MIMEText, recipients: list[str]) -> None:
         """Send the message."""
+        deprecated_notify_action_call(self.hass, self._service_name)
+
         mail = self.connect()
         for attempt in range(self.tries):
             try:

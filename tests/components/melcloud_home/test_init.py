@@ -118,8 +118,12 @@ async def test_stale_devices_removed(
     fixture = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
     await setup_integration(hass, mock_config_entry)
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "ata-unit-uuid-1")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "atw-unit-uuid-1")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ata-unit-uuid-1"), mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "atw-unit-uuid-1"), mock_config_entry.entry_id
+    )
 
     # Poof, now they're gone
     mock_melcloud_client.get_context.return_value = UserContext.model_validate(
@@ -136,11 +140,15 @@ async def test_stale_devices_removed(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "ata-unit-uuid-1")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "ata-unit-uuid-1"), mock_config_entry.entry_id
+        )
         is None
     )
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "atw-unit-uuid-1")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "atw-unit-uuid-1"), mock_config_entry.entry_id
+        )
         is None
     )
 

@@ -56,7 +56,7 @@ class _ClimateTargetTemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitB
 
     _base_unit = UnitOfTemperature.CELSIUS
     _domain_specs = {
-        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.TEMPERATURE)
+        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.TARGET_TEMPERATURE)
     }
     _unit_converter = TemperatureConverter
 
@@ -65,7 +65,7 @@ class _ClimateTargetTemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitB
         """Skip climate entities that do not expose a target temperature."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ClimateEntityStateAttribute.TEMPERATURE)
+            and state.attributes.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE)
             is not None
         )
 
@@ -94,7 +94,7 @@ class _ClimateTargetHumidityTriggerMixin(EntityNumericalStateTriggerBase):
     """Mixin for climate target humidity triggers."""
 
     _domain_specs = {
-        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.HUMIDITY)
+        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.TARGET_HUMIDITY)
     }
     _valid_unit = "%"
 
@@ -103,7 +103,8 @@ class _ClimateTargetHumidityTriggerMixin(EntityNumericalStateTriggerBase):
         """Skip climate entities that do not expose a target humidity."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ClimateEntityStateAttribute.HUMIDITY) is not None
+            and state.attributes.get(ClimateEntityStateAttribute.TARGET_HUMIDITY)
+            is not None
         )
 
 

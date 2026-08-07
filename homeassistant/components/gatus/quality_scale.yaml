@@ -49,7 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Integration does not support discovery.
@@ -80,7 +80,7 @@ rules:
   repair-issues:
     status: exempt
     comment: Integration does not require user intervention repairs.
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done
