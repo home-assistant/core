@@ -671,18 +671,19 @@ async def test_ignore_local_mac_client_sensors(
     ],
 )
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_wired_client_speed_sensor_not_created_when_untracked(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client_payload: list[dict[str, Any]],
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Verify untracked wired clients create neither a link speed sensor nor a device."""
     assert entity_registry.async_get("sensor.wired_client_link_speed") is None
     assert (
-        device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"]),
+            config_entry_setup.entry_id,
         )
         is None
     )
