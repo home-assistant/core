@@ -1,0 +1,48 @@
+- id: tuya_zosung_ts1201
+  name: Tuya/Zosung TS1201 IR blaster
+  match:
+    models:
+      - TS1201
+    manufacturers:
+      - _TZ3290_ot6ewjvmejq5ekhl
+      - _TZ3290_j37rooaxrcdcqo5n
+      - _TZ3290_u9xac5rv
+      - _TZ3290_7v1k4vufotpowp9z
+      - _TZ3290_acv1iuslxi3shaaj
+      - _TZ3290_gnl5a6a5xvql7c2a
+      - _TZ3290_rlkmy85q4pzoxobl
+      - _TZ3290_nba3knpsarkawgnt
+    device_types:
+      - "0xF000"
+    required_in_clusters:
+      - "0xE004"
+      - "0xED00"
+  features:
+    send_ir: true
+    receive_ir: true
+  transport:
+    cluster_id: "0xE004"
+    command_id: "0x02"
+    command_arg: code
+    expect_reply: true
+  receive:
+    method: cluster_attribute_read
+    attribute: last_learned_ir_code
+    poll_interval_seconds: 1
+    arm_command:
+      repeat: 10
+      min_cmd_interval: 2
+      call_cmd:
+        command_id: "0x01"
+        arg: on_off
+        value: true
+      state_cmd:
+        cluster_id: "0x0006"
+        attribute: on_off
+        armed: false
+        disarmed: true
+      reset:
+        on_receive: true
+        on_not_armed: true
+  codec:
+    name: tuya_base64_rawtimings_v1

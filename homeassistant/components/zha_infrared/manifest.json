@@ -1,0 +1,12 @@
+{
+  "domain": "zha_infrared",
+  "name": "ZHA Infrared",
+  "codeowners": ["@slavonnet"],
+  "config_flow": true,
+  "dependencies": ["infrared", "zha"],
+  "documentation": "https://www.home-assistant.io/integrations/zha_infrared",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["zha", "zigpy"],
+  "quality_scale": "bronze"
+}
