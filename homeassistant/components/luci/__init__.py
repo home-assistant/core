@@ -2,6 +2,7 @@
 
 from collections.abc import Collection
 from datetime import timedelta
+from functools import partial
 
 from openwrt_luci_rpc import OpenWrtRpc
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -72,19 +73,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool
             return
         seen_macs.update(coordinator.data)
         entry.async_create_task(
-            hass, _async_check_legacy_known_devices(hass, set(seen_macs))
+            hass, _async_check_legacy_known_devices(hass, entry, set(seen_macs))
         )
 
-    await _async_check_legacy_known_devices(hass, seen_macs)
+    await _async_check_legacy_known_devices(hass, entry, seen_macs)
     entry.async_on_unload(coordinator.async_add_listener(_async_check_new_devices))
+    entry.async_on_unload(
+        partial(ir.async_delete_issue, hass, DOMAIN, _legacy_issue_id(entry))
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
+def _legacy_issue_id(entry: LuciConfigEntry) -> str:
+    """Return the issue ID, scoped per entry so routers don't clobber each other."""
+    return f"{ISSUE_LEGACY_KNOWN_DEVICES}_{entry.entry_id}"
+
+
 async def _async_check_legacy_known_devices(
-    hass: HomeAssistant, tracked: Collection[str]
+    hass: HomeAssistant, entry: LuciConfigEntry, tracked: Collection[str]
 ) -> None:
     """Report leftover known_devices.yaml entries for devices we now track.
 
@@ -103,17 +112,18 @@ async def _async_check_legacy_known_devices(
     )
 
     if not conflicting:
-        ir.async_delete_issue(hass, DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES)
+        ir.async_delete_issue(hass, DOMAIN, _legacy_issue_id(entry))
         return
 
     ir.async_create_issue(
         hass,
         DOMAIN,
-        ISSUE_LEGACY_KNOWN_DEVICES,
+        _legacy_issue_id(entry),
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key=ISSUE_LEGACY_KNOWN_DEVICES,
         translation_placeholders={
+            "host": entry.data[CONF_HOST],
             "path": YAML_DEVICES,
             "devices": "\n".join(f"- `{dev_id}`" for dev_id in conflicting),
         },

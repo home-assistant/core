@@ -31,6 +31,11 @@ YAML_CONFIG = {
 }
 
 
+def _issue_id(entry_id: str) -> str:
+    """Return the per-entry issue ID for the legacy known_devices repair."""
+    return f"{ISSUE_LEGACY_KNOWN_DEVICES}_{entry_id}"
+
+
 @pytest.mark.usefixtures("mock_luci_client")
 async def test_unload_entry(
     hass: HomeAssistant,
@@ -136,10 +141,13 @@ async def test_legacy_known_devices_issue(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES)
+    issue = issue_registry.async_get_issue(
+        DOMAIN, _issue_id(mock_config_entry.entry_id)
+    )
     assert issue is not None
     assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
+        "host": "192.168.1.1",
         "path": "known_devices.yaml",
         "devices": "- `homeserver`\n- `router_phone`",
     }
@@ -165,7 +173,10 @@ async def test_legacy_known_devices_no_issue(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES) is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, _issue_id(mock_config_entry.entry_id))
+        is None
+    )
 
 
 async def test_legacy_known_devices_issue_on_new_device(
@@ -190,7 +201,10 @@ async def test_legacy_known_devices_issue_on_new_device(
         await hass.async_block_till_done()
 
         assert (
-            issue_registry.async_get_issue(DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES) is None
+            issue_registry.async_get_issue(
+                DOMAIN, _issue_id(mock_config_entry.entry_id)
+            )
+            is None
         )
 
         mock_luci_client.get_all_connected_devices.return_value = [
@@ -199,11 +213,64 @@ async def test_legacy_known_devices_issue_on_new_device(
         ]
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        # The scheduled coordinator refresh is a background task.
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES)
+    issue = issue_registry.async_get_issue(
+        DOMAIN, _issue_id(mock_config_entry.entry_id)
+    )
     assert issue is not None
     assert issue.translation_placeholders == {
+        "host": "192.168.1.1",
         "path": "known_devices.yaml",
         "devices": "- `late_arrival`",
     }
+
+
+async def test_legacy_known_devices_issue_per_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_luci_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a second router without conflicts keeps the first router's issue."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="01JBVVVJ87F6G5V0QJX6HBC94U",
+        data={
+            CONF_HOST: "192.168.2.1",
+            CONF_USERNAME: "root",
+            CONF_PASSWORD: "password",
+        },
+    )
+    legacy_devices = [
+        Device(hass, timedelta(0), True, "homeserver", MOCK_DEVICE_1.mac),
+    ]
+
+    with patch(
+        "homeassistant.components.luci.async_load_config",
+        return_value=legacy_devices,
+    ):
+        mock_luci_client.get_all_connected_devices.return_value = [MOCK_DEVICE_1]
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # The second router tracks a device with no known_devices.yaml entry.
+        mock_luci_client.get_all_connected_devices.return_value = [MOCK_DEVICE_3]
+        other_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(other_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, _issue_id(mock_config_entry.entry_id)
+    )
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "host": "192.168.1.1",
+        "path": "known_devices.yaml",
+        "devices": "- `homeserver`",
+    }
+    assert (
+        issue_registry.async_get_issue(DOMAIN, _issue_id(other_entry.entry_id)) is None
+    )
