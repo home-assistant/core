@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, override
+from typing import Any, Final, override
 
 import jwt
 import voluptuous as vol
@@ -12,6 +12,8 @@ from homeassistant.helpers import config_entry_oauth2_flow, device_registry as d
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
+
+INPUT_IMAGE_SCOPE: Final = "images_scope"
 
 
 class OAuth2FlowHandler(
@@ -23,6 +25,8 @@ class OAuth2FlowHandler(
 
     MINOR_VERSION = 3
 
+    image_scope: bool | None = None
+
     @property
     @override
     def logger(self) -> logging.Logger:
@@ -32,7 +36,43 @@ class OAuth2FlowHandler(
     @property
     @override
     def extra_authorize_data(self) -> dict[str, str]:
-        return {"scope": "Control Monitor Settings IdentifyAppliance Images"}
+        return {
+            "scope": "Control Monitor Settings IdentifyAppliance"
+            + (" Images" if self.image_scope else "")
+        }
+
+    @override
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create an entry for auth.
+
+        We need to intercede to ask the user if he wants to use the image scope
+        before generating the URL. Otherwise, attempts with application credentials
+        that don't have the image scope will fail.
+        """
+        if user_input is not None:
+            return await super().async_step_auth(user_input)
+
+        return await self.async_step_scopes(user_input)
+
+    async def async_step_scopes(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask the user if he wants to use the image scope."""
+        if user_input is not None:
+            self.image_scope = user_input[INPUT_IMAGE_SCOPE]
+        if self.image_scope is not None:
+            return await super().async_step_auth(None)
+
+        return self.async_show_form(
+            step_id="scopes",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(INPUT_IMAGE_SCOPE): bool,
+                }
+            ),
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

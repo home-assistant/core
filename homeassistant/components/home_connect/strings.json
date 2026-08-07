@@ -38,6 +38,16 @@
       "reauth_confirm": {
         "description": "The Home Connect integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "scopes": {
+        "data": {
+          "images_scope": "Images scope"
+        },
+        "data_description": {
+          "images_scope": "Allows Home Assistant to access images from your Home Connect devices."
+        },
+        "description": "Select the optional scopes you want to enable for Home Connect authentication.",
+        "title": "Scopes"
       }
     }
   },
