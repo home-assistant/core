@@ -121,7 +121,7 @@ class _KnxEntityBase(Entity):
     """Representation of a KNX entity."""
 
     # `assumed_state` toggles when a restored state is confirmed by the bus,
-    # which would else write a new attributes row for every entity on startup
+    # which would otherwise write a new attributes row for every entity on startup
     _unrecorded_attributes = frozenset({ATTR_ASSUMED_STATE})
 
     _attr_should_poll = False
