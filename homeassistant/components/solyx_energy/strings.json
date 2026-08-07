@@ -37,29 +37,15 @@
     }
   },
   "entity": {
-    "number": {
-      "control_value": {
-        "name": "Control value"
-      }
-    },
-    "select": {
-      "operating_mode": {
-        "name": "Operating mode",
-        "state": {
-          "direct": "Direct",
-          "muted": "Muted"
-        }
-      }
-    },
     "sensor": {
+      "boiler_power": {
+        "name": "Power boiler"
+      },
       "energy_boiler": {
         "name": "Energy to boiler"
       },
       "grid_power": {
         "name": "Grid power"
-      },
-      "power_boiler": {
-        "name": "Power boiler"
       }
     }
   }

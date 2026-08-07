@@ -17,16 +17,14 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    ATTRIBUTE_CONTROL_VALUE,
+    ATTRIBUTE_BOILER_POWER,
     ATTRIBUTE_ENERGY_BOILER,
     ATTRIBUTE_GRID_POWER,
-    ATTRIBUTE_OPERATING_MODE,
-    ATTRIBUTE_POWER_BOILER,
     DATA_INTERVAL_SECONDS,
     DATA_SETTLE_SECONDS,
     DOMAIN,
 )
-from .util import parse_attr_value, parse_float
+from .util import parse_float
 
 if TYPE_CHECKING:
     from solyx_energy_api.client import SolyxEnergyApiClient
@@ -41,11 +39,9 @@ _LOGGER = logging.getLogger(__name__)
 class SolyxEnergyData:
     """Hold a snapshot of all Solyx Energy integration values, using the internal Solyx platform name."""
 
-    powerBoiler: float | None  # noqa: N815
+    boilerPower: float | None  # noqa: N815
     energyBoiler: float | None  # noqa: N815
-    operatingMode: str | None  # noqa: N815
     gridPower: float | None  # noqa: N815
-    controlValue: float | None  # noqa: N815
 
 
 class SolyxEnergyCoordinator(DataUpdateCoordinator[SolyxEnergyData]):
@@ -84,11 +80,9 @@ class SolyxEnergyCoordinator(DataUpdateCoordinator[SolyxEnergyData]):
             raise UpdateFailed(f"API error: {err}") from err
 
         return SolyxEnergyData(
-            powerBoiler=parse_float(nymo_data, ATTRIBUTE_POWER_BOILER),
+            boilerPower=parse_float(nymo_data, ATTRIBUTE_BOILER_POWER),
             energyBoiler=parse_float(nymo_data, ATTRIBUTE_ENERGY_BOILER),
-            operatingMode=parse_attr_value(nymo_data, ATTRIBUTE_OPERATING_MODE),
             gridPower=parse_float(nymo_data, ATTRIBUTE_GRID_POWER),
-            controlValue=parse_float(nymo_data, ATTRIBUTE_CONTROL_VALUE),
         )
 
     async def async_set_attribute(self, attribute_name: str, value: object) -> None:

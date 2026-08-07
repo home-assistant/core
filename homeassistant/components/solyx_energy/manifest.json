@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["solyx-energy-api-client==0.1.0"]
+  "requirements": ["solyx-energy-api-client==0.1.1"]
 }

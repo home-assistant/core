@@ -20,7 +20,7 @@ from .coordinator import SolyxEnergyCoordinator
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SELECT, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 type SolyxEnergyConfigEntry = ConfigEntry[SolyxEnergyCoordinator]
 

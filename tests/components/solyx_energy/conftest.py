@@ -56,11 +56,11 @@ def mock_api_client_class(mock_solyx_api_client):
     """Patch SolyxEnergyApiClient so integration setup and config flow use the mock."""
     with (
         patch(
-            "custom_components.solyx_energy.SolyxEnergyApiClient",
+            "solyx_energy_api.client.SolyxEnergyApiClient",
             return_value=mock_solyx_api_client,
         ),
         patch(
-            "custom_components.solyx_energy.config_flow.SolyxEnergyApiClient",
+            "homeassistant.components.solyx_energy.config_flow.SolyxEnergyApiClient",
             return_value=mock_solyx_api_client,
         ),
     ):
@@ -70,7 +70,9 @@ def mock_api_client_class(mock_solyx_api_client):
 @pytest.fixture
 def mock_setup_entry():
     """Mock setting up a config entry, preventing full integration setup."""
-    with patch("custom_components.solyx_energy.async_setup_entry", return_value=True):
+    with patch(
+        "homeassistant.components.solyx_energy.async_setup_entry", return_value=True
+    ):
         yield
 
 

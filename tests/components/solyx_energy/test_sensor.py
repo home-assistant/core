@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     ("key", "expected"),
     [
-        ("powerBoiler", ("1234.0", "W", "power")),
+        ("boilerPower", ("1234.0", "W", "power")),
         ("energyBoiler", ("5678.0", "Wh", "energy")),
         ("gridPower", ("-100.0", "W", "power")),
     ],

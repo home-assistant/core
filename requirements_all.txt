@@ -3080,7 +3080,7 @@ solarman-opendata==0.0.3
 solax==3.2.4
 
 # homeassistant.components.solyx_energy
-solyx-energy-api-client==0.1.0
+solyx-energy-api-client==0.1.1
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
