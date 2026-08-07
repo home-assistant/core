@@ -238,6 +238,16 @@ def vizio_guess_device_type_fixture() -> Generator[None]:
         yield
 
 
+@pytest.fixture(name="vizio_detect_tv")
+def vizio_detect_tv_fixture() -> Generator[None]:
+    """Mock vizio device type probe to report a TV."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.async_is_tv",
+        return_value=True,
+    ):
+        yield
+
+
 @pytest.fixture(name="vizio_cant_connect")
 def vizio_cant_connect_fixture() -> Generator[None]:
     """Mock vizio device can't connect with valid auth."""

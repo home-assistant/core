@@ -1508,13 +1508,17 @@ async def test_device_info_called(
 
     assert len(hass.states.async_entity_ids()) == 3
 
-    device = device_registry.async_get_device(identifiers={("hue", "1234")})
+    device = device_registry.async_get_device_by_identifier(
+        ("hue", "1234"), config_entry.entry_id
+    )
     assert device == snapshot
     assert device.config_entries == {config_entry.entry_id}
     assert device.config_entries_subentries == {config_entry.entry_id: {None}}
     assert device.primary_config_entry == config_entry.entry_id
     assert device.via_device_id == via.id
-    device = device_registry.async_get_device(identifiers={("hue", "efgh")})
+    device = device_registry.async_get_device_by_identifier(
+        ("hue", "efgh"), config_entry.entry_id
+    )
     assert device == snapshot
     assert device.config_entries == {config_entry.entry_id}
     assert device.config_entries_subentries == {
@@ -1568,8 +1572,8 @@ async def test_device_info_not_overrides(
     assert await entity_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
 
-    device2 = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "abcd")}
+    device2 = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "abcd"), config_entry.entry_id
     )
     assert device2 is not None
     assert device.id == device2.id
@@ -1622,7 +1626,9 @@ async def test_device_info_homeassistant_url(
 
     assert len(hass.states.async_entity_ids()) == 1
 
-    device = device_registry.async_get_device(identifiers={("mqtt", "1234")})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "1234"), config_entry.entry_id
+    )
     assert device is not None
     assert device.identifiers == {("mqtt", "1234")}
     assert device.configuration_url == "homeassistant://config/mqtt"
@@ -1674,7 +1680,9 @@ async def test_device_info_change_to_no_url(
 
     assert len(hass.states.async_entity_ids()) == 1
 
-    device = device_registry.async_get_device(identifiers={("mqtt", "1234")})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "1234"), config_entry.entry_id
+    )
     assert device is not None
     assert device.identifiers == {("mqtt", "1234")}
     assert device.configuration_url is None
@@ -2762,8 +2770,8 @@ async def test_device_name_defaulting_config_entry(
     assert await entity_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "1234")}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "1234"), config_entry.entry_id
     )
     assert device is not None
     assert device.name == expected_device_name
