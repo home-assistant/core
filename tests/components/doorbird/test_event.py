@@ -6,7 +6,7 @@ from homeassistant.components.doorbird.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import Event, HomeAssistant, callback
 
-from . import mock_webhook_call
+from . import mock_not_found_exception, mock_webhook_call
 from .conftest import DoorbirdMockerType
 
 from tests.typing import ClientSessionGenerator
@@ -72,3 +72,32 @@ async def test_event_data_points_at_matching_image_entity(
 
     assert len(events) == 1
     assert events[0].data[ATTR_ENTITY_ID] == expected_entity_id
+
+
+async def test_event_data_entity_id_without_schedule_api(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """Models without the schedule API report no entity_id on their events.
+
+    Those models expose no event descriptions, so neither the event entities nor
+    the image entities that carry the entity_id are created for them.
+    """
+    doorbird_entry = await doorbird_mocker(
+        schedule_side_effect=mock_not_found_exception()
+    )
+    events: list[Event] = []
+
+    @callback
+    def _capture(fired_event: Event) -> None:
+        events.append(fired_event)
+
+    hass.bus.async_listen(f"{DOMAIN}_mydoorbird_doorbell", _capture)
+
+    client = await hass_client()
+    await mock_webhook_call(doorbird_entry.entry, client, "mydoorbird_doorbell")
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data[ATTR_ENTITY_ID] is None
