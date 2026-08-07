@@ -20,12 +20,7 @@ rules:
   docs-triggers: done
   entity-event-setup: done
   entity-unique-id: done
-  has-entity-name:
-    status: exempt
-    comment: |
-      UI entities use `has_entity_name`. YAML entities can be assigned to a
-      device but intentionally keep their configured full name for backwards
-      compatibility, so they don't use `has_entity_name`.
+  has-entity-name: done
   runtime-data:
     status: exempt
     comment: |

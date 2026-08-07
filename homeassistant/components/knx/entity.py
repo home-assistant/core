@@ -203,15 +203,18 @@ class KnxYamlEntity(_KnxEntityBase):
 
         if device := entity_config.get(CONF_DEVICE):
             # Entities sharing the same `device` `id` are grouped into one
-            # device. The `id` is used verbatim as the identifier so YAML
-            # entities can also join a UI-created device by referencing its
-            # identifier.
+            # device. `id` is normalized in the schema (`_device_id`), which
+            # also lets YAML entities join a UI-created device by referencing
+            # its identifier verbatim.
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, device[CONF_ID])},
                 manufacturer="KNX",
             )
             if device_name := device.get(CONF_NAME):
                 self._attr_device_info["name"] = device_name
+            # Matches UI entity naming: the device name is prepended to the
+            # entity name (or used as-is if the entity has no name).
+            self._attr_has_entity_name = True
 
         default_entity_id: str | None
         if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
