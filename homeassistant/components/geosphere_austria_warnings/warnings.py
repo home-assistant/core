@@ -25,6 +25,11 @@ WARNING_LEVEL_SLUGS: Mapping[WarningLevel, str] = {
     WarningLevel.RED: "red",
 }
 
+SUSTAINED_WARNING_TYPES: frozenset[WarningType] = frozenset(
+    {WarningType.HEAT, WarningType.COLD}
+)
+RANKING_DEMOTION = 1
+
 
 def warning_type_slug(warning_type: WarningType) -> str:
     """Return the stable slug for a warning type."""
@@ -40,6 +45,18 @@ def warning_level_slug(level: WarningLevel) -> str:
         return WARNING_LEVEL_SLUGS[level]
     except KeyError as err:
         raise ValueError(f"Unsupported GeoSphere warning level: {level!r}") from err
+ 
+ 
+def _ranking_level(warning: WeatherWarning) -> int:
+    """Return the level value used for ordering, adjusted for warning type.
+ 
+    Sustained/ambient types (heat, cold) are demoted by one tier relative to
+    acute/event types when ranking warnings against each other, since they
+    describe a background condition rather than something to react to right
+    now. This never affects the warning's actual, reported level.
+    """
+    demotion = RANKING_DEMOTION if warning.warning_type in SUSTAINED_WARNING_TYPES else 0
+    return warning.level.value - demotion
 
 
 def warning_sort_key(warning: WeatherWarning) -> tuple[int, datetime, int, int, int, str]:
@@ -50,7 +67,8 @@ def warning_sort_key(warning: WeatherWarning) -> tuple[int, datetime, int, int, 
     tie-breakers.
     """
     return (
-        -warning.level.value,
+        -_ranking_level(warning),
+        warning.end,
         warning.start,
         warning.warning_id,
         warning.change_id,
@@ -60,7 +78,13 @@ def warning_sort_key(warning: WeatherWarning) -> tuple[int, datetime, int, int, 
 
 
 def sort_warnings(warnings: Iterable[WeatherWarning]) -> list[WeatherWarning]:
-    """Return warnings in deterministic highest-first order."""
+    """Return warnings in deterministic, actionability-ranked order.
+ 
+    This ordering is used for display and for selecting the "featured"
+    warning (see ``select_highest_warning``); it is intentionally not pure
+    severity order. For the true worst-case severity, use
+    ``highest_warning_level`` instead.
+    """
     return sorted(warnings, key=warning_sort_key)
 
 
@@ -116,8 +140,13 @@ def serialize_warnings(
 
 
 def highest_warning_level(warnings: Iterable[WeatherWarning]) -> str:
-    """Return the highest warning level, or ``none`` for an empty bucket."""
-    warning = select_highest_warning(warnings)
-    if warning is None:
+    """Return the highest *actual* warning level, or ``none`` for an empty bucket.
+ 
+    Deliberately independent of ``sort_warnings``' type-adjusted ranking: the
+    reported level must reflect true worst-case severity, e.g. a red heat
+    warning must never be masked by a concurrent yellow thunderstorm.
+    """
+    levels = [warning.level.value for warning in warnings]
+    if not levels:
         return LEVEL_NONE
-    return warning_level_slug(warning.level)
+    return warning_level_slug(WarningLevel(max(levels)))

@@ -17,6 +17,30 @@
       {
         "type": "Warning",
         "properties": {
+          "warnid": 10,
+          "chgid": 1,
+          "verlaufid": 11,
+          "warntypid": 6,
+          "begin": "27.03.2023 00:00",
+          "end": "27.03.2023 23:59",
+          "create": "2023-03-26 12:00:00+00",
+          "text": "Enhanced heat stress can be expected.",
+          "auswirkungen": "",
+          "empfehlungen": "",
+          "meteotext": "",
+          "updategrund": "",
+          "warnstufeid": 1,
+          "rawinfo": {
+            "wtype": 6,
+            "wlevel": 1,
+            "start": "1679875200",
+            "end": "1679961540"
+          }
+        }
+      },
+      {
+        "type": "Warning",
+        "properties": {
           "warnid": 4149,
           "chgid": 6,
           "verlaufid": 12,
@@ -41,24 +65,24 @@
       {
         "type": "Warning",
         "properties": {
-          "warnid": 4149,
-          "chgid": 6,
-          "verlaufid": 21,
-          "warntypid": 1,
-          "begin": "27.03.2023 20:00",
-          "end": "28.03.2023 04:00",
-          "create": "2023-03-27 06:00:00+00",
-          "text": "Yellow storm warning from Mon, 27.03.2023 20:00 until Tue, 28.03.2023 04:00",
+          "warnid": 4150,
+          "chgid": 2,
+          "verlaufid": 52,
+          "warntypid": 2,
+          "begin": "28.03.2023 06:00",
+          "end": "28.03.2023 16:00",
+          "create": "2023-03-27 08:00:00+00",
+          "text": "Orange rain warning from Tue, 28.03.2023 06:00 until Tue, 28.03.2023 16:00",
           "auswirkungen": "",
           "empfehlungen": "",
           "meteotext": "",
           "updategrund": "",
-          "warnstufeid": 1,
+          "warnstufeid": 2,
           "rawinfo": {
-            "wtype": 1,
-            "wlevel": 1,
-            "start": "1679947200",
-            "end": "1679976000"
+            "wtype": 2,
+            "wlevel": 2,
+            "start": "1679983200",
+            "end": "1680019200"
           }
         }
       },
@@ -89,48 +113,24 @@
       {
         "type": "Warning",
         "properties": {
-          "warnid": 4149,
-          "chgid": 6,
-          "verlaufid": 41,
-          "warntypid": 1,
-          "begin": "28.03.2023 08:00",
-          "end": "28.03.2023 20:00",
-          "create": "2023-03-27 06:00:00+00",
-          "text": "Orange storm warning from Tue, 28.03.2023 08:00 until Tue, 28.03.2023 20:00",
+          "warnid": 10,
+          "chgid": 1,
+          "verlaufid": 51,
+          "warntypid": 6,
+          "begin": "29.03.2023 00:00",
+          "end": "29.03.2023 23:59",
+          "create": "2023-03-28 12:00:00+00",
+          "text": "Enhanced heat stress can be expected.",
           "auswirkungen": "",
           "empfehlungen": "",
           "meteotext": "",
           "updategrund": "",
           "warnstufeid": 2,
           "rawinfo": {
-            "wtype": 1,
+            "wtype": 6,
             "wlevel": 2,
-            "start": "1679990400",
-            "end": "1680033600"
-          }
-        }
-      },
-      {
-        "type": "Warning",
-        "properties": {
-          "warnid": 4149,
-          "chgid": 6,
-          "verlaufid": 52,
-          "warntypid": 1,
-          "begin": "28.03.2023 06:00",
-          "end": "28.03.2023 16:00",
-          "create": "2023-03-27 06:00:00+00",
-          "text": "Orange storm warning from Tue, 28.03.2023 06:00 until Tue, 28.03.2023 16:00",
-          "auswirkungen": "",
-          "empfehlungen": "",
-          "meteotext": "",
-          "updategrund": "",
-          "warnstufeid": 2,
-          "rawinfo": {
-            "wtype": 1,
-            "wlevel": 2,
-            "start": "1679983200",
-            "end": "1680019200"
+            "start": "1680048000",
+            "end": "1680134340"
           }
         }
       },
@@ -155,6 +155,30 @@
             "wlevel": 1,
             "start": "1680076800",
             "end": "1680112800"
+          }
+        }
+      },
+      {
+        "type": "Warning",
+        "properties": {
+          "warnid": 4837,
+          "chgid": 1,
+          "verlaufid": 2,
+          "warntypid": 5,
+          "begin": "29.03.2023 14:00",
+          "end": "29.03.2023 21:00",
+          "create": "2023-03-29 12:00:00+00",
+          "text": "Yellow thunderstorm warning from Wed, 29.03.2023 14:00 until Wed, 29.03.2023 21:00",
+          "auswirkungen": "* Caution! Heightened likelihood of thunderstorms. From region to region, heavy rainfall and storm-strength winds can be expected. The major danger stems from strokes of lightning, falling tree branches and loosed flying objects. From place to place, inundations are possible.",
+          "empfehlungen": "",
+          "meteotext": "",
+          "updategrund": "",
+          "warnstufeid": 1,
+          "rawinfo": {
+            "wtype": 5,
+            "wlevel": 1,
+            "start": "1680098400",
+            "end": "1680123600"
           }
         }
       }
