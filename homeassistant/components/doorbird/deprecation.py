@@ -23,8 +23,6 @@ def deprecate_entity(
     entity_unique_id: str,
     issue_id: str,
     translation_key: str,
-    replacement_platform_domain: str,
-    replacement_entity_unique_id: str,
 ) -> bool:
     """Handle a deprecated entity, returning whether it should still be created."""
     entity_id = entity_registry.async_get_entity_id(
@@ -49,15 +47,6 @@ def deprecate_entity(
     placeholders = {
         "entity_id": entity_id,
         "entity_name": entity_entry.name or entity_entry.original_name or entity_id,
-        # The replacement platform may not have been set up yet on the first run,
-        # so fall back to the deprecated entity's object id, which the replacement
-        # shares because both use the same device and translation key.
-        "replacement_entity_id": (
-            entity_registry.async_get_entity_id(
-                replacement_platform_domain, DOMAIN, replacement_entity_unique_id
-            )
-            or f"{replacement_platform_domain}.{entity_id.partition('.')[2]}"
-        ),
     }
     if items:
         translation_key = f"{translation_key}_scripts"

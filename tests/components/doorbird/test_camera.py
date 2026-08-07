@@ -112,8 +112,31 @@ async def test_deprecated_camera_kept_and_flagged(
     )
     assert issue is not None
     assert issue.translation_key == f"deprecated_camera_{camera_id}"
-    assert issue.translation_placeholders["replacement_entity_id"] == (
-        f"image.mydoorbird_{camera_id}"
+    assert issue.translation_placeholders["entity_id"] == entity_id
+
+
+async def test_deprecated_camera_issue_survives_rename(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A renamed legacy camera still gets an issue naming its own entity id."""
+    entity_registry.async_get_or_create(
+        Platform.CAMERA,
+        DOMAIN,
+        "1234ABCD_last_ring",
+        suggested_object_id="front_door_ring_snapshot",
+    )
+
+    await doorbird_mocker()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_camera_1234ABCD_last_ring"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders["entity_id"] == (
+        "camera.front_door_ring_snapshot"
     )
 
 

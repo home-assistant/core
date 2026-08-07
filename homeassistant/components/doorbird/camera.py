@@ -57,8 +57,6 @@ async def async_setup_entry(
             entity_unique_id=f"{mac_addr}_{camera_id}",
             issue_id=f"deprecated_camera_{mac_addr}_{camera_id}",
             translation_key=f"deprecated_camera_{camera_id}",
-            replacement_platform_domain=Platform.IMAGE,
-            replacement_entity_unique_id=f"{mac_addr}_{camera_id}",
         ):
             continue
         entities.append(
