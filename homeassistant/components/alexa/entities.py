@@ -22,6 +22,7 @@ from homeassistant.components import (
 )
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelEntityStateAttribute,
 )
 from homeassistant.components.alert import DOMAIN as ALERT_DOMAIN
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -53,10 +54,10 @@ from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DESCRIPTION,
     CONF_NAME,
+    EntityStateAttribute,
     UnitOfTemperature,
     __version__,
 )
@@ -444,7 +445,7 @@ class SwitchCapabilities(AlexaEntity):
         if self.entity.domain == INPUT_BOOLEAN_DOMAIN:
             return [DisplayCategory.OTHER]
 
-        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = self.entity.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         if device_class == switch.SwitchDeviceClass.OUTLET:
             return [DisplayCategory.SMARTPLUG]
 
@@ -494,7 +495,9 @@ class ClimateCapabilities(AlexaEntity):
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
         # If we support two modes, one being off, we allow turning on too.
-        supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported_features = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if (
             (
                 self.entity.domain == CLIMATE_DOMAIN
@@ -550,7 +553,7 @@ class CoverCapabilities(AlexaEntity):
     @override
     def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
-        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = self.entity.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         if device_class in (cover.CoverDeviceClass.GARAGE, cover.CoverDeviceClass.GATE):
             return [DisplayCategory.GARAGE_DOOR]
         if device_class == cover.CoverDeviceClass.DOOR:
@@ -573,14 +576,16 @@ class CoverCapabilities(AlexaEntity):
     @override
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
-        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = self.entity.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         if device_class not in (
             cover.CoverDeviceClass.GARAGE,
             cover.CoverDeviceClass.GATE,
         ):
             yield AlexaPowerController(self.entity)
 
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if supported & cover.CoverEntityFeature.SET_POSITION:
             yield AlexaRangeController(
                 self.entity, instance=f"{COVER_DOMAIN}.{cover.ATTR_POSITION}"
@@ -663,7 +668,9 @@ class FanCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
         force_range_controller = True
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if supported & fan.FanEntityFeature.OSCILLATE:
             yield AlexaToggleController(
                 self.entity, instance=f"{FAN_DOMAIN}.{fan.ATTR_OSCILLATING}"
@@ -709,7 +716,9 @@ class RemoteCapabilities(AlexaEntity):
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         activities = self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST) or []
         if (
             activities
@@ -736,7 +745,9 @@ class HumidifierCapabilities(AlexaEntity):
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if (
             supported & humidifier.HumidifierEntityFeature.MODES
         ) and self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES):
@@ -775,7 +786,7 @@ class MediaPlayerCapabilities(AlexaEntity):
     @override
     def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
-        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = self.entity.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         if device_class == media_player.MediaPlayerDeviceClass.SPEAKER:
             return [DisplayCategory.SPEAKER]
 
@@ -786,7 +797,9 @@ class MediaPlayerCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
 
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if supported & media_player.MediaPlayerEntityFeature.VOLUME_SET:
             yield AlexaSpeaker(self.entity)
         elif supported & media_player.MediaPlayerEntityFeature.VOLUME_STEP:
@@ -979,7 +992,9 @@ class AlarmControlPanelCapabilities(AlexaEntity):
     @override
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
-        if not self.entity.attributes.get("code_arm_required"):
+        if not self.entity.attributes.get(
+            AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED
+        ):
             yield AlexaSecurityPanelController(self.hass, self.entity)
             yield AlexaEndpointHealth(self.hass, self.entity)
             yield Alexa(self.entity)
@@ -1050,7 +1065,9 @@ class VacuumCapabilities(AlexaEntity):
     @override
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if (
             (supported & vacuum.VacuumEntityFeature.TURN_ON)
             or (supported & vacuum.VacuumEntityFeature.START)
@@ -1087,7 +1104,9 @@ class ValveCapabilities(AlexaEntity):
     @override
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if supported & valve.ValveEntityFeature.SET_POSITION:
             yield AlexaRangeController(
                 self.entity, instance=f"{VALVE_DOMAIN}.{valve.ATTR_POSITION}"
@@ -1115,7 +1134,9 @@ class CameraCapabilities(AlexaEntity):
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
         if self._check_requirements():
-            supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            supported = self.entity.attributes.get(
+                EntityStateAttribute.SUPPORTED_FEATURES, 0
+            )
             if supported & camera.CameraEntityFeature.STREAM:
                 yield AlexaCameraStreamController(self.entity)
 

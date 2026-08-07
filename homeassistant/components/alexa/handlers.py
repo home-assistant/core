@@ -27,7 +27,11 @@ from homeassistant.components import (
     water_heater,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityStateAttribute,
+)
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
@@ -43,8 +47,6 @@ from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ENTITY_PICTURE,
-    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
@@ -65,6 +67,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.helpers import network
@@ -205,7 +208,7 @@ async def async_api_turn_on(
     elif domain == REMOTE_DOMAIN:
         service = remote.SERVICE_TURN_ON
     elif domain == VACUUM_DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         if (
             not supported & vacuum.VacuumEntityFeature.TURN_ON
             and supported & vacuum.VacuumEntityFeature.START
@@ -214,7 +217,7 @@ async def async_api_turn_on(
     elif domain == TIMER_DOMAIN:
         service = timer.SERVICE_START
     elif domain == MEDIA_PLAYER_DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         power_features = (
             media_player.MediaPlayerEntityFeature.TURN_ON
             | media_player.MediaPlayerEntityFeature.TURN_OFF
@@ -258,7 +261,7 @@ async def async_api_turn_off(
     elif domain == HUMIDIFIER_DOMAIN:
         service = humidifier.SERVICE_TURN_OFF
     elif domain == VACUUM_DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         if (
             not supported & vacuum.VacuumEntityFeature.TURN_OFF
             and supported & vacuum.VacuumEntityFeature.RETURN_HOME
@@ -267,7 +270,7 @@ async def async_api_turn_off(
     elif domain == TIMER_DOMAIN:
         service = timer.SERVICE_CANCEL
     elif domain == MEDIA_PLAYER_DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         power_features = (
             media_player.MediaPlayerEntityFeature.TURN_ON
             | media_player.MediaPlayerEntityFeature.TURN_OFF
@@ -782,7 +785,9 @@ async def async_api_stop(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == COVER_DOMAIN:
-        supported: int = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported: int = entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         feature_services: dict[int, str] = {
             cover.CoverEntityFeature.STOP.value: cover.SERVICE_STOP_COVER,
             cover.CoverEntityFeature.STOP_TILT.value: cover.SERVICE_STOP_COVER_TILT,
@@ -875,7 +880,7 @@ async def async_api_set_target_temp(
     domain = entity.domain
 
     min_temp = entity.attributes[MIN_MAX_TEMP[domain]["min_temp"]]
-    max_temp = entity.attributes["max_temp"]
+    max_temp = entity.attributes[ClimateEntityCapabilityAttribute.MAX_TEMP]
     unit = hass.config.units.temperature_unit
 
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
@@ -985,7 +990,9 @@ async def async_api_adjust_target_temp(
             }
         )
     else:
-        current_target_temp: str | None = entity.attributes.get(ATTR_TEMPERATURE)
+        current_target_temp: str | None = entity.attributes.get(
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE
+        )
         if current_target_temp is None:
             raise AlexaUnsupportedThermostatTargetStateError(
                 "The current target temperature is not set, "
@@ -1432,7 +1439,7 @@ async def async_api_set_range(
     service = None
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     range_value = directive.payload["rangeValue"]
-    supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
     # Cover Position
     if instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
@@ -1946,7 +1953,7 @@ async def async_api_initialize_camera_stream(
     stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
     state = hass.states.get(entity.entity_id)
     assert state
-    camera_image = state.attributes[ATTR_ENTITY_PICTURE]
+    camera_image = state.attributes[EntityStateAttribute.ENTITY_PICTURE]
 
     try:
         external_url = network.get_url(

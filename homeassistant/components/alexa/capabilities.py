@@ -20,17 +20,23 @@ from homeassistant.components import (
 )
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityStateAttribute,
     AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, HVACMode
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityStateAttribute,
+    HVACMode,
+)
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.image_processing import DOMAIN as IMAGE_PROCESSING_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.light import LightEntityStateAttribute
 from homeassistant.components.lock import LockState
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
@@ -39,10 +45,6 @@ from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
-    ATTR_CODE_FORMAT,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_IDLE,
     STATE_OFF,
@@ -51,6 +53,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfLength,
     UnitOfMass,
     UnitOfTemperature,
@@ -103,7 +106,9 @@ UNIT_TO_CATALOG_TAG = {
 
 def get_resource_by_unit_of_measurement(entity: State) -> str:
     """Translate the unit of measurement to an Alexa Global Catalog keyword."""
-    unit: str = entity.attributes.get("unit_of_measurement", "preset")
+    unit: str = entity.attributes.get(
+        EntityStateAttribute.UNIT_OF_MEASUREMENT, "preset"
+    )
     return UNIT_TO_CATALOG_TAG.get(unit, AlexaGlobalCatalog.SETTING_PRESET)
 
 
@@ -619,7 +624,9 @@ class AlexaBrightnessController(AlexaCapability):
         """Read and return a property."""
         if name != "brightness":
             raise UnsupportedProperty(name)
-        if brightness := self.entity.attributes.get("brightness"):
+        if brightness := self.entity.attributes.get(
+            LightEntityStateAttribute.BRIGHTNESS
+        ):
             return round(brightness / 255.0 * 100)
         return 0
 
@@ -774,7 +781,9 @@ class AlexaSpeaker(AlexaCapability):
         """Return what properties this entity supports."""
         properties = [{"name": "volume"}]
 
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if supported & media_player.MediaPlayerEntityFeature.VOLUME_MUTE:
             properties.append({"name": "muted"})
 
@@ -871,7 +880,9 @@ class AlexaPlaybackController(AlexaCapability):
         Supported Operations: FastForward, Next, Pause, Play, Previous, Rewind,
         StartOver, Stop
         """
-        supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported_features = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
 
         operations: dict[
             cover.CoverEntityFeature | media_player.MediaPlayerEntityFeature, str
@@ -1008,7 +1019,8 @@ class AlexaTemperatureSensor(AlexaCapability):
             raise UnsupportedProperty(name)
 
         unit: str = self.entity.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT, self.hass.config.units.temperature_unit
+            EntityStateAttribute.UNIT_OF_MEASUREMENT,
+            self.hass.config.units.temperature_unit,
         )
         temp: str | None = self.entity.state
         if self.entity.domain == CLIMATE_DOMAIN:
@@ -1197,7 +1209,9 @@ class AlexaThermostatController(AlexaCapability):
     def properties_supported(self) -> list[dict[str, str]]:
         """Return what properties this entity supports."""
         properties = [{"name": "thermostatMode"}]
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if self.entity.domain == CLIMATE_DOMAIN:
             if supported & climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
                 properties.append({"name": "lowerSetpoint"})
@@ -1251,7 +1265,9 @@ class AlexaThermostatController(AlexaCapability):
 
         unit = self.hass.config.units.temperature_unit
         if name == "targetSetpoint":
-            temp = self.entity.attributes.get(ATTR_TEMPERATURE)
+            temp = self.entity.attributes.get(
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            )
         elif name == "lowerSetpoint":
             temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
         elif name == "upperSetpoint":
@@ -1426,8 +1442,10 @@ class AlexaSecurityPanelController(AlexaCapability):
     @override
     def configuration(self) -> dict[str, Any] | None:
         """Return configuration object with supported authorization types."""
-        code_format = self.entity.attributes.get(ATTR_CODE_FORMAT)
-        supported = self.entity.attributes[ATTR_SUPPORTED_FEATURES]
+        code_format = self.entity.attributes.get(
+            AlarmControlPanelEntityStateAttribute.CODE_FORMAT
+        )
+        supported = self.entity.attributes[EntityStateAttribute.SUPPORTED_FEATURES]
         configuration = {}
 
         supported_arm_states = [{"value": "DISARMED"}]
@@ -1698,7 +1716,9 @@ class AlexaModeController(AlexaCapability):
 
         # Valve position resources
         if self.instance == f"{VALVE_DOMAIN}.state":
-            supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            supported_features = self.entity.attributes.get(
+                EntityStateAttribute.SUPPORTED_FEATURES, 0
+            )
             self._resource = AlexaModeResource(
                 ["Preset", AlexaGlobalCatalog.SETTING_PRESET], False
             )
@@ -1727,7 +1747,9 @@ class AlexaModeController(AlexaCapability):
     @override
     def semantics(self) -> dict[str, Any] | None:
         """Build and return semantics object."""
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
 
         # Cover Position
         if self.instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
@@ -1879,7 +1901,9 @@ class AlexaRangeController(AlexaCapability):
 
         # Fan speed percentage
         if self.instance == f"{FAN_DOMAIN}.{fan.ATTR_PERCENTAGE}":
-            supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            supported = self.entity.attributes.get(
+                EntityStateAttribute.SUPPORTED_FEATURES, 0
+            )
             if supported and fan.FanEntityFeature.SET_SPEED:
                 return self.entity.attributes.get(fan.ATTR_PERCENTAGE)
             return 100 if self.entity.state == fan.STATE_ON else 0
@@ -1975,7 +1999,7 @@ class AlexaRangeController(AlexaCapability):
             min_value = float(self.entity.attributes[input_number.ATTR_MIN])
             max_value = float(self.entity.attributes[input_number.ATTR_MAX])
             precision = float(self.entity.attributes.get(input_number.ATTR_STEP, 1))
-            unit = self.entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            unit = self.entity.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
             self._resource = AlexaPresetResource(
                 ["Value", get_resource_by_unit_of_measurement(self.entity)],
@@ -1997,7 +2021,7 @@ class AlexaRangeController(AlexaCapability):
             min_value = float(self.entity.attributes[number.ATTR_MIN])
             max_value = float(self.entity.attributes[number.ATTR_MAX])
             precision = float(self.entity.attributes.get(number.ATTR_STEP, 1))
-            unit = self.entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            unit = self.entity.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
             self._resource = AlexaPresetResource(
                 ["Value", get_resource_by_unit_of_measurement(self.entity)],
@@ -2050,7 +2074,9 @@ class AlexaRangeController(AlexaCapability):
     @override
     def semantics(self) -> dict[str, Any] | None:
         """Build and return semantics object."""
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
 
         # Cover Position
         if self.instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
