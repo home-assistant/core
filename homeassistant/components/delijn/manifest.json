@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pydelijn"],
   "quality_scale": "bronze",
-  "requirements": ["pydelijn==2.0.0b0"]
+  "requirements": ["pydelijn==2.0.0"]
 }
