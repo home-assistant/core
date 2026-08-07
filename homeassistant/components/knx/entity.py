@@ -6,7 +6,12 @@ from typing import TYPE_CHECKING, Any, override
 from xknx.devices import Device as XknxDevice
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
 
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, EntityCategory
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -114,6 +119,10 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
 
 class _KnxEntityBase(Entity):
     """Representation of a KNX entity."""
+
+    # `assumed_state` toggles when a restored state is confirmed by the bus,
+    # which would else write a new attributes row for every entity on startup
+    _unrecorded_attributes = frozenset({ATTR_ASSUMED_STATE})
 
     _attr_should_poll = False
 
