@@ -92,10 +92,14 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         self._host = discovery_info.host
         self._port = discovery_info.port or DEFAULT_PORT
-        self._name = discovery_info.hostname.removesuffix(".local.") or self._host
+        hostname = discovery_info.hostname.rstrip(".")
+        self._name = hostname.removesuffix(".local") or self._host
 
-        # MPD exposes no stable identifier, over zeroconf or its protocol.
-        self._async_abort_entries_match({CONF_HOST: self._host, CONF_PORT: self._port})
+        # MPD exposes no stable identifier, over zeroconf or its protocol, so
+        # identity is address-shaped. Discovery only ever reports an IP, so also
+        # match the advertised hostname to catch entries added under that name.
+        for host in (self._host, hostname, self._name):
+            self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: self._port})
         await self.async_set_unique_id(f"{self._host}:{self._port}")
         self._abort_if_unique_id_configured()
 

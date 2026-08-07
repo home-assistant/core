@@ -92,6 +92,8 @@ async def test_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+    # The connection must be released even when validation raises.
+    assert mock_mpd_client.disconnect.called
 
     mock_mpd_client.password.side_effect = None
 
@@ -182,12 +184,23 @@ async def test_zeroconf_flow_default_port(hass: HomeAssistant) -> None:
     assert result["data"] == {CONF_HOST: "192.168.0.1", CONF_PORT: 6600}
 
 
+@pytest.mark.parametrize(
+    "configured_host",
+    [
+        pytest.param("192.168.0.1", id="ip_address"),
+        pytest.param("mpd-server.local", id="fqdn"),
+        pytest.param("mpd-server", id="hostname"),
+    ],
+)
 @pytest.mark.usefixtures("mock_mpd_client")
 async def test_zeroconf_flow_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, configured_host: str
 ) -> None:
-    """Test the zeroconf flow aborts for an already configured host and port."""
-    mock_config_entry.add_to_hass(hass)
+    """Test the zeroconf flow aborts for an already configured server."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: configured_host, CONF_PORT: 6600},
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
