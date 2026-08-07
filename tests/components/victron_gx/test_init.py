@@ -11,12 +11,15 @@ from victron_mqtt import (
 )
 from victron_mqtt.testing import finalize_injection, inject_message
 
-from homeassistant.components.victron_gx import async_remove_config_entry_device
+from homeassistant.components.victron_gx import (
+    async_migrate_entry,
+    async_remove_config_entry_device,
+)
 from homeassistant.components.victron_gx.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import MOCK_INSTALLATION_ID
 
@@ -33,6 +36,51 @@ def mock_victron_hub_library():
         hub_instance.installation_id = MOCK_INSTALLATION_ID
         mock_lib.return_value = hub_instance
         yield mock_lib
+
+
+async def test_migrate_legacy_evcharger_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test legacy EV charger sensors are removed only during migration."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, minor_version=1)
+    legacy_entries = [
+        entity_registry.async_get_or_create(
+            Platform.SENSOR,
+            DOMAIN,
+            f"{MOCK_INSTALLATION_ID}_evcharger_0_{metric}",
+            config_entry=mock_config_entry,
+        )
+        for metric in (
+            "evcharger_max_set_current",
+            "evcharger_min_set_current",
+        )
+    ]
+    unrelated_entry = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{MOCK_INSTALLATION_ID}_evcharger_0_evcharger_current",
+        config_entry=mock_config_entry,
+    )
+
+    assert await async_migrate_entry(hass, mock_config_entry)
+
+    assert mock_config_entry.minor_version == 2
+    assert all(
+        entity_registry.async_get(entry.entity_id) is None for entry in legacy_entries
+    )
+    assert entity_registry.async_get(unrelated_entry.entity_id) is unrelated_entry
+
+    legacy_entry = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{MOCK_INSTALLATION_ID}_evcharger_1_evcharger_max_set_current",
+        config_entry=mock_config_entry,
+    )
+    assert await async_migrate_entry(hass, mock_config_entry)
+    assert entity_registry.async_get(legacy_entry.entity_id) is legacy_entry
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")

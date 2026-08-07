@@ -4,11 +4,16 @@ import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .hub import Hub, VictronGxConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+_LEGACY_EVCHARGER_SENSOR_SUFFIXES = (
+    "_evcharger_max_set_current",
+    "_evcharger_min_set_current",
+)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -20,6 +25,24 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
     Platform.TIME,
 ]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        entity_registry = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            if (
+                entity_entry.domain == Platform.SENSOR
+                and entity_entry.unique_id.endswith(_LEGACY_EVCHARGER_SENSOR_SUFFIXES)
+            ):
+                entity_registry.async_remove(entity_entry.entity_id)
+
+        hass.config_entries.async_update_entry(entry, version=1, minor_version=2)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:

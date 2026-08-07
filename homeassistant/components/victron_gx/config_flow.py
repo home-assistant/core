@@ -102,6 +102,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Victron GX devices."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize."""
