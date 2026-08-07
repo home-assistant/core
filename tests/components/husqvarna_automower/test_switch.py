@@ -1,5 +1,6 @@
 """Tests for switch platform."""
 
+from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 import zoneinfo
@@ -76,7 +77,7 @@ async def test_work_area_and_stay_out_zone_entities_unavailable_without_data(
 ) -> None:
     """Test entities become unavailable when capability data disappears."""
     await setup_integration(hass, mock_config_entry)
-
+    original_values = deepcopy(values)
     values[TEST_MOWER_ID].work_areas = None
     values[TEST_MOWER_ID].stay_out_zones = None
     mock_automower_client.get_status.return_value = values
@@ -91,6 +92,15 @@ async def test_work_area_and_stay_out_zone_entities_unavailable_without_data(
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_UNAVAILABLE
+
+    original_values[TEST_MOWER_ID].stay_out_zones.zones = None
+    mock_automower_client.get_status.return_value = original_values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.garden_test_mower_1_avoid_danger_zone")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
