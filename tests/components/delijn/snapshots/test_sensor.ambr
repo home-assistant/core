@@ -39,6 +39,7 @@
 # name: test_sensor[sensor.brugsepoort_begijnhoflaan_gent_next_departure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by data.delijn.be',
       'cancelled': False,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       'due_at_realtime': '2026-08-06T12:07:00+00:00',

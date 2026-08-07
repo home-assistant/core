@@ -92,7 +92,7 @@ async def async_setup_platform(
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
+        f"deprecated_yaml_{DOMAIN}",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
@@ -162,6 +162,7 @@ def _passage_attributes(index: int, passage: Passage) -> dict[str, Any]:
 class DeLijnSensor(CoordinatorEntity[DeLijnCoordinator], SensorEntity):
     """Representation of the next De Lijn departure at a stop."""
 
+    _attr_attribution = "Data provided by data.delijn.be"
     _attr_has_entity_name = True
     _attr_translation_key = "next_departure"
     _attr_device_class = SensorDeviceClass.TIMESTAMP

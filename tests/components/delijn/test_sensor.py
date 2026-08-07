@@ -142,7 +142,7 @@ async def test_yaml_import(
     assert entries[0].data[CONF_STOP_NUMBER] == STOP_NUMBER
     assert entries[0].options == {CONF_NUMBER_OF_DEPARTURES: 3}
 
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml_delijn")
     assert not issue_registry.async_get_issue(
         DOMAIN, f"deprecated_yaml_import_issue_{STOP_NUMBER}_invalid_stop"
     )
@@ -175,7 +175,7 @@ async def test_yaml_import_failure_creates_issue(
     )
     assert issue
     assert issue.translation_key == "deprecated_yaml_import_issue_invalid_stop"
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml_delijn")
 
 
 @pytest.mark.parametrize(
