@@ -286,6 +286,7 @@ async def _async_handle_streamable_message(
                 streams.read_stream, streams.write_stream, options, stateless=True
             )
 
+        session_message: SessionMessage | None = None
         try:
             async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
                 tg.start_soon(run_server)
@@ -307,6 +308,7 @@ async def _async_handle_streamable_message(
                 text="Internal error processing request"
             ) from eg
 
+        assert session_message is not None
         _LOGGER.debug("Sending response: %s", session_message)
         return web.json_response(
             data=session_message.message.model_dump(by_alias=True, exclude_none=True),
