@@ -1,5 +1,7 @@
 """The tests for LG webOS TV automation triggers."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -9,7 +11,7 @@ from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
@@ -18,11 +20,28 @@ from .const import ENTITY_ID, FAKE_UUID
 from tests.common import MockEntity, MockEntityPlatform
 
 
+@pytest.mark.parametrize(
+    "build_trigger",
+    [
+        pytest.param(
+            lambda device_id: {"trigger": "webostv.turn_on", "device_id": device_id},
+            id="legacy",
+        ),
+        pytest.param(
+            lambda device_id: {
+                "trigger": "webostv.turn_on",
+                "target": {"device_id": device_id},
+            },
+            id="target",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("client")
 async def test_webostv_turn_on_trigger_device_id(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
-    client,
+    build_trigger: Callable[[str], dict[str, Any]],
 ) -> None:
     """Test for turn_on triggers by device_id firing."""
     await setup_webostv(hass)
@@ -35,10 +54,7 @@ async def test_webostv_turn_on_trigger_device_id(
         {
             automation.DOMAIN: [
                 {
-                    "trigger": {
-                        "platform": "webostv.turn_on",
-                        "device_id": device.id,
-                    },
+                    "trigger": build_trigger(device.id),
                     "action": {
                         "service": "test.automation",
                         "data_template": {
@@ -78,8 +94,27 @@ async def test_webostv_turn_on_trigger_device_id(
     assert len(service_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "trigger_config",
+    [
+        pytest.param(
+            {"trigger": "webostv.turn_on", "entity_id": ENTITY_ID}, id="legacy"
+        ),
+        pytest.param(
+            {"trigger": "webostv.turn_on", "target": {"entity_id": ENTITY_ID}},
+            id="target",
+        ),
+        pytest.param(
+            {"trigger": "webostv.turn_on", "entity_id": ENTITY_ID, "target": {}},
+            id="legacy_with_empty_target",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("client")
 async def test_webostv_turn_on_trigger_entity_id(
-    hass: HomeAssistant, service_calls: list[ServiceCall], client
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_config: dict[str, Any],
 ) -> None:
     """Test for turn_on triggers by entity_id firing."""
     await setup_webostv(hass)
@@ -90,10 +125,7 @@ async def test_webostv_turn_on_trigger_entity_id(
         {
             automation.DOMAIN: [
                 {
-                    "trigger": {
-                        "platform": "webostv.turn_on",
-                        "entity_id": ENTITY_ID,
-                    },
+                    "trigger": trigger_config,
                     "action": {
                         "service": "test.automation",
                         "data_template": {
@@ -118,8 +150,54 @@ async def test_webostv_turn_on_trigger_entity_id(
     assert service_calls[1].data["id"] == 0
 
 
+@pytest.mark.usefixtures("client")
+async def test_webostv_turn_on_trigger_area_id(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test for turn_on triggers targeting an area firing."""
+    await setup_webostv(hass)
+
+    area = area_registry.async_create("Living room")
+    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    device_registry.async_update_device(device.id, area_id=area.id)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "trigger": "webostv.turn_on",
+                        "target": {"area_id": area.id},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "{{ trigger.device_id }}"},
+                    },
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == device.id
+
+
+@pytest.mark.usefixtures("client")
 async def test_unknown_trigger_platform_type(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test unknown trigger platform type."""
     await setup_webostv(hass)
@@ -146,13 +224,14 @@ async def test_unknown_trigger_platform_type(
         },
     )
 
-    assert "Unknown trigger platform: webostv.unknown" in caplog.text
+    assert "Invalid trigger 'webostv.unknown' specified" in caplog.text
 
 
-async def test_trigger_invalid_entity_id(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client
+@pytest.mark.usefixtures("client")
+async def test_trigger_non_webostv_entity_id(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
-    """Test turn on trigger using invalid entity_id."""
+    """Test turn on trigger using an entity_id of another integration."""
     await setup_webostv(hass)
 
     platform = MockEntityPlatform(hass)
@@ -160,26 +239,58 @@ async def test_trigger_invalid_entity_id(
     invalid_entity = f"{DOMAIN}.invalid"
     await platform.async_add_entities([MockEntity(name=invalid_entity)])
 
-    await async_setup_component(
+    assert await async_setup_component(
         hass,
         automation.DOMAIN,
         {
             automation.DOMAIN: [
                 {
                     "trigger": {
-                        "platform": "webostv.turn_on",
-                        "entity_id": invalid_entity,
+                        "trigger": "webostv.turn_on",
+                        "target": {"entity_id": invalid_entity},
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {
-                            "some": ENTITY_ID,
-                            "id": "{{ trigger.id }}",
-                        },
+                        "data_template": {"some": ENTITY_ID},
                     },
                 },
             ],
         },
     )
 
-    assert f"Entity {invalid_entity} is not a valid webOS TV entity" in caplog.text
+    # The entity is not a webOS TV entity, so no turn on trigger is attached
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "media_player",
+            "turn_on",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+
+    assert len(service_calls) == 1
+
+
+@pytest.mark.usefixtures("client")
+async def test_trigger_without_target(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test turn on trigger without a target."""
+    await setup_webostv(hass)
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"trigger": "webostv.turn_on", "target": {}},
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ENTITY_ID},
+                    },
+                },
+            ],
+        },
+    )
+
+    assert "The LG webOS TV turn on trigger requires a target" in caplog.text
