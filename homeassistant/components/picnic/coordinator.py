@@ -2,12 +2,13 @@
 
 import asyncio
 from contextlib import suppress
-import copy
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
 
 from python_picnic_api2 import PicnicAPI
+from python_picnic_api2.models import Cart, DeliverySummary, Slot
 from python_picnic_api2.session import PicnicAuthError
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,6 +31,25 @@ from .const import (
 )
 
 type PicnicConfigEntry = ConfigEntry[PicnicUpdateCoordinator]
+
+
+@dataclass
+class NextDeliveryData:
+    """The next (current, undelivered) delivery, with its live ETA."""
+
+    delivery: DeliverySummary | None = None
+    eta_start: str | None = None
+    eta_end: str | None = None
+    estimated_arrival: int | None = None
+
+
+@dataclass
+class LastOrderData:
+    """The most recent delivery, with its total price."""
+
+    delivery: DeliverySummary | None = None
+    total_price: int = 0
+    delivery_time_start: str | None = None
 
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
@@ -86,21 +106,20 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         return data
 
     @staticmethod
-    def _get_update_interval(next_delivery: dict | None) -> timedelta:
+    def _get_update_interval(next_delivery: NextDeliveryData | None) -> timedelta:
         """Poll faster around the delivery so the live ETA is picked up in time."""
-        if not next_delivery:
+        if next_delivery is None or next_delivery.delivery is None:
             return DEFAULT_UPDATE_INTERVAL
 
-        eta = next_delivery.get("eta")
-        slot = next_delivery.get("slot")
+        slot = next_delivery.delivery.slot
 
         start = end = None
-        if eta:
-            start = dt_util.parse_datetime(str(eta.get("start")))
-            end = dt_util.parse_datetime(str(eta.get("end")))
+        if next_delivery.eta_start and next_delivery.eta_end:
+            start = dt_util.parse_datetime(next_delivery.eta_start)
+            end = dt_util.parse_datetime(next_delivery.eta_end)
         if (start is None or end is None) and slot:
-            start = dt_util.parse_datetime(str(slot.get("window_start")))
-            end = dt_util.parse_datetime(str(slot.get("window_end")))
+            start = dt_util.parse_datetime(str(slot.window_start))
+            end = dt_util.parse_datetime(str(slot.window_end))
 
         if start is None or end is None:
             return DEFAULT_UPDATE_INTERVAL
@@ -129,12 +148,11 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("API response doesn't contain expected data.")
 
         next_delivery, last_order = self._get_order_data()
-        slot_data = self._get_slot_data(cart)
 
         return {
             ADDRESS: self._get_address(),
             CART_DATA: cart,
-            SLOT_DATA: slot_data,
+            SLOT_DATA: self._get_slot_data(cart),
             NEXT_DELIVERY_DATA: next_delivery,
             LAST_ORDER_DATA: last_order,
         }
@@ -142,85 +160,85 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     def _get_address(self):
         """Get the address that identifies the Picnic service."""
         if self._user_address is None:
-            address = self.picnic_api_client.get_user()["address"]
+            address = self.picnic_api_client.get_user().address
             self._user_address = (
-                f"{address['street']} "
-                f"{address['house_number']}{address['house_number_ext']}"
+                f"{address.street} "
+                f"{address.house_number}{address.house_number_ext or ''}"
             )
 
         return self._user_address
 
     @staticmethod
-    def _get_slot_data(cart: dict) -> dict:
+    def _get_slot_data(cart: Cart) -> Slot | None:
         """Get the selected slot, if it's explicitly selected."""
-        selected_slot = cart.get("selected_slot", {})
-        available_slots = cart.get("delivery_slots", [])
+        selected_slot = cart.selected_slot
 
-        if selected_slot.get("state") == "EXPLICIT":
-            slot_data = filter(
-                lambda slot: slot.get("slot_id") == selected_slot.get("slot_id"),
-                available_slots,
-            )
-            if slot_data:
-                return next(slot_data)
+        if selected_slot and selected_slot.state == "EXPLICIT":
+            for slot in cart.delivery_slots:
+                if slot.slot_id == selected_slot.slot_id:
+                    return slot
 
-        return {}
+        return None
 
-    def _get_order_data(self) -> tuple[dict, dict]:
+    @staticmethod
+    def _delivery_time(delivery: DeliverySummary) -> dict | None:
+        """Return the raw delivery-time window; not a field the library models."""
+        return delivery.raw.get("delivery_time") if delivery.raw else None
+
+    def _get_order_data(self) -> tuple[NextDeliveryData, LastOrderData]:
         """Get data of the last order from the list of deliveries."""
         # Get the deliveries
         deliveries = self.picnic_api_client.get_deliveries(summary=True)
 
-        # Determine the last order and return an empty dict if there is none
+        # Determine the last order and return empty data if there is none
         try:
             # Filter on status CURRENT and select the last
             # on the list which is the first one to be delivered
-            # Make a deepcopy because some references are local
-            next_deliveries = list(
-                filter(lambda d: d["status"] == "CURRENT", deliveries)
-            )
-            next_delivery = (
-                copy.deepcopy(next_deliveries[-1]) if next_deliveries else {}
-            )
-            last_order = copy.deepcopy(deliveries[0]) if deliveries else {}
-        except KeyError, TypeError:
-            # A KeyError or TypeError indicate that the
+            next_deliveries = [d for d in deliveries if d.status == "CURRENT"]
+            next_delivery = next_deliveries[-1] if next_deliveries else None
+            last_order = deliveries[0] if deliveries else None
+        except AttributeError, TypeError:
+            # An AttributeError or TypeError indicate that the
             # response contains unexpected data
-            return {}, {}
+            return NextDeliveryData(), LastOrderData()
+
+        if last_order is None:
+            return NextDeliveryData(), LastOrderData()
 
         #  Get the next order's position details if there is an undelivered order
         delivery_position = {}
-        if next_delivery and not next_delivery.get("delivery_time"):
+        if next_delivery and not self._delivery_time(next_delivery):
             # ValueError: If no information yet can mean an empty response
             with suppress(ValueError):
                 delivery_position = self.picnic_api_client.get_delivery_position(
-                    next_delivery["delivery_id"]
+                    next_delivery.delivery_id
                 )
 
         # Determine the ETA, if available, the one from the
         # delivery position API is more precise
         # but, it's only available shortly before the actual delivery.
-        next_delivery["eta"] = delivery_position.get(
-            "eta_window", next_delivery.get("eta2", {})
+        eta_window = delivery_position.get("eta_window") or {}
+        eta2 = next_delivery.eta2 if next_delivery else None
+        next_delivery_data = NextDeliveryData(
+            delivery=next_delivery,
+            eta_start=eta_window.get("start") or (eta2.start if eta2 else None),
+            eta_end=eta_window.get("end") or (eta2.end if eta2 else None),
+            # The position response's eta (unix timestamp in milliseconds) feeds
+            # the estimated arrival sensor; the API only serves it shortly before
+            # the delivery, so that sensor is unknown outside that window
+            estimated_arrival=delivery_position.get("eta"),
         )
-        if "eta2" in next_delivery:
-            del next_delivery["eta2"]
-
-        # The position response's eta (unix timestamp in milliseconds) feeds
-        # the estimated arrival sensor; the API only serves it shortly before
-        # the delivery, so that sensor is unknown outside that window
-        next_delivery["estimated_arrival"] = delivery_position.get("eta")
 
         # Determine the total price by adding up the total price of all sub-orders
-        total_price = 0
-        for order in last_order.get("orders", []):
-            total_price += order.get("total_price", 0)
-        last_order["total_price"] = total_price
+        total_price = sum(order.total_price or 0 for order in last_order.orders)
+        delivery_time = self._delivery_time(last_order)
+        last_order_data = LastOrderData(
+            delivery=last_order,
+            total_price=total_price,
+            delivery_time_start=delivery_time.get("start") if delivery_time else None,
+        )
 
-        # Make sure delivery_time is a dict
-        last_order.setdefault("delivery_time", {})
-
-        return next_delivery, last_order
+        return next_delivery_data, last_order_data
 
     @callback
     def _update_auth_token(self):
