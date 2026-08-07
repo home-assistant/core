@@ -103,7 +103,9 @@ async def test_get_triggers(
     )
     await setup_platform()
 
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("nest", DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
     expected_triggers = [
         {
@@ -202,7 +204,9 @@ async def test_triggers_for_invalid_device_id(
     )
     await setup_platform()
 
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("nest", DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device_entry is not None
 
     # Create an additional device that does not exist.  Fetching supported
@@ -258,7 +262,9 @@ async def test_fires_on_camera_motion(
     )
     await setup_platform()
 
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("nest", DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 
@@ -292,7 +298,9 @@ async def test_fires_on_camera_person(
     )
     await setup_platform()
 
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("nest", DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
     assert await setup_automation(hass, device_entry.id, "camera_person")
 
@@ -326,7 +334,9 @@ async def test_fires_on_camera_sound(
     )
     await setup_platform()
 
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("nest", DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
     assert await setup_automation(hass, device_entry.id, "camera_sound")
 
@@ -360,7 +370,9 @@ async def test_fires_on_doorbell_chime(
     )
     await setup_platform()
 
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("nest", DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
     assert await setup_automation(hass, device_entry.id, "doorbell_chime")
 
@@ -394,7 +406,9 @@ async def test_trigger_for_wrong_device_id(
     )
     await setup_platform()
 
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("nest", DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 
@@ -427,7 +441,9 @@ async def test_trigger_for_wrong_event_type(
     )
     await setup_platform()
 
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("nest", DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 
@@ -460,7 +476,9 @@ async def test_subscriber_automation(
     )
     await setup_platform()
 
-    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("nest", DEVICE_ID), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 
