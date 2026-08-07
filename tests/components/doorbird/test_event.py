@@ -1,7 +1,10 @@
 """Test DoorBird events."""
 
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+import pytest
+
+from homeassistant.components.doorbird.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import Event, HomeAssistant, callback
 
 from . import mock_webhook_call
 from .conftest import DoorbirdMockerType
@@ -35,3 +38,37 @@ async def test_motion_event(
     client = await hass_client()
     await mock_webhook_call(doorbird_entry.entry, client, "mydoorbird_motion")
     assert hass.states.get(relay_1_entity_id).state != STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("event", "expected_entity_id"),
+    [
+        pytest.param(
+            "mydoorbird_doorbell", "image.mydoorbird_last_ring", id="doorbell"
+        ),
+        pytest.param("mydoorbird_motion", "image.mydoorbird_last_motion", id="motion"),
+    ],
+)
+async def test_event_data_points_at_matching_image_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    doorbird_mocker: DoorbirdMockerType,
+    event: str,
+    expected_entity_id: str,
+) -> None:
+    """The fired event carries the image entity matching its event type."""
+    doorbird_entry = await doorbird_mocker()
+    events: list[Event] = []
+
+    @callback
+    def _capture(fired_event: Event) -> None:
+        events.append(fired_event)
+
+    hass.bus.async_listen(f"{DOMAIN}_{event}", _capture)
+
+    client = await hass_client()
+    await mock_webhook_call(doorbird_entry.entry, client, event)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data[ATTR_ENTITY_ID] == expected_entity_id

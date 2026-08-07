@@ -1,10 +1,5 @@
 """Last motion and last ring image entities for a DoorBird device."""
 
-# These replace the same-named camera entities, which exposed stills through the
-# camera UI even though no live video is involved. The legacy camera entities are
-# kept to avoid breaking existing dashboards and automations; a follow-up should
-# deprecate them via a repair issue once users have had time to migrate.
-
 from dataclasses import dataclass
 from typing import override
 
@@ -113,7 +108,9 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to the underlying DoorBird events."""
         await super().async_added_to_hass()
+        event_to_entity_id = self._door_bird_data.event_entity_ids
         for event_name in self._matching_event_names:
+            event_to_entity_id[event_name] = self.entity_id
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
@@ -121,6 +118,15 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
                     self._async_handle_event,
                 )
             )
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from events."""
+        event_to_entity_id = self._door_bird_data.event_entity_ids
+        for event_name in self._matching_event_names:
+            # If the clear api was called, the events may not be in the dict
+            event_to_entity_id.pop(event_name, None)
+        await super().async_will_remove_from_hass()
 
     @callback
     def _async_handle_event(self) -> None:
