@@ -1,5 +1,6 @@
 """Tests for the GeoSphere Austria Warnings sensors."""
 
+from typing import Any
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,7 +12,7 @@ from homeassistant.components.geosphere_austria_warnings.coordinator import (
     UPDATE_INTERVAL,
 )
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -35,7 +36,7 @@ EXPECTED_ENTITY_IDS = {
 WARNING_DETAIL_ATTRIBUTE_KEYS = {"type", "start", "end", "warning_id"}
 
 
-def warning_details(state) -> dict:
+def warning_details(state: State) -> dict[str, Any]:
     """Return integration-specific warning attributes only."""
     return {
         key: value
@@ -60,9 +61,8 @@ async def test_sensor_set_and_active_warning(
         if entity_id.startswith("sensor.schwechat_")
     }
     assert entity_ids == EXPECTED_ENTITY_IDS
-    assert "sensor.schwechat_current_warning_level" not in entity_ids
 
-    state = hass.states.get(WARNING_LEVEL_ENTITY_ID)
+    assert (state := hass.states.get(WARNING_LEVEL_ENTITY_ID))
     assert state.state == "orange"
     assert warning_details(state) == {
         "type": "storm",
@@ -71,9 +71,10 @@ async def test_sensor_set_and_active_warning(
         "warning_id": 4149,
     }
 
-    state = hass.states.get(ACTIVE_WARNINGS_ENTITY_ID)
+    assert (state := hass.states.get(ACTIVE_WARNINGS_ENTITY_ID))
     assert state.state == "2"
-    state = hass.states.get(ADVANCE_WARNING_LEVEL_ENTITY_ID)
+
+    assert (state := hass.states.get(ADVANCE_WARNING_LEVEL_ENTITY_ID))
     assert state.state == "orange"
     assert warning_details(state) == {
         "type": "rain",
@@ -82,7 +83,7 @@ async def test_sensor_set_and_active_warning(
         "warning_id": 4150,
     }
 
-    state = hass.states.get(ADVANCE_WARNINGS_ENTITY_ID)
+    assert (state := hass.states.get(ADVANCE_WARNINGS_ENTITY_ID))
     assert state.state == "5"
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -96,23 +97,23 @@ async def test_sensors_without_active_warning(
     """Test the sensor states and empty attributes when no warning is active."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(WARNING_LEVEL_ENTITY_ID)
+    assert (state := hass.states.get(WARNING_LEVEL_ENTITY_ID))
     assert state.state == "none"
-    state = hass.states.get(WARNING_LEVEL_ENTITY_ID)
     assert warning_details(state) == {}
-    state = hass.states.get(ACTIVE_WARNINGS_ENTITY_ID)
+
+    assert (state := hass.states.get(ACTIVE_WARNINGS_ENTITY_ID))
     assert state.state == "0"
 
-    state = hass.states.get(ADVANCE_WARNING_LEVEL_ENTITY_ID)
+    assert (state := hass.states.get(ADVANCE_WARNING_LEVEL_ENTITY_ID))
     assert state.state == "orange"
-    state = hass.states.get(ADVANCE_WARNING_LEVEL_ENTITY_ID)
     assert warning_details(state) == {
         "type": "rain",
         "start": "2023-03-28T06:00:00+00:00",
         "end": "2023-03-28T16:00:00+00:00",
         "warning_id": 4150,
     }
-    state = hass.states.get(ADVANCE_WARNINGS_ENTITY_ID)
+
+    assert (state := hass.states.get(ADVANCE_WARNINGS_ENTITY_ID))
     assert state.state == "5"
 
 
@@ -126,7 +127,7 @@ async def test_entities_unavailable_on_error(
     """Test that entities become unavailable when the update fails."""
     await setup_integration(hass, mock_config_entry)
     for entity_id in EXPECTED_ENTITY_IDS:
-        state = hass.states.get(entity_id)
+        assert (state := hass.states.get(entity_id))
         assert state.state != STATE_UNAVAILABLE
 
     mock_client.get_last_modified.side_effect = GeoSphereConnectionError
@@ -135,11 +136,6 @@ async def test_entities_unavailable_on_error(
     await hass.async_block_till_done()
 
     for entity_id in EXPECTED_ENTITY_IDS:
-        state = hass.states.get(entity_id)
+        assert (state := hass.states.get(entity_id))
         assert state.state == STATE_UNAVAILABLE
 
-
-def test_expected_entity_ids_are_current_sensor_model() -> None:
-    """Guard against accidentally reintroducing the old sensor name."""
-    assert "sensor.schwechat_current_warning_level" not in EXPECTED_ENTITY_IDS
-    assert ADVANCE_WARNINGS_ENTITY_ID in EXPECTED_ENTITY_IDS

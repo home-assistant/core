@@ -21,7 +21,7 @@ from tests.common import load_json_object_fixture
 
 
 @pytest.fixture
-def warnings() -> list:
+def warnings() -> list[WeatherWarning]:
     """Return warnings parsed from the deterministic API fixture."""
     location_warnings = LocationWarnings.from_api(
         load_json_object_fixture("get_warnings_for_coords.json", DOMAIN)
@@ -29,7 +29,7 @@ def warnings() -> list:
     return location_warnings.warnings
 
 
-def test_sort_warnings_is_deterministic(warnings: list) -> None:
+def test_sort_warnings_is_deterministic(warnings: list[WeatherWarning]) -> None:
     """Test actionability ranking is independent of source order.
 
     The fixture contains no overlapping warnings of the same type and level.
@@ -64,7 +64,7 @@ def test_select_highest_warning_uses_severity_then_end_time(
     assert selected.end.isoformat() == "2023-03-27T18:00:00+00:00"
 
 
-def test_highest_warning_level(warnings: list) -> None:
+def test_highest_warning_level(warnings: list[WeatherWarning]) -> None:
     """Test highest-level values and the empty-bucket value."""
     assert highest_warning_level(warnings) == "orange"
     assert highest_warning_level([]) == LEVEL_NONE
@@ -178,7 +178,7 @@ def test_ranking_tie_between_equal_levels_prefers_soonest_end() -> None:
     assert highest_warning_level([all_day_heat, afternoon_thunderstorm]) == "orange"
 
 
-def test_warning_sensor_attributes_are_flat_and_minimal(warnings: list) -> None:
+def test_warning_sensor_attributes_are_flat_and_minimal(warnings: list[WeatherWarning]) -> None:
     """Test that sensor attributes expose only the selected warning details."""
     selected = select_highest_warning(warnings)
     assert selected is not None
