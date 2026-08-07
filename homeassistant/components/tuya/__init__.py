@@ -23,7 +23,7 @@ from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-# Suppress logs from the library, it logs unneeded on error
+# Suppress verbose library logs while retaining warnings and errors
 logging.getLogger("tuya_sharing").setLevel(logging.WARNING)
 
 
