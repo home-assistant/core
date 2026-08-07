@@ -26,3 +26,5 @@ DEFAULT_ENCRYPTION: Final = "starttls"
 ENCRYPTION_OPTIONS: Final = ["tls", "starttls", "none"]
 
 SUBENTRY_TYPE_RECIPIENT: Final = "recipient"
+
+CONF_OLD_RECIPIENT: Final = "old_recipient"
