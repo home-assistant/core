@@ -61,31 +61,34 @@ async def test_ventilation_related_sensors_created_for_supported_node_types(
     ventilation_node_type: NodeType,
 ) -> None:
     """Test ventilation-related sensors are created for supported node families."""
+    # Mutate a non-box node (node 50 "Kitchen RH", index 3); mutating the box
+    # node would make its via_device link resolve to itself.
     supported_node = replace(
-        mock_sensor_nodes[0],
-        general=replace(mock_sensor_nodes[0].general, node_type=ventilation_node_type),
+        mock_sensor_nodes[3],
+        general=replace(mock_sensor_nodes[3].general, node_type=ventilation_node_type),
         ventilation=replace(
-            mock_sensor_nodes[0].ventilation,
+            mock_sensor_nodes[3].ventilation,
             flow_lvl_tgt=42,
             time_state_end=1700000459,
         ),
     )
     mock_duco_client.async_get_nodes.return_value = [
+        *mock_sensor_nodes[:3],
         supported_node,
-        *mock_sensor_nodes[1:],
+        *mock_sensor_nodes[4:],
     ]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
 
-    state = hass.states.get("sensor.living_ventilation_state")
+    state = hass.states.get("sensor.kitchen_rh_ventilation_state")
     assert state is not None
     assert state.state == "auto"
 
-    state = hass.states.get("sensor.living_target_flow_level")
+    state = hass.states.get("sensor.kitchen_rh_target_flow_level")
     assert state is not None
     assert state.state == "42"
 
-    state = hass.states.get("sensor.living_state_end_time")
+    state = hass.states.get("sensor.kitchen_rh_state_end_time")
     assert state is not None
     assert state.state == "2023-11-14T22:20:59+00:00"
 
