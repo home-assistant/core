@@ -32,19 +32,51 @@ from homeassistant.components.climate import (
     ClimateEntityCapabilityAttribute,
     ClimateEntityStateAttribute,
 )
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverEntityStateAttribute,
+)
+from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
+    FanEntityCapabilityAttribute,
+    FanEntityStateAttribute,
+)
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
-from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.humidifier import (
+    DOMAIN as HUMIDIFIER_DOMAIN,
+    HumidifierEntityCapabilityAttribute,
+    HumidifierEntityStateAttribute,
+)
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.components.light import (
+    LightEntityCapabilityAttribute,
+    LightEntityStateAttribute,
+)
+from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerEntityCapabilityAttribute,
+    MediaPlayerEntityStateAttribute,
+)
+from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
+    NumberEntityCapabilityAttribute,
+)
+from homeassistant.components.remote import (
+    DOMAIN as REMOTE_DOMAIN,
+    RemoteEntityStateAttribute,
+)
 from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    VacuumEntityCapabilityAttribute,
+    VacuumEntityStateAttribute,
+)
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
+from homeassistant.components.water_heater import (
+    DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterCapabilityAttribute,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -394,8 +426,10 @@ async def async_api_decrease_color_temp(
 ) -> AlexaResponse:
     """Process a decrease color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes[light.ATTR_COLOR_TEMP_KELVIN])
-    min_kelvin = int(entity.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN])
+    current = int(entity.attributes[LightEntityStateAttribute.COLOR_TEMP_KELVIN])
+    min_kelvin = int(
+        entity.attributes[LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN]
+    )
 
     value = max(min_kelvin, current - 500)
     await hass.services.async_call(
@@ -418,8 +452,10 @@ async def async_api_increase_color_temp(
 ) -> AlexaResponse:
     """Process an increase color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes[light.ATTR_COLOR_TEMP_KELVIN])
-    max_kelvin = int(entity.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN])
+    current = int(entity.attributes[LightEntityStateAttribute.COLOR_TEMP_KELVIN])
+    max_kelvin = int(
+        entity.attributes[LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN]
+    )
 
     value = min(max_kelvin, current + 500)
     await hass.services.async_call(
@@ -607,7 +643,10 @@ async def async_api_select_input(
 
     # Attempt to map the ALL UPPERCASE payload name to a source.
     # Strips trailing 1 to match single input devices.
-    source_list = entity.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
+    source_list = (
+        entity.attributes.get(MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST)
+        or []
+    )
     for source in source_list:
         formatted_source = (
             source.lower().replace("-", "").replace("_", "").replace(" ", "")
@@ -654,7 +693,9 @@ async def async_api_adjust_volume(
     volume_delta = int(directive.payload["volume"])
 
     entity = directive.entity
-    current_level = entity.attributes[media_player.ATTR_MEDIA_VOLUME_LEVEL]
+    current_level = entity.attributes[
+        MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
+    ]
 
     # read current state
     try:
@@ -958,8 +999,12 @@ async def async_api_adjust_target_temp(
 
     response = directive.response()
 
-    current_target_temp_high = entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)
-    current_target_temp_low = entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
+    current_target_temp_high = entity.attributes.get(
+        ClimateEntityStateAttribute.TARGET_TEMP_HIGH
+    )
+    current_target_temp_low = entity.attributes.get(
+        ClimateEntityStateAttribute.TARGET_TEMP_LOW
+    )
     if current_target_temp_high is not None and current_target_temp_low is not None:
         target_temp_high = float(current_target_temp_high) + temp_delta
         if target_temp_high < min_temp or target_temp_high > max_temp:
@@ -1044,7 +1089,9 @@ async def async_api_set_thermostat_mode(
     ha_preset = next((k for k, v in API_THERMOSTAT_PRESETS.items() if v == mode), None)
 
     if ha_preset:
-        presets = entity.attributes.get(climate.ATTR_PRESET_MODES) or []
+        presets = (
+            entity.attributes.get(ClimateEntityCapabilityAttribute.PRESET_MODES) or []
+        )
 
         if ha_preset not in presets:
             msg = f"The requested thermostat mode {ha_preset} is not supported"
@@ -1054,7 +1101,9 @@ async def async_api_set_thermostat_mode(
         data[climate.ATTR_PRESET_MODE] = ha_preset
 
     elif mode == "CUSTOM":
-        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES) or []
+        operation_list = (
+            entity.attributes.get(ClimateEntityCapabilityAttribute.HVAC_MODES) or []
+        )
         custom_mode = directive.payload["thermostatMode"]["customName"]
         custom_mode = next(
             (k for k, v in API_THERMOSTAT_MODES_CUSTOM.items() if v == custom_mode),
@@ -1070,7 +1119,9 @@ async def async_api_set_thermostat_mode(
         data[climate.ATTR_HVAC_MODE] = custom_mode
 
     else:
-        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES) or []
+        operation_list = (
+            entity.attributes.get(ClimateEntityCapabilityAttribute.HVAC_MODES) or []
+        )
         ha_modes: dict[str, str] = {
             k: v for k, v in API_THERMOSTAT_MODES.items() if v == mode
         }
@@ -1228,7 +1279,9 @@ async def async_api_set_mode(
     # Fan preset_mode
     elif instance == f"{FAN_DOMAIN}.{fan.ATTR_PRESET_MODE}":
         preset_mode = mode.split(".")[1]
-        preset_modes: list[str] | None = entity.attributes.get(fan.ATTR_PRESET_MODES)
+        preset_modes: list[str] | None = entity.attributes.get(
+            FanEntityCapabilityAttribute.PRESET_MODES
+        )
         if (
             preset_mode != PRESET_MODE_NA
             and preset_modes
@@ -1243,7 +1296,9 @@ async def async_api_set_mode(
     # Humidifier mode
     elif instance == f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_MODE}":
         mode = mode.split(".")[1]
-        modes: list[str] | None = entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES)
+        modes: list[str] | None = entity.attributes.get(
+            HumidifierEntityCapabilityAttribute.AVAILABLE_MODES
+        )
         if mode != PRESET_MODE_NA and modes and mode in modes:
             service = humidifier.SERVICE_SET_MODE
             data[humidifier.ATTR_MODE] = mode
@@ -1254,7 +1309,9 @@ async def async_api_set_mode(
     # Remote Activity
     elif instance == f"{REMOTE_DOMAIN}.{remote.ATTR_ACTIVITY}":
         activity = mode.split(".")[1]
-        activities: list[str] | None = entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
+        activities: list[str] | None = entity.attributes.get(
+            RemoteEntityStateAttribute.ACTIVITY_LIST
+        )
         if activity != PRESET_MODE_NA and activities and activity in activities:
             service = remote.SERVICE_TURN_ON
             data[remote.ATTR_ACTIVITY] = activity
@@ -1266,7 +1323,7 @@ async def async_api_set_mode(
     elif instance == f"{WATER_HEATER_DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
         operation_mode = mode.split(".")[1]
         operation_modes: list[str] | None = entity.attributes.get(
-            water_heater.ATTR_OPERATION_LIST
+            WaterHeaterCapabilityAttribute.OPERATION_LIST
         )
         if (
             operation_mode != PRESET_MODE_NA
@@ -1492,14 +1549,14 @@ async def async_api_set_range(
     elif instance == f"{NUMBER_DOMAIN}.{number.ATTR_VALUE}":
         range_value = float(range_value)
         service = number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[number.ATTR_MIN])
-        max_value = float(entity.attributes[number.ATTR_MAX])
+        min_value = float(entity.attributes[NumberEntityCapabilityAttribute.MIN])
+        max_value = float(entity.attributes[NumberEntityCapabilityAttribute.MAX])
         data[number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
     # Vacuum Fan Speed
     elif instance == f"{VACUUM_DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
         service = vacuum.SERVICE_SET_FAN_SPEED
-        speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
+        speed_list = entity.attributes[VacuumEntityCapabilityAttribute.FAN_SPEED_LIST]
         speed = next(
             (v for i, v in enumerate(speed_list) if i == int(range_value)), None
         )
@@ -1562,7 +1619,9 @@ async def async_api_adjust_range(
     if instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
-        if not (current := entity.attributes.get(cover.ATTR_CURRENT_POSITION)):
+        if not (
+            current := entity.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION)
+        ):
             msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))
@@ -1591,14 +1650,16 @@ async def async_api_adjust_range(
 
     # Fan speed percentage
     elif instance == f"{FAN_DOMAIN}.{fan.ATTR_PERCENTAGE}":
-        percentage_step = entity.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 20
+        percentage_step = (
+            entity.attributes.get(FanEntityStateAttribute.PERCENTAGE_STEP) or 20
+        )
         range_delta = (
             int(range_delta * percentage_step)
             if range_delta_default
             else int(range_delta)
         )
         service = fan.SERVICE_SET_PERCENTAGE
-        if not (current := entity.attributes.get(fan.ATTR_PERCENTAGE)):
+        if not (current := entity.attributes.get(FanEntityStateAttribute.PERCENTAGE)):
             msg = f"Unable to determine {entity.entity_id} current fan speed"
             raise AlexaInvalidValueError(msg)
         percentage = response_value = min(100, max(0, range_delta + current))
@@ -1616,11 +1677,17 @@ async def async_api_adjust_range(
             else int(range_delta)
         )
         service = humidifier.SERVICE_SET_HUMIDITY
-        if not (current := entity.attributes.get(humidifier.ATTR_HUMIDITY)):
+        if not (
+            current := entity.attributes.get(HumidifierEntityStateAttribute.HUMIDITY)
+        ):
             msg = f"Unable to determine {entity.entity_id} current target humidity"
             raise AlexaInvalidValueError(msg)
-        min_value = entity.attributes.get(humidifier.ATTR_MIN_HUMIDITY, 10)
-        max_value = entity.attributes.get(humidifier.ATTR_MAX_HUMIDITY, 90)
+        min_value = entity.attributes.get(
+            HumidifierEntityCapabilityAttribute.MIN_HUMIDITY, 10
+        )
+        max_value = entity.attributes.get(
+            HumidifierEntityCapabilityAttribute.MAX_HUMIDITY, 90
+        )
         percentage = response_value = min(
             max_value, max(min_value, range_delta + current)
         )
@@ -1642,8 +1709,8 @@ async def async_api_adjust_range(
     elif instance == f"{NUMBER_DOMAIN}.{number.ATTR_VALUE}":
         range_delta = float(range_delta)
         service = number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[number.ATTR_MIN])
-        max_value = float(entity.attributes[number.ATTR_MAX])
+        min_value = float(entity.attributes[NumberEntityCapabilityAttribute.MIN])
+        max_value = float(entity.attributes[NumberEntityCapabilityAttribute.MAX])
         current = float(entity.state)
         data[number.ATTR_VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
@@ -1653,8 +1720,8 @@ async def async_api_adjust_range(
     elif instance == f"{VACUUM_DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
         range_delta = int(range_delta)
         service = vacuum.SERVICE_SET_FAN_SPEED
-        speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
-        current_speed = entity.attributes[vacuum.ATTR_FAN_SPEED]
+        speed_list = entity.attributes[VacuumEntityCapabilityAttribute.FAN_SPEED_LIST]
+        current_speed = entity.attributes[VacuumEntityStateAttribute.FAN_SPEED]
         current_speed_index = next(
             (i for i, v in enumerate(speed_list) if v == current_speed), 0
         )
@@ -1805,14 +1872,18 @@ async def async_api_seek(
     entity = directive.entity
     position_delta = int(directive.payload["deltaPositionMilliseconds"])
 
-    current_position = entity.attributes.get(media_player.ATTR_MEDIA_POSITION)
+    current_position = entity.attributes.get(
+        MediaPlayerEntityStateAttribute.MEDIA_POSITION
+    )
     if not current_position:
         msg = f"{entity} did not return the current media position."
         raise AlexaVideoActionNotPermittedForContentError(msg)
 
     seek_position = max(int(current_position) + int(position_delta / 1000), 0)
 
-    media_duration = entity.attributes.get(media_player.ATTR_MEDIA_DURATION)
+    media_duration = entity.attributes.get(
+        MediaPlayerEntityStateAttribute.MEDIA_DURATION
+    )
     if media_duration and 0 < int(media_duration) < seek_position:
         seek_position = media_duration
 
@@ -1852,7 +1923,9 @@ async def async_api_set_eq_mode(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    sound_mode_list = entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST)
+    sound_mode_list = entity.attributes.get(
+        MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST
+    )
     if sound_mode_list and mode.lower() in sound_mode_list:
         data[media_player.ATTR_SOUND_MODE] = mode.lower()
     else:
