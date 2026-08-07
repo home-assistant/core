@@ -1,5 +1,6 @@
 """Support for ZhongHong HVAC Controller."""
 
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -26,6 +27,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -40,6 +42,7 @@ CONF_GATEWAY_ADDRRESS = "gateway_address"
 
 DEFAULT_PORT = 9999
 DEFAULT_GATEWAY_ADDRRESS = 1
+SCAN_INTERVAL = timedelta(seconds=60)
 
 SIGNAL_DEVICE_ADDED = "zhong_hong_device_added"
 SIGNAL_ZHONG_HONG_HUB_START = "zhong_hong_hub_start"
@@ -77,6 +80,15 @@ FAN_MODE_MAP = {
     "medium_low": "MIDLOW",
 }
 FAN_MODE_REVERSE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
+
+
+def _send_failed(command: str) -> HomeAssistantError:
+    """Return the error raised when a command cannot be sent."""
+    return HomeAssistantError(
+        translation_domain="zhong_hong",
+        translation_key="send_command_failed",
+        translation_placeholders={"command": command},
+    )
 
 
 def setup_platform(
@@ -140,7 +152,7 @@ class ZhongHongClimate(ClimateEntity):
         HVACMode.FAN_ONLY,
         HVACMode.OFF,
     ]
-    _attr_should_poll = False
+    _attr_should_poll = True
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -182,6 +194,17 @@ class ZhongHongClimate(ClimateEntity):
         if self._device.target_temperature:
             self._attr_target_temperature = self._device.target_temperature
         self.schedule_update_ha_state()
+
+    def update(self) -> None:
+        """Poll the gateway for fresh status when the connection is healthy."""
+        if self._hub.connected:
+            self._device.update()
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return False when the gateway connection is unhealthy."""
+        return self._hub.connected
 
     @property
     @override
@@ -227,18 +250,21 @@ class ZhongHongClimate(ClimateEntity):
     @override
     def turn_on(self) -> None:
         """Turn on ac."""
-        return self._device.turn_on()
+        if not self._device.turn_on():
+            raise _send_failed("turn-on")
 
     @override
     def turn_off(self) -> None:
         """Turn off ac."""
-        return self._device.turn_off()
+        if not self._device.turn_off():
+            raise _send_failed("turn-off")
 
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            self._device.set_temperature(temperature)
+            if not self._device.set_temperature(temperature):
+                raise _send_failed("temperature")
 
         if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             self.set_hvac_mode(operation_mode)
@@ -254,7 +280,8 @@ class ZhongHongClimate(ClimateEntity):
         if not self.is_on:
             self.turn_on()
 
-        self._device.set_operation_mode(hvac_mode.upper())
+        if not self._device.set_operation_mode(hvac_mode.upper()):
+            raise _send_failed("mode")
 
     @override
     def set_fan_mode(self, fan_mode: str) -> None:
@@ -262,4 +289,6 @@ class ZhongHongClimate(ClimateEntity):
         mapped_mode = FAN_MODE_MAP.get(fan_mode)
         if not mapped_mode:
             _LOGGER.error("Unsupported fan mode: %s", fan_mode)
-        self._device.set_fan_mode(mapped_mode)
+            return
+        if not self._device.set_fan_mode(mapped_mode):
+            raise _send_failed("fan")

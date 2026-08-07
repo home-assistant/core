@@ -1,0 +1,7 @@
+{
+  "exceptions": {
+    "send_command_failed": {
+      "message": "Failed to send {command} command to the ZhongHong gateway."
+    }
+  }
+}
