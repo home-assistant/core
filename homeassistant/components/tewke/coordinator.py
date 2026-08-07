@@ -198,12 +198,6 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
             # Tell HomeAssistant that the device is offline
             # If failed is ever higher than 3, reality has broken, handle regardless
             if failed >= max_fails:
-                self.logger.error(
-                    "Failed to re-initialise observations with tap %s %d times,"
-                    " labelling as unavailable",
-                    self.config_entry.runtime_data.tap.wall_dock_id,
-                    failed,
-                )
                 self.async_set_update_error(
                     UpdateFailed(
                         f"Failed to re-initialise observations with tap "

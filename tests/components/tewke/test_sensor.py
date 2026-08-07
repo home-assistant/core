@@ -1,22 +1,28 @@
+"""Test Tewke sensor."""
+
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytewke.data import ConfigData, EnergyData, RadarData, SensorData
 from pytewke.data.radar import RadarProximity, RadarThreshold, RadarThresholds
 from pytewke.data.sensors import AmbientLight
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.tewke.sensor import (
+    ENERGY_SENSOR_DESCRIPTIONS,
+    RADAR_SENSOR_DESCRIPTIONS,
+    SENSOR_DESCRIPTIONS,
+    TewkeEnergySensor,
+    TewkeRadarSensor,
+    TewkeSensor,
+)
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
-from homeassistant.components.tewke.sensor import (
-    ENERGY_SENSOR_DESCRIPTIONS,
-    RADAR_SENSOR_DESCRIPTIONS,
-    SENSOR_DESCRIPTIONS,
-)
 
 @pytest.fixture
 def mock_tap_with_sensors(mock_tap):
@@ -168,7 +174,6 @@ async def test_sensor_data_becomes_none(
 
     # Entities should now report 'unavailable' state because native_value returns None
     state = hass.states.get("sensor.living_room_tewke_switch_air_quality")
-    print("STATE:", state)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -270,11 +275,6 @@ async def test_native_value_when_none(
 
     # The entities will still be registered but unavailable
     # Let's get the objects and call native_value directly
-    from homeassistant.components.tewke.sensor import (
-        TewkeEnergySensor,
-        TewkeRadarSensor,
-        TewkeSensor,
-    )
 
     coordinator = mock_config_entry.runtime_data.coordinator
 

@@ -1,3 +1,5 @@
+"""Test Tewke binary sensor."""
+
 from unittest.mock import AsyncMock
 
 import pytest

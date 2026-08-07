@@ -1,3 +1,5 @@
+"""Test Tewke light."""
+
 from unittest.mock import AsyncMock
 
 import pytest

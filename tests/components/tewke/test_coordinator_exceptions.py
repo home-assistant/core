@@ -1,3 +1,5 @@
+"""Test Tewke coordinator exceptions."""
+
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -56,9 +58,11 @@ async def test_coordinator_device_swap(hass, mock_config_entry, mock_tap):
     coordinator = TewkeCoordinator(
         hass, logging.getLogger(__name__), "Tewke Tap", mock_config_entry
     )
-    with patch.object(coordinator, "_setup_observe", return_value=True):
-        with pytest.raises(UpdateFailed, match="Device swap detected"):
-            await coordinator._async_update_data()
+    with (
+        patch.object(coordinator, "_setup_observe", return_value=True),
+        pytest.raises(UpdateFailed, match="Device swap detected"),
+    ):
+        await coordinator._async_update_data()
 
 
 async def test_coordinator_get_scenes_fails(hass, mock_config_entry, mock_tap):
@@ -77,9 +81,11 @@ async def test_coordinator_get_scenes_fails(hass, mock_config_entry, mock_tap):
     coordinator = TewkeCoordinator(
         hass, logging.getLogger(__name__), "Tewke Tap", mock_config_entry
     )
-    with patch.object(coordinator, "_setup_observe", return_value=True):
-        with pytest.raises(UpdateFailed, match="Error communicating with Tewke Tap"):
-            await coordinator._async_update_data()
+    with (
+        patch.object(coordinator, "_setup_observe", return_value=True),
+        pytest.raises(UpdateFailed, match="Error communicating with Tewke Tap"),
+    ):
+        await coordinator._async_update_data()
 
 
 async def test_coordinator_get_targets_fails(hass, mock_config_entry, mock_tap):
@@ -99,9 +105,11 @@ async def test_coordinator_get_targets_fails(hass, mock_config_entry, mock_tap):
     coordinator = TewkeCoordinator(
         hass, logging.getLogger(__name__), "Tewke Tap", mock_config_entry
     )
-    with patch.object(coordinator, "_setup_observe", return_value=True):
-        with pytest.raises(UpdateFailed, match="Error communicating with Tewke Tap:"):
-            await coordinator._async_update_data()
+    with (
+        patch.object(coordinator, "_setup_observe", return_value=True),
+        pytest.raises(UpdateFailed, match="Error communicating with Tewke Tap:"),
+    ):
+        await coordinator._async_update_data()
 
 
 async def test_coordinator_optional_endpoints_fail(hass, mock_config_entry, mock_tap):

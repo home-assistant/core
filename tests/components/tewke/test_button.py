@@ -1,3 +1,5 @@
+"""Test Tewke button."""
+
 from unittest.mock import AsyncMock
 
 import pytest
