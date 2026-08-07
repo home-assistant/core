@@ -158,6 +158,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "RGBICWW Floor Lamp": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.LIGHT,)
     ),
+    "Permanent Outdoor Lights": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
     "RGBICWW Strip Light": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.LIGHT,)
     ),
