@@ -38,7 +38,7 @@ async def async_setup_entry(
     for mower_id in coordinator.data:
         if coordinator.data[mower_id].capabilities.stay_out_zones:
             _stay_out_zones = coordinator.data[mower_id].stay_out_zones
-            if _stay_out_zones is not None:
+            if _stay_out_zones is not None and _stay_out_zones.zones is not None:
                 entities.extend(
                     StayOutZoneSwitchEntity(coordinator, mower_id, stay_out_zone_uid)
                     for stay_out_zone_uid in _stay_out_zones.zones
