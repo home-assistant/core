@@ -218,12 +218,7 @@ async def test_streamable_error_processing_request(
     setup_integration: None,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test an unexpected failure while processing a streamable request returns a structured 500.
-
-    This simulates a defect in the underlying MCP server run (not a
-    request-caused failure). The endpoint should respond with a structured
-    server error instead of an unhandled exception or a misleading 400.
-    """
+    """Test unexpected server failure returns 500, not an unhandled exception."""
     client = await hass_client()
 
     with patch(
@@ -246,14 +241,7 @@ async def test_streamable_timeout_processing_request(
     setup_integration: None,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test a request the MCP server never responds to returns a structured 504.
-
-    This simulates the originally reported crash: an out-of-sequence or
-    malformed probe that the session can't turn into a reply, so the
-    request-handling task group never receives a response before the
-    timeout. The endpoint should respond with a structured timeout error
-    instead of hanging or crashing.
-    """
+    """Test a request that times out returns 504 instead of hanging or crashing."""
     client = await hass_client()
 
     async def hang_forever(*args: Any, **kwargs: Any) -> None:

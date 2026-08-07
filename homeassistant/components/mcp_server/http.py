@@ -294,17 +294,11 @@ async def _async_handle_streamable_message(
                 session_message = await anext(streams.write_stream_reader)
                 tg.cancel_scope.cancel()
         except* TimeoutError as eg:
-            # The MCP server never produced a response within TIMEOUT, e.g. an
-            # out-of-sequence or malformed probe that the session can't turn
-            # into a reply. This is a request-caused failure, not a server bug.
             _LOGGER.debug(
                 "Timed out waiting for MCP server response: %s", eg.exceptions
             )
             raise HTTPGatewayTimeout(text="Timed out waiting for a response") from eg
         except* Exception as eg:
-            # Anything else is unexpected (a defect in our code or the MCP
-            # SDK), so surface it as a server error and log it loudly instead
-            # of hiding it behind a client-error status at debug level.
             _LOGGER.exception(
                 "Unexpected error processing streamable MCP request",
                 exc_info=eg,
