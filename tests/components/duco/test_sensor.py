@@ -377,8 +377,8 @@ async def test_deregistered_node_removes_device(
 ) -> None:
     """Test a node disappearing from the API removes its device from the registry."""
     # Verify node 2 (UCCO2 RF sensor) device exists before deregistration.
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_2")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}_2"), mock_config_entry.entry_id
     )
     assert device is not None
 
@@ -392,8 +392,8 @@ async def test_deregistered_node_removes_device(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # The device should be removed from the device registry.
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_2")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}_2"), mock_config_entry.entry_id
     )
     assert device is None
 
@@ -413,8 +413,9 @@ async def test_box_node_not_removed_on_transient_incomplete_node_list(
         hass, mock_config_entry, [Platform.FAN, Platform.SENSOR]
     )
 
-    box_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_{BOX_NODE_ID}")}
+    box_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}_{BOX_NODE_ID}"),
+        mock_config_entry.entry_id,
     )
     assert box_device is not None
     assert hass.states.get("fan.living") is not None
@@ -428,8 +429,9 @@ async def test_box_node_not_removed_on_transient_incomplete_node_list(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_{BOX_NODE_ID}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{mock_config_entry.unique_id}_{BOX_NODE_ID}"),
+            mock_config_entry.entry_id,
         )
         is not None
     )
@@ -483,8 +485,8 @@ async def test_unknown_node_type_logs_warning_and_creates_no_entities(
     assert "unsupported" in caplog.text.lower()
     assert hass.states.get("sensor.unsupported_device_humidity") is None
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_99")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}_99"), mock_config_entry.entry_id
     )
     assert device is None
 
