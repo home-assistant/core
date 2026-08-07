@@ -117,6 +117,17 @@ def _due_in_minutes(due_at: datetime | None) -> int | None:
     return round((due_at - dt_util.utcnow()).total_seconds() / 60)
 
 
+def _bare_hex(colour: str | None) -> str | None:
+    """Return a colour hex value without the leading #.
+
+    The pre-config-flow integration exposed colours this way, and community
+    dashboard cards prepend the # themselves.
+    """
+    if colour is None:
+        return None
+    return colour.removeprefix("#")
+
+
 def _passage_attributes(index: int, passage: Passage) -> dict[str, Any]:
     """Return the legacy attribute mapping for a single passage."""
     line = passage.line
@@ -137,14 +148,14 @@ def _passage_attributes(index: int, passage: Passage) -> dict[str, Any]:
         "line_number_public": line.public_number,
         "line_desc": line.description,
         "line_transport_type": line.transport_type,
-        "line_number_colourFront": line.colour_front_hex,
-        "line_number_colourFrontHex": line.colour_front_hex,
-        "line_number_colourBack": line.colour_back_hex,
-        "line_number_colourBackHex": line.colour_back_hex,
-        "line_number_colourFrontBorder": line.colour_front_border_hex,
-        "line_number_colourFrontBorderHex": line.colour_front_border_hex,
-        "line_number_colourBackBorder": line.colour_back_border_hex,
-        "line_number_colourBackBorderHex": line.colour_back_border_hex,
+        "line_number_colourFront": _bare_hex(line.colour_front_hex),
+        "line_number_colourFrontHex": _bare_hex(line.colour_front_hex),
+        "line_number_colourBack": _bare_hex(line.colour_back_hex),
+        "line_number_colourBackHex": _bare_hex(line.colour_back_hex),
+        "line_number_colourFrontBorder": _bare_hex(line.colour_front_border_hex),
+        "line_number_colourFrontBorderHex": _bare_hex(line.colour_front_border_hex),
+        "line_number_colourBackBorder": _bare_hex(line.colour_back_border_hex),
+        "line_number_colourBackBorderHex": _bare_hex(line.colour_back_border_hex),
     }
 
 
@@ -161,6 +172,7 @@ class DeLijnSensor(CoordinatorEntity[DeLijnCoordinator], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         stop_number = entry.data[CONF_STOP_NUMBER]
+        self._stopname = entry.title
         self._attr_unique_id = f"{entry.unique_id}_next_departure"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, stop_number)},
@@ -184,6 +196,7 @@ class DeLijnSensor(CoordinatorEntity[DeLijnCoordinator], SensorEntity):
         passages = self.coordinator.data
         if not passages:
             return {
+                "stopname": self._stopname,
                 "line_number_public": None,
                 "line_transport_type": None,
                 "final_destination": None,
@@ -196,6 +209,7 @@ class DeLijnSensor(CoordinatorEntity[DeLijnCoordinator], SensorEntity):
 
         first = passages[0]
         return {
+            "stopname": self._stopname,
             "line_number_public": first.line.public_number,
             "line_transport_type": first.line.transport_type,
             "final_destination": first.destination,
