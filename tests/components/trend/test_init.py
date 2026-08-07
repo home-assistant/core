@@ -155,15 +155,12 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
 
     events = track_entity_registry_actions(hass, trend_entity_entry.entity_id)
 
-    # Remove the source sensor's config entry from the device, this removes the
-    # source sensor
+    # Remove the source device, this removes the source sensor
     with patch(
         "homeassistant.components.trend.async_unload_entry",
         wraps=trend.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            sensor_device.id, remove_config_entry_id=sensor_config_entry.entry_id
-        )
+        device_registry.async_remove_device(sensor_device.id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_called_once()
@@ -179,7 +176,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
 
     # Check we got the expected events: the helper entity's device link is
     # cleared when the source device is removed (the helper entity belongs to
-    # the trend config entry, not the removed source config entry), then the
+    # the trend config entry, not the removed source device's config entry), then the
     # helper entity is removed when the trend config entry is removed. Both
     # registry actions are observed in fire order.
     assert events == ["update", "remove"]
