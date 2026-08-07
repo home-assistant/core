@@ -135,11 +135,13 @@ class SmartHub:
         device_registry.async_get_or_create(
             config_entry_id=self.config.entry_id,
             configuration_url=conf_url,
-            # An empty MAC is not a connection; registering one would collide
-            # with every other device that reports none.
-            connections=(
-                {(dr.CONNECTION_NETWORK_MAC, self._mac)} if self._mac else set()
-            ),
+            # Every interface, not just the identifying one: the hub answers
+            # over whichever is up, so a discovery that saw the other one must
+            # still match this device. An empty MAC is not a connection --
+            # registering one would collide with every device reporting none.
+            connections={
+                (dr.CONNECTION_NETWORK_MAC, mac) for mac in self.comm.com_macs if mac
+            },
             identifiers={(DOMAIN, self.uid)},
             manufacturer="Habitron GmbH",
             suggested_area="House",

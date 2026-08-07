@@ -30,6 +30,7 @@ def smart_hub_stub() -> SmartHub:
     comm.com_ip = MOCK_HOST
     comm.com_port = 7777
     comm.com_mac = "AA:BB:CC:DD:EE:FF"
+    comm.com_macs = ["AA:BB:CC:DD:EE:FF"]
     comm.com_version = "9.9.9"
     comm.com_hwtype = "Raspberry Pi 4"
     comm.is_addon = False
@@ -255,6 +256,58 @@ async def test_setup_without_a_mac_keeps_the_entry_id(
     )
     assert device is not None
     assert device.connections == set()
+
+
+async def test_setup_registers_every_interface_mac(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Both interfaces become connections, but only the LAN MAC is the identity.
+
+    The hub answers over whichever interface is up, so a discovery that saw the
+    other one has to match this same device rather than create a second.
+    """
+    info = _smhub_info("none")
+    info["hardware"]["network"]["wlan mac"] = "11:22:33:44:55:66"
+    info["hardware"]["network"]["mac"] = "11:22:33:44:55:66"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="aabbccddeeff",
+        data=MOCK_CONFIG_DATA,
+        options=MOCK_CONFIG_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+
+    client = AsyncMock(spec=HabitronClient)
+    client.host = MOCK_HOST
+    client.get_smhub_info = AsyncMock(return_value=info)
+    router = Router(uid="rt_1")
+    with (
+        patch(
+            "homeassistant.components.habitron.communicate.HabitronClient",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.habitron.smart_hub.async_build_system",
+            new=AsyncMock(return_value=router),
+        ),
+        patch(
+            "homeassistant.components.habitron.coordinator."
+            "HbtnCoordinator._async_update_data",
+            new=AsyncMock(return_value=0),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "aabbccddeeff")})
+    assert device is not None
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:66"),
+    }
 
 
 async def test_update_short_circuits_when_no_diags(smart_hub_stub: SmartHub) -> None:

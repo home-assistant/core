@@ -113,9 +113,37 @@ async def test_get_smhub_info_populates_fields(reported_ip: str) -> None:
     assert out["software"]["version"] == "1.0"
     assert comm.com_version == "1.0"
     assert comm.com_mac == "AA:BB"
+    assert comm.com_macs == ["AA:BB"]
     assert comm.com_ip == "192.168.1.50"
     assert comm.slugname == "habitron"
     assert comm.is_addon is True
+
+
+async def test_get_smhub_info_collects_every_interface_mac() -> None:
+    """A hub on both interfaces reports both MACs, but is identified by the LAN one.
+
+    ``mac`` is the interface currently carrying the traffic, so it duplicates
+    one of the other two and must not become the identity -- it would flip on a
+    LAN/WLAN switch.
+    """
+    comm = _make_comm("192.168.1.50")
+    info = {
+        "software": {"version": "1.0", "slug": "none"},
+        "hardware": {
+            "platform": {"type": "Raspberry Pi 5"},
+            "network": {
+                "ip": "192.168.1.50",
+                "host": "smarthub",
+                "lan mac": "AA:BB:CC:DD:EE:FF",
+                "wlan mac": "11:22:33:44:55:66",
+                "mac": "11:22:33:44:55:66",
+            },
+        },
+    }
+    comm._client.get_smhub_info = AsyncMock(return_value=info)
+    await comm.get_smhub_info()
+    assert comm.com_mac == "AA:BB:CC:DD:EE:FF"
+    assert comm.com_macs == ["AA:BB:CC:DD:EE:FF", "11:22:33:44:55:66"]
 
 
 async def test_get_smhub_info_external_hub_has_none_slug() -> None:

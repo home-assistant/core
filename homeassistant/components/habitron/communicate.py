@@ -12,6 +12,7 @@ from habitron_client import (
     async_refresh_system,
     get_host_ip,
     get_own_ip,
+    hub_mac_addresses,
 )
 
 from homeassistant.components import network
@@ -58,6 +59,7 @@ class HbtnComm:
         self._config: ConfigEntry = config
         self._hostname: str = ""
         self._mac: str = ""
+        self._macs: list[str] = []
         self._hwtype: str = ""
         self._version: str = ""
         self._network_ip: str = ""
@@ -118,6 +120,16 @@ class HbtnComm:
     def com_mac(self) -> str:
         """Mac address for SmartHub."""
         return self._mac
+
+    @property
+    def com_macs(self) -> list[str]:
+        """Every MAC the hub reports, not just the identifying one.
+
+        A SmartHub answers over whichever interface is up, so registering only
+        ``com_mac`` would leave it unrecognised by a discovery that saw it on
+        the other one.
+        """
+        return self._macs
 
     @property
     def com_version(self) -> str:
@@ -204,7 +216,11 @@ class HbtnComm:
             self._version = info["software"]["version"]
             self._hwtype = info["hardware"]["platform"]["type"]
             self._hostname = info["hardware"]["network"]["host"]
+            # ``lan mac`` alone is the identity -- it exists whichever interface
+            # currently carries the traffic, so it does not flip on a LAN/WLAN
+            # switch. The full list is only used for device connections.
             self._mac = info["hardware"]["network"]["lan mac"]
+            self._macs = hub_mac_addresses(info)
             software = cast("dict[str, Any]", info["software"])
             # The SmartHub reports its own ingress slug only when it runs as the
             # Home Assistant add-on; an external/standalone unit reports the
