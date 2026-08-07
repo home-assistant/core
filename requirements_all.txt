@@ -474,7 +474,7 @@ aiowatttime==0.1.1
 aiowebdav2==0.6.2
 
 # homeassistant.components.webostv
-aiowebostv==0.9.0
+aiowebostv==0.9.1
 
 # homeassistant.components.withings
 aiowithings==3.1.6
@@ -3479,7 +3479,7 @@ zha-quirks==2.2.0
 zha==2.1.0
 
 # homeassistant.components.zhong_hong
-zhong-hong-hvac==1.0.13
+zhong-hong-hvac==1.0.16
 
 # homeassistant.components.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.1.0
