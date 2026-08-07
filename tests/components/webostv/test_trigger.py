@@ -113,6 +113,14 @@ async def test_webostv_turn_on_trigger_device_id(
             {"trigger": "webostv.turn_on", "entity_id": ENTITY_ID, "target": {}},
             id="legacy_with_empty_target",
         ),
+        pytest.param(
+            {
+                "trigger": "webostv.turn_on",
+                "entity_id": ENTITY_ID,
+                "target": {"entity_id": []},
+            },
+            id="legacy_with_empty_target_value",
+        ),
     ],
 )
 @pytest.mark.usefixtures("client")
@@ -301,6 +309,49 @@ async def test_unknown_trigger_platform_type(
     )
 
     assert "Invalid trigger 'webostv.unknown' specified" in caplog.text
+
+
+@pytest.mark.usefixtures("client")
+async def test_trigger_target_takes_precedence_over_legacy(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test the target wins over a legacy option selecting a different entity."""
+    await setup_webostv(hass)
+
+    platform = MockEntityPlatform(hass)
+    other_entity = f"{DOMAIN}.other"
+    await platform.async_add_entities([MockEntity(name=other_entity)])
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "trigger": "webostv.turn_on",
+                        "entity_id": ENTITY_ID,
+                        "target": {"entity_id": other_entity},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ENTITY_ID},
+                    },
+                },
+            ],
+        },
+    )
+
+    # The target selects another entity, so the legacy entity_id is not used
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "media_player",
+            "turn_on",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+
+    assert len(service_calls) == 1
 
 
 @pytest.mark.usefixtures("client")
