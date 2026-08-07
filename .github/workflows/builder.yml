@@ -281,7 +281,7 @@ jobs:
     uses: ./.github/workflows/e2e-tests.yml
     with:
       version: ${{ needs.init.outputs.version }}
-      images: ${{ needs.init.outputs.architectures }}
+      image_prefixes: ${{ needs.init.outputs.architectures }}
 
   run_e2e_tests_machine:
     name: Run E2E tests on machine images
@@ -290,7 +290,7 @@ jobs:
     uses: ./.github/workflows/e2e-tests.yml
     with:
       version: ${{ needs.init.outputs.version }}
-      images: ${{ needs.init.outputs.machines }}
+      image_prefixes: ${{ needs.init.outputs.machines }}
 
   publish_ha:
     name: Publish version files
