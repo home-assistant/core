@@ -287,13 +287,10 @@ async def async_remove_config_entry_device(
     ):
         # can not remove interface device
         return False
-    ui_unique_ids = {
-        entry.unique_id for entry in knx_module.config_store.get_entity_entries()
-    }
+    ui_unique_ids = knx_module.config_store.get_entity_uids()
     entity_registry = er.async_get(hass)
     if any(
-        entity.platform == DOMAIN
-        and entity.config_entry_id == config_entry.entry_id
+        entity.config_entry_id == config_entry.entry_id
         and entity.unique_id not in ui_unique_ids
         for entity in er.async_entries_for_device(entity_registry, device_entry.id)
     ):
