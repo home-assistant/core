@@ -283,6 +283,9 @@
       "time": {
         "name": "Time"
       },
+      "valve_opening": {
+        "name": "Valve opening"
+      },
       "video_brightness": {
         "name": "Video brightness"
       },
@@ -988,8 +991,14 @@
           "level_3": "[%key:common::state::full%]"
         }
       },
+      "water_once": {
+        "name": "Water usage (last session)"
+      },
       "water_time": {
         "name": "Water usage duration"
+      },
+      "water_total": {
+        "name": "Total water usage"
       },
       "wind_chill_index_temperature": {
         "name": "Wind chill index"
