@@ -474,7 +474,7 @@ aiowatttime==0.1.1
 aiowebdav2==0.6.2
 
 # homeassistant.components.webostv
-aiowebostv==0.9.0
+aiowebostv==0.9.1
 
 # homeassistant.components.withings
 aiowithings==3.1.6
