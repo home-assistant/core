@@ -291,20 +291,20 @@ def _determine_device_info_type(
 class _ValidatedDeviceInfoFields(TypedDict):
     """Device info fields validated on create and update."""
 
-    configuration_url: str | URL | None | UndefinedType
-    hw_version: str | None | UndefinedType
-    manufacturer: str | None | UndefinedType
-    model: str | None | UndefinedType
-    model_id: str | None | UndefinedType
-    serial_number: str | None | UndefinedType
-    sw_version: str | None | UndefinedType
+    configuration_url: str | URL | UndefinedType | None
+    hw_version: str | UndefinedType | None
+    manufacturer: str | UndefinedType | None
+    model: str | UndefinedType | None
+    model_id: str | UndefinedType | None
+    serial_number: str | UndefinedType | None
+    sw_version: str | UndefinedType | None
 
 
 _cached_parse_url = lru_cache(maxsize=512)(URL)
 """Parse a URL and cache the result."""
 
 
-def _validate_str(name: str, value: Any) -> str | None | UndefinedType:
+def _validate_str(name: str, value: Any) -> str | UndefinedType | None:
     """Validate that a device registry string field has correct type."""
     if (
         value is UNDEFINED
@@ -1149,7 +1149,7 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         identifiers: set[tuple[str, str]] | None = None,
         connections: set[tuple[str, str]] | None = None,
         *,
-        config_entry_id: str | None | UndefinedType = UNDEFINED,
+        config_entry_id: str | UndefinedType | None = UNDEFINED,
     ) -> _EntryTypeT | None:
         """Get the first entry matching identifiers or connections.
 
@@ -1741,32 +1741,32 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         *,
         config_entry_id: str,
-        config_subentry_id: str | None | UndefinedType = UNDEFINED,
-        configuration_url: str | URL | None | UndefinedType = UNDEFINED,
-        connections: set[tuple[str, str]] | None | UndefinedType = UNDEFINED,
+        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        configuration_url: str | URL | UndefinedType | None = UNDEFINED,
+        connections: set[tuple[str, str]] | UndefinedType | None = UNDEFINED,
         created_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
-        default_manufacturer: str | None | UndefinedType = UNDEFINED,
-        default_model: str | None | UndefinedType = UNDEFINED,
-        default_name: str | None | UndefinedType = UNDEFINED,
+        default_manufacturer: str | UndefinedType | None = UNDEFINED,
+        default_model: str | UndefinedType | None = UNDEFINED,
+        default_name: str | UndefinedType | None = UNDEFINED,
         # To disable a device if it gets created, does not affect existing devices
-        disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
-        entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
-        hw_version: str | None | UndefinedType = UNDEFINED,
-        identifiers: set[tuple[str, str]] | None | UndefinedType = UNDEFINED,
-        manufacturer: str | None | UndefinedType = UNDEFINED,
-        model: str | None | UndefinedType = UNDEFINED,
-        model_id: str | None | UndefinedType = UNDEFINED,
+        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
+        entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED,
+        hw_version: str | UndefinedType | None = UNDEFINED,
+        identifiers: set[tuple[str, str]] | UndefinedType | None = UNDEFINED,
+        manufacturer: str | UndefinedType | None = UNDEFINED,
+        model: str | UndefinedType | None = UNDEFINED,
+        model_id: str | UndefinedType | None = UNDEFINED,
         modified_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
-        name: str | None | UndefinedType = UNDEFINED,
-        serial_number: str | None | UndefinedType = UNDEFINED,
-        suggested_area: str | None | UndefinedType = UNDEFINED,
-        sw_version: str | None | UndefinedType = UNDEFINED,
+        name: str | UndefinedType | None = UNDEFINED,
+        serial_number: str | UndefinedType | None = UNDEFINED,
+        suggested_area: str | UndefinedType | None = UNDEFINED,
+        sw_version: str | UndefinedType | None = UNDEFINED,
         translation_key: str | None = None,
         translation_placeholders: Mapping[str, str] | None = None,
         # via_device is deprecated and will be removed in HA Core 2027.8, use
         # via_device_id instead
-        via_device: tuple[str, str] | None | UndefinedType = UNDEFINED,
-        via_device_id: str | None | UndefinedType = UNDEFINED,
+        via_device: tuple[str, str] | UndefinedType | None = UNDEFINED,
+        via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
         default_manufacturer = _validate_str(
@@ -2040,37 +2040,37 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         device_id: str,
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
-        add_config_subentry_id: str | None | UndefinedType = UNDEFINED,
+        add_config_subentry_id: str | UndefinedType | None = UNDEFINED,
         # Only set when stripping colliding keys from a stale device: its retained
         # keys can still be duplicated in other stale devices and must not validate.
         allow_collisions: bool = False,
-        area_id: str | None | UndefinedType = UNDEFINED,
-        configuration_url: str | URL | None | UndefinedType = UNDEFINED,
-        disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
-        entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
-        hw_version: str | None | UndefinedType = UNDEFINED,
+        area_id: str | UndefinedType | None = UNDEFINED,
+        configuration_url: str | URL | UndefinedType | None = UNDEFINED,
+        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
+        entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED,
+        hw_version: str | UndefinedType | None = UNDEFINED,
         is_new: bool = False,
         labels: set[str] | UndefinedType = UNDEFINED,
-        manufacturer: str | None | UndefinedType = UNDEFINED,
+        manufacturer: str | UndefinedType | None = UNDEFINED,
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        model: str | None | UndefinedType = UNDEFINED,
-        model_id: str | None | UndefinedType = UNDEFINED,
-        name_by_user: str | None | UndefinedType = UNDEFINED,
-        name: str | None | UndefinedType = UNDEFINED,
+        model: str | UndefinedType | None = UNDEFINED,
+        model_id: str | UndefinedType | None = UNDEFINED,
+        name_by_user: str | UndefinedType | None = UNDEFINED,
+        name: str | UndefinedType | None = UNDEFINED,
         # has_composite_identifiers can be removed in HA Core 2027.8
         has_composite_identifiers: bool | UndefinedType = UNDEFINED,
         new_config_entry_id: str | UndefinedType = UNDEFINED,
-        new_config_subentry_id: str | None | UndefinedType = UNDEFINED,
+        new_config_subentry_id: str | UndefinedType | None = UNDEFINED,
         new_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
-        remove_config_subentry_id: str | None | UndefinedType = UNDEFINED,
-        serial_number: str | None | UndefinedType = UNDEFINED,
+        remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        serial_number: str | UndefinedType | None = UNDEFINED,
         # Can be removed when suggested_area is removed from DeviceEntry
-        suggested_area: str | None | UndefinedType = UNDEFINED,
-        sw_version: str | None | UndefinedType = UNDEFINED,
-        via_device_id: str | None | UndefinedType = UNDEFINED,
+        suggested_area: str | UndefinedType | None = UNDEFINED,
+        sw_version: str | UndefinedType | None = UNDEFINED,
+        via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry | None:
         """Private update device attributes.
 
@@ -2173,8 +2173,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         #   is one, otherwise it removes the device, since it has no other config entry.
         # - new_config_entry_id / new_config_subentry_id move the device immediately.
         target_config_entry_id: str | UndefinedType = UNDEFINED
-        target_config_subentry_id: str | None | UndefinedType = UNDEFINED
-        pending_move: _PendingMove | None | UndefinedType = UNDEFINED
+        target_config_subentry_id: str | UndefinedType | None = UNDEFINED
+        pending_move: _PendingMove | UndefinedType | None = UNDEFINED
         if new_config_entry_id is not UNDEFINED:
             target_config_entry_id = new_config_entry_id
             target_config_subentry_id = (
@@ -2488,31 +2488,31 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         device_id: str,
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
-        add_config_subentry_id: str | None | UndefinedType = UNDEFINED,
-        area_id: str | None | UndefinedType = UNDEFINED,
-        configuration_url: str | URL | None | UndefinedType = UNDEFINED,
-        disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
-        entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
-        hw_version: str | None | UndefinedType = UNDEFINED,
+        add_config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        area_id: str | UndefinedType | None = UNDEFINED,
+        configuration_url: str | URL | UndefinedType | None = UNDEFINED,
+        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
+        entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED,
+        hw_version: str | UndefinedType | None = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
-        manufacturer: str | None | UndefinedType = UNDEFINED,
+        manufacturer: str | UndefinedType | None = UNDEFINED,
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        model: str | None | UndefinedType = UNDEFINED,
-        model_id: str | None | UndefinedType = UNDEFINED,
-        name_by_user: str | None | UndefinedType = UNDEFINED,
-        name: str | None | UndefinedType = UNDEFINED,
+        model: str | UndefinedType | None = UNDEFINED,
+        model_id: str | UndefinedType | None = UNDEFINED,
+        name_by_user: str | UndefinedType | None = UNDEFINED,
+        name: str | UndefinedType | None = UNDEFINED,
         new_config_entry_id: str | UndefinedType = UNDEFINED,
-        new_config_subentry_id: str | None | UndefinedType = UNDEFINED,
+        new_config_subentry_id: str | UndefinedType | None = UNDEFINED,
         new_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
-        remove_config_subentry_id: str | None | UndefinedType = UNDEFINED,
-        serial_number: str | None | UndefinedType = UNDEFINED,
+        remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        serial_number: str | UndefinedType | None = UNDEFINED,
         # suggested_area is deprecated and will be removed in 2026.9
-        suggested_area: str | None | UndefinedType = UNDEFINED,
-        sw_version: str | None | UndefinedType = UNDEFINED,
-        via_device_id: str | None | UndefinedType = UNDEFINED,
+        suggested_area: str | UndefinedType | None = UNDEFINED,
+        sw_version: str | UndefinedType | None = UNDEFINED,
+        via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update device attributes.
 
