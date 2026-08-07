@@ -19,6 +19,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DATA_APPS
@@ -31,6 +32,7 @@ from .const import (
     CONF_NAME_SPACE,
     CONF_VOLUME_STEP,
     DEFAULT_VOLUME_STEP,
+    DOMAIN,
     SUPPORTED_COMMANDS,
     VIZIO_AUDIO_SETTINGS,
     VIZIO_MUTE,
@@ -351,12 +353,15 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        if sound_mode in (self._attr_sound_mode_list or ()):
-            await async_device_command(
-                self._device.set_setting(
-                    VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE, sound_mode
-                )
+        if sound_mode not in (self._attr_sound_mode_list or ()):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_mode",
+                translation_placeholders={"sound_mode": sound_mode},
             )
+        await async_device_command(
+            self._device.set_setting(VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE, sound_mode)
+        )
 
     @override
     async def async_turn_on(self) -> None:
@@ -407,6 +412,12 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
             )
         elif source in self._available_apps:
             await async_device_command(self._device.launch_app(source))
+        else:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={"source": source},
+            )
 
     @override
     async def async_volume_up(self) -> None:
@@ -431,16 +442,10 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
-        if self._attr_volume_level is not None:
-            if volume > self._attr_volume_level:
-                num = int(self._max_volume * (volume - self._attr_volume_level))
-                await async_device_command(self._device.volume_up(steps=num))
-                self._attr_volume_level = volume
-
-            elif volume < self._attr_volume_level:
-                num = int(self._max_volume * (self._attr_volume_level - volume))
-                await async_device_command(self._device.volume_down(steps=num))
-                self._attr_volume_level = volume
+        await async_device_command(
+            self._device.set_volume(round(volume * self._max_volume))
+        )
+        self._attr_volume_level = volume
 
     @override
     async def async_media_play(self) -> None:
