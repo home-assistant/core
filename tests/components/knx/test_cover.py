@@ -290,8 +290,8 @@ async def test_cover_assumed_state_not_recorded(
 ) -> None:
     """Test `assumed_state` is excluded from recording.
 
-    It toggles when the restored state is confirmed by the bus, which would else
-    write a new attributes row for every entity shortly after startup.
+    It toggles when the restored state is confirmed by the bus, which would
+    otherwise write a new attributes row for every entity shortly after startup.
     """
     start_time = dt_util.utcnow()
     mock_restore_cache(
@@ -323,7 +323,6 @@ async def test_cover_assumed_state_not_recorded(
     ]
     for state in recorded_states:
         assert ATTR_ASSUMED_STATE not in state.attributes
-        # other attributes are still recorded
         assert ATTR_CURRENT_POSITION in state.attributes
 
 
