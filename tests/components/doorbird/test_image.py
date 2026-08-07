@@ -66,6 +66,23 @@ async def test_image_updates_on_event(
     assert hass.states.get("image.mydoorbird_last_motion").state != STATE_UNKNOWN
 
 
+async def test_image_unregisters_event_entity_id_on_unload(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """Unloading the entry clears the event entity_id the image registered."""
+    doorbird_entry = await doorbird_mocker()
+    event_entity_ids = doorbird_entry.entry.runtime_data.event_entity_ids
+    assert event_entity_ids["mydoorbird_doorbell"] == "image.mydoorbird_last_ring"
+    assert event_entity_ids["mydoorbird_motion"] == "image.mydoorbird_last_motion"
+
+    await hass.config_entries.async_unload(doorbird_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "mydoorbird_doorbell" not in event_entity_ids
+    assert "mydoorbird_motion" not in event_entity_ids
+
+
 async def test_image_entity_fetches_bytes(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
