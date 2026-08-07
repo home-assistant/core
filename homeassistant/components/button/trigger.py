@@ -1,6 +1,5 @@
 """Provides triggers for buttons."""
 
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import StatelessEntityTriggerBase, Trigger
@@ -11,10 +10,7 @@ from . import DOMAIN
 class ButtonPressedTrigger(StatelessEntityTriggerBase):
     """Trigger for button entity presses."""
 
-    _domain_specs = {
-        DOMAIN: DomainSpec(),
-        INPUT_BUTTON_DOMAIN: DomainSpec(),
-    }
+    _domain_specs = {DOMAIN: DomainSpec()}
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

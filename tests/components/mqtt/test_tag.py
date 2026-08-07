@@ -506,35 +506,6 @@ async def test_entity_device_info_with_identifier(
     assert device.sw_version == "0.1-beta"
 
 
-async def test_entity_device_info_with_via_device(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-) -> None:
-    """Test tag device registry integration links via_device_id."""
-    await mqtt_mock_entry()
-    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    hub = device_registry.async_get_or_create(
-        config_entry_id=mqtt_config_entry.entry_id,
-        identifiers={("mqtt", "hub-id")},
-        manufacturer="manufacturer",
-        model="hub",
-    )
-
-    data = json.dumps(
-        {
-            "topic": "test-topic",
-            "device": {"identifiers": ["helloworld"], "via_device": "hub-id"},
-        }
-    )
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla/config", data)
-    await hass.async_block_till_done()
-
-    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
-    assert device is not None
-    assert device.via_device_id == hub.id
-
-
 async def test_entity_device_info_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

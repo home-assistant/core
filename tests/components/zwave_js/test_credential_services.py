@@ -24,11 +24,11 @@ from zwave_js_server.model.node import Node
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, MockUser
+from tests.common import MockConfigEntry
 
 
 def _mock_access_control(
@@ -1794,59 +1794,3 @@ async def test_service_access_control_not_supported(
     # The guard runs before anything else, so no capability query is issued.
     api.is_supported.assert_called_once_with()
     api.get_user_capabilities_cached.assert_not_called()
-
-
-@pytest.mark.parametrize(
-    ("service", "service_data", "returns_response"),
-    [
-        pytest.param("set_user", {}, True, id="set_user"),
-        pytest.param("delete_user", {"user_id": 1}, False, id="delete_user"),
-        pytest.param("delete_all_users", {}, False, id="delete_all_users"),
-        pytest.param(
-            "set_credential",
-            {"user_id": 1, "credential_type": "pin_code", "credential_data": "1234"},
-            True,
-            id="set_credential",
-        ),
-        pytest.param(
-            "delete_credential",
-            {"user_id": 1, "credential_type": "pin_code", "credential_slot": 1},
-            False,
-            id="delete_credential",
-        ),
-        pytest.param(
-            "delete_all_credentials", {"user_id": 1}, False, id="delete_all_credentials"
-        ),
-    ],
-)
-async def test_service_requires_admin(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    client: MagicMock,
-    lock_schlage_be469: Node,
-    integration: MockConfigEntry,
-    hass_read_only_user: MockUser,
-    service: str,
-    service_data: dict[str, int | str],
-    returns_response: bool,
-) -> None:
-    """Every mutating user/credential service rejects non-admin users."""
-    # Grant control of all entities, so the call is only rejected for not being admin
-    hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
-    api = _mock_access_control(lock_schlage_be469)
-    entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
-    )
-
-    with pytest.raises(Unauthorized):
-        await hass.services.async_call(
-            DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: entity_id, **service_data},
-            blocking=True,
-            return_response=returns_response,
-            context=Context(user_id=hass_read_only_user.id),
-        )
-
-    api.is_supported.assert_not_called()

@@ -284,7 +284,6 @@ homeassistant.components.homekit_controller.storage
 homeassistant.components.homekit_controller.utils
 homeassistant.components.homewizard.*
 homeassistant.components.homeworks.*
-homeassistant.components.hortimax.*
 homeassistant.components.hr_energy_qube.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*

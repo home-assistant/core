@@ -233,7 +233,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         # are treated as one device.
         if (
             parent is not None
-            and parent.device_id != registry_device.device_id
+            and parent != registry_device
             and parent.device_type is not Device.Type.WallSwitch
         ):
             self._attr_device_info["via_device_id"] = (

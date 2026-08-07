@@ -1,6 +1,6 @@
 """Tests for UPnP/IGD sensor."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from async_upnp_client.profiles.igd import IgdDevice, IgdState
 import pytest
@@ -53,7 +53,7 @@ async def test_upnp_sensors(
     # Second poll.
     mock_igd_device: IgdDevice = mock_config_entry.igd_device
     mock_igd_device.async_get_traffic_and_status_data.return_value = IgdState(
-        timestamp=dt_util.naive_now(),
+        timestamp=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
         bytes_received=10240,
         bytes_sent=20480,
         packets_received=30,

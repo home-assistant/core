@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_SERIAL_NUMBER,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
+    ATTR_VIA_DEVICE,
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
@@ -28,8 +29,6 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
-    EntityCapabilityAttribute,
-    EntityStateAttribute,
 )
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -135,24 +134,24 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 MQTT_ATTRIBUTES_BLOCKED = {
+    "assumed_state",
     "available",
+    "device_class",
     "device_info",
     "entity_category",
     "entity_id",
+    "entity_picture",
     "entity_registry_enabled_default",
     "extra_state_attributes",
     "force_update",
+    "group_entities",
+    "icon",
+    "friendly_name",
     "should_poll",
     "state",
+    "supported_features",
     "unique_id",
-    EntityCapabilityAttribute.GROUP_ENTITIES,
-    EntityStateAttribute.ASSUMED_STATE,
-    EntityStateAttribute.DEVICE_CLASS,
-    EntityStateAttribute.ENTITY_PICTURE,
-    EntityStateAttribute.FRIENDLY_NAME,
-    EntityStateAttribute.ICON,
-    EntityStateAttribute.SUPPORTED_FEATURES,
-    EntityStateAttribute.UNIT_OF_MEASUREMENT,
+    "unit_of_measurement",
 }
 
 PUBLISH_KWARGS = (CONF_MESSAGE_EXPIRY_INTERVAL,)
@@ -1300,6 +1299,9 @@ def device_info_from_specifications(
     if CONF_SW_VERSION in specifications:
         info[ATTR_SW_VERSION] = specifications[CONF_SW_VERSION]
 
+    if CONF_VIA_DEVICE in specifications:
+        info[ATTR_VIA_DEVICE] = (DOMAIN, specifications[CONF_VIA_DEVICE])
+
     if CONF_SUGGESTED_AREA in specifications:
         info[ATTR_SUGGESTED_AREA] = specifications[CONF_SUGGESTED_AREA]
 
@@ -1309,65 +1311,31 @@ def device_info_from_specifications(
     return info
 
 
-def _via_device_identifier(
-    specifications: dict[str, Any] | None,
-) -> tuple[str, str] | None:
-    """Return the device registry identifier of the referenced via device."""
-    if not specifications or CONF_VIA_DEVICE not in specifications:
-        return None
-    return (DOMAIN, specifications[CONF_VIA_DEVICE])
-
-
 @callback
 def ensure_via_device_exists(
-    hass: HomeAssistant,
-    specifications: dict[str, Any] | None,
-    config_entry: ConfigEntry,
+    hass: HomeAssistant, device_info: DeviceInfo | None, config_entry: ConfigEntry
 ) -> None:
-    """Ensure the via device is in the device registry.
-
-    MQTT discovery can announce a child device before its via device, so the
-    referenced parent is stub-created here when it does not yet exist.
-    """
-    if (identifier := _via_device_identifier(specifications)) is None:
-        return
-
-    device_registry = dr.async_get(hass)
-    if device_registry.async_get_device_by_identifier(
-        identifier, config_entry.entry_id
+    """Ensure the via device is in the device registry."""
+    if (
+        device_info is None
+        or CONF_VIA_DEVICE not in device_info
+        or (device_registry := dr.async_get(hass)).async_get_device_by_identifier(
+            device_info["via_device"], config_entry.entry_id
+        )
     ):
         return
 
+    # Ensure the via device exists in the device registry
     _LOGGER.debug(
-        "Device identifier %s referenced as via_device not found in the "
-        "Device Registry, creating new entry",
-        identifier,
+        "Device identifier %s via_device reference from device_info %s "
+        "not found in the Device Registry, creating new entry",
+        device_info["via_device"],
+        device_info,
     )
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={identifier},
+        identifiers={device_info["via_device"]},
     )
-
-
-@callback
-def _resolve_via_device_id(
-    hass: HomeAssistant,
-    specifications: dict[str, Any] | None,
-    config_entry: ConfigEntry,
-) -> str | None:
-    """Resolve the referenced via device to its device registry id.
-
-    Best-effort read-only lookup: returns None when no via device is referenced
-    or the referenced device is not (yet) registered. It never raises, so a
-    missing parent cannot abort entity setup given MQTT's non-deterministic
-    discovery order.
-    """
-    if (identifier := _via_device_identifier(specifications)) is None:
-        return None
-    via_device = dr.async_get(hass).async_get_device_by_identifier(
-        identifier, config_entry.entry_id
-    )
-    return via_device.id if via_device else None
 
 
 class MqttEntityDeviceInfo(Entity):
@@ -1385,12 +1353,10 @@ class MqttEntityDeviceInfo(Entity):
         self._device_specifications = config.get(CONF_DEVICE)
         device_registry = dr.async_get(self.hass)
         config_entry_id = self._config_entry.entry_id
-        ensure_via_device_exists(
-            self.hass, self._device_specifications, self._config_entry
-        )
         device_info = self.device_info
 
         if device_info is not None:
+            ensure_via_device_exists(self.hass, device_info, self._config_entry)
             device_registry.async_get_or_create(
                 config_entry_id=config_entry_id, **device_info
             )
@@ -1399,14 +1365,7 @@ class MqttEntityDeviceInfo(Entity):
     @override
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
-        info = device_info_from_specifications(self._device_specifications)
-        if info is not None and (
-            via_device_id := _resolve_via_device_id(
-                self.hass, self._device_specifications, self._config_entry
-            )
-        ):
-            info["via_device_id"] = via_device_id
-        return info
+        return device_info_from_specifications(self._device_specifications)
 
 
 class MqttEntity(
@@ -1453,9 +1412,7 @@ class MqttEntity(
             self, hass, discovery_data, self.discovery_update
         )
         MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
-        ensure_via_device_exists(
-            self.hass, self._device_specifications, self._config_entry
-        )
+        ensure_via_device_exists(self.hass, self.device_info, self._config_entry)
 
     def _init_entity_registry(self, discovery_data: DiscoveryInfoType | None) -> None:
         """Set entity_id from default_entity_id if defined in config.
@@ -1774,14 +1731,11 @@ def update_device(
     device: DeviceEntry | None = None
     device_registry = dr.async_get(hass)
     config_entry_id = config_entry.entry_id
-    specifications = config[CONF_DEVICE]
+    device_info = device_info_from_specifications(config[CONF_DEVICE])
 
-    ensure_via_device_exists(hass, specifications, config_entry)
-    device_info = device_info_from_specifications(specifications)
+    ensure_via_device_exists(hass, device_info, config_entry)
 
     if config_entry_id is not None and device_info is not None:
-        if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
-            device_info["via_device_id"] = via_device_id
         update_device_info = cast(dict[str, Any], device_info)
         update_device_info["config_entry_id"] = config_entry_id
         device = device_registry.async_get_or_create(**update_device_info)

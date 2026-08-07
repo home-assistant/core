@@ -498,8 +498,12 @@ def create_devices(
     rooms: dict[str, str],
 ) -> None:
     """Create devices in the device registry."""
+    # Devices are sorted so a parent is always created before its children,
+    # allowing children to reference the parent's registered device id.
     created_devices: dict[str, dr.DeviceEntry] = {}
-    for device in devices.values():
+    for device in sorted(
+        devices.values(), key=lambda d: d.device.parent_device_id or ""
+    ):
         kwargs: dict[str, Any] = {}
         if device.device.hub is not None:
             kwargs = {
@@ -518,6 +522,8 @@ def create_devices(
                         format_zigbee_address(device.device.hub.hub_eui),
                     )
                 )
+        if device.device.parent_device_id and device.device.parent_device_id in devices:
+            kwargs["via_device_id"] = created_devices[device.device.parent_device_id].id
         if (ocf := device.device.ocf) is not None:
             kwargs.update(
                 {
@@ -602,17 +608,6 @@ def create_devices(
             name=device.device.label,
             **kwargs,
         )
-
-    # Link child devices to their parent in a second pass, so registration is
-    # robust to any ordering of parents and children in the device list,
-    # including nested hierarchies where a parent is itself a child device.
-    for device in devices.values():
-        parent_device_id = device.device.parent_device_id
-        if parent_device_id and parent_device_id in devices:
-            device_registry.async_update_device(
-                created_devices[device.device.device_id].id,
-                via_device_id=created_devices[parent_device_id].id,
-            )
 
 
 KEEP_CAPABILITY_QUIRK: dict[

@@ -137,7 +137,7 @@
     },
     "button": {
       "hibernate": {
-        "name": "Suspend"
+        "name": "Hibernate"
       },
       "reset": {
         "name": "Reset"

@@ -14,6 +14,7 @@ from homeassistant.components import (
     climate,
     cover,
     fan,
+    group,
     humidifier,
     input_button,
     input_number,
@@ -26,21 +27,6 @@ from homeassistant.components import (
     valve,
     water_heater,
 )
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
-from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
-from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -102,19 +88,19 @@ _LOGGER = logging.getLogger(__name__)
 DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"
 
 MIN_MAX_TEMP = {
-    CLIMATE_DOMAIN: {
+    climate.DOMAIN: {
         "min_temp": climate.ATTR_MIN_TEMP,
         "max_temp": climate.ATTR_MAX_TEMP,
     },
-    WATER_HEATER_DOMAIN: {
+    water_heater.DOMAIN: {
         "min_temp": water_heater.ATTR_MIN_TEMP,
         "max_temp": water_heater.ATTR_MAX_TEMP,
     },
 }
 
 SERVICE_SET_TEMPERATURE = {
-    CLIMATE_DOMAIN: climate.SERVICE_SET_TEMPERATURE,
-    WATER_HEATER_DOMAIN: water_heater.SERVICE_SET_TEMPERATURE,
+    climate.DOMAIN: climate.SERVICE_SET_TEMPERATURE,
+    water_heater.DOMAIN: water_heater.SERVICE_SET_TEMPERATURE,
 }
 
 HANDLERS: Registry[
@@ -190,30 +176,30 @@ async def async_api_turn_on(
 ) -> AlexaResponse:
     """Process a turn on request."""
     entity = directive.entity
-    if (domain := entity.domain) == GROUP_DOMAIN:
+    if (domain := entity.domain) == group.DOMAIN:
         domain = ha.DOMAIN
 
     service = SERVICE_TURN_ON
-    if domain == COVER_DOMAIN:
+    if domain == cover.DOMAIN:
         service = cover.SERVICE_OPEN_COVER
-    elif domain == CLIMATE_DOMAIN:
+    elif domain == climate.DOMAIN:
         service = climate.SERVICE_TURN_ON
-    elif domain == FAN_DOMAIN:
+    elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_ON
-    elif domain == HUMIDIFIER_DOMAIN:
+    elif domain == humidifier.DOMAIN:
         service = humidifier.SERVICE_TURN_ON
-    elif domain == REMOTE_DOMAIN:
+    elif domain == remote.DOMAIN:
         service = remote.SERVICE_TURN_ON
-    elif domain == VACUUM_DOMAIN:
+    elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
             not supported & vacuum.VacuumEntityFeature.TURN_ON
             and supported & vacuum.VacuumEntityFeature.START
         ):
             service = vacuum.SERVICE_START
-    elif domain == TIMER_DOMAIN:
+    elif domain == timer.DOMAIN:
         service = timer.SERVICE_START
-    elif domain == MEDIA_PLAYER_DOMAIN:
+    elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = (
             media_player.MediaPlayerEntityFeature.TURN_ON
@@ -243,30 +229,30 @@ async def async_api_turn_off(
     """Process a turn off request."""
     entity = directive.entity
     domain = entity.domain
-    if entity.domain == GROUP_DOMAIN:
+    if entity.domain == group.DOMAIN:
         domain = ha.DOMAIN
 
     service = SERVICE_TURN_OFF
-    if entity.domain == COVER_DOMAIN:
+    if entity.domain == cover.DOMAIN:
         service = cover.SERVICE_CLOSE_COVER
-    elif domain == CLIMATE_DOMAIN:
+    elif domain == climate.DOMAIN:
         service = climate.SERVICE_TURN_OFF
-    elif domain == FAN_DOMAIN:
+    elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_OFF
-    elif domain == REMOTE_DOMAIN:
+    elif domain == remote.DOMAIN:
         service = remote.SERVICE_TURN_OFF
-    elif domain == HUMIDIFIER_DOMAIN:
+    elif domain == humidifier.DOMAIN:
         service = humidifier.SERVICE_TURN_OFF
-    elif domain == VACUUM_DOMAIN:
+    elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
             not supported & vacuum.VacuumEntityFeature.TURN_OFF
             and supported & vacuum.VacuumEntityFeature.RETURN_HOME
         ):
             service = vacuum.SERVICE_RETURN_TO_BASE
-    elif domain == TIMER_DOMAIN:
+    elif domain == timer.DOMAIN:
         service = timer.SERVICE_CANCEL
-    elif domain == MEDIA_PLAYER_DOMAIN:
+    elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = (
             media_player.MediaPlayerEntityFeature.TURN_ON
@@ -442,9 +428,9 @@ async def async_api_activate(
     domain = entity.domain
 
     service = SERVICE_TURN_ON
-    if domain == BUTTON_DOMAIN:
+    if domain == button.DOMAIN:
         service = button.SERVICE_PRESS
-    elif domain == INPUT_BUTTON_DOMAIN:
+    elif domain == input_button.DOMAIN:
         service = input_button.SERVICE_PRESS
 
     await hass.services.async_call(
@@ -781,7 +767,7 @@ async def async_api_stop(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if entity.domain == COVER_DOMAIN:
+    if entity.domain == cover.DOMAIN:
         supported: int = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         feature_services: dict[int, str] = {
             cover.CoverEntityFeature.STOP.value: cover.SERVICE_STOP_COVER,
@@ -1079,7 +1065,7 @@ async def async_api_set_thermostat_mode(
 
     response = directive.response()
     await hass.services.async_call(
-        CLIMATE_DOMAIN, service, data, blocking=False, context=context
+        climate.DOMAIN, service, data, blocking=False, context=context
     )
     response.add_context_property(
         {
@@ -1212,14 +1198,14 @@ async def async_api_set_mode(
     mode = directive.payload["mode"]
 
     # Fan Direction
-    if instance == f"{FAN_DOMAIN}.{fan.ATTR_DIRECTION}":
+    if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
         direction = mode.split(".")[1]
         if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = direction
 
     # Fan preset_mode
-    elif instance == f"{FAN_DOMAIN}.{fan.ATTR_PRESET_MODE}":
+    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
         preset_mode = mode.split(".")[1]
         preset_modes: list[str] | None = entity.attributes.get(fan.ATTR_PRESET_MODES)
         if (
@@ -1234,7 +1220,7 @@ async def async_api_set_mode(
             raise AlexaInvalidValueError(msg)
 
     # Humidifier mode
-    elif instance == f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_MODE}":
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
         mode = mode.split(".")[1]
         modes: list[str] | None = entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES)
         if mode != PRESET_MODE_NA and modes and mode in modes:
@@ -1245,7 +1231,7 @@ async def async_api_set_mode(
             raise AlexaInvalidValueError(msg)
 
     # Remote Activity
-    elif instance == f"{REMOTE_DOMAIN}.{remote.ATTR_ACTIVITY}":
+    elif instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
         activity = mode.split(".")[1]
         activities: list[str] | None = entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
         if activity != PRESET_MODE_NA and activities and activity in activities:
@@ -1256,7 +1242,7 @@ async def async_api_set_mode(
             raise AlexaInvalidValueError(msg)
 
     # Water heater operation mode
-    elif instance == f"{WATER_HEATER_DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
+    elif instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
         operation_mode = mode.split(".")[1]
         operation_modes: list[str] | None = entity.attributes.get(
             water_heater.ATTR_OPERATION_LIST
@@ -1276,7 +1262,7 @@ async def async_api_set_mode(
             raise AlexaInvalidValueError(msg)
 
     # Cover Position
-    elif instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
+    elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]
 
         if position == cover.CoverState.CLOSED:
@@ -1287,7 +1273,7 @@ async def async_api_set_mode(
             service = cover.SERVICE_STOP_COVER
 
     # Valve position state
-    elif instance == f"{VALVE_DOMAIN}.state":
+    elif instance == f"{valve.DOMAIN}.state":
         position = mode.split(".")[1]
 
         if position == valve.STATE_CLOSED:
@@ -1348,13 +1334,13 @@ async def async_api_toggle_on(
     data: dict[str, Any]
 
     # Fan Oscillating
-    if instance == f"{FAN_DOMAIN}.{fan.ATTR_OSCILLATING}":
+    if instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
         service = fan.SERVICE_OSCILLATE
         data = {
             ATTR_ENTITY_ID: entity.entity_id,
             fan.ATTR_OSCILLATING: True,
         }
-    elif instance == f"{VALVE_DOMAIN}.stop":
+    elif instance == f"{valve.DOMAIN}.stop":
         service = valve.SERVICE_STOP_VALVE
         data = {
             ATTR_ENTITY_ID: entity.entity_id,
@@ -1392,7 +1378,7 @@ async def async_api_toggle_off(
     domain = entity.domain
 
     # Fan Oscillating
-    if instance != f"{FAN_DOMAIN}.{fan.ATTR_OSCILLATING}":
+    if instance != f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
     service = fan.SERVICE_OSCILLATE
@@ -1435,7 +1421,7 @@ async def async_api_set_range(
     supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     # Cover Position
-    if instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
+    if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_value = int(range_value)
         if supported & cover.CoverEntityFeature.CLOSE and range_value == 0:
             service = cover.SERVICE_CLOSE_COVER
@@ -1446,7 +1432,7 @@ async def async_api_set_range(
             data[cover.ATTR_POSITION] = range_value
 
     # Cover Tilt
-    elif instance == f"{COVER_DOMAIN}.tilt":
+    elif instance == f"{cover.DOMAIN}.tilt":
         range_value = int(range_value)
         if supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 0:
             service = cover.SERVICE_CLOSE_COVER_TILT
@@ -1457,7 +1443,7 @@ async def async_api_set_range(
             data[cover.ATTR_TILT_POSITION] = range_value
 
     # Fan Speed
-    elif instance == f"{FAN_DOMAIN}.{fan.ATTR_PERCENTAGE}":
+    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
         range_value = int(range_value)
         if range_value == 0:
             service = fan.SERVICE_TURN_OFF
@@ -1468,13 +1454,13 @@ async def async_api_set_range(
             service = fan.SERVICE_TURN_ON
 
     # Humidifier target humidity
-    elif instance == f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
         range_value = int(range_value)
         service = humidifier.SERVICE_SET_HUMIDITY
         data[humidifier.ATTR_HUMIDITY] = range_value
 
     # Input Number Value
-    elif instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+    elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_value = float(range_value)
         service = input_number.SERVICE_SET_VALUE
         min_value = float(entity.attributes[input_number.ATTR_MIN])
@@ -1482,7 +1468,7 @@ async def async_api_set_range(
         data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
     # Input Number Value
-    elif instance == f"{NUMBER_DOMAIN}.{number.ATTR_VALUE}":
+    elif instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
         range_value = float(range_value)
         service = number.SERVICE_SET_VALUE
         min_value = float(entity.attributes[number.ATTR_MIN])
@@ -1490,7 +1476,7 @@ async def async_api_set_range(
         data[number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
     # Vacuum Fan Speed
-    elif instance == f"{VACUUM_DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+    elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
         service = vacuum.SERVICE_SET_FAN_SPEED
         speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
         speed = next(
@@ -1504,7 +1490,7 @@ async def async_api_set_range(
         data[vacuum.ATTR_FAN_SPEED] = speed
 
     # Valve Position
-    elif instance == f"{VALVE_DOMAIN}.{valve.ATTR_POSITION}":
+    elif instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":
         range_value = int(range_value)
         if supported & valve.ValveEntityFeature.CLOSE and range_value == 0:
             service = valve.SERVICE_CLOSE_VALVE
@@ -1552,7 +1538,7 @@ async def async_api_adjust_range(
     response_value: float | None = 0
 
     # Cover Position
-    if instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
+    if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
         if not (current := entity.attributes.get(cover.ATTR_CURRENT_POSITION)):
@@ -1567,7 +1553,7 @@ async def async_api_adjust_range(
             data[cover.ATTR_POSITION] = position
 
     # Cover Tilt
-    elif instance == f"{COVER_DOMAIN}.tilt":
+    elif instance == f"{cover.DOMAIN}.tilt":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_TILT_POSITION
         current = entity.attributes.get(cover.ATTR_TILT_POSITION)
@@ -1583,7 +1569,7 @@ async def async_api_adjust_range(
             data[cover.ATTR_TILT_POSITION] = tilt_position
 
     # Fan speed percentage
-    elif instance == f"{FAN_DOMAIN}.{fan.ATTR_PERCENTAGE}":
+    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
         percentage_step = entity.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 20
         range_delta = (
             int(range_delta * percentage_step)
@@ -1601,7 +1587,7 @@ async def async_api_adjust_range(
             service = fan.SERVICE_TURN_OFF
 
     # Humidifier target humidity
-    elif instance == f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
         percentage_step = 5
         range_delta = (
             int(range_delta * percentage_step)
@@ -1621,7 +1607,7 @@ async def async_api_adjust_range(
             data[humidifier.ATTR_HUMIDITY] = percentage
 
     # Input Number Value
-    elif instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+    elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_delta = float(range_delta)
         service = input_number.SERVICE_SET_VALUE
         min_value = float(entity.attributes[input_number.ATTR_MIN])
@@ -1632,7 +1618,7 @@ async def async_api_adjust_range(
         )
 
     # Number Value
-    elif instance == f"{NUMBER_DOMAIN}.{number.ATTR_VALUE}":
+    elif instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
         range_delta = float(range_delta)
         service = number.SERVICE_SET_VALUE
         min_value = float(entity.attributes[number.ATTR_MIN])
@@ -1643,7 +1629,7 @@ async def async_api_adjust_range(
         )
 
     # Vacuum Fan Speed
-    elif instance == f"{VACUUM_DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+    elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
         range_delta = int(range_delta)
         service = vacuum.SERVICE_SET_FAN_SPEED
         speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
@@ -1660,7 +1646,7 @@ async def async_api_adjust_range(
         data[vacuum.ATTR_FAN_SPEED] = response_value = speed
 
     # Valve Position
-    elif instance == f"{VALVE_DOMAIN}.{valve.ATTR_POSITION}":
+    elif instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = valve.SERVICE_SET_VALVE_POSITION
         if not (current := entity.attributes.get(valve.ATTR_POSITION)):
@@ -1815,7 +1801,7 @@ async def async_api_seek(
     }
 
     await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
+        media_player.DOMAIN,
         media_player.SERVICE_MEDIA_SEEK,
         data,
         blocking=False,
@@ -1891,10 +1877,10 @@ async def async_api_hold(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if entity.domain == TIMER_DOMAIN:
+    if entity.domain == timer.DOMAIN:
         service = timer.SERVICE_PAUSE
 
-    elif entity.domain == VACUUM_DOMAIN:
+    elif entity.domain == vacuum.DOMAIN:
         service = vacuum.SERVICE_START_PAUSE
 
     else:
@@ -1918,10 +1904,10 @@ async def async_api_resume(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if entity.domain == TIMER_DOMAIN:
+    if entity.domain == timer.DOMAIN:
         service = timer.SERVICE_START
 
-    elif entity.domain == VACUUM_DOMAIN:
+    elif entity.domain == vacuum.DOMAIN:
         service = vacuum.SERVICE_START_PAUSE
 
     else:

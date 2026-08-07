@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Coroutine, Generator
 import copy
+from datetime import datetime
 import socket
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
@@ -31,7 +32,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -93,7 +93,7 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
     mock_igd_device.device = mock_upnp_device
 
     mock_igd_device.async_get_traffic_and_status_data.return_value = IgdState(
-        timestamp=dt_util.naive_now(),
+        timestamp=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
         bytes_received=0,
         bytes_sent=0,
         packets_received=0,

@@ -68,10 +68,9 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.binary_entity_values.items()
         },
-        # None overrides names restored from storage, {} would keep them
         entity_names={
-            device_key_to_bluetooth_entity_key(device_key): None
-            for device_key in sensor_update.binary_entity_values
+            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
+            for device_key, sensor_values in sensor_update.binary_entity_values.items()
         },
     )
 

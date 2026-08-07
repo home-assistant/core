@@ -202,7 +202,6 @@ def _create_mocked_hole(
     incorrect_app_password: bool = False,
     wrong_host: bool = False,
     ftl_error: bool = False,
-    logout_error: bool = False,
 ) -> MagicMock:
     """Return a mocked Hole API object with side effects based on constructor args."""
 
@@ -251,9 +250,6 @@ def _create_mocked_hole(
             mocked_hole.data = FTL_ERROR
 
         mocked_hole.authenticate = AsyncMock(side_effect=authenticate_side_effect)
-        mocked_hole.logout = AsyncMock(
-            side_effect=HoleError("Logout failed") if logout_error else None
-        )
         mocked_hole.get_data = AsyncMock(side_effect=get_data_side_effect)
 
         if ftl_error:

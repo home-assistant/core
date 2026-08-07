@@ -121,11 +121,10 @@ class TelldusLiveEntity(Entity):
             config_entry = self.platform.config_entry
             if TYPE_CHECKING:
                 assert config_entry
-            # The hub is not registered when fetching the client list failed while
-            # device requests succeeded, so link only when the hub device exists.
-            hub_device = dr.async_get(self.hass).async_get_device_by_identifier(
-                (DOMAIN, client), config_entry.entry_id
+            # The hub is registered in async_new_client before entities are added.
+            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, client),
+                config_entry_id=config_entry.entry_id,
             )
-            if hub_device is not None:
-                device_info["via_device_id"] = hub_device.id
         return device_info

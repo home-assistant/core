@@ -1,7 +1,7 @@
 {
   "582dfbdace4d4aeb832923ce7d1ddda0": {
     "active_preset": "home",
-    "available_schedules": ["off", "Winter", "Test "],
+    "available_schedules": ["Winter", "Test ", "off"],
     "climate_mode": "auto",
     "control_state": "cooling",
     "dev_class": "thermostat",
