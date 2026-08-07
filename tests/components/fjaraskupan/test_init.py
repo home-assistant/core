@@ -55,8 +55,8 @@ async def test_setup(
     )
 
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address), config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.manufacturer == "Fjäråskupan"
@@ -95,8 +95,8 @@ async def test_setup_ignore_device(
     )
 
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address), config_entry.entry_id
     )
     assert device_entry is None
 
@@ -119,8 +119,8 @@ async def test_remove_device(
     inject_bluetooth_service_info(hass, MOCK_SERVICE_INFO_DISCOVERY)
 
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address), config_entry.entry_id
     )
     assert device_entry
 
