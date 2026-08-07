@@ -40,9 +40,10 @@
       },
       "confirm": {
         "title": "Confirm your stop",
-        "description": "**{name}{municipality}** (stop {number})\n\nUpcoming departures:\n{departures}",
+        "description": "**{name}{municipality}** (stop {number})\n\nUpcoming departures:\n{departures}\n\n{links}",
         "menu_options": {
           "create_entry": "Add this stop",
+          "pick": "Back to search results",
           "stop": "Search again"
         }
       },

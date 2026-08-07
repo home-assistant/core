@@ -74,6 +74,21 @@ def _stop_label(stop: Stop) -> str:
     return label
 
 
+def _stop_links(stop: Stop) -> str:
+    """Return markdown links that help verify a stop, for the confirm step."""
+    links = [
+        f"[View this stop on delijn.be](https://www.delijn.be/nl/haltes/{stop.number}/)"
+    ]
+    if stop.latitude is not None and stop.longitude is not None:
+        links.insert(
+            0,
+            "[Show location on a map]"
+            f"(https://www.openstreetmap.org/?mlat={stop.latitude}&mlon={stop.longitude}"
+            f"#map=19/{stop.latitude}/{stop.longitude})",
+        )
+    return "\n".join(links)
+
+
 class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for De Lijn."""
 
@@ -135,14 +150,18 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
         stop = self._pending_stop
         assert stop is not None
 
+        menu_options = (
+            ["create_entry"] + (["pick"] if self._search_results else []) + ["stop"]
+        )
         return self.async_show_menu(
             step_id="confirm",
-            menu_options=["create_entry", "stop"],
+            menu_options=menu_options,
             description_placeholders={
                 "name": stop.name,
                 "municipality": f", {stop.municipality}" if stop.municipality else "",
                 "number": stop.number,
                 "departures": await self._async_departure_preview(stop),
+                "links": _stop_links(stop),
             },
         )
 

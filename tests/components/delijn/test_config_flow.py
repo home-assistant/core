@@ -68,8 +68,15 @@ async def test_user_flow_stop_number(
     )
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "confirm"
+    assert result["menu_options"] == ["create_entry", "stop"]
     assert result["description_placeholders"]["departures"] == (
         "4 → Wondelgem (05:07)\n4 → Wondelgem (05:20)"
+    )
+    assert result["description_placeholders"]["links"] == (
+        "[Show location on a map]"
+        "(https://www.openstreetmap.org/?mlat=51.070365&mlon=3.700651"
+        "#map=19/51.070365/3.700651)\n"
+        "[View this stop on delijn.be](https://www.delijn.be/nl/haltes/200112/)"
     )
 
     result = await _select_menu_option(hass, result["flow_id"], "create_entry")
@@ -78,6 +85,29 @@ async def test_user_flow_stop_number(
     assert result["title"] == TITLE
     assert result["data"] == {CONF_API_KEY: API_KEY, CONF_STOP_NUMBER: STOP_NUMBER}
     assert result["result"].unique_id == STOP_NUMBER
+
+
+async def test_confirm_links_without_coordinates(
+    hass: HomeAssistant, mock_delijn_client: MagicMock
+) -> None:
+    """Test the confirm links placeholder omits the map link without coordinates."""
+    mock_delijn_client.get_stop.return_value = Stop(
+        entity_number="2", number=STOP_NUMBER, name="Brugsepoort (Begijnhoflaan)"
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP: STOP_NUMBER}
+    )
+
+    assert result["description_placeholders"]["links"] == (
+        "[View this stop on delijn.be](https://www.delijn.be/nl/haltes/200112/)"
+    )
 
 
 async def test_confirm_search_again(
@@ -94,11 +124,46 @@ async def test_confirm_search_again(
         result["flow_id"], {CONF_STOP: STOP_NUMBER}
     )
     assert result["type"] is FlowResultType.MENU
+    assert "pick" not in result["menu_options"]
 
     result = await _select_menu_option(hass, result["flow_id"], "stop")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "stop"
+
+
+async def test_confirm_back_to_pick(
+    hass: HomeAssistant, mock_delijn_client: MagicMock
+) -> None:
+    """Test the confirm step's back-to-results option re-renders the dropdown."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP: "Brugsepoort"}
+    )
+    assert result["step_id"] == "pick"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP: STOP_NUMBER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == ["create_entry", "pick", "stop"]
+
+    result = await _select_menu_option(hass, result["flow_id"], "pick")
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick"
+    select_selector = result["data_schema"].schema[CONF_STOP]
+    assert select_selector.config["options"] == [
+        SelectOptionDict(
+            value=STOP_NUMBER,
+            label="Brugsepoort (Begijnhoflaan), Gent (200112)",
+        )
+    ]
 
 
 async def test_confirm_no_upcoming_departures(
