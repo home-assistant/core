@@ -114,7 +114,7 @@ MEASUREMENT_SENSOR_TYPES: tuple[AirGradientMeasurementSensorEntityDescription, .
     AirGradientMeasurementSensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.rco2,
     ),
