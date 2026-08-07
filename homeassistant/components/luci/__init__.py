@@ -72,8 +72,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool
         if not coordinator.data.keys() - seen_macs:
             return
         seen_macs.update(coordinator.data)
-        entry.async_create_task(
-            hass, _async_check_legacy_known_devices(hass, entry, set(seen_macs))
+        # Background, so unload cancels an in-flight check instead of awaiting it
+        # and letting it recreate the issue we just deleted.
+        entry.async_create_background_task(
+            hass,
+            _async_check_legacy_known_devices(hass, entry, set(seen_macs)),
+            name=f"{DOMAIN} legacy known_devices check",
         )
 
     await _async_check_legacy_known_devices(hass, entry, seen_macs)

@@ -1,5 +1,6 @@
 """Tests for the luci integration."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -225,6 +226,56 @@ async def test_legacy_known_devices_issue_on_new_device(
         "path": "known_devices.yaml",
         "devices": "- `late_arrival`",
     }
+
+
+async def test_legacy_known_devices_issue_not_recreated_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_luci_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a check still running when the entry unloads cannot recreate the issue."""
+    legacy_devices = [
+        Device(hass, timedelta(0), True, "late_arrival", MOCK_DEVICE_3.mac),
+    ]
+    release_load = asyncio.Event()
+    calls = 0
+
+    async def _load_config(
+        path: str, hass: HomeAssistant, consider_home: timedelta
+    ) -> list[Device]:
+        nonlocal calls
+        calls += 1
+        # Let the check during setup finish, but leave the later one suspended.
+        if calls > 1:
+            await release_load.wait()
+        return legacy_devices
+
+    mock_luci_client.get_all_connected_devices.return_value = [MOCK_DEVICE_1]
+
+    with patch(
+        "homeassistant.components.luci.async_load_config", side_effect=_load_config
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Released while unloading, after the integration deleted its issue.
+        mock_config_entry.async_on_unload(release_load.set)
+
+        # A conflicting MAC starts a check that blocks before it can raise.
+        coordinator = mock_config_entry.runtime_data
+        coordinator.async_set_updated_data(
+            {MOCK_DEVICE_1.mac: MOCK_DEVICE_1, MOCK_DEVICE_3.mac: MOCK_DEVICE_3}
+        )
+
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, _issue_id(mock_config_entry.entry_id))
+        is None
+    )
 
 
 async def test_legacy_known_devices_issue_per_entry(
