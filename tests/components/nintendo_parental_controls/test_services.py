@@ -31,7 +31,9 @@ async def test_add_bonus_time(
 ) -> None:
     """Test add bonus time service."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "testdevid")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "testdevid"), mock_config_entry.entry_id
+    )
     assert device_entry
     await hass.services.async_call(
         DOMAIN,
@@ -151,7 +153,9 @@ async def test_update_pin_code(
 ) -> None:
     """Test update pin code service."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "testdevid")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "testdevid"), mock_config_entry.entry_id
+    )
     assert device_entry
     await hass.services.async_call(
         DOMAIN,
