@@ -41,6 +41,20 @@ def mock_stop() -> Stop:
 
 
 @pytest.fixture
+def mock_nearby_stop() -> Stop:
+    """Return a De Lijn stop fixture as returned by a nearby-stop search."""
+    return Stop(
+        entity_number="2",
+        number=STOP_NUMBER,
+        name="Brugsepoort (Begijnhoflaan)",
+        municipality=None,
+        latitude=51.070365,
+        longitude=3.700651,
+        distance=152,
+    )
+
+
+@pytest.fixture
 def mock_line() -> Line:
     """Return a De Lijn line fixture."""
     return Line(
@@ -87,7 +101,7 @@ def mock_passages(mock_line: Line) -> list[Passage]:
 
 @pytest.fixture
 def mock_delijn_client(
-    mock_stop: Stop, mock_passages: list[Passage]
+    mock_stop: Stop, mock_nearby_stop: Stop, mock_passages: list[Passage]
 ) -> Generator[MagicMock]:
     """Mock the pydelijn client wherever it is constructed."""
     with (
@@ -106,7 +120,7 @@ def mock_delijn_client(
         client = mock_client.return_value
         client.get_stop.return_value = mock_stop
         client.search_stops.return_value = [mock_stop]
-        client.get_stops_near.return_value = [mock_stop]
+        client.get_stops_near.return_value = [mock_nearby_stop]
         client.get_passages.return_value = mock_passages
         yield client
 

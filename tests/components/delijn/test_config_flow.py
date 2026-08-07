@@ -19,7 +19,7 @@ from homeassistant.components.delijn.const import (
     CONF_STOP_NUMBER,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -36,6 +36,15 @@ from tests.common import MockConfigEntry
 
 API_KEY = "test-api-key"
 TITLE = "Brugsepoort (Begijnhoflaan), Gent"
+
+
+async def _select_menu_option(
+    hass: HomeAssistant, flow_id: str, next_step_id: str
+) -> ConfigFlowResult:
+    """Choose a menu option on the current step of a flow."""
+    return await hass.config_entries.flow.async_configure(
+        flow_id, {"next_step_id": next_step_id}
+    )
 
 
 async def test_user_flow_stop_number(
@@ -57,11 +66,88 @@ async def test_user_flow_stop_number(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_STOP: STOP_NUMBER}
     )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"]["departures"] == (
+        "4 → Wondelgem (05:07)\n4 → Wondelgem (05:20)"
+    )
+
+    result = await _select_menu_option(hass, result["flow_id"], "create_entry")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {CONF_API_KEY: API_KEY, CONF_STOP_NUMBER: STOP_NUMBER}
     assert result["result"].unique_id == STOP_NUMBER
+
+
+async def test_confirm_search_again(
+    hass: HomeAssistant, mock_delijn_client: MagicMock
+) -> None:
+    """Test the confirm step's search-again option returns to the stop step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP: STOP_NUMBER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await _select_menu_option(hass, result["flow_id"], "stop")
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "stop"
+
+
+async def test_confirm_no_upcoming_departures(
+    hass: HomeAssistant, mock_delijn_client: MagicMock
+) -> None:
+    """Test the confirm step still allows confirming with no upcoming departures."""
+    mock_delijn_client.get_passages.return_value = []
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP: STOP_NUMBER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert (
+        result["description_placeholders"]["departures"]
+        == "No upcoming departures right now."
+    )
+
+    result = await _select_menu_option(hass, result["flow_id"], "create_entry")
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_confirm_departures_error(
+    hass: HomeAssistant, mock_delijn_client: MagicMock
+) -> None:
+    """Test the confirm step still allows confirming if the preview fails."""
+    mock_delijn_client.get_passages.side_effect = DeLijnConnectionError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP: STOP_NUMBER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["description_placeholders"]["departures"] == (
+        "Could not load departures."
+    )
+
+    result = await _select_menu_option(hass, result["flow_id"], "create_entry")
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_prefills_api_key(
@@ -119,6 +205,10 @@ async def test_user_flow_search(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_STOP: STOP_NUMBER}
     )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "confirm"
+
+    result = await _select_menu_option(hass, result["flow_id"], "create_entry")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -154,6 +244,9 @@ async def test_stop_title_and_label_without_municipality(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_STOP: STOP_NUMBER}
     )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await _select_menu_option(hass, result["flow_id"], "create_entry")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Brugsepoort (Begijnhoflaan)"
@@ -215,7 +308,8 @@ async def test_stop_number_lookup_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_STOP: STOP_NUMBER}
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "confirm"
 
 
 @pytest.mark.parametrize(
@@ -274,10 +368,20 @@ async def test_stop_step_nearby_home_location(
     mock_delijn_client.get_stops_near.assert_awaited_once_with(
         hass.config.latitude, hass.config.longitude, max_results=10
     )
+    select_selector = result["data_schema"].schema[CONF_STOP]
+    assert select_selector.config["options"] == [
+        SelectOptionDict(
+            value=STOP_NUMBER,
+            label="Brugsepoort (Begijnhoflaan) (200112) – 152 m",
+        )
+    ]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_STOP: STOP_NUMBER}
     )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await _select_menu_option(hass, result["flow_id"], "create_entry")
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -306,6 +410,9 @@ async def test_stop_step_nearby_chosen_location(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_STOP: STOP_NUMBER}
     )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await _select_menu_option(hass, result["flow_id"], "create_entry")
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -379,6 +486,9 @@ async def test_user_flow_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_STOP: STOP_NUMBER}
     )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await _select_menu_option(hass, result["flow_id"], "create_entry")
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -38,6 +38,14 @@
           "stop": "The stop to monitor."
         }
       },
+      "confirm": {
+        "title": "Confirm your stop",
+        "description": "**{name}{municipality}** (stop {number})\n\nUpcoming departures:\n{departures}",
+        "menu_options": {
+          "create_entry": "Add this stop",
+          "stop": "Search again"
+        }
+      },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

@@ -36,6 +36,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_NUMBER_OF_DEPARTURES,
@@ -49,6 +50,10 @@ from .coordinator import DeLijnConfigEntry
 
 CONF_STOP = "stop"
 MAX_SEARCH_RESULTS = 10
+PREVIEW_PASSAGES = 3
+
+_NO_DEPARTURES_TEXT = "No upcoming departures right now."
+_DEPARTURES_ERROR_TEXT = "Could not load departures."
 
 
 def _stop_title(stop: Stop) -> str:
@@ -61,8 +66,12 @@ def _stop_title(stop: Stop) -> str:
 def _stop_label(stop: Stop) -> str:
     """Return the select option label for a stop."""
     if stop.municipality:
-        return f"{stop.name}, {stop.municipality} ({stop.number})"
-    return f"{stop.name} ({stop.number})"
+        label = f"{stop.name}, {stop.municipality} ({stop.number})"
+    else:
+        label = f"{stop.name} ({stop.number})"
+    if stop.distance is not None:
+        label += f" – {stop.distance} m"
+    return label
 
 
 class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -74,6 +83,7 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._api_key = ""
         self._search_results: list[Stop] = []
+        self._pending_stop: Stop | None = None
 
     @staticmethod
     @callback
@@ -92,6 +102,57 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             title=_stop_title(stop),
             data={CONF_API_KEY: self._api_key, CONF_STOP_NUMBER: stop.number},
         )
+
+    async def _async_departure_preview(self, stop: Stop) -> str:
+        """Return a short preview of the next few departures for a stop."""
+        client = DeLijnClient(self._api_key, async_get_clientsession(self.hass))
+        try:
+            passages = await client.get_passages(
+                stop.number, max_passages=PREVIEW_PASSAGES
+            )
+        except DeLijnError:
+            LOGGER.exception("Unexpected error loading a De Lijn departure preview")
+            return _DEPARTURES_ERROR_TEXT
+
+        if not passages:
+            return _NO_DEPARTURES_TEXT
+
+        lines = []
+        for passage in passages:
+            line_number = passage.line.public_number or passage.line.number
+            due_at = (
+                dt_util.as_local(passage.due_at).strftime("%H:%M")
+                if passage.due_at
+                else "?"
+            )
+            lines.append(f"{line_number} → {passage.destination} ({due_at})")
+        return "\n".join(lines)
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show a departure preview so the user can confirm the right stop."""
+        stop = self._pending_stop
+        assert stop is not None
+
+        return self.async_show_menu(
+            step_id="confirm",
+            menu_options=["create_entry", "stop"],
+            description_placeholders={
+                "name": stop.name,
+                "municipality": f", {stop.municipality}" if stop.municipality else "",
+                "number": stop.number,
+                "departures": await self._async_departure_preview(stop),
+            },
+        )
+
+    async def async_step_create_entry(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create the config entry for the stop confirmed in the menu step."""
+        stop = self._pending_stop
+        assert stop is not None
+        return await self._async_finish(stop)
 
     @override
     async def async_step_user(
@@ -138,7 +199,8 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
                         LOGGER.exception("Unexpected error looking up De Lijn stop")
                         errors["base"] = "unknown"
                     else:
-                        return await self._async_finish(stop)
+                        self._pending_stop = stop
+                        return await self.async_step_confirm()
                 else:
                     try:
                         results = await client.search_stops(
@@ -205,7 +267,8 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
                 None,
             )
             if stop is not None:
-                return await self._async_finish(stop)
+                self._pending_stop = stop
+                return await self.async_step_confirm()
 
         options = [
             SelectOptionDict(value=stop.number, label=_stop_label(stop))
