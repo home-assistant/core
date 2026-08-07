@@ -311,12 +311,24 @@ async def test_unknown_trigger_platform_type(
     assert "Invalid trigger 'webostv.unknown' specified" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "build_legacy_option",
+    [
+        pytest.param(lambda device_id: {"entity_id": ENTITY_ID}, id="entity_id"),
+        pytest.param(lambda device_id: {"device_id": device_id}, id="device_id"),
+    ],
+)
 @pytest.mark.usefixtures("client")
 async def test_trigger_target_takes_precedence_over_legacy(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
+    build_legacy_option: Callable[[str], dict[str, Any]],
 ) -> None:
-    """Test the target wins over a legacy option selecting a different entity."""
+    """Test the target wins over a legacy option selecting another device."""
     await setup_webostv(hass)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
 
     platform = MockEntityPlatform(hass)
     other_entity = f"{DOMAIN}.other"
@@ -330,7 +342,7 @@ async def test_trigger_target_takes_precedence_over_legacy(
                 {
                     "trigger": {
                         "trigger": "webostv.turn_on",
-                        "entity_id": ENTITY_ID,
+                        **build_legacy_option(device.id),
                         "target": {"entity_id": other_entity},
                     },
                     "action": {

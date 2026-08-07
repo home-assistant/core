@@ -152,8 +152,8 @@ class TurnOnTrigger(Trigger):
         """Validate complete config, folding the legacy top-level fields into the target.
 
         A config edited in the UI can carry both the legacy top-level fields and a
-        target. The target wins, since it is what the user last selected, but a legacy
-        field is still used when the target selects nothing for that key.
+        target. The target is what the user last selected, so the legacy fields are
+        only used when the target selects nothing at all.
         """
         if legacy_keys := {ATTR_ENTITY_ID, ATTR_DEVICE_ID} & complete_config.keys():
             ir.async_create_issue(
@@ -167,10 +167,9 @@ class TurnOnTrigger(Trigger):
             )
             complete_config = complete_config.copy()
             target = dict(complete_config.get(CONF_TARGET) or {})
-            for key in legacy_keys:
-                legacy_value = complete_config.pop(key)
-                if not target.get(key):
-                    target[key] = legacy_value
+            legacy_target = {key: complete_config.pop(key) for key in legacy_keys}
+            if not TargetSelection(target).has_any_target:
+                target.update(legacy_target)
             complete_config[CONF_TARGET] = target
         return await super().async_validate_complete_config(hass, complete_config)
 
