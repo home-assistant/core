@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 from uiprotect.data import (
     NVR,
@@ -16,7 +16,12 @@ from uiprotect.data import (
     ProtectDeviceModel,
     Sensor,
 )
-from uiprotect.data.public_devices import SensorFeatureCapability
+from uiprotect.data.public_devices import (
+    PublicDeviceModel,
+    PublicLight,
+    SensorFeatureCapability,
+)
+from uiprotect.utils import convert_to_datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -52,7 +57,7 @@ from .entity import (
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
-from .utils import async_get_light_motion_current
+from .utils import async_get_light_motion_current_public
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -88,6 +93,11 @@ class ProtectSensorEventEntityDescription(
     ProtectEventMixin[T], SensorEntityDescription
 ):
     """Describes UniFi Protect Sensor entity."""
+
+
+def _get_last_motion_public(obj: PublicDeviceModel) -> datetime | None:
+    # Public API reports last motion as a JS epoch (ms); private side a datetime.
+    return convert_to_datetime(cast(PublicLight, obj).last_motion)
 
 
 def _get_uptime(obj: ProtectDeviceModel) -> datetime | None:
@@ -508,7 +518,7 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="motion_last_trip_time",
         translation_key="last_motion_detected",
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_value="last_motion",
+        ufp_public_value_fn=_get_last_motion_public,
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
@@ -516,14 +526,14 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         translation_key="motion_sensitivity",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="light_device_settings.pir_sensitivity",
+        ufp_public_value="light_device_settings.pir_sensitivity",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription[Light](
         key="light_motion",
         translation_key="light_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value_fn=async_get_light_motion_current,
+        ufp_public_value_fn=async_get_light_motion_current_public,
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(

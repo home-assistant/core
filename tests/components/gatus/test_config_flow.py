@@ -61,40 +61,6 @@ async def test_form_success_with_path(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_url(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_gatus_client: AsyncMock
-) -> None:
-    """Test handling of a malformed URL and subsequent recovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_URL: "gatus.example.com"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_url"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_URL: "http://gatus.example.com:abc"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_url"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_URL: "http://gatus.example.com:8080"},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 @pytest.mark.parametrize(
     ("side_effect", "error_key"),
     [
@@ -148,6 +114,103 @@ async def test_form_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_URL: "http://gatus.example.com:8080"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_gatus_client")
+async def test_flow_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://gatus.example2.com:8080/"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_URL: "http://gatus.example2.com:8080",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_key"),
+    [
+        (GatusClientError("Cannot connect"), "cannot_connect"),
+        (Exception("Unexpected backend explosion"), "unknown"),
+    ],
+)
+async def test_flow_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gatus_client: AsyncMock,
+    side_effect: Exception,
+    error_key: str,
+) -> None:
+    """Test reconfigure flow errors and recover."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_gatus_client.get_endpoints_statuses.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://gatus.example2.com:8080"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_key}
+
+    mock_gatus_client.get_endpoints_statuses.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://gatus.example2.com:8080"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_URL: "http://gatus.example2.com:8080",
+    }
+
+
+@pytest.mark.usefixtures("mock_gatus_client")
+async def test_flow_reconfigure_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow aborts if the new URL is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://gatus.example3.com:8080"},
+        entry_id="other_id",
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://gatus.example3.com:8080"},
     )
 
     assert result["type"] is FlowResultType.ABORT

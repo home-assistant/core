@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from tplink_omada_client.devices import OmadaDevice
+from tplink_omada_client.devices import OmadaDevice, OmadaSwitchPortDetails
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -27,3 +27,10 @@ class OmadaDeviceEntity[_T: OmadaCoordinator[Any]](CoordinatorEntity[_T]):
             model=device.model_display_name,
             name=device.name,
         )
+
+
+def get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
+    """Get display name for a switch port."""
+    if port.name == f"Port{port.port}":
+        return str(port.port)
+    return f"{port.port} ({port.name})"

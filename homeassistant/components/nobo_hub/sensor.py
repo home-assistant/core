@@ -35,6 +35,12 @@ async def async_setup_entry(
     @callback
     def _add_sensors(_hub: nobo) -> None:
         """Add temperature sensors for components added to the hub."""
+        if hub.connected:
+            # Forget components no longer on the hub so a removed-then-re-added
+            # component is detected as new again. Skip while disconnected: a
+            # stale/empty snapshot would drop live components and cause
+            # duplicate re-adds on reconnect.
+            known_components.intersection_update(hub.components)
         new_components = [
             serial
             for serial, component in hub.components.items()
@@ -42,7 +48,8 @@ async def async_setup_entry(
         ]
         known_components.update(new_components)
         async_add_entities(
-            NoboTemperatureSensor(serial, hub) for serial in new_components
+            NoboTemperatureSensor(hass, serial, hub, config_entry.entry_id)
+            for serial in new_components
         )
 
     _add_sensors(hub)
@@ -58,9 +65,11 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 1
 
-    def __init__(self, serial: str, hub: nobo) -> None:
+    def __init__(
+        self, hass: HomeAssistant, serial: str, hub: nobo, entry_id: str
+    ) -> None:
         """Initialize the temperature sensor."""
-        super().__init__(hub)
+        super().__init__(hass, hub, entry_id)
         self._temperature: StateType = None
         self._id = serial
         component = hub.components[self._id]
@@ -75,7 +84,7 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
             name=component[ATTR_NAME],
             manufacturer=NOBO_MANUFACTURER,
             model=component[ATTR_MODEL].name,
-            via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
+            via_device_id=self._hub_device_id,
             suggested_area=suggested_area,
         )
         self._read_state()

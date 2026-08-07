@@ -1524,7 +1524,7 @@ async def _resolve_integrations_dependencies(
     integrations: Iterable[Integration],
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
     ignore_exceptions: bool,
 ) -> dict[str, set[str]]:
     """Resolve all dependencies for integrations.
@@ -1567,7 +1567,7 @@ async def _resolve_integration_dependencies(
     itg: Integration,
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
     ignore_exceptions: bool = False,
 ) -> set[str]:
     """Recursively resolve all dependencies.

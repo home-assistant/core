@@ -23,6 +23,20 @@ from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClient, WebSocketGenerator
 
 
+def _get_device_for_config_entry(
+    device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+    *,
+    identifiers: set[tuple[str, str]] | None = None,
+    connections: set[tuple[str, str]] | None = None,
+) -> dr.DeviceEntry | None:
+    """Return the device for a config entry matching identifiers or connections."""
+    for device in device_registry.devices.get_entries(identifiers, connections):
+        if device.config_entry_id == config_entry_id:
+            return device
+    return None
+
+
 async def test_subscribing_config_topic(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
 ) -> None:
@@ -324,12 +338,21 @@ async def test_device_remove_multiple_config_entries_1(
     )
     await hass.async_block_till_done()
 
-    # Verify device entry is created
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    # Verify device entry is created. Identifiers and connections are unique per config
+    # entry, so Tasmota discovery creates a separate device sharing the connection
+    tasmota_device_entry = _get_device_for_config_entry(
+        device_registry,
+        tasmota_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
-    assert device_entry is not None
-    assert device_entry.config_entries == {tasmota_entry.entry_id, mock_entry.entry_id}
+    assert tasmota_device_entry is not None
+    assert tasmota_device_entry.config_entries == {tasmota_entry.entry_id}
+    mock_device_entry = _get_device_for_config_entry(
+        device_registry,
+        mock_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+    )
+    assert mock_device_entry is not None
 
     async_fire_mqtt_message(
         hass,
@@ -338,9 +361,19 @@ async def test_device_remove_multiple_config_entries_1(
     )
     await hass.async_block_till_done()
 
-    # Verify device entry is not removed
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    # Verify the Tasmota device is removed, but the other config entry's device is not
+    assert (
+        _get_device_for_config_entry(
+            device_registry,
+            tasmota_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        )
+        is None
+    )
+    device_entry = _get_device_for_config_entry(
+        device_registry,
+        mock_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
     assert device_entry is not None
     assert device_entry.config_entries == {mock_entry.entry_id}
@@ -378,21 +411,27 @@ async def test_device_remove_multiple_config_entries_2(
     )
     await hass.async_block_till_done()
 
-    # Verify device entry is created
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    # Verify device entry is created. Identifiers and connections are unique per config
+    # entry, so Tasmota discovery creates a separate device sharing the connection
+    device_entry = _get_device_for_config_entry(
+        device_registry,
+        tasmota_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
     assert device_entry is not None
-    assert device_entry.config_entries == {tasmota_entry.entry_id, mock_entry.entry_id}
+    assert device_entry.config_entries == {tasmota_entry.entry_id}
     assert other_device_entry.id != device_entry.id
 
-    # Remove other config entry from the device
-    device_registry.async_update_device(
-        device_entry.id, remove_config_entry_id=mock_entry.entry_id
+    # Remove the other (non-Tasmota) device sharing the connection
+    mock_device_entry = _get_device_for_config_entry(
+        device_registry,
+        mock_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
+    device_registry.async_remove_device(mock_device_entry.id)
     await hass.async_block_till_done()
 
-    # Verify device entry is not removed
+    # Verify the Tasmota device entry is not removed
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
@@ -400,11 +439,9 @@ async def test_device_remove_multiple_config_entries_2(
     assert device_entry.config_entries == {tasmota_entry.entry_id}
     mqtt_mock.async_publish.assert_not_called()
 
-    # Remove other config entry from the other device
+    # Remove the other (non-Tasmota) device
     # Tasmota should not do any cleanup
-    device_registry.async_update_device(
-        other_device_entry.id, remove_config_entry_id=mock_entry.entry_id
-    )
+    device_registry.async_remove_device(other_device_entry.id)
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_not_called()
 
