@@ -38,7 +38,7 @@ def mock_hub_mac() -> Generator[AsyncMock]:
 
     The config flow probes the hub for its MAC as the stable fallback id, so
     without this every flow test would open a real socket. Returning ``None``
-    keeps the host-based fallback tests exercise by default; the tests that care
+    exercises the host-based fallback by default; the tests that care
     about the MAC patch this target themselves.
     """
     with patch(
