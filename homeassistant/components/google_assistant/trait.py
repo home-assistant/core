@@ -29,6 +29,7 @@ from homeassistant.components import (
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityStateAttribute,
     AlarmControlPanelState,
 )
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -36,15 +37,24 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, CameraEntityFeature
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
 )
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverEntityFeature
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN, FanEntityFeature
+from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
+    FanEntityCapabilityAttribute,
+    FanEntityFeature,
+    FanEntityStateAttribute,
+)
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.humidifier import (
     DOMAIN as HUMIDIFIER_DOMAIN,
+    HumidifierEntityCapabilityAttribute,
     HumidifierEntityFeature,
+    HumidifierEntityStateAttribute,
 )
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
@@ -53,11 +63,18 @@ from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     LawnMowerEntityFeature,
 )
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightEntityFeature
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    LightEntityCapabilityAttribute,
+    LightEntityFeature,
+    LightEntityStateAttribute,
+)
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
     MediaType,
 )
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
@@ -69,16 +86,15 @@ from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntit
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveEntityFeature
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterCapabilityAttribute,
     WaterHeaterEntityFeature,
+    WaterHeaterStateAttribute,
 )
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
     ATTR_CODE,
-    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_MODE,
-    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     CAST_APP_ID_HOMEASSISTANT_MEDIA,
     SERVICE_ALARM_ARM_AWAY,
@@ -97,6 +113,7 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -352,7 +369,9 @@ class BrightnessTrait(_Trait):
     def supported(domain, features, device_class, attributes):
         """Test if state is supported."""
         if domain == LIGHT_DOMAIN:
-            color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+            color_modes = attributes.get(
+                LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
+            )
             return light.brightness_supported(color_modes)
 
         return False
@@ -369,7 +388,7 @@ class BrightnessTrait(_Trait):
         response = {}
 
         if domain == LIGHT_DOMAIN:
-            brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS)
+            brightness = self.state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
             if brightness is not None:
                 response["brightness"] = round(100 * (brightness / 255))
 
@@ -535,7 +554,7 @@ class OnOffTrait(_Trait):
     @override
     def sync_attributes(self) -> dict[str, Any]:
         """Return OnOff attributes for a sync request."""
-        if self.state.attributes.get(ATTR_ASSUMED_STATE, False):
+        if self.state.attributes.get(EntityStateAttribute.ASSUMED_STATE, False):
             return {"commandOnlyOnOff": True}
         return {}
 
@@ -581,7 +600,9 @@ class ColorSettingTrait(_Trait):
         if domain != LIGHT_DOMAIN:
             return False
 
-        color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+        color_modes = attributes.get(
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
+        )
         return light.color_temp_supported(color_modes) or light.color_supported(
             color_modes
         )
@@ -590,7 +611,7 @@ class ColorSettingTrait(_Trait):
     def sync_attributes(self) -> dict[str, Any]:
         """Return color temperature attributes for a sync request."""
         attrs = self.state.attributes
-        color_modes = attrs.get(light.ATTR_SUPPORTED_COLOR_MODES)
+        color_modes = attrs.get(LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES)
         response: dict[str, Any] = {}
 
         if light.color_supported(color_modes):
@@ -598,8 +619,12 @@ class ColorSettingTrait(_Trait):
 
         if light.color_temp_supported(color_modes):
             response["colorTemperatureRange"] = {
-                "temperatureMaxK": int(attrs.get(light.ATTR_MAX_COLOR_TEMP_KELVIN)),
-                "temperatureMinK": int(attrs.get(light.ATTR_MIN_COLOR_TEMP_KELVIN)),
+                "temperatureMaxK": int(
+                    attrs.get(LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN)
+                ),
+                "temperatureMinK": int(
+                    attrs.get(LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN)
+                ),
             }
 
         return response
@@ -607,13 +632,15 @@ class ColorSettingTrait(_Trait):
     @override
     def query_attributes(self) -> dict[str, Any]:
         """Return color temperature query attributes."""
-        color_mode = self.state.attributes.get(light.ATTR_COLOR_MODE)
+        color_mode = self.state.attributes.get(LightEntityStateAttribute.COLOR_MODE)
 
         color: dict[str, Any] = {}
 
         if light.color_supported([color_mode]):
-            color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
-            brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS, 1)
+            color_hs = self.state.attributes.get(LightEntityStateAttribute.HS_COLOR)
+            brightness = self.state.attributes.get(
+                LightEntityStateAttribute.BRIGHTNESS, 1
+            )
             if color_hs is not None:
                 color["spectrumHsv"] = {
                     "hue": color_hs[0],
@@ -622,7 +649,9 @@ class ColorSettingTrait(_Trait):
                 }
 
         if light.color_temp_supported([color_mode]):
-            temp = self.state.attributes.get(light.ATTR_COLOR_TEMP_KELVIN)
+            temp = self.state.attributes.get(
+                LightEntityStateAttribute.COLOR_TEMP_KELVIN
+            )
             # Some faulty integrations might put 0 in here, raising exception.
             if temp == 0:
                 _LOGGER.warning(
@@ -645,8 +674,12 @@ class ColorSettingTrait(_Trait):
         """Execute a color temperature command."""
         if "temperature" in params["color"]:
             temp = params["color"]["temperature"]
-            max_temp = self.state.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN]
-            min_temp = self.state.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN]
+            max_temp = self.state.attributes[
+                LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN
+            ]
+            min_temp = self.state.attributes[
+                LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN
+            ]
 
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
@@ -938,11 +971,15 @@ class StartStopTrait(_Trait):
         domain = self.state.domain
         if domain == VACUUM_DOMAIN:
             sync_attributes = {
-                "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                "pausable": self.state.attributes.get(
+                    EntityStateAttribute.SUPPORTED_FEATURES, 0
+                )
                 & VacuumEntityFeature.PAUSE
                 != 0
             }
-            features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            features = self.state.attributes.get(
+                EntityStateAttribute.SUPPORTED_FEATURES, 0
+            )
             if features & VacuumEntityFeature.CLEAN_AREA:
                 available_zones = []
                 entity_registry = er.async_get(self.hass)
@@ -962,7 +999,9 @@ class StartStopTrait(_Trait):
             return sync_attributes
         if domain == LAWN_MOWER_DOMAIN:
             return {
-                "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                "pausable": self.state.attributes.get(
+                    EntityStateAttribute.SUPPORTED_FEATURES, 0
+                )
                 & LawnMowerEntityFeature.PAUSE
                 != 0
             }
@@ -991,10 +1030,12 @@ class StartStopTrait(_Trait):
         if domain in COVER_VALVE_DOMAINS:
             assumed_state_or_set_position = bool(
                 (
-                    self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                    self.state.attributes.get(
+                        EntityStateAttribute.SUPPORTED_FEATURES, 0
+                    )
                     & COVER_VALVE_SET_POSITION_FEATURE[domain]
                 )
-                or self.state.attributes.get(ATTR_ASSUMED_STATE)
+                or self.state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
             )
 
             return {
@@ -1102,10 +1143,12 @@ class StartStopTrait(_Trait):
         if command == COMMAND_START_STOP:
             assumed_state_or_set_position = bool(
                 (
-                    self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                    self.state.attributes.get(
+                        EntityStateAttribute.SUPPORTED_FEATURES, 0
+                    )
                     & COVER_VALVE_SET_POSITION_FEATURE[domain]
                 )
-                or self.state.attributes.get(ATTR_ASSUMED_STATE)
+                or self.state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
             )
 
             if params["start"] is False:
@@ -1191,7 +1234,7 @@ class TemperatureControlTrait(_Trait):
         if domain == WATER_HEATER_DOMAIN:
             min_temp = round(
                 TemperatureConverter.convert(
-                    float(attrs[water_heater.ATTR_MIN_TEMP]),
+                    float(attrs[WaterHeaterCapabilityAttribute.MIN_TEMP]),
                     unit,
                     UnitOfTemperature.CELSIUS,
                 ),
@@ -1199,7 +1242,7 @@ class TemperatureControlTrait(_Trait):
             )
             max_temp = round(
                 TemperatureConverter.convert(
-                    float(attrs[water_heater.ATTR_MAX_TEMP]),
+                    float(attrs[WaterHeaterCapabilityAttribute.MAX_TEMP]),
                     unit,
                     UnitOfTemperature.CELSIUS,
                 ),
@@ -1225,8 +1268,10 @@ class TemperatureControlTrait(_Trait):
         domain = self.state.domain
         unit = self.hass.config.units.temperature_unit
         if domain == WATER_HEATER_DOMAIN:
-            target_temp = self.state.attributes[water_heater.ATTR_TEMPERATURE]
-            current_temp = self.state.attributes[water_heater.ATTR_CURRENT_TEMPERATURE]
+            target_temp = self.state.attributes[WaterHeaterStateAttribute.TEMPERATURE]
+            current_temp = self.state.attributes[
+                WaterHeaterStateAttribute.CURRENT_TEMPERATURE
+            ]
             if target_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 response["temperatureSetpointCelsius"] = round(
                     TemperatureConverter.convert(
@@ -1269,8 +1314,8 @@ class TemperatureControlTrait(_Trait):
         unit = self.hass.config.units.temperature_unit
 
         if domain == WATER_HEATER_DOMAIN and command == COMMAND_SET_TEMPERATURE:
-            min_temp = self.state.attributes[water_heater.ATTR_MIN_TEMP]
-            max_temp = self.state.attributes[water_heater.ATTR_MAX_TEMP]
+            min_temp = self.state.attributes[WaterHeaterCapabilityAttribute.MIN_TEMP]
+            max_temp = self.state.attributes[WaterHeaterCapabilityAttribute.MAX_TEMP]
             temp = TemperatureConverter.convert(
                 params["temperature"], UnitOfTemperature.CELSIUS, unit
             )
@@ -1346,12 +1391,12 @@ class TemperatureSettingTrait(_Trait):
         modes = []
         attrs = self.state.attributes
 
-        for mode in attrs.get(climate.ATTR_HVAC_MODES) or []:
+        for mode in attrs.get(ClimateEntityCapabilityAttribute.HVAC_MODES) or []:
             google_mode = self.hvac_to_google.get(mode)
             if google_mode and google_mode not in modes:
                 modes.append(google_mode)
 
-        for preset in attrs.get(climate.ATTR_PRESET_MODES) or []:
+        for preset in attrs.get(ClimateEntityCapabilityAttribute.PRESET_MODES) or []:
             google_mode = self.preset_to_google.get(preset)
             if google_mode and google_mode not in modes:
                 modes.append(google_mode)
@@ -1368,7 +1413,7 @@ class TemperatureSettingTrait(_Trait):
 
         min_temp = round(
             TemperatureConverter.convert(
-                float(attrs[climate.ATTR_MIN_TEMP]),
+                float(attrs[ClimateEntityCapabilityAttribute.MIN_TEMP]),
                 unit,
                 UnitOfTemperature.CELSIUS,
             ),
@@ -1376,7 +1421,7 @@ class TemperatureSettingTrait(_Trait):
         )
         max_temp = round(
             TemperatureConverter.convert(
-                float(attrs[climate.ATTR_MAX_TEMP]),
+                float(attrs[ClimateEntityCapabilityAttribute.MAX_TEMP]),
                 unit,
                 UnitOfTemperature.CELSIUS,
             ),
@@ -1412,8 +1457,8 @@ class TemperatureSettingTrait(_Trait):
         unit = self.hass.config.units.temperature_unit
 
         operation = self.state.state
-        preset = attrs.get(climate.ATTR_PRESET_MODE)
-        supported = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
+        preset = attrs.get(ClimateEntityStateAttribute.PRESET_MODE)
+        supported = attrs.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if preset in self.preset_to_google:
             response["thermostatMode"] = self.preset_to_google[preset]
@@ -1421,11 +1466,13 @@ class TemperatureSettingTrait(_Trait):
             response["thermostatMode"] = self.hvac_to_google.get(operation, "none")
 
         if (
-            action := self.action_to_google.get(attrs.get(climate.ATTR_HVAC_ACTION))
+            action := self.action_to_google.get(
+                attrs.get(ClimateEntityStateAttribute.HVAC_ACTION)
+            )
         ) is not None:
             response["activeThermostatMode"] = action
 
-        current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
+        current_temp = attrs.get(ClimateEntityStateAttribute.CURRENT_TEMPERATURE)
         if current_temp is not None:
             response["thermostatTemperatureAmbient"] = round(
                 TemperatureConverter.convert(
@@ -1434,7 +1481,7 @@ class TemperatureSettingTrait(_Trait):
                 1,
             )
 
-        current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
+        current_humidity = attrs.get(ClimateEntityStateAttribute.CURRENT_HUMIDITY)
         if current_humidity is not None:
             response["thermostatHumidityAmbient"] = current_humidity
 
@@ -1442,7 +1489,7 @@ class TemperatureSettingTrait(_Trait):
             if supported & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
                 response["thermostatTemperatureSetpointHigh"] = round(
                     TemperatureConverter.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_HIGH],
+                        attrs[ClimateEntityStateAttribute.TARGET_TEMP_HIGH],
                         unit,
                         UnitOfTemperature.CELSIUS,
                     ),
@@ -1450,13 +1497,15 @@ class TemperatureSettingTrait(_Trait):
                 )
                 response["thermostatTemperatureSetpointLow"] = round(
                     TemperatureConverter.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_LOW],
+                        attrs[ClimateEntityStateAttribute.TARGET_TEMP_LOW],
                         unit,
                         UnitOfTemperature.CELSIUS,
                     ),
                     1,
                 )
-            elif (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
+            elif (
+                target_temp := attrs.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE)
+            ) is not None:
                 target_temp = round(
                     TemperatureConverter.convert(
                         target_temp, unit, UnitOfTemperature.CELSIUS
@@ -1465,7 +1514,9 @@ class TemperatureSettingTrait(_Trait):
                 )
                 response["thermostatTemperatureSetpointHigh"] = target_temp
                 response["thermostatTemperatureSetpointLow"] = target_temp
-        elif (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
+        elif (
+            target_temp := attrs.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE)
+        ) is not None:
             response["thermostatTemperatureSetpoint"] = round(
                 TemperatureConverter.convert(
                     target_temp, unit, UnitOfTemperature.CELSIUS
@@ -1480,8 +1531,8 @@ class TemperatureSettingTrait(_Trait):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
         unit = self.hass.config.units.temperature_unit
-        min_temp = self.state.attributes[climate.ATTR_MIN_TEMP]
-        max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
+        min_temp = self.state.attributes[ClimateEntityCapabilityAttribute.MIN_TEMP]
+        max_temp = self.state.attributes[ClimateEntityCapabilityAttribute.MAX_TEMP]
 
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
             temp = TemperatureConverter.convert(
@@ -1539,7 +1590,9 @@ class TemperatureSettingTrait(_Trait):
                     ),
                 )
 
-            supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+            supported = self.state.attributes.get(
+                EntityStateAttribute.SUPPORTED_FEATURES
+            )
             svc_data = {ATTR_ENTITY_ID: self.state.entity_id}
 
             if supported & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
@@ -1558,7 +1611,9 @@ class TemperatureSettingTrait(_Trait):
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:
             target_mode = params["thermostatMode"]
-            supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+            supported = self.state.attributes.get(
+                EntityStateAttribute.SUPPORTED_FEATURES
+            )
 
             if target_mode == "on":
                 await self.hass.services.async_call(
@@ -1635,17 +1690,25 @@ class HumiditySettingTrait(_Trait):
         domain = self.state.domain
 
         if domain == SENSOR_DOMAIN:
-            device_class = attrs.get(ATTR_DEVICE_CLASS)
+            device_class = attrs.get(EntityStateAttribute.DEVICE_CLASS)
             if device_class == sensor.SensorDeviceClass.HUMIDITY:
                 response["queryOnlyHumiditySetting"] = True
 
         elif domain == HUMIDIFIER_DOMAIN:
             response["humiditySetpointRange"] = {
                 "minPercent": round(
-                    float(self.state.attributes[humidifier.ATTR_MIN_HUMIDITY])
+                    float(
+                        self.state.attributes[
+                            HumidifierEntityCapabilityAttribute.MIN_HUMIDITY
+                        ]
+                    )
                 ),
                 "maxPercent": round(
-                    float(self.state.attributes[humidifier.ATTR_MAX_HUMIDITY])
+                    float(
+                        self.state.attributes[
+                            HumidifierEntityCapabilityAttribute.MAX_HUMIDITY
+                        ]
+                    )
                 ),
             }
 
@@ -1659,17 +1722,21 @@ class HumiditySettingTrait(_Trait):
         domain = self.state.domain
 
         if domain == SENSOR_DOMAIN:
-            device_class = attrs.get(ATTR_DEVICE_CLASS)
+            device_class = attrs.get(EntityStateAttribute.DEVICE_CLASS)
             if device_class == sensor.SensorDeviceClass.HUMIDITY:
                 humidity_state = self.state.state
                 if humidity_state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["humidityAmbientPercent"] = round(float(humidity_state))
 
         elif domain == HUMIDIFIER_DOMAIN:
-            target_humidity: int | None = attrs.get(humidifier.ATTR_HUMIDITY)
+            target_humidity: int | None = attrs.get(
+                HumidifierEntityStateAttribute.HUMIDITY
+            )
             if target_humidity is not None:
                 response["humiditySetpointPercent"] = target_humidity
-            current_humidity: int | None = attrs.get(humidifier.ATTR_CURRENT_HUMIDITY)
+            current_humidity: int | None = attrs.get(
+                HumidifierEntityStateAttribute.CURRENT_HUMIDITY
+            )
             if current_humidity is not None:
                 response["humidityAmbientPercent"] = current_humidity
 
@@ -1793,7 +1860,7 @@ class ArmDisArmTrait(_Trait):
 
     def _supported_states(self):
         """Return supported states."""
-        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = self.state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         return [
             state
             for state, required_feature in self.state_to_support.items()
@@ -1855,7 +1922,9 @@ class ArmDisArmTrait(_Trait):
 
             if self.state.state == arm_level:
                 raise SmartHomeError(ERR_ALREADY_ARMED, "System is already armed")
-            if self.state.attributes["code_arm_required"]:
+            if self.state.attributes[
+                AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED
+            ]:
                 _verify_pin_challenge(data, self.state, challenge)
             service = self.state_to_service[arm_level]
         # disarm the system without asking for code when
@@ -1913,7 +1982,11 @@ class FanSpeedTrait(_Trait):
         super().__init__(hass, state, config)
         if state.domain == FAN_DOMAIN:
             speed_count = round(
-                100 / (self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0)
+                100
+                / (
+                    self.state.attributes.get(FanEntityStateAttribute.PERCENTAGE_STEP)
+                    or 1.0
+                )
             )
             if speed_count <= FAN_SPEED_MAX_SPEED_COUNT:
                 self._ordered_speed = [
@@ -1941,7 +2014,7 @@ class FanSpeedTrait(_Trait):
 
         if domain == FAN_DOMAIN:
             reversible = bool(
-                self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                self.state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
                 & FanEntityFeature.DIRECTION
             )
 
@@ -1969,7 +2042,10 @@ class FanSpeedTrait(_Trait):
                 )
 
         elif domain == CLIMATE_DOMAIN:
-            modes = self.state.attributes.get(climate.ATTR_FAN_MODES) or []
+            modes = (
+                self.state.attributes.get(ClimateEntityCapabilityAttribute.FAN_MODES)
+                or []
+            )
             for mode in modes:
                 speed = {
                     "speed_name": mode,
@@ -1994,11 +2070,11 @@ class FanSpeedTrait(_Trait):
         domain = self.state.domain
         response = {}
         if domain == CLIMATE_DOMAIN:
-            speed = attrs.get(climate.ATTR_FAN_MODE) or "off"
+            speed = attrs.get(ClimateEntityStateAttribute.FAN_MODE) or "off"
             response["currentFanSpeedSetting"] = speed
 
         if domain == FAN_DOMAIN:
-            percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
+            percent = attrs.get(FanEntityStateAttribute.PERCENTAGE) or 0
             if self._ordered_speed:
                 response["currentFanSpeedSetting"] = percentage_to_ordered_list_item(
                     self._ordered_speed, percent
@@ -2045,7 +2121,10 @@ class FanSpeedTrait(_Trait):
     async def execute_reverse(self, data, params):
         """Execute a Reverse command."""
         if self.state.domain == FAN_DOMAIN:
-            if self.state.attributes.get(fan.ATTR_DIRECTION) == fan.DIRECTION_FORWARD:
+            if (
+                self.state.attributes.get(FanEntityStateAttribute.DIRECTION)
+                == fan.DIRECTION_FORWARD
+            ):
                 direction = fan.DIRECTION_REVERSE
             else:
                 direction = fan.DIRECTION_FORWARD
@@ -2170,23 +2249,27 @@ class ModesTrait(_Trait):
         mode_settings = {}
 
         if self.state.domain == FAN_DOMAIN:
-            if fan.ATTR_PRESET_MODES in attrs:
-                mode_settings["preset mode"] = attrs.get(fan.ATTR_PRESET_MODE)
+            if FanEntityCapabilityAttribute.PRESET_MODES in attrs:
+                mode_settings["preset mode"] = attrs.get(
+                    FanEntityStateAttribute.PRESET_MODE
+                )
         elif self.state.domain == MEDIA_PLAYER_DOMAIN:
-            if media_player.ATTR_SOUND_MODE_LIST in attrs:
-                mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
+            if MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST in attrs:
+                mode_settings["sound mode"] = attrs.get(
+                    MediaPlayerEntityStateAttribute.SOUND_MODE
+                )
         elif self.state.domain in (INPUT_SELECT_DOMAIN, SELECT_DOMAIN):
             mode_settings["option"] = self.state.state
         elif self.state.domain == HUMIDIFIER_DOMAIN:
-            if ATTR_MODE in attrs:
-                mode_settings["mode"] = attrs.get(ATTR_MODE)
+            if HumidifierEntityStateAttribute.MODE in attrs:
+                mode_settings["mode"] = attrs.get(HumidifierEntityStateAttribute.MODE)
         elif self.state.domain == WATER_HEATER_DOMAIN:
-            if water_heater.ATTR_OPERATION_MODE in attrs:
+            if WaterHeaterStateAttribute.OPERATION_MODE in attrs:
                 mode_settings["operation mode"] = attrs.get(
-                    water_heater.ATTR_OPERATION_MODE
+                    WaterHeaterStateAttribute.OPERATION_MODE
                 )
         elif self.state.domain == LIGHT_DOMAIN and (
-            effect := attrs.get(light.ATTR_EFFECT)
+            effect := attrs.get(LightEntityStateAttribute.EFFECT)
         ):
             mode_settings["effect"] = effect
 
@@ -2333,7 +2416,9 @@ class InputSelectorTrait(_Trait):
     def sync_attributes(self) -> dict[str, Any]:
         """Return mode attributes for a sync request."""
         attrs = self.state.attributes
-        sourcelist: list[str] = attrs.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
+        sourcelist: list[str] = (
+            attrs.get(MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST) or []
+        )
         inputs = [
             {"key": source, "names": [{"name_synonym": [source], "lang": "en"}]}
             for source in sourcelist
@@ -2345,13 +2430,20 @@ class InputSelectorTrait(_Trait):
     def query_attributes(self) -> dict[str, Any]:
         """Return current modes."""
         attrs = self.state.attributes
-        return {"currentInput": attrs.get(media_player.ATTR_INPUT_SOURCE, "")}
+        return {
+            "currentInput": attrs.get(MediaPlayerEntityStateAttribute.INPUT_SOURCE, "")
+        }
 
     @override
     async def execute(self, command, data, params, challenge):
         """Execute an SetInputSource command."""
-        sources = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
-        source = self.state.attributes.get(media_player.ATTR_INPUT_SOURCE)
+        sources = (
+            self.state.attributes.get(
+                MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST
+            )
+            or []
+        )
+        source = self.state.attributes.get(MediaPlayerEntityStateAttribute.INPUT_SOURCE)
 
         if command == COMMAND_SET_INPUT:
             requested_source = params.get("newInput")
@@ -2419,7 +2511,7 @@ class OpenCloseTrait(_Trait):
     def sync_attributes(self) -> dict[str, Any]:
         """Return opening direction."""
         response = {}
-        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = self.state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if self.state.domain == BINARY_SENSOR_DOMAIN:
             response["queryOnlyOpenClose"] = True
@@ -2447,7 +2539,7 @@ class OpenCloseTrait(_Trait):
             ):
                 response["queryOnlyOpenClose"] = True
 
-        if self.state.attributes.get(ATTR_ASSUMED_STATE):
+        if self.state.attributes.get(EntityStateAttribute.ASSUMED_STATE):
             response["commandOnlyOpenClose"] = True
 
         return response
@@ -2462,7 +2554,7 @@ class OpenCloseTrait(_Trait):
         # This shouldn't happen because we set `commandOnlyOpenClose`
         # but Google still queries. Erroring here will cause device
         # to show up offline.
-        if self.state.attributes.get(ATTR_ASSUMED_STATE):
+        if self.state.attributes.get(EntityStateAttribute.ASSUMED_STATE):
             return response
 
         if domain in COVER_VALVE_DOMAINS:
@@ -2492,7 +2584,7 @@ class OpenCloseTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an Open, close, Set position command."""
         domain = self.state.domain
-        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = self.state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if domain in COVER_VALVE_DOMAINS:
             svc_params = {ATTR_ENTITY_ID: self.state.entity_id}
@@ -2528,7 +2620,7 @@ class OpenCloseTrait(_Trait):
 
             if (
                 should_verify
-                and self.state.attributes.get(ATTR_DEVICE_CLASS)
+                and self.state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
                 in OpenCloseTrait.COVER_2FA
             ):
                 _verify_pin_challenge(data, self.state, challenge)
@@ -2567,12 +2659,14 @@ class VolumeTrait(_Trait):
     @override
     def sync_attributes(self) -> dict[str, Any]:
         """Return volume attributes for a sync request."""
-        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = self.state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         return {
             "volumeCanMuteAndUnmute": bool(
                 features & MediaPlayerEntityFeature.VOLUME_MUTE
             ),
-            "commandOnlyVolume": self.state.attributes.get(ATTR_ASSUMED_STATE, False),
+            "commandOnlyVolume": self.state.attributes.get(
+                EntityStateAttribute.ASSUMED_STATE, False
+            ),
             # Volume amounts in SET_VOLUME and VOLUME_RELATIVE are on a scale
             # from 0 to this value.
             "volumeMaxLevel": 100,
@@ -2587,12 +2681,16 @@ class VolumeTrait(_Trait):
         """Return volume query attributes."""
         response = {}
 
-        level = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
+        level = self.state.attributes.get(
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
+        )
         if level is not None:
             # Convert 0.0-1.0 to 0-100
             response["currentVolume"] = round(level * 100)
 
-        muted = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_MUTED)
+        muted = self.state.attributes.get(
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED
+        )
         if muted is not None:
             response["isMuted"] = bool(muted)
 
@@ -2614,7 +2712,7 @@ class VolumeTrait(_Trait):
         level = max(0, min(100, params["volumeLevel"]))
 
         if not (
-            self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            self.state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
             & MediaPlayerEntityFeature.VOLUME_SET
         ):
             raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
@@ -2623,10 +2721,12 @@ class VolumeTrait(_Trait):
 
     async def _execute_volume_relative(self, data, params):
         relative = params["relativeSteps"]
-        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = self.state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if features & MediaPlayerEntityFeature.VOLUME_SET:
-            current = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
+            current = self.state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
+            )
             target = max(0.0, min(1.0, current + relative / 100))
 
             await self._set_volume_absolute(data, target)
@@ -2652,7 +2752,7 @@ class VolumeTrait(_Trait):
         mute = params["mute"]
 
         if not (
-            self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            self.state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
             & MediaPlayerEntityFeature.VOLUME_MUTE
         ):
             raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
@@ -2754,7 +2854,9 @@ class TransportControlTrait(_Trait):
         response = {}
 
         if self.state.domain == MEDIA_PLAYER_DOMAIN:
-            features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            features = self.state.attributes.get(
+                EntityStateAttribute.SUPPORTED_FEATURES, 0
+            )
 
             support = []
             for command, feature in MEDIA_COMMAND_SUPPORT_MAPPING.items():
@@ -2782,12 +2884,14 @@ class TransportControlTrait(_Trait):
             if self.state.state == STATE_PLAYING:
                 now = dt_util.utcnow()
                 upd_at = self.state.attributes.get(
-                    media_player.ATTR_MEDIA_POSITION_UPDATED_AT, now
+                    MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT, now
                 )
                 seconds_since = (now - upd_at).total_seconds()
-            position = self.state.attributes.get(media_player.ATTR_MEDIA_POSITION, 0)
+            position = self.state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_POSITION, 0
+            )
             max_position = self.state.attributes.get(
-                media_player.ATTR_MEDIA_DURATION, 0
+                MediaPlayerEntityStateAttribute.MEDIA_DURATION, 0
             )
             service_attrs[media_player.ATTR_MEDIA_SEEK_POSITION] = min(
                 max(position + seconds_since + rel_position, 0), max_position
@@ -2796,7 +2900,7 @@ class TransportControlTrait(_Trait):
             service = media_player.SERVICE_MEDIA_SEEK
 
             max_position = self.state.attributes.get(
-                media_player.ATTR_MEDIA_DURATION, 0
+                MediaPlayerEntityStateAttribute.MEDIA_DURATION, 0
             )
             service_attrs[media_player.ATTR_MEDIA_SEEK_POSITION] = min(
                 max(params["absPositionMs"] / 1000, 0), max_position
@@ -2813,7 +2917,7 @@ class TransportControlTrait(_Trait):
             service = media_player.SERVICE_SHUFFLE_SET
 
             # Google Assistant only supports enabling shuffle
-            service_attrs[media_player.ATTR_MEDIA_SHUFFLE] = True
+            service_attrs[MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE] = True
         elif command == COMMAND_MEDIA_STOP:
             service = media_player.SERVICE_MEDIA_STOP
         else:
@@ -3008,7 +3112,7 @@ class SensorStateTrait(_Trait):
     @override
     def sync_attributes(self) -> dict[str, Any]:
         """Return attributes for a sync request."""
-        device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = self.state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
 
         def create_sensor_state(
             name: str,
@@ -3052,7 +3156,7 @@ class SensorStateTrait(_Trait):
     @override
     def query_attributes(self) -> dict[str, Any]:
         """Return the attributes of this trait for this entity."""
-        device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = self.state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
 
         def create_sensor_state(
             name: str, raw_value: float | None = None, current_state: str | None = None
