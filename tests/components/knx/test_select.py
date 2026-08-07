@@ -1,5 +1,6 @@
 """Test KNX select."""
 
+import logging
 from typing import Any
 
 import pytest
@@ -24,7 +25,9 @@ from tests.common import mock_restore_cache
 from tests.typing import WebSocketGenerator
 
 
-async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
+async def test_select_dpt_2_simple(
+    hass: HomeAssistant, knx: KNXTestKit, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test simple KNX select."""
     _options = [
         {CONF_PAYLOAD: 0b00, SelectConf.OPTION: "No control"},
@@ -78,9 +81,17 @@ async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit) -> None
     assert state.state == "Control - On"
 
     # update from KNX with undefined value
-    await knx.receive_write(test_address, 0b01)
+    with caplog.at_level(logging.DEBUG):
+        await knx.receive_write(test_address, 0b01)
     state = hass.states.get("select.test")
     assert state.state is STATE_UNKNOWN
+    # the unconfigured payload and its telegram are logged for diagnosis
+    assert any(
+        "No option configured for payload 1 of select.test" in message
+        and test_address in message
+        for record in caplog.records
+        if (message := record.getMessage())
+    )
 
     # select invalid option
     with pytest.raises(ServiceValidationError):

@@ -1,5 +1,6 @@
 """Support for KNX select entities."""
 
+import logging
 from typing import override
 
 from xknx.devices import RawValue
@@ -43,6 +44,8 @@ from .entity import (
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY
 from .storage.util import ConfigExtractor
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -149,6 +152,13 @@ class _KNXSelect(SelectEntity, RestoreEntity):
                 key for key, value in self._option_payloads.items() if value == payload
             )
         except StopIteration:
+            if payload is not None:
+                _LOGGER.debug(
+                    "No option configured for payload %s of %s: %s",
+                    payload,
+                    self.entity_id,
+                    self._device.remote_value.telegram,
+                )
             return None
 
     @override
