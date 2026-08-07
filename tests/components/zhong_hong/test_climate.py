@@ -1,7 +1,9 @@
 """Test the zhong_hong climate platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.climate import (
@@ -26,8 +28,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from tests.common import async_fire_time_changed
+
 ENTITY_ID = "climate.zhong_hong_hvac_1_1"
 HOST = "1.2.3.4"
+# Spelled out instead of importing SCAN_INTERVAL, so that changing the poll
+# interval in the platform makes these tests fail instead of following along.
+POLL_INTERVAL = timedelta(seconds=60)
 
 
 class FakeGateway:
@@ -37,6 +44,8 @@ class FakeGateway:
         """Initialize the fake gateway."""
         self.connected = True
         self.send_result = True
+        self.send_results: list[bool] = []
+        self.send_calls = 0
         self.query_status_calls = 0
 
     @property
@@ -69,7 +78,14 @@ class FakeGateway:
         return self.send_result
 
     def send(self, ac_data) -> bool:
-        """Send a command to the gateway."""
+        """Send a command to the gateway.
+
+        Results queued in ``send_results`` are returned in order, so a test can
+        let one command succeed and the next one fail.
+        """
+        self.send_calls += 1
+        if self.send_results:
+            return self.send_results.pop(0)
         return self.send_result
 
 
@@ -120,29 +136,29 @@ async def test_unavailable_when_gateway_disconnected(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_update_queries_gateway_when_connected(
-    hass: HomeAssistant, gateway: FakeGateway
+async def test_scheduled_poll_queries_gateway_when_connected(
+    hass: HomeAssistant, gateway: FakeGateway, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test update polls the gateway when the connection is healthy."""
+    """Test the scheduled poll queries the gateway when the connection is healthy."""
     await _setup_climate(hass, gateway)
 
-    entity = hass.data[CLIMATE_DOMAIN].get_entity(ENTITY_ID)
-    assert entity is not None
-    await entity.async_device_update()
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert gateway.query_status_calls == 1
 
 
-async def test_update_skips_gateway_when_disconnected(
-    hass: HomeAssistant, gateway: FakeGateway
+async def test_scheduled_poll_skips_gateway_when_disconnected(
+    hass: HomeAssistant, gateway: FakeGateway, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test update does not poll the gateway when the connection is unhealthy."""
+    """Test the scheduled poll skips the gateway when the connection is unhealthy."""
     gateway.connected = False
     await _setup_climate(hass, gateway)
 
-    entity = hass.data[CLIMATE_DOMAIN].get_entity(ENTITY_ID)
-    assert entity is not None
-    await entity.async_device_update()
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert gateway.query_status_calls == 0
 
@@ -220,14 +236,10 @@ async def test_set_hvac_mode_send_failure_raises(
     hass: HomeAssistant, gateway: FakeGateway
 ) -> None:
     """Test set_hvac_mode raises when the command cannot be sent."""
-    gateway.send_result = False
+    # The device is off, so set_hvac_mode turns it on first. Let that command
+    # succeed and fail only the mode command that follows it.
+    gateway.send_results = [True, False]
     await _setup_climate(hass, gateway)
-
-    # The device must already be on, otherwise turn_on() fails first
-    # and the mode command is never attempted.
-    entity = hass.data[CLIMATE_DOMAIN].get_entity(ENTITY_ID)
-    assert entity is not None
-    entity._device.switch_status = "ON"
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -259,12 +271,15 @@ async def test_set_fan_mode_unsupported_logs_error(
     """Test set_fan_mode with an unsupported mode logs an error and sends nothing."""
     await _setup_climate(hass, gateway)
 
+    # The service call is not usable here: climate rejects a fan mode outside
+    # fan_modes before it ever reaches the entity, so the guard under test can
+    # only be exercised by calling the entity method directly.
     entity = hass.data[CLIMATE_DOMAIN].get_entity(ENTITY_ID)
     assert entity is not None
     await entity.async_set_fan_mode("unknown")
 
     assert "Unsupported fan mode: unknown" in caplog.text
-    assert "failed to send" not in caplog.text
+    assert gateway.send_calls == 0
 
 
 async def test_set_fan_mode_send_failure_raises(
