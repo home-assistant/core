@@ -2,20 +2,17 @@
 
 These drive the real HA config-entry lifecycle (setup, unload, retry, reauth)
 with the API client mocked at the class level, so no network calls are made.
-The four cases below are the ones the HA quality scale cares about for Silver:
-a clean load/unload, an auth failure that triggers reauth, a transient failure
-that schedules a retry, and a correct device-registry entry.
 """
 
 from typing import TYPE_CHECKING
 
 import pytest
-
-from homeassistant.components.solyx_energy.api import (
+from solyx_energy_api.exceptions import (
     SolyxEnergyAuthError,
     SolyxEnergyDataError,
     SolyxEnergyTokenError,
 )
+
 from homeassistant.components.solyx_energy.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 

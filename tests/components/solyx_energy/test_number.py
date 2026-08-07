@@ -3,9 +3,9 @@
 from typing import TYPE_CHECKING
 
 import pytest
+from solyx_energy_api.exceptions import SolyxEnergyWriteError
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.components.solyx_energy.api import SolyxEnergyWriteError
 from homeassistant.components.solyx_energy.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError

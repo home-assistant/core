@@ -8,12 +8,12 @@ mocked at the class level, so no network calls are made.
 from typing import TYPE_CHECKING
 
 import pytest
-
-from homeassistant.components.solyx_energy.api import (
+from solyx_energy_api.exceptions import (
     SolyxEnergyAuthError,
     SolyxEnergyDataError,
     SolyxEnergyTokenError,
 )
+
 from homeassistant.components.solyx_energy.const import (
     CONF_NYMO_CLIENT_ID,
     CONF_NYMO_CLIENT_SECRET,
@@ -67,7 +67,10 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     ],
 )
 async def test_user_flow_errors(
-    hass: HomeAssistant, mock_api_client_class, side_effect, error_key
+    hass: HomeAssistant,
+    mock_api_client_class,
+    side_effect,
+    error_key,
 ) -> None:
     """A failed connection test returns to the form with the right error (see pytest parameters)."""
     mock_api_client_class.async_test_connection.side_effect = side_effect
@@ -84,7 +87,8 @@ async def test_user_flow_errors(
 
 @pytest.mark.usefixtures("mock_api_client_class")
 async def test_user_flow_already_configured(
-    hass: HomeAssistant, mock_config_entry
+    hass: HomeAssistant,
+    mock_config_entry,
 ) -> None:
     """Setting up the same device twice aborts with 'already_configured'."""
     mock_config_entry.add_to_hass(hass)

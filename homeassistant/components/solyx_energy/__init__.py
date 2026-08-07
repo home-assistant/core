@@ -2,12 +2,19 @@
 
 from typing import TYPE_CHECKING
 
+from solyx_energy_api.client import SolyxEnergyApiClient
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import SolyxEnergyApiClient
-from .const import CONF_NYMO_CLIENT_ID, CONF_NYMO_CLIENT_SECRET, CONF_NYMO_DEVICE_ID
+from .const import (
+    BASE_URL,
+    CONF_NYMO_CLIENT_ID,
+    CONF_NYMO_CLIENT_SECRET,
+    CONF_NYMO_DEVICE_ID,
+    REALM_ID,
+)
 from .coordinator import SolyxEnergyCoordinator
 
 if TYPE_CHECKING:
@@ -25,6 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolyxEnergyConfigEntry) 
         session=session,
         nymo_client_id=entry.data[CONF_NYMO_CLIENT_ID],
         nymo_client_secret=entry.data[CONF_NYMO_CLIENT_SECRET],
+        base_url=BASE_URL,
+        realm_id=REALM_ID,
     )
     coordinator = SolyxEnergyCoordinator(
         hass=hass,

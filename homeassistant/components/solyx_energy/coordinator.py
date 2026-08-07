@@ -5,17 +5,17 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from .api import (
-    SolyxEnergyApiClient,
+from solyx_energy_api.exceptions import (
     SolyxEnergyAuthError,
     SolyxEnergyDataError,
     SolyxEnergyTokenError,
     SolyxEnergyWriteError,
 )
+
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
 from .const import (
     ATTRIBUTE_CONTROL_VALUE,
     ATTRIBUTE_ENERGY_BOILER,
@@ -29,6 +29,8 @@ from .const import (
 from .util import parse_attr_value, parse_float
 
 if TYPE_CHECKING:
+    from solyx_energy_api.client import SolyxEnergyApiClient
+
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 

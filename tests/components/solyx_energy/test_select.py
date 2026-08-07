@@ -3,12 +3,12 @@
 from typing import TYPE_CHECKING
 
 import pytest
+from solyx_energy_api.exceptions import SolyxEnergyWriteError
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.solyx_energy.api import SolyxEnergyWriteError
 from homeassistant.components.solyx_energy.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
 from homeassistant.exceptions import HomeAssistantError
