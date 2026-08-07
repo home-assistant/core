@@ -474,7 +474,7 @@ aiowatttime==0.1.1
 aiowebdav2==0.6.2
 
 # homeassistant.components.webostv
-aiowebostv==0.9.0
+aiowebostv==0.9.1
 
 # homeassistant.components.withings
 aiowithings==3.1.6
@@ -669,7 +669,7 @@ bleak-smlight==1.1.0
 bleak==3.0.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.5
+blebox-uniapi==2.5.6
 
 # homeassistant.components.blink
 blinkpy==0.25.9
@@ -1365,7 +1365,7 @@ imgw_pib==2.5.1
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.8.6
+indevolt-api==1.8.7
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -2264,7 +2264,7 @@ pyialarm==2.2.0
 pyicloud==2.6.5
 
 # homeassistant.components.imou
-pyimouapi==1.3.0
+pyimouapi==1.3.4
 
 # homeassistant.components.insteon
 pyinsteon==1.6.4
@@ -3479,7 +3479,7 @@ zha-quirks==2.2.0
 zha==2.1.0
 
 # homeassistant.components.zhong_hong
-zhong-hong-hvac==1.0.13
+zhong-hong-hvac==1.0.16
 
 # homeassistant.components.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.1.0

@@ -304,42 +304,43 @@ async def test_container_stack_device_links(
     """Test that stack-linked containers are nested under the correct stack device."""
     await setup_integration(hass, mock_config_entry)
 
-    endpoint_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1")}
+    endpoint_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1"), mock_config_entry.entry_id
     )
     assert endpoint_device is not None
 
-    dashy_stack_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_stack_2")}
+    dashy_stack_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_2"), mock_config_entry.entry_id
     )
     assert dashy_stack_device is not None
     assert dashy_stack_device.via_device_id == endpoint_device.id
 
-    webstack_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_stack_1")}
+    webstack_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_1"), mock_config_entry.entry_id
     )
     assert webstack_device is not None
     assert webstack_device.via_device_id == endpoint_device.id
 
-    swarm_container_device = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                f"{mock_config_entry.entry_id}_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05",
-            )
-        }
+    swarm_container_device = device_registry.async_get_device_by_identifier(
+        (
+            DOMAIN,
+            f"{mock_config_entry.entry_id}_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05",
+        ),
+        mock_config_entry.entry_id,
     )
     assert swarm_container_device is not None
     assert swarm_container_device.via_device_id == dashy_stack_device.id
 
-    compose_container_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_serene_banach")}
+    compose_container_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_serene_banach"),
+        mock_config_entry.entry_id,
     )
     assert compose_container_device is not None
     assert compose_container_device.via_device_id == webstack_device.id
 
-    standalone_container_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_focused_einstein")}
+    standalone_container_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_focused_einstein"),
+        mock_config_entry.entry_id,
     )
 
     assert standalone_container_device is not None

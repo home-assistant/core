@@ -250,9 +250,7 @@ async def test_remove_config_entry_device(
     )
     result = await async_remove_config_entry_device(hass, config_entry, stale_device)
     assert result is True
-    device_registry.async_update_device(
-        stale_device.id, remove_config_entry_id=config_entry.entry_id
-    )
+    device_registry.async_remove_device(stale_device.id)
 
     stale_device_after = device_registry.async_get(stale_device.id)
     assert (
