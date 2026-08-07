@@ -1094,6 +1094,13 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         TuyaSensorEntityDescription(
+            key=DPCode.PERCENT_STATE,
+            translation_key="valve_opening_state",
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
             key=DPCode.WATER_ONCE,
             translation_key="water_once",
             device_class=SensorDeviceClass.WATER,
