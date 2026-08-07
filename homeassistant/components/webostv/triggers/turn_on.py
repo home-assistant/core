@@ -160,7 +160,7 @@ class TurnOnTrigger(Trigger):
                 DOMAIN,
                 DEPRECATED_TARGET_ISSUE_ID,
                 breaks_in_ha_version="2027.3",
-                is_fixable=False,
+                is_fixable=True,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key=DEPRECATED_TARGET_ISSUE_ID,
             )
