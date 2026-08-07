@@ -233,7 +233,7 @@
   },
   "issues": {
     "deprecated_inline_keyboard": {
-      "description": "The action `{action}` called from `{action_origin}` is using a deprecated format for one or more `inline_keyboard` buttons.\n\nThe comma/colon-separated string format cannot represent text or callback data containing `,`, `:` or `/`, and neither it nor the `[text, data]` list format can set button styles. Both will be removed in Home Assistant 2026.12.\n\nPlease update `{action_origin}` to the mapping format, for example:\n\n```yaml\ninline_keyboard:\n  - - text: \"Button 1\"\n      callback_data: \"/command1\"\n      style: \"primary\"\n```",
+      "description": "The action `{action}` called from `{action_origin}` is using a deprecated format for one or more `inline_keyboard` buttons.\n\nThe comma-separated string format cannot represent button text containing `,` or `:`, or callback data containing `,`, and it treats callback data containing a URL as a link button. The `[text, data]` list format handles those correctly, but neither format can set button styles. Both will be removed in Home Assistant 2026.12.\n\nPlease update `{action_origin}` to the mapping format, for example:\n\n```yaml\ninline_keyboard:\n  - - text: \"Button 1\"\n      callback_data: \"/command1\"\n      style: \"primary\"\n```",
       "title": "Deprecated inline_keyboard format"
     },
     "deprecated_timeout_parameter": {
