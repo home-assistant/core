@@ -131,6 +131,10 @@ def test_diag_check_flagged_descriptions() -> None:
         CPU_TEMPERATURE_DESCRIPTION,
         STATUS_DESCRIPTION,
         POWER_TEMP_DESCRIPTION,
+        # Host health of the machine the hub runs on, from the same query as
+        # the CPU readings -- not building-automation measurements.
+        MEMORY_DESCRIPTION,
+        DISK_DESCRIPTION,
     ],
 )
 def test_static_diagnostic_descriptions(
@@ -139,18 +143,6 @@ def test_static_diagnostic_descriptions(
     """Statically-diagnostic descriptions are hidden by default."""
     assert description.entity_category is EntityCategory.DIAGNOSTIC
     assert description.entity_registry_enabled_default is False
-
-
-@pytest.mark.parametrize(
-    "description",
-    [MEMORY_DESCRIPTION, DISK_DESCRIPTION],
-)
-def test_hub_memory_descriptions_are_user_visible(
-    description: HbtnSensorEntityDescription,
-) -> None:
-    """Memory/Disk usage are ordinary, enabled hub sensors."""
-    assert description.entity_category is None
-    assert description.entity_registry_enabled_default is True
 
 
 @pytest.mark.parametrize(

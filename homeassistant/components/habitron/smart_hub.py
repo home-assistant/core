@@ -98,7 +98,6 @@ class SmartHub:
 
     async def async_setup(self) -> None:
         """Connect, register the hub device and build the bus model."""
-        # 1. Open the client connection and fetch hub info (mac/version/host).
         await self.comm.async_setup()
         await self.comm.get_smhub_info()
 
@@ -130,7 +129,6 @@ class SmartHub:
             self.base_url = f"http://{self.host}:7780"
         conf_url = f"{self.base_url}/hub" if self.host else None
 
-        # 2. Register the hub device.
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config.entry_id,
@@ -154,7 +152,6 @@ class SmartHub:
             sw_version=self._version,
         )
 
-        # 3. Hub diagnostics (depends on the platform type).
         if self._type.startswith("Raspberry Pi"):
             self.diags = [
                 Diagnostic(name="CPU Frequency", nmbr=0, type=10),
@@ -170,7 +167,6 @@ class SmartHub:
                 Sensor(name="Logging level file", nmbr=1, type=2, value=0),
             ]
 
-        # 4. Build the bus model (router + modules), register their devices.
         # ``reinit_hub(0)`` stops the hub's event server for the duration of the
         # setup; ``reinit_hub(1)`` must always restore it, even when building the
         # model or registering devices raises, or the hub would stay stopped

@@ -219,7 +219,10 @@ class HbtnComm:
             # ``lan mac`` alone is the identity -- it exists whichever interface
             # currently carries the traffic, so it does not flip on a LAN/WLAN
             # switch. The full list is only used for device connections.
-            self._mac = info["hardware"]["network"]["lan mac"]
+            # Null when the hub has no LAN interface configured; the empty
+            # string is the "no identity" case the uid derivation expects,
+            # whereas ``None`` would fail on ``.replace()``.
+            self._mac = info["hardware"]["network"]["lan mac"] or ""
             self._macs = hub_mac_addresses(info)
             software = cast("dict[str, Any]", info["software"])
             # The SmartHub reports its own ingress slug only when it runs as the

@@ -48,7 +48,10 @@ async def _async_hub_mac(host: str) -> str | None:
     try:
         async with HabitronClient(host) as client:
             info = await client.get_smhub_info()
-        mac = str(info["hardware"]["network"]["lan mac"])
+        # A hub without a configured LAN interface reports the key as null, and
+        # ``str(None)`` would normalise to the literal "none" -- an id every
+        # such hub would share. Treat it as absent, like a missing key.
+        mac = str(info["hardware"]["network"]["lan mac"] or "")
     except (HabitronError, OSError, KeyError, TypeError) as err:
         _LOGGER.debug("Could not read the MAC from the hub at %s: %s", host, err)
         return None

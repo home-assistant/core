@@ -336,6 +336,31 @@ async def test_setup_adopts_the_hub_identity(
     assert mock_config_entry.unique_id == expected
 
 
+async def test_setup_does_not_adopt_an_id_another_entry_owns(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A hub configured twice keeps the two entries apart.
+
+    Home Assistant reindexes onto an id already in use and only logs the
+    collision, so rewriting here would leave two entries sharing one unique id
+    -- and tell the user to file a bug report about it.
+    """
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id="habitron_192.168.1.50"
+    )
+    MockConfigEntry(domain=DOMAIN, title="Other", unique_id=MOCK_UID).add_to_hass(hass)
+
+    smhub = MagicMock()
+    smhub.uid = MOCK_UID
+    smhub.has_mac_uid = True
+
+    _async_adopt_hub_identity(hass, mock_config_entry, smhub)
+
+    assert mock_config_entry.unique_id == "habitron_192.168.1.50"
+
+
 async def test_setup_adopts_before_the_update_listener_exists(
     hass: HomeAssistant,
     setup_homeassistant: None,
