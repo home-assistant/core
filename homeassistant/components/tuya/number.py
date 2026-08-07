@@ -88,6 +88,23 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
             translation_key="voice_times",
         ),
     ),
+    DeviceCategory.CZ: (
+        # Two-channel current transformer meters warn above these thresholds
+        NumberEntityDescription(
+            key=DPCode.WARN_POWER1,
+            translation_key="indexed_power_warning_threshold",
+            translation_placeholders={"index": "1"},
+            device_class=NumberDeviceClass.POWER,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.WARN_POWER2,
+            translation_key="indexed_power_warning_threshold",
+            translation_placeholders={"index": "2"},
+            device_class=NumberDeviceClass.POWER,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.DGNBJ: (
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,

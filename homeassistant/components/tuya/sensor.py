@@ -1673,8 +1673,111 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     ),
 }
 
-# Socket (duplicate of `kg`)
-SENSORS[DeviceCategory.CZ] = SENSORS[DeviceCategory.KG]
+# Two-channel current transformer meters report a full set of electricity DPs
+# per channel, plus a combined energy total for both channels.
+DUAL_CHANNEL_METER_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
+    TuyaSensorEntityDescription(
+        key=DPCode.DEVICE_STATE1,
+        translation_key="indexed_meter_status",
+        translation_placeholders={"index": "1"},
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.DEVICE_STATE2,
+        translation_key="indexed_meter_status",
+        translation_placeholders={"index": "2"},
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.CUR_CURRENT1,
+        translation_key="indexed_current",
+        translation_placeholders={"index": "1"},
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.CUR_CURRENT2,
+        translation_key="indexed_current",
+        translation_placeholders={"index": "2"},
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.CUR_POWER1,
+        translation_key="indexed_power",
+        translation_placeholders={"index": "1"},
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.CUR_POWER2,
+        translation_key="indexed_power",
+        translation_placeholders={"index": "2"},
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.CUR_VOLTAGE1,
+        translation_key="indexed_voltage",
+        translation_placeholders={"index": "1"},
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.CUR_VOLTAGE2,
+        translation_key="indexed_voltage",
+        translation_placeholders={"index": "2"},
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.TOTAL_ENERGY1,
+        translation_key="indexed_total_energy",
+        translation_placeholders={"index": "1"},
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.TOTAL_ENERGY2,
+        translation_key="indexed_total_energy",
+        translation_placeholders={"index": "2"},
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.TODAY_ACC_ENERGY1,
+        translation_key="indexed_energy_today",
+        translation_placeholders={"index": "1"},
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.TODAY_ACC_ENERGY2,
+        translation_key="indexed_energy_today",
+        translation_placeholders={"index": "2"},
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    TuyaSensorEntityDescription(
+        key=DPCode.ALL_ENERGY,
+        translation_key="total_energy",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+)
+
+# Socket (duplicate of `kg`, plus the two-channel meter DPs)
+SENSORS[DeviceCategory.CZ] = (
+    *SENSORS[DeviceCategory.KG],
+    *DUAL_CHANNEL_METER_SENSORS,
+)
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
