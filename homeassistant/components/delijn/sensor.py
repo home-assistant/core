@@ -69,18 +69,19 @@ async def async_setup_platform(
                 CONF_NUMBER_OF_DEPARTURES: departure[CONF_NUMBER_OF_DEPARTURES],
             },
         )
+        reason = result.get("reason")
         if (
             result.get("type") is FlowResultType.ABORT
-            and result.get("reason") != "already_configured"
+            and reason != "already_configured"
         ):
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                f"deprecated_yaml_import_issue_{stop_id}_{result.get('reason')}",
+                f"deprecated_yaml_import_issue_{stop_id}_{reason}",
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,
-                translation_key="deprecated_yaml_import_issue",
+                translation_key=f"deprecated_yaml_import_issue_{reason}",
                 translation_placeholders={
                     "domain": DOMAIN,
                     "integration_title": "De Lijn",

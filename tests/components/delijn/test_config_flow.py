@@ -20,7 +20,12 @@ from homeassistant.components.delijn.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import SelectOptionDict
@@ -57,6 +62,34 @@ async def test_user_flow_stop_number(
     assert result["title"] == TITLE
     assert result["data"] == {CONF_API_KEY: API_KEY, CONF_STOP_NUMBER: STOP_NUMBER}
     assert result["result"].unique_id == STOP_NUMBER
+
+
+async def test_user_flow_prefills_api_key(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the API key is prefilled from an existing config entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    api_key_key = next(iter(result["data_schema"].schema))
+    assert api_key_key.description["suggested_value"] == API_KEY
+
+
+async def test_user_flow_no_prefill_without_existing_entry(
+    hass: HomeAssistant, mock_delijn_client: MagicMock
+) -> None:
+    """Test the API key field has no suggested value without an existing entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    api_key_key = next(iter(result["data_schema"].schema))
+    assert api_key_key.description is None
 
 
 async def test_user_flow_search(
@@ -219,6 +252,112 @@ async def test_search_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_STOP: "Brugsepoort"}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick"
+
+
+async def test_stop_step_nearby_home_location(
+    hass: HomeAssistant, mock_delijn_client: MagicMock
+) -> None:
+    """Test leaving the stop step empty suggests stops near the HA location."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick"
+    mock_delijn_client.get_stops_near.assert_awaited_once_with(
+        hass.config.latitude, hass.config.longitude, max_results=10
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP: STOP_NUMBER}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_stop_step_nearby_chosen_location(
+    hass: HomeAssistant, mock_delijn_client: MagicMock
+) -> None:
+    """Test picking a location suggests stops near that location."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_LOCATION: {CONF_LATITUDE: 51.05, CONF_LONGITUDE: 3.72}},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick"
+    mock_delijn_client.get_stops_near.assert_awaited_once_with(
+        51.05, 3.72, max_results=10
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP: STOP_NUMBER}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_nearby_no_results(
+    hass: HomeAssistant, mock_delijn_client: MagicMock
+) -> None:
+    """Test no nearby stops being found shows a no_results error."""
+    mock_delijn_client.get_stops_near.return_value = []
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "stop"
+    assert result["errors"] == {"base": "no_results"}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (DeLijnAuthError, "invalid_auth"),
+        (DeLijnConnectionError, "cannot_connect"),
+        (DeLijnResponseError, "unknown"),
+    ],
+)
+async def test_nearby_errors(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    side_effect: type[DeLijnError],
+    expected_error: str,
+) -> None:
+    """Test errors returned while finding nearby stops."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+
+    mock_delijn_client.get_stops_near.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "stop"
+    assert result["errors"] == {"base": expected_error}
+
+    mock_delijn_client.get_stops_near.side_effect = None
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pick"
 

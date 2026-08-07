@@ -3,7 +3,16 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pydelijn import DeLijnConnectionError, DeLijnNotFoundError, Line, Passage
+from pydelijn import (
+    DeLijnAuthError,
+    DeLijnConnectionError,
+    DeLijnError,
+    DeLijnNotFoundError,
+    DeLijnResponseError,
+    Line,
+    Passage,
+)
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.delijn.const import (
@@ -161,7 +170,48 @@ async def test_yaml_import_failure_creates_issue(
     await hass.async_block_till_done()
 
     assert not hass.config_entries.async_entries(DOMAIN)
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
         DOMAIN, f"deprecated_yaml_import_issue_{unknown_stop}_invalid_stop"
     )
+    assert issue
+    assert issue.translation_key == "deprecated_yaml_import_issue_invalid_stop"
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_reason"),
+    [
+        (DeLijnNotFoundError, "invalid_stop"),
+        (DeLijnAuthError, "invalid_auth"),
+        (DeLijnConnectionError, "cannot_connect"),
+        (DeLijnResponseError, "unknown"),
+    ],
+)
+async def test_yaml_import_failure_translation_key_per_reason(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    side_effect: type[DeLijnError],
+    expected_reason: str,
+) -> None:
+    """Test each import failure reason maps to its own translation key."""
+    mock_delijn_client.get_stop.side_effect = side_effect
+    unknown_stop = "999999"
+
+    config = {
+        "sensor": {
+            "platform": DOMAIN,
+            CONF_API_KEY: API_KEY,
+            CONF_NEXT_DEPARTURE: [
+                {CONF_STOP_ID: unknown_stop, CONF_NUMBER_OF_DEPARTURES: 3},
+            ],
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_yaml_import_issue_{unknown_stop}_{expected_reason}"
+    )
+    assert issue
+    assert issue.translation_key == f"deprecated_yaml_import_issue_{expected_reason}"

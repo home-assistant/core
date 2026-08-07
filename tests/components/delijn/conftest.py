@@ -106,6 +106,7 @@ def mock_delijn_client(
         client = mock_client.return_value
         client.get_stop.return_value = mock_stop
         client.search_stops.return_value = [mock_stop]
+        client.get_stops_near.return_value = [mock_stop]
         client.get_passages.return_value = mock_passages
         yield client
 

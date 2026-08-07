@@ -18,10 +18,16 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    LocationSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -96,46 +102,79 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             self._api_key = user_input[CONF_API_KEY]
             return await self.async_step_stop()
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
-        )
+        schema = vol.Schema({vol.Required(CONF_API_KEY): str})
+        if existing_entries := self._async_current_entries():
+            schema = self.add_suggested_values_to_schema(
+                schema, {CONF_API_KEY: existing_entries[0].data[CONF_API_KEY]}
+            )
+        return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_stop(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the stop lookup step: a stop number or a free-text search."""
+        """Handle the stop lookup step.
+
+        A stop number or free-text search takes priority; otherwise a
+        location picked on the map is used, falling back to the Home
+        Assistant location if both are left empty.
+        """
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            query = user_input[CONF_STOP].strip()
+            query = (user_input.get(CONF_STOP) or "").strip()
             client = DeLijnClient(self._api_key, async_get_clientsession(self.hass))
 
-            if query.isdigit():
-                try:
-                    stop = await client.get_stop(query)
-                except DeLijnNotFoundError:
-                    errors["base"] = "invalid_stop"
-                except DeLijnAuthError:
-                    errors["base"] = "invalid_auth"
-                except DeLijnConnectionError:
-                    errors["base"] = "cannot_connect"
-                except DeLijnError:
-                    LOGGER.exception("Unexpected error looking up De Lijn stop")
-                    errors["base"] = "unknown"
+            if query:
+                if query.isdigit():
+                    try:
+                        stop = await client.get_stop(query)
+                    except DeLijnNotFoundError:
+                        errors["base"] = "invalid_stop"
+                    except DeLijnAuthError:
+                        errors["base"] = "invalid_auth"
+                    except DeLijnConnectionError:
+                        errors["base"] = "cannot_connect"
+                    except DeLijnError:
+                        LOGGER.exception("Unexpected error looking up De Lijn stop")
+                        errors["base"] = "unknown"
+                    else:
+                        return await self._async_finish(stop)
                 else:
-                    return await self._async_finish(stop)
+                    try:
+                        results = await client.search_stops(
+                            query, max_results=MAX_SEARCH_RESULTS
+                        )
+                    except DeLijnAuthError:
+                        errors["base"] = "invalid_auth"
+                    except DeLijnConnectionError:
+                        errors["base"] = "cannot_connect"
+                    except DeLijnError:
+                        LOGGER.exception("Unexpected error searching De Lijn stops")
+                        errors["base"] = "unknown"
+                    else:
+                        if not results:
+                            errors["base"] = "no_results"
+                        else:
+                            self._search_results = results
+                            return await self.async_step_pick()
             else:
+                if (location := user_input.get(CONF_LOCATION)) is not None:
+                    latitude = location[CONF_LATITUDE]
+                    longitude = location[CONF_LONGITUDE]
+                else:
+                    latitude = self.hass.config.latitude
+                    longitude = self.hass.config.longitude
+
                 try:
-                    results = await client.search_stops(
-                        query, max_results=MAX_SEARCH_RESULTS
+                    results = await client.get_stops_near(
+                        latitude, longitude, max_results=MAX_SEARCH_RESULTS
                     )
                 except DeLijnAuthError:
                     errors["base"] = "invalid_auth"
                 except DeLijnConnectionError:
                     errors["base"] = "cannot_connect"
                 except DeLijnError:
-                    LOGGER.exception("Unexpected error searching De Lijn stops")
+                    LOGGER.exception("Unexpected error finding nearby De Lijn stops")
                     errors["base"] = "unknown"
                 else:
                     if not results:
@@ -146,7 +185,12 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="stop",
-            data_schema=vol.Schema({vol.Required(CONF_STOP): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_STOP): str,
+                    vol.Optional(CONF_LOCATION): LocationSelector(),
+                }
+            ),
             errors=errors,
         )
 

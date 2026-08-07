@@ -22,10 +22,12 @@
       },
       "stop": {
         "data": {
-          "stop": "Stop"
+          "stop": "Stop",
+          "location": "Search near a location"
         },
         "data_description": {
-          "stop": "A De Lijn stop number, or part of a stop name to search for."
+          "stop": "A De Lijn stop number, or part of a stop name to search for. Leave empty to search near a location instead.",
+          "location": "Pick a location on the map to find nearby stops. Leave both fields empty to find stops near your Home Assistant location."
         }
       },
       "pick": {
@@ -54,8 +56,20 @@
     }
   },
   "issues": {
-    "deprecated_yaml_import_issue": {
-      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nWhile importing your configuration for stop {stop_id}, an error occurred when trying to connect to the De Lijn API. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nWhile importing your configuration for stop {stop_id}, Home Assistant could not reach the De Lijn API. This will be retried automatically on the next restart. Remove the existing YAML configuration and set the integration up via the UI once the import succeeds.",
+      "title": "{integration_title} YAML configuration deprecated"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nWhile importing your configuration for stop {stop_id}, the De Lijn API rejected the configured API key. Check the API key in your YAML configuration and restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "{integration_title} YAML configuration deprecated"
+    },
+    "deprecated_yaml_import_issue_invalid_stop": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nStop {stop_id} from your YAML configuration no longer exists in De Lijn's data. Remove it from the `next_departure` list in your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "{integration_title} YAML configuration deprecated"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nAn unexpected error occurred while importing your configuration for stop {stop_id}. Check the Home Assistant logs for details, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
       "title": "{integration_title} YAML configuration deprecated"
     }
   },
