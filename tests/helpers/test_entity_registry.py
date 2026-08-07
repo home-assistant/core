@@ -3562,8 +3562,8 @@ async def test_remove_device_keeps_other_config_subentry_entities(
     assert entity_registry.async_is_registered(entry_1.entity_id)
     assert entity_registry.async_is_registered(entry_2.entity_id)
 
-    # Removing the device keeps entities not tied to it (one with no config entry, one
-    # in another subentry) but detaches them
+    # Removing the device keeps entities not owned by its config subentry (one with no
+    # config entry, one in another subentry) but detaches them
     device_registry.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
 
