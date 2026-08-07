@@ -662,11 +662,9 @@ async def test_cleanup_tag(
     )
     assert device_entry2 is not None
 
-    # Removing the test config entry deletes its device; the MQTT device is untouched
+    # Removing the test config entry's device leaves the MQTT device untouched
     # and MQTT does not clear its discovery topic
-    device_registry.async_update_device(
-        device_entry1.id, remove_config_entry_id=config_entry.entry_id
-    )
+    device_registry.async_remove_device(device_entry1.id)
     assert (
         _get_device_for_config_entry(
             device_registry,
