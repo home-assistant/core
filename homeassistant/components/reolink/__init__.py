@@ -58,6 +58,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TIME,
     Platform.UPDATE,
 ]
 FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
@@ -229,23 +230,39 @@ async def async_setup_entry(
 
     # ensure host device is setup before connected camera devices that use via_device
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    host_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, host.unique_id)},
         connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
     )
 
     if host.api.is_nvr and host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
-        # ensure the camera device is setup before
+        # ensure the camera devices are setup before
         # the lens sub-devices that use via_device
-        if host.api.supported(0, "UID"):
-            camera_dev_id = f"{host.unique_id}_{host.api.camera_uid(0)}"
+        for channel in host.api.stream_channels:
+            if host.api.supported(channel, "UID"):
+                camera_dev_id = f"{host.unique_id}_{host.api.camera_uid(channel)}"
+            else:
+                camera_dev_id = f"{host.unique_id}_ch{channel}"
+            device_registry.async_get_or_create(
+                config_entry_id=config_entry.entry_id,
+                identifiers={(DOMAIN, camera_dev_id)},
+                via_device_id=host_device.id,
+            )
+
+    # ensure the camera devices that chimes connect through are setup
+    # before the chime sub-devices that use via_device
+    for chime in host.api.chime_list:
+        if chime.channel is None or not host.api.is_nvr:
+            continue  # chime connected directly to the host device
+        if host.api.supported(chime.channel, "UID"):
+            camera_dev_id = f"{host.unique_id}_{host.api.camera_uid(chime.channel)}"
         else:
-            camera_dev_id = f"{host.unique_id}_ch0"
+            camera_dev_id = f"{host.unique_id}_ch{chime.channel}"
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={(DOMAIN, camera_dev_id)},
-            via_device=(DOMAIN, host.unique_id),
+            via_device_id=host_device.id,
         )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -493,7 +510,9 @@ def migrate_entity_ids(
                 new_device_id,
             )
             new_identifiers = {(DOMAIN, new_device_id)}
-            existing_device = device_reg.async_get_device(identifiers=new_identifiers)
+            existing_device = device_reg.async_get_device_by_identifier(
+                (DOMAIN, new_device_id), config_entry_id
+            )
             if existing_device is None:
                 device_reg.async_update_device(
                     device.id, new_identifiers=new_identifiers
@@ -533,6 +552,33 @@ def migrate_entity_ids(
                 )
                 entity_reg.async_remove(entity.entity_id)
                 continue
+
+        # Can be removed in HA 2027.2
+        if (
+            host.api.is_dual_lens
+            and host.api.supported(1, "zoom_basic")
+            and not host.api.supported(0, "zoom_basic")
+        ):
+            id_parts = entity.unique_id.split("_", 2)
+            if len(id_parts) < 3:
+                continue
+            if id_parts[1] == "0" and id_parts[2] in {
+                "zoom",
+                "ptz_zoom_in",
+                "ptz_zoom_out",
+            }:
+                new_id = f"{host.unique_id}_1_{id_parts[2]}"
+                _LOGGER.debug(
+                    "Updating Reolink entity unique_id from %s to %s",
+                    entity.unique_id,
+                    new_id,
+                )
+                existing_entity = entity_reg.async_get_entity_id(
+                    entity.domain, entity.platform, new_id
+                )
+                if existing_entity is not None:
+                    entity_reg.async_remove(existing_entity)
+                entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
 
         if entity.device_id in ch_device_ids:
             ch = ch_device_ids[entity.device_id]

@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
+import attr
 import httpx
 from openai import (
     APIConnectionError,
@@ -735,12 +736,12 @@ async def test_migration_from_v1(
     assert migrated_entity.unique_id == subentry.subentry_id
 
     # Check device migration
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert (
-        migrated_device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        migrated_device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert migrated_device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -847,8 +848,8 @@ async def test_migration_from_v1_with_multiple_keys(
         # Use conversation subentry for device assertions
         subentry = conversation_subentry
 
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), entry.entry_id
         )
         assert dev is not None
         assert dev.config_entries == {entry.entry_id}
@@ -968,8 +969,8 @@ async def test_migration_from_v1_with_same_keys(
         assert subentry.data == options
 
         # Check devices were migrated correctly
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
         assert dev is not None
         assert dev.config_entries == {mock_config_entry.entry_id}
@@ -1191,11 +1192,11 @@ async def test_migration_from_v1_disabled(
         assert tts_subentries[0].data == RECOMMENDED_TTS_OPTIONS
         assert tts_subentries[0].title == DEFAULT_TTS_NAME
 
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry_2.entry_id), mock_config_entry_2.entry_id
     )
 
     for idx, subentry in enumerate(conversation_subentries):
@@ -1207,8 +1208,9 @@ async def test_migration_from_v1_disabled(
         assert entity.disabled_by is subentry_data["entity_disabled_by"]
 
         assert (
-            device := device_registry.async_get_device(
-                identifiers={(DOMAIN, subentry.subentry_id)}
+            device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, subentry.subentry_id),
+                mock_config_entries[main_config_entry].entry_id,
             )
         )
         assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -1360,12 +1362,12 @@ async def test_migration_from_v2_1(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -1381,12 +1383,12 @@ async def test_migration_from_v2_1(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -1420,8 +1422,8 @@ async def test_devices(
         for subentry in mock_config_entry.subentries.values()
         if subentry.subentry_type == "conversation"
     )
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, conversation_subentry.subentry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, conversation_subentry.subentry_id), mock_config_entry.entry_id
     )
     assert device is not None
     assert device == snapshot(exclude=props("identifiers"))
@@ -1631,13 +1633,19 @@ async def test_migrate_entry_from_v2_3(
     conversation_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=device_disabled_by,
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="OpenAI",
         model="ChatGPT",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # A stale disabled_by flag can't be set through the registry API, which
+    # validates it against the config entry's disabled state; write it
+    # directly to simulate existing storage.
+    conversation_device = attr.evolve(
+        conversation_device, disabled_by=device_disabled_by
+    )
+    device_registry.devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

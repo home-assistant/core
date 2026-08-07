@@ -158,36 +158,33 @@ async def test_device_info_to_link(
     assert async_device_info_to_link_from_device_id(hass, device_id=None) is None
 
 
-async def test_remove_stale_device_links_keep_entity_device(
+async def test_remove_stale_devices_links_deprecated_noop(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test cleaning works for entity."""
+    """The stale-device-link helpers are deprecated and do nothing.
+
+    A device belongs to a single config entry, so a helper no longer adds its config
+    entry to another device and there is no stale config entry link to remove. The
+    helpers leave the devices and entities untouched and only report the deprecated
+    usage; helpers set entity.device_entry and clean up devices with
+    async_remove_helper_devices instead.
+    """
     helper_config_entry = MockConfigEntry(domain="helper_integration")
     helper_config_entry.add_to_hass(hass)
     host_config_entry = MockConfigEntry(domain="host_integration")
     host_config_entry.add_to_hass(hass)
 
+    # A device owned by another config entry, plus one owned by the helper config entry
     current_device = device_registry.async_get_or_create(
         identifiers={("test", "current_device")},
-        connections={("mac", "30:31:32:33:34:00")},
+        config_entry_id=host_config_entry.entry_id,
+    )
+    stale_device = device_registry.async_get_or_create(
+        identifiers={("test", "stale_device")},
         config_entry_id=helper_config_entry.entry_id,
     )
-
-    stale_device_1 = device_registry.async_get_or_create(
-        identifiers={("test", "stale_device_1")},
-        connections={("mac", "30:31:32:33:34:01")},
-        config_entry_id=helper_config_entry.entry_id,
-    )
-
-    device_registry.async_get_or_create(
-        identifiers={("test", "stale_device_2")},
-        connections={("mac", "30:31:32:33:34:02")},
-        config_entry_id=helper_config_entry.entry_id,
-    )
-
-    # Source entity
     source_entity = entity_registry.async_get_or_create(
         "sensor",
         "host_integration",
@@ -195,92 +192,31 @@ async def test_remove_stale_device_links_keep_entity_device(
         config_entry=host_config_entry,
         device_id=current_device.id,
     )
-    assert entity_registry.async_get(source_entity.entity_id) is not None
-
-    # Helper entity connected to a stale device
+    # Helper entity left on a device owned by the helper config entry
     helper_entity = entity_registry.async_get_or_create(
         "sensor",
         "helper_integration",
         "helper",
         config_entry=helper_config_entry,
-        device_id=stale_device_1.id,
-    )
-    assert entity_registry.async_get(helper_entity.entity_id) is not None
-
-    devices_helper_entry = device_registry.devices.get_devices_for_config_entry_id(
-        helper_config_entry.entry_id
+        device_id=stale_device.id,
     )
 
-    # 3 devices linked to the config entry are expected (1 current device + 2 stales)
-    assert len(devices_helper_entry) == 3
-
-    # Manual cleanup should unlink stale devices from the config entry
-    async_remove_stale_devices_links_keep_entity_device(
-        hass,
-        entry_id=helper_config_entry.entry_id,
-        source_entity_id_or_uuid=source_entity.entity_id,
-    )
-
+    with patch("homeassistant.helpers.device.report_usage") as report_usage:
+        async_remove_stale_devices_links_keep_current_device(
+            hass,
+            entry_id=helper_config_entry.entry_id,
+            current_device_id=current_device.id,
+        )
+        async_remove_stale_devices_links_keep_entity_device(
+            hass,
+            entry_id=helper_config_entry.entry_id,
+            source_entity_id_or_uuid=source_entity.entity_id,
+        )
     await hass.async_block_till_done()
 
-    devices_helper_entry = device_registry.devices.get_devices_for_config_entry_id(
-        helper_config_entry.entry_id
-    )
-
-    # After cleanup, only one device is expected to be linked to the config entry, and
-    # the entities should exist and be linked to the current device
-    assert len(devices_helper_entry) == 1
-    assert current_device in devices_helper_entry
-    assert entity_registry.async_get(source_entity.entity_id) is not None
-    assert entity_registry.async_get(helper_entity.entity_id) is not None
-
-
-async def test_remove_stale_devices_links_keep_current_device(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test cleanup works for device id."""
-    config_entry = MockConfigEntry(domain="hue")
-    config_entry.add_to_hass(hass)
-
-    current_device = device_registry.async_get_or_create(
-        identifiers={("test", "current_device")},
-        connections={("mac", "30:31:32:33:34:00")},
-        config_entry_id=config_entry.entry_id,
-    )
-    assert current_device is not None
-
-    device_registry.async_get_or_create(
-        identifiers={("test", "stale_device_1")},
-        connections={("mac", "30:31:32:33:34:01")},
-        config_entry_id=config_entry.entry_id,
-    )
-
-    device_registry.async_get_or_create(
-        identifiers={("test", "stale_device_2")},
-        connections={("mac", "30:31:32:33:34:02")},
-        config_entry_id=config_entry.entry_id,
-    )
-
-    devices_config_entry = device_registry.devices.get_devices_for_config_entry_id(
-        config_entry.entry_id
-    )
-
-    # 3 devices linked to the config entry are expected (1 current device + 2 stales)
-    assert len(devices_config_entry) == 3
-
-    # Manual cleanup should unlink stales devices from the config entry
-    async_remove_stale_devices_links_keep_current_device(
-        hass,
-        entry_id=config_entry.entry_id,
-        current_device_id=current_device.id,
-    )
-
-    devices_config_entry = device_registry.devices.get_devices_for_config_entry_id(
-        config_entry.entry_id
-    )
-
-    # After cleanup, only one device is expected to be linked to the config entry
-    assert len(devices_config_entry) == 1
-
-    assert current_device in devices_config_entry
+    # Both helpers reported the deprecated usage and changed nothing
+    assert report_usage.call_count == 2
+    assert device_registry.async_get(current_device.id) is not None
+    assert device_registry.async_get(stale_device.id) is not None
+    helper_entity_entry = entity_registry.async_get(helper_entity.entity_id)
+    assert helper_entity_entry.device_id == stale_device.id

@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.number import NumberDeviceClass, NumberMode, RestoreNumber
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_MODE,
     CONF_NAME,
     CONF_TYPE,
@@ -35,7 +34,12 @@ from .const import (
     NumberConf,
 )
 from .dpt import get_supported_dpts
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY, CONF_GA_SENSOR
 from .storage.util import ConfigExtractor
@@ -118,9 +122,8 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.sensor_value.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            unique_id=build_yaml_unique_id(self._device.sensor_value.group_address),
+            entity_config=config,
         )
         dpt_string = self._device.sensor_value.dpt_class.dpt_number_str()
         dpt_info = get_supported_dpts()[dpt_string]

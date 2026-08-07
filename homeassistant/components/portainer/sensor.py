@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pyportainer import StackType
 from pyportainer.models.docker import DockerContainerState, DockerSystemDF
@@ -43,6 +43,7 @@ class PortainerContainerSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer container sensor description."""
 
     value_fn: Callable[[PortainerContainerData], StateType]
+    supported_fn: Callable[[PortainerContainerData], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -85,6 +86,22 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         value_fn=lambda data: data.container.state,
         device_class=SensorDeviceClass.ENUM,
         options=[state.value for state in DockerContainerState],
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="container_health_state",
+        translation_key="container_health_state",
+        value_fn=lambda data: (
+            health.status
+            if (state := data.container_inspect.state) and (health := state.health)
+            else None
+        ),
+        supported_fn=lambda data: (
+            (state := data.container_inspect.state) is not None
+            and state.health is not None
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=["healthy", "unhealthy", "starting"],
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerContainerSensorEntityDescription(
         key="memory_limit",
@@ -359,7 +376,8 @@ async def async_setup_entry(
     """Set up Portainer sensors based on a config entry."""
     coordinator = entry.runtime_data
     ds_coordinator = coordinator.docker_disk_space
-    assert ds_coordinator is not None
+    if TYPE_CHECKING:
+        assert ds_coordinator is not None
 
     def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
         """Add new endpoint sensors."""
@@ -395,6 +413,7 @@ async def async_setup_entry(
             )
             for (endpoint, container) in containers
             for entity_description in CONTAINER_SENSORS
+            if entity_description.supported_fn(container)
         )
 
     def _async_add_new_stacks(
