@@ -236,7 +236,6 @@ async def ws_start_preview(
             seconds=max_age_input["seconds"],
         )
     preview_entity = StatisticsSensor(
-        hass,
         source_entity_id=entity_id,
         name=name,
         unique_id=None,

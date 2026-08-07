@@ -8,6 +8,7 @@ from yarl import URL
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_URL
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -57,14 +58,14 @@ class HabiticaBase(CoordinatorEntity[HabiticaDataUpdateCoordinator]):
         )
 
         if subentry:
-            self._attr_device_info.update(
-                DeviceInfo(
-                    via_device=(
-                        (
-                            DOMAIN,
-                            f"{coordinator.config_entry.unique_id}_{self.user.party.id}",
-                        )
-                    )
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (
+                        DOMAIN,
+                        f"{coordinator.config_entry.unique_id}_{self.user.party.id}",
+                    ),
+                    config_entry_id=coordinator.config_entry.entry_id,
                 )
             )
 
@@ -138,6 +139,10 @@ class HabiticaPartyBase(CoordinatorEntity[HabiticaPartyCoordinator]):
             model=NAME,
             name=coordinator.data.party.summary,
             identifiers={(DOMAIN, unique_id)},
-            via_device=(DOMAIN, config_entry.unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, config_entry.unique_id),
+                config_entry_id=config_entry.entry_id,
+            ),
         )
         self.content = content

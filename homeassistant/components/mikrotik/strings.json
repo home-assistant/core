@@ -43,8 +43,21 @@
   },
   "entity": {
     "button": {
+      "backup": {
+        "name": "Backup"
+      },
       "shutdown": {
         "name": "Shutdown"
+      }
+    },
+    "select": {
+      "poe_out": {
+        "name": "PoE (out)",
+        "state": {
+          "auto_on": "On (automatic)",
+          "forced_on": "On (forced)",
+          "off": "[%key:common::state::off%]"
+        }
       }
     },
     "sensor": {
@@ -56,6 +69,22 @@
       },
       "memory_usage": {
         "name": "Memory usage"
+      }
+    },
+    "switch": {
+      "ether": {
+        "name": "Ethernet"
+      },
+      "wlan": {
+        "name": "WLAN"
+      }
+    },
+    "update": {
+      "firmware_update": {
+        "name": "RouterOS"
+      },
+      "routerboard_update": {
+        "name": "RouterBOARD"
       }
     }
   },

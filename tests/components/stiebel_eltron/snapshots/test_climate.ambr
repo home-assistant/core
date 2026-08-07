@@ -80,7 +80,7 @@
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.5,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 22.5,
     }),
     'context': <ANY>,
     'entity_id': 'climate.stiebel_eltron_lwz',
