@@ -65,9 +65,6 @@ def _fixed_location_title(data: Mapping[str, Any]) -> str:
 
 def _has_generated_title(config_entry: ConfigEntry) -> bool:
     """Return if the entry title still matches an integration-generated title."""
-    if not config_entry.title:
-        return True
-
     if config_entry.data.get(CONF_TRACK_HOME, False):
         return config_entry.title == HOME_LOCATION_NAME
 

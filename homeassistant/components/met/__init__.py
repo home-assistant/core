@@ -59,14 +59,11 @@ async def async_migrate_entry(
     """Migrate old config entry."""
     if config_entry.minor_version < 2:
         data = dict(config_entry.data)
-        title = config_entry.title
-        if name := data.pop(CONF_NAME, None):
-            title = title or name
+        data.pop(CONF_NAME, None)
 
         hass.config_entries.async_update_entry(
             config_entry,
             data=data,
-            title=title,
             minor_version=2,
         )
 

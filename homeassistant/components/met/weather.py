@@ -62,7 +62,7 @@ async def async_setup_entry(
     if config_entry.data.get(CONF_TRACK_HOME, False):
         device_name = hass.config.location_name
     else:
-        device_name = config_entry.title or DEFAULT_NAME
+        device_name = config_entry.title
 
     entities = [MetWeather(coordinator, config_entry, device_name, is_metric)]
 

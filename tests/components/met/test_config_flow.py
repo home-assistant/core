@@ -155,7 +155,6 @@ async def test_onboarding_step_abort_no_home(
         pytest.param(
             False, "Custom location", "Custom location", id="custom_title_kept"
         ),
-        pytest.param(False, "", f"{DEFAULT_NAME} (12, 23)", id="empty_title_updated"),
         pytest.param(
             True, None, f"{DEFAULT_NAME} (12, 23)", id="track_home_title_updated"
         ),

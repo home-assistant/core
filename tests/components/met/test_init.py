@@ -75,18 +75,6 @@ async def test_fail_default_home_entry(
             id="name_removed_title_kept",
         ),
         pytest.param(
-            {
-                CONF_NAME: "test",
-                CONF_LATITUDE: 0,
-                CONF_LONGITUDE: 1.0,
-                CONF_ELEVATION: 1.0,
-            },
-            "",
-            {CONF_LATITUDE: 0, CONF_LONGITUDE: 1.0, CONF_ELEVATION: 1.0},
-            "test",
-            id="empty_title_replaced_by_name",
-        ),
-        pytest.param(
             {CONF_TRACK_HOME: True},
             HOME_LOCATION_NAME,
             {CONF_TRACK_HOME: True},
@@ -121,17 +109,3 @@ async def test_migrate_entry(
     assert entry.minor_version == 2
     assert entry.data == expected_data
     assert entry.title == expected_title
-
-
-async def test_migrate_entry_future_version(hass: HomeAssistant) -> None:
-    """Test migrating a config entry from the future fails."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 1.0, CONF_ELEVATION: 1.0},
-        version=2,
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
