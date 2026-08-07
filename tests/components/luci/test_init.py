@@ -145,7 +145,7 @@ async def test_legacy_known_devices_issue(
         DOMAIN, _issue_id(mock_config_entry.entry_id)
     )
     assert issue is not None
-    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {
         "host": "192.168.1.1",
         "path": "known_devices.yaml",

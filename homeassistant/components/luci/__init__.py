@@ -120,7 +120,7 @@ async def _async_check_legacy_known_devices(
         DOMAIN,
         _legacy_issue_id(entry),
         is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
+        severity=ir.IssueSeverity.ERROR,
         translation_key=ISSUE_LEGACY_KNOWN_DEVICES,
         translation_placeholders={
             "host": entry.data[CONF_HOST],
