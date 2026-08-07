@@ -36,6 +36,9 @@ async def _async_try_connect(host: str, port: int, password: str | None) -> str 
             await client.connect(host, port)
             if password is not None:
                 await client.password(password)
+            # MPD greets before authenticating, so a read is what proves the
+            # credentials actually grant access.
+            await client.status()
     except TimeoutError, gaierror, mpd.ConnectionError, mpd.ProtocolError, OSError:
         return "cannot_connect"
     except mpd.CommandError:
@@ -95,15 +98,19 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         hostname = discovery_info.hostname.rstrip(".")
         self._name = hostname.removesuffix(".local") or self._host
 
-        # MPD exposes no stable identifier, over zeroconf or its protocol, so
-        # identity is address-shaped. Discovery only ever reports an IP, so also
-        # match the advertised hostname to catch entries added under that name.
+        # Discovery only ever reports an IP, so also match the advertised
+        # hostname to catch entries added under that name.
         for host in (self._host, hostname, self._name):
             self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: self._port})
+        # MPD exposes no stable identifier, over zeroconf or its protocol. The
+        # address deduplicates concurrent flows only, and is cleared before the
+        # entry is created so it is never persisted.
         await self.async_set_unique_id(f"{self._host}:{self._port}")
         self._abort_if_unique_id_configured()
 
-        if await _async_try_connect(self._host, self._port, None):
+        # A server that needs a password fails the unauthenticated probe, so
+        # only a transport failure rules the server out here.
+        if await _async_try_connect(self._host, self._port, None) == "cannot_connect":
             return self.async_abort(reason="cannot_connect")
 
         self.context["title_placeholders"] = {"name": self._name}
@@ -124,6 +131,7 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                 data = {CONF_HOST: self._host, CONF_PORT: self._port}
                 if password is not None:
                     data[CONF_PASSWORD] = password
+                await self.async_set_unique_id(None)
                 return self.async_create_entry(title=self._name, data=data)
 
         return self.async_show_form(

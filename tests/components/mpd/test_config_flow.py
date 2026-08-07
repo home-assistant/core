@@ -142,10 +142,10 @@ async def test_existing_entry(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_mpd_client")
 async def test_zeroconf_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    mock_mpd_client: AsyncMock,
     user_input: dict[str, str],
     expected_data: dict[str, str | int],
 ) -> None:
@@ -165,7 +165,10 @@ async def test_zeroconf_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "mpd-server"
     assert result["data"] == expected_data
-    assert result["result"].unique_id == "192.168.0.1:6600"
+    # A read proves the credentials grant access, not just that MPD greeted us.
+    assert mock_mpd_client.status.called
+    # The address deduplicates flows only; it must not be persisted.
+    assert result["result"].unique_id is None
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -242,6 +245,30 @@ async def test_zeroconf_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow_password_protected(
+    hass: HomeAssistant, mock_mpd_client: AsyncMock
+) -> None:
+    """Test a server refusing the unauthenticated probe still offers the form."""
+    mock_mpd_client.status.side_effect = INVALID_PASSWORD_ERROR
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    mock_mpd_client.status.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "test123"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
