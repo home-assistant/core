@@ -16,7 +16,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
 from homeassistant.helpers.trigger import (
     PluggableAction,
@@ -32,6 +36,8 @@ from ..helpers import async_get_device_entry_by_device_id
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
+
+DEPRECATED_TARGET_ISSUE_ID = "deprecated_turn_on_trigger_target"
 
 _TRIGGER_SCHEMA = vol.Schema({vol.Required(CONF_TARGET): cv.TARGET_FIELDS})
 
@@ -149,6 +155,15 @@ class TurnOnTrigger(Trigger):
         target, so the two are merged instead of one shape taking precedence.
         """
         if legacy_keys := {ATTR_ENTITY_ID, ATTR_DEVICE_ID} & complete_config.keys():
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                DEPRECATED_TARGET_ISSUE_ID,
+                breaks_in_ha_version="2027.3",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=DEPRECATED_TARGET_ISSUE_ID,
+            )
             complete_config = complete_config.copy()
             target = dict(complete_config.get(CONF_TARGET) or {})
             for key in legacy_keys:

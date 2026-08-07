@@ -8,10 +8,15 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.webostv import DOMAIN
+from homeassistant.components.webostv.triggers.turn_on import DEPRECATED_TARGET_ISSUE_ID
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import area_registry as ar, device_registry as dr
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
@@ -294,3 +299,51 @@ async def test_trigger_without_target(
     )
 
     assert "The LG webOS TV turn on trigger requires a target" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("trigger_config", "issue_expected"),
+    [
+        pytest.param(
+            {"trigger": "webostv.turn_on", "entity_id": ENTITY_ID}, True, id="entity_id"
+        ),
+        pytest.param(
+            {"trigger": "webostv.turn_on", "device_id": "some-device-id"},
+            True,
+            id="device_id",
+        ),
+        pytest.param(
+            {"trigger": "webostv.turn_on", "target": {"entity_id": ENTITY_ID}},
+            False,
+            id="target",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("client")
+async def test_deprecated_target_repair_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    trigger_config: dict[str, Any],
+    issue_expected: bool,
+) -> None:
+    """Test the repair issue raised for the legacy top-level trigger options."""
+    await setup_webostv(hass)
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": trigger_config,
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ENTITY_ID},
+                    },
+                },
+            ],
+        },
+    )
+
+    issue = issue_registry.async_get_issue(DOMAIN, DEPRECATED_TARGET_ISSUE_ID)
+    assert (issue is not None) is issue_expected
