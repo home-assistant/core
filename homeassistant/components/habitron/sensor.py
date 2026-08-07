@@ -498,6 +498,10 @@ MEMORY_DESCRIPTION = HbtnSensorEntityDescription(
     native_unit_of_measurement=PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
     icon="mdi:memory",
+    # Host health of the machine the hub runs on, like the CPU readings below
+    # -- not a building-automation measurement anyone automates on.
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
     translated_name=True,
     value_fn=lambda hub, idx: hub.sensors[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.sensors[idx],
@@ -508,6 +512,8 @@ DISK_DESCRIPTION = HbtnSensorEntityDescription(
     native_unit_of_measurement=PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
     icon="mdi:harddisk",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
     translated_name=True,
     value_fn=lambda hub, idx: hub.sensors[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.sensors[idx],

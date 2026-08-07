@@ -157,6 +157,18 @@ def _async_adopt_hub_identity(
     """
     if not smhub.has_mac_uid or entry.unique_id == smhub.uid:
         return
+    if hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, smhub.uid):
+        # Another entry already owns this hub. Rewriting would not merge the
+        # two -- Home Assistant reindexes onto the used id anyway and only logs
+        # the collision -- so leave this entry on its own id and say which one
+        # to remove.
+        _LOGGER.warning(
+            "The hub at %s is already configured as %s; remove the duplicate entry %s",
+            smhub.host,
+            smhub.uid,
+            entry.title,
+        )
+        return
     _LOGGER.debug(
         "Adopting hub identity for %s: %s -> %s",
         entry.title,
