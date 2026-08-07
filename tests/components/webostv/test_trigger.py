@@ -201,6 +201,77 @@ async def test_webostv_turn_on_trigger_area_id(
 
 
 @pytest.mark.usefixtures("client")
+async def test_webostv_turn_on_trigger_follows_area_changes(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the targeted devices are updated when the device area changes."""
+    await setup_webostv(hass)
+
+    area = area_registry.async_create("Living room")
+    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "trigger": "webostv.turn_on",
+                        "target": {"area_id": area.id},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "{{ trigger.device_id }}"},
+                    },
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    # The TV is not in the targeted area yet, so no turn on action is attached
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "media_player",
+            "turn_on",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+
+    assert len(service_calls) == 1
+
+    device_registry.async_update_device(device.id, area_id=area.id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(service_calls) == 3
+    assert service_calls[2].data["some"] == device.id
+
+    device_registry.async_update_device(device.id, area_id=None)
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "media_player",
+            "turn_on",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+
+    assert len(service_calls) == 4
+
+
+@pytest.mark.usefixtures("client")
 async def test_unknown_trigger_platform_type(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
