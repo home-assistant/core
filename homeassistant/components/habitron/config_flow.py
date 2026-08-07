@@ -321,16 +321,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             reload_on_update=False,
         )
 
-        # The unique_id did not match an existing entry. The same SmartHub
-        # may already be configured under a host-based fallback id — the
-        # manual step falls back to ``habitron_<host>`` when no serial is
-        # available, while SSDP yields a stable UDN/serial. Match on the
-        # host/IP so we adopt the stable id and abort instead of offering a
-        # duplicate of the hub the user already added.
-        # ``_async_matching_entry`` canonicalises both sides, so this also
-        # matches an entry stored under a host name (or under the ``local``
-        # sentinel, which resolves to Home Assistant's own address) against the
-        # IP the discovery reports.
+        # The id did not match, but a hub added while it was unreachable is
+        # keyed by its host, so fall back to matching on the address.
+        # ``_async_matching_entry`` canonicalises both sides, which is what
+        # makes a stored host name -- or the ``local`` sentinel, resolving to
+        # Home Assistant's own address -- match the IP a discovery reports.
         if entry := await self._async_matching_entry(
             # Ignored entries count: a host-fallback entry the user ignored must
             # not be offered again just because this discovery has a stable UDN.

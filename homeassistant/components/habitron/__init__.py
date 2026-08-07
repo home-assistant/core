@@ -135,9 +135,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HabitronConfigEntry) ->
 
 
 async def update_listener(hass: HomeAssistant, entry: HabitronConfigEntry) -> None:
-    """Handle options update by reloading the config entry."""
-    # Reload unconditionally so host, interval and token changes are picked up
-    # via the normal setup path.
+    """Reload the entry so a changed host is picked up by the normal setup."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
