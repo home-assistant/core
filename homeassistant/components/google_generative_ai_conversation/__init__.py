@@ -151,8 +151,8 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             DOMAIN,
             entry.entry_id,
         )
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, entry.entry_id)}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, entry.entry_id), entry.entry_id
         )
 
         if conversation_entity_id is not None:

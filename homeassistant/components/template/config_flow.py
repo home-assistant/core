@@ -612,7 +612,6 @@ CONFIG_FLOW = {
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
-        preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.LIGHT: SchemaFlowFormStep(
@@ -702,7 +701,6 @@ OPTIONS_FLOW = {
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
-        preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.LIGHT: SchemaFlowFormStep(

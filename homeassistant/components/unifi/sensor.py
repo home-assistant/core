@@ -259,7 +259,7 @@ def _device_wan_latency_monitor(
 ) -> TypedDeviceUptimeStatsWanMonitor | None:
     """Return the target of the WAN latency monitor."""
     if device.uptime_stats and (uptime_stats_wan := device.uptime_stats.get(wan)):
-        for monitor in uptime_stats_wan["monitors"]:
+        for monitor in uptime_stats_wan.get("monitors", []):
             if monitor_target in monitor["target"]:
                 return monitor
     return None

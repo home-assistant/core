@@ -181,6 +181,9 @@
     "firmware_update_failed": {
       "message": "Firmware update failed for {device_name}."
     },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
     "no_device_found": {
       "message": "No valid SMLIGHT device found for the given targets."
     },

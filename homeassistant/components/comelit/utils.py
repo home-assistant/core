@@ -78,7 +78,9 @@ def _async_remove_state_config_entry_from_devices(
 
     device_registry = dr.async_get(hass)
     for identifier in identifiers:
-        device = device_registry.async_get_device(identifiers={(DOMAIN, identifier)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, identifier), config_entry.entry_id
+        )
         if device:
             _LOGGER.info(
                 "Removing config entry %s from device %s",

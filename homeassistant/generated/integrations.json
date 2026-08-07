@@ -4341,6 +4341,12 @@
         }
       }
     },
+    "midea_lan": {
+      "name": "Midea LAN",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "miele": {
       "name": "Miele",
       "integration_type": "hub",

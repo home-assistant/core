@@ -276,6 +276,81 @@ async def test_device_location(
     )
 
 
+async def test_device_info_strips_whitespace(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that leading and trailing whitespace is stripped from device info fields."""
+    await async_init_integration(
+        hass,
+        username="someuser",
+        password="somepassword",
+        list_vars={
+            "ups.serial": "A00000000000",
+            "ups.mfr": "Tripp Lite ",
+            "ups.model": "Tripp Lite UPS ",
+            "ups.firmware": "1.0 ",
+            "device.part": "SMART1000 ",
+            "device.location": "Server Room ",
+            "device.macaddr": " 00 00 00 FF FF FF ",
+        },
+        list_ups={"ups1": "UPS 1"},
+        list_commands_return_value=[],
+    )
+
+    # The device identifier is intentionally built from the raw (unstripped)
+    # status values, as changing it would orphan existing device entries
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "Tripp Lite _Tripp Lite UPS _A00000000000")}
+    )
+
+    assert device_entry is not None
+    assert device_entry.manufacturer == "Tripp Lite"
+    assert device_entry.model == "Tripp Lite UPS"
+    assert device_entry.sw_version == "1.0"
+    assert device_entry.serial_number == "A00000000000"
+    assert device_entry.model_id == "SMART1000"
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "00:00:00:ff:ff:ff")
+    }
+    assert (
+        device_entry.area_id == area_registry.async_get_area_by_name("Server Room").id
+    )
+
+
+async def test_device_info_whitespace_only_values(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that whitespace-only device info fields are treated as missing."""
+    mock_serial_number = "A00000000000"
+    await async_init_integration(
+        hass,
+        username="someuser",
+        password="somepassword",
+        list_vars={
+            "ups.serial": mock_serial_number,
+            "ups.firmware": "   ",
+            "device.part": "   ",
+            "device.location": "   ",
+            "device.macaddr": "   ",
+        },
+        list_ups={"ups1": "UPS 1"},
+        list_commands_return_value=[],
+    )
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_serial_number)}
+    )
+
+    assert device_entry is not None
+    assert device_entry.sw_version is None
+    assert device_entry.model_id is None
+    assert device_entry.connections == set()
+    assert device_entry.area_id is None
+
+
 async def test_update_options(hass: HomeAssistant) -> None:
     """Test update options triggers reload."""
     mock_pynut = _get_mock_nutclient(

@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 from google_health_api.model import (
     BODY_FAT,
     DAILY_RESTING_HEART_RATE,
+    SLEEP,
     WEIGHT,
     ActiveEnergyBurnedRollupValue,
     DailyRollupDataPoint,
@@ -158,6 +159,11 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         )
         client.body_fat = AsyncMock()
         client.body_fat.list.return_value = _list_fixture("body_fat.json", BODY_FAT)
+        client.sleep = AsyncMock()
+        client.sleep.list.return_value = _list_fixture("sleep.json", SLEEP)
+        client.sleep.required_read_scopes = [
+            "https://www.googleapis.com/auth/googlehealth.sleep.readonly"
+        ]
         client.get_identity.return_value = Identity.from_dict(
             load_json_object_fixture("identity.json", DOMAIN)
         )

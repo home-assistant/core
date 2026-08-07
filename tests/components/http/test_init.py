@@ -1033,6 +1033,75 @@ async def test_yaml_migration_matches_stable_no_pending(
     assert issue is not None
 
 
+@pytest.mark.parametrize(
+    ("yaml_extra", "expected_stable_proxies", "expected_pending"),
+    [
+        pytest.param(
+            {},
+            ["127.0.0.0/8", "10.11.12.0/24"],
+            None,
+            id="only-lost-masks-repairs-stable",
+        ),
+        pytest.param(
+            {"server_port": 8765},
+            ["127.0.0.0/32", "10.11.12.0/32"],
+            {
+                "server_port": 8765,
+                "cors_allowed_origins": ["https://example.com"],
+                "use_x_forwarded_for": True,
+                "trusted_proxies": ["127.0.0.0/8", "10.11.12.0/24"],
+                "ip_ban_enabled": False,
+                "login_attempts_threshold": -1,
+                "ssl_profile": "modern",
+                "use_x_frame_options": True,
+            },
+            id="other-change-creates-pending",
+        ),
+    ],
+)
+async def test_yaml_migration_stable_lost_trusted_proxy_masks(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    yaml_extra: dict[str, Any],
+    expected_stable_proxies: list[str],
+    expected_pending: dict[str, Any] | None,
+) -> None:
+    """Test YAML migration against a stable config with lost trusted proxy masks.
+
+    Releases up to 2026.7.1 stored trusted proxies without the network mask,
+    which the v1->v2 store migration turned into host networks. If the YAML
+    config only differs from stable by those lost masks, the masks must be
+    restored in stable instead of staging the unchanged YAML as pending.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "server_port": 9123,
+            "cors_allowed_origins": ["https://example.com"],
+            "use_x_forwarded_for": True,
+            "trusted_proxies": ["127.0.0.0/32", "10.11.12.0/32"],
+            "ip_ban_enabled": False,
+        },
+        yaml_migration_done=False,
+    )
+
+    yaml_conf = {
+        "server_port": 9123,
+        "cors_allowed_origins": ["https://example.com"],
+        "use_x_forwarded_for": True,
+        "trusted_proxies": ["127.0.0.0/8", "10.11.12.0/24"],
+        "ip_ban_enabled": False,
+        **yaml_extra,
+    }
+    assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    stored = hass_storage[DOMAIN]["data"]
+    assert stored["yaml_migration_done"] is True
+    assert stored["pending"] == expected_pending
+    assert stored["stable"]["trusted_proxies"] == expected_stable_proxies
+
+
 async def test_yaml_migration_differs_from_stable_creates_pending(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -1438,6 +1507,152 @@ async def test_websocket_http_config(
     assert len(restart_calls) == 3
 
 
+async def test_websocket_configure_verifies_new_port(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_create_server: Mock,
+) -> None:
+    """Configuring a new port probes that it can be bound before restarting."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": {"server_port": 9123}}
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+
+    # One bind for setup, one for the probe of the new config.
+    assert mock_create_server.call_count == 2
+    assert mock_create_server.call_args_list[1].args[0].server_port == 9123
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "bind_error",
+    [
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        PermissionError(errno.EACCES, "Permission denied"),
+        socket.gaierror(socket.EAI_NONAME, "Name or service not known"),
+    ],
+    ids=["address-in-use", "permission-denied", "unresolvable-host"],
+)
+async def test_websocket_configure_rejects_unbindable_config(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+    bind_error: OSError,
+) -> None:
+    """A new config whose address cannot be bound is rejected without a restart."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    mock_create_server.side_effect = bind_error
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": {"server_port": 9123}}
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "bind_failed"
+    assert response["error"]["message"] == (
+        f"Failed to create HTTP server at port 9123: {bind_error}"
+    )
+
+    # The rejected config is not stored and no restart is triggered.
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
+
+
+async def test_websocket_configure_rejects_unusable_ssl(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A new config whose SSL certificate cannot be loaded is rejected."""
+    cert_path, key_path = _setup_broken_ssl_pem_files(tmp_path)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "http/config/configure",
+            "config": {
+                "server_port": 9123,
+                "ssl_certificate": str(cert_path),
+                "ssl_key": str(key_path),
+            },
+        }
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "bind_failed"
+    assert "Could not use SSL certificate" in response["error"]["message"]
+
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
+
+
+async def test_websocket_configure_same_port_skips_bind_check(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+) -> None:
+    """No bind probe runs when the new config keeps the currently bound port.
+
+    The running server holds the port until the restart releases it, so a
+    probe would always fail against ourselves.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    # Any probe would fail; success proves the check was skipped.
+    mock_create_server.side_effect = OSError(errno.EADDRINUSE, "Address already in use")
+
+    current_port = default_server_port()
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "http/config/configure",
+            "config": {
+                "server_port": current_port,
+                "cors_allowed_origins": ["https://example.com"],
+            },
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+    assert hass_storage[DOMAIN]["data"]["pending"]["server_port"] == current_port
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
+
+
 async def test_pending_config_auto_reverts_to_stable(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1671,6 +1886,38 @@ async def test_bound_server_closed_on_stop_before_start(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert not server.sockets
+
+
+async def test_stop_completes_with_open_connections(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Stopping the server must not wait for connected clients to disconnect.
+
+    Server.wait_closed() waits for all client connections to terminate since
+    Python 3.12.1, but connections are only torn down by the runner cleanup,
+    so waiting for them first hangs shutdown while a client (e.g. an open
+    websocket) stays connected.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.http._server is not None
+    port = hass.http._server.sockets[0].getsockname()[1]
+    reader, writer = await asyncio.open_connection("127.0.0.1", port)
+
+    try:
+        # Complete a request/response round trip so the connection is
+        # accepted and tracked by the server (a mere TCP connect may still
+        # sit in the listen backlog), then keep the connection open.
+        writer.write(b"GET / HTTP/1.1\r\nHost: localhost\r\n\r\n")
+        await writer.drain()
+        assert await reader.readline()
+
+        await asyncio.wait_for(hass.http.stop(), timeout=15)
+    finally:
+        writer.close()
 
 
 async def test_stable_config_bind_failure_fails_setup(
