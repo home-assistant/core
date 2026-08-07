@@ -14,6 +14,7 @@ from tests.common import MockConfigEntry
 
 async def test_new_scene_repair_flow(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_tap: Any,
 ) -> None:
@@ -47,7 +48,7 @@ async def test_new_scene_repair_flow(
     )
 
     # Get the issue
-    issue = ir.async_get(hass).async_get_issue(
+    issue = issue_registry.async_get_issue(
         DOMAIN, f"new_scenes_found_{mock_config_entry.entry_id}"
     )
     assert issue is not None
@@ -65,7 +66,7 @@ async def test_new_scene_repair_flow(
     assert result["data"] == {}
 
     # Issue should be deleted
-    issue = ir.async_get(hass).async_get_issue(
+    issue = issue_registry.async_get_issue(
         DOMAIN, f"new_scenes_found_{mock_config_entry.entry_id}"
     )
     assert issue is None

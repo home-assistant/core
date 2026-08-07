@@ -7,12 +7,15 @@ import pytest
 
 from homeassistant.components.tewke.coordinator import TewkeCoordinator, UpdateFailed
 from homeassistant.components.tewke.data import TewkeData
+from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 pytestmark = pytest.mark.usefixtures("mock_tap")
 
 
-async def test_coordinator_reset_and_cancel_timeout(hass, mock_config_entry, mock_tap):
+async def test_coordinator_reset_and_cancel_timeout(
+    hass: HomeAssistant, mock_config_entry, mock_tap
+) -> None:
     """Test reset and cancel timeout logic."""
     mock_config_entry.runtime_data = TewkeData(
         host="127.0.0.1",
@@ -48,8 +51,8 @@ async def test_coordinator_reset_and_cancel_timeout(hass, mock_config_entry, moc
 
 
 async def test_coordinator_handle_timeout_retry_success_first_try(
-    hass, mock_config_entry, mock_tap
-):
+    hass: HomeAssistant, mock_config_entry, mock_tap
+) -> None:
     """Test when the first retry attempt (retry_observes) succeeds."""
     mock_tap.retry_observes = AsyncMock(return_value=True)
 
@@ -80,8 +83,8 @@ async def test_coordinator_handle_timeout_retry_success_first_try(
 
 
 async def test_coordinator_handle_timeout_retry_success_second_try(
-    hass, mock_config_entry, mock_tap
-):
+    hass: HomeAssistant, mock_config_entry, mock_tap
+) -> None:
     """Test when retry_observes fails but _setup_observe succeeds."""
     mock_tap.retry_observes = AsyncMock(return_value=False)
 
@@ -115,8 +118,8 @@ async def test_coordinator_handle_timeout_retry_success_second_try(
 
 
 async def test_coordinator_handle_timeout_retry_fail_all(
-    hass, mock_config_entry, mock_tap
-):
+    hass: HomeAssistant, mock_config_entry, mock_tap
+) -> None:
     """Test when all retry attempts fail."""
     mock_tap.retry_observes = AsyncMock(return_value=False)
 
@@ -157,8 +160,8 @@ async def test_coordinator_handle_timeout_retry_fail_all(
 
 
 async def test_coordinator_handle_timeout_already_running(
-    hass, mock_config_entry, mock_tap
-):
+    hass: HomeAssistant, mock_config_entry, mock_tap
+) -> None:
     """Test when _handle_observation_timeout is called while a retry is already running."""
     mock_config_entry.runtime_data = TewkeData(
         host="127.0.0.1",
@@ -181,7 +184,9 @@ async def test_coordinator_handle_timeout_already_running(
     assert coordinator._observe_retry_task is dummy_task
 
 
-async def test_coordinator_cancel_timeout_with_task(hass, mock_config_entry, mock_tap):
+async def test_coordinator_cancel_timeout_with_task(
+    hass: HomeAssistant, mock_config_entry, mock_tap
+) -> None:
     """Test cancel_observation_timeout when a task is running."""
     mock_config_entry.runtime_data = TewkeData(
         host="127.0.0.1",

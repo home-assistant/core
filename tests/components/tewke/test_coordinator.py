@@ -14,7 +14,7 @@ from homeassistant.components.tewke.data import TewkeData
 from homeassistant.core import HomeAssistant
 
 
-async def test_fetch_with_retries_success():
+async def test_fetch_with_retries_success() -> None:
     """Test _fetch_with_retries succeeds on first try."""
     mock_fn = AsyncMock(return_value="success")
     result = await _fetch_with_retries(mock_fn)
@@ -22,7 +22,7 @@ async def test_fetch_with_retries_success():
     assert mock_fn.call_count == 1
 
 
-async def test_fetch_with_retries_transient_error():
+async def test_fetch_with_retries_transient_error() -> None:
     """Test _fetch_with_retries succeeds after retries."""
     mock_fn = AsyncMock(side_effect=[PyTewkeCoapError("Timeout", 408), "success"])
 
@@ -34,7 +34,7 @@ async def test_fetch_with_retries_transient_error():
     mock_sleep.assert_called_once_with(1.0)
 
 
-async def test_fetch_with_retries_exhausted():
+async def test_fetch_with_retries_exhausted() -> None:
     """Test _fetch_with_retries raises after exhausting retries."""
     mock_fn = AsyncMock(side_effect=PyTewkeCoapError("Timeout", 408))
 
@@ -48,7 +48,7 @@ async def test_fetch_with_retries_exhausted():
     assert mock_sleep.call_count == 2
 
 
-async def test_fetch_with_retries_non_transient():
+async def test_fetch_with_retries_non_transient() -> None:
     """Test _fetch_with_retries fails immediately on non-transient error."""
     mock_fn = AsyncMock(side_effect=PyTewkeInvalidResponseError("Invalid"))
 
@@ -64,7 +64,7 @@ async def test_fetch_with_retries_non_transient():
 
 async def test_coordinator_update_data_first_boot(
     hass: HomeAssistant, mock_config_entry, mock_tap
-):
+) -> None:
     """Test coordinator fetch data on first boot."""
 
     mock_config_entry.runtime_data = TewkeData(
@@ -96,7 +96,7 @@ async def test_coordinator_update_data_first_boot(
 
 async def test_coordinator_update_data_active_observe(
     hass: HomeAssistant, mock_config_entry, mock_tap
-):
+) -> None:
     """Test coordinator skips fetch if observe is active and data is populated."""
 
     mock_config_entry.runtime_data = TewkeData(

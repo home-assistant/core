@@ -106,6 +106,7 @@ async def test_async_setup_observe_error(
 
 async def test_tewke_observer(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test TewkeObserver callbacks."""
@@ -176,8 +177,7 @@ async def test_tewke_observer(
     observer.on_energy_update(EnergyData.model_construct())
 
     # Test on_config_update: renaming
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "test_dock_id")},
         name="Old Name",
@@ -188,7 +188,7 @@ async def test_tewke_observer(
         ConfigData.model_construct(device_name="New Name", tewke_os_version="1.1.0")
     )
 
-    device = dev_reg.async_get(device.id)
+    device = device_registry.async_get(device.id)
     assert device.name == "New Name"
     assert device.sw_version == "1.1.0"
     assert mock_config_entry.data[CONF_NAME] == "New Name"
