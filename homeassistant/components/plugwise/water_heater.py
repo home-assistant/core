@@ -147,7 +147,7 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
+        temperature = cast(float, kwargs[ATTR_TEMPERATURE])
         await self.coordinator.api.set_number(
             self._dev_id,
             self.entity_description.key,
