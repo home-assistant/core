@@ -98,14 +98,16 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         hostname = discovery_info.hostname.rstrip(".")
         self._name = hostname.removesuffix(".local") or self._host
 
-        # Discovery only ever reports an IP, so also match the advertised
-        # hostname to catch entries added under that name.
-        for host in (self._host, hostname, self._name):
+        # Entries may be configured under any address the server advertises or
+        # under its hostname, and a dual-stack server can present a different
+        # one on each announcement, so match them all.
+        for host in (*discovery_info.addresses, hostname, self._name):
             self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: self._port})
         # MPD exposes no stable identifier, over zeroconf or its protocol. The
-        # address deduplicates concurrent flows only, and is cleared before the
-        # entry is created so it is never persisted.
-        await self.async_set_unique_id(f"{self._host}:{self._port}")
+        # advertised name is stable across dual-stack reannouncements, unlike the
+        # selected address, and is cleared before the entry is created so that
+        # nothing discovery-derived is persisted.
+        await self.async_set_unique_id(discovery_info.name)
         self._abort_if_unique_id_configured()
 
         # A server that needs a password fails the unauthenticated probe, so

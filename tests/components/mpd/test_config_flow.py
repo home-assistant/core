@@ -21,7 +21,7 @@ INVALID_PASSWORD_ERROR = mpd.CommandError("[3@0] {password} incorrect password")
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.0.1"),
-    ip_addresses=[ip_address("192.168.0.1")],
+    ip_addresses=[ip_address("192.168.0.1"), ip_address("2001:db8::1")],
     port=6600,
     hostname="mpd-server.local.",
     type="_mpd._tcp.local.",
@@ -191,6 +191,7 @@ async def test_zeroconf_flow_default_port(hass: HomeAssistant) -> None:
     "configured_host",
     [
         pytest.param("192.168.0.1", id="ip_address"),
+        pytest.param("2001:db8::1", id="other_advertised_address"),
         pytest.param("mpd-server.local", id="fqdn"),
         pytest.param("mpd-server", id="hostname"),
     ],
@@ -215,7 +216,7 @@ async def test_zeroconf_flow_already_configured(
 
 @pytest.mark.usefixtures("mock_mpd_client")
 async def test_zeroconf_flow_already_in_progress(hass: HomeAssistant) -> None:
-    """Test a second discovery of a host awaiting confirmation aborts."""
+    """Test a reannouncement selecting another address does not open a flow."""
     await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
     )
@@ -225,12 +226,14 @@ async def test_zeroconf_flow_already_in_progress(hass: HomeAssistant) -> None:
         context={"source": SOURCE_ZEROCONF},
         data=replace(
             ZEROCONF_DISCOVERY,
-            ip_addresses=[ip_address("192.168.0.1"), ip_address("2001:db8::1")],
+            ip_address=ip_address("2001:db8::1"),
+            ip_addresses=[ip_address("2001:db8::1"), ip_address("192.168.0.1")],
         ),
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
+    assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
 
 
 async def test_zeroconf_flow_cannot_connect(
