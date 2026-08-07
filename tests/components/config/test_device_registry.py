@@ -385,12 +385,47 @@ async def test_update_device_labels(
         assert getattr(device, key) == value
 
 
+_DEPRECATION_WARNING = (
+    "The websocket command config/device_registry/remove_config_entry is "
+    "deprecated and will be removed in Home Assistant 2027.9"
+)
+
+# The new command and its deprecated alias share an implementation, so tests that
+# apply to both are parametrized over them. The alias still takes config_entry_id,
+# which must match the device's config entry, while the new command rejects it as an
+# unknown key.
+_REMOVE_DEVICE_COMMANDS = [
+    pytest.param("config/device_registry/remove", False, id="remove"),
+    pytest.param(
+        "config/device_registry/remove_config_entry", True, id="remove_config_entry"
+    ),
+]
+
+
+async def _send_remove_device(
+    ws_client: MockHAClientWebSocket,
+    command: str,
+    device_id: str,
+    config_entry_id: str,
+) -> dict[str, Any]:
+    """Send a device removal command and return the response."""
+    message: dict[str, Any] = {"type": command, "device_id": device_id}
+    if command == "config/device_registry/remove_config_entry":
+        message["config_entry_id"] = config_entry_id
+    await ws_client.send_json_auto_id(message)
+    return await ws_client.receive_json()
+
+
+@pytest.mark.parametrize(("command", "deprecated"), _REMOVE_DEVICE_COMMANDS)
 async def test_remove_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    command: str,
+    deprecated: bool,
 ) -> None:
-    """Test removing a device."""
+    """Test removing a device via the command and its deprecated alias."""
     assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
@@ -444,7 +479,9 @@ async def test_remove_device(
     assert device_entry.config_entries == {entry_2.entry_id}
 
     # Removal is rejected while async_remove_config_entry_device returns False
-    response = await ws_client.remove_device(device_entry.id)
+    response = await _send_remove_device(
+        ws_client, command, device_entry.id, entry_2.entry_id
+    )
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -453,7 +490,9 @@ async def test_remove_device(
     can_remove = True
 
     # The device is removed
-    response = await ws_client.remove_device(device_entry.id)
+    response = await _send_remove_device(
+        ws_client, command, device_entry.id, entry_2.entry_id
+    )
 
     assert response["success"]
     assert response["result"] is None
@@ -464,6 +503,9 @@ async def test_remove_device(
     assert device_registry.async_get(device_entry_1.id).config_entries == {
         entry_1.entry_id
     }
+
+    # Only the deprecated alias logs a deprecation warning
+    assert (_DEPRECATION_WARNING in caplog.text) is deprecated
 
 
 async def test_remove_device_fails(
@@ -698,6 +740,67 @@ async def test_remove_device_composite(
     assert not msg["success"]
     assert msg["error"]["code"] == "home_assistant_error"
     assert msg["error"]["message"] == "Cannot remove a composite device"
+
+
+async def test_remove_config_entry_from_device_deprecated_config_entry_mismatch(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the deprecated alias fails if config_entry_id is not the device's."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    async def async_remove_config_entry_device(
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    ) -> bool:
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp1", async_remove_config_entry_device=async_remove_config_entry_device
+        ),
+    )
+
+    entry_1 = MockConfigEntry(domain="comp1", title="Test 1", source="bla")
+    entry_1.supports_remove_device = True
+    entry_1.add_to_hass(hass)
+
+    # A second, unrelated config entry
+    entry_2 = MockConfigEntry(domain="comp1", title="Test 2", source="bla")
+    entry_2.supports_remove_device = True
+    entry_2.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    # Passing a config entry which is not the device's fails, device is untouched
+    response = await _send_remove_device(
+        ws_client,
+        "config/device_registry/remove_config_entry",
+        device_entry.id,
+        entry_2.entry_id,
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert response["error"]["message"] == "Config entry not in device"
+    assert device_registry.async_get(device_entry.id) is not None
+
+    # Passing the device's own config entry removes the device
+    response = await _send_remove_device(
+        ws_client,
+        "config/device_registry/remove_config_entry",
+        device_entry.id,
+        entry_1.entry_id,
+    )
+
+    assert response["success"]
+    assert response["result"] is None
+    assert not device_registry.async_get(device_entry.id)
 
 
 async def test_list_linked_devices(

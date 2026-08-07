@@ -1,5 +1,6 @@
 """HTTP views to interact with the device registry."""
 
+import logging
 from typing import Any, cast
 
 import voluptuous as vol
@@ -12,6 +13,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryDisabler
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
@@ -22,6 +25,9 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, websocket_list_linked_devices)
     websocket_api.async_register_command(hass, websocket_update_device)
     websocket_api.async_register_command(hass, websocket_remove_device)
+    websocket_api.async_register_command(
+        hass, websocket_remove_config_entry_from_device
+    )
     return True
 
 
@@ -169,20 +175,20 @@ def websocket_update_device(
     connection.send_message(websocket_api.result_message(msg_id, entry.dict_repr))
 
 
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        "type": "config/device_registry/remove",
-        "device_id": str,
-    }
-)
-@websocket_api.async_response
-async def websocket_remove_device(
+async def _async_remove_device(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    *,
+    expected_config_entry_id: str | None = None,
 ) -> None:
-    """Remove a device."""
+    """Remove a device.
+
+    Shared implementation for the config/device_registry/remove command and its
+    deprecated config/device_registry/remove_config_entry alias. The alias passes
+    expected_config_entry_id, and the device is only removed if it belongs to that
+    config entry.
+    """
     registry = dr.async_get(hass)
     device_id = msg["device_id"]
 
@@ -192,6 +198,12 @@ async def websocket_remove_device(
 
     if (device_entry := registry.async_get(device_id)) is None:
         raise HomeAssistantError("Unknown device")
+
+    if (
+        expected_config_entry_id is not None
+        and expected_config_entry_id not in device_entry.config_entries
+    ):
+        raise HomeAssistantError("Config entry not in device")
 
     config_entry_id = device_entry.config_entry_id
     if (config_entry := hass.config_entries.async_get_entry(config_entry_id)) is None:
@@ -218,3 +230,50 @@ async def websocket_remove_device(
         registry.async_remove_device(device_id)
 
     connection.send_message(websocket_api.result_message(msg["id"], None))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config/device_registry/remove",
+        "device_id": str,
+    }
+)
+@websocket_api.async_response
+async def websocket_remove_device(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Remove a device."""
+    await _async_remove_device(hass, connection, msg)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config/device_registry/remove_config_entry",
+        "config_entry_id": str,
+        "device_id": str,
+    }
+)
+@websocket_api.async_response
+async def websocket_remove_config_entry_from_device(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Remove a device.
+
+    Deprecated alias of config/device_registry/remove. The config_entry_id
+    parameter is kept for backwards compatibility and must match the device's
+    config entry.
+    """
+    _LOGGER.warning(
+        "The websocket command config/device_registry/remove_config_entry is "
+        "deprecated and will be removed in Home Assistant 2027.9; use "
+        "config/device_registry/remove instead"
+    )
+    await _async_remove_device(
+        hass, connection, msg, expected_config_entry_id=msg["config_entry_id"]
+    )
