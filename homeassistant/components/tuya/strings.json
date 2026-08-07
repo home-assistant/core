@@ -992,7 +992,7 @@
         }
       },
       "water_once": {
-        "name": "Water usage (last session)"
+        "name": "Session water usage"
       },
       "water_time": {
         "name": "Water usage duration"

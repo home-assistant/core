@@ -1093,7 +1093,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="irrigation_status",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-        # Water used during the current/last watering session
         TuyaSensorEntityDescription(
             key=DPCode.WATER_ONCE,
             translation_key="water_once",
@@ -1101,7 +1100,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfVolume.LITERS,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
-        # Cumulative total water usage
         TuyaSensorEntityDescription(
             key=DPCode.WATER_TOTAL,
             translation_key="water_total",
