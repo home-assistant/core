@@ -689,12 +689,7 @@ async def test_migration_from_v2_1(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 2.1.
-
-    This tests we clean up the broken migration in Home Assistant Core
-    2025.7.0b0-2025.7.0b1:
-    - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
-    """
+    """Test migration from version 2.1."""
     # Create a v2.1 config entry with 2 subentries, devices and entities
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,

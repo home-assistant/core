@@ -779,9 +779,7 @@ async def test_migration_from_v2_1(
 ) -> None:
     """Test migration from version 2.1.
 
-    This tests we clean up the broken migration in Home Assistant Core
-    2025.7.0b0-2025.7.0b1 and add AI Task and STT subentries:
-    - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
+    This tests we add TTS, AI Task and STT subentries:
     - Add TTS subentry (Added in Home Assistant Core 2025.7.0b1)
     - Add AI Task subentry (Added in version 2.3)
     - Add STT subentry (Added in version 2.3)
