@@ -83,6 +83,7 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
             }
 
         super().__init__(hass, target_selection, entity_filter)
+        self._selection = target_selection
         self._run_action = run_action
         self._device_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
@@ -94,14 +95,15 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
         ent_reg = er.async_get(self._hass)
         dev_reg = dr.async_get(self._hass)
         # Directly targeted devices are used as-is, because resolving them through their
-        # entities would drop a device whose webOS TV entity is hidden.
+        # entities would drop a device whose webOS TV entity is hidden. A device that no
+        # longer exists is skipped, like an entity that is not a webOS TV entity.
         device_ids: set[str] = set()
-        for device_id in self._target_selection.device_ids:
-            # A pre-migration composite id is not a device; it resolves to its splits
-            if splits := dev_reg.async_get_devices_for_composite_device_id(device_id):
-                device_ids.update(device.id for device in splits)
-            else:
+        for device_id in self._selection.device_ids:
+            if device_id in dev_reg.devices:
                 device_ids.add(device_id)
+            # A pre-migration composite id is not a device; it resolves to its splits
+            elif splits := dev_reg.async_get_devices_for_composite_device_id(device_id):
+                device_ids.update(device.id for device in splits)
         device_ids.update(
             entity_device_id
             for entity_id in tracked_entities

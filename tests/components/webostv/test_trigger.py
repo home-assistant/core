@@ -487,6 +487,48 @@ async def test_trigger_target_takes_precedence_over_legacy(
 
 
 @pytest.mark.usefixtures("client")
+async def test_trigger_unknown_device_id(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test turn on trigger targeting a device that no longer exists."""
+    await setup_webostv(hass)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "trigger": "webostv.turn_on",
+                        "target": {"device_id": "does-not-exist"},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ENTITY_ID},
+                    },
+                },
+            ],
+        },
+    )
+
+    assert "ValueError" not in caplog.text
+
+    # The device does not resolve, so no turn on action is attached
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "media_player",
+            "turn_on",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+
+    assert len(service_calls) == 1
+
+
+@pytest.mark.usefixtures("client")
 async def test_trigger_non_webostv_entity_id(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
