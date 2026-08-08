@@ -2127,6 +2127,127 @@ async def test_migration_detaches_via_device_of_dropped_parent(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_migration_clears_via_device_self_reference(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """The version 3.3 migration clears a device's via_device_id self-reference."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    device_id = "selfref00000000000000000000000"
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 3,
+        "minor_version": 2,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entry_id": entry.entry_id,
+                    "config_subentry_id": None,
+                    "composite_device_id": None,
+                    "composite_primary_config_entry": None,
+                    "split_at": None,
+                    "has_composite_identifiers": False,
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": device_id,
+                    "identifiers": [["test", "self"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "name": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": None,
+                    # Buggy self-reference that the migration must clear
+                    "via_device_id": device_id,
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    device = registry.async_get(device_id)
+    assert device is not None
+    assert device.via_device_id is None
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_clears_composite_via_device_self_reference(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A self-reference the 3.2 split remapping introduces is cleared.
+
+    A pre-migration composite device linking to itself via via_device_id is split into
+    one device per config entry; the 3.2 remapping points each split's stale link at the
+    split owning its config entry, i.e. itself. The 3.3 step runs afterwards and clears
+    the resulting self-references.
+    """
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    composite_id = "composite000000000000000000000"
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [entry_1.entry_id, entry_2.entry_id],
+                    "config_entries_subentries": {
+                        entry_1.entry_id: [None],
+                        entry_2.entry_id: [None],
+                    },
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": composite_id,
+                    "identifiers": [["test", "composite"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "name": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": entry_1.entry_id,
+                    "serial_number": None,
+                    "sw_version": None,
+                    # Buggy self-reference remapped to each split by the 3.2 migration
+                    "via_device_id": composite_id,
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    splits = registry.devices.get_devices_for_composite_device_id(composite_id)
+    assert len(splits) == 2
+    assert all(split.via_device_id is None for split in splits)
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_migration_collapses_multi_subentry_device(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -4011,6 +4132,132 @@ async def test_update_device_unknown_via_device_id_raises_before_removal(
 
     # The device was not removed
     assert device_registry.async_get(device.id) == device
+
+
+async def test_get_or_create_via_device_self_reference_ignored(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A device referencing itself via the deprecated via_device is ignored and logged."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "self")}
+    )
+
+    updated = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "self")},
+        via_device=("hue", "self"),
+    )
+
+    assert updated.id == device.id
+    assert updated.via_device_id is None
+    assert (
+        "calls `device_registry.async_get_or_create` with a `via_device` "
+        "referencing the device itself" in caplog.text
+    )
+
+
+async def test_get_or_create_via_device_id_self_reference_raises(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A device referencing itself via via_device_id raises, leaving it unchanged."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "self")}
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="A device can not be its own via device"
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("hue", "self")},
+            via_device_id=device.id,
+        )
+
+    assert device_registry.async_get(device.id).via_device_id is None
+
+
+async def test_update_device_via_device_id_self_reference_raises(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Updating a device to reference itself via via_device_id raises."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "self")}
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="A device can not be its own via device"
+    ):
+        device_registry.async_update_device(device.id, via_device_id=device.id)
+
+    assert device_registry.async_get(device.id).via_device_id is None
+
+
+async def test_update_device_via_device_id_self_reference_raises_before_removal(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A self-referencing via_device_id raises before a removal in the same call."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "device")}
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="A device can not be its own via device"
+    ):
+        device_registry.async_update_device(
+            device.id,
+            remove_config_entry_id=config_entry.entry_id,
+            via_device_id=device.id,
+        )
+
+    # The device was not removed
+    assert device_registry.async_get(device.id) == device
+
+
+async def test_update_device_composite_via_device_id_self_reference_raises_before_removal(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A composite via_device_id self-reference raises before a removal in one call."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    # old_id resolves to device_1 (the split owned by entry_1), so linking device_1 to
+    # it is a self-reference; it must raise before the removal deletes the device.
+    with pytest.raises(
+        HomeAssistantError, match="A device can not be its own via device"
+    ):
+        device_registry.async_update_device(
+            device_1.id,
+            remove_config_entry_id=entry_1.entry_id,
+            via_device_id=old_id,
+        )
+
+    assert device_1.id in device_registry.devices
 
 
 async def test_get_or_create_composite_via_device_id_resolved(
