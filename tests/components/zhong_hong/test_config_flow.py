@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import HOST, FakeGateway
+from .conftest import DEVICE_ADDRESS, HOST, FakeGateway
 
 from tests.common import MockConfigEntry
 
@@ -130,6 +130,37 @@ async def test_user_flow_no_devices_found(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_user_flow_closes_the_probe_before_discovering(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_socket_probe: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the probe socket is gone before discovery opens its own.
+
+    The gateway takes one connection at a time, so a probe still on its way
+    out would have discovery refused and report a reachable gateway as
+    unreachable.
+    """
+    writer = mock_socket_probe.return_value[1]
+    closed_before_discovery = False
+
+    def _discovery_ac() -> list[tuple[int, int]]:
+        nonlocal closed_before_discovery
+        closed_before_discovery = writer.wait_closed.await_count == 1
+        return [DEVICE_ADDRESS]
+
+    mock_gateway.discovery_ac = _discovery_ac
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert closed_before_discovery
+
+
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
@@ -146,6 +177,26 @@ async def test_user_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_second_gateway_on_another_port(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_socket_probe: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the port is part of what tells two gateways apart."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={**USER_INPUT, CONF_PORT: DEFAULT_PORT + 1},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_import_flow(

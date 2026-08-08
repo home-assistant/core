@@ -178,10 +178,11 @@ def mock_gateway(gateway: FakeGateway) -> Generator[FakeGateway]:
 @pytest.fixture
 def mock_socket_probe() -> Generator[AsyncMock]:
     """Patch the config flow's reachability probe."""
+    writer = MagicMock(wait_closed=AsyncMock())
     with patch(
         "homeassistant.components.zhong_hong.config_flow.asyncio.open_connection",
         new_callable=AsyncMock,
-        return_value=(MagicMock(), MagicMock()),
+        return_value=(MagicMock(), writer),
     ) as probe:
         yield probe
 

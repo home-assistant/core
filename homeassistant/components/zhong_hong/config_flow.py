@@ -41,14 +41,17 @@ async def _async_validate_gateway(
 
     # Probe the socket first. The library retries discovery on its own for
     # minutes before giving up, which is far too long to leave a flow hanging
-    # on a mistyped address.
+    # on a mistyped address. The probe has to be closed and waited on before
+    # discovery opens its own: the gateway takes one connection at a time and
+    # refuses a second one, so a probe still on the way out would make a
+    # perfectly reachable gateway look unreachable.
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT):
             _, writer = await asyncio.open_connection(host, port)
+            writer.close()
+            await writer.wait_closed()
     except OSError, TimeoutError:
         return "cannot_connect"
-
-    writer.close()
 
     hub = ZhongHongGateway(host, port, data[CONF_GATEWAY_ADDRESS])
     try:
@@ -78,9 +81,13 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # A gateway is identified by the endpoint it is reached on and the
+            # address it answers to, all three of which the coordinator needs
+            # to talk to it.
             self._async_abort_entries_match(
                 {
                     CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
                     CONF_GATEWAY_ADDRESS: user_input[CONF_GATEWAY_ADDRESS],
                 }
             )
@@ -114,6 +121,7 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match(
             {
                 CONF_HOST: import_data[CONF_HOST],
+                CONF_PORT: import_data[CONF_PORT],
                 CONF_GATEWAY_ADDRESS: import_data[CONF_GATEWAY_ADDRESS],
             }
         )
