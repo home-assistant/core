@@ -1078,7 +1078,7 @@ gardena-bluetooth==2.8.1
 gassist-text==0.0.14
 
 # homeassistant.components.gatus
-gatus-api==1.0.3
+gatus-api==1.0.5
 
 # homeassistant.components.google
 gcal-sync==9.1.0
@@ -3479,7 +3479,7 @@ zha-quirks==2.2.0
 zha==2.1.0
 
 # homeassistant.components.zhong_hong
-zhong-hong-hvac==1.0.16
+zhong-hong-hvac==1.0.17
 
 # homeassistant.components.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.1.0
