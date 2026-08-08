@@ -48,7 +48,7 @@ async def test_list_devices(
         identifiers={("bridgeid", "1234")},
         manufacturer="manufacturer",
         model="model",
-        via_device=("bridgeid", "0123"),
+        via_device_id=device1.id,
         entry_type=dr.DeviceEntryType.SERVICE,
     )
 
