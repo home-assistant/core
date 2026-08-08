@@ -381,7 +381,18 @@ UPS_DEVICE_1.update(
                 "outlet_current": 0.35,
                 "outlet_power": 42.5,
                 "outlet_power_factor": 0.98,
-            }
+            },
+            {
+                "index": 2,
+                "relay_state": True,
+                "cycle_enabled": False,
+                "has_metering": True,
+                "name": "Outlet 2",
+                "outlet_voltage": 121.7,
+                "outlet_current": 0.1,
+                "outlet_power": 12.5,
+                "outlet_power_factor": 0.95,
+            },
         ],
         "outlet_overrides": [
             {
@@ -997,6 +1008,9 @@ async def test_outlet_power_reading_extended_caps(
     """Test outlet power reporting with extended capability bits and numeric values."""
     entity_id = "sensor.dummy_ups_2u_pro_outlet_1_outlet_power"
     assert hass.states.get(entity_id).state == "42.5"
+    assert (
+        hass.states.get("sensor.dummy_ups_2u_pro_outlet_2_outlet_power").state == "12.5"
+    )
 
     updated_device_data = deepcopy(UPS_DEVICE_1)
     updated_device_data["outlet_table"][0]["outlet_power"] = 43.5
