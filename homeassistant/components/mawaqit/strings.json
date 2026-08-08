@@ -1,11 +1,10 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Only one MAWAQIT entry is allowed. Use the 3-dot menu on the existing entry to Reconfigure or Delete it, then set it up again.",
+      "already_configured": "Only one MAWAQIT entry is allowed. Delete the current integration, then set it up again.",
       "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
       "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect_to_server": "Cannot connect to the server, please retry later.",

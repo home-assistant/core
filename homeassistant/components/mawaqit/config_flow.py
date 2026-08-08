@@ -213,11 +213,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 lat,
                 longi,
             )
-            if self.source == config_entries.SOURCE_RECONFIGURE:
-                # reconfigure flow: update existing entry with new data and reload
-                return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(), title=title, data=data_entry
-                )
             return self.async_create_entry(title=title, data=data_entry)
 
         if not self.mosques:
@@ -329,12 +324,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     mawaqit_token=self.token,
                 )
 
-                if self.source == config_entries.SOURCE_RECONFIGURE:
-                    # reconfigure flow: update existing entry with new data and reload
-                    return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(), title=title, data=data_entry
-                    )
-
                 return self.async_create_entry(title=title, data=data_entry)
 
             # New keyword: reset to page 1
@@ -436,10 +425,3 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(option),
             errors=errors,
         )
-
-    async def async_step_reconfigure(
-        self, user_input: Mapping[str, Any]
-    ) -> config_entries.ConfigFlowResult:
-        """Handle reconfiguration."""
-        self.token = self._get_reconfigure_entry().data[CONF_API_KEY]
-        return await self.async_step_search_method()
