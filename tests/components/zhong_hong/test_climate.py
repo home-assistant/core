@@ -62,8 +62,9 @@ async def test_entity_registration(
 
     entity_entry = entity_registry.async_get(ENTITY_ID)
     assert entity_entry is not None
-    # Changing this breaks the history of every installation that used YAML.
-    assert entity_entry.unique_id == "zhong_hong_hvac_1_1"
+    # The address on the bus is not unique on its own: another gateway can
+    # have an air conditioner at the same one.
+    assert entity_entry.unique_id == f"{mock_config_entry.entry_id}_1_1"
 
     device_entry = device_registry.async_get(entity_entry.device_id)
     assert device_entry is not None

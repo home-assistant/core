@@ -20,11 +20,18 @@ type ZhongHongConfigEntry = ConfigEntry[ZhongHongCoordinator]
 type DeviceAddress = tuple[int, int]
 
 
-def device_unique_id(address: DeviceAddress) -> str:
-    """Return the unique ID of the air conditioner at an address.
+def device_unique_id(entry: ZhongHongConfigEntry, address: DeviceAddress) -> str:
+    """Return the unique ID of the air conditioner at an address."""
+    return f"{entry.entry_id}_{address[0]}_{address[1]}"
 
-    This is the identifier the YAML platform used. Keeping it means an
-    imported installation keeps its entity IDs and recorded history.
+
+def legacy_device_unique_id(address: DeviceAddress) -> str:
+    """Return the identifier the YAML platform gave the air conditioner.
+
+    It carried only the address on the bus, so two gateways with an air
+    conditioner at the same address, which `(1, 1)` commonly is, produced the
+    same one and the second entity was dropped. Entities are moved off it on
+    setup; it is still needed to find them.
     """
     return f"zhong_hong_hvac_{address[0]}_{address[1]}"
 

@@ -1,6 +1,7 @@
 """Config flow for the ZhongHong integration."""
 
 import asyncio
+from functools import partial
 from typing import Any, override
 
 import voluptuous as vol
@@ -31,6 +32,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 CONNECT_TIMEOUT = 5
 
+# Left to itself the library retries discovery for over five minutes, which is
+# what an address that accepts the connection without speaking the protocol
+# costs. Waiting that out belongs to the retries that set the entry up, not to
+# someone sitting in front of a form.
+DISCOVERY_TIMEOUT = 15
+
 
 async def _async_validate_gateway(
     hass: HomeAssistant, data: dict[str, Any]
@@ -39,12 +46,11 @@ async def _async_validate_gateway(
     host: str = data[CONF_HOST]
     port: int = data[CONF_PORT]
 
-    # Probe the socket first. The library retries discovery on its own for
-    # minutes before giving up, which is far too long to leave a flow hanging
-    # on a mistyped address. The probe has to be closed and waited on before
-    # discovery opens its own: the gateway takes one connection at a time and
-    # refuses a second one, so a probe still on the way out would make a
-    # perfectly reachable gateway look unreachable.
+    # Probe the socket first, so a mistyped address is answered for in seconds
+    # rather than waiting on discovery. The probe has to be closed and waited
+    # on before discovery opens its own: the gateway takes one connection at a
+    # time and refuses a second one, so a probe still on the way out would make
+    # a perfectly reachable gateway look unreachable.
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT):
             _, writer = await asyncio.open_connection(host, port)
@@ -55,7 +61,9 @@ async def _async_validate_gateway(
 
     hub = ZhongHongGateway(host, port, data[CONF_GATEWAY_ADDRESS])
     try:
-        addresses = await hass.async_add_executor_job(hub.discovery_ac)
+        addresses = await hass.async_add_executor_job(
+            partial(hub.discovery_ac, timeout=DISCOVERY_TIMEOUT)
+        )
     except OSError:
         LOGGER.debug("Discovery against %s:%s failed", host, port, exc_info=True)
         return "cannot_connect"

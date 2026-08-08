@@ -166,7 +166,7 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
         super().__init__(coordinator)
         self._device = coordinator.devices[address]
         addr_out, addr_in = address
-        self._attr_unique_id = device_unique_id(address)  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+        self._attr_unique_id = device_unique_id(coordinator.config_entry, address)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="ZhongHong",

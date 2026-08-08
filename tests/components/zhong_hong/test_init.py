@@ -12,10 +12,10 @@ from homeassistant.components.zhong_hong.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -144,3 +144,97 @@ async def test_yaml_import_with_an_unreachable_gateway(
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
+
+
+async def test_unique_ids_are_migrated_off_the_address(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity keeps its entity ID when its unique ID is replaced.
+
+    The YAML platform identified an air conditioner by its address alone. The
+    entity ID is what the history is recorded against, so it has to survive.
+    """
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        "zhong_hong_hvac_1_1",
+        suggested_object_id="ac_1_1",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.unique_id == f"{mock_config_entry.entry_id}_1_1"
+
+
+async def test_two_gateways_with_the_same_address(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an air conditioner at the same address on two gateways.
+
+    `(1, 1)` is the first address on any bus, so two gateways having one is
+    the ordinary case rather than a corner one. Identified by address alone
+    both entities collided and Home Assistant added only the first.
+    """
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="5.6.7.8",
+        data={
+            CONF_HOST: "5.6.7.8",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_GATEWAY_ADDRESS: DEFAULT_GATEWAY_ADDRESS,
+        },
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, other_entry)
+
+    assert other_entry.state is ConfigEntryState.LOADED
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 2
+
+
+async def test_the_old_unique_id_is_left_with_its_owner(
+    hass: HomeAssistant,
+    mock_gateway: FakeGateway,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity another gateway owns is not taken over.
+
+    Both gateways can have an air conditioner at `(1, 1)`, but only one of
+    them owns the entity left behind under the old identifier. The owner
+    moves it itself when it sets up; while it is not running, nobody else
+    may, or that gateway's history would end up on this one.
+    """
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        disabled_by=ConfigEntryDisabler.USER,
+        data={
+            CONF_HOST: "5.6.7.8",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_GATEWAY_ADDRESS: DEFAULT_GATEWAY_ADDRESS,
+        },
+    )
+    other_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        "zhong_hong_hvac_1_1",
+        config_entry=other_entry,
+        suggested_object_id="ac_1_1",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.unique_id == "zhong_hong_hvac_1_1"
+    assert entity_entry.config_entry_id == other_entry.entry_id

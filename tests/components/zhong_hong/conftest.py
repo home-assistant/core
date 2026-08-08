@@ -71,6 +71,9 @@ class FakeGateway:
 
         self.discovery_result: list[tuple[int, int]] = [DEVICE_ADDRESS]
         self.discovery_error: Exception | None = None
+        # The bound each discovery was given, so a test can tell the config
+        # flow's bounded call from the coordinator's unbounded one.
+        self.discovery_timeouts: list[float | None] = []
 
         self.send_result = True
         self.send_results: list[bool] = []
@@ -86,8 +89,9 @@ class FakeGateway:
         self._devices: dict[tuple[int, int], object] = {}
         self._status_callbacks: dict[tuple[int, int], Callable[[AcStatus], None]] = {}
 
-    def discovery_ac(self) -> list[tuple[int, int]]:
+    def discovery_ac(self, timeout: float | None = None) -> list[tuple[int, int]]:
         """Return the devices behind the gateway."""
+        self.discovery_timeouts.append(timeout)
         if self.discovery_error is not None:
             raise self.discovery_error
         return self.discovery_result

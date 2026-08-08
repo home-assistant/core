@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from homeassistant.components.zhong_hong.config_flow import DISCOVERY_TIMEOUT
 from homeassistant.components.zhong_hong.const import (
     CONF_GATEWAY_ADDRESS,
     DEFAULT_GATEWAY_ADDRESS,
@@ -48,6 +49,10 @@ async def test_user_flow(
     assert result["title"] == HOST
     assert result["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
+    # Discovery is bounded here. Unbounded it retries for over five minutes,
+    # which is what an address that connects but does not answer would cost
+    # someone waiting on the form.
+    assert mock_gateway.discovery_timeouts == [DISCOVERY_TIMEOUT]
 
 
 async def test_user_flow_unreachable_host(
@@ -145,7 +150,7 @@ async def test_user_flow_closes_the_probe_before_discovering(
     writer = mock_socket_probe.return_value[1]
     closed_before_discovery = False
 
-    def _discovery_ac() -> list[tuple[int, int]]:
+    def _discovery_ac(timeout: float | None = None) -> list[tuple[int, int]]:
         nonlocal closed_before_discovery
         closed_before_discovery = writer.wait_closed.await_count == 1
         return [DEVICE_ADDRESS]
