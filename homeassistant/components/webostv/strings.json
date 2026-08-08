@@ -95,7 +95,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "An automation or template entity uses the LG webOS TV turn on trigger with the `entity_id` or `device_id` option. Those options have been replaced by a target. They still work for now, but support for them will be removed in a future release.\n\nOpen each affected automation in the editor, select your TV as the target of the trigger, and save it again. Alternatively, edit your configuration files (for example `automations.yaml`) directly and move the `entity_id` or `device_id` option into a `target` block.\n\nWhen this is done, select **Submit**.",
+            "description": "An automation or template entity uses the LG webOS TV turn on trigger with the `entity_id` or `device_id` option. Those options have been replaced by a target. They still work for now, but support for them will be removed in a future release.\n\nOpen each affected automation in the editor, select your TV as the target of the trigger, and save it again. Alternatively, edit your configuration files (for example `automations.yaml`) directly and move the `entity_id` or `device_id` option into a `target` block.\n\nIf this issue reappears after a restart, the old option is still present. Edit your configuration files directly and remove the `entity_id` or `device_id` option from the trigger.\n\nWhen this is done, select **Submit**.",
             "title": "Deprecated LG webOS TV turn on trigger configuration"
           }
         }
