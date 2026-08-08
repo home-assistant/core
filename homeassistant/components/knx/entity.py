@@ -203,26 +203,33 @@ class KnxYamlEntity(_KnxEntityBase):
         async_migrate_yaml_unique_id(
             knx_module.hass, platform, legacy_unique_id, new_unique_id
         )
-        if user_unique_id := entity_config.get(CONF_UNIQUE_ID):
+        if (user_unique_id := entity_config.get(CONF_UNIQUE_ID)) and (
+            user_unique_id != new_unique_id
+        ):
             ent_reg = er.async_get(knx_module.hass)
-            if ent_reg.async_get_entity_id(
-                platform, DOMAIN, user_unique_id
-            ) and ent_reg.async_get_entity_id(platform, DOMAIN, new_unique_id):
-                # The user id already belongs to a different entity. Migrating
-                # would delete this entity's registry entry (history, settings),
-                # so keep the generated id - the duplicate surfaces at add time.
-                _LOGGER.warning(
-                    "Configured `unique_id: %s` for %s entity '%s' is already in"
-                    " use; keeping the generated unique id instead",
-                    user_unique_id,
-                    platform,
-                    entity_config[CONF_NAME],
-                )
-            else:
-                async_migrate_yaml_unique_id(
-                    knx_module.hass, platform, new_unique_id, user_unique_id
-                )
+            generated_entity_id = ent_reg.async_get_entity_id(
+                platform, DOMAIN, new_unique_id
+            )
+            if generated_entity_id is None:
+                # new entity, or already migrated on an earlier run
                 new_unique_id = user_unique_id
+            else:
+                try:
+                    # rename the existing entry, preserving history and settings
+                    ent_reg.async_update_entity(
+                        generated_entity_id, new_unique_id=user_unique_id
+                    )
+                except ValueError:
+                    # id already belongs to another entity - keep the generated one
+                    _LOGGER.warning(
+                        "Configured `unique_id: %s` for %s entity '%s' is already"
+                        " in use; keeping the generated unique id instead",
+                        user_unique_id,
+                        platform,
+                        entity_config[CONF_NAME],
+                    )
+                else:
+                    new_unique_id = user_unique_id
         self._knx_module = knx_module
         self._attr_name = entity_config[CONF_NAME] or None
         self._attr_unique_id = new_unique_id
