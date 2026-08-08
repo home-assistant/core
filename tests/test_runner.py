@@ -195,6 +195,25 @@ def test_enable_posix_spawn() -> None:
         assert subprocess._USE_POSIX_SPAWN is False
 
 
+def test_patch_aiodns_to_disable_edns_flags() -> None:
+    """Test aiodns flags are patched only when not explicitly configured."""
+    calls: list[dict[str, object]] = []
+
+    class DNSResolver:
+        def __init__(self, **kwargs: object) -> None:
+            calls.append(kwargs)
+
+    fake_aiodns = MagicMock(DNSResolver=DNSResolver)
+
+    with patch.dict("sys.modules", {"aiodns": fake_aiodns}):
+        runner._patch_aiodns_to_disable_edns()
+        DNSResolver()
+        DNSResolver(flags=None)
+        DNSResolver(flags=1)
+
+    assert calls == [{"flags": 0}, {"flags": 0}, {"flags": 1}]
+
+
 def test_ensure_single_execution_success(tmp_path: Path) -> None:
     """Test successful single instance execution."""
     config_dir = str(tmp_path)

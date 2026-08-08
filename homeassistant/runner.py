@@ -278,9 +278,40 @@ def _enable_posix_spawn() -> None:
     subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform  # type: ignore[misc]  # noqa: SLF001
 
 
+def _patch_aiodns_to_disable_edns() -> None:
+    """Disable DNS cookies in aiodns by setting default flags to 0.
+
+    c-ares 1.33.0+ enables DNS cookies by default which can cause timeouts
+    with some DNS servers. We disable EDNS (and thus cookies) by default
+    unless flags are explicitly set.
+
+    This process-wide monkeypatch compensates for current aiodns/pycares/c-ares
+    resolver behavior and can be removed once the resolver layer handles this
+    case more gracefully.
+    """
+    try:
+        import aiodns  # noqa: PLC0415
+    except ImportError:
+        return
+
+    patch_marker = "ha_disable_edns_patched"
+    original_init = aiodns.DNSResolver.__init__
+    if getattr(original_init, patch_marker, False):
+        return
+
+    def new_init(self: Any, *args: Any, **kwargs: Any) -> None:
+        if kwargs.get("flags") is None:
+            kwargs["flags"] = 0
+        original_init(self, *args, **kwargs)
+
+    setattr(new_init, patch_marker, True)
+    aiodns.DNSResolver.__init__ = new_init  # type: ignore[method-assign]
+
+
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     _enable_posix_spawn()
+    _patch_aiodns_to_disable_edns()
     set_open_file_descriptor_limit()
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))  # type: ignore[deprecated]
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
