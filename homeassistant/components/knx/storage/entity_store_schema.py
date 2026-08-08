@@ -111,6 +111,7 @@ from .const import (
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
     CONF_IGNORE_AUTO_MODE,
+    CONF_RESET_DATA,
     CONF_SPEED,
     CONF_TARGET_TEMPERATURE,
 )
@@ -175,36 +176,47 @@ BINARY_SENSOR_KNX_SCHEMA = vol.Schema(
 )
 
 
-def _button_data_sub_validator(config: dict) -> dict:
-    """Validate data matching configured DPT."""
+def _validate_button_data(config: dict, data_key: str) -> None:
+    """Validate button data matching configured DPT."""
     dpt = config[CONF_GA_SEND].get(CONF_DPT)
-    transcoder = None
     if dpt:
         transcoder = DPTBase.parse_transcoder(dpt)
         assert transcoder is not None  # already checked by GASelector
 
-        if CONF_VALUE in config[CONF_DATA]:
+        if CONF_VALUE in config[data_key]:
             try:
-                transcoder.to_knx(config[CONF_DATA][CONF_VALUE])
+                transcoder.to_knx(config[data_key][CONF_VALUE])
             except ConversionError as ex:
                 raise vol.Invalid(
                     f"Value invalid for DPT {transcoder.dpt_number_str()}",
-                    path=([CONF_DATA]),
+                    path=([data_key]),
                 ) from ex
-        elif CONF_PAYLOAD_LENGTH in config[CONF_DATA]:
-            length = config[CONF_DATA][CONF_PAYLOAD_LENGTH]
+        elif CONF_PAYLOAD_LENGTH in config[data_key]:
+            length = config[data_key][CONF_PAYLOAD_LENGTH]
             if length != transcoder.payload_length or (
                 length != 0 and transcoder.payload_type is DPTBinary
             ):
                 raise vol.Invalid(
                     f"Payload length invalid for DPT {transcoder.dpt_number_str()}",
-                    path=([CONF_DATA]),
+                    path=([data_key]),
                 )
-        return config
+        return
     # without DPT only raw allowed -> payload + payload_length (checked by KnxPayloadSelector)
-    if CONF_PAYLOAD_LENGTH in config[CONF_DATA]:
-        return config
-    raise vol.Invalid("Invalid configuration for button entity")
+    if CONF_PAYLOAD_LENGTH in config[data_key]:
+        return
+    raise vol.Invalid("Invalid configuration for button entity", path=([data_key]))
+
+
+def _button_data_sub_validator(config: dict) -> dict:
+    """Validate button and optional reset data matching configured DPT."""
+    _validate_button_data(config, CONF_DATA)
+    if CONF_RESET_AFTER in config:
+        if CONF_RESET_DATA not in config:
+            raise vol.Invalid("Reset data required", path=([CONF_RESET_DATA]))
+        _validate_button_data(config, CONF_RESET_DATA)
+    else:
+        config.pop(CONF_RESET_DATA, None)
+    return config
 
 
 BUTTON_KNX_SCHEMA = AllSerializeFirst(
@@ -218,6 +230,13 @@ BUTTON_KNX_SCHEMA = AllSerializeFirst(
                 dpt_required=False,  # for raw payload support
             ),
             vol.Required(CONF_DATA): KnxPayloadSelector(ga_path=CONF_GA_SEND),
+            "section_pulse": KNXSectionFlat(collapsible=True),
+            vol.Optional(CONF_RESET_AFTER): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=600, step=0.1, unit_of_measurement="s"
+                )
+            ),
+            vol.Optional(CONF_RESET_DATA): KnxPayloadSelector(ga_path=CONF_GA_SEND),
         },
     ),
     _button_data_sub_validator,

@@ -21,6 +21,7 @@ CONF_GA_STEP: Final = "ga_step"
 
 # Button
 CONF_GA_SEND: Final = "ga_send"
+CONF_RESET_DATA: Final = "reset_data"
 
 # Climate
 CONF_GA_TEMPERATURE_CURRENT: Final = "ga_temperature_current"

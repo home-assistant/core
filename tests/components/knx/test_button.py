@@ -1,8 +1,10 @@
 """Test KNX button."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -22,6 +24,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
@@ -193,6 +196,174 @@ async def test_button_ui_create(
     await knx.assert_write("1/1/1", (1,))
 
 
+async def test_button_ui_create_pulse(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test creating a pulsed button."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.BUTTON,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_send": {"write": "1/1/1", "dpt": "1.001"},
+            "data": {"value": "on"},
+            "reset_data": {"value": "off"},
+            "reset_after": 0,
+        },
+    )
+    await hass.services.async_call(
+        "button", "press", {"entity_id": "button.test"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/1", True)
+    await knx.assert_write("1/1/1", False)
+
+
+async def test_button_ui_create_pulse_delayed_reset(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test reset data is sent after the configured delay."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.BUTTON,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_send": {"write": "1/1/1", "dpt": "1.001"},
+            "data": {"value": "on"},
+            "reset_data": {"value": "off"},
+            "reset_after": 0.01,
+        },
+    )
+    sleep_delays: list[float] = []
+
+    async def _sleep(delay: float) -> None:
+        sleep_delays.append(delay)
+
+    with patch("homeassistant.components.knx.button.sleep", _sleep):
+        await hass.services.async_call(
+            "button", "press", {"entity_id": "button.test"}, blocking=True
+        )
+        await asyncio.sleep(0)
+
+    assert sleep_delays == [0.01]
+    await knx.assert_write("1/1/1", True)
+    await knx.assert_write("1/1/1", False)
+
+
+async def test_button_ui_create_pulse_replaces_pending_reset(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test pressing again replaces the pending reset task."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.BUTTON,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_send": {"write": "1/1/1", "dpt": "1.001"},
+            "data": {"value": "on"},
+            "reset_data": {"value": "off"},
+            "reset_after": 5,
+        },
+    )
+    sleep_futures: list[asyncio.Future[None]] = []
+
+    async def _sleep(delay: float) -> None:
+        future: asyncio.Future[None] = hass.loop.create_future()
+        sleep_futures.append(future)
+        await future
+
+    with patch("homeassistant.components.knx.button.sleep", _sleep):
+        await hass.services.async_call(
+            "button", "press", {"entity_id": "button.test"}, blocking=True
+        )
+        await asyncio.sleep(0)
+        await knx.assert_write("1/1/1", True)
+
+        await hass.services.async_call(
+            "button", "press", {"entity_id": "button.test"}, blocking=True
+        )
+        await asyncio.sleep(0)
+        await knx.assert_write("1/1/1", True)
+
+        assert len(sleep_futures) == 2
+        assert sleep_futures[0].cancelled()
+        with pytest.raises(AssertionError):
+            await knx.assert_write("1/1/1", False)
+
+        sleep_futures[1].set_result(None)
+        await asyncio.sleep(0)
+        await knx.assert_write("1/1/1", False)
+
+
+async def test_button_ui_create_pulse_cancels_reset_when_removed(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing a pulsed button cancels the pending reset task."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.BUTTON,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_send": {"write": "1/1/1", "dpt": "1.001"},
+            "data": {"value": "on"},
+            "reset_data": {"value": "off"},
+            "reset_after": 5,
+        },
+    )
+    sleep_futures: list[asyncio.Future[None]] = []
+
+    async def _sleep(delay: float) -> None:
+        future: asyncio.Future[None] = hass.loop.create_future()
+        sleep_futures.append(future)
+        await future
+
+    with patch("homeassistant.components.knx.button.sleep", _sleep):
+        await hass.services.async_call(
+            "button", "press", {"entity_id": "button.test"}, blocking=True
+        )
+        await asyncio.sleep(0)
+        await knx.assert_write("1/1/1", True)
+
+        entity_registry.async_remove("button.test")
+        await hass.async_block_till_done()
+
+    assert len(sleep_futures) == 1
+    assert sleep_futures[0].cancelled()
+    with pytest.raises(AssertionError):
+        await knx.assert_write("1/1/1", False)
+
+
+async def test_button_ui_create_ignores_reset_data_without_delay(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test reset data submitted without a reset delay is ignored."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.BUTTON,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_send": {"write": "1/1/1", "dpt": "1.001"},
+            "data": {"value": "on"},
+            "reset_data": {"value": "off"},
+        },
+    )
+    await hass.services.async_call(
+        "button", "press", {"entity_id": "button.test"}, blocking=True
+    )
+    await knx.assert_write("1/1/1", True)
+
+
 async def test_button_ui_load(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test loading a button from storage."""
     await knx.setup_integration(config_store_fixture="config_store_button.json")
@@ -216,6 +387,18 @@ async def test_button_ui_load(hass: HomeAssistant, knx: KNXTestKit) -> None:
         "button", "press", {"entity_id": "button.test_typed"}, blocking=True
     )
     await knx.assert_write("1/1/2", True)
+
+    # Pulsed button configuration
+    knx.assert_state(
+        "button.test_pulse",
+        STATE_UNKNOWN,
+    )
+    await hass.services.async_call(
+        "button", "press", {"entity_id": "button.test_pulse"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/3", True)
+    await knx.assert_write("1/1/3", False)
 
 
 @pytest.mark.parametrize(
@@ -247,6 +430,11 @@ async def test_button_ui_load(hass: HomeAssistant, knx: KNXTestKit) -> None:
         {  # out of bound value for zero-length
             "ga_send": {"write": "1/1/1"},
             "data": {"payload": "0x40", "payload_length": 0},
+        },
+        {  # missing reset data
+            "ga_send": {"write": "1/1/1", "dpt": "1.001"},
+            "data": {"value": "on"},
+            "reset_after": 0.5,
         },
     ],
 )

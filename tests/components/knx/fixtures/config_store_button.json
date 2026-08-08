@@ -36,6 +36,26 @@
               "value": "on"
             }
           }
+        },
+        "knx_es_01KVH5W0B4PPPW8MZJ7HFYRED2": {
+          "entity": {
+            "name": "test pulse",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_send": {
+              "write": "1/1/3",
+              "dpt": "1.001"
+            },
+            "data": {
+              "value": "on"
+            },
+            "reset_data": {
+              "value": "off"
+            },
+            "reset_after": 0
+          }
         }
       }
     },

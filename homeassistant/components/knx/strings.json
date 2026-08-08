@@ -485,6 +485,18 @@
             "ga_send": {
               "description": "Group address the value is sent to.",
               "label": "Address"
+            },
+            "reset_after": {
+              "description": "Delay before sending the reset value after the button is pressed.",
+              "label": "Reset after"
+            },
+            "reset_data": {
+              "description": "Value sent after the reset delay. Use this for simple pulse commands.",
+              "label": "Reset data"
+            },
+            "section_pulse": {
+              "description": "Optionally send a second value after a delay.",
+              "title": "Pulse"
             }
           }
         },
