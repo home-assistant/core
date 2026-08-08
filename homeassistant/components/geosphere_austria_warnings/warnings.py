@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable, Mapping
 from datetime import datetime
+from typing import Any
 
 from pygeosphere_warnings import WarningLevel, WarningType, WeatherWarning
 
