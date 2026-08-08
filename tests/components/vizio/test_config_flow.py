@@ -668,3 +668,19 @@ async def test_zeroconf_flow_without_port_resolves(hass: HomeAssistant) -> None:
     assert mock_resolve.call_args_list[0][0][0] == ZEROCONF_HOST
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
+async def test_zeroconf_flow_unresolvable_host_aborts(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery aborts when no SmartCast port responds."""
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO, port=None)
+    with patch(
+        "homeassistant.components.vizio.config_flow.async_resolve_host",
+        AsyncMock(side_effect=VizioConnectionError("no SmartCast API")),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
