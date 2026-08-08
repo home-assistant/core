@@ -15,7 +15,7 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "gateway_address": "The address the gateway answers on. Leave the default unless you run more than one gateway on the same network.",
+          "gateway_address": "The address the gateway is set to answer on, found in the controller's own settings. The default matches a controller that has not been changed.",
           "host": "The hostname or IP address of the ZhongHong gateway on your network.",
           "port": "The TCP port the gateway listens on. Leave the default unless you changed it on the gateway."
         }
