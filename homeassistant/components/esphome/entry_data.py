@@ -22,6 +22,7 @@ from aioesphomeapi import (
     DateInfo,
     DateTimeInfo,
     DeviceInfo,
+    DeviceState,
     EntityInfo,
     EntityState,
     Event,
@@ -71,6 +72,7 @@ INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()
 
 _SENTINEL = object()
 SAVE_DELAY = 120
+MIN_VERSION_DEVICE_AVAILABILITY = APIVersion(1, 15)
 _LOGGER = logging.getLogger(__name__)
 
 # Mapping from ESPHome info type to HA platform
@@ -145,6 +147,10 @@ class RuntimeEntryData:
         default_factory=dict
     )
     device_update_subscriptions: set[CALLBACK_TYPE] = field(default_factory=set)
+    device_availability_subscriptions: defaultdict[int, set[CALLBACK_TYPE]] = field(
+        default_factory=lambda: defaultdict(set)
+    )
+    unavailable_devices: set[int] = field(default_factory=set)
     static_info_update_subscriptions: set[Callable[[list[EntityInfo]], None]] = field(
         default_factory=set
     )
@@ -345,6 +351,15 @@ class RuntimeEntryData:
         return partial(self.device_update_subscriptions.remove, callback_)
 
     @callback
+    def async_subscribe_device_availability(
+        self, device_id: int, callback_: CALLBACK_TYPE
+    ) -> CALLBACK_TYPE:
+        """Subscribe to availability updates for a device."""
+        subscriptions = self.device_availability_subscriptions[device_id]
+        subscriptions.add(callback_)
+        return partial(subscriptions.remove, callback_)
+
+    @callback
     def async_subscribe_static_info_updated(
         self, callback_: Callable[[list[EntityInfo]], None]
     ) -> CALLBACK_TYPE:
@@ -402,6 +417,29 @@ class RuntimeEntryData:
         """Distribute an update of a core device state like availability."""
         for callback_ in self.device_update_subscriptions.copy():
             callback_()
+
+    @callback
+    def async_update_device_availability(self, state: DeviceState) -> None:
+        """Distribute an availability update for a device."""
+        device_id = state.device_id
+        is_unavailable = device_id in self.unavailable_devices
+        if is_unavailable == (not state.available):
+            return
+        if state.available:
+            self.unavailable_devices.remove(device_id)
+        else:
+            self.unavailable_devices.add(device_id)
+        for callback_ in tuple(
+            self.device_availability_subscriptions.get(device_id, ())
+        ):
+            callback_()
+
+    @callback
+    def async_prepare_availability(self, api_version: APIVersion) -> None:
+        """Prepare availability before subscribing after a reconnect."""
+        # Device snapshots report both values, so preserve them across reconnects.
+        if api_version < MIN_VERSION_DEVICE_AVAILABILITY:
+            self.unavailable_devices.clear()
 
     async def async_load_from_store(self) -> tuple[list[EntityInfo], list[UserService]]:
         """Load the retained data from store and return de-serialized data."""
