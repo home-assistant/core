@@ -91,14 +91,17 @@ def _async_attach_turn_on_actions(
 ) -> list[CALLBACK_TYPE]:
     """Attach the turn on action for each of the given devices."""
 
-    @callback
-    def run_turn_on_action(
+    async def run_turn_on_action(
         description: str,
         variables: dict[str, Any],
         context: Context | None = None,
     ) -> None:
-        """Run the trigger action."""
-        run_action(variables, description, context)
+        """Run the trigger action.
+
+        This is a coroutine function rather than a callback, so that the turn on
+        service waits for the triggered action to finish.
+        """
+        await run_action(variables, description, context)
 
     return [
         PluggableAction.async_attach_trigger(

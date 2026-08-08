@@ -1,5 +1,6 @@
 """The tests for LG webOS TV automation triggers."""
 
+import asyncio
 from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
@@ -539,6 +540,61 @@ async def test_trigger_non_webostv_entity_id(
         )
 
     assert len(service_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "trigger_config",
+    [
+        pytest.param({"trigger": LEGACY_TURN_ON, "entity_id": ENTITY_ID}, id="legacy"),
+        pytest.param(
+            {"trigger": TURN_ON_REQUESTED, "target": {"entity_id": ENTITY_ID}},
+            id="target",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("client")
+async def test_turn_on_waits_for_the_automation(
+    hass: HomeAssistant, trigger_config: dict[str, Any]
+) -> None:
+    """Test the turn on service waits for the triggered automation to finish."""
+    await setup_webostv(hass)
+
+    started = asyncio.Event()
+    finish = asyncio.Event()
+
+    async def slow_action(call: ServiceCall) -> None:
+        started.set()
+        await finish.wait()
+
+    hass.services.async_register("slowtest", "run", slow_action)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": trigger_config,
+                    "action": {"service": "slowtest.run"},
+                },
+            ],
+        },
+    )
+
+    turn_on = hass.async_create_task(
+        hass.services.async_call(
+            "media_player",
+            "turn_on",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+    )
+    await started.wait()
+
+    assert not turn_on.done()
+
+    finish.set()
+    await turn_on
 
 
 @pytest.mark.usefixtures("client")
