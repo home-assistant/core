@@ -1,9 +1,7 @@
 """Config flow for ISEO Argo BLE Lock."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 import uuid as uuid_module
 
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -86,6 +84,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._priv_scalar: str = ""
         self._gw_priv: ec.EllipticCurvePrivateKey | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -149,6 +148,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:

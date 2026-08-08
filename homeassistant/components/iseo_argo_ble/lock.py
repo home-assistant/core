@@ -1,11 +1,9 @@
 """ISEO BLE Lock entity."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import UTC, datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from iseo_argo_ble import IseoAuthError, IseoClient, IseoConnectionError, LockState
 
@@ -78,6 +76,7 @@ class IseoLockEntity(LockEntity):
         self._attr_available = True
         self._poll_suppress_until: datetime | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Probe door-status support; start polling if the lock supports it."""
         await self._poll_state()
@@ -212,6 +211,7 @@ class IseoLockEntity(LockEntity):
         except asyncio.CancelledError:
             pass
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the door (not supported)."""
         raise HomeAssistantError(
@@ -219,6 +219,7 @@ class IseoLockEntity(LockEntity):
             translation_key="lock_not_supported",
         )
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Open the lock (momentary actuator — always re-latches automatically)."""
         if self._relock_task and not self._relock_task.done():

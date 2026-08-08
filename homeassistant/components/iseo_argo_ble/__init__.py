@@ -1,7 +1,5 @@
 """ISEO Argo BLE Lock — Home Assistant integration."""
 
-from __future__ import annotations
-
 from cryptography.hazmat.primitives.asymmetric.ec import SECP224R1, derive_private_key
 from iseo_argo_ble import IseoClient
 

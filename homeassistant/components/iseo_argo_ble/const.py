@@ -1,7 +1,5 @@
 """Constants for the ISEO Argo BLE Lock integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 
 DOMAIN = "iseo_argo_ble"
