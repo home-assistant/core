@@ -4,7 +4,14 @@ import copy
 import logging
 from typing import Any, override
 
-from vizaio import AppRecord, PairChallenge, Vizio, VizioError, async_is_tv
+from vizaio import (
+    AppRecord,
+    PairChallenge,
+    Vizio,
+    VizioError,
+    async_is_tv,
+    async_resolve_host,
+)
 from vizaio.apps import APP_HOME, BUNDLED_APPS
 import voluptuous as vol
 
@@ -250,6 +257,17 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
             self._user_schema = _get_config_schema(user_input)
+            # A host entered without a port would target 443; probe for the
+            # API port. No-op for a host that already carries one.
+            try:
+                user_input[CONF_HOST] = await async_resolve_host(
+                    user_input[CONF_HOST],
+                    session=async_get_clientsession(self.hass, False),
+                )
+            except VizioError:
+                errors[CONF_HOST] = "cannot_connect"
+
+        if user_input is not None and not errors:
             # Zeroconf discovery provides the device class; detect it otherwise
             if CONF_DEVICE_CLASS not in user_input:
                 user_input[CONF_DEVICE_CLASS] = await _async_detect_device_class(
@@ -307,8 +325,17 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         host = discovery_info.host
         # If host already has port, no need to add it again
-        if ":" not in host:
+        if ":" not in host and discovery_info.port:
             host = f"{host}:{discovery_info.port}"
+        if ":" not in host:
+            # Discovery didn't advertise a port; probe for the API port so we
+            # don't build a host that targets 443.
+            try:
+                host = await async_resolve_host(
+                    host, session=async_get_clientsession(self.hass, False)
+                )
+            except VizioError:
+                return self.async_abort(reason="cannot_connect")
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`

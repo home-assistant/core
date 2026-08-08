@@ -1,10 +1,11 @@
 """Tests for Vizio init."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from vizaio import VizioConnectionError
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -12,6 +13,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.vizio import DATA_APPS
 from homeassistant.components.vizio.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -23,7 +25,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import setup_integration
-from .const import APP_RECORDS, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
+from .const import (
+    APP_RECORDS,
+    HOST,
+    HOST2,
+    MOCK_USER_VALID_TV_CONFIG,
+    MODEL,
+    NAME2,
+    PORTLESS_HOST,
+    UNIQUE_ID,
+    VERSION,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -172,3 +184,57 @@ async def test_device_registry_without_model_or_version(
     assert device.model is None
     assert device.sw_version is None
     assert device.manufacturer == "VIZIO"
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_portless_host_is_resolved_and_persisted(hass: HomeAssistant) -> None:
+    """Test a config entry storing a host without a port is repaired on setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_USER_VALID_TV_CONFIG, CONF_HOST: PORTLESS_HOST},
+        unique_id=UNIQUE_ID,
+    )
+    with patch(
+        "homeassistant.components.vizio.async_resolve_host",
+        AsyncMock(return_value=HOST),
+    ) as mock_resolve:
+        await setup_integration(hass, entry)
+
+    assert mock_resolve.call_args[0][0] == PORTLESS_HOST
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_portless_host_resolve_failure_retries(hass: HomeAssistant) -> None:
+    """Test setup is retried when the port cannot be determined."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_USER_VALID_TV_CONFIG, CONF_HOST: PORTLESS_HOST},
+        unique_id=UNIQUE_ID,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.vizio.async_resolve_host",
+        AsyncMock(side_effect=VizioConnectionError("no SmartCast API")),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.data[CONF_HOST] == PORTLESS_HOST
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_host_with_port_is_not_probed(
+    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+) -> None:
+    """Test a host that already has a port costs no probing."""
+    with patch(
+        "homeassistant.components.vizio.async_resolve_host",
+        AsyncMock(return_value=HOST),
+    ) as mock_resolve:
+        await setup_integration(hass, mock_tv_config_entry)
+
+    mock_resolve.assert_not_called()
+    assert mock_tv_config_entry.data[CONF_HOST] == HOST

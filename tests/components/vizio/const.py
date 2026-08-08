@@ -36,6 +36,7 @@ NAME = "Vizio"
 NAME2 = "Vizio2"
 HOST = "192.168.1.1:9000"
 HOST2 = "192.168.1.2:9000"
+PORTLESS_HOST = "192.168.1.1"
 ACCESS_TOKEN = "deadbeef"
 VOLUME_STEP = 2
 UNIQUE_ID = "testid"

@@ -40,6 +40,9 @@
     }
   },
   "exceptions": {
+    "cannot_determine_port": {
+      "message": "Could not determine the API port for {host}. If the device is reachable, reconfigure it using host:port."
+    },
     "command_error": {
       "message": "Failed to send command to the device: {error}"
     },
