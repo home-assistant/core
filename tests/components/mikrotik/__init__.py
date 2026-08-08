@@ -12,10 +12,9 @@ from .const import (
     DHCP_DATA,
     HEALTH_DATA,
     MOCK_DATA,
+    ROUTERBOARD_DATA,
     SYSTEM_DATA,
-    TEST_FIRMWARE,
-    TEST_MODEL,
-    TEST_SERIAL_NUMBER,
+    UPDATE_DATA,
     WIFIWAVE2_DATA,
     WIRELESS_DATA,
 )
@@ -32,19 +31,17 @@ def _build_command_responses(
     wifiwave2_data: list[dict[str, Any]],
     health_data: list[dict[str, Any]],
     system_data: list[dict[str, Any]],
+    interface_data: list[dict[str, Any]],
+    routerboard_data: list[dict[str, Any]],
+    update_data: list[dict[str, Any]],
+    poe_data: list[dict[str, Any]],
 ) -> dict[str, Any]:
     """Build mocked service responses for the Mikrotik coordinator."""
     return {
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IDENTITY]: [
             {"name": "Mikrotik"}
         ],
-        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.INFO]: [
-            {
-                "model": TEST_MODEL,
-                "current-firmware": TEST_FIRMWARE,
-                "serial-number": TEST_SERIAL_NUMBER,
-            }
-        ],
+        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ROUTERBOARD]: routerboard_data,
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_CAPSMAN]: [],
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIRELESS]: support_wireless,
         mikrotik.const.MIKROTIK_SERVICES[
@@ -56,7 +53,10 @@ def _build_command_responses(
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIFIWAVE2]: wifiwave2_data,
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ARP]: ARP_DATA,
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.HEALTH]: health_data,
-        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.SYSTEM]: system_data,
+        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.RESOURCE]: system_data,
+        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.INTERFACE]: interface_data,
+        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.UPDATE]: update_data,
+        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.POE]: poe_data,
     }
 
 
@@ -74,13 +74,11 @@ async def setup_integration(
         cmd: str,
         params: dict[str, Any] | None = None,
         suppress_errors: bool = False,
+        during_setup: bool = False,
     ) -> Any:
         return command_responses.get(cmd, {})
 
-    with (
-        patch("librouteros.connect"),
-        patch.object(mikrotik.coordinator.MikrotikData, "command", new=mock_command),
-    ):
+    with patch.object(mikrotik.coordinator.MikrotikData, "command", new=mock_command):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -122,6 +120,10 @@ async def setup_mikrotik_entry(
         wifiwave2_data=kwargs.get("wifiwave2_data", WIFIWAVE2_DATA),
         health_data=kwargs.get("health_data", HEALTH_DATA),
         system_data=kwargs.get("system_data", SYSTEM_DATA),
+        interface_data=kwargs.get("interface_data", []),
+        routerboard_data=kwargs.get("routerboard_data", ROUTERBOARD_DATA),
+        update_data=kwargs.get("update_data", UPDATE_DATA),
+        poe_data=kwargs.get("poe_data", []),
     )
 
     await setup_integration(hass, config_entry, command_responses=command_responses)

@@ -16,6 +16,7 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    BluetoothCallbackReplay,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
@@ -45,6 +46,7 @@ from homeassistant.components.bluetooth.match import (
     MANUFACTURER_ID,
     SERVICE_DATA_UUID,
     SERVICE_UUID,
+    BluetoothCallbackMatcher,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -1501,6 +1503,113 @@ async def test_register_callbacks(
     assert service_info.source == SOURCE_LOCAL
     assert service_info.manufacturer == "Nordic Semiconductor ASA"
     assert service_info.manufacturer_id == 89
+
+
+@pytest.mark.parametrize(
+    ("devices", "matcher", "replay", "expected_addresses"),
+    [
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "older", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "newer", 2000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.OLDEST_FIRST,
+            ["AA:BB:CC:DD:EE:01", "AA:BB:CC:DD:EE:02"],
+            id="oldest-first",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "older", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "newer", 2000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.NEWEST_FIRST,
+            ["AA:BB:CC:DD:EE:02", "AA:BB:CC:DD:EE:01"],
+            id="newest-first",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "target", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "other", 2000.0),
+                ("AA:BB:CC:DD:EE:03", "target", 3000.0),
+            ],
+            {LOCAL_NAME: "target"},
+            BluetoothCallbackReplay.NEWEST_FIRST,
+            ["AA:BB:CC:DD:EE:03", "AA:BB:CC:DD:EE:01"],
+            id="newest-first-with-filter",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "older", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "newer", 2000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.DISABLED,
+            [],
+            id="disabled",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "target", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "other", 2000.0),
+            ],
+            {ADDRESS: "AA:BB:CC:DD:EE:01"},
+            BluetoothCallbackReplay.NEWEST_FIRST,
+            ["AA:BB:CC:DD:EE:01"],
+            id="newest-first-address-match",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "newer", 2000.0),
+                ("AA:BB:CC:DD:EE:02", "older", 1000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.OLDEST_FIRST,
+            ["AA:BB:CC:DD:EE:02", "AA:BB:CC:DD:EE:01"],
+            id="oldest-first-out-of-order-insertion",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("enable_bluetooth", "mock_bleak_scanner_start")
+async def test_register_callbacks_history_replay_order(
+    hass: HomeAssistant,
+    devices: list[tuple[str, str, float]],
+    matcher: BluetoothCallbackMatcher | None,
+    replay: BluetoothCallbackReplay,
+    expected_addresses: list[str],
+) -> None:
+    """History replay respects the replay order kwarg."""
+    mock_bt = []
+    replayed: list[BluetoothServiceInfo] = []
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        for address, name, adv_time in devices:
+            device = generate_ble_device(address, name)
+            adv = generate_advertisement_data(local_name=name)
+            inject_advertisement_with_time_and_source_connectable(
+                hass, device, adv, adv_time, SOURCE_LOCAL, True
+            )
+
+        def _subscriber(
+            service_info: BluetoothServiceInfo, change: BluetoothChange
+        ) -> None:
+            replayed.append(service_info)
+
+        cancel = bluetooth.async_register_callback(
+            hass, _subscriber, matcher, BluetoothScanningMode.ACTIVE, replay=replay
+        )
+        cancel()
+
+    assert [si.address for si in replayed] == expected_addresses
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

@@ -129,7 +129,7 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         errors: dict[str, str] = {}
 
-        client = Paperless(
+        client = Paperless(  # type: ignore[abstract]
             user_input[CONF_URL],
             user_input[CONF_API_KEY],
             session=async_get_clientsession(

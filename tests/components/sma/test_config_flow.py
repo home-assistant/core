@@ -8,7 +8,13 @@ import pytest
 
 from homeassistant.components.sma.const import CONF_GROUP, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
@@ -338,6 +344,7 @@ async def test_full_flow_reconfigure(
     assert entry.data[CONF_SSL] is True
     assert entry.data[CONF_VERIFY_SSL] is False
     assert entry.data[CONF_GROUP] == "user"
+    assert entry.data[CONF_PASSWORD] == "new_password"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -385,6 +392,7 @@ async def test_full_flow_reconfigure_exceptions(
     assert entry.data[CONF_SSL] is True
     assert entry.data[CONF_VERIFY_SSL] is False
     assert entry.data[CONF_GROUP] == "user"
+    assert entry.data[CONF_PASSWORD] == "new_password"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

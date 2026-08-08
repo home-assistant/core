@@ -707,7 +707,7 @@ async def test_entity_assignment_to_sub_device(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test entities are assigned to correct sub devices."""
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Define sub devices
     sub_devices = [
@@ -758,8 +758,9 @@ async def test_entity_assignment_to_sub_device(
     )
 
     # Check main device
-    main_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    main_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address),
+        device.entry.entry_id,
     )
     assert main_device is not None
 
@@ -769,8 +770,8 @@ async def test_entity_assignment_to_sub_device(
     assert main_sensor.device_id == main_device.id
 
     # Check sub device 1 entity
-    sub_device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    sub_device_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
 
@@ -779,8 +780,8 @@ async def test_entity_assignment_to_sub_device(
     assert motion_sensor.device_id == sub_device_1.id
 
     # Check sub device 2 entity
-    sub_device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    sub_device_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
 
@@ -939,8 +940,9 @@ async def test_entity_switches_between_devices(
     )
 
     # Verify entity is on main device
-    main_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    main_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address),
+        device.entry.entry_id,
     )
     assert main_device is not None
 
@@ -970,8 +972,8 @@ async def test_entity_switches_between_devices(
     await device.mock_connect()
 
     # Verify entity is now on sub device 1
-    sub_device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    sub_device_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
 
@@ -999,8 +1001,8 @@ async def test_entity_switches_between_devices(
     await device.mock_connect()
 
     # Verify entity is now on sub device 2
-    sub_device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    sub_device_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
 
@@ -1326,8 +1328,8 @@ async def test_unique_id_migration_when_entity_moves_between_devices(
     assert entity_entry.unique_id == expected_unique_id
 
     # Entity should now be associated with the sub-device
-    sub_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    sub_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device is not None
     assert entity_entry.device_id == sub_device.id
@@ -1421,8 +1423,9 @@ async def test_unique_id_migration_sub_device_to_main_device(
     assert entity_entry.unique_id == expected_unique_id
 
     # Entity should now be associated with the main device
-    main_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    main_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address),
+        device.entry.entry_id,
     )
     assert main_device is not None
     assert entity_entry.device_id == main_device.id
@@ -1517,8 +1520,8 @@ async def test_unique_id_migration_between_sub_devices(
     assert entity_entry.unique_id == expected_unique_id
 
     # Entity should now be associated with the second sub-device
-    bedroom_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+    bedroom_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_33333333"), device.entry.entry_id
     )
     assert bedroom_device is not None
     assert entity_entry.device_id == bedroom_device.id
@@ -1643,8 +1646,8 @@ async def test_entity_device_id_rename_in_yaml(
     assert entity_entry.unique_id == expected_unique_id
 
     # Entity should be associated with the new device
-    renamed_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_99999999")}
+    renamed_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_99999999"), device.entry.entry_id
     )
     assert renamed_device is not None
     assert entity_entry.device_id == renamed_device.id
