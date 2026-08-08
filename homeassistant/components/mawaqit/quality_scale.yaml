@@ -50,7 +50,7 @@ rules:
   devices:
     status: exempt
     comment: This integration does not use devices
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: This integration does not use devices
