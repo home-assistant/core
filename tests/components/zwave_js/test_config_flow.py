@@ -4271,19 +4271,21 @@ async def test_reconfigure_migrate_with_addon(
 
     assert len(device_registry.devices) == 2
     # Verify there's a device entry for the controller.
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, controller_device_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_device_id), entry.entry_id
     )
     assert device
-    assert device == device_registry.async_get_device(
-        identifiers={(DOMAIN, controller_device_id_ext)}
+    assert device == device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_device_id_ext), entry.entry_id
     )
     assert device.manufacturer == "AEON Labs"
     assert device.model == "ZW090"
     assert device.name == "Z‐Stick Gen5 USB Controller"
     # Verify there's a device entry for the multisensor.
     sensor_device_id = f"{client.driver.controller.home_id}-{multisensor_6.node_id}"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, sensor_device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, sensor_device_id), entry.entry_id
+    )
     assert device
     assert device.manufacturer == "AEON Labs"
     assert device.model == "ZW100"
@@ -4419,14 +4421,16 @@ async def test_reconfigure_migrate_with_addon(
         f"{controller_device_id}-{controller_node.manufacturer_id}:"
         f"{controller_node.product_type}:{controller_node.product_id}"
     )
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, controller_device_id_ext)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_device_id_ext), entry.entry_id
     )
     assert device
     assert device.manufacturer == "New Device Manufacturer"
     assert device.model == "New Device Model"
     assert device.name == "New Device Name"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, sensor_device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, sensor_device_id), entry.entry_id
+    )
     assert device
     assert device.manufacturer == "AEON Labs"
     assert device.model == "ZW100"
