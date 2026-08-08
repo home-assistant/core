@@ -6,7 +6,6 @@ from typing import override
 
 from mawaqit.exceptions import BadCredentialsException, MawaqitException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -16,6 +15,7 @@ import homeassistant.util.dt as dt_util
 
 from . import mawaqit_wrapper
 from .const import DOMAIN
+from .types import MawaqitConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 class MosqueCoordinator(DataUpdateCoordinator[dict]):
     """Coordinator to fetch mosque information."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: MawaqitConfigEntry) -> None:
         """Initialize the mosque coordinator."""
         self.mosque_uuid: str = config_entry.data[CONF_UUID]
         self.token: str | None = config_entry.data.get(CONF_API_KEY)
@@ -81,7 +81,7 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
     next prayer can re-evaluate which prayer is upcoming.
     """
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: MawaqitConfigEntry) -> None:
         """Initialize the prayer time coordinator."""
         self.mosque_uuid = config_entry.data.get(CONF_UUID)
         self.token = config_entry.data.get(CONF_API_KEY)
