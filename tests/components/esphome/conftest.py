@@ -12,6 +12,7 @@ from aioesphomeapi import (
     APIVersion,
     BluetoothProxyFeature,
     DeviceInfo,
+    DeviceState,
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
@@ -240,6 +241,7 @@ class MockESPHomeDevice:
         self.entry = entry
         self.client = client
         self.state_callback: Callable[[EntityState], None]
+        self.device_state_callback: Callable[[DeviceState], None]
         self.service_call_callback: Callable[[HomeassistantServiceCall], None]
         self.on_disconnect: Callable[[bool], None]
         self.on_connect: Callable[[bool], None]
@@ -290,6 +292,10 @@ class MockESPHomeDevice:
     def set_state(self, state: EntityState) -> None:
         """Mock setting state."""
         self.state_callback(state)
+
+    def set_device_state(self, state: DeviceState) -> None:
+        """Mock setting device state."""
+        self.device_state_callback(state)
 
     def set_on_disconnect(self, on_disconnect: Callable[[bool], None]) -> None:
         """Set the disconnect callback."""
@@ -527,9 +533,12 @@ async def _mock_generic_device_entry(
         on_service_call: Callable[[HomeassistantServiceCall], None],
         on_state_sub: Callable[[str, str | None], None],
         on_state_request: Callable[[str, str | None], None],
+        on_device_state: Callable[[DeviceState], None] | None = None,
     ) -> None:
         """Subscribe to states and service calls."""
         mock_device.set_state_callback(on_state)
+        assert on_device_state is not None
+        mock_device.device_state_callback = on_device_state
         mock_device.set_service_call_callback(on_service_call)
         mock_device.set_home_assistant_state_subscription_callback(
             on_state_sub, on_state_request
