@@ -604,9 +604,7 @@ async def test_remove_config_entry_from_device_if_integration_remove(
         hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
     ) -> bool:
         if can_remove:
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_registry.async_remove_device(device_entry.id)
         return can_remove
 
     mock_integration(

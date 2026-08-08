@@ -215,14 +215,8 @@ async def websocket_remove_config_entry_from_device(
             "Failed to remove device entry, rejected by integration"
         )
 
-    # Integration might have removed the config entry already, that is fine.
+    # The integration might have removed the device already, that is fine.
     if registry.async_get(device_id):
-        entry = registry.async_update_device(
-            device_id, remove_config_entry_id=config_entry_id
-        )
+        registry.async_remove_device(device_id)
 
-        entry_as_dict = entry.dict_repr if entry else None
-    else:
-        entry_as_dict = None
-
-    connection.send_message(websocket_api.result_message(msg["id"], entry_as_dict))
+    connection.send_message(websocket_api.result_message(msg["id"], None))
