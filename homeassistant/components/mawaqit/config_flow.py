@@ -1,6 +1,5 @@
 """Config flow for the Mawaqit integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -14,7 +13,7 @@ from mawaqit.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_UUID
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_UUID
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -53,82 +52,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.keyword_page: int = 1
         self.keyword_has_next: bool = False
         self.current_keyword: str = ""
-
-    #############################################
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> config_entries.ConfigFlowResult:
-        """Handle reauthentication."""
-
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Confirm reauthentication."""
-
-        errors: dict[str, str] = {}
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-                ),
-                vol.Required(CONF_PASSWORD): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
-                ),
-            }
-        )
-
-        if user_input is not None:
-            username = user_input[CONF_USERNAME]
-            password = user_input[CONF_PASSWORD]
-
-            try:
-                valid = await mawaqit_wrapper.validate_credentials(
-                    username,
-                    password,
-                    session=async_get_clientsession(self.hass),
-                )
-            except (
-                ClientConnectorError,
-                ConnectionError,
-                TimeoutError,
-                MawaqitException,
-            ):
-                errors["base"] = CANNOT_CONNECT_TO_SERVER
-            else:
-                if not valid:
-                    errors["base"] = WRONG_CREDENTIAL
-                else:
-                    try:
-                        token = await mawaqit_wrapper.get_mawaqit_api_token(
-                            username,
-                            password,
-                            session=async_get_clientsession(self.hass),
-                        )
-                    except (
-                        ClientConnectorError,
-                        ConnectionError,
-                        TimeoutError,
-                        MawaqitException,
-                    ):
-                        errors["base"] = CANNOT_CONNECT_TO_SERVER
-                    else:
-                        return self.async_update_reload_and_abort(
-                            self._get_reauth_entry(),
-                            data_updates={
-                                CONF_API_KEY: token,
-                            },
-                        )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=schema,
-            errors=errors,
-        )
-
-    #############################################
 
     @override
     async def async_step_user(

@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "Only one MAWAQIT entry is allowed. Delete the current integration, then set it up again.",
       "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
-      "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one."
     },
     "error": {
       "cannot_connect_to_server": "Cannot connect to the server, please retry later.",
@@ -34,18 +33,6 @@
           "uuid": "Select the mosque closest to your location."
         },
         "title": "Your favourite mosque"
-      },
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::email%]"
-        },
-        "data_description": {
-          "password": "Your MAWAQIT account password.",
-          "username": "Your MAWAQIT account email address."
-        },
-        "description": "Mawaqit integration needs to re-authenticate your account",
-        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "search_method": {
         "data": {

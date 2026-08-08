@@ -8,7 +8,6 @@ from mawaqit.exceptions import BadCredentialsException, MawaqitException
 
 from homeassistant.const import CONF_API_KEY, CONF_UUID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -46,9 +45,10 @@ class MosqueCoordinator(DataUpdateCoordinator[dict]):
                 session=async_get_clientsession(self.hass),
             )
         except BadCredentialsException as err:
-            raise ConfigEntryAuthFailed(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="auth_failed",
+                translation_key="mawaqit_error",
+                translation_placeholders={"error": str(err)},
             ) from err
         except MawaqitException as err:
             raise UpdateFailed(
@@ -104,9 +104,10 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
                 session=async_get_clientsession(self.hass),
             )
         except BadCredentialsException as err:
-            raise ConfigEntryAuthFailed(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="auth_failed",
+                translation_key="mawaqit_error",
+                translation_placeholders={"error": str(err)},
             ) from err
         except MawaqitException as err:
             raise UpdateFailed(

@@ -63,19 +63,14 @@ async def test_mosque_coordinator_errors_cause_setup_retry(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_mosque_coordinator_auth_error_starts_reauth(
+async def test_mosque_coordinator_auth_error_causes_setup_retry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     setup_mawaqit_integration,
 ) -> None:
-    """Test auth errors trigger reauthentication."""
+    """Test auth errors cause setup retry (no reauth in this PR)."""
     await setup_mawaqit_integration(mosque_side_effect=BadCredentialsException)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    # ConfigEntryAuthFailed triggers a reauth flow
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_mosque_coordinator_empty_data(
@@ -142,19 +137,14 @@ async def test_prayer_time_coordinator_errors_cause_setup_retry(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_prayer_time_coordinator_auth_error_starts_reauth(
+async def test_prayer_time_coordinator_auth_error_causes_setup_retry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     setup_mawaqit_integration,
 ) -> None:
-    """Test auth errors trigger reauthentication."""
+    """Test auth errors cause setup retry."""
     await setup_mawaqit_integration(prayer_side_effect=BadCredentialsException)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    # ConfigEntryAuthFailed triggers a reauth flow
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_prayer_time_coordinator_empty_data(

@@ -43,7 +43,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
@@ -79,8 +79,7 @@ rules:
   repair-issues:
     status: exempt
     comment: >-
-      This integration has no repairable issues. Authentication failures are
-      handled by the reauthentication flow.
+      This integration has no repairable issues.
   stale-devices:
     status: exempt
     comment: This integration does not use devices
