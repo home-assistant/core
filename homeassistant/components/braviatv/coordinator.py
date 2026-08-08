@@ -143,11 +143,16 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         if sort_by:
             sources = sorted(sources, key=lambda d: d.get(sort_by, ""))
         for item in sources:
-            title = item.get("title")
+            # Sony TVs report the generic connector name in "title" and the name
+            # the user configured on the TV itself in "label". Prefer the latter,
+            # falling back to "title" when no custom name has been set.
+            title = item.get("label") or item.get("title")
             uri = item.get("uri")
             if not title or not uri:
                 continue
-            self.source_map[uri] = {**item, "type": source_type}
+            # Store the resolved name so that lookups in async_source_find match
+            # what is exposed in source_list.
+            self.source_map[uri] = {**item, "title": title, "type": source_type}
             if add_to_list and title not in self.source_list:
                 self.source_list.append(title)
 
@@ -251,7 +256,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         if self.media_uri:
             self.media_content_id = self.media_uri
             if self.media_uri[:8] == "extInput":
-                self.source = playing_info.get("title")
+                source = self.source_map.get(self.media_uri, {})
+                self.source = source.get("title") or playing_info.get("title")
             if self.media_uri[:2] == "tv":
                 self.media_content_id = playing_info.get("dispNum")
                 self.media_title = (
