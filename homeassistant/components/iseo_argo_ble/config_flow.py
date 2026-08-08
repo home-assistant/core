@@ -19,6 +19,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
@@ -28,13 +29,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import (
-    CONF_ADDRESS,
-    CONF_PRIV_SCALAR,
-    CONF_UUID,
-    DEFAULT_USER_SUBTYPE,
-    DOMAIN,
-)
+from .const import CONF_PRIV_SCALAR, DEFAULT_USER_SUBTYPE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

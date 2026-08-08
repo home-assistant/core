@@ -5,9 +5,7 @@ from homeassistant.const import Platform
 DOMAIN = "iseo_argo_ble"
 PLATFORMS: list[Platform] = [Platform.LOCK]
 
-# Config entry keys
-CONF_ADDRESS = "address"
-CONF_UUID = "uuid"
+# Config entry keys (CONF_ADDRESS and CONF_UUID come from homeassistant.const)
 CONF_PRIV_SCALAR = "priv_scalar"
 
 # Default user subtype (gateway)

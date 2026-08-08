@@ -5,12 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.iseo_argo_ble.const import (
-    CONF_ADDRESS,
-    CONF_PRIV_SCALAR,
-    CONF_UUID,
-    DOMAIN,
-)
+from homeassistant.components.iseo_argo_ble.const import CONF_PRIV_SCALAR, DOMAIN
+from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.helpers.device_registry import format_mac
 
 from . import MOCK_ADDRESS, MOCK_PRIV_SCALAR, MOCK_UUID_HEX

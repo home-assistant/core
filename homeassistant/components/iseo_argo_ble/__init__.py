@@ -5,18 +5,12 @@ from iseo_argo_ble import IseoClient
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    CONF_ADDRESS,
-    CONF_PRIV_SCALAR,
-    CONF_UUID,
-    DEFAULT_USER_SUBTYPE,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import CONF_PRIV_SCALAR, DEFAULT_USER_SUBTYPE, DOMAIN, PLATFORMS
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -29,7 +23,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
     if ble_device is None:
         raise ConfigEntryNotReady(
-            f"Could not find ISEO lock {address} — is it powered on and in range?"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"address": address},
         )
 
     priv_int = int(entry.data[CONF_PRIV_SCALAR], 16)

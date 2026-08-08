@@ -1,7 +1,7 @@
 """Test the ISEO Argo BLE lock entity."""
 
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -425,6 +426,7 @@ async def test_poll_state_locked_mutex(
 
 async def test_poll_state_firmware_update(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_iseo_client: MagicMock,
     mock_derive_private_key: MagicMock,
@@ -464,8 +466,7 @@ async def test_poll_state_firmware_update(
     ):
         await lock_entity._poll_state()
 
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry.unique_id)}
     )
     assert device is not None
@@ -499,7 +500,7 @@ async def test_poll_state_early_returns(
 
     # Case 2: _poll_suppress_until is in the future
     lock_entity._attr_is_unlocking = False
-    lock_entity._poll_suppress_until = datetime.now(tz=UTC) + timedelta(hours=1)
+    lock_entity._poll_suppress_until = dt_util.utcnow() + timedelta(hours=1)
     mock_iseo_client.read_state.reset_mock()
     with patch(
         "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
@@ -565,7 +566,7 @@ async def test_poll_state_status_updates(
 
     # Case: _poll_suppress_until early return branch
     lock_entity._attr_is_unlocking = False
-    lock_entity._poll_suppress_until = datetime.now(tz=UTC) + timedelta(hours=1)
+    lock_entity._poll_suppress_until = dt_util.utcnow() + timedelta(hours=1)
     lock_entity._attr_available = False
     with patch(
         "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
@@ -679,5 +680,5 @@ async def test_poll_state_ble_locked_manual_with_now(
 
     mock_iseo_client.read_state.reset_mock()
     with patch.object(lock_entity._ble_lock, "locked", return_value=True):
-        await lock_entity._poll_state(_now=datetime.now(tz=UTC))
+        await lock_entity._poll_state(_now=dt_util.utcnow())
         mock_iseo_client.read_state.assert_not_called()

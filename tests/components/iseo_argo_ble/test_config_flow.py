@@ -8,7 +8,8 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.iseo_argo_ble import config_flow
-from homeassistant.components.iseo_argo_ble.const import CONF_ADDRESS, DOMAIN
+from homeassistant.components.iseo_argo_ble.const import DOMAIN
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

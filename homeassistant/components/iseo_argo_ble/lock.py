@@ -1,7 +1,7 @@
 """ISEO BLE Lock entity."""
 
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any, cast, override
 
@@ -9,15 +9,17 @@ from iseo_argo_ble import IseoAuthError, IseoClient, IseoConnectionError, LockSt
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.lock import LockEntity
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import dt as dt_util
 
 from . import IseoConfigEntry
-from .const import CONF_ADDRESS, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,7 +163,7 @@ class IseoLockEntity(LockEntity):
         if (
             not force
             and self._poll_suppress_until
-            and datetime.now(tz=UTC) < self._poll_suppress_until
+            and dt_util.utcnow() < self._poll_suppress_until
         ):
             # We updated availability, write it now.
             self.async_write_ha_state()
@@ -182,9 +184,7 @@ class IseoLockEntity(LockEntity):
         self._attr_is_unlocking = False
         self._attr_is_locked = False
         self._attr_available = available
-        self._poll_suppress_until = datetime.now(tz=UTC) + timedelta(
-            seconds=_RELOCK_DELAY
-        )
+        self._poll_suppress_until = dt_util.utcnow() + timedelta(seconds=_RELOCK_DELAY)
         self.async_write_ha_state()
 
     def _set_locked(self, available: bool = True) -> None:

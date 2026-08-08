@@ -35,6 +35,9 @@
     "cannot_connect": {
       "message": "Could not connect to the lock."
     },
+    "device_not_found": {
+      "message": "Could not find ISEO lock {address}. Make sure it is powered on and within Bluetooth range."
+    },
     "lock_not_supported": {
       "message": "Manual locking is not supported by this device. The lock will automatically re-latch after being opened."
     },
