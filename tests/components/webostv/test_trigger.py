@@ -123,6 +123,17 @@ async def test_webostv_turn_on_trigger_device_id(
             },
             id="legacy_with_empty_target_value",
         ),
+        pytest.param(
+            {
+                "trigger": "webostv.turn_on",
+                "entity_id": f"{ENTITY_ID},media_player.other",
+            },
+            id="legacy_comma_separated",
+        ),
+        pytest.param(
+            {"trigger": "webostv.turn_on", "entity_id": ENTITY_ID.upper()},
+            id="legacy_uppercase",
+        ),
     ],
 )
 @pytest.mark.usefixtures("client")

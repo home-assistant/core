@@ -42,6 +42,15 @@ DEPRECATED_TARGET_ISSUE_ID = "deprecated_turn_on_trigger_target"
 
 _TRIGGER_SCHEMA = vol.Schema({vol.Required(CONF_TARGET): cv.TARGET_FIELDS})
 
+# The legacy options were more lenient than the target fields they are folded into:
+# entity IDs could be given as a comma separated string and in any casing.
+_LEGACY_OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    }
+)
+
 
 def async_get_turn_on_trigger(device_id: str) -> dict[str, str]:
     """Return data for a turn on trigger."""
@@ -180,7 +189,9 @@ class TurnOnTrigger(Trigger):
             )
             complete_config = complete_config.copy()
             target = dict(complete_config.get(CONF_TARGET) or {})
-            legacy_target = {key: complete_config.pop(key) for key in legacy_keys}
+            legacy_target = _LEGACY_OPTIONS_SCHEMA(
+                {key: complete_config.pop(key) for key in legacy_keys}
+            )
             if not TargetSelection(target).has_any_target:
                 target.update(legacy_target)
             complete_config[CONF_TARGET] = target
