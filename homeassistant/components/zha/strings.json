@@ -2292,6 +2292,17 @@
       }
     }
   },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Device with IEEE address {ieee} not found"
+    },
+    "group_not_found": {
+      "message": "Group with ID {group_id} not found"
+    },
+    "no_warning_device": {
+      "message": "Device with IEEE address {ieee} is not an IAS warning device"
+    }
+  },
   "issues": {
     "inconsistent_network_settings": {
       "fix_flow": {

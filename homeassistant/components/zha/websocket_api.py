@@ -46,7 +46,8 @@ from zha.application.platforms.siren import (
     StrobeLevel,
     WarningMode,
 )
-from zha.zigbee.group import GroupMemberReference
+from zha.zigbee.device import Device
+from zha.zigbee.group import Group, GroupMemberReference
 import zigpy.backups
 from zigpy.config import CONF_DEVICE
 from zigpy.config.validators import cv_boolean
@@ -62,6 +63,7 @@ from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
@@ -91,6 +93,7 @@ from .helpers import (
     ZHAGatewayProxy,
     async_cluster_exists,
     cluster_command_schema_to_vol_schema,
+    convert_zha_error_to_ha_error,
     get_config_entry,
     get_zha_gateway,
     get_zha_gateway_proxy,
@@ -314,6 +317,41 @@ CLUSTER_BINDING_SCHEMA = vol.All(
 )
 
 
+def _get_device(zha_gateway: Gateway, ieee: EUI64) -> Device:
+    """Return the device for an IEEE address, raising if it is unknown."""
+    if (device := zha_gateway.get_device(ieee)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"ieee": str(ieee)},
+        )
+    return device
+
+
+def _get_warning_device(zha_gateway: Gateway, ieee: EUI64) -> BaseSiren:
+    """Return the IAS warning device entity of a device, raising if it has none."""
+    device = _get_device(zha_gateway, ieee)
+    try:
+        return device.get_entity(Platform.SIREN, pick_first=True)
+    except LookupError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_warning_device",
+            translation_placeholders={"ieee": str(ieee)},
+        ) from err
+
+
+def _get_group(zha_gateway: Gateway, group_id: int) -> Group:
+    """Return the group for a group ID, raising if it is unknown."""
+    if (group := zha_gateway.get_group(group_id)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="group_not_found",
+            translation_placeholders={"group_id": str(group_id)},
+        )
+    return group
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -348,23 +386,25 @@ async def websocket_permit_devices(
     zha_gateway_proxy.async_enable_debug_mode()
     src_ieee: EUI64
     link_key: KeyData
+    application_controller = zha_gateway_proxy.gateway.application_controller
     if ATTR_SOURCE_IEEE in msg:
         src_ieee = msg[ATTR_SOURCE_IEEE]
         link_key = msg[ATTR_INSTALL_CODE]
         _LOGGER.debug("Allowing join for %s device with link key", src_ieee)
-        await zha_gateway_proxy.gateway.application_controller.permit_with_link_key(
-            time_s=duration, node=src_ieee, link_key=link_key
-        )
+        async with convert_zha_error_to_ha_error():
+            await application_controller.permit_with_link_key(
+                time_s=duration, node=src_ieee, link_key=link_key
+            )
     elif ATTR_QR_CODE in msg:
         src_ieee, link_key = msg[ATTR_QR_CODE]
         _LOGGER.debug("Allowing join for %s device with link key", src_ieee)
-        await zha_gateway_proxy.gateway.application_controller.permit_with_link_key(
-            time_s=duration, node=src_ieee, link_key=link_key
-        )
+        async with convert_zha_error_to_ha_error():
+            await application_controller.permit_with_link_key(
+                time_s=duration, node=src_ieee, link_key=link_key
+            )
     else:
-        await zha_gateway_proxy.gateway.application_controller.permit(
-            time_s=duration, node=ieee
-        )
+        async with convert_zha_error_to_ha_error():
+            await application_controller.permit(time_s=duration, node=ieee)
     connection.send_result(msg[ID])
 
 
@@ -858,13 +898,11 @@ async def websocket_read_zigbee_cluster_attributes(
     cluster_type: str = msg[ATTR_CLUSTER_TYPE]
     attribute: int = msg[ATTR_ATTRIBUTE]
     manufacturer: int | ZigpyUndefinedType = msg.get(ATTR_MANUFACTURER, ZIGPY_UNDEFINED)
-    zha_device = zha_gateway.get_device(ieee)
-    success = {}
-    failure = {}
-    if zha_device is not None:
-        cluster = zha_device.async_get_cluster(
-            endpoint_id, cluster_id, cluster_type=cluster_type
-        )
+    zha_device = _get_device(zha_gateway, ieee)
+    cluster = zha_device.async_get_cluster(
+        endpoint_id, cluster_id, cluster_type=cluster_type
+    )
+    async with convert_zha_error_to_ha_error():
         success, failure = await cluster.read_attributes(
             [attribute], allow_cache=False, only_cache=False, manufacturer=manufacturer
         )
@@ -905,8 +943,12 @@ async def websocket_get_bindable_devices(
     """Directly bind devices."""
     zha_gateway_proxy = get_zha_gateway_proxy(hass)
     source_ieee: EUI64 = msg[ATTR_IEEE]
-    source_device = zha_gateway_proxy.device_proxies.get(source_ieee)
-    assert source_device is not None
+    if (source_device := zha_gateway_proxy.device_proxies.get(source_ieee)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"ieee": str(source_ieee)},
+        )
 
     devices = [
         device.zha_device_info
@@ -1001,8 +1043,7 @@ async def websocket_bind_group(
     source_ieee: EUI64 = msg[ATTR_SOURCE_IEEE]
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
-    source_device = zha_gateway.get_device(source_ieee)
-    assert source_device
+    source_device = _get_device(zha_gateway, source_ieee)
     await source_device.async_bind_to_group(group_id, bindings)
     connection.send_result(msg[ID])
 
@@ -1025,8 +1066,7 @@ async def websocket_unbind_group(
     source_ieee: EUI64 = msg[ATTR_SOURCE_IEEE]
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
-    source_device = zha_gateway.get_device(source_ieee)
-    assert source_device
+    source_device = _get_device(zha_gateway, source_ieee)
     await source_device.async_unbind_from_group(group_id, bindings)
     connection.send_result(msg[ID])
 
@@ -1039,11 +1079,9 @@ async def async_binding_operation(
 ) -> None:
     """Create or remove a direct zigbee binding between 2 devices."""
 
-    source_device = zha_gateway.get_device(source_ieee)
-    target_device = zha_gateway.get_device(target_ieee)
+    source_device = _get_device(zha_gateway, source_ieee)
+    target_device = _get_device(zha_gateway, target_ieee)
 
-    assert source_device
-    assert target_device
     clusters_to_bind = await get_matched_clusters(source_device, target_device)
 
     zdo = source_device.device.zdo
@@ -1291,24 +1329,27 @@ def async_load_api(hass: HomeAssistant) -> None:
             src_ieee = service.data[ATTR_SOURCE_IEEE]
             link_key = service.data[ATTR_INSTALL_CODE]
             _LOGGER.info("Allowing join for %s device with link key", src_ieee)
-            await application_controller.permit_with_link_key(
-                time_s=duration, node=src_ieee, link_key=link_key
-            )
+            async with convert_zha_error_to_ha_error():
+                await application_controller.permit_with_link_key(
+                    time_s=duration, node=src_ieee, link_key=link_key
+                )
             return
 
         if ATTR_QR_CODE in service.data:
             src_ieee, link_key = service.data[ATTR_QR_CODE]
             _LOGGER.info("Allowing join for %s device with link key", src_ieee)
-            await application_controller.permit_with_link_key(
-                time_s=duration, node=src_ieee, link_key=link_key
-            )
+            async with convert_zha_error_to_ha_error():
+                await application_controller.permit_with_link_key(
+                    time_s=duration, node=src_ieee, link_key=link_key
+                )
             return
 
         if ieee:
             _LOGGER.info("Permitting joins for %ss on %s device", duration, ieee)
         else:
             _LOGGER.info("Permitting joins for %ss", duration)
-        await application_controller.permit(time_s=duration, node=ieee)
+        async with convert_zha_error_to_ha_error():
+            await application_controller.permit(time_s=duration, node=ieee)
 
     async_register_admin_service(
         hass, DOMAIN, SERVICE_PERMIT, permit, schema=SERVICE_SCHEMAS[SERVICE_PERMIT]
@@ -1319,7 +1360,8 @@ def async_load_api(hass: HomeAssistant) -> None:
         zha_gateway = get_zha_gateway(hass)
         ieee: EUI64 = service.data[ATTR_IEEE]
         _LOGGER.info("Removing node %s", ieee)
-        await zha_gateway.async_remove_device(ieee)
+        async with convert_zha_error_to_ha_error():
+            await zha_gateway.async_remove_device(ieee)
 
     async_register_admin_service(
         hass, DOMAIN, SERVICE_REMOVE, remove, schema=SERVICE_SCHEMAS[IEEE_SERVICE]
@@ -1336,9 +1378,8 @@ def async_load_api(hass: HomeAssistant) -> None:
         manufacturer: int | ZigpyUndefinedType = service.data.get(
             ATTR_MANUFACTURER, ZIGPY_UNDEFINED
         )
-        zha_device = zha_gateway.get_device(ieee)
-        response = None
-        if zha_device is not None:
+        zha_device = _get_device(zha_gateway, ieee)
+        async with convert_zha_error_to_ha_error():
             response = await zha_device.write_zigbee_attribute(
                 endpoint_id,
                 cluster_id,
@@ -1347,8 +1388,6 @@ def async_load_api(hass: HomeAssistant) -> None:
                 cluster_type=cluster_type,
                 manufacturer=manufacturer,
             )
-        else:
-            raise ValueError(f"Device with IEEE {ieee!s} not found")
 
         _LOGGER.debug(
             (
@@ -1392,11 +1431,11 @@ def async_load_api(hass: HomeAssistant) -> None:
         manufacturer: int | ZigpyUndefinedType = service.data.get(
             ATTR_MANUFACTURER, ZIGPY_UNDEFINED
         )
-        zha_device = zha_gateway.get_device(ieee)
-        if zha_device is not None:
-            if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
-                manufacturer = zha_device.manufacturer_code
+        zha_device = _get_device(zha_gateway, ieee)
+        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+            manufacturer = zha_device.manufacturer_code
 
+        async with convert_zha_error_to_ha_error():
             await zha_device.issue_cluster_command(
                 endpoint_id,
                 cluster_id,
@@ -1407,30 +1446,28 @@ def async_load_api(hass: HomeAssistant) -> None:
                 cluster_type=cluster_type,
                 manufacturer=manufacturer,
             )
-            _LOGGER.debug(
-                (
-                    "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
-                    " %s: [%s] %s: [%s] %s: [%s]"
-                ),
-                ATTR_CLUSTER_ID,
-                cluster_id,
-                ATTR_CLUSTER_TYPE,
-                cluster_type,
-                ATTR_ENDPOINT_ID,
-                endpoint_id,
-                ATTR_COMMAND,
-                command,
-                ATTR_COMMAND_TYPE,
-                command_type,
-                ATTR_ARGS,
-                args,
-                ATTR_PARAMS,
-                params,
-                ATTR_MANUFACTURER,
-                manufacturer,
-            )
-        else:
-            raise ValueError(f"Device with IEEE {ieee!s} not found")
+        _LOGGER.debug(
+            (
+                "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
+                " %s: [%s] %s: [%s] %s: [%s]"
+            ),
+            ATTR_CLUSTER_ID,
+            cluster_id,
+            ATTR_CLUSTER_TYPE,
+            cluster_type,
+            ATTR_ENDPOINT_ID,
+            endpoint_id,
+            ATTR_COMMAND,
+            command,
+            ATTR_COMMAND_TYPE,
+            command_type,
+            ATTR_ARGS,
+            args,
+            ATTR_PARAMS,
+            params,
+            ATTR_MANUFACTURER,
+            manufacturer,
+        )
 
     async_register_admin_service(
         hass,
@@ -1449,12 +1486,11 @@ def async_load_api(hass: HomeAssistant) -> None:
         manufacturer: int | ZigpyUndefinedType = service.data.get(
             ATTR_MANUFACTURER, ZIGPY_UNDEFINED
         )
-        group = zha_gateway.get_group(group_id)
+        group = _get_group(zha_gateway, group_id)
         if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
             _LOGGER.error("Missing manufacturer attribute for cluster: %d", cluster_id)
-        response = None
-        if group is not None:
-            cluster = group.endpoint[cluster_id]
+        cluster = group.endpoint[cluster_id]
+        async with convert_zha_error_to_ha_error():
             response = await cluster.command(
                 command, *args, manufacturer=manufacturer, expect_reply=True
             )
@@ -1487,10 +1523,10 @@ def async_load_api(hass: HomeAssistant) -> None:
         strobe: int = service.data[ATTR_WARNING_DEVICE_STROBE]
         level: int = service.data[ATTR_LEVEL]
 
-        device = zha_gateway.get_device(ieee)
-        siren: BaseSiren = device.get_entity(Platform.SIREN, pick_first=True)
+        siren = _get_warning_device(zha_gateway, ieee)
 
-        await siren.async_squawk(mode=mode, strobe=strobe, squawk_level=level)
+        async with convert_zha_error_to_ha_error():
+            await siren.async_squawk(mode=mode, strobe=strobe, squawk_level=level)
 
     async_register_admin_service(
         hass,
@@ -1510,17 +1546,17 @@ def async_load_api(hass: HomeAssistant) -> None:
         duty_mode: int = service.data[ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE]
         intensity: int = service.data[ATTR_WARNING_DEVICE_STROBE_INTENSITY]
 
-        device = zha_gateway.get_device(ieee)
-        siren: BaseSiren = device.get_entity(Platform.SIREN, pick_first=True)
+        siren = _get_warning_device(zha_gateway, ieee)
 
-        await siren.async_turn_on(
-            tone=mode,
-            volume_level=level,
-            duration=duration,
-            strobe=strobe,
-            strobe_duty_cycle=duty_mode,
-            strobe_intensity=intensity,
-        )
+        async with convert_zha_error_to_ha_error():
+            await siren.async_turn_on(
+                tone=mode,
+                volume_level=level,
+                duration=duration,
+                strobe=strobe,
+                strobe_duty_cycle=duty_mode,
+                strobe_intensity=intensity,
+            )
 
     async_register_admin_service(
         hass,
