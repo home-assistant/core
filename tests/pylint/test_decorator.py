@@ -1,16 +1,13 @@
 """Tests for pylint hass_enforce_type_hints plugin."""
 
-from __future__ import annotations
-
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.interfaces import UNDEFINED
 from pylint.testutils import MessageTest
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 import pytest
 
-from . import assert_adds_messages, assert_no_messages
+from . import assert_adds_messages, assert_no_messages, walk_checker
 
 
 def test_good_callback(linter: UnittestLinter, decorator_checker: BaseChecker) -> None:
@@ -26,11 +23,9 @@ def test_good_callback(linter: UnittestLinter, decorator_checker: BaseChecker) -
     """
 
     root_node = astroid.parse(code)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)
 
 
 def test_bad_callback(linter: UnittestLinter, decorator_checker: BaseChecker) -> None:
@@ -46,13 +41,11 @@ def test_bad_callback(linter: UnittestLinter, decorator_checker: BaseChecker) ->
     """
 
     root_node = astroid.parse(code)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_adds_messages(
         linter,
         MessageTest(
-            msg_id="hass-async-callback-decorator",
+            msg_id="home-assistant-async-callback-decorator",
             line=5,
             node=root_node.body[1],
             args=None,
@@ -62,7 +55,7 @@ def test_bad_callback(linter: UnittestLinter, decorator_checker: BaseChecker) ->
             end_col_offset=15,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -112,11 +105,9 @@ def test_good_fixture(
     """
 
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -148,13 +139,11 @@ def test_bad_fixture_session_scope(
     """
 
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_adds_messages(
         linter,
         MessageTest(
-            msg_id="hass-pytest-fixture-decorator",
+            msg_id="home-assistant-pytest-fixture-decorator",
             line=10,
             node=root_node.body[2].decorators.nodes[0],
             args=("scope `session`", "use `package` or lower"),
@@ -164,7 +153,7 @@ def test_bad_fixture_session_scope(
             end_col_offset=32,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -195,13 +184,11 @@ def test_bad_fixture_package_scope(
     """
 
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_adds_messages(
         linter,
         MessageTest(
-            msg_id="hass-pytest-fixture-decorator",
+            msg_id="home-assistant-pytest-fixture-decorator",
             line=10,
             node=root_node.body[2].decorators.nodes[0],
             args=("scope `package`", "use `module` or lower"),
@@ -211,7 +198,7 @@ def test_bad_fixture_package_scope(
             end_col_offset=32,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -249,13 +236,11 @@ def test_bad_fixture_autouse(
     """
 
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(decorator_checker)
 
     with assert_adds_messages(
         linter,
         MessageTest(
-            msg_id="hass-pytest-fixture-decorator",
+            msg_id="home-assistant-pytest-fixture-decorator",
             line=10,
             node=root_node.body[2].decorators.nodes[0],
             args=("scope/autouse combination", "set `autouse=True` or reduce scope"),
@@ -265,4 +250,4 @@ def test_bad_fixture_autouse(
             end_col_offset=17 + len(keywords),
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, decorator_checker, root_node)

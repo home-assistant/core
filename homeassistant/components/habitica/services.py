@@ -1,9 +1,7 @@
 """Actions for the Habitica integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
-from datetime import UTC, date, datetime, time
+from datetime import UTC, datetime, time
 import logging
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID, uuid4
@@ -305,7 +303,7 @@ async def _cast_skill(call: ServiceCall) -> ServiceResponse:
         ) from e
     else:
         await coordinator.async_request_refresh()
-        return asdict(response.data)
+        return asdict(response.data) if call.return_response is True else None
 
 
 async def _manage_quests(call: ServiceCall) -> ServiceResponse:
@@ -315,7 +313,7 @@ async def _manage_quests(call: ServiceCall) -> ServiceResponse:
     )
     coordinator = entry.runtime_data
 
-    FUNC_MAP = {
+    func_map = {
         SERVICE_ABORT_QUEST: coordinator.habitica.abort_quest,
         SERVICE_ACCEPT_QUEST: coordinator.habitica.accept_quest,
         SERVICE_CANCEL_QUEST: coordinator.habitica.cancel_quest,
@@ -324,7 +322,7 @@ async def _manage_quests(call: ServiceCall) -> ServiceResponse:
         SERVICE_START_QUEST: coordinator.habitica.start_quest,
     }
 
-    func = FUNC_MAP[call.service]
+    func = func_map[call.service]
 
     try:
         response = await func()
@@ -355,7 +353,7 @@ async def _manage_quests(call: ServiceCall) -> ServiceResponse:
             translation_placeholders={"reason": str(e)},
         ) from e
     else:
-        return asdict(response.data)
+        return asdict(response.data) if call.return_response is True else None
 
 
 async def _score_task(call: ServiceCall) -> ServiceResponse:
@@ -420,7 +418,7 @@ async def _score_task(call: ServiceCall) -> ServiceResponse:
         ) from e
     else:
         await coordinator.async_request_refresh()
-        return asdict(response.data)
+        return asdict(response.data) if call.return_response is True else None
 
 
 async def _transformation(call: ServiceCall) -> ServiceResponse:
@@ -505,7 +503,7 @@ async def _transformation(call: ServiceCall) -> ServiceResponse:
             translation_placeholders={"reason": str(e)},
         ) from e
     else:
-        return asdict(response.data)
+        return asdict(response.data) if call.return_response is True else None
 
 
 async def _get_tasks(call: ServiceCall) -> ServiceResponse:
@@ -742,7 +740,7 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
             reminders.extend(
                 Reminders(
                     id=uuid4(),
-                    time=datetime.combine(date.today(), r, tzinfo=UTC),
+                    time=datetime.combine(dt_util.now().date(), r, tzinfo=UTC),
                 )
                 for r in add_reminders
                 if r not in existing_reminder_times
@@ -808,10 +806,10 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
             data["daysOfMonth"] = [start_date.day]
             data["weeksOfMonth"] = []
 
-    if interval := call.data.get(ATTR_INTERVAL):
+    if (interval := call.data.get(ATTR_INTERVAL)) is not None:
         data["everyX"] = interval
 
-    if streak := call.data.get(ATTR_STREAK):
+    if (streak := call.data.get(ATTR_STREAK)) is not None:
         data["streak"] = streak
 
     try:
@@ -841,7 +839,11 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
             translation_placeholders={"reason": str(e)},
         ) from e
     else:
-        return response.data.to_dict(omit_none=True)
+        return (
+            response.data.to_dict(omit_none=True)
+            if call.return_response is True
+            else None
+        )
 
 
 @callback
@@ -861,7 +863,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             service_name,
             _manage_quests,
             schema=SERVICE_MANAGE_QUEST_SCHEMA,
-            supports_response=SupportsResponse.ONLY,
+            supports_response=SupportsResponse.OPTIONAL,
         )
 
     for service_name in (
@@ -875,7 +877,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             service_name,
             _create_or_update_task,
             schema=SERVICE_UPDATE_TASK_SCHEMA,
-            supports_response=SupportsResponse.ONLY,
+            supports_response=SupportsResponse.OPTIONAL,
         )
     for service_name in (
         SERVICE_CREATE_DAILY,
@@ -888,7 +890,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             service_name,
             _create_or_update_task,
             schema=SERVICE_CREATE_TASK_SCHEMA,
-            supports_response=SupportsResponse.ONLY,
+            supports_response=SupportsResponse.OPTIONAL,
         )
 
     hass.services.async_register(
@@ -896,7 +898,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_CAST_SKILL,
         _cast_skill,
         schema=SERVICE_CAST_SKILL_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     hass.services.async_register(
@@ -904,14 +906,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SCORE_HABIT,
         _score_task,
         schema=SERVICE_SCORE_TASK_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,
         SERVICE_SCORE_REWARD,
         _score_task,
         schema=SERVICE_SCORE_TASK_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     hass.services.async_register(
@@ -919,7 +921,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_TRANSFORMATION,
         _transformation,
         schema=SERVICE_TRANSFORMATION_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,

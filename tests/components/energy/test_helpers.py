@@ -23,8 +23,8 @@ def test_generate_power_sensor_unique_id_combined() -> None:
     }
     unique_id = generate_power_sensor_unique_id("battery", config)
     assert (
-        unique_id
-        == "energy_power_battery_combined_sensor_battery_discharge_sensor_battery_charge"
+        unique_id == "energy_power_battery_combined"
+        "_sensor_battery_discharge_sensor_battery_charge"
     )
 
 

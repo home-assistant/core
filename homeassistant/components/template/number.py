@@ -1,22 +1,26 @@
 """Support for numbers which integrates with other components."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN as NUMBER_DOMAIN,
     ENTITY_ID_FORMAT,
-    NumberEntity,
+    NumberExtraStoredData,
+    RestoreNumber,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_STATE,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -46,8 +50,11 @@ CONF_SET_VALUE = "set_value"
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
 
+SCRIPT_FIELDS = (CONF_SET_VALUE,)
+
 NUMBER_COMMON_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
         vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
@@ -81,6 +88,7 @@ async def async_setup_platform(
         TriggerNumberEntity,
         async_add_entities,
         discovery_info,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -96,6 +104,7 @@ async def async_setup_entry(
         async_add_entities,
         StateNumberEntity,
         NUMBER_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -109,23 +118,29 @@ def async_create_preview_number(
     )
 
 
-class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
+class AbstractTemplateNumber(AbstractTemplateEntity, RestoreNumber):
     """Representation of a template number features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
+    _restore_state_extra_data = NumberExtraStoredData
+    _restore_state_properties = ("_attr_native_value",)
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_native_step = DEFAULT_STEP
         self._attr_native_min_value = DEFAULT_MIN_VALUE
         self._attr_native_max_value = DEFAULT_MAX_VALUE
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_native_value",
             template_validators.number(self, CONF_STATE),
         )
@@ -140,6 +155,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
 
         self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set value of the number."""
         if self._attr_assumed_state:
@@ -148,9 +164,29 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
         if set_value := self._action_scripts.get(CONF_SET_VALUE):
             await self.async_run_script(
                 set_value,
-                run_variables={ATTR_VALUE: value},
+                run_variables={"value": value},
                 context=self._context,
             )
+
+    @override
+    def restore_extra_data(self, extra_data: NumberExtraStoredData) -> None:
+        """Restore the extra data."""
+        # Do not restore native_unit_of_measurement, this is always pulled from the
+        # number configuration.
+        self._attr_native_max_value = (
+            DEFAULT_MAX_VALUE
+            if extra_data.native_max_value is None
+            else extra_data.native_max_value
+        )
+        self._attr_native_min_value = (
+            DEFAULT_MIN_VALUE
+            if extra_data.native_min_value is None
+            else extra_data.native_min_value
+        )
+        self._attr_native_step = (
+            DEFAULT_STEP if extra_data.native_step is None else extra_data.native_step
+        )
+        self._attr_native_value = extra_data.native_value
 
 
 class StateNumberEntity(TemplateEntity, AbstractTemplateNumber):

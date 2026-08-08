@@ -1,0 +1,62 @@
+navigate_url:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
+    url:
+      required: true
+      selector:
+        text:
+
+set_blackout:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
+    visible:
+      default: true
+      selector:
+        boolean:
+    text:
+      selector:
+        text:
+    background:
+      default: [0, 0, 0]
+      selector:
+        color_rgb:
+    foreground:
+      default: [255, 255, 255]
+      selector:
+        color_rgb:
+    icon:
+      selector:
+        text:
+    expire:
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    dismissible:
+      default: false
+      selector:
+        boolean:
+    button_background:
+      default: [255, 255, 255]
+      selector:
+        color_rgb:
+    button_foreground:
+      default: [0, 0, 0]
+      selector:
+        color_rgb:
+    button_text:
+      selector:
+        text:
+    sound:
+      selector:
+        text:

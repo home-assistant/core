@@ -1,6 +1,6 @@
 """Support for Duotecno switches."""
 
-from typing import Any
+from typing import Any, override
 
 from duotecno.unit import SwitchUnit
 
@@ -30,16 +30,19 @@ class DuotecnoSwitch(DuotecnoEntity, SwitchEntity):
     _unit: SwitchUnit
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self._unit.is_on()
 
     @api_call
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
         await self._unit.turn_on()
 
     @api_call
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         await self._unit.turn_off()

@@ -1,10 +1,8 @@
 """Support for the Fibaro devices."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyfibaro.fibaro_device import DeviceModel
 
@@ -34,6 +32,7 @@ class FibaroEntity(Entity):
         if not fibaro_device.visible:
             self._attr_entity_registry_visible_default = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.async_on_remove(
@@ -102,6 +101,7 @@ class FibaroEntity(Entity):
         return self.fibaro_device.value.bool_value(False)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the device."""
         attr = {"fibaro_id": self.fibaro_device.fibaro_id}

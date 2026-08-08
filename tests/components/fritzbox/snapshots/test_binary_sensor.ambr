@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[binary_sensor.fake_name_alarm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_setup[binary_sensor.fake_name_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'fake_name Alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_name Alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fake_name_alarm',
@@ -51,8 +52,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_setup[binary_sensor.fake_name_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'fake_name Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_name Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fake_name_battery',
@@ -101,8 +103,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_button_lock_on_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_setup[binary_sensor.fake_name_button_lock_on_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'lock',
-      'friendly_name': 'fake_name Button lock on device',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_name Button lock on device',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fake_name_button_lock_on_device',
@@ -151,8 +154,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_button_lock_via_ui-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_setup[binary_sensor.fake_name_button_lock_via_ui-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'lock',
-      'friendly_name': 'fake_name Button lock via UI',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_name Button lock via UI',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fake_name_button_lock_via_ui',
@@ -201,8 +205,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_holiday_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -238,7 +243,7 @@
 # name: test_setup[binary_sensor.fake_name_holiday_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'fake_name Holiday mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_name Holiday mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fake_name_holiday_mode',
@@ -250,8 +255,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_open_window_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -287,7 +293,7 @@
 # name: test_setup[binary_sensor.fake_name_open_window_detected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'fake_name Open window detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_name Open window detected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fake_name_open_window_detected',
@@ -299,8 +305,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_summer_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -336,7 +343,7 @@
 # name: test_setup[binary_sensor.fake_name_summer_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'fake_name Summer mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_name Summer mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fake_name_summer_mode',

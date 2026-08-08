@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["airtouch5py"],
-  "requirements": ["airtouch5py==0.3.0"]
+  "requirements": ["airtouch5py==0.4.0"]
 }

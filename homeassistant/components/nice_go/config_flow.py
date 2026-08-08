@@ -1,11 +1,9 @@
 """Config flow for Nice G.O. integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from nice_go import AuthFailedError, NiceGOApi
 import voluptuous as vol
@@ -31,6 +29,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -60,7 +59,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_EMAIL: user_input[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_REFRESH_TOKEN: refresh_token,
-                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
                     },
                 )
 
@@ -101,7 +100,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         **user_input,
                         CONF_REFRESH_TOKEN: refresh_token,
-                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
                     },
                     unique_id=user_input[CONF_EMAIL],
                 )

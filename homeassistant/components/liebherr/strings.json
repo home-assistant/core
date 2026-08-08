@@ -33,6 +33,25 @@
     }
   },
   "entity": {
+    "cover": {
+      "auto_door": {
+        "name": "AutoDoor"
+      },
+      "auto_door_bottom_zone": {
+        "name": "Bottom zone AutoDoor"
+      },
+      "auto_door_middle_zone": {
+        "name": "Middle zone AutoDoor"
+      },
+      "auto_door_top_zone": {
+        "name": "Top zone AutoDoor"
+      }
+    },
+    "light": {
+      "presentation_light": {
+        "name": "Presentation light"
+      }
+    },
     "number": {
       "setpoint_temperature": {
         "name": "Setpoint"
@@ -198,8 +217,32 @@
     }
   },
   "exceptions": {
+    "auth_expired": {
+      "message": "API key is no longer valid"
+    },
+    "cannot_connect": {
+      "message": "Failed to connect to the Liebherr API"
+    },
+    "close_auto_door_error": {
+      "message": "An error occurred while closing the door"
+    },
     "communication_error": {
       "message": "An error occurred while communicating with the device"
+    },
+    "device_communication_error": {
+      "message": "Error communicating with device {device_id}"
+    },
+    "device_connection_error": {
+      "message": "Failed to connect to device {device_id}"
+    },
+    "device_timeout_error": {
+      "message": "Timeout communicating with device {device_id}"
+    },
+    "invalid_api_key": {
+      "message": "Invalid API key"
+    },
+    "open_auto_door_error": {
+      "message": "An error occurred while opening the door"
     }
   }
 }

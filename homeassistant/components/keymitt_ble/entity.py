@@ -1,7 +1,5 @@
 """MicroBot class."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.bluetooth.passive_update_coordinator import (

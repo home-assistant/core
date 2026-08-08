@@ -1,12 +1,10 @@
 """Config flow to configure deCONZ component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
 from pydeconz.errors import LinkButtonNotPressed, RequestError, ResponseError
@@ -65,6 +63,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> DeconzOptionsFlowHandler:
@@ -75,6 +74,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the deCONZ config flow."""
         self.bridge_id = ""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -211,6 +211,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_link()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -245,6 +246,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_link()
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:

@@ -1,13 +1,11 @@
 """The microBees Coordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import aiohttp
 from microBeesPy import Actuator, Bee, MicroBees, MicroBeesException, Sensor
@@ -52,6 +50,7 @@ class MicroBeesUpdateCoordinator(DataUpdateCoordinator[MicroBeesCoordinatorData]
         )
         self.microbees = microbees
 
+    @override
     async def _async_update_data(self) -> MicroBeesCoordinatorData:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(10):

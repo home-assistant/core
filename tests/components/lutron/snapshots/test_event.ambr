@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_event_setup[event.test_keypad_test_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <LutronEventType.SINGLE_PRESS: 'single_press'>,
       ]),
     }),
@@ -42,11 +43,11 @@
 # name: test_event_setup[event.test_keypad_test_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <LutronEventType.SINGLE_PRESS: 'single_press'>,
       ]),
-      'friendly_name': 'Test Keypad Test Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Keypad Test Button',
     }),
     'context': <ANY>,
     'entity_id': 'event.test_keypad_test_button',

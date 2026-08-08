@@ -1,1 +1,1 @@
-"""The bbox component."""
+"""The Bbox integration."""

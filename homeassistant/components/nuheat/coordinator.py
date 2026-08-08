@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import nuheat
 
@@ -16,15 +17,18 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
+type NuHeatConfigEntry = ConfigEntry[NuHeatCoordinator]
+
+
 class NuHeatCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for NuHeat thermostat data."""
 
-    config_entry: ConfigEntry
+    config_entry: NuHeatConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: NuHeatConfigEntry,
         thermostat: nuheat.NuHeatThermostat,
     ) -> None:
         """Initialize the coordinator."""
@@ -37,6 +41,7 @@ class NuHeatCoordinator(DataUpdateCoordinator[None]):
         )
         self.thermostat = thermostat
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.hass.async_add_executor_job(self.thermostat.get_data)

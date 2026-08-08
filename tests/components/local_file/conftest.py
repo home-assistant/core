@@ -1,7 +1,5 @@
 """Fixtures for the Local file integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch

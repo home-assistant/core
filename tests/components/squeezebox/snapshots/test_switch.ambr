@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity_registry[switch.alarm_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -39,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'alarm_id': '1',
-      'friendly_name': 'Alarm (1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm (1)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.alarm_1',
@@ -51,8 +52,9 @@
 # ---
 # name: test_entity_registry[switch.alarms_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,7 +90,7 @@
 # name: test_entity_registry[switch.alarms_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Alarms enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarms enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.alarms_enabled',

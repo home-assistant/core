@@ -1,7 +1,5 @@
 """Support for the Tank Utility propane monitor."""
 
-from __future__ import annotations
-
 import datetime
 import logging
 
@@ -63,6 +61,7 @@ def setup_platform(
         if http_error.response.status_code == requests.codes.unauthorized:
             _LOGGER.error("Invalid credentials")
             return
+        raise
 
     all_sensors = []
     for device in devices:

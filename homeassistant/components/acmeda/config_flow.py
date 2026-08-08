@@ -1,10 +1,8 @@
 """Config flow for Rollease Acmeda Automate Pulse Hub."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from contextlib import suppress
-from typing import Any
+from typing import Any, override
 
 import aiopulse
 import voluptuous as vol
@@ -24,6 +22,7 @@ class AcmedaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.discovered_hubs: dict[str, aiopulse.Hub] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

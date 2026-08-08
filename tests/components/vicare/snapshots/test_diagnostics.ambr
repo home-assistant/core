@@ -4715,6 +4715,19 @@
           'id': 'deviceId0',
           'modelId': 'model0',
           'roles': list([
+            'type:boiler',
+          ]),
+          'status': 'Online',
+          'type': None,
+        }),
+      }),
+      dict({
+        'data': list([
+        ]),
+        'device': dict({
+          'id': 'deviceId_unsupported',
+          'modelId': 'unsupported_model',
+          'roles': list([
           ]),
           'status': 'Online',
           'type': None,
@@ -4723,10 +4736,8 @@
     ]),
     'entry': dict({
       'data': dict({
-        'client_id': '**REDACTED**',
-        'heating_type': 'auto',
-        'password': '**REDACTED**',
-        'username': '**REDACTED**',
+        'auth_implementation': 'vicare',
+        'token': '**REDACTED**',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -4743,7 +4754,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': 'ViCare',
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---

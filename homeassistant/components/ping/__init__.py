@@ -1,7 +1,5 @@
 """The ping component."""
 
-from __future__ import annotations
-
 import logging
 
 from icmplib import SocketPermissionError, async_ping
@@ -31,10 +29,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bo
         # Migrate device registry identifiers from homeassistant domain to ping domain
         registry = dr.async_get(hass)
         if (
-            device := registry.async_get_device(
-                identifiers={(HOMEASSISTANT_DOMAIN, entry.entry_id)}
+            device := registry.async_get_device_by_identifier(
+                (HOMEASSISTANT_DOMAIN, entry.entry_id), entry.entry_id
             )
-        ) is not None and entry.entry_id in device.config_entries:
+        ) is not None:
             registry.async_update_device(
                 device_id=device.id,
                 new_identifiers={(DOMAIN, entry.entry_id)},
@@ -70,6 +68,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # Ensure the device exists before forwarding to platforms, so that the
+    # device tracker (which looks up the device on init) is not racing the
+    # binary sensor / sensor platforms that create the device via DeviceInfo.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Ping",
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

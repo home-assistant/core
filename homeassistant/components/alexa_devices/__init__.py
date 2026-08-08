@@ -1,19 +1,28 @@
 """Alexa Devices integration."""
 
-from homeassistant.const import CONF_COUNTRY, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from collections.abc import Awaitable, Callable
 
-from .const import _LOGGER, CONF_LOGIN_DATA, CONF_SITE, COUNTRY_DOMAINS, DOMAIN
+from homeassistant.const import CONF_COUNTRY, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client, config_validation as cv, httpx_client
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
+
+from .const import CONF_LOGIN_DATA, CONF_SITE, COUNTRY_DOMAINS, DOMAIN, LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.EVENT,
+    Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TODO,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -25,6 +34,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _async_initial_sync(sync_call: Callable[[], Awaitable[None]]) -> None:
+    """Run an initial best-effort sync call.
+
+    These syncs are not required for setup to succeed: a failing Amazon API
+    call must not prevent the other syncs from running or abort setup.
+    """
+    try:
+        await sync_call()
+    except ConfigEntryNotReady as err:
+        LOGGER.warning(
+            "Initial sync failed for %s: %s. Data may be missing or incomplete until updates are pushed by Amazon",
+            sync_call.__name__,
+            err,
+        )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Set up Alexa Devices platform."""
 
@@ -32,6 +57,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     coordinator = AmazonDevicesCoordinator(hass, entry, session)
 
     await coordinator.async_config_entry_first_refresh()
+
+    for sync_call in (
+        coordinator.sync_todo_list_items,
+        coordinator.sync_history_state,
+        coordinator.sync_media_state,
+    ):
+        await _async_initial_sync(sync_call)
+
+    async def _on_http2_reauth_required() -> None:
+        entry.async_start_reauth(hass)
+
+    alexa_httpx_client = httpx_client.get_async_client(
+        hass,
+        alpn_protocols=SSL_ALPN_HTTP11_HTTP2,
+    )
+
+    await coordinator.api.start_http2_processing(
+        alexa_httpx_client,
+        on_reauth_required=_on_http2_reauth_required,
+    )
+
+    async def _async_stop_http2(_event: Event | None = None) -> None:
+        """Stop HTTP/2 processing on entry unload or HA shutdown."""
+        await coordinator.api.stop_http2_processing()
+
+    entry.async_on_unload(_async_stop_http2)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_http2)
+    )
 
     entry.runtime_data = coordinator
 
@@ -59,9 +114,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
             hass.config_entries.async_update_entry(entry, version=1, minor_version=3)
             return True
 
-        _LOGGER.debug(
-            "Migrating from version %s.%s", entry.version, entry.minor_version
-        )
+        LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
         # Convert country in domain
         country = entry.data[CONF_COUNTRY].lower()
@@ -75,7 +128,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
             entry, data=new_data, version=1, minor_version=3
         )
 
-        _LOGGER.info(
+        LOGGER.info(
             "Migration to version %s.%s successful", entry.version, entry.minor_version
         )
 

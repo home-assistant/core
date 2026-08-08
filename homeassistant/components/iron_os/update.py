@@ -1,13 +1,13 @@
 """Update platform for IronOS integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.update import (
-    ATTR_INSTALLED_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -57,41 +57,49 @@ class IronOSUpdate(IronOSBaseEntity, UpdateEntity, RestoreEntity):
         super().__init__(coordinator, entity_description)
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """IronOS version on the device."""
 
         return self.coordinator.device_info.build or self._attr_installed_version
 
     @property
+    @override
     def title(self) -> str | None:
         """Title of the IronOS release."""
 
         return f"IronOS {self.firmware_update.data.name}"
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest IronOS version available."""
 
         return self.firmware_update.data.html_url
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest IronOS version available for install."""
 
         return self.firmware_update.data.tag_name
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
 
         return self.firmware_update.data.body
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass.
 
         Register extra update listener for the firmware update coordinator.
         """
         if state := await self.async_get_last_state():
-            self._attr_installed_version = state.attributes.get(ATTR_INSTALLED_VERSION)
+            self._attr_installed_version = state.attributes.get(
+                UpdateEntityStateAttribute.INSTALLED_VERSION
+            )
 
         await super().async_added_to_hass()
         self.async_on_remove(
@@ -99,6 +107,7 @@ class IronOSUpdate(IronOSBaseEntity, UpdateEntity, RestoreEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (

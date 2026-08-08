@@ -20,6 +20,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     DEFAULT_ROUTING_IA,
     DOMAIN,
 )
@@ -44,7 +45,8 @@ async def test_diagnostics(
     """Test diagnostics."""
     await knx.setup_integration()
 
-    # Overwrite the version for this test since we don't want to change this with every library bump
+    # Overwrite the version for this test since we don't want to
+    # change this with every library bump
     knx.xknx.version = "0.0.0"
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
@@ -64,9 +66,11 @@ async def test_diagnostic_config_error(
     """Test diagnostics."""
     await knx.setup_integration()
 
-    # Overwrite the version for this test since we don't want to change this with every library bump
+    # Overwrite the version for this test since we don't want to
+    # change this with every library bump
     knx.xknx.version = "0.0.0"
-    # the snapshot will contain 'configuration_error' key with the voluptuous error message
+    # the snapshot will contain 'configuration_error' key with
+    # the voluptuous error message
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
         == snapshot
@@ -97,11 +101,17 @@ async def test_diagnostic_redact(
             CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_authentication",
             CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44bbaacc44bbaacc44",
         },
+        options={
+            CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: (
+                "postgresql://knx:supersecret@localhost:5432/knx_telegrams"
+            ),
+        },
     )
     knx: KNXTestKit = KNXTestKit(hass, mock_config_entry, hass_storage)
     await knx.setup_integration()
 
-    # Overwrite the version for this test since we don't want to change this with every library bump
+    # Overwrite the version for this test since we don't want to
+    # change this with every library bump
     knx.xknx.version = "0.0.0"
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)

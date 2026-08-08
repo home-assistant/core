@@ -3,18 +3,31 @@
 from base64 import b64decode
 from unittest.mock import call
 
+from broadlink.exceptions import BroadlinkException
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+
 from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.components.broadlink.updater import BroadlinkRMUpdateManager
 from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import get_device
+
+from tests.common import async_fire_time_changed
 
 REMOTE_DEVICES = ["Entrance", "Living Room", "Office", "Garage"]
 
@@ -33,8 +46,8 @@ async def test_remote_setup_works(
     for device in map(get_device, REMOTE_DEVICES):
         mock_setup = await device.setup_entry(hass)
 
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
         )
         entries = er.async_entries_for_device(entity_registry, device_entry.id)
         remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]
@@ -58,8 +71,8 @@ async def test_remote_send_command(
     for device in map(get_device, REMOTE_DEVICES):
         mock_setup = await device.setup_entry(hass)
 
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
         )
         entries = er.async_entries_for_device(entity_registry, device_entry.id)
         remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]
@@ -78,6 +91,60 @@ async def test_remote_send_command(
         assert mock_setup.api.auth.call_count == 1
 
 
+@pytest.mark.parametrize(
+    ("error", "ticks_to_unavailable"),
+    [
+        # OSError flips availability on the first failure (fast path).
+        (OSError("connection refused"), 1),
+        # A generic BroadlinkException keeps the entity available across the
+        # first three failed cycles and only flips once SCAN_INTERVAL * 3 has
+        # elapsed since the last successful update.
+        (BroadlinkException("update failed"), 4),
+    ],
+)
+async def test_remote_availability(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    error: Exception,
+    ticks_to_unavailable: int,
+) -> None:
+    """Test the remote becomes unavailable on disconnect and recovers on reconnect."""
+    device = get_device("Garage")
+    mock_setup = await device.setup_entry(hass)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
+    )
+    entries = er.async_entries_for_device(entity_registry, device_entry.id)
+    remote = next(entry for entry in entries if entry.domain == Platform.REMOTE)
+
+    assert hass.states.get(remote.entity_id).state == STATE_ON
+
+    mock_setup.api.check_sensors.side_effect = error
+
+    for _ in range(ticks_to_unavailable - 1):
+        freezer.tick(BroadlinkRMUpdateManager.SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get(remote.entity_id).state == STATE_ON
+
+    freezer.tick(BroadlinkRMUpdateManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(remote.entity_id).state == STATE_UNAVAILABLE
+
+    mock_setup.api.check_sensors.side_effect = None
+
+    freezer.tick(BroadlinkRMUpdateManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(remote.entity_id).state == STATE_ON
+
+
 async def test_remote_turn_off_turn_on(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -87,8 +154,8 @@ async def test_remote_turn_off_turn_on(
     for device in map(get_device, REMOTE_DEVICES):
         mock_setup = await device.setup_entry(hass)
 
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
         )
         entries = er.async_entries_for_device(entity_registry, device_entry.id)
         remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]

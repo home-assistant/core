@@ -1,9 +1,8 @@
 """Support for Elgato sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -138,6 +137,7 @@ class ElgatoSensorEntity(ElgatoEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)

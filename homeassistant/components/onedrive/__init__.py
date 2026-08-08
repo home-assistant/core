@@ -1,7 +1,5 @@
 """The OneDrive integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from html import unescape
 from json import dumps, loads
@@ -135,9 +133,6 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
 
 async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
     """Migrate old entry."""
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if (version := entry.version) == 1 and (minor_version := entry.minor_version) == 1:
         _LOGGER.debug(

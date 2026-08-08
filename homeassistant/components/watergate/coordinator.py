@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from watergate_local_api import WatergateApiException, WatergateLocalApiClient
 from watergate_local_api.models import DeviceState, NetworkingData, TelemetryData
@@ -49,6 +50,7 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> WatergateAgregatedRequests:
         try:
             state = await self.api.async_get_device_state()
@@ -58,6 +60,7 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
             raise UpdateFailed(f"Sonic device is unavailable: {exc}") from exc
         return WatergateAgregatedRequests(state, telemetry, networking)
 
+    @override
     def async_set_updated_data(self, data: WatergateAgregatedRequests) -> None:
         """Manually update data, notify listeners and DO NOT reset refresh interval."""
 

@@ -458,9 +458,6 @@
       "energy_left": {
         "name": "Energy left"
       },
-      "energy_remaining": {
-        "name": "Energy remaining"
-      },
       "generator_energy_exported": {
         "name": "Generator exported"
       },
@@ -615,6 +612,11 @@
         "name": "Valet mode"
       }
     },
+    "text": {
+      "navigation_destination": {
+        "name": "Navigation destination"
+      }
+    },
     "update": {
       "update": {
         "name": "[%key:component::update::title%]"
@@ -633,6 +635,9 @@
     },
     "cable_connected": {
       "message": "Charge cable is connected."
+    },
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "command_failed": {
       "message": "Command failed, {message}"

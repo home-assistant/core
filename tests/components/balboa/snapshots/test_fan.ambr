@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_fan[fan.fakespa_pump_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -40,12 +41,12 @@
 # name: test_fan[fan.fakespa_pump_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'FakeSpa Pump 1',
-      'percentage': 0,
-      'percentage_step': 50.0,
-      'preset_mode': None,
-      'preset_modes': None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FakeSpa Pump 1',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 50.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.fakespa_pump_1',

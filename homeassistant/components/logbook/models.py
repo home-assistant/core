@@ -1,7 +1,5 @@
 """Event parser and human readable log generator."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, NamedTuple, cast, final
@@ -16,7 +14,7 @@ from homeassistant.components.recorder.models import (
     ulid_to_bytes_or_none,
     uuid_hex_to_bytes_or_none,
 )
-from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, EntityStateAttribute
 from homeassistant.core import Context, Event, State, callback
 from homeassistant.util.event_type import EventType
 from homeassistant.util.json import json_loads
@@ -108,10 +106,11 @@ CONTEXT_PARENT_ID_BIN_POS: Final = 6
 STATE_POS: Final = 7
 ENTITY_ID_POS: Final = 8
 ICON_POS: Final = 9
-CONTEXT_ONLY_POS: Final = 10
+ATTRIBUTES_POS: Final = 10
+CONTEXT_ONLY_POS: Final = 11
 # - For EventAsRow, additional fields are:
-DATA_POS: Final = 11
-CONTEXT_POS: Final = 12
+DATA_POS: Final = 12
+CONTEXT_POS: Final = 13
 
 
 @final  # Final to allow direct checking of the type instead of using isinstance
@@ -131,6 +130,7 @@ class EventAsRow(NamedTuple):
     state: str | None
     entity_id: str | None
     icon: str | None
+    attributes: Mapping[str, Any] | None
     context_only: bool | None
 
     # Additional fields for EventAsRow
@@ -154,6 +154,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
             state=None,
             entity_id=None,
             icon=None,
+            attributes=None,
             context_only=None,
             data=event.data,
             context=context,
@@ -162,7 +163,10 @@ def async_event_to_row(event: Event) -> EventAsRow:
     # that are missing new_state or old_state
     # since the logbook does not show these
     new_state: State = event.data["new_state"]
-    context = new_state.context
+    # Use the event's context rather than the state's context because
+    # State.expire() replaces the context with a copy that loses
+    # origin_event, which is needed for context augmentation.
+    context = event.context
     return EventAsRow(
         row_id=hash(event),
         event_type=None,
@@ -173,7 +177,8 @@ def async_event_to_row(event: Event) -> EventAsRow:
         context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
         state=new_state.state,
         entity_id=new_state.entity_id,
-        icon=new_state.attributes.get(ATTR_ICON),
+        icon=new_state.attributes.get(EntityStateAttribute.ICON),
+        attributes=new_state.attributes,
         context_only=None,
         data=event.data,
         context=context,

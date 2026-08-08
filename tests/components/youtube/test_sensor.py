@@ -30,6 +30,9 @@ async def test_sensor(
     state = hass.states.get("sensor.google_for_developers_subscribers")
     assert state == snapshot
 
+    state = hass.states.get("sensor.google_for_developers_videos")
+    assert state == snapshot
+
     state = hass.states.get("sensor.google_for_developers_views")
     assert state == snapshot
 
@@ -55,6 +58,9 @@ async def test_sensor_without_uploaded_video(
     assert state == snapshot
 
     state = hass.states.get("sensor.google_for_developers_subscribers")
+    assert state == snapshot
+
+    state = hass.states.get("sensor.google_for_developers_videos")
     assert state == snapshot
 
     state = hass.states.get("sensor.google_for_developers_views")
@@ -145,6 +151,9 @@ async def test_sensor_unavailable(
     assert state.state == "unavailable"
 
     state = hass.states.get("sensor.google_for_developers_subscribers")
+    assert state.state == "unavailable"
+
+    state = hass.states.get("sensor.google_for_developers_videos")
     assert state.state == "unavailable"
 
     state = hass.states.get("sensor.google_for_developers_views")

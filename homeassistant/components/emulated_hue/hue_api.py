@@ -1,7 +1,5 @@
 """Support for a Hue API to control Home Assistant."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from functools import lru_cache
@@ -52,7 +50,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
@@ -64,6 +61,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, EventStateChangedData, State
 from homeassistant.helpers.event import async_track_state_change_event
@@ -384,9 +382,16 @@ class HueOneLightChangeView(HomeAssistantView):
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         # Get the entity's supported features
-        entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        entity_features = entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if entity.domain == light.DOMAIN:
-            color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) or []
+            color_modes = (
+                entity.attributes.get(
+                    light.LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
+                )
+                or []
+            )
 
         # Parse the request
         parsed: dict[str, Any] = {
@@ -650,7 +655,8 @@ def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
     if cached_state_entry is not None:
         entry_state, entry_time = cached_state_entry
         if entry_time is None:
-            # Handle the case where the entity is listed in config.off_maps_to_on_domains.
+            # Handle the case where the entity is listed
+            # in config.off_maps_to_on_domains.
             cached_state = entry_state
         elif time.time() - entry_time < STATE_CACHED_TIMEOUT and entry_state[
             STATE_ON
@@ -770,7 +776,10 @@ def _entity_unique_id(entity_id: str) -> str:
 
 def state_to_json(config: Config, state: State) -> dict[str, Any]:
     """Convert an entity to its Hue bridge JSON representation."""
-    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) or []
+    color_modes = (
+        state.attributes.get(light.LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES)
+        or []
+    )
     unique_id = _entity_unique_id(state.entity_id)
     state_dict = get_entity_state_dict(config, state)
 
@@ -791,7 +800,7 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
     color_temp_supported = is_light and light.color_temp_supported(color_modes)
     if color_supported and color_temp_supported:
         # Extended Color light (Zigbee Device ID: 0x0210)
-        # Same as Color light, but which supports additional setting of color temperature
+        # Same as Color light, but supports additional color temperature setting
         retval["type"] = "Extended color light"
         retval["modelid"] = "HASS231"
         json_state.update(
@@ -809,7 +818,8 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
             json_state[HUE_API_STATE_COLORMODE] = "ct"
     elif color_supported:
         # Color light (Zigbee Device ID: 0x0200)
-        # Supports on/off, dimming and color control (hue/saturation, enhanced hue, color loop and XY)
+        # Supports on/off, dimming and color control
+        # (hue/saturation, enhanced hue, color loop and XY)
         retval["type"] = "Color light"
         retval["modelid"] = "HASS213"
         json_state.update(
@@ -865,7 +875,7 @@ def state_supports_hue_brightness(
         return light.brightness_supported(color_modes)
     if not (required_feature := DIMMABLE_SUPPORTED_FEATURES_BY_DOMAIN.get(domain)):
         return False
-    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
     enum = ENTITY_FEATURES_BY_DOMAIN[domain]
     features = enum(features) if type(features) is int else features
     return required_feature in features

@@ -10,7 +10,6 @@ from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakePairing
-from attr import asdict
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -262,10 +261,10 @@ async def test_ble_device_populates_connections(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    dev_reg = dr.async_get(hass)
+    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
-        dev_reg.async_get_device(
-            identifiers={}, connections={("bluetooth", "AA:BB:CC:DD:EE:FF")}
+        dev_reg.async_get_device_by_connection(
+            ("bluetooth", "AA:BB:CC:DD:EE:FF"), config_entry.entry_id
         )
         is not None
     )
@@ -279,7 +278,7 @@ async def test_snapshots(
     snapshot: SnapshotAssertion,
     example: str,
 ) -> None:
-    """Detect regressions in enumerating a homekit accessory database and building entities."""
+    """Detect regressions in enumerating accessory DB and building entities."""
     accessories = await setup_accessories_from_file(hass, example)
     config_entry, _ = await setup_test_accessories(hass, accessories)
 
@@ -313,24 +312,8 @@ async def test_snapshots(
                 state_dict["attributes"].pop("access_token", None)
                 state_dict["attributes"].pop("entity_picture", None)
 
-            entry = asdict(entity_entry)
-            entry.pop("id", None)
-            entry.pop("device_id", None)
-            entry.pop("created_at", None)
-            entry.pop("modified_at", None)
-            entry.pop("_cache", None)
+            entities.append({"entry": entity_entry, "state": state_dict})
 
-            entities.append({"entry": entry, "state": state_dict})
-
-        device_dict = asdict(device)
-        device_dict.pop("id", None)
-        device_dict.pop("via_device_id", None)
-        device_dict.pop("created_at", None)
-        device_dict.pop("modified_at", None)
-        device_dict.pop("_cache", None)
-        # This can be removed when suggested_area is removed from DeviceEntry
-        device_dict.pop("_suggested_area")
-
-        devices.append({"device": device_dict, "entities": entities})
+        devices.append({"device": device, "entities": entities})
 
     assert snapshot == devices

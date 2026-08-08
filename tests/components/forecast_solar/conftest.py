@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from forecast_solar import models
@@ -15,7 +16,9 @@ from homeassistant.components.forecast_solar.const import (
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
+    SUBENTRY_TYPE_PLANE,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -33,26 +36,44 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def api_key_present() -> bool:
+    """Return whether an API key should be present in the config entry options."""
+    return True
+
+
+@pytest.fixture
+def mock_config_entry(api_key_present: bool) -> MockConfigEntry:
     """Return the default mocked config entry."""
+    options: dict[str, Any] = {
+        CONF_DAMPING_MORNING: 0.5,
+        CONF_DAMPING_EVENING: 0.5,
+        CONF_INVERTER_SIZE: 2000,
+    }
+    if api_key_present:
+        options[CONF_API_KEY] = "abcdef1234567890"
     return MockConfigEntry(
         title="Green House",
         unique_id="unique",
-        version=2,
+        version=3,
         domain=DOMAIN,
         data={
             CONF_LATITUDE: 52.42,
             CONF_LONGITUDE: 4.42,
         },
-        options={
-            CONF_API_KEY: "abcdef12345",
-            CONF_DECLINATION: 30,
-            CONF_AZIMUTH: 190,
-            CONF_MODULES_POWER: 5100,
-            CONF_DAMPING_MORNING: 0.5,
-            CONF_DAMPING_EVENING: 0.5,
-            CONF_INVERTER_SIZE: 2000,
-        },
+        options=options,
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_DECLINATION: 30,
+                    CONF_AZIMUTH: 190,
+                    CONF_MODULES_POWER: 5100,
+                },
+                subentry_id="mock_plane_id",
+                subentry_type=SUBENTRY_TYPE_PLANE,
+                title="30° / 190° / 5100W",
+                unique_id=None,
+            ),
+        ],
     )
 
 

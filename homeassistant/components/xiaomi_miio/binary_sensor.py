@@ -1,11 +1,9 @@
 """Support for Xiaomi Miio binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from miio import Device as MiioDevice
 
@@ -92,7 +90,6 @@ VACUUM_SENSORS = {
         translation_key=ATTR_WATER_BOX_ATTACHED,
         icon="mdi:square-rounded",
         parent_key=VacuumCoordinatorDataAttributes.status,
-        entity_registry_enabled_default=True,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -101,7 +98,6 @@ VACUUM_SENSORS = {
         translation_key=ATTR_WATER_BOX_ATTACHED,
         icon="mdi:water",
         parent_key=VacuumCoordinatorDataAttributes.status,
-        entity_registry_enabled_default=True,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -110,7 +106,6 @@ VACUUM_SENSORS = {
         translation_key=ATTR_WATER_SHORTAGE,
         icon="mdi:water",
         parent_key=VacuumCoordinatorDataAttributes.status,
-        entity_registry_enabled_default=True,
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -123,7 +118,6 @@ VACUUM_SENSORS_SEPARATE_MOP = {
         translation_key=ATTR_MOP_ATTACHED,
         icon="mdi:square-rounded",
         parent_key=VacuumCoordinatorDataAttributes.status,
-        entity_registry_enabled_default=True,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -241,6 +235,7 @@ class XiaomiGenericBinarySensor(
         self._attr_is_on = self._determine_native_value()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._attr_is_on = self._determine_native_value()
 

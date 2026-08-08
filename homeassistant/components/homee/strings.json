@@ -487,11 +487,20 @@
     }
   },
   "exceptions": {
+    "auth_failed": {
+      "message": "Authentication to homee failed."
+    },
     "connection_closed": {
       "message": "Could not connect to homee while setting attribute."
     },
+    "connection_failed": {
+      "message": "Connection to homee failed."
+    },
     "disarm_not_supported": {
       "message": "Disarm is not supported by homee."
+    },
+    "homeegram_turn_off_not_supported": {
+      "message": "Turning off homeegrams is not supported."
     },
     "invalid_preset_mode": {
       "message": "Invalid preset mode: {preset_mode}. Turning on is only supported with preset mode 'Manual'."

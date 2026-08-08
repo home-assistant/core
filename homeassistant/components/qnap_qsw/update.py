@@ -1,8 +1,6 @@
 """Support for the QNAP QSW update."""
 
-from __future__ import annotations
-
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioqsw.const import (
     QSD_DESCRIPTION,
@@ -17,13 +15,12 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, QSW_COORD_FW, QSW_UPDATE
-from .coordinator import QswFirmwareCoordinator
+from .const import QSW_UPDATE
+from .coordinator import QnapQswConfigEntry, QswFirmwareCoordinator
 from .entity import QswFirmwareEntity
 
 UPDATE_TYPES: Final[tuple[UpdateEntityDescription, ...]] = (
@@ -37,13 +34,11 @@ UPDATE_TYPES: Final[tuple[UpdateEntityDescription, ...]] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: QnapQswConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add QNAP QSW updates from a config_entry."""
-    coordinator: QswFirmwareCoordinator = hass.data[DOMAIN][entry.entry_id][
-        QSW_COORD_FW
-    ]
+    coordinator = entry.runtime_data.firmware_coordinator
     async_add_entities(
         QswUpdate(coordinator, description, entry) for description in UPDATE_TYPES
     )
@@ -59,7 +54,7 @@ class QswUpdate(QswFirmwareEntity, UpdateEntity):
         self,
         coordinator: QswFirmwareCoordinator,
         description: UpdateEntityDescription,
-        entry: ConfigEntry,
+        entry: QnapQswConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
@@ -72,6 +67,7 @@ class QswUpdate(QswFirmwareEntity, UpdateEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()
@@ -87,6 +83,7 @@ class QswUpdate(QswFirmwareEntity, UpdateEntity):
             QSD_FIRMWARE_CHECK, QSD_DESCRIPTION
         )
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

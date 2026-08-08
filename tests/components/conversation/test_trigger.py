@@ -158,7 +158,7 @@ async def test_empty_response(hass: HomeAssistant) -> None:
 async def test_response_same_sentence(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
-    """Test the conversation response action with multiple triggers using the same sentence."""
+    """Test conversation response with same sentence triggers."""
     assert await async_setup_component(
         hass,
         "automation",
@@ -249,7 +249,7 @@ async def test_response_same_sentence_with_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the conversation response action with multiple triggers using the same sentence and an error."""
+    """Test conversation response with same sentence and error."""
     caplog.set_level(logging.ERROR)
     assert await async_setup_component(
         hass,
@@ -300,7 +300,7 @@ async def test_response_same_sentence_with_error(
 async def test_subscribe_trigger_does_not_interfere_with_responses(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that subscribing to a trigger from the websocket API does not interfere with responses."""
+    """Test trigger subscription does not interfere with responses."""
     websocket_client = await hass_ws_client()
     await websocket_client.send_json_auto_id(
         {
@@ -573,6 +573,21 @@ async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
         )
 
 
+async def test_fails_on_bad_parse(hass: HomeAssistant) -> None:
+    """Test that validation fails when sentence is malformed."""
+    with pytest.raises(vol.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "id": "trigger1",
+                    "platform": "conversation",
+                    "command": ["[test)"],
+                },
+            ],
+        )
+
+
 async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) -> None:
     """Test wildcards in trigger sentences."""
     assert await async_setup_component(
@@ -671,7 +686,9 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
                     "command": ["test sentence"],
                 },
                 "action": {
-                    "set_conversation_response": "{{ trigger.device_id }} - {{ trigger.satellite_id }}",
+                    "set_conversation_response": (
+                        "{{ trigger.device_id }} - {{ trigger.satellite_id }}"
+                    ),
                 },
             }
         },
@@ -693,4 +710,39 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
     assert (
         result.response.speech["plain"]["speech"]
         == "my_device - assist_satellite.my_satellite"
+    )
+
+
+async def test_inline_range_list(hass: HomeAssistant) -> None:
+    """Test sentence trigger and response with an inline number range list."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["set brightness to {0..100:brightness} percent"],
+                },
+                "action": {
+                    "set_conversation_response": "Brightness set to"
+                    " {{trigger.slots.brightness|int}}"
+                    " ({{trigger.details.brightness.text}}) percent",
+                },
+            }
+        },
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "set brightness to forty two percent",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert (
+        service_response["response"]["speech"]["plain"]["speech"]
+        == "Brightness set to 42 (forty two) percent"
     )

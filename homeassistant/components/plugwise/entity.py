@@ -1,14 +1,15 @@
 """Generic Plugwise Entity Class."""
 
-from __future__ import annotations
+from typing import override
 
 from plugwise import GwEntityData
 
-from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
+from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_ZIGBEE,
     DeviceInfo,
+    async_get_device_id_by_identifier,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -66,11 +67,16 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             self._attr_device_info.update(
                 {
                     ATTR_NAME: self.device.get(ATTR_NAME),
-                    ATTR_VIA_DEVICE: (DOMAIN, gateway_id),
+                    "via_device_id": async_get_device_id_by_identifier(
+                        coordinator.hass,
+                        (DOMAIN, gateway_id),
+                        config_entry_id=entry.entry_id,
+                    ),
                 }
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (

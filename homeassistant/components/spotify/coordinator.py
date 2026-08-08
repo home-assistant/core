@@ -3,10 +3,11 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import override
 
 from spotifyaio import (
     ContextType,
+    Device,
     PlaybackState,
     Playlist,
     SpotifyClient,
@@ -19,19 +20,26 @@ from spotifyaio import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    from .models import SpotifyData
-
 _LOGGER = logging.getLogger(__name__)
 
 
 type SpotifyConfigEntry = ConfigEntry[SpotifyData]
+
+
+@dataclass
+class SpotifyData:
+    """Class to hold Spotify data."""
+
+    coordinator: SpotifyCoordinator
+    session: OAuth2Session
+    devices: SpotifyDeviceCoordinator
 
 
 UPDATE_INTERVAL = timedelta(seconds=30)
@@ -82,6 +90,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         self._playlist: Playlist | None = None
         self._checked_playlist_id: str | None = None
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -102,6 +111,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         except SpotifyConnectionError as err:
             raise UpdateFailed("Error communicating with Spotify API") from err
 
+    @override
     async def _async_update_data(self) -> SpotifyCoordinatorData:
         self.update_interval = UPDATE_INTERVAL
         try:
@@ -114,8 +124,9 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 position_updated_at=None,
                 playlist=None,
             )
-        # Record the last updated time, because Spotify's timestamp property is unreliable
-        # and doesn't actually return the fetch time as is mentioned in the API description
+        # Record the last updated time, because Spotify's
+        # timestamp property is unreliable and doesn't
+        # actually return the fetch time as described in API
         position_updated_at = dt_util.utcnow()
 
         dj_playlist = False
@@ -164,3 +175,32 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             playlist=self._playlist,
             dj_playlist=dj_playlist,
         )
+
+
+class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
+    """Class to manage fetching Spotify data."""
+
+    config_entry: SpotifyConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SpotifyConfigEntry,
+        client: SpotifyClient,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{config_entry.title} Devices",
+            update_interval=timedelta(minutes=5),
+        )
+        self._client = client
+
+    @override
+    async def _async_update_data(self) -> list[Device]:
+        try:
+            return await self._client.get_devices()
+        except SpotifyConnectionError as err:
+            raise UpdateFailed from err

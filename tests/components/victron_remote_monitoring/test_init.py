@@ -1,7 +1,5 @@
 """Tests for Victron Remote Monitoring integration setup and auth handling."""
 
-from __future__ import annotations
-
 import pytest
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
@@ -36,8 +34,10 @@ async def test_setup_auth_or_connection_error_starts_retry_or_reauth(
 ) -> None:
     """Auth errors initiate reauth flow; other errors set entry to retry.
 
-    AuthenticationError should surface as ConfigEntryAuthFailed which marks the entry in SETUP_ERROR and starts a reauth flow.
-    Generic VictronVRMError should set the entry to SETUP_RETRY without a reauth flow.
+    AuthenticationError should surface as ConfigEntryAuthFailed which marks
+    the entry in SETUP_ERROR and starts a reauth flow.
+    Generic VictronVRMError should set the entry to SETUP_RETRY
+    without a reauth flow.
     """
     mock_config_entry.add_to_hass(hass)
     # Override default success behaviour of fixture to raise side effect

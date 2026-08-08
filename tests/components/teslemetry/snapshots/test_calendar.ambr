@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_calendar[calendar.energy_site_buy_tariff-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,17 +39,17 @@
 # name: test_calendar[calendar.energy_site_buy_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': False,
-      'description': '''
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
         Season: Summer
         Period: Off peak
         Price: 0.20/kWh
       ''',
-      'end_time': '2024-01-01 16:00:00',
-      'friendly_name': 'Energy Site Buy tariff',
-      'location': '',
-      'message': 'Off peak: 0.20/kWh',
-      'start_time': '2023-12-31 21:00:00',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 16:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Buy tariff',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.20/kWh',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2023-12-31 21:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.energy_site_buy_tariff',
@@ -60,8 +61,9 @@
 # ---
 # name: test_calendar[calendar.energy_site_sell_tariff-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -97,17 +99,17 @@
 # name: test_calendar[calendar.energy_site_sell_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': False,
-      'description': '''
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
         Season: Summer
         Period: Off peak
         Price: 0.08/kWh
       ''',
-      'end_time': '2024-01-01 16:00:00',
-      'friendly_name': 'Energy Site Sell tariff',
-      'location': '',
-      'message': 'Off peak: 0.08/kWh',
-      'start_time': '2023-12-31 21:00:00',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 16:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Sell tariff',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.08/kWh',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2023-12-31 21:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.energy_site_sell_tariff',
@@ -119,17 +121,17 @@
 # ---
 # name: test_calendar_events[time_tuple0-calendar.energy_site_buy_tariff][event]
   ReadOnlyDict({
-    'all_day': False,
-    'description': '''
+    <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+    <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
       Season: Summer
       Period: Off peak
       Price: 0.20/kWh
     ''',
-    'end_time': '2024-01-01 16:00:00',
-    'friendly_name': 'Energy Site Buy tariff',
-    'location': '',
-    'message': 'Off peak: 0.20/kWh',
-    'start_time': '2023-12-31 21:00:00',
+    <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 16:00:00',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Buy tariff',
+    <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+    <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.20/kWh',
+    <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2023-12-31 21:00:00',
   })
 # ---
 # name: test_calendar_events[time_tuple0-calendar.energy_site_buy_tariff][events]
@@ -262,17 +264,17 @@
 # ---
 # name: test_calendar_events[time_tuple0-calendar.energy_site_sell_tariff][event]
   ReadOnlyDict({
-    'all_day': False,
-    'description': '''
+    <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+    <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
       Season: Summer
       Period: Off peak
       Price: 0.08/kWh
     ''',
-    'end_time': '2024-01-01 16:00:00',
-    'friendly_name': 'Energy Site Sell tariff',
-    'location': '',
-    'message': 'Off peak: 0.08/kWh',
-    'start_time': '2023-12-31 21:00:00',
+    <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 16:00:00',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Sell tariff',
+    <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+    <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.08/kWh',
+    <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2023-12-31 21:00:00',
   })
 # ---
 # name: test_calendar_events[time_tuple0-calendar.energy_site_sell_tariff][events]
@@ -405,17 +407,17 @@
 # ---
 # name: test_calendar_events[time_tuple1-calendar.energy_site_buy_tariff][event]
   ReadOnlyDict({
-    'all_day': False,
-    'description': '''
+    <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+    <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
       Season: Summer
       Period: On peak
       Price: 0.22/kWh
     ''',
-    'end_time': '2024-01-01 21:00:00',
-    'friendly_name': 'Energy Site Buy tariff',
-    'location': '',
-    'message': 'On peak: 0.22/kWh',
-    'start_time': '2024-01-01 16:00:00',
+    <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 21:00:00',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Buy tariff',
+    <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+    <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'On peak: 0.22/kWh',
+    <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-01 16:00:00',
   })
 # ---
 # name: test_calendar_events[time_tuple1-calendar.energy_site_buy_tariff][events]
@@ -548,17 +550,17 @@
 # ---
 # name: test_calendar_events[time_tuple1-calendar.energy_site_sell_tariff][event]
   ReadOnlyDict({
-    'all_day': False,
-    'description': '''
+    <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+    <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
       Season: Summer
       Period: On peak
       Price: 0.16/kWh
     ''',
-    'end_time': '2024-01-01 21:00:00',
-    'friendly_name': 'Energy Site Sell tariff',
-    'location': '',
-    'message': 'On peak: 0.16/kWh',
-    'start_time': '2024-01-01 16:00:00',
+    <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 21:00:00',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Sell tariff',
+    <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+    <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'On peak: 0.16/kWh',
+    <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-01 16:00:00',
   })
 # ---
 # name: test_calendar_events[time_tuple1-calendar.energy_site_sell_tariff][events]
@@ -691,17 +693,17 @@
 # ---
 # name: test_calendar_events[time_tuple2-calendar.energy_site_buy_tariff][event]
   ReadOnlyDict({
-    'all_day': False,
-    'description': '''
+    <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+    <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
       Season: Summer
       Period: Off peak
       Price: 0.20/kWh
     ''',
-    'end_time': '2024-01-02 16:00:00',
-    'friendly_name': 'Energy Site Buy tariff',
-    'location': '',
-    'message': 'Off peak: 0.20/kWh',
-    'start_time': '2024-01-01 21:00:00',
+    <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-02 16:00:00',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Buy tariff',
+    <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+    <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.20/kWh',
+    <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-01 21:00:00',
   })
 # ---
 # name: test_calendar_events[time_tuple2-calendar.energy_site_buy_tariff][events]
@@ -834,17 +836,17 @@
 # ---
 # name: test_calendar_events[time_tuple2-calendar.energy_site_sell_tariff][event]
   ReadOnlyDict({
-    'all_day': False,
-    'description': '''
+    <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+    <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
       Season: Summer
       Period: Off peak
       Price: 0.08/kWh
     ''',
-    'end_time': '2024-01-02 16:00:00',
-    'friendly_name': 'Energy Site Sell tariff',
-    'location': '',
-    'message': 'Off peak: 0.08/kWh',
-    'start_time': '2024-01-01 21:00:00',
+    <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-02 16:00:00',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Sell tariff',
+    <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+    <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.08/kWh',
+    <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-01 21:00:00',
   })
 # ---
 # name: test_calendar_events[time_tuple2-calendar.energy_site_sell_tariff][events]

@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "backup_mode": {
+        "default": "mdi:home-battery"
+      },
+      "battery_standby": {
+        "default": "mdi:power-standby"
+      }
+    },
     "sensor": {
       "cash_factor": {
         "default": "mdi:cash-plus"

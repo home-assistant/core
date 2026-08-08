@@ -16,10 +16,11 @@ from homeassistant.components.ai_task import (
 from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE
 from homeassistant.components.camera import Image
 from homeassistant.components.conversation import async_get_chat_log
+from homeassistant.components.llm import AssistAPI
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, llm
+from homeassistant.helpers import chat_session
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
@@ -77,7 +78,7 @@ async def test_generate_data_preferred_entity(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    llm_api = llm.AssistAPI(hass)
+    llm_api = AssistAPI(hass)
     result = await async_generate_data(
         hass,
         task_name="Test Task",
@@ -101,7 +102,9 @@ async def test_generate_data_preferred_entity(
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
         HomeAssistantError,
-        match="AI Task entity ai_task.test_task_entity does not support generating data",
+        match=(
+            "AI Task entity ai_task.test_task_entity does not support generating data"
+        ),
     ):
         await async_generate_data(
             hass,
@@ -278,6 +281,50 @@ async def test_generate_data_mixed_attachments(
     assert media_attachment.path == Path("/media/test.mp4")
 
 
+async def test_generate_data_content_type(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_ai_task_entity: MockAITaskEntity,
+) -> None:
+    """Test that user-provided content type of an attachment is respected."""
+    with patch(
+        "homeassistant.components.media_source.async_resolve_media",
+        return_value=media_source.PlayMedia(
+            url="http://example.com/test.png",  # jpeg image saved as png
+            mime_type="image/png",
+            path=Path("/media/test.png"),
+        ),
+    ) as mock_resolve_media:
+        await async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id=TEST_ENTITY_ID,
+            instructions="Describe this image",
+            attachments=[
+                {
+                    "media_content_id": "media-source://media_player/test.png",
+                    "media_content_type": "image/jpeg",
+                },
+            ],
+        )
+
+    # Verify the method was called
+    mock_resolve_media.assert_called_once_with(
+        hass, "media-source://media_player/test.png", None
+    )
+
+    # Check attachments
+    assert len(mock_ai_task_entity.mock_generate_data_tasks) == 1
+    task = mock_ai_task_entity.mock_generate_data_tasks[0]
+    assert task.attachments is not None
+    assert len(task.attachments) == 1
+
+    media_attachment = task.attachments[0]
+    assert media_attachment.media_content_id == "media-source://media_player/test.png"
+    assert media_attachment.mime_type == "image/jpeg"
+    assert media_attachment.path == Path("/media/test.png")
+
+
 @pytest.mark.freeze_time("2025-06-14 22:59:00")
 async def test_generate_image(
     hass: HomeAssistant,
@@ -332,7 +379,9 @@ async def test_generate_image(
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
         HomeAssistantError,
-        match="AI Task entity ai_task.test_task_entity does not support generating images",
+        match=(
+            "AI Task entity ai_task.test_task_entity does not support generating images"
+        ),
     ):
         await async_generate_image(
             hass,

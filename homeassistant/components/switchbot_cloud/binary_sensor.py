@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import Device, SwitchBotAPI
 
@@ -11,13 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
-from .const import DOMAIN
+from . import SwitchbotCloudConfigEntry
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
@@ -102,6 +100,14 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
     ),
+    "Lock Vision": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
+    "Lock Vision Pro": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
     "Smart Lock Pro Wifi": (
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
@@ -119,7 +125,7 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Hub 3": (MOVE_DETECTED_DESCRIPTION,),
     "Water Detector": (LEAK_DESCRIPTION,),
-    "Climate Panel": (
+    "Home Climate Panel": (
         IS_LIGHT_DESCRIPTION,
         MOVE_DETECTED_DESCRIPTION,
     ),
@@ -129,19 +135,25 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
 
-    async_add_entities(
-        SwitchBotCloudBinarySensor(data.api, device, coordinator, description)
-        for device, coordinator in data.devices.binary_sensors
+    entities: list[SwitchBotCloudBinarySensor] = []
+
+    for device, coordinator in data.devices.binary_sensors:
+        if not BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES.get(device.device_type):
+            continue
         for description in BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[
             device.device_type
-        ]
-    )
+        ]:
+            entities.extend(
+                [SwitchBotCloudBinarySensor(data.api, device, coordinator, description)]
+            )
+
+    async_add_entities(entities)
 
 
 class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
@@ -161,6 +173,7 @@ class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:

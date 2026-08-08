@@ -125,7 +125,7 @@ def mock_imported_config_data(
     monitored_resources: list[str] | None,
     configured_unit_system: str | None,
 ) -> dict[str, Any]:
-    """Fixture for the fitbit sensor platform configuration data in configuration.yaml."""
+    """Fixture for the fitbit sensor platform config data."""
     config = {}
     if monitored_resources is not None:
         config["monitored_resources"] = monitored_resources
@@ -191,12 +191,13 @@ def mock_profile_response(
 
 
 @pytest.fixture(name="profile", autouse=True)
-def mock_profile(requests_mock: Mocker, profile_response: dict[str, Any]) -> None:
+def mock_profile(
+    aioclient_mock: AiohttpClientMocker, profile_response: dict[str, Any]
+) -> None:
     """Fixture to setup fake requests made to Fitbit API during config flow."""
-    requests_mock.register_uri(
-        "GET",
+    aioclient_mock.get(
         PROFILE_API_URL,
-        status_code=HTTPStatus.OK,
+        status=HTTPStatus.OK,
         json=profile_response,
     )
 

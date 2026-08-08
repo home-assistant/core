@@ -2,7 +2,7 @@
 
 import logging
 from socket import gaierror
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
@@ -40,6 +40,8 @@ GATEWAY_CONFIG_HOST = GATEWAY_CONFIG.extend(CONFIG_HOST)
 GATEWAY_SETTINGS = vol.Schema(
     {
         vol.Optional(CONF_KEY): vol.All(str, vol.Length(min=16, max=16)),
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Optional(CONF_NAME, default=DEFAULT_GATEWAY_NAME): str,
     }
 )
@@ -78,6 +80,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=ERROR_STEP_PLACEHOLDERS,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -165,6 +168,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=ERROR_STEP_PLACEHOLDERS,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

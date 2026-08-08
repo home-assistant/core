@@ -1,21 +1,19 @@
 """Support for WattTime sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     PERCENTAGE,
+    EntityStateAttribute,
     UnitOfMass,
 )
 from homeassistant.core import HomeAssistant
@@ -25,7 +23,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_BALANCING_AUTHORITY, CONF_BALANCING_AUTHORITY_ABBREV, DOMAIN
-from .coordinator import WattTimeCoordinator
+from .coordinator import WattTimeConfigEntry, WattTimeCoordinator
 
 ATTR_BALANCING_AUTHORITY = "balancing_authority"
 
@@ -51,11 +49,11 @@ REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WattTimeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WattTime sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         [
             RealtimeEmissionsSensor(coordinator, entry, description)
@@ -73,7 +71,7 @@ class RealtimeEmissionsSensor(CoordinatorEntity[WattTimeCoordinator], SensorEnti
     def __init__(
         self,
         coordinator: WattTimeCoordinator,
-        entry: ConfigEntry,
+        entry: WattTimeConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -88,6 +86,7 @@ class RealtimeEmissionsSensor(CoordinatorEntity[WattTimeCoordinator], SensorEnti
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         attrs = {
@@ -99,15 +98,16 @@ class RealtimeEmissionsSensor(CoordinatorEntity[WattTimeCoordinator], SensorEnti
         # Conversely, we can hide the location on the map by using other keys, like
         # "lati" and "long".
         if self._entry.options.get(CONF_SHOW_ON_MAP) is not False:
-            attrs[ATTR_LATITUDE] = self._entry.data[ATTR_LATITUDE]
-            attrs[ATTR_LONGITUDE] = self._entry.data[ATTR_LONGITUDE]
+            attrs[EntityStateAttribute.LATITUDE] = self._entry.data[CONF_LATITUDE]
+            attrs[EntityStateAttribute.LONGITUDE] = self._entry.data[CONF_LONGITUDE]
         else:
-            attrs["lati"] = self._entry.data[ATTR_LATITUDE]
-            attrs["long"] = self._entry.data[ATTR_LONGITUDE]
+            attrs["lati"] = self._entry.data[CONF_LATITUDE]
+            attrs["long"] = self._entry.data[CONF_LONGITUDE]
 
         return attrs
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return cast(StateType, self.coordinator.data[self.entity_description.key])

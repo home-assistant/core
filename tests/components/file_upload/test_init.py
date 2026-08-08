@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import file_upload
+from homeassistant.components.file_upload import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -16,12 +17,12 @@ from tests.components.image_upload import TEST_IMAGE
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.fixture
-async def uploaded_file_dir(
+@pytest.fixture(name="uploaded_file_dir")
+async def upload_file_dir(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> Path:
     """Test uploading and using a file."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     with (
@@ -50,7 +51,6 @@ async def test_using_file(hass: HomeAssistant, uploaded_file_dir) -> None:
         assert file_path.parent == uploaded_file_dir
         assert file_path.read_bytes() == TEST_IMAGE.read_bytes()
 
-    # Test it's removed
     assert not uploaded_file_dir.exists()
 
 
@@ -83,7 +83,7 @@ async def test_upload_large_file(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, large_file_io
 ) -> None:
     """Test uploading large file."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     with (
@@ -117,7 +117,7 @@ async def test_upload_with_wrong_key_fails(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, large_file_io
 ) -> None:
     """Test uploading fails."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     with patch(
@@ -134,7 +134,7 @@ async def test_upload_large_file_fails(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, large_file_io
 ) -> None:
     """Test uploading large file."""
-    assert await async_setup_component(hass, "file_upload", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
 
     @contextmanager

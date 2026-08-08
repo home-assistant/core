@@ -1,7 +1,5 @@
 """The Assist pipeline integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable
 from typing import Any
 
@@ -137,5 +135,4 @@ async def async_pipeline_from_audio_stream(
                 audio_settings=audio_settings or AudioSettings(),
             ),
         )
-        await pipeline_input.validate()
-        await pipeline_input.execute()
+        await pipeline_input.execute(validate=True)

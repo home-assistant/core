@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[binary_sensor.1p7k_500006_ev_diode_short-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_all_entities[binary_sensor.1p7k_500006_ev_diode_short-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': '1p7k_500006 EV diode short',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 EV diode short',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_ev_diode_short',
@@ -51,8 +52,9 @@
 # ---
 # name: test_all_entities[binary_sensor.1p7k_500006_ev_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_all_entities[binary_sensor.1p7k_500006_ev_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': '1p7k_500006 EV error',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 EV error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_ev_error',
@@ -101,8 +103,9 @@
 # ---
 # name: test_all_entities[binary_sensor.1p7k_500006_metering_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_all_entities[binary_sensor.1p7k_500006_metering_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Metering error',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Metering error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_metering_error',
@@ -151,8 +154,9 @@
 # ---
 # name: test_all_entities[binary_sensor.1p7k_500006_overcurrent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_all_entities[binary_sensor.1p7k_500006_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Overcurrent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Overcurrent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_overcurrent',
@@ -201,8 +205,9 @@
 # ---
 # name: test_all_entities[binary_sensor.1p7k_500006_overheating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -238,8 +243,8 @@
 # name: test_all_entities[binary_sensor.1p7k_500006_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Overheating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Overheating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_overheating',
@@ -251,8 +256,9 @@
 # ---
 # name: test_all_entities[binary_sensor.1p7k_500006_overvoltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -288,8 +294,8 @@
 # name: test_all_entities[binary_sensor.1p7k_500006_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Overvoltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Overvoltage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_overvoltage',
@@ -301,8 +307,9 @@
 # ---
 # name: test_all_entities[binary_sensor.1p7k_500006_rcd_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -338,8 +345,8 @@
 # name: test_all_entities[binary_sensor.1p7k_500006_rcd_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': '1p7k_500006 RCD error',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 RCD error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_rcd_error',
@@ -351,8 +358,9 @@
 # ---
 # name: test_all_entities[binary_sensor.1p7k_500006_relay_contacts_welded-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -388,8 +396,8 @@
 # name: test_all_entities[binary_sensor.1p7k_500006_relay_contacts_welded-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Relay contacts welded',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Relay contacts welded',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_relay_contacts_welded',
@@ -401,8 +409,9 @@
 # ---
 # name: test_all_entities[binary_sensor.1p7k_500006_thermal_throttling-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -438,8 +447,8 @@
 # name: test_all_entities[binary_sensor.1p7k_500006_thermal_throttling-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Thermal throttling',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Thermal throttling',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_thermal_throttling',
@@ -451,8 +460,9 @@
 # ---
 # name: test_all_entities[binary_sensor.1p7k_500006_undervoltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -488,8 +498,8 @@
 # name: test_all_entities[binary_sensor.1p7k_500006_undervoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Undervoltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Undervoltage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_undervoltage',

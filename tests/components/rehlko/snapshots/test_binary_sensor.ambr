@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[binary_sensor.generator_1_auto_run-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_sensors[binary_sensor.generator_1_auto_run-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Generator 1 Auto run',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Auto run',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_auto_run',
@@ -50,8 +51,9 @@
 # ---
 # name: test_sensors[binary_sensor.generator_1_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,8 +89,8 @@
 # name: test_sensors[binary_sensor.generator_1_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Generator 1 Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_connectivity',
@@ -100,8 +102,9 @@
 # ---
 # name: test_sensors[binary_sensor.generator_1_load_shed_hvac_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -137,7 +140,7 @@
 # name: test_sensors[binary_sensor.generator_1_load_shed_hvac_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Generator 1 Load shed HVAC A',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Load shed HVAC A',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_hvac_a',
@@ -149,8 +152,9 @@
 # ---
 # name: test_sensors[binary_sensor.generator_1_load_shed_hvac_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -186,7 +190,7 @@
 # name: test_sensors[binary_sensor.generator_1_load_shed_hvac_b-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Generator 1 Load shed HVAC B',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Load shed HVAC B',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_hvac_b',
@@ -198,8 +202,9 @@
 # ---
 # name: test_sensors[binary_sensor.generator_1_load_shed_load_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -235,7 +240,7 @@
 # name: test_sensors[binary_sensor.generator_1_load_shed_load_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Generator 1 Load shed Load A',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Load shed Load A',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_load_a',
@@ -247,8 +252,9 @@
 # ---
 # name: test_sensors[binary_sensor.generator_1_load_shed_load_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -284,7 +290,7 @@
 # name: test_sensors[binary_sensor.generator_1_load_shed_load_b-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Generator 1 Load shed Load B',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Load shed Load B',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_load_b',
@@ -296,8 +302,9 @@
 # ---
 # name: test_sensors[binary_sensor.generator_1_load_shed_load_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -333,7 +340,7 @@
 # name: test_sensors[binary_sensor.generator_1_load_shed_load_c-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Generator 1 Load shed Load C',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Load shed Load C',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_load_c',
@@ -345,8 +352,9 @@
 # ---
 # name: test_sensors[binary_sensor.generator_1_load_shed_load_d-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -382,7 +390,7 @@
 # name: test_sensors[binary_sensor.generator_1_load_shed_load_d-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Generator 1 Load shed Load D',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Load shed Load D',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_load_shed_load_d',
@@ -394,8 +402,9 @@
 # ---
 # name: test_sensors[binary_sensor.generator_1_oil_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -431,8 +440,8 @@
 # name: test_sensors[binary_sensor.generator_1_oil_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Generator 1 Oil pressure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Generator 1 Oil pressure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.generator_1_oil_pressure',

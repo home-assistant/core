@@ -1,7 +1,5 @@
 """Test Statistics component setup process."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock, patch
 
 from homeassistant.components.local_file.const import DOMAIN

@@ -92,7 +92,7 @@ async def test_multi_zone_with_none_position(
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test multi-zone device with None zone_position falls back to no translation key."""
+    """Test multi-zone device with None zone_position falls back."""
     device = Device(
         device_id="multi_zone_none",
         nickname="Multi Zone Fridge",
@@ -105,7 +105,8 @@ async def test_multi_zone_with_none_position(
         controls=[
             TemperatureControl(
                 zone_id=1,
-                zone_position=None,  # None triggers fallback in _get_zone_translation_key
+                # None triggers fallback in _get_zone_translation_key
+                zone_position=None,
                 name="Fridge",
                 type="fridge",
                 value=5,
@@ -237,7 +238,7 @@ async def test_sensor_unavailable_when_control_missing(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test sensor becomes unavailable when temperature control is removed from device."""
+    """Test sensor becomes unavailable when control is removed."""
     entity_id = "sensor.test_fridge_top_zone"
 
     # Initial state should be available

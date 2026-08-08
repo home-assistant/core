@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switches[switch.device_name_cooker_hood_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_switches[switch.device_name_cooker_hood_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Device Name Cooker hood mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Name Cooker hood mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_name_cooker_hood_mode',
@@ -51,8 +52,9 @@
 # ---
 # name: test_switches[switch.device_name_electric_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_switches[switch.device_name_electric_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Device Name Electric heater',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Name Electric heater',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_name_electric_heater',
@@ -102,8 +104,8 @@
 # name: test_switches_implementation[switch.device_name_electric_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Device Name Electric heater',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Name Electric heater',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_name_electric_heater',

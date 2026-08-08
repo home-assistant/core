@@ -1,11 +1,9 @@
 """Support for TPLink lights."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from kasa import Device, DeviceType, KasaException, LightState, Module
 from kasa.interfaces import LightEffect
@@ -335,6 +333,7 @@ class TPLinkLightEntity(CoordinatedTPLinkModuleEntity, LightEntity):
         )
 
     @async_refresh_after
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
@@ -348,6 +347,7 @@ class TPLinkLightEntity(CoordinatedTPLinkModuleEntity, LightEntity):
             await self._async_turn_on_with_brightness(brightness, transition)
 
     @async_refresh_after
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
@@ -371,6 +371,7 @@ class TPLinkLightEntity(CoordinatedTPLinkModuleEntity, LightEntity):
         return ColorMode.HS
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         light_module = self._light_module
@@ -406,6 +407,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
 
         self._effect_module = device.modules[Module.LightEffect]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call update attributes after the device is added to the platform."""
         await super().async_added_to_hass()
@@ -426,6 +428,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
             )
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         super()._async_update_attrs()
@@ -442,6 +445,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         return True
 
     @async_refresh_after
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)

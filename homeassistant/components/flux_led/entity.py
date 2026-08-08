@@ -1,9 +1,7 @@
 """Support for Magic Home lights."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from flux_led.aiodevice import AIOWifiLedBulb
 
@@ -99,17 +97,20 @@ class FluxEntity(CoordinatorEntity[FluxLedUpdateCoordinator]):
             await self._device.async_turn_on()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         return {"ip_address": self._device.ipaddr}
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.coordinator.last_update_success != self._responding:
             self.async_write_ha_state()
         self._responding = self.coordinator.last_update_success
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         self.async_on_remove(

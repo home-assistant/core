@@ -1,7 +1,5 @@
 """Support for the Hive devices and services."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
@@ -46,15 +44,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
+    hub_data = devices["parent"][0]
+    connections: set[tuple[str, str]] = set()
+    if mac := hub_data.get("macAddress"):
+        connections.add((dr.CONNECTION_NETWORK_MAC, mac))
+
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    hub_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, devices["parent"][0]["device_id"])},
-        name=devices["parent"][0]["hiveName"],
-        model=devices["parent"][0]["deviceData"]["model"],
-        sw_version=devices["parent"][0]["deviceData"]["version"],
-        manufacturer=devices["parent"][0]["deviceData"]["manufacturer"],
+        identifiers={(DOMAIN, hub_data["device_id"])},
+        connections=connections,
+        name=hub_data["hiveName"],
+        model=hub_data["deviceData"]["model"],
+        sw_version=hub_data["deviceData"]["version"],
+        manufacturer=hub_data["deviceData"]["manufacturer"],
     )
+    if hub_device.via_device_id is not None:
+        # Older versions linked the hub's own diagnostic sensor to the hub itself;
+        # clear the stale self-reference since async_get_or_create leaves
+        # via_device_id untouched when it's not passed.
+        device_registry.async_update_device(hub_device.id, via_device_id=None)
 
     await hass.config_entries.async_forward_entry_setups(
         entry,

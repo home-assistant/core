@@ -1,7 +1,5 @@
 """Constants for the Tomorrow.io integration."""
 
-from __future__ import annotations
-
 import logging
 
 from pytomorrowio.const import DAILY, HOURLY, NOWCAST, WeatherCode

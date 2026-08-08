@@ -1,7 +1,5 @@
 """Support for Powerfox diagnostics."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Any
 
@@ -31,8 +29,12 @@ async def async_get_config_entry_diagnostics(
                             "power": coordinator.data.power,
                             "energy_usage": coordinator.data.energy_usage,
                             "energy_return": coordinator.data.energy_return,
-                            "energy_usage_high_tariff": coordinator.data.energy_usage_high_tariff,
-                            "energy_usage_low_tariff": coordinator.data.energy_usage_low_tariff,
+                            "energy_usage_high_tariff": (
+                                coordinator.data.energy_usage_high_tariff
+                            ),
+                            "energy_usage_low_tariff": (
+                                coordinator.data.energy_usage_low_tariff
+                            ),
                         }
                     }
                     if isinstance(coordinator.data, PowerMeter)
@@ -74,8 +76,12 @@ async def async_get_config_entry_diagnostics(
                             "sum": coordinator.data.gas.sum,
                             "consumption": coordinator.data.gas.consumption,
                             "consumption_kwh": coordinator.data.gas.consumption_kwh,
-                            "current_consumption": coordinator.data.gas.current_consumption,
-                            "current_consumption_kwh": coordinator.data.gas.current_consumption_kwh,
+                            "current_consumption": (
+                                coordinator.data.gas.current_consumption
+                            ),
+                            "current_consumption_kwh": (
+                                coordinator.data.gas.current_consumption_kwh
+                            ),
                             "sum_currency": coordinator.data.gas.sum_currency,
                         }
                     }

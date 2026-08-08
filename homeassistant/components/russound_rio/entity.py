@@ -2,17 +2,22 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
-from aiorussound import Controller, RussoundClient
-from aiorussound.models import CallbackType
-from aiorussound.rio import ZoneControlSurface
+from aiorussound.rio import RussoundRIOClient
+from aiorussound.rio.client import Controller, ZoneControlSurface
+from aiorussound.rio.models import CallbackType
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS
+
+if TYPE_CHECKING:
+    from . import RussoundConfigEntry
 
 
 def command[_EntityT: RussoundBaseEntity, **_P](
@@ -46,7 +51,9 @@ class RussoundBaseEntity(Entity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         controller: Controller,
+        entry: RussoundConfigEntry,
         zone_id: int | None = None,
     ) -> None:
         """Initialize the entity."""
@@ -73,7 +80,11 @@ class RussoundBaseEntity(Entity):
             model=controller.controller_type,
             sw_version=controller.firmware_version,
             suggested_area=zone.name,
-            via_device=(DOMAIN, self._device_identifier),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, self._device_identifier),
+                config_entry_id=entry.entry_id,
+            ),
         )
 
     @property
@@ -82,7 +93,7 @@ class RussoundBaseEntity(Entity):
         return self._controller.zones[self._zone_id]
 
     async def _state_update_callback(
-        self, _client: RussoundClient, _callback_type: CallbackType
+        self, _client: RussoundRIOClient, _callback_type: CallbackType
     ) -> None:
         """Call when the device is notified of changes."""
         if _callback_type == CallbackType.CONNECTION:
@@ -90,10 +101,12 @@ class RussoundBaseEntity(Entity):
         self._controller = _client.controllers[self._controller.controller_id]
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback handlers."""
         await self._client.register_state_update_callbacks(self._state_update_callback)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
         self._client.unregister_state_update_callbacks(self._state_update_callback)

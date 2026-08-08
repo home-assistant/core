@@ -1,8 +1,13 @@
 """Test Lutron integration setup."""
 
+from typing import Any, cast
 from unittest.mock import MagicMock
 
+from pylutron import LutronException
+import pytest
+
 from homeassistant.components.lutron.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -16,7 +21,7 @@ async def test_setup_entry(
     """Test setting up the integration."""
     mock_config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "lutron", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert mock_config_entry.runtime_data.client is mock_lutron
@@ -24,10 +29,10 @@ async def test_setup_entry(
 
     # Verify that the unique ID is generated correctly.
     # This prevents regression in unique ID generation which would be a breaking change.
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     # The light from mock_lutron has uuid="light_uuid" and guid="12345678901"
     expected_unique_id = "12345678901_light_uuid"
-    entry = entity_registry.async_get("light.test_light")
+    entry = entity_registry.async_get("light.test_area_test_light")
     assert entry.unique_id == expected_unique_id
 
 
@@ -37,11 +42,29 @@ async def test_unload_entry(
     """Test unloading the integration."""
     mock_config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "lutron", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("method", ["load_xml_db", "connect"])
+async def test_setup_entry_not_ready(
+    hass: HomeAssistant,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    method: str,
+) -> None:
+    """Test setting up the integration when Lutron repeater is not ready."""
+    mock_config_entry.add_to_hass(hass)
+
+    getattr(mock_lutron, method).side_effect = LutronException(f"{method} failed")
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unique_id_migration(
@@ -58,8 +81,8 @@ async def test_unique_id_migration(
 
     # Setup registries with an entry using the "legacy" unique ID format.
     # This simulates a user who had configured the integration in an older version.
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     legacy_unique_id = "12345678901_light_legacy_uuid"
     new_unique_id = "12345678901_light_uuid"
@@ -88,7 +111,7 @@ async def test_unique_id_migration(
     # Trigger the integration setup.
     # The async_setup_entry logic will detect the legacy IDs in the registry
     # and update them to the new UUIDs provided by the mock_lutron fixture.
-    assert await async_setup_component(hass, "lutron", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     # Verify that the entity's unique ID has been updated to the new format.
@@ -99,3 +122,194 @@ async def test_unique_id_migration(
     device = device_registry.async_get(device.id)
     assert (DOMAIN, new_unique_id) in device.identifiers
     assert (DOMAIN, legacy_unique_id) not in device.identifiers
+
+
+async def test_keypad_integer_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from integer keypad ID to GUID-prefixed legacy UUID."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a device with the old integer-based identifier
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, cast(Any, 1))},
+        manufacturer="Lutron",
+        name="Test Keypad",
+    )
+
+    # Mock keypad data for migration
+    keypad = mock_lutron.areas[0].keypads[0]
+    keypad.id = 1
+    keypad.uuid = ""  # No proper UUID yet
+    keypad.legacy_uuid = "1-0"
+    controller_guid = mock_lutron.guid
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the device identifier has been updated
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, cast(Any, 1)), mock_config_entry.entry_id
+    )
+    assert device is None
+
+    new_unique_id = f"{controller_guid}_{keypad.legacy_uuid}"
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_unique_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == "Test Keypad"
+
+
+async def test_keypad_uuid_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from legacy UUID to proper UUID."""
+    mock_config_entry.add_to_hass(hass)
+
+    controller_guid = mock_lutron.guid
+    legacy_uuid = "1-0"
+    proper_uuid = "proper-keypad-uuid"
+
+    # Create a device with the legacy UUID-based identifier
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{controller_guid}_{legacy_uuid}")},
+        manufacturer="Lutron",
+        name="Test Keypad",
+    )
+
+    # Mock keypad data with a proper UUID (e.g. after a firmware update)
+    keypad = mock_lutron.areas[0].keypads[0]
+    keypad.id = 1
+    keypad.uuid = proper_uuid
+    keypad.legacy_uuid = legacy_uuid
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the device identifier has been updated to use the proper UUID
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{controller_guid}_{legacy_uuid}"), mock_config_entry.entry_id
+    )
+    assert device is None
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{controller_guid}_{proper_uuid}"), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == "Test Keypad"
+
+
+async def test_keypad_integer_to_uuid_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from integer keypad ID directly to proper UUID."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a device with the old integer-based identifier
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, cast(Any, 1))},
+        manufacturer="Lutron",
+        name="Test Keypad",
+    )
+
+    # Mock keypad data with a proper UUID
+    keypad = mock_lutron.areas[0].keypads[0]
+    keypad.id = 1
+    keypad.uuid = "proper-keypad-uuid"
+    keypad.legacy_uuid = "1-0"
+    controller_guid = mock_lutron.guid
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the device identifier has been updated to the proper UUID
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, cast(Any, 1)), mock_config_entry.entry_id
+    )
+    assert device is None
+
+    new_unique_id = f"{controller_guid}_{keypad.uuid}"
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_unique_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == "Test Keypad"
+
+
+async def test_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that devices are linked to the main repeater via via_device_id."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    controller_guid = mock_lutron.guid
+    repeater_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_guid), mock_config_entry.entry_id
+    )
+    assert repeater_device is not None
+    assert repeater_device.via_device_id is None
+
+    light = mock_lutron.areas[0].outputs[0]
+    light_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{controller_guid}_{light.uuid}"), mock_config_entry.entry_id
+    )
+    assert light_device is not None
+    assert light_device.via_device_id == repeater_device.id
+
+    # The mocked keypad is not the main repeater's own keypad, so it links to
+    # the repeater via via_device_id like any other device.
+    keypad = mock_lutron.areas[0].keypads[0]
+    keypad_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{controller_guid}_{keypad.uuid}"), mock_config_entry.entry_id
+    )
+    assert keypad_device is not None
+    assert keypad_device.via_device_id == repeater_device.id
+
+
+async def test_via_device_id_main_repeater_keypad(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the main repeater's own keypad stays the root device."""
+    mock_config_entry.add_to_hass(hass)
+    mock_lutron.areas[0].keypads[0].type = "MAIN_REPEATER"
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    controller_guid = mock_lutron.guid
+    repeater_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_guid), mock_config_entry.entry_id
+    )
+    assert repeater_device is not None
+    assert repeater_device.via_device_id is None
+
+    keypad = mock_lutron.areas[0].keypads[0]
+    keypad_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{controller_guid}_{keypad.uuid}"), mock_config_entry.entry_id
+    )
+    # A MAIN_REPEATER keypad shares the controller's identifier, so it
+    # resolves to the same root device instead of a separate child device.
+    assert keypad_device is not None
+    assert keypad_device.id == repeater_device.id

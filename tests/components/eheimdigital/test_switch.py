@@ -54,12 +54,16 @@ async def test_setup(
 @pytest.mark.parametrize(
     ("device_name", "entity_id", "property_name"),
     [
-        ("classic_vario_mock", "switch.mock_classicvario", "filterActive"),
-        ("filter_mock", "switch.mock_filter", "active"),
-        ("reeflex_mock", "switch.mock_reeflex", "isActive"),
-        ("reeflex_mock", "switch.mock_reeflex_pause", "pause"),
-        ("reeflex_mock", "switch.mock_reeflex_booster", "booster"),
-        ("reeflex_mock", "switch.mock_reeflex_expert_mode", "expert"),
+        (
+            "classic_vario_mock",
+            "switch.mock_aquarium_mock_classicvario",
+            "filterActive",
+        ),
+        ("filter_mock", "switch.mock_aquarium_mock_filter", "active"),
+        ("reeflex_mock", "switch.mock_aquarium_mock_reeflex", "isActive"),
+        ("reeflex_mock", "switch.mock_aquarium_mock_reeflex_pause", "pause"),
+        ("reeflex_mock", "switch.mock_aquarium_mock_reeflex_booster", "booster"),
+        ("reeflex_mock", "switch.mock_aquarium_mock_reeflex_expert_mode", "expert"),
     ],
 )
 async def test_turn_on_off(
@@ -101,14 +105,14 @@ async def test_turn_on_off(
             "classic_vario_mock",
             [
                 (
-                    "switch.mock_classicvario",
+                    "switch.mock_aquarium_mock_classicvario",
                     "classic_vario_data",
                     "filterActive",
                     1,
                     "on",
                 ),
                 (
-                    "switch.mock_classicvario",
+                    "switch.mock_aquarium_mock_classicvario",
                     "classic_vario_data",
                     "filterActive",
                     0,
@@ -120,14 +124,14 @@ async def test_turn_on_off(
             "filter_mock",
             [
                 (
-                    "switch.mock_filter",
+                    "switch.mock_aquarium_mock_filter",
                     "filter_data",
                     "filterActive",
                     1,
                     "on",
                 ),
                 (
-                    "switch.mock_filter",
+                    "switch.mock_aquarium_mock_filter",
                     "filter_data",
                     "filterActive",
                     0,
@@ -139,56 +143,56 @@ async def test_turn_on_off(
             "reeflex_mock",
             [
                 (
-                    "switch.mock_reeflex",
+                    "switch.mock_aquarium_mock_reeflex",
                     "reeflex_data",
                     "isActive",
                     1,
                     "on",
                 ),
                 (
-                    "switch.mock_reeflex",
+                    "switch.mock_aquarium_mock_reeflex",
                     "reeflex_data",
                     "isActive",
                     0,
                     "off",
                 ),
                 (
-                    "switch.mock_reeflex_pause",
+                    "switch.mock_aquarium_mock_reeflex_pause",
                     "reeflex_data",
                     "pause",
                     1,
                     "on",
                 ),
                 (
-                    "switch.mock_reeflex_pause",
+                    "switch.mock_aquarium_mock_reeflex_pause",
                     "reeflex_data",
                     "pause",
                     0,
                     "off",
                 ),
                 (
-                    "switch.mock_reeflex_booster",
+                    "switch.mock_aquarium_mock_reeflex_booster",
                     "reeflex_data",
                     "booster",
                     1,
                     "on",
                 ),
                 (
-                    "switch.mock_reeflex_booster",
+                    "switch.mock_aquarium_mock_reeflex_booster",
                     "reeflex_data",
                     "booster",
                     0,
                     "off",
                 ),
                 (
-                    "switch.mock_reeflex_expert_mode",
+                    "switch.mock_aquarium_mock_reeflex_expert_mode",
                     "reeflex_data",
                     "expert",
                     1,
                     "on",
                 ),
                 (
-                    "switch.mock_reeflex_expert_mode",
+                    "switch.mock_aquarium_mock_reeflex_expert_mode",
                     "reeflex_data",
                     "expert",
                     0,

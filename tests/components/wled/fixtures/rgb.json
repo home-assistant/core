@@ -64,7 +64,7 @@
         "spc": 0,
         "of": 0,
         "on": true,
-        "frz": false,
+        "frz": true,
         "bri": 255,
         "cct": 127,
         "set": 0,

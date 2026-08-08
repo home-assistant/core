@@ -20,11 +20,11 @@
           "name": "Level"
         }
       },
-      "name": "Set default level"
+      "name": "Set logger default level"
     },
     "set_level": {
       "description": "Sets the log level for one or more integrations.",
-      "name": "Set level"
+      "name": "Set logger level"
     }
   }
 }

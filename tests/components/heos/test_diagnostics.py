@@ -1,7 +1,6 @@
 """Tests for the HEOS diagnostics module."""
 
 from pyheos import HeosError, HeosSystem
-import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -41,7 +40,6 @@ async def test_config_entry_diagnostics(
     )
 
 
-@pytest.mark.usefixtures("controller")
 async def test_config_entry_diagnostics_error_getting_system(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -64,7 +62,6 @@ async def test_config_entry_diagnostics_error_getting_system(
     )
 
 
-@pytest.mark.usefixtures("controller")
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -74,8 +71,10 @@ async def test_device_diagnostics(
     """Test generating diagnostics for a config entry."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, "1")})
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1"), config_entry.entry_id
+    )
     assert device is not None
     diagnostics = await get_diagnostics_for_device(
         hass, hass_client, config_entry, device

@@ -1,7 +1,5 @@
 """StarLine Account."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any
@@ -15,7 +13,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    _LOGGER,
     DATA_EXPIRES,
     DATA_SLID_TOKEN,
     DATA_SLNET_TOKEN,
@@ -23,6 +20,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SCAN_OBD_INTERVAL,
     DOMAIN,
+    LOGGER,
 )
 
 
@@ -49,7 +47,7 @@ class StarlineAccount:
 
     def _check_slnet_token(self, interval: int) -> None:
         """Check SLNet token expiration and update if needed."""
-        now = datetime.now().timestamp()
+        now = datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
         slnet_token_expires = self._config_entry.data[DATA_EXPIRES]
 
         if now + interval > slnet_token_expires:
@@ -75,7 +73,7 @@ class StarlineAccount:
                 },
             )
         except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Error updating SLNet token: %s", err)
+            LOGGER.error("Error updating SLNet token: %s", err)
 
     @callback
     def _save_slnet_token(self, data) -> None:
@@ -109,7 +107,7 @@ class StarlineAccount:
 
     def set_update_interval(self, interval: int) -> None:
         """Set StarLine API update interval."""
-        _LOGGER.debug("Setting update interval: %ds", interval)
+        LOGGER.debug("Setting update interval: %ds", interval)
         self._update_interval = interval
         if self._unsubscribe_auto_updater is not None:
             self._unsubscribe_auto_updater()
@@ -121,7 +119,7 @@ class StarlineAccount:
 
     def set_update_obd_interval(self, interval: int) -> None:
         """Set StarLine API OBD update interval."""
-        _LOGGER.debug("Setting OBD update interval: %ds", interval)
+        LOGGER.debug("Setting OBD update interval: %ds", interval)
         self._update_obd_interval = interval
         if self._unsubscribe_auto_obd_updater is not None:
             self._unsubscribe_auto_obd_updater()
@@ -133,7 +131,7 @@ class StarlineAccount:
 
     def unload(self):
         """Unload StarLine API."""
-        _LOGGER.debug("Unloading StarLine API")
+        LOGGER.debug("Unloading StarLine API")
         if self._unsubscribe_auto_updater is not None:
             self._unsubscribe_auto_updater()
             self._unsubscribe_auto_updater = None

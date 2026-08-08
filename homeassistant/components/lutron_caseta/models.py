@@ -1,7 +1,5 @@
 """The lutron_caseta integration models."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, Final, TypedDict
 
@@ -21,6 +19,7 @@ class LutronCasetaData:
     bridge: Smartbridge
     bridge_device: dict[str, Any]
     keypad_data: LutronKeypadData
+    config_entry_id: str
 
 
 @dataclass

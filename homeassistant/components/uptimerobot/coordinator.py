@@ -1,8 +1,6 @@
 """DataUpdateCoordinator for the uptimerobot integration."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pyuptimerobot import (
     UptimeRobot,
@@ -45,14 +43,22 @@ class UptimeRobotDataUpdateCoordinator(
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[int, UptimeRobotMonitor]:
         """Update data."""
         try:
             response = await self.api.async_get_monitors()
         except UptimeRobotAuthenticationException as exception:
-            raise ConfigEntryAuthFailed(exception) from exception
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_authentication_exception",
+            ) from exception
         except UptimeRobotException as exception:
-            raise UpdateFailed(exception) from exception
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_generic_exception",
+                translation_placeholders={"error": "Generic UptimeRobot exception"},
+            ) from exception
 
         if TYPE_CHECKING:
             assert isinstance(response.data, list)
@@ -63,12 +69,9 @@ class UptimeRobotDataUpdateCoordinator(
             device_registry = dr.async_get(self.hass)
 
             for monitor_id in stale_ids:
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, str(monitor_id))}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, str(monitor_id)), self.config_entry.entry_id
                 ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
 
         return new_monitors

@@ -47,13 +47,13 @@ async def test_setup_entry_success(
         (
             ClientConnectionError("Connection failed"),
             ConfigEntryState.SETUP_RETRY,
-            "connection_error",
+            "cannot_connect",
         ),
         (TimeoutError(), ConfigEntryState.SETUP_RETRY, "timeout_connect"),
         (
             Exception("Unexpected error"),
             ConfigEntryState.SETUP_RETRY,
-            "unexpected_error",
+            "unexpected_connect_error",
         ),
         ([True, False], ConfigEntryState.SETUP_ERROR, "invalid_auth"),
     ],
@@ -95,8 +95,9 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_yaml_import_without_filter(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
 ) -> None:
     """Test YAML configuration without filter triggers import."""
     assert await async_setup_component(
@@ -119,8 +120,30 @@ async def test_yaml_import_without_filter(
     assert entries[0].source == SOURCE_IMPORT
 
 
+@pytest.mark.usefixtures("mock_setup_entry", "mock_hass_splunk")
+async def test_yaml_import_defaults_ssl_on(hass: HomeAssistant) -> None:
+    """Test YAML import defaults to SSL enabled when the field is omitted."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_TOKEN: "test-token",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8088,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_SSL] is True
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_yaml_with_filter(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
 ) -> None:
     """Test YAML configuration with filter triggers import."""
     assert await async_setup_component(
@@ -311,7 +334,7 @@ async def test_yaml_filter_only_no_deprecation_issue(
     assert len(entries) == 0
 
     # Verify no deprecation issue was created
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issues = issue_registry.issues
     assert not any(
         issue_id[0] == DOMAIN and "deprecated" in issue_id[1] for issue_id in issues
@@ -322,8 +345,9 @@ async def test_yaml_filter_only_no_deprecation_issue(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_yaml_with_connection_creates_deprecation_issue(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
 ) -> None:
     """Test YAML with connection settings creates deprecation issue."""
     assert await async_setup_component(
@@ -346,7 +370,7 @@ async def test_yaml_with_connection_creates_deprecation_issue(
     assert entries[0].source == SOURCE_IMPORT
 
     # Verify deprecation issue was created in homeassistant domain
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues
 
 
@@ -376,24 +400,23 @@ async def test_yaml_import_error_creates_specific_issue(
     assert len(entries) == 0
 
     # Verify error-specific issue was created
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         DOMAIN,
         "deprecated_yaml_import_issue_cannot_connect",
     ) in issue_registry.issues
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_yaml_import_already_configured_creates_deprecation_issue(
-    hass: HomeAssistant,
-    mock_hass_splunk: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test YAML import when already configured still creates deprecation issue."""
     # Add existing config entry before YAML import
     mock_config_entry.add_to_hass(hass)
 
-    # Set up component with YAML - should see existing entry and abort with single_instance_allowed
+    # Set up component with YAML - should see existing entry and
+    # abort with single_instance_allowed
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -409,5 +432,5 @@ async def test_yaml_import_already_configured_creates_deprecation_issue(
     await hass.async_block_till_done()
 
     # Verify deprecation issue was still created (single_instance_allowed is ok)
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues

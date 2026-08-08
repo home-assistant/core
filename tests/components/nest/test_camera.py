@@ -112,7 +112,8 @@ def make_motion_event(
         timestamp = utcnow()
     return EventMessage.create_event(
         {
-            "eventId": "some-event-id",  # Ignored; we use the resource updated event id below
+            # Ignored; we use the resource updated event id below
+            "eventId": "some-event-id",
             "timestamp": timestamp.isoformat(timespec="seconds"),
             "resourceUpdate": {
                 "name": DEVICE_ID,
@@ -166,13 +167,16 @@ async def mock_create_stream(hass: HomeAssistant) -> Generator[AsyncMock]:
 
 
 async def async_get_image(
-    hass: HomeAssistant, width: int | None = None, height: int | None = None
+    hass: HomeAssistant,
+    width: int | None = None,
+    height: int | None = None,
+    expected_content_type: str = "image/jpeg",
 ) -> bytes:
     """Get the camera image."""
     image = await camera.async_get_image(
         hass, "camera.my_camera", width=width, height=height
     )
-    assert image.content_type == "image/jpeg"
+    assert image.content_type == expected_content_type
     return image.content
 
 
@@ -504,7 +508,8 @@ async def test_extending_stream_already_expired(
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
-    # The stream will have expired in the past, but 1 minute min refresh interval is applied.
+    # The stream will have expired in the past, but 1 minute min
+    # refresh interval is applied.
     # The stream token is not updated.
     await fire_alarm(hass, now + datetime.timedelta(seconds=170))
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
@@ -691,9 +696,12 @@ async def test_camera_web_rtc(
         "answer": "v=0\r\ns=-\r\n",
     }
 
-    # Nest WebRTC cameras return a placeholder
-    await async_get_image(hass)
-    await async_get_image(hass, width=1024, height=768)
+    # The WebRTC placeholder is a PNG, served as image/png not the default jpeg.
+    png_bytes = await async_get_image(hass, expected_content_type="image/png")
+    assert png_bytes.startswith(b"\x89PNG")
+    await async_get_image(
+        hass, width=1024, height=768, expected_content_type="image/png"
+    )
 
 
 @pytest.mark.usefixtures("auth", "camera_device")
@@ -728,7 +736,10 @@ async def test_camera_web_rtc_unsupported(
     assert not msg["success"]
     assert msg["error"] == {
         "code": "webrtc_offer_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
+        "message": (
+            "Camera does not support WebRTC,"
+            " frontend_stream_types={<StreamType.HLS: 'hls'>}"
+        ),
     }
 
 

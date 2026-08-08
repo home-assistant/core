@@ -1,12 +1,10 @@
 """UniFi Protect media sources."""
 
-from __future__ import annotations
-
 import asyncio
 from calendar import monthrange
 from datetime import date, datetime, timedelta
 from enum import StrEnum
-from typing import Any, NoReturn, cast
+from typing import Any, NoReturn, cast, override
 
 from uiprotect.data import Camera, Event, EventType, SmartDetectObjectType
 from uiprotect.exceptions import NvrError
@@ -107,10 +105,14 @@ def _get_month_start_end(start: datetime) -> tuple[datetime, datetime]:
 
 @callback
 def _bad_identifier(identifier: str, err: Exception | None = None) -> NoReturn:
-    msg = f"Unexpected identifier: {identifier}"
+    exc = BrowseError(
+        translation_domain=DOMAIN,
+        translation_key="unexpected_identifier",
+        translation_placeholders={"identifier": identifier},
+    )
     if err is None:
-        raise BrowseError(msg)
-    raise BrowseError(msg) from err
+        raise exc
+    raise exc from err
 
 
 @callback
@@ -191,6 +193,7 @@ class ProtectMediaSource(MediaSource):
         self.data_sources = data_sources
         self._registry = None
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Return a streamable URL and associated mime type for a UniFi Protect event.
 
@@ -227,6 +230,7 @@ class ProtectMediaSource(MediaSource):
             )
         return PlayMedia(async_generate_event_video_url(event), "video/mp4")
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return a browsable UniFi Protect media source.
 
@@ -264,11 +268,13 @@ class ProtectMediaSource(MediaSource):
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}
             Root Camera(s) Event Type(s) browse source
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}:recent:{day_count}
-            Listing of all events in last {day_count}, sorted in reverse chronological order
+            Listing of all events in last {day_count},
+            sorted in reverse chronological order
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}:range:{year}:{month}
             List of folders for each day in month + all events for month
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}:range:{year}:{month}:all|{day}
-            Listing of all events for give {day} + {month} + {year} combination in chronological order
+            All events for given day/month/year
+            in chronological order
         """
 
         if not item.identifier:
@@ -377,7 +383,10 @@ class ProtectMediaSource(MediaSource):
             _bad_identifier(f"{data.api.bootstrap.nvr.id}:{subtype}:{event_id}", err)
 
         if event.start is None or event.end is None:
-            raise BrowseError("Event is still ongoing")
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="event_ongoing",
+            )
 
         return await self._build_event(data, event, thumbnail_only)
 
@@ -787,7 +796,11 @@ class ProtectMediaSource(MediaSource):
         if camera_id != "all":
             camera = data.api.bootstrap.cameras.get(camera_id)
             if camera is None:
-                raise BrowseError(f"Unknown Camera ID: {camera_id}")
+                raise BrowseError(
+                    translation_domain=DOMAIN,
+                    translation_key="unknown_camera_id",
+                    translation_placeholders={"camera_id": camera_id},
+                )
             name = camera.name or camera.market_name or camera.type
             is_doorbell = camera.feature_flags.is_doorbell
             has_smart = camera.feature_flags.has_smart_detect

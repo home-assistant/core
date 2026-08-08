@@ -1,5 +1,6 @@
 """Tests for the Overseerr integration."""
 
+import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -45,7 +46,7 @@ async def test_initialization_errors(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state == config_entry_state
+    assert mock_config_entry.state is config_entry_state
 
 
 async def test_device_info(
@@ -57,8 +58,8 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot
@@ -91,7 +92,7 @@ async def test_proper_webhook_configuration(
         {
             "return_value.options": WebhookNotificationOptions(
                 webhook_url="http://10.10.10.10:8123/api/webhook/test-webhook-id",
-                json_payload='"{\\"message\\": \\"{{title}}\\"}"',
+                json_payload='{"message": "{{title}}"}',
             )
         },
     ],
@@ -130,7 +131,7 @@ async def test_webhook_configuration_need_update(
         {
             "return_value.options": WebhookNotificationOptions(
                 webhook_url="http://10.10.10.10:8123/api/webhook/test-webhook-id",
-                json_payload='"{\\"message\\": \\"{{title}}\\"}"',
+                json_payload='{"message": "{{title}}"}',
             )
         },
     ],
@@ -155,6 +156,12 @@ async def test_webhook_failing_test(
 
     mock_overseerr_client.test_webhook_notification_config.assert_called_once()
     mock_overseerr_client.set_webhook_notification_config.assert_not_called()
+
+
+async def test_webhook_json_payload_formatting() -> None:
+    """Test the webhook JSON payload formatting."""
+
+    assert json.loads(JSON_PAYLOAD)["notification_type"] == "{{notification_type}}"
 
 
 async def test_prefer_internal_ip(

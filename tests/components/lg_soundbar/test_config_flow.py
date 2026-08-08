@@ -1,7 +1,5 @@
 """Test the lg_soundbar config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import socket
 from typing import Any
@@ -99,7 +97,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 async def test_form_mac_info_response_empty(hass: HomeAssistant) -> None:
-    """Test we get the form, but response from the initial get_mac_info function call is empty."""
+    """Test form when initial get_mac_info response is empty."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -240,7 +238,7 @@ async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(
 
 
 async def test_form_uuid_missing_from_mac_info(hass: HomeAssistant) -> None:
-    """Test we get the form, but uuid is missing from the initial get_mac_info function call."""
+    """Test form when uuid is missing from get_mac_info response."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -363,7 +361,7 @@ async def test_form_both_queues_empty(hass: HomeAssistant) -> None:
 
 
 async def test_no_uuid_host_already_configured(hass: HomeAssistant) -> None:
-    """Test we handle if the device has no UUID and the host has already been configured."""
+    """Test handling device with no UUID and already configured host."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,

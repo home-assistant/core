@@ -321,9 +321,8 @@ async def test_reconfigure(
     assert entry.data[CONF_HOST] == "127.0.0.3"
 
 
-async def test_zeroconf(
-    hass: HomeAssistant, mock_slide_api: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf(hass: HomeAssistant, mock_slide_api: AsyncMock) -> None:
     """Test starting a flow from discovery."""
 
     result = await hass.config_entries.flow.async_init(
@@ -343,8 +342,9 @@ async def test_zeroconf(
     assert result["result"].unique_id == "12:34:56:78:90:ab"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_duplicate_entry(
-    hass: HomeAssistant, mock_slide_api: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_slide_api: AsyncMock
 ) -> None:
     """Test starting a flow from discovery."""
 
@@ -362,8 +362,9 @@ async def test_zeroconf_duplicate_entry(
     assert entries[0].data[CONF_HOST] == HOST
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_update_duplicate_entry(
-    hass: HomeAssistant, mock_slide_api: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_slide_api: AsyncMock
 ) -> None:
     """Test updating an existing entry from discovery."""
 
@@ -391,11 +392,9 @@ async def test_zeroconf_update_duplicate_entry(
         (Exception),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_connection_error(
-    hass: HomeAssistant,
-    exception: Exception,
-    mock_slide_api: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, exception: Exception, mock_slide_api: AsyncMock
 ) -> None:
     """Test starting a flow from discovery."""
 
