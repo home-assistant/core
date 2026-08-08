@@ -1,6 +1,6 @@
 """Tests for the Device Registry."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime, timedelta
 from functools import partial
@@ -23,6 +23,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    frame,
 )
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
@@ -38,6 +39,33 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
+
+
+@pytest.fixture(autouse=True)
+def _downgrade_device_registry_deprecation_reports(
+    request: pytest.FixtureRequest,
+) -> Generator[None]:
+    """Keep the deprecated device registry APIs from raising in tests.
+
+    async_get_device, the config entry parameters of async_update_device, and via_device
+    on async_get_or_create are deprecated and raise for core and core integration
+    callers, disable them here so we can run tests without triggering deprecation errors.
+
+    Tests which use `mock_integration_frame` will not be affected by this fixture, so
+    they can test the deprecation.
+    """
+    if "mock_integration_frame" in request.fixturenames:
+        yield
+        return
+
+    def _log_only(what: str, **kwargs: Any) -> None:
+        kwargs["core_behavior"] = frame.ReportBehavior.LOG
+        kwargs["core_integration_behavior"] = frame.ReportBehavior.LOG
+        kwargs["custom_integration_behavior"] = frame.ReportBehavior.LOG
+        frame.report_usage(what, **kwargs)
+
+    with patch.object(dr, "report_usage", _log_only):
+        yield
 
 
 def _get_device_for_config_entry(
@@ -4132,6 +4160,180 @@ async def test_update_device_unknown_via_device_id_raises_before_removal(
 
     # The device was not removed
     assert device_registry.async_get(device.id) == device
+
+
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(RuntimeError),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_get_device_deprecated(
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test async_get_device is deprecated.
+
+    It logs for custom integrations and raises for core and core integrations.
+    """
+    what = "calls `device_registry.async_get_device`"
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        device_registry.async_get_device(identifiers={("some_domain", "some_id")})
+
+    assert caplog.text.count(what) == expected_log
+
+
+@pytest.mark.parametrize(
+    "via_device",
+    [("some_domain", "via_id"), None],
+    ids=["value", "none"],
+)
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(RuntimeError),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_get_or_create_via_device_deprecated(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    via_device: tuple[str, str] | None,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test passing via_device to async_get_or_create is deprecated.
+
+    It logs for custom integrations and raises for core and core integrations.
+    """
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("some_domain", "via_id")}
+    )
+
+    what = "calls `device_registry.async_get_or_create` with a `via_device`"
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("some_domain", "some_id")},
+            via_device=via_device,
+        )
+
+    assert caplog.text.count(what) == expected_log
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_get_or_create_via_device_reported_before_mutation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """The via_device deprecation is reported before the registry is mutated.
+
+    The default frame is a core integration, so the report raises; the new device must
+    not be left partially created.
+    """
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+        pytest.raises(RuntimeError),
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("some_domain", "new_device")},
+            via_device=("some_domain", "via_id"),
+        )
+
+    # The report raised before insertion, so no partial device was left behind.
+    assert (
+        device_registry.async_get_device_by_identifier(
+            ("some_domain", "new_device"), config_entry.entry_id
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(RuntimeError),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_update_device_config_entry_params_deprecated(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test the config entry params of async_update_device are deprecated.
+
+    Passing any of add_config_entry_id, add_config_subentry_id, remove_config_entry_id
+    or remove_config_subentry_id logs for custom integrations, and raises for core and
+    core integrations.
+    """
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("some_domain", "some_id")}
+    )
+
+    what = "calls `device_registry.async_update_device` with one of"
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        device_registry.async_update_device(
+            device.id, remove_config_entry_id=config_entry.entry_id
+        )
+
+    assert caplog.text.count(what) == expected_log
 
 
 async def test_get_or_create_via_device_self_reference_ignored(
