@@ -22,12 +22,15 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     EntityCategory,
+    Platform,
     UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 
+from . import DOMAIN
 from .coordinator import EheimDigitalConfigEntry, EheimDigitalDeviceUpdateCoordinator
 from .entity import EheimDigitalEntity, exception_handler
 
@@ -196,6 +199,18 @@ GENERAL_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalDevice], .
 )
 
 
+def _async_migrate_entities(hass: HomeAssistant, device_address: str) -> None:
+    registry = er.async_get(hass)
+    if (
+        old_id := registry.async_get_entity_id(
+            Platform.NUMBER, DOMAIN, f"{device_address}_system_led"
+        )
+    ) is not None:
+        registry.async_update_entity(
+            old_id, new_unique_id=old_id.replace("system_led", "sys_led")
+        )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EheimDigitalConfigEntry,
@@ -209,6 +224,7 @@ async def async_setup_entry(
     ) -> None:
         """Set up the number entities for one or multiple devices."""
         entities: list[EheimDigitalNumber[Any]] = []
+        _async_migrate_entities(hass, device_coordinator.data.mac_address)
         if isinstance(device_coordinator.data, EheimDigitalClassicVario):
             entities.extend(
                 EheimDigitalNumber[EheimDigitalClassicVario](

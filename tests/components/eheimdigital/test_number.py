@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.eheimdigital.const import DOMAIN
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -51,6 +52,57 @@ async def test_setup(
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_migrate_entities(
+    hass: HomeAssistant,
+    eheimdigital_hub_mock: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the migration of entity ids."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        "00:00:00:00:00:01_system_led",
+        config_entry=mock_config_entry,
+    )
+
+    with (
+        patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.NUMBER]),
+        patch(
+            "homeassistant.components.eheimdigital.coordinator.asyncio.Event",
+            new=AsyncMock,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    for device in eheimdigital_hub_mock.return_value.devices:
+        device_obj = eheimdigital_hub_mock.return_value.devices[device]
+        await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
+            device, device_obj.device_type
+        )
+        for packet in device_obj.packet_mapping:
+            await eheimdigital_hub_mock.call_args.kwargs["receive_callback"](
+                device_obj.mac_address, packet
+            )
+
+        await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.NUMBER, DOMAIN, "00:00:00:00:00:01_system_led"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.NUMBER, DOMAIN, "00:00:00:00:00:01_sys_led"
+        )
+        is not None
+    )
 
 
 @pytest.mark.parametrize(
