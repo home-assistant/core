@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -30,7 +31,7 @@ async def test_setup_entry(
         await hass.async_block_till_done()
 
     assert result is True
-    assert mock_config_entry.state.value == "loaded"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_unload_entry(
@@ -59,4 +60,4 @@ async def test_unload_entry(
         await hass.async_block_till_done()
 
     assert result is True
-    assert mock_config_entry.state.value == "not_loaded"
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED

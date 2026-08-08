@@ -28,6 +28,9 @@ PARALLEL_UPDATES = 1
 # Seconds the entity stays in "unlocked" state before reverting to "locked".
 _RELOCK_DELAY = 5
 
+# Seconds to wait after an unlock before re-polling the door state.
+_RELOCK_POLL_DELAY = 2
+
 # How often to poll the lock for door state (when door status is supported).
 _POLL_INTERVAL = timedelta(seconds=30)
 
@@ -38,14 +41,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ISEO lock entity from a config entry."""
-    async_add_entities(
-        [
-            IseoLockEntity(
-                entry,
-                entry.runtime_data,
-            )
-        ],
-    )
+    async_add_entities([IseoLockEntity(entry)])
 
 
 class IseoLockEntity(LockEntity):
@@ -58,7 +54,6 @@ class IseoLockEntity(LockEntity):
     def __init__(
         self,
         entry: IseoConfigEntry,
-        client: IseoClient,
     ) -> None:
         """Initialize the lock entity."""
         self._entry = entry
@@ -67,13 +62,12 @@ class IseoLockEntity(LockEntity):
         self._door_status_supported: bool | None = None
         self._poll_unsub: CALLBACK_TYPE | None = None
         self._fw_version_set = False
-        self.client: IseoClient = client
+        self.client: IseoClient = entry.runtime_data
 
-        self._attr_unique_id = f"{entry.unique_id}_lock"
+        self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, cast(str, entry.unique_id))},
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
-            name=entry.title,
             manufacturer="ISEO",
             model="X1R Smart",
             model_id="X1R",
@@ -205,7 +199,7 @@ class IseoLockEntity(LockEntity):
         """Revert to 'locked' after the motor has re-latched."""
         try:
             if self._door_status_supported:
-                await asyncio.sleep(2)
+                await asyncio.sleep(_RELOCK_POLL_DELAY)
                 await self._poll_state(force=True)
                 # If the poll exited early (BLE busy, device not found, error),
                 # the state was not updated — fall back to locked.

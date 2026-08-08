@@ -54,27 +54,27 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_iseo_client() -> Generator[MagicMock]:
-    """Mock the IseoClient class."""
-    client = MagicMock()
-    client.read_state = AsyncMock(
-        return_value=MagicMock(door_closed=None, firmware_info=None)
-    )
-    client.open_lock = AsyncMock(return_value=None)
-    client.gw_open = AsyncMock(return_value=None)
-    client.register_user = AsyncMock(return_value=None)
-    client.gw_register_log_notif = AsyncMock(return_value=None)
-    client.update_ble_device = MagicMock()
-
+    """Mock the IseoClient class (shared by setup and the config flow)."""
     with (
         patch(
             "homeassistant.components.iseo_argo_ble.IseoClient",
-            return_value=client,
-        ),
+            autospec=True,
+        ) as client_class,
         patch(
-            "homeassistant.components.iseo_argo_ble.lock.IseoClient",
-            return_value=client,
+            "homeassistant.components.iseo_argo_ble.config_flow.IseoClient",
+            new=client_class,
         ),
     ):
+        client = client_class.return_value
+        client.read_state = AsyncMock(
+            return_value=MagicMock(door_closed=None, firmware_info=None)
+        )
+        client.open_lock = AsyncMock(return_value=None)
+        client.gw_open = AsyncMock(return_value=None)
+        client.register_user = AsyncMock(return_value=None)
+        client.gw_register_log_notif = AsyncMock(return_value=None)
+        client.setup_gateway = AsyncMock(return_value=None)
+        client.update_ble_device = MagicMock()
         yield client
 
 

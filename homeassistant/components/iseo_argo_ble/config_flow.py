@@ -112,15 +112,18 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_gw_register()
 
-        found = _discover_locks(self.hass)
+        configured = {
+            entry.data.get(CONF_ADDRESS) for entry in self._async_current_entries()
+        }
+        found = [
+            info
+            for info in _discover_locks(self.hass)
+            if info.address not in configured
+        ]
         self._discovered = {info.address: info for info in found}
 
         if not self._discovered:
             return self.async_abort(reason="no_devices_found")
-
-        configured = {
-            entry.data.get(CONF_ADDRESS) for entry in self._async_current_entries()
-        }
 
         return self.async_show_form(
             step_id="user",
@@ -134,11 +137,6 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                                     label=(
                                         f"{info.name or 'Unknown'}  —  {info.address}"
                                         f"  (RSSI {info.rssi} dBm)"
-                                        + (
-                                            " — already configured"
-                                            if info.address in configured
-                                            else ""
-                                        )
                                     ),
                                 )
                                 for info in found
