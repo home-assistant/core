@@ -15,6 +15,8 @@ from gardena_bluetooth.const import (
     Sensor,
     Spray,
     Valve,
+    Valve1,
+    Valve2,
 )
 from gardena_bluetooth.parse import Characteristic
 
@@ -85,6 +87,22 @@ DESCRIPTIONS = (
             x.name.lower() if isinstance(x, Valve.activation_reason.enum) else None
         ),
         options=[member.name.lower() for member in Valve.activation_reason.enum],
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key=Valve1.activation_reason.unique_id,
+        translation_key="activation_reason_valve_1",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        char=Valve1.activation_reason,
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key=Valve2.activation_reason.unique_id,
+        translation_key="activation_reason_valve_2",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        char=Valve2.activation_reason,
     ),
     GardenaBluetoothSensorEntityDescription(
         key=Battery.battery_level.unique_id,
@@ -246,6 +264,22 @@ async def async_setup_entry(
         entities.append(
             GardenaBluetoothRemainSensor(
                 coordinator, Valve.remaining_open_time, "remaining_open_timestamp"
+            )
+        )
+    if Valve1.remaining_time_open.unique_id in coordinator.characteristics:
+        entities.append(
+            GardenaBluetoothRemainSensor(
+                coordinator,
+                Valve1.remaining_time_open,
+                "remaining_open_timestamp_valve_1",
+            )
+        )
+    if Valve2.remaining_time_open.unique_id in coordinator.characteristics:
+        entities.append(
+            GardenaBluetoothRemainSensor(
+                coordinator,
+                Valve2.remaining_time_open,
+                "remaining_open_timestamp_valve_2",
             )
         )
     if (

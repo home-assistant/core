@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import bleak
 from freezegun.api import FrozenDateTimeFactory
 from gardena_bluetooth.client import Client
-from gardena_bluetooth.const import DeviceInformation
+from gardena_bluetooth.const import DeviceInformation, ValveX
 from gardena_bluetooth.exceptions import CharacteristicNotFound
 from gardena_bluetooth.parse import Characteristic, Service
 import pytest
@@ -78,6 +78,26 @@ def mock_read_char_raw():
         DeviceInformation.firmware_version.uuid: b"1.2.3",
         DeviceInformation.model_number.uuid: b"Mock Model",
     }
+
+
+@pytest.fixture
+def mock_valvex_chars(
+    request: pytest.FixtureRequest, mock_read_char_raw: dict[str, bytes]
+) -> dict[str, bytes]:
+    """Mock data on a Valve1/Valve2-family device (G-19033/19034 etc.)."""
+    service: type[ValveX] = request.param
+    mock_read_char_raw[service.state.uuid] = b"\x00"
+    mock_read_char_raw[service.available.uuid] = b"\x01"
+    mock_read_char_raw[service.remaining_time_open.uuid] = (
+        service.remaining_time_open.encode(0)
+    )
+    mock_read_char_raw[service.manual_watering_duration.uuid] = (
+        service.manual_watering_duration.encode(1800)
+    )
+    mock_read_char_raw[service.activation_reason.uuid] = b"\x00"
+    mock_read_char_raw[service.start_watering.uuid] = b""
+    mock_read_char_raw[service.stop_watering.uuid] = b""
+    return mock_read_char_raw
 
 
 @pytest.fixture
