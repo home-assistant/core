@@ -1,6 +1,7 @@
 """Base classes for KNX entities."""
 
 from dataclasses import dataclass
+import logging
 from typing import TYPE_CHECKING, Any, override
 
 from xknx.devices import Device as XknxDevice
@@ -30,6 +31,8 @@ from .storage.const import CONF_DEVICE_INFO
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _stable_group_address_repr(part: DeviceGroupAddress | int | str | None) -> str:
@@ -192,7 +195,8 @@ class KnxYamlEntity(_KnxEntityBase):
         `build_yaml_unique_id`; the legacy id is migrated to the stable one. A
         user-defined `unique_id` in the config takes precedence, and an existing
         auto-generated entity is migrated to it so history is preserved. Removing
-        a user-defined `unique_id` again cannot be migrated back.
+        a user-defined `unique_id` again cannot be migrated back. If the id is
+        already used by another entity, the generated id is kept instead.
         """
         new_unique_id, legacy_unique_id = unique_id
         platform = async_get_current_platform().domain
@@ -200,10 +204,25 @@ class KnxYamlEntity(_KnxEntityBase):
             knx_module.hass, platform, legacy_unique_id, new_unique_id
         )
         if user_unique_id := entity_config.get(CONF_UNIQUE_ID):
-            async_migrate_yaml_unique_id(
-                knx_module.hass, platform, new_unique_id, user_unique_id
-            )
-            new_unique_id = user_unique_id
+            ent_reg = er.async_get(knx_module.hass)
+            if ent_reg.async_get_entity_id(
+                platform, DOMAIN, user_unique_id
+            ) and ent_reg.async_get_entity_id(platform, DOMAIN, new_unique_id):
+                # The user id already belongs to a different entity. Migrating
+                # would delete this entity's registry entry (history, settings),
+                # so keep the generated id - the duplicate surfaces at add time.
+                _LOGGER.warning(
+                    "Configured `unique_id: %s` for %s entity '%s' is already in"
+                    " use; keeping the generated unique id instead",
+                    user_unique_id,
+                    platform,
+                    entity_config[CONF_NAME],
+                )
+            else:
+                async_migrate_yaml_unique_id(
+                    knx_module.hass, platform, new_unique_id, user_unique_id
+                )
+                new_unique_id = user_unique_id
         self._knx_module = knx_module
         self._attr_name = entity_config[CONF_NAME] or None
         self._attr_unique_id = new_unique_id

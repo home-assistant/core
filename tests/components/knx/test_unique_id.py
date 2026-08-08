@@ -239,3 +239,49 @@ async def test_yaml_duplicate_user_unique_id_invalid(
     )
     assert "duplicate 'unique_id' not allowed: dup" in caplog.text
     assert hass.states.get("switch.a") is None
+
+
+async def test_yaml_user_unique_id_collision_keeps_generated_id(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A user id colliding with another entity keeps the generated id, no deletion."""
+    knx.mock_config_entry.add_to_hass(hass)
+    # another entity already owns the id the user configures below
+    entity_registry.async_get_or_create(
+        object_id_base="other",
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id="taken",
+        config_entry=knx.mock_config_entry,
+    )
+    # the entity being configured already exists under its generated id
+    generated_entry = entity_registry.async_get_or_create(
+        object_id_base="test",
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id="1/2/3",
+        config_entry=knx.mock_config_entry,
+    )
+    await knx.setup_integration(
+        {
+            SwitchSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: "1/2/3",
+                CONF_UNIQUE_ID: "taken",
+            }
+        },
+        add_entry_to_hass=False,
+    )
+    # the generated entry is untouched (history preserved), user id not adopted
+    assert entity_registry.async_get(generated_entry.entity_id) is not None
+    entry = entity_registry.async_get(generated_entry.entity_id)
+    assert entry.unique_id == "1/2/3"
+    # the other entity keeps ownership of the configured id
+    assert (
+        entity_registry.async_get_entity_id(Platform.SWITCH, DOMAIN, "taken")
+        != generated_entry.entity_id
+    )
+    assert "already in use" in caplog.text
