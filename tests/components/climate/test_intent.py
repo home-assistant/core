@@ -203,12 +203,36 @@ async def test_set_temperature(
         )
     assert err.value.result.no_match_reason is intent.MatchFailedReason.MULTIPLE_TARGETS
 
+    # Empty targets have the same behavior as omitted targets
+    with pytest.raises(intent.MatchFailedError) as err:
+        await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_SET_TEMPERATURE,
+            {
+                "area": {"value": ""},
+                "floor": {"value": ""},
+                "name": {"value": ""},
+                "temperature": {"value": 20},
+            },
+            assistant=conversation.DOMAIN,
+        )
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.MULTIPLE_TARGETS
+    assert err.value.constraints.name is None
+    assert err.value.constraints.area_name is None
+    assert err.value.constraints.floor_name is None
+
     # Select by area explicitly (climate_2)
     response = await intent.async_handle(
         hass,
         "test",
         climate_intent.INTENT_SET_TEMPERATURE,
-        {"area": {"value": bedroom_area.name}, "temperature": {"value": 20.1}},
+        {
+            "area": {"value": bedroom_area.name},
+            "floor": {"value": ""},
+            "name": {"value": ""},
+            "temperature": {"value": 20.1},
+        },
         assistant=conversation.DOMAIN,
     )
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
@@ -311,6 +335,23 @@ async def test_set_temperature(
             assistant=conversation.DOMAIN,
         )
     assert err.value.result.no_match_reason is intent.MatchFailedReason.MULTIPLE_TARGETS
+
+
+@pytest.mark.parametrize("target", ["area", "floor", "name"])
+async def test_set_temperature_whitespace_target(
+    hass: HomeAssistant, target: str
+) -> None:
+    """Test whitespace-only targets are invalid."""
+    await climate_intent.async_setup_intents(hass)
+
+    with pytest.raises(intent.InvalidSlotInfo):
+        await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_SET_TEMPERATURE,
+            {target: {"value": " "}, "temperature": {"value": 20}},
+            assistant=conversation.DOMAIN,
+        )
 
 
 async def test_set_temperature_no_entities(

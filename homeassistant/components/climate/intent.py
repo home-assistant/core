@@ -29,9 +29,9 @@ class SetTemperatureIntent(intent.IntentHandler):
     description = "Sets the target temperature of a climate device or entity"
     slot_schema = {
         vol.Required("temperature"): vol.Coerce(float),
-        vol.Optional("area"): intent.non_empty_string,
-        vol.Optional("name"): intent.non_empty_string,
-        vol.Optional("floor"): intent.non_empty_string,
+        vol.Optional("area"): vol.Any(intent.non_empty_string, ""),
+        vol.Optional("name"): vol.Any(intent.non_empty_string, ""),
+        vol.Optional("floor"): vol.Any(intent.non_empty_string, ""),
         vol.Optional("preferred_area_id"): cv.string,
         vol.Optional("preferred_floor_id"): cv.string,
     }
@@ -45,17 +45,9 @@ class SetTemperatureIntent(intent.IntentHandler):
 
         temperature: float = slots["temperature"]["value"]
 
-        name: str | None = None
-        if "name" in slots:
-            name = slots["name"]["value"]
-
-        area_name: str | None = None
-        if "area" in slots:
-            area_name = slots["area"]["value"]
-
-        floor_name: str | None = None
-        if "floor" in slots:
-            floor_name = slots["floor"]["value"]
+        name: str | None = slots.get("name", {}).get("value") or None
+        area_name: str | None = slots.get("area", {}).get("value") or None
+        floor_name: str | None = slots.get("floor", {}).get("value") or None
 
         match_constraints = intent.MatchTargetsConstraints(
             name=name,
