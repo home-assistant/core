@@ -342,7 +342,9 @@ async def test_device_info_ismartgate(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "xyz")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "xyz"), config_entry.entry_id
+    )
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "mycontroller"
@@ -378,7 +380,9 @@ async def test_device_info_gogogate2(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "xyz")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "xyz"), config_entry.entry_id
+    )
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "mycontroller"
