@@ -44,6 +44,7 @@ class DummyDevice:
         self.subtype = TEST_SUBTYPE
         self.available = False
         self.attributes = attributes or {}
+        self.capabilities: dict[str, Any] = {}
         self._callbacks: list[Callable] = []
         self.calls: list[tuple] = []
         self.temperature_step = 1
