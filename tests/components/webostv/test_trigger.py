@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
+import attr
 import pytest
 
 from homeassistant.components import automation
@@ -207,6 +208,60 @@ async def test_webostv_turn_on_trigger_hidden_entity(
             automation.DOMAIN: [
                 {
                     "trigger": build_trigger(device.id),
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "{{ trigger.device_id }}"},
+                    },
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == device.id
+
+
+@pytest.mark.usefixtures("client")
+async def test_webostv_turn_on_trigger_composite_device_id(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a target using a pre-migration composite device id."""
+    await setup_webostv(hass)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    composite_device_id = "composite00000000000000000000ab"
+    device_registry.devices[device.id] = attr.evolve(
+        device, composite_device_id=composite_device_id
+    )
+    # Hide the entities so the composite id can only resolve through the device registry
+    for entry in er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    ):
+        entity_registry.async_update_entity(
+            entry.entity_id, hidden_by=er.RegistryEntryHider.USER
+        )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "trigger": "webostv.turn_on",
+                        "target": {"device_id": composite_device_id},
+                    },
                     "action": {
                         "service": "test.automation",
                         "data_template": {"some": "{{ trigger.device_id }}"},
