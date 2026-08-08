@@ -825,6 +825,31 @@ async def test_ac_hvac_mode_branches(
     assert state.state == expected_state
 
 
+async def test_ac_hvac_mode_invalid(
+    hass: HomeAssistant, mock_config_entry: Callable[[DummyDevice], MockConfigEntry]
+) -> None:
+    """Test AC hvac_mode with an unsupported mode by the protocol."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: 103,
+            ACAttributes.swing_vertical: True,
+            ACAttributes.swing_horizontal: True,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_entry.entity_id)
+
+    with pytest.raises(ValueError):
+        entity.set_hvac_mode(HVACMode.HEAT_COOL)
+
+
 async def test_ac_fan_mode_invalid_type_returns_none(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
