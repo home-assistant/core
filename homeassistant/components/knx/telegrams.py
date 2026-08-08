@@ -48,12 +48,9 @@ _LOGGER = logging.getLogger(__name__)
 EVICT_EXPIRED_HOUR = 3
 
 # Interval at which buffered telegram writes are flushed to the database.
-# Websocket queries flush on demand (``flush_first=True``), so the only telegrams
-# at risk from a longer interval are those buffered during an ungraceful shutdown.
-# Postgres is additionally used for live views driven directly by the database
-# (e.g. SpectrumKNX's postgres-readonly companion mode, via LISTEN/NOTIFY on
-# insert), which only learn about a telegram once it is actually written - so
-# Postgres flushes much more often than sqlite.
+# Postgres flushes far more often than sqlite: push-based consumers, unlike
+# on-demand-flushed (``flush_first=True``) queries, only see a telegram once
+# it is actually written.
 FLUSH_INTERVAL_SECONDS_SQLITE = 600
 FLUSH_INTERVAL_SECONDS_POSTGRES = 1
 
