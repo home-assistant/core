@@ -385,6 +385,10 @@ async def test_a_command_is_read_back(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_HIGH},
         blocking=True,
     )
+    # The command is sent from the executor, which hands the re-read back to
+    # the event loop to be scheduled there. Moving the clock on before that
+    # has happened would leave the timer set past the point being fired.
+    await hass.async_block_till_done()
 
     assert mock_gateway.query_all_status_calls == 1
 
@@ -411,6 +415,9 @@ async def test_commands_in_a_row_are_read_back_once(
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: fan_mode},
             blocking=True,
         )
+    # See test_a_command_is_read_back: the re-read is scheduled on the event
+    # loop from the executor the commands are sent on.
+    await hass.async_block_till_done()
 
     freezer.tick(READBACK_DELAY)
     async_fire_time_changed(hass)
