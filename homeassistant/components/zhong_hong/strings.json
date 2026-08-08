@@ -15,9 +15,9 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "gateway_address": "The address the gateway is set to answer on, found in the controller's own settings. The default matches a controller that has not been changed.",
+          "gateway_address": "The address the gateway itself answers to, which is 1 from the factory. Change this only if the gateway was set to another address.",
           "host": "The hostname or IP address of the ZhongHong gateway on your network.",
-          "port": "The TCP port the gateway listens on. Leave the default unless you changed it on the gateway."
+          "port": "The port the gateway accepts connections on. This is 9999 unless it was changed on the gateway."
         }
       }
     }
