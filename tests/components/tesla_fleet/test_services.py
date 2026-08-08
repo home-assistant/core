@@ -1,5 +1,6 @@
 """Test the Tesla Fleet services."""
 
+from math import inf
 from typing import Any
 from unittest.mock import patch
 
@@ -445,7 +446,7 @@ async def test_time_of_use_wrapping_days(
                 "seasons": [
                     {
                         "name": "All year",
-                        "periods": [{"name": "Peak", "buy_rate": float("inf")}],
+                        "periods": [{"name": "Peak", "buy_rate": inf}],
                     }
                 ]
             },

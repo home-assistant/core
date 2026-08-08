@@ -9,7 +9,7 @@ from tesla_fleet_api.const import Scope
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_DEVICE_ID
+from homeassistant.const import ATTR_NAME, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -27,7 +27,6 @@ ATTR_DAYS = "days"
 ATTR_END_DAY = "end_day"
 ATTR_END_MONTH = "end_month"
 ATTR_END_TIME = "end_time"
-ATTR_NAME = "name"
 ATTR_PERIODS = "periods"
 ATTR_SEASONS = "seasons"
 ATTR_SELL_RATE = "sell_rate"
