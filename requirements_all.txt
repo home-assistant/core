@@ -1534,7 +1534,7 @@ lw12==0.9.2
 lxml==6.1.1
 
 # homeassistant.components.lyngdorf
-lyngdorf==1.4.4
+lyngdorf==1.4.8
 
 # homeassistant.components.matrix
 matrix-nio==0.26.0
