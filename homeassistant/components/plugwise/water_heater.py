@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, cast, override
 
 from homeassistant.components.water_heater import (
+    ATTR_OPERATION_MODE,
     STATE_ECO,
     WaterHeaterEntity,
     WaterHeaterEntityDescription,
@@ -148,6 +149,9 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = cast(float, kwargs[ATTR_TEMPERATURE])
+        if ATTR_OPERATION_MODE in kwargs:
+            await self.async_set_operation_mode(kwargs[ATTR_OPERATION_MODE])
+
         await self.coordinator.api.set_number(
             self._dev_id,
             self.entity_description.key,
