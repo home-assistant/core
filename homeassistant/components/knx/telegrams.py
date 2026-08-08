@@ -58,10 +58,11 @@ FLUSH_INTERVAL_SECONDS_SQLITE = 600
 FLUSH_INTERVAL_SECONDS_POSTGRES = 1
 
 # The buffer drops the oldest telegrams when full. Size it to cover a full
-# flush interval at ~50 telegrams/s, the maximum rate of a KNX TP line, so
-# nothing is dropped while the database is healthy.
-MAX_BUFFER_TELEGRAMS_SQLITE = FLUSH_INTERVAL_SECONDS_SQLITE * 50
-MAX_BUFFER_TELEGRAMS_POSTGRES = FLUSH_INTERVAL_SECONDS_POSTGRES * 50
+# flush interval at ~50 telegrams/s, the maximum rate of a single KNX TP line,
+# times 4 for headroom - routing can record multiple TP lines concurrently -
+# so nothing is dropped while the database is healthy.
+MAX_BUFFER_TELEGRAMS_SQLITE = FLUSH_INTERVAL_SECONDS_SQLITE * 50 * 4
+MAX_BUFFER_TELEGRAMS_POSTGRES = FLUSH_INTERVAL_SECONDS_POSTGRES * 50 * 4
 
 # Timeout for the migration probe and store initialization, so an unreachable
 # database cannot block KNX setup until the driver/OS connection timeout expires.
