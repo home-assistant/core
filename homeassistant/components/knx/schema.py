@@ -217,6 +217,7 @@ def _device_id(value: str) -> str:
     case or whitespace resolve to the same device instead of silently
     creating a separate one.
     """
+    value = value.strip()
     if value.startswith(UI_DEVICE_ID_PREFIX):
         return value
     return slugify(value)

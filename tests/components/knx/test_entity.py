@@ -213,6 +213,8 @@ async def test_yaml_entity_device_naming(
         (" living_room ", "living_room"),
         # A UI device identifier is preserved verbatim, not lower-cased.
         ("knx_vdev_ABC123", "knx_vdev_ABC123"),
+        # Surrounding whitespace is stripped before the UI-prefix check.
+        (" knx_vdev_ABC123 ", "knx_vdev_ABC123"),
     ],
 )
 async def test_yaml_device_id_normalization(

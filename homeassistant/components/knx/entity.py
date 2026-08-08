@@ -121,6 +121,7 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
 class _KnxEntityBase(Entity):
     """Representation of a KNX entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     _attr_unique_id: str
@@ -212,9 +213,6 @@ class KnxYamlEntity(_KnxEntityBase):
             )
             if device_name := device.get(CONF_NAME):
                 self._attr_device_info["name"] = device_name
-            # Matches UI entity naming: the device name is prepended to the
-            # entity name (or used as-is if the entity has no name).
-            self._attr_has_entity_name = True
 
         default_entity_id: str | None
         if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
@@ -223,8 +221,6 @@ class KnxYamlEntity(_KnxEntityBase):
 
 class KnxUiEntity(_KnxEntityBase):
     """Representation of a KNX UI entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self, knx_module: KNXModule, unique_id: str, entity_config: dict[str, Any]

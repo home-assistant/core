@@ -294,7 +294,7 @@ async def async_remove_config_entry_device(
         and entity.unique_id not in ui_unique_ids
         for entity in er.async_entries_for_device(entity_registry, device_entry.id)
     ):
-        # device still has YAML-configured KNX entities; only YAML can remove them
+        # device still has YAML-configured KNX entities; it would be recreated after reload
         return False
     for entity in knx_module.config_store.get_entity_entries():
         if entity.device_id == device_entry.id:
