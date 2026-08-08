@@ -182,10 +182,14 @@ def register_sub_device(
     device_registry: DeviceRegistry, config_entry: ConfigEntry, unique_id: str
 ) -> DeviceEntry:
     """Register Shelly sub-device."""
+    main_device = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, MOCK_MAC), config_entry.entry_id
+    )
+    assert main_device is not None
     return device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, f"{MOCK_MAC}-{unique_id}")},
-        via_device=(DOMAIN, MOCK_MAC),
+        via_device_id=main_device.id,
     )
 
 
