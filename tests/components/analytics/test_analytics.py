@@ -1045,7 +1045,7 @@ async def test_devices_payload_no_entities(
     mock_config_entry.add_to_hass(hass)
 
     # Normal device with all fields
-    device_registry.async_get_or_create(
+    device_1 = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "1")},
         sw_version="test-sw-version",
@@ -1087,7 +1087,7 @@ async def test_devices_payload_no_entities(
         identifiers={("device", "6")},
         manufacturer="test-manufacturer6",
         model_id="test-model-id6",
-        via_device=("device", "1"),
+        via_device_id=device_1.id,
     )
 
     # Device from custom integration
