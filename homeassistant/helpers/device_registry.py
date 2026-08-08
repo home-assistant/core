@@ -1804,6 +1804,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "Passing both `via_device` and `via_device_id` is not allowed; "
                 "`via_device` is deprecated, pass `via_device_id` only"
             )
+        # Report the deprecated `via_device` here, before any registry mutation.
+        if via_device is not UNDEFINED:
+            report_usage(
+                "calls `device_registry.async_get_or_create` with a `via_device`, "
+                "which is deprecated because device identifiers are no longer unique; "
+                "pass `via_device_id` instead",
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                breaks_in_ha_version="2027.8.0",
+            )
         if (
             config_subentry_id is not UNDEFINED
             and config_subentry_id is not None
@@ -1974,14 +1984,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name = default_name
 
         if via_device is not None and via_device is not UNDEFINED:
-            report_usage(
-                "calls `device_registry.async_get_or_create` with a `via_device`, "
-                "which is deprecated because device identifiers are no longer unique; "
-                "pass `via_device_id` instead",
-                core_behavior=ReportBehavior.ERROR,
-                core_integration_behavior=ReportBehavior.ERROR,
-                breaks_in_ha_version="2027.8.0",
-            )
             # Resolve the deprecated via_device to a device id. The identifier is not
             # unique across config entries, so prefer a via device in the same config
             # entry, then one from the same integration (domain), falling back to any

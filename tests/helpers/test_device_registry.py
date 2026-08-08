@@ -4080,6 +4080,11 @@ async def test_async_get_device_deprecated(
 
 
 @pytest.mark.parametrize(
+    "via_device",
+    [("some_domain", "via_id"), None],
+    ids=["value", "none"],
+)
+@pytest.mark.parametrize(
     ("integration_frame_path", "expectation", "expected_log"),
     [
         pytest.param(
@@ -4104,6 +4109,7 @@ async def test_async_get_or_create_via_device_deprecated(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
+    via_device: tuple[str, str] | None,
     expectation: AbstractContextManager,
     expected_log: int,
 ) -> None:
@@ -4122,10 +4128,42 @@ async def test_async_get_or_create_via_device_deprecated(
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={("some_domain", "some_id")},
-            via_device=("some_domain", "via_id"),
+            via_device=via_device,
         )
 
     assert caplog.text.count(what) == expected_log
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_get_or_create_via_device_reported_before_mutation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """The via_device deprecation is reported before the registry is mutated.
+
+    The default frame is a core integration, so the report raises; the new device must
+    not be left partially created.
+    """
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+        pytest.raises(RuntimeError),
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("some_domain", "new_device")},
+            via_device=("some_domain", "via_id"),
+        )
+
+    # The report raised before insertion, so no partial device was left behind.
+    assert (
+        device_registry.async_get_device_by_identifier(
+            ("some_domain", "new_device"), config_entry.entry_id
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
