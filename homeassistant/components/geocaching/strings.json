@@ -70,5 +70,22 @@
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
+  },
+  "options": {
+    "error": {
+      "too_many_caches": "A maximum of 50 caches can be tracked."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "cache_codes": "Cache codes"
+        },
+        "data_description": {
+          "cache_codes": "Enter the GC codes of the caches to track, separated by commas or new lines. A maximum of 50 caches can be tracked."
+        },
+        "description": "Select which geocaches you want to track.",
+        "title": "Tracked caches"
+      }
+    }
   }
 }
