@@ -11,6 +11,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.geocaching.const import (
+    CONF_CACHE_CODES,
     DOMAIN,
     ENVIRONMENT,
     ENVIRONMENT_URLS,
@@ -230,3 +231,54 @@ async def test_reauthentication(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test configuring tracked caches."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CACHE_CODES: "GC12345, gc67890\nGC12345",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_CACHE_CODES: ["GC12345", "GC67890"],
+    }
+    assert mock_config_entry.options == {
+        CONF_CACHE_CODES: ["GC12345", "GC67890"],
+    }
+
+
+async def test_options_flow_too_many_caches(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test configuring too many tracked caches."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    cache_codes = "\n".join(f"GC{number}" for number in range(51))
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CACHE_CODES: cache_codes,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "too_many_caches"}

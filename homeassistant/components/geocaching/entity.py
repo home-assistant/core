@@ -27,7 +27,8 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
     ) -> None:
         """Initialize the Geocaching cache entity."""
         super().__init__(coordinator)
-        self.cache = cache
+
+        self._reference_code = cache.reference_code
 
         # A device can have multiple entities, and for a cache
         # which requires multiple entities we want to group them
@@ -38,4 +39,15 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
             identifiers={(DOMAIN, cast(str, cache.reference_code))},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=cache.owner.username,
+        )
+
+    @property
+    def cache(self) -> GeocachingCache:
+        """Return the latest cache data."""
+        for cache in self.coordinator.data.tracked_caches:
+            if cache.reference_code == self._reference_code:
+                return cache
+
+        raise RuntimeError(
+            f"Cache {self._reference_code} is no longer available in coordinator data"
         )
