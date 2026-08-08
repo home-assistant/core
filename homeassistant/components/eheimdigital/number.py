@@ -206,9 +206,7 @@ def _async_migrate_entities(hass: HomeAssistant, device_address: str) -> None:
             Platform.NUMBER, DOMAIN, f"{device_address}_system_led"
         )
     ) is not None:
-        registry.async_update_entity(
-            old_id, new_unique_id=old_id.replace("system_led", "sys_led")
-        )
+        registry.async_update_entity(old_id, new_unique_id=f"{device_address}_sys_led")
 
 
 async def async_setup_entry(

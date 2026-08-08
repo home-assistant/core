@@ -76,7 +76,7 @@ def _async_migrate_entities(hass: HomeAssistant, device_address: str) -> None:
         )
     ) is not None:
         registry.async_update_entity(
-            old_id, new_unique_id=old_id.replace("active", "is_active")
+            old_id, new_unique_id=f"{device_address}_is_active"
         )
 
 
