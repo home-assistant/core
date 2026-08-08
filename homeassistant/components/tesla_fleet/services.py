@@ -195,6 +195,10 @@ def _validate_seasons(seasons: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     date(2000, month, day)
                 except ValueError as err:
                     raise vol.Invalid(f"Invalid season date {day}/{month}") from err
+            if season[ATTR_NAME] == ALL_SEASON:
+                raise vol.Invalid(
+                    f"{ALL_SEASON} is reserved by Tesla and cannot name a season"
+                )
             if season[ATTR_NAME] in season_names:
                 raise vol.Invalid(f"Duplicate season name {season[ATTR_NAME]!r}")
             season_names.add(season[ATTR_NAME])
@@ -209,12 +213,21 @@ def _validate_seasons(seasons: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     for season in seasons:
         labels: dict[str, str] = {}
+        rates: dict[str, tuple[float, float | None]] = {}
         for period in season[ATTR_PERIODS]:
             key = _period_key(period[ATTR_NAME])
             if labels.setdefault(key, period[ATTR_NAME]) != period[ATTR_NAME]:
                 raise vol.Invalid(
                     f"Period names {labels[key]!r} and {period[ATTR_NAME]!r} both "
                     f"produce the tariff label {key}"
+                )
+            # Tesla holds one rate per label, so a period split across several
+            # times of day has to charge the same rate each time.
+            rate = (period[ATTR_BUY_RATE], period.get(ATTR_SELL_RATE))
+            if rates.setdefault(key, rate) != rate:
+                raise vol.Invalid(
+                    f"Period {period[ATTR_NAME]!r} is used more than once in "
+                    f"{season[ATTR_NAME]!r} with different rates"
                 )
 
     return seasons
@@ -328,6 +341,15 @@ def build_tariff_content_v2(data: dict[str, Any]) -> dict[str, Any]:
     demand_charges: dict[str, Any] = {ALL_SEASON: {"rates": {ALL_SEASON: 0}}}
     demand_charges |= {key: {"rates": {}} for key in seasons if key != ALL_SEASON}
 
+    # Tesla's published tariffs always carry these, zeroed when unused.
+    unused_charges: dict[str, Any] = {
+        "monthly_minimum_bill": 0,
+        "min_applicable_demand": 0,
+        "max_applicable_demand": 0,
+        "monthly_charges": 0,
+        "daily_demand_charges": {},
+    }
+
     tariff: dict[str, Any] = {
         "version": 1,
         "code": "home_assistant",
@@ -335,23 +357,24 @@ def build_tariff_content_v2(data: dict[str, Any]) -> dict[str, Any]:
         "utility": data[ATTR_UTILITY],
         "currency": data[ATTR_CURRENCY],
         "daily_charges": [{"name": "Charge", "amount": data.get(ATTR_DAILY_CHARGE, 0)}],
-        "daily_demand_charges": {},
         "demand_charges": demand_charges,
         "energy_charges": buy_charges,
         "seasons": seasons,
+        **unused_charges,
     }
 
     if sell_charges:
         tariff["sell_tariff"] = {
+            "version": 1,
             "code": "",
             "currency": "",
             "name": data[ATTR_NAME],
             "utility": data[ATTR_UTILITY],
             "daily_charges": [{"name": "Charge", "amount": 0}],
-            "daily_demand_charges": {},
             "demand_charges": deepcopy(demand_charges),
             "energy_charges": sell_charges,
             "seasons": deepcopy(seasons),
+            **deepcopy(unused_charges),
         }
 
     return tariff

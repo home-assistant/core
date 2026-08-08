@@ -672,7 +672,7 @@
           "name": "Days"
         },
         "end_time": {
-          "description": "Time this period ends. Leave both times empty for an all-day period.",
+          "description": "Time this period ends. Leave both times empty to run from midnight to midnight.",
           "name": "End time"
         },
         "name": {
@@ -684,7 +684,7 @@
           "name": "Sell rate"
         },
         "start_time": {
-          "description": "Time this period starts. Leave both times empty for an all-day period.",
+          "description": "Time this period starts. Leave both times empty to run from midnight to midnight.",
           "name": "Start time"
         }
       }
