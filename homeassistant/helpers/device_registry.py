@@ -64,7 +64,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 3
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 CLEANUP_DELAY = 10
 
@@ -1003,6 +1003,13 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         device["config_entry_id"], splits
                     )
                 else:
+                    device["via_device_id"] = None
+
+        if old_major_version < 3 or (old_major_version == 3 and old_minor_version < 3):
+            # Version 3.3, introduced in 2026.8, clears via_device_id self-references,
+            # which are no longer allowed.
+            for device in old_data["devices"]:
+                if device["via_device_id"] == device["id"]:
                     device["via_device_id"] = None
 
         if old_major_version > 3:
@@ -1989,7 +1996,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2025.12.0",
                 )
-            via_device_id = via.id if via else UNDEFINED
+                via_device_id = UNDEFINED
+            elif via.id == device.id:
+                # A device can not be its own via device. Ignore the self-reference;
+                # this will raise in HA Core 2027.8.
+                report_usage(
+                    "calls `device_registry.async_get_or_create` with a `via_device` "
+                    "referencing the device itself; the via device is ignored",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2027.8.0",
+                )
+                via_device_id = UNDEFINED
+            else:
+                via_device_id = via.id
         elif via_device is None:
             # An explicit `via_device=None` means "no via device" (a via_device_id
             # alongside it is rejected above).
@@ -2163,6 +2182,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Can't link device to unknown via device {via_device_id}"
             )
 
+        if via_device_id == device_id:
+            raise HomeAssistantError("A device can not be its own via device")
+
         # A device belongs to exactly one config entry and subentry:
         # - add_config_entry_id (with an optional add_config_subentry_id) records a
         #   transient pending move to that config entry and subentry; on its own it does
@@ -2228,6 +2250,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 ):
                     move_target = None
                 if move_target is None:
+                    # A composite via_device_id resolves to the split owned by the
+                    # entry being removed, i.e. this device, so it is a self-reference;
+                    # reject it before deleting, atomically like the direct-id check
+                    # before the ownership changes above.
+                    if (
+                        via_device_id is not UNDEFINED
+                        and via_device_id is not None
+                        and via_device_id == old.composite_device_id
+                    ):
+                        raise HomeAssistantError(
+                            "A device can not be its own via device"
+                        )
                     self.async_remove_device(device_id)
                     return None
                 target_config_entry_id = move_target.config_entry_id
@@ -2298,6 +2332,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             via_device_id = self._resolve_via_device_id(
                 via_device_id, effective_config_entry_id
             )
+            # Direct self-references were rejected before the ownership changes above;
+            # this catches a composite via_device_id that resolves to device_id.
+            if via_device_id == device_id:
+                raise HomeAssistantError("A device can not be its own via device")
 
         added_connections: set[tuple[str, str]] | None = None
         added_identifiers: set[tuple[str, str]] | None = None
