@@ -1,14 +1,13 @@
 """Test the Tesla Fleet services."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.tesla_fleet.const import DOMAIN
-from homeassistant.components.tesla_fleet.services import (
-    ATTR_TOU_SETTINGS,
-    SERVICE_TIME_OF_USE,
-)
+from homeassistant.components.tesla_fleet.services import SERVICE_TIME_OF_USE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
@@ -20,21 +19,104 @@ from .const import COMMAND_ERROR, RESPONSE_OK
 
 from tests.common import MockConfigEntry
 
+ENERGY_SITE_ENTITY = "sensor.energy_site_grid_power"
+
+TIME_OF_USE_DATA = {
+    "name": "Agile",
+    "utility": "Octopus Energy",
+    "currency": "gbp",
+    "daily_charge": 0.6,
+    "seasons": [
+        {
+            "name": "All year",
+            "periods": [
+                {
+                    "name": "Agile low",
+                    "days": ["monday", "wednesday", "friday"],
+                    "start_time": "00:30:00",
+                    "end_time": "04:30:00",
+                    "buy_rate": -0.05,
+                    "sell_rate": 0.15,
+                }
+            ],
+        }
+    ],
+}
+
+AGILE_LOW_PERIODS = [
+    {
+        "fromDayOfWeek": day,
+        "toDayOfWeek": day,
+        "fromHour": 0,
+        "fromMinute": 30,
+        "toHour": 4,
+        "toMinute": 30,
+    }
+    for day in (0, 2, 4)
+]
+
+EXPECTED_TARIFF = {
+    "version": 1,
+    "code": "home_assistant",
+    "name": "Agile",
+    "utility": "Octopus Energy",
+    "currency": "GBP",
+    "daily_charges": [{"name": "Charge", "amount": 0.6}],
+    "daily_demand_charges": {},
+    "demand_charges": {"ALL": {"rates": {"ALL": 0}}},
+    "energy_charges": {"ALL": {"rates": {"AGILE_LOW": -0.05}}},
+    "seasons": {"ALL": {"tou_periods": {"AGILE_LOW": {"periods": AGILE_LOW_PERIODS}}}},
+    "sell_tariff": {
+        "code": "",
+        "currency": "",
+        "name": "Agile",
+        "utility": "Octopus Energy",
+        "daily_charges": [{"name": "Charge", "amount": 0}],
+        "daily_demand_charges": {},
+        "demand_charges": {"ALL": {"rates": {"ALL": 0}}},
+        "energy_charges": {"ALL": {"rates": {"AGILE_LOW": 0.15}}},
+        "seasons": {
+            "ALL": {"tou_periods": {"AGILE_LOW": {"periods": AGILE_LOW_PERIODS}}}
+        },
+    },
+}
+
 
 async def test_time_of_use(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the time_of_use service call against an energy site device."""
+    """Test the time_of_use service builds the expected Tesla tariff."""
     await setup_platform(hass, normal_config_entry)
 
-    energy_device = entity_registry.async_get("sensor.energy_site_grid_power").device_id
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
 
-    # Service is registered after setup.
     assert hass.services.has_service(DOMAIN, SERVICE_TIME_OF_USE)
 
-    # Successful call — payload passed through verbatim.
+    with patch(
+        "tesla_fleet_api.tesla.EnergySite.time_of_use_settings",
+        return_value=RESPONSE_OK,
+    ) as set_time_of_use:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {CONF_DEVICE_ID: energy_device, **TIME_OF_USE_DATA},
+            blocking=True,
+        )
+        set_time_of_use.assert_called_once_with(EXPECTED_TARIFF)
+
+
+async def test_time_of_use_seasons(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a dated multi-season tariff without export rates."""
+    await setup_platform(hass, normal_config_entry)
+
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
+
     with patch(
         "tesla_fleet_api.tesla.EnergySite.time_of_use_settings",
         return_value=RESPONSE_OK,
@@ -44,13 +126,73 @@ async def test_time_of_use(
             SERVICE_TIME_OF_USE,
             {
                 CONF_DEVICE_ID: energy_device,
-                ATTR_TOU_SETTINGS: {"utility": "test"},
+                "name": "Seasonal",
+                "utility": "Octopus Energy",
+                "currency": "GBP",
+                "seasons": [
+                    {
+                        "name": "Summer",
+                        "start_month": 4,
+                        "start_day": 1,
+                        "end_month": 9,
+                        "end_day": 30,
+                        "periods": [{"name": "On peak", "buy_rate": 0.3}],
+                    },
+                    {
+                        "name": "Winter",
+                        "start_month": 10,
+                        "start_day": 1,
+                        "end_month": 3,
+                        "end_day": 31,
+                        "periods": [{"name": "On peak", "buy_rate": 0.4}],
+                    },
+                ],
             },
             blocking=True,
         )
-        set_time_of_use.assert_called_once_with({"utility": "test"})
 
-    # tariff_content_v2 wrapper is stripped before the call.
+    tariff = set_time_of_use.call_args[0][0]
+    all_week = [
+        {
+            "fromDayOfWeek": 0,
+            "toDayOfWeek": 6,
+            "fromHour": 0,
+            "fromMinute": 0,
+            "toHour": 0,
+            "toMinute": 0,
+        }
+    ]
+    assert tariff["daily_charges"] == [{"name": "Charge", "amount": 0}]
+    assert "sell_tariff" not in tariff
+    assert tariff["energy_charges"] == {
+        "Summer": {"rates": {"ON_PEAK": 0.3}},
+        "Winter": {"rates": {"ON_PEAK": 0.4}},
+        "ALL": {"rates": {"ALL": 0}},
+    }
+    assert tariff["demand_charges"] == {
+        "ALL": {"rates": {"ALL": 0}},
+        "Summer": {"rates": {}},
+        "Winter": {"rates": {}},
+    }
+    assert tariff["seasons"]["Summer"] == {
+        "tou_periods": {"ON_PEAK": {"periods": all_week}},
+        "fromMonth": 4,
+        "fromDay": 1,
+        "toMonth": 9,
+        "toDay": 30,
+    }
+
+
+async def test_time_of_use_wrapping_days(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a weekend-wrapping day selection becomes a single Tesla range."""
+    await setup_platform(hass, normal_config_entry)
+
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
+
     with patch(
         "tesla_fleet_api.tesla.EnergySite.time_of_use_settings",
         return_value=RESPONSE_OK,
@@ -60,15 +202,175 @@ async def test_time_of_use(
             SERVICE_TIME_OF_USE,
             {
                 CONF_DEVICE_ID: energy_device,
-                ATTR_TOU_SETTINGS: {
-                    "tariff_content_v2": {"utility": "test"},
-                },
+                "name": "Weekend",
+                "utility": "Octopus Energy",
+                "currency": "GBP",
+                "seasons": [
+                    {
+                        "name": "All year",
+                        "periods": [
+                            {
+                                "name": "Off peak",
+                                "days": [
+                                    "friday",
+                                    "saturday",
+                                    "sunday",
+                                    "monday",
+                                ],
+                                "buy_rate": 0.1,
+                            }
+                        ],
+                    }
+                ],
             },
             blocking=True,
         )
-        set_time_of_use.assert_called_once_with({"utility": "test"})
 
-    # Tesla API returns an error response — the service raises HomeAssistantError.
+    periods = set_time_of_use.call_args[0][0]["seasons"]["ALL"]["tou_periods"]
+    assert periods["OFF_PEAK"]["periods"] == [
+        {
+            "fromDayOfWeek": 4,
+            "toDayOfWeek": 0,
+            "fromHour": 0,
+            "fromMinute": 0,
+            "toHour": 0,
+            "toMinute": 0,
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param(
+            {"seasons": [{"name": "All year", "periods": []}]},
+            id="no_periods",
+        ),
+        pytest.param(
+            {
+                "seasons": [
+                    {
+                        "name": "All year",
+                        "periods": [
+                            {
+                                "name": "Peak",
+                                "start_time": "01:00:00",
+                                "buy_rate": 0.1,
+                            }
+                        ],
+                    }
+                ]
+            },
+            id="only_start_time",
+        ),
+        pytest.param(
+            {
+                "seasons": [
+                    {
+                        "name": "Summer",
+                        "start_month": 4,
+                        "periods": [{"name": "Peak", "buy_rate": 0.1}],
+                    },
+                    {
+                        "name": "Winter",
+                        "start_month": 10,
+                        "start_day": 1,
+                        "end_month": 3,
+                        "end_day": 31,
+                        "periods": [{"name": "Peak", "buy_rate": 0.2}],
+                    },
+                ]
+            },
+            id="partial_season_dates",
+        ),
+        pytest.param(
+            {
+                "seasons": [
+                    {"name": "One", "periods": [{"name": "Peak", "buy_rate": 0.1}]},
+                    {"name": "Two", "periods": [{"name": "Peak", "buy_rate": 0.2}]},
+                ]
+            },
+            id="multiple_undated_seasons",
+        ),
+        pytest.param(
+            {
+                "seasons": [
+                    {
+                        "name": "All year",
+                        "periods": [
+                            {"name": "Peak", "buy_rate": 0.3, "sell_rate": 0.1},
+                            {"name": "Off peak", "buy_rate": 0.1},
+                        ],
+                    }
+                ]
+            },
+            id="partial_export_rates",
+        ),
+        pytest.param(
+            {
+                "seasons": [
+                    {
+                        "name": "All year",
+                        "periods": [
+                            {"name": "On peak", "buy_rate": 0.3},
+                            {"name": "On  Peak", "buy_rate": 0.1},
+                        ],
+                    }
+                ]
+            },
+            id="colliding_period_labels",
+        ),
+        pytest.param(
+            {
+                "seasons": [
+                    {
+                        "name": "All year",
+                        "periods": [{"name": "Peak", "buy_rate": float("inf")}],
+                    }
+                ]
+            },
+            id="non_finite_rate",
+        ),
+        pytest.param({"currency": "pounds"}, id="invalid_currency"),
+        pytest.param({"daily_charge": -1}, id="negative_daily_charge"),
+    ],
+)
+async def test_time_of_use_invalid_payload(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    payload: dict[str, Any],
+) -> None:
+    """Test that malformed tariff input is rejected before any command is sent."""
+    await setup_platform(hass, normal_config_entry)
+
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
+
+    with (
+        patch(
+            "tesla_fleet_api.tesla.EnergySite.time_of_use_settings"
+        ) as set_time_of_use,
+        pytest.raises(vol.Invalid),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {CONF_DEVICE_ID: energy_device, **TIME_OF_USE_DATA, **payload},
+            blocking=True,
+        )
+    set_time_of_use.assert_not_called()
+
+
+async def test_time_of_use_command_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a Tesla error response raises HomeAssistantError."""
+    await setup_platform(hass, normal_config_entry)
+
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
+
     with (
         patch(
             "tesla_fleet_api.tesla.EnergySite.time_of_use_settings",
@@ -79,10 +381,7 @@ async def test_time_of_use(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_TIME_OF_USE,
-            {
-                CONF_DEVICE_ID: energy_device,
-                ATTR_TOU_SETTINGS: {},
-            },
+            {CONF_DEVICE_ID: energy_device, **TIME_OF_USE_DATA},
             blocking=True,
         )
 
@@ -98,10 +397,7 @@ async def test_time_of_use_invalid_device(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_TIME_OF_USE,
-            {
-                CONF_DEVICE_ID: "not-a-real-device",
-                ATTR_TOU_SETTINGS: {},
-            },
+            {CONF_DEVICE_ID: "not-a-real-device", **TIME_OF_USE_DATA},
             blocking=True,
         )
     assert exc_info.value.translation_key == "invalid_device"
@@ -115,7 +411,7 @@ async def test_time_of_use_entry_not_loaded(
     """Test calling the service after the config entry is unloaded."""
     await setup_platform(hass, normal_config_entry)
 
-    energy_device = entity_registry.async_get("sensor.energy_site_grid_power").device_id
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
 
     assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -126,10 +422,7 @@ async def test_time_of_use_entry_not_loaded(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_TIME_OF_USE,
-            {
-                CONF_DEVICE_ID: energy_device,
-                ATTR_TOU_SETTINGS: {},
-            },
+            {CONF_DEVICE_ID: energy_device, **TIME_OF_USE_DATA},
             blocking=True,
         )
     assert exc_info.value.translation_key == "entry_not_loaded"
@@ -143,7 +436,7 @@ async def test_time_of_use_missing_scope(
     """Test the service rejects an entry without the energy commands scope."""
     await setup_platform(hass, readonly_config_entry)
 
-    energy_device = entity_registry.async_get("sensor.energy_site_grid_power").device_id
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
 
     with (
         patch(
@@ -154,10 +447,7 @@ async def test_time_of_use_missing_scope(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_TIME_OF_USE,
-            {
-                CONF_DEVICE_ID: energy_device,
-                ATTR_TOU_SETTINGS: {},
-            },
+            {CONF_DEVICE_ID: energy_device, **TIME_OF_USE_DATA},
             blocking=True,
         )
     assert exc_info.value.translation_key == "missing_scope_energy_cmds"

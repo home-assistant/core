@@ -649,17 +649,102 @@
       "message": "Could not wake up vehicle"
     }
   },
+  "selector": {
+    "days_of_week": {
+      "options": {
+        "friday": "[%key:common::time::friday%]",
+        "monday": "[%key:common::time::monday%]",
+        "saturday": "[%key:common::time::saturday%]",
+        "sunday": "[%key:common::time::sunday%]",
+        "thursday": "[%key:common::time::thursday%]",
+        "tuesday": "[%key:common::time::tuesday%]",
+        "wednesday": "[%key:common::time::wednesday%]"
+      }
+    },
+    "tou_period": {
+      "fields": {
+        "buy_rate": {
+          "description": "Import price per kWh during this period. Negative prices are supported.",
+          "name": "Buy rate"
+        },
+        "days": {
+          "description": "Days of the week this period applies to. Leave empty to apply every day.",
+          "name": "Days"
+        },
+        "end_time": {
+          "description": "Time this period ends. Leave both times empty for an all-day period.",
+          "name": "End time"
+        },
+        "name": {
+          "description": "Name of this rate period, such as On peak or Off peak.",
+          "name": "Period name"
+        },
+        "sell_rate": {
+          "description": "Export price per kWh during this period. If used, every period needs one. Negative prices are supported.",
+          "name": "Sell rate"
+        },
+        "start_time": {
+          "description": "Time this period starts. Leave both times empty for an all-day period.",
+          "name": "Start time"
+        }
+      }
+    },
+    "tou_season": {
+      "fields": {
+        "end_day": {
+          "description": "Day of the end month this season runs until.",
+          "name": "End day"
+        },
+        "end_month": {
+          "description": "Month this season ends.",
+          "name": "End month"
+        },
+        "name": {
+          "description": "Name of this season, such as Summer or Winter.",
+          "name": "Season name"
+        },
+        "periods": {
+          "description": "The rate periods that make up this season.",
+          "name": "Periods"
+        },
+        "start_day": {
+          "description": "Day of the start month this season begins on.",
+          "name": "Start day"
+        },
+        "start_month": {
+          "description": "Month this season starts.",
+          "name": "Start month"
+        }
+      }
+    }
+  },
   "services": {
     "time_of_use": {
-      "description": "Configure time-of-use tariff settings on a Tesla energy site (Powerwall). See {time_of_use_url} for the tariff_content_v2 payload schema.",
+      "description": "Configures a time-of-use tariff on a Tesla energy site.",
       "fields": {
+        "currency": {
+          "description": "Three-letter currency code for the rates, such as GBP or USD.",
+          "name": "Currency"
+        },
+        "daily_charge": {
+          "description": "Fixed standing charge applied each day, in the selected currency.",
+          "name": "Daily standing charge"
+        },
         "device_id": {
           "description": "The energy site to apply the tariff to.",
           "name": "Energy site device"
         },
-        "tou_settings": {
-          "description": "The tariff_content_v2 payload (object). The outer `tariff_content_v2` key is stripped automatically if present.",
-          "name": "TOU settings"
+        "name": {
+          "description": "Name of the tariff.",
+          "name": "Tariff name"
+        },
+        "seasons": {
+          "description": "The seasons that make up the tariff. A single season with no dates applies all year.",
+          "name": "Seasons"
+        },
+        "utility": {
+          "description": "Name of the energy supplier.",
+          "name": "Utility"
         }
       },
       "name": "Time of use"
