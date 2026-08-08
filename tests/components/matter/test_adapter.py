@@ -32,10 +32,9 @@ async def test_device_registry_single_node_device(
     name: str,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, f"deviceid_00000000000004D2-{unique_id}-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"deviceid_00000000000004D2-{unique_id}-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -58,10 +57,9 @@ async def test_device_registry_single_node_device_alt(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test additional device with different attribute values."""
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-000000000000001A-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001A-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -82,8 +80,8 @@ async def test_device_registry_bridge(
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
     # Validate bridge
-    bridge_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "mock-hub-id")}
+    bridge_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "mock-hub-id"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
     )
     assert bridge_entry is not None
 
@@ -94,8 +92,9 @@ async def test_device_registry_bridge(
     assert bridge_entry.sw_version == "123.4.5"
 
     # Device 1
-    device1_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "mock-id-kitchen-ceiling")}
+    device1_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "mock-id-kitchen-ceiling"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert device1_entry is not None
 
@@ -107,8 +106,9 @@ async def test_device_registry_bridge(
     assert device1_entry.sw_version == "67.8.9"
 
     # Device 2
-    device2_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "mock-id-living-room-ceiling")}
+    device2_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "mock-id-living-room-ceiling"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert device2_entry is not None
 

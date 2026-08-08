@@ -6,6 +6,7 @@ import logging
 from typing import Any, override
 
 from reolink_aio.api import (
+    AntiFlickerEnum,
     BinningModeEnum,
     Chime,
     ChimeToneEnum,
@@ -216,6 +217,19 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "exposure"),
         value=lambda api, ch: ExposureEnum(api.exposure(ch)).name,
         method=lambda api, ch, name: api.set_exposure(ch, ExposureEnum[name].value),
+    ),
+    ReolinkSelectEntityDescription(
+        key="anti_flicker",
+        cmd_key="GetIsp",
+        translation_key="anti_flicker",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in AntiFlickerEnum],
+        supported=lambda api, ch: api.supported(ch, "anti_flicker"),
+        value=lambda api, ch: AntiFlickerEnum(api.anti_flicker_mode(ch)).name,
+        method=lambda api, ch, name: api.set_anti_flicker(
+            ch, AntiFlickerEnum[name].value
+        ),
     ),
     ReolinkSelectEntityDescription(
         key="binning_mode",
