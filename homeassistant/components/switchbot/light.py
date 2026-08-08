@@ -26,6 +26,7 @@ from .entity import SwitchbotEntity, exception_handler
 SWITCHBOT_COLOR_MODE_TO_HASS = {
     SwitchBotColorMode.RGB: ColorMode.RGB,
     SwitchBotColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
+    SwitchBotColorMode.BRIGHTNESS: ColorMode.BRIGHTNESS,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +58,7 @@ class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.base_unique_id}_light"
+        self._attr_unique_id = f"{coordinator.base_unique_id}_light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override
     async def async_added_to_hass(self) -> None:

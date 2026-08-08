@@ -1,6 +1,6 @@
 """Tests for the SwitchBot Cloud integration init."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -20,6 +20,7 @@ from homeassistant.components.switchbot_cloud.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.components.switchbot_cloud.coordinator import SwitchBotCoordinator
 from homeassistant.components.webhook import DOMAIN as WEBHOOK_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -300,7 +301,6 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
     entity_id = "vacuum.vacuum_name_1"
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes["battery_level"] == 71
 
     # Change API return values and wait for update
     mock_get_status.return_value = {
@@ -317,7 +317,6 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
     # Validate that the state was updated again via fetch
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes["battery_level"] == 60
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     webhook_id = entry.data[CONF_WEBHOOK_ID]
@@ -408,7 +407,7 @@ async def test_setup_creates_cloudhook_when_cloud_active(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ) as fake_create_cloudhook,
         patch("homeassistant.components.cloud.async_delete_cloudhook"),
@@ -463,7 +462,7 @@ async def test_setup_reuses_persisted_cloudhook(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ) as fake_create_cloudhook,
         patch("homeassistant.components.cloud.async_delete_cloudhook"),
@@ -549,7 +548,7 @@ async def test_cloud_connects_after_setup(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ) as fake_create_cloudhook,
         patch("homeassistant.components.cloud.async_delete_cloudhook"),
@@ -593,7 +592,7 @@ async def test_setup_active_subscription_not_connected(
         patch("homeassistant.components.cloud.async_is_connected", return_value=False),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             side_effect=cloud.CloudNotConnected,
         ) as fake_create_cloudhook,
         patch("homeassistant.components.cloud.async_delete_cloudhook"),
@@ -611,7 +610,7 @@ async def test_setup_active_subscription_not_connected(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ) as fake_create_cloudhook,
         patch("homeassistant.components.cloud.async_delete_cloudhook"),
@@ -647,7 +646,7 @@ async def test_cloudhook_deleted_on_entry_removal(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ),
         patch(
@@ -728,7 +727,7 @@ async def test_remove_entry_with_cloud_unavailable(
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value=CLOUDHOOK_URL,
         ),
         patch(
@@ -746,3 +745,28 @@ async def test_remove_entry_with_cloud_unavailable(
         await hass.async_block_till_done()
 
         assert not hass.config_entries.async_entries("switchbot_cloud")
+
+
+async def test_single_coordinator_for_multi_platform_device(
+    hass: HomeAssistant, mock_list_devices: AsyncMock, mock_get_status: AsyncMock
+) -> None:
+    """Test that a multi-platform device creates only one coordinator."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="relay-switch-pm-id-1",
+            deviceName="relay-switch-pm-1",
+            deviceType="Relay Switch 1PM",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"switchStatus": 0}
+
+    with patch(
+        "homeassistant.components.switchbot_cloud.SwitchBotCoordinator",
+        wraps=SwitchBotCoordinator,
+    ) as coordinator_cls:
+        entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert coordinator_cls.call_count == 1

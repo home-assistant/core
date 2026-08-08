@@ -34,7 +34,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, LOGGER
 from .coordinator import (
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
@@ -191,7 +191,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
                 name=product["display_name"],
-                model=MODELS.get(vin[3]),
+                model=api_vehicle.model,
                 serial_number=vin,
             )
 

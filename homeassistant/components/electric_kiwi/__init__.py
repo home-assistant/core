@@ -6,7 +6,12 @@ from electrickiwi_api.exceptions import ApiException, AuthException
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -38,11 +43,9 @@ async def async_setup_entry(
 
     try:
         await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(err) from err
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(err) from err
+    except (OAuth2TokenRequestError, aiohttp.ClientError) as err:
         raise ConfigEntryNotReady from err
 
     ek_api = ElectricKiwiApi(

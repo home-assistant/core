@@ -41,7 +41,13 @@ SCAN_INTERVAL = timedelta(seconds=30)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
-__all__ = ["DOMAIN", "TextEntity", "TextEntityDescription", "TextMode"]
+__all__ = [
+    "DOMAIN",
+    "TextEntity",
+    "TextEntityCapabilityAttribute",
+    "TextEntityDescription",
+    "TextMode",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

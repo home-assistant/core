@@ -1,4 +1,5 @@
 """The lookin integration."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -31,6 +32,7 @@ from .const import (
     TYPE_TO_PLATFORM,
 )
 from .coordinator import LookinDataUpdateCoordinator, LookinPushCoordinator
+from .entity import _lookin_device_to_device_info
 from .models import LookinConfigEntry, LookinData
 
 LOGGER = logging.getLogger(__name__)
@@ -179,6 +181,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bo
         devices=devices,
         lookin_protocol=lookin_protocol,
         device_coordinators=device_coordinators,
+    )
+
+    # Register the lookin device so entities on the controlled devices can link
+    # to it via via_device_id, regardless of which platform is set up first.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        **_lookin_device_to_device_info(lookin_device, host),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

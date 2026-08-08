@@ -474,12 +474,12 @@ async def test_camera_reconnect_webhook(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
@@ -587,12 +587,12 @@ async def test_camera_webhook_consistency(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
@@ -697,7 +697,7 @@ async def test_setup_component_no_devices(
     """Test setup with no devices."""
     fake_post_hits = 0
 
-    async def fake_post_no_data(*args, **kwargs):
+    async def fake_post_no_data(*args: Any, **kwargs: Any):
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
@@ -707,12 +707,12 @@ async def test_setup_component_no_devices(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_no_data
@@ -750,12 +750,12 @@ async def test_camera_image_raises_exception(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post

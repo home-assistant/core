@@ -46,6 +46,7 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, recorder, template
+from homeassistant.helpers.http import MIN_COMPRESSED_RESPONSE_SIZE
 from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
@@ -223,12 +224,14 @@ class APIStatesView(HomeAssistantView):
                 for state in hass.states.async_all()
                 if entity_perm(state.entity_id, POLICY_READ)
             )
+        body = b"".join((b"[", b",".join(states), b"]"))
         response = web.Response(
-            body=b"".join((b"[", b",".join(states), b"]")),
+            body=body,
             content_type=CONTENT_TYPE_JSON,
             zlib_executor_size=32768,
         )
-        response.enable_compression()
+        if len(body) > MIN_COMPRESSED_RESPONSE_SIZE:
+            response.enable_compression()
         return response
 
 
@@ -297,11 +300,12 @@ class APIEntityStateView(HomeAssistantView):
             return self.json_message(
                 "Error storing state.", HTTPStatus.INTERNAL_SERVER_ERROR
             )
-        resp = self.json(state.as_dict(), status_code)
-
-        resp.headers.add("Location", f"/api/states/{entity_id}")
-
-        return resp
+        return web.Response(
+            body=state.as_dict_json,
+            content_type=CONTENT_TYPE_JSON,
+            status=status_code,
+            headers={"Location": f"/api/states/{entity_id}"},
+        )
 
     @ha.callback
     def delete(self, request: web.Request, entity_id: str) -> web.Response:
@@ -436,14 +440,18 @@ class APIDomainServicesView(HomeAssistantView):
 
         try:
             # shield the service call from cancellation on connection drop
+            # and track the task so it cannot be garbage collected mid-run
             response = await shield(
-                hass.services.async_call(
-                    domain,
-                    service,
-                    data,  # type: ignore[arg-type]
-                    blocking=True,
-                    context=context,
-                    return_response=response_requested,
+                hass.async_create_task(
+                    hass.services.async_call(
+                        domain,
+                        service,
+                        data,  # type: ignore[arg-type]
+                        blocking=True,
+                        context=context,
+                        return_response=response_requested,
+                    ),
+                    f"api service call {domain}.{service}",
                 )
             )
         except (vol.Invalid, ServiceNotFound) as ex:

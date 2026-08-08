@@ -15,13 +15,19 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
+    "progress": {
+      "wait_for_approval": "Open the Monzo app and approve the request from Home Assistant. Setup will continue automatically once access is approved."
+    },
     "step": {
-      "await_approval_confirmation": {
-        "data": {
-          "confirm": "I've approved"
-        },
-        "description": "Before proceeding, open your Monzo app and approve the request from Home Assistant.",
-        "title": "Confirm in Monzo app"
+      "approval_timeout": {
+        "data": {},
+        "description": "Approval was not received from Monzo. Approve the request in the Monzo app, then try again.",
+        "title": "Approval timed out"
+      },
+      "connection_error": {
+        "data": {},
+        "description": "Home Assistant could not check whether access was approved. Check your internet connection and try again.",
+        "title": "Connection error"
       },
       "pick_implementation": {
         "data": {

@@ -16,10 +16,10 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import (
-    PERCENTAGE,
     EntityCategory,
     Platform,
     UnitOfLength,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -354,7 +354,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
             key="pump_setpoint",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             translation_key="pump_setpoint",
             native_max_value=100,
             native_min_value=0.5,
@@ -478,15 +478,20 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.CONFIG,
             translation_key="valve_configuration_and_control_default_open_duration",
             native_max_value=65534,
-            native_min_value=1,
+            native_min_value=0,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
+            # use 0 to indicate that no default duration is configured
+            device_to_ha=lambda x: 0 if x is None else x,
+            ha_to_device=lambda x: None if x == 0 else int(x),
         ),
         entity_class=MatterNumber,
         required_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.DefaultOpenDuration,
         ),
         allow_multi=True,
+        # allow None value to account for the 'no default' state
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -516,7 +521,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterRangeNumberEntityDescription(
             key="speaker_setpoint",
             translation_key="speaker_setpoint",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             command=lambda value: clusters.LevelControl.Commands.MoveToLevel(
                 level=int(value)
             ),

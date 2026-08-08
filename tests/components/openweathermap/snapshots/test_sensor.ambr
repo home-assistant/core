@@ -90,7 +90,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-co',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_carbon_monoxide-state]
@@ -100,7 +100,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenWeatherMap Carbon monoxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_carbon_monoxide',
@@ -146,7 +146,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-no2',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_nitrogen_dioxide-state]
@@ -156,7 +156,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'nitrogen_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenWeatherMap Nitrogen dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_nitrogen_dioxide',
@@ -202,7 +202,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-no',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_nitrogen_monoxide-state]
@@ -212,7 +212,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'nitrogen_monoxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenWeatherMap Nitrogen monoxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_nitrogen_monoxide',
@@ -258,7 +258,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-o3',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_ozone-state]
@@ -268,7 +268,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ozone',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenWeatherMap Ozone',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_ozone',
@@ -314,7 +314,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-pm10',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_pm10-state]
@@ -324,7 +324,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenWeatherMap PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_pm10',
@@ -370,7 +370,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-pm2_5',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_pm2_5-state]
@@ -380,7 +380,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenWeatherMap PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_pm2_5',
@@ -426,7 +426,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-so2',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_sulphur_dioxide-state]
@@ -436,7 +436,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sulphur_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenWeatherMap Sulphur dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_sulphur_dioxide',
@@ -541,7 +541,7 @@
     'supported_features': 0,
     'translation_key': 'clouds',
     'unique_id': '12.34-56.78-clouds',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_cloud_coverage-state]
@@ -550,7 +550,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by OpenWeatherMap',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenWeatherMap Cloud coverage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_cloud_coverage',
@@ -706,7 +706,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_humidity-state]
@@ -716,7 +716,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenWeatherMap Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_humidity',
@@ -1504,7 +1504,7 @@
     'supported_features': 0,
     'translation_key': 'clouds',
     'unique_id': '12.34-56.78-clouds',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_cloud_coverage-state]
@@ -1513,7 +1513,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by OpenWeatherMap',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenWeatherMap Cloud coverage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_cloud_coverage',
@@ -1669,7 +1669,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_humidity-state]
@@ -1679,7 +1679,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenWeatherMap Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_humidity',
