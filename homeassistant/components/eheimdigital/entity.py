@@ -98,6 +98,11 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
         self._device = coordinator.data
         self._device_address = coordinator.data.mac_address
 
+    @override
+    async def async_update(self) -> None:
+        """Request an update from the hub."""
+        await self.coordinator.main_coordinator.async_request_refresh()
+
     @abstractmethod
     def _async_update_attrs(self) -> None: ...
 
