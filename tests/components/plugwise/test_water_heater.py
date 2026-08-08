@@ -116,7 +116,7 @@ async def test_anna_water_heater_snapshot(
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
 ) -> None:
-    """Test Anna water_heater snapshot with dhw_state on."""
+    """Test Anna water_heater snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
