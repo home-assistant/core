@@ -146,4 +146,3 @@ async def test_entities_unavailable_on_error(
     for entity_id in EXPECTED_ENTITY_IDS:
         assert (state := hass.states.get(entity_id))
         assert state.state == STATE_UNAVAILABLE
-

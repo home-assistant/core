@@ -48,8 +48,12 @@ def test_sort_warnings_is_deterministic(warnings: list[WeatherWarning]) -> None:
         (10, 51),
         (10, 11),
     ]
-    assert [(warning.warning_id, warning.course_id) for warning in sorted_warnings] == expected
-    assert [(warning.warning_id, warning.course_id) for warning in sorted_again] == expected
+    assert [
+        (warning.warning_id, warning.course_id) for warning in sorted_warnings
+    ] == expected
+    assert [
+        (warning.warning_id, warning.course_id) for warning in sorted_again
+    ] == expected
 
 
 def test_select_highest_warning_uses_severity_then_end_time(
@@ -68,8 +72,8 @@ def test_highest_warning_level(warnings: list[WeatherWarning]) -> None:
     """Test highest-level values and the empty-bucket value."""
     assert highest_warning_level(warnings) == "orange"
     assert highest_warning_level([]) == LEVEL_NONE
- 
- 
+
+
 def test_select_highest_warning_prefers_storm_over_concurrent_heat(
     warnings: list[WeatherWarning],
 ) -> None:
@@ -85,8 +89,8 @@ def test_select_highest_warning_prefers_storm_over_concurrent_heat(
     assert selected is not None
     assert selected.course_id == 12
     assert selected.warning_type == WarningType.STORM
- 
- 
+
+
 def test_sort_warnings_demotes_sustained_heat_below_acute_thunderstorm(
     warnings: list[WeatherWarning],
 ) -> None:
@@ -100,8 +104,8 @@ def test_sort_warnings_demotes_sustained_heat_below_acute_thunderstorm(
     sorted_warnings = sort_warnings(heat_and_thunderstorm)
 
     assert [warning.course_id for warning in sorted_warnings] == [2, 51, 11]
- 
- 
+
+
 def test_highest_warning_level_ignores_type_demotion(
     warnings: list[WeatherWarning],
 ) -> None:
@@ -113,8 +117,8 @@ def test_highest_warning_level_ignores_type_demotion(
     ]
 
     assert highest_warning_level(heat_and_thunderstorm) == "orange"
- 
- 
+
+
 def test_select_highest_warning_prefers_acute_over_sustained(
     warnings: list[WeatherWarning],
 ) -> None:
@@ -131,11 +135,11 @@ def test_select_highest_warning_prefers_acute_over_sustained(
     assert selected is not None
     assert selected.course_id == 2
     assert selected.warning_type == WarningType.THUNDERSTORM
- 
- 
+
+
 def test_ranking_tie_between_equal_levels_prefers_soonest_end() -> None:
     """Test the case of an all-day warning vs. a narrow-window warning.
- 
+
     An all-day orange heat warning and a yellow thunderstorm warning active
     only mid-afternoon are equally ranked once heat is demoted below its
     nominal level; the thunderstorm, ending soonest, must win the tie rather
@@ -170,15 +174,17 @@ def test_ranking_tie_between_equal_levels_prefers_soonest_end() -> None:
         meteo_text="",
         update_reason="",
     )
- 
+
     selected = select_highest_warning([all_day_heat, afternoon_thunderstorm])
- 
+
     assert selected is not None
     assert selected.warning_id == 200
     assert highest_warning_level([all_day_heat, afternoon_thunderstorm]) == "orange"
 
 
-def test_warning_sensor_attributes_are_flat_and_minimal(warnings: list[WeatherWarning]) -> None:
+def test_warning_sensor_attributes_are_flat_and_minimal(
+    warnings: list[WeatherWarning],
+) -> None:
     """Test that sensor attributes expose only the selected warning details."""
     selected = select_highest_warning(warnings)
     assert selected is not None
@@ -193,4 +199,3 @@ def test_warning_sensor_attributes_are_flat_and_minimal(warnings: list[WeatherWa
     attributes = warning_sensor_attributes([selected])
     assert set(attributes) == {"type", "start", "end", "warning_id"}
     assert warning_sensor_attributes([]) == {}
-
