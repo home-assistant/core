@@ -19,6 +19,8 @@ from homeassistant.helpers.data_entry_flow import (
 )
 
 from .const import DOMAIN
+from .issue_handler import RepairsFlowManager
+from .models import RepairsFlowResult
 
 
 @callback
@@ -105,7 +107,7 @@ def ws_list_issues(
     connection.send_result(msg["id"], {"issues": issues})
 
 
-class RepairsFlowIndexView(FlowManagerIndexView):
+class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager, RepairsFlowResult]):
     """View to create issue fix flows."""
 
     url = "/api/repairs/issues/fix"
@@ -141,7 +143,9 @@ class RepairsFlowIndexView(FlowManagerIndexView):
         )
 
 
-class RepairsFlowResourceView(FlowManagerResourceView):
+class RepairsFlowResourceView(
+    FlowManagerResourceView[RepairsFlowManager, RepairsFlowResult]
+):
     """View to interact with the option flow manager."""
 
     url = "/api/repairs/issues/fix/{flow_id}"
