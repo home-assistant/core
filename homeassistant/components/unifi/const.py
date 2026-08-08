@@ -60,6 +60,10 @@ BLOCK_SWITCH = "block"
 DPI_SWITCH = "dpi"
 OUTLET_SWITCH = "outlet"
 
+# Outlet capabilities may be reported as explicit booleans or as bitmask flags.
+OUTLET_CAP_RELAY_BIT = 1
+OUTLET_CAP_METERING_BIT = 2
+
 DEVICE_STATES = {
     DeviceState.DISCONNECTED: "disconnected",
     DeviceState.CONNECTED: "connected",

@@ -49,7 +49,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
-from .const import DEVICE_STATES
+from .const import DEVICE_STATES, OUTLET_CAP_METERING_BIT
 from .device_tracker import async_client_allowed_fn
 from .entity import (
     UnifiEntity,
@@ -191,9 +191,10 @@ def async_uptime_value_changed_fn(
 @callback
 def async_device_outlet_power_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet has the power property."""
-    # At this time, an outlet_caps value of 3 is expected to indicate that the outlet
-    # supports metering
-    return hub.api.outlets[obj_id].caps == 3
+    outlet = hub.api.outlets[obj_id]
+    return outlet.has_metering is True or bool(
+        (outlet.caps or 0) & OUTLET_CAP_METERING_BIT
+    )
 
 
 @callback
