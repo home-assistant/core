@@ -15,6 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
+    entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.setup import async_setup_component
@@ -161,6 +162,70 @@ async def test_webostv_turn_on_trigger_entity_id(
     assert len(service_calls) == 2
     assert service_calls[1].data["some"] == ENTITY_ID
     assert service_calls[1].data["id"] == 0
+
+
+@pytest.mark.parametrize(
+    "build_trigger",
+    [
+        pytest.param(
+            lambda device_id: {"trigger": "webostv.turn_on", "device_id": device_id},
+            id="legacy",
+        ),
+        pytest.param(
+            lambda device_id: {
+                "trigger": "webostv.turn_on",
+                "target": {"device_id": device_id},
+            },
+            id="target",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("client")
+async def test_webostv_turn_on_trigger_hidden_entity(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    build_trigger: Callable[[str], dict[str, Any]],
+) -> None:
+    """Test a device target still fires when the device entities are hidden."""
+    await setup_webostv(hass)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    # Hidden entities are excluded when a device target is expanded to its entities
+    for entry in er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    ):
+        entity_registry.async_update_entity(
+            entry.entity_id, hidden_by=er.RegistryEntryHider.USER
+        )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": build_trigger(device.id),
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "{{ trigger.device_id }}"},
+                    },
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == device.id
 
 
 @pytest.mark.usefixtures("client")

@@ -91,12 +91,15 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
         """Re-attach the turn on actions when the tracked devices change."""
         ent_reg = er.async_get(self._hass)
-        device_ids = {
+        # Directly targeted devices are used as-is, because resolving them through their
+        # entities would drop a device whose webOS TV entity is hidden.
+        device_ids = set(self._target_selection.device_ids)
+        device_ids.update(
             device_id
             for entity_id in tracked_entities
             if (entry := ent_reg.async_get(entity_id))
             and (device_id := entry.device_id)
-        }
+        )
         if device_ids == self._device_ids:
             return
 
