@@ -49,8 +49,8 @@ async def test_remove_config_entry_device_server(
     await hass.async_block_till_done()
 
     device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    server_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    server_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
 
     assert server_device is not None

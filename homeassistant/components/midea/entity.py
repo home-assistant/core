@@ -5,7 +5,7 @@ from typing import Any, override
 from midealocal.device import MideaDevice
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN, LOGGER
@@ -43,15 +43,21 @@ class MideaEntity(Entity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return DeviceInfo(
+        device_info = DeviceInfo(
             manufacturer="Midea",
             # Map the device type (numeric ID) to a human-readable model name.
-            model=MIDEA_DEVICE_NAMES.get(self._device.device_type, "Unknown"),
+            model=MIDEA_DEVICE_NAMES.get(self._device.device_type),
             identifiers={(DOMAIN, str(self._device.device_id))},
             name=self._device_name,
-            model_id=str(self._device.device_type),
-            hw_version=str(self._device.subtype),
+            model_id=self._device.device_type.name,
+            hw_version=str(self._device.model),
         )
+        if mac := self._device.mac:
+            device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
+        if serial_number := self._device.serial_number:
+            device_info["serial_number"] = serial_number
+
+        return device_info
 
     @property
     @override

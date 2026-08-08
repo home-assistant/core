@@ -70,10 +70,7 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
                     and identifier[1].removeprefix(f"{self._entry_id}_") in stale_keys
                     for identifier in device.identifiers
                 ):
-                    device_registry.async_update_device(
-                        device.id,
-                        remove_config_entry_id=self._entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
         self._known_endpoint_keys = current_keys
 
         return {ep.key: ep for ep in raw_endpoints}
