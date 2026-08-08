@@ -1,14 +1,12 @@
 """Tests for the Mawaqit coordinators."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
 
 from mawaqit.exceptions import BadCredentialsException, MawaqitException
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -18,6 +16,21 @@ from tests.common import MockConfigEntry
 
 
 # --- MosqueCoordinator ---
+
+
+async def test_mosque_coordinator_update_interval_is_daily(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    mock_mosque_data: dict,
+    mock_prayer_data: dict,
+) -> None:
+    """Test mosque coordinator polls once per day."""
+    await setup_mawaqit_integration(
+        mosque_data=mock_mosque_data, prayer_data=mock_prayer_data
+    )
+    coordinator = mock_config_entry.runtime_data.mosque_coordinator
+    assert coordinator.update_interval == timedelta(days=1)
 
 
 async def test_mosque_coordinator_success(
@@ -80,6 +93,21 @@ async def test_mosque_coordinator_empty_data(
 # --- PrayerTimeCoordinator ---
 
 
+async def test_prayer_time_coordinator_update_interval_is_12_hours(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    mock_mosque_data: dict,
+    mock_prayer_data: dict,
+) -> None:
+    """Test prayer time coordinator polls twice daily (12 hours)."""
+    await setup_mawaqit_integration(
+        mosque_data=mock_mosque_data, prayer_data=mock_prayer_data
+    )
+    coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
+    assert coordinator.update_interval == timedelta(hours=12)
+
+
 async def test_prayer_time_coordinator_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -94,68 +122,6 @@ async def test_prayer_time_coordinator_success(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
     assert coordinator.data == mock_prayer_data
-    assert coordinator.last_fetch is not None
-
-
-async def test_prayer_time_coordinator_cached(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_mosque_data: dict,
-    mock_prayer_data: dict,
-) -> None:
-    """Test prayer time coordinator uses cached data within 12 hours."""
-    mock_fetch = AsyncMock(return_value=mock_prayer_data)
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_mosque_by_id",
-            new_callable=AsyncMock,
-            return_value=mock_mosque_data,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
-            new=mock_fetch,
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        # Call refresh again - should use cache
-        coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
-        await coordinator.async_refresh()
-
-    assert mock_fetch.call_count == 1
-
-
-async def test_prayer_time_coordinator_refresh_after_day(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_mosque_data: dict,
-    mock_prayer_data: dict,
-) -> None:
-    """Test prayer time coordinator re-fetches after more than 12 hours."""
-    mock_fetch = AsyncMock(return_value=mock_prayer_data)
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_mosque_by_id",
-            new_callable=AsyncMock,
-            return_value=mock_mosque_data,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
-            new=mock_fetch,
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
-        coordinator.last_fetch = dt_util.utcnow() - timedelta(days=2)
-        await coordinator.async_refresh()
-
-    assert mock_fetch.call_count == 2
 
 
 @pytest.mark.parametrize(
