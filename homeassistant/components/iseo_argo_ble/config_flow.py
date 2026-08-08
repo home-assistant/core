@@ -92,7 +92,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(format_mac(address))
             self._abort_if_unique_id_configured()
 
-            priv = _generate_identity()
+            priv = await self.hass.async_add_executor_job(_generate_identity)
             priv_int = priv.private_numbers().private_value
             new_uuid = uuid_module.uuid4().bytes
 
@@ -154,7 +154,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         if not is_iseo_advertisement(list(discovery_info.service_uuids or [])):
             return self.async_abort(reason="not_iseo_device")
 
-        priv = _generate_identity()
+        priv = await self.hass.async_add_executor_job(_generate_identity)
         priv_int = priv.private_numbers().private_value
         new_uuid = uuid_module.uuid4().bytes
 
@@ -192,6 +192,7 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = "cannot_connect"
             else:
+                assert self._gw_priv is not None
                 client = IseoClient(
                     address=self._address,
                     uuid_bytes=bytes.fromhex(self._uuid_hex),
