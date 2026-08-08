@@ -45,20 +45,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> boo
     device_class = entry.data[CONF_DEVICE_CLASS]
 
     # Entries created before the host was stored with a port need one probed
-    # and persisted, otherwise every request targets port 443.
-    if ":" not in host:
-        try:
-            host = await async_resolve_host(
-                host,
-                session=async_get_clientsession(hass, False),
-                timeout=DEFAULT_TIMEOUT,
-            )
-        except VizioError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="cannot_determine_port",
-                translation_placeholders={"host": host},
-            ) from err
+    # and persisted, otherwise every request targets port 443. Resolving is a
+    # no-op for a host that already has one.
+    try:
+        resolved_host = await async_resolve_host(
+            host,
+            session=async_get_clientsession(hass, False),
+            timeout=DEFAULT_TIMEOUT,
+        )
+    except VizioError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_determine_port",
+            translation_placeholders={"host": host},
+        ) from err
+    if resolved_host != host:
+        host = resolved_host
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_HOST: host}
         )

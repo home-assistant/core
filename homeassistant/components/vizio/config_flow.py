@@ -327,15 +327,14 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         # If host already has port, no need to add it again
         if ":" not in host and discovery_info.port:
             host = f"{host}:{discovery_info.port}"
-        if ":" not in host:
-            # Discovery didn't advertise a port; probe for the API port so we
-            # don't build a host that targets 443.
-            try:
-                host = await async_resolve_host(
-                    host, session=async_get_clientsession(self.hass, False)
-                )
-            except VizioError:
-                return self.async_abort(reason="cannot_connect")
+        # Discovery doesn't always advertise a port; probe for the API port so
+        # we don't build a host that targets 443. No-op if one was appended.
+        try:
+            host = await async_resolve_host(
+                host, session=async_get_clientsession(self.hass, False)
+            )
+        except VizioError:
+            return self.async_abort(reason="cannot_connect")
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`

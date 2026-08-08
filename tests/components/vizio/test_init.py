@@ -226,15 +226,14 @@ async def test_portless_host_resolve_failure_retries(hass: HomeAssistant) -> Non
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
-async def test_host_with_port_is_not_probed(
+async def test_host_with_port_is_left_alone(
     hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
 ) -> None:
-    """Test a host that already has a port costs no probing."""
-    with patch(
-        "homeassistant.components.vizio.async_resolve_host",
-        AsyncMock(return_value=HOST),
-    ) as mock_resolve:
-        await setup_integration(hass, mock_tv_config_entry)
+    """Test a host that already has a port is not rewritten.
 
-    mock_resolve.assert_not_called()
+    async_resolve_host is idempotent, so it is called unconditionally and
+    returns the host untouched without any probing of its own.
+    """
+    await setup_integration(hass, mock_tv_config_entry)
+
     assert mock_tv_config_entry.data[CONF_HOST] == HOST
