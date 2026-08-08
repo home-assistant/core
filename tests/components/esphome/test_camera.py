@@ -1,6 +1,12 @@
 """Test ESPHome cameras."""
 
-from aioesphomeapi import APIClient, CameraInfo, CameraState as ESPHomeCameraState
+from aioesphomeapi import (
+    APIClient,
+    CameraInfo,
+    CameraState as ESPHomeCameraState,
+    DeviceState,
+    SubDeviceInfo,
+)
 
 from homeassistant.components.camera import CameraState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -137,6 +143,34 @@ async def test_camera_single_image_unavailable_during_request(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
+    assert resp.status == 500
+
+
+async def test_camera_single_image_sub_device_unavailable_during_request(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a camera whose sub-device becomes unavailable during a request."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"devices": [SubDeviceInfo(device_id=1, name="Sub Device")]},
+        entity_info=[
+            CameraInfo(object_id="mycamera", key=1, name="my camera", device_id=1)
+        ],
+    )
+
+    def _mock_camera_image() -> None:
+        mock_device.set_device_state(DeviceState(device_id=1, available=False))
+
+    mock_client.request_single_image = _mock_camera_image
+
+    client = await hass_client()
+    resp = await client.get("/api/camera_proxy/camera.sub_device_my_camera")
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state("camera.sub_device_my_camera", STATE_UNAVAILABLE)
     assert resp.status == 500
 
 
