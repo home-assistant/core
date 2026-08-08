@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "gateway_address": "Gateway address"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the ZhongHong gateway on your network.",
+          "port": "The TCP port the gateway listens on. Leave the default unless you changed it on the gateway.",
+          "gateway_address": "The address the gateway answers on. Leave the default unless you run more than one gateway on the same network."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices_found": "Connected to the gateway, but it did not report any air conditioners."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to the ZhongHong gateway at {host}."
+    },
+    "no_devices_found": {
+      "message": "The ZhongHong gateway at {host} did not report any air conditioners."
+    },
+    "send_command_failed": {
+      "message": "Failed to send {command} command to the ZhongHong gateway."
+    }
+  }
+}
