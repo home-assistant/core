@@ -675,6 +675,51 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     }
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_remove_config_entry_from_composite_device(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test removing a config entry from a pre-migration composite device id fails."""
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+
+    composite_id = "compositea000000000000000000000"
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                # Composite spanning two config entries; splitting it on load removes
+                # the composite device, so composite_id no longer refers to a device
+                _storage_device_v1_12(
+                    composite_id,
+                    [entry_1.entry_id, entry_2.entry_id],
+                    entry_1.entry_id,
+                    "a",
+                ),
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    registry = dr.async_get(hass)
+    assert registry.async_is_composite_device_id(composite_id) is True
+
+    response = await client.remove_device(composite_id, entry_1.entry_id)
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert response["error"]["message"] == "Cannot remove a composite device"
+
+
 async def test_list_linked_devices(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,

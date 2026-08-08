@@ -190,6 +190,10 @@ async def websocket_remove_config_entry_from_device(
     config_entry_id = msg["config_entry_id"]
     device_id = msg["device_id"]
 
+    # A composite device id has no single underlying device to remove; reject it.
+    if registry.async_is_composite_device_id(device_id):
+        raise HomeAssistantError("Cannot remove a composite device")
+
     if (config_entry := hass.config_entries.async_get_entry(config_entry_id)) is None:
         raise HomeAssistantError("Unknown config entry")
 
