@@ -227,10 +227,7 @@ async def test_sensor_subentry_flow_invalid_json_attrs_path(
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {CONF_JSON_ATTRS_PATH: "invalid_result"}
-    assert (
-        "rest_data" in result["description_placeholders"]
-        and "json_path" in result["description_placeholders"]
-    )
+    assert "json_path" in result["description_placeholders"]
 
 
 async def test_sensor_subentry_flow_invalid_json_attrs(
@@ -260,9 +257,7 @@ async def test_sensor_subentry_flow_invalid_json_attrs(
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {CONF_JSON_ATTRS: "attrs_not_found"}
-    assert ("rest_data" in result["description_placeholders"]) and (
-        "json_attrs" in result["description_placeholders"]
-    )
+    assert "json_attrs" in result["description_placeholders"]
 
 
 async def test_sensor_subentry_flow_invalid_unit_state_class(

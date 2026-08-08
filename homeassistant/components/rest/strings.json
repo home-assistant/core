@@ -179,7 +179,7 @@
   },
   "exceptions": {
     "attrs_not_found": {
-      "message": "JSON attributes \"{json_attrs}\" not found in: {rest_data}"
+      "message": "JSON attributes \"{json_attrs}\" not found in endpoint response"
     },
     "endpoint_error": {
       "message": "Error communicating with resource: {error_message}"
@@ -188,13 +188,13 @@
       "message": "Error communicating with {resource}"
     },
     "invalid_result": {
-      "message": "JSON @ \"{json_path}\" was not a dictionary or list with with a dictionary @ the 0th element but was: {rest_data}"
+      "message": "JSON @ \"{json_path}\" was not a dictionary or list with a dictionary @ the 0th element"
     },
     "no_json": {
       "message": "Expected REST result was empty"
     },
     "parse_error": {
-      "message": "REST result could not be parsed as JSON: {rest_data} with error: {parse_error_message}"
+      "message": "REST result could not be parsed as JSON: {parse_error_message}"
     },
     "turn_off_failed": {
       "message": "Failed to turn off {resource}"

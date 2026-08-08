@@ -194,6 +194,7 @@ class _auth_section(section):
             for error in ex.errors:
                 if isinstance(error, vol.InclusiveInvalid):
                     raise vol.Invalid("credentials_missing") from error
+            raise
 
 
 def RESOURCE_FLOW_SCHEMA(collapse_auth: bool = True) -> vol.Schema:

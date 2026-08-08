@@ -21,7 +21,6 @@ def parse_json_attributes_raise_error(
     if not value:
         raise HomeAssistantError(translation_domain=DOMAIN, translation_key="no_json")
 
-    json_dict = None
     try:
         json_dict = json_loads(value)
         if json_attrs_path is not None:
@@ -35,7 +34,6 @@ def parse_json_attributes_raise_error(
                 translation_domain=DOMAIN,
                 translation_key="attrs_not_found",
                 translation_placeholders={
-                    "rest_data": str(json_dict),
                     "json_attrs": ", ".join(json_attrs),
                 },
             )
@@ -44,7 +42,6 @@ def parse_json_attributes_raise_error(
             translation_domain=DOMAIN,
             translation_key="invalid_result",
             translation_placeholders={
-                "rest_data": str(json_dict),
                 "json_path": json_attrs_path or "",
             },
         )
@@ -59,7 +56,6 @@ def parse_json_attributes_raise_error(
             translation_domain=DOMAIN,
             translation_key="parse_error",
             translation_placeholders={
-                "rest_data": str(json_dict) if json_dict else value,
                 "parse_error_message": str(ex),
             },
         ) from ex
