@@ -161,6 +161,25 @@ async def test_disappearing_readout_becomes_unknown(
 
 
 @pytest.mark.usefixtures("mock_hortos_client")
+async def test_disappearing_device_becomes_unavailable(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an entity whose controller drops out of coordinator data is unavailable."""
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        hass.states.get("sensor.weerstation_outside_temperature").state == "18.203125"
+    )
+
+    mock_config_entry.runtime_data.async_set_updated_data({})
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.weerstation_outside_temperature").state
+        == STATE_UNAVAILABLE
+    )
+
+
+@pytest.mark.usefixtures("mock_hortos_client")
 @pytest.mark.parametrize(
     ("code", "expected"),
     [
