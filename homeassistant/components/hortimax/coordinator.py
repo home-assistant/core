@@ -86,9 +86,9 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
         # suddenly has none is a change on the HortOS side. Retrying beats
         # loading an integration with nothing in it.
         #
-        # HA's setup-retry backoff for the resulting ConfigEntryNotReady is
-        # capped at once per 10 minutes (SETUP_RETRY_MAX_WAIT), reaching that
-        # cap after 7 calls to this endpoint in the first ~10 minutes. aiohortos
+        # HA's setup-retry backoff for the resulting ConfigEntryNotReady grows
+        # 5, 10, 20, 40, 80, 160, 320 seconds, then caps at 600 (10 minutes,
+        # SETUP_RETRY_MAX_WAIT) forever from the 8th call onward. aiohortos
         # documents HortOS's limit as 100 requests per 15 seconds per API key,
         # so this stays far under it even in that worst case.
         if not self.devices:
