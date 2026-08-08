@@ -25,9 +25,11 @@ async def test_webostv_turn_on_trigger_device_id(
     client,
 ) -> None:
     """Test for turn_on triggers by device_id firing."""
-    await setup_webostv(hass)
+    entry = await setup_webostv(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
 
     assert await async_setup_component(
         hass,

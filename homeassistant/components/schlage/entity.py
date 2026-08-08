@@ -34,7 +34,7 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
     @property
     def _lock_data(self) -> LockData:
         """Fetch the LockData from our coordinator."""
-        return self.coordinator.data.locks[self.device_id]
+        return self.coordinator.data[self.device_id]
 
     @property
     def _lock(self) -> Lock:
@@ -47,6 +47,6 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
         """Return if entity is available."""
         return (
             super().available
-            and self.device_id in self.coordinator.data.locks
+            and self.device_id in self.coordinator.data
             and self._lock.connected
         )
