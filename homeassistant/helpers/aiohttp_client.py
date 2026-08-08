@@ -412,4 +412,9 @@ def _async_get_or_create_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
 
 @callback
 def _async_make_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
-    return HassAsyncDNSResolver(async_zeroconf=zeroconf.async_get_async_zeroconf(hass))
+    kwargs: dict[str, Any] = {
+        "async_zeroconf": zeroconf.async_get_async_zeroconf(hass),
+    }
+    if hass.config.disable_edns:
+        kwargs["flags"] = 0
+    return HassAsyncDNSResolver(**kwargs)

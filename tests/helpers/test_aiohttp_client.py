@@ -440,3 +440,33 @@ async def test_connector_no_verify_uses_http11_alpn(hass: HomeAssistant) -> None
         mock_client_context_no_verify.assert_called_once_with(
             SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP11
         )
+
+
+@pytest.mark.usefixtures("disable_mock_zeroconf_resolver", "mock_async_zeroconf")
+async def test_make_resolver_disable_edns_enabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test resolver gets flags=0 when disable_edns is enabled."""
+    hass.config.disable_edns = True
+    with patch(
+        "homeassistant.helpers.aiohttp_client.HassAsyncDNSResolver"
+    ) as mock_resolver:
+        client._async_make_resolver(hass)
+        mock_resolver.assert_called_once()
+        _, kwargs = mock_resolver.call_args
+        assert kwargs["flags"] == 0
+
+
+@pytest.mark.usefixtures("disable_mock_zeroconf_resolver", "mock_async_zeroconf")
+async def test_make_resolver_disable_edns_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test resolver does not get flags when disable_edns is off."""
+    hass.config.disable_edns = False
+    with patch(
+        "homeassistant.helpers.aiohttp_client.HassAsyncDNSResolver"
+    ) as mock_resolver:
+        client._async_make_resolver(hass)
+        mock_resolver.assert_called_once()
+        _, kwargs = mock_resolver.call_args
+        assert "flags" not in kwargs

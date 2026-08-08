@@ -83,6 +83,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_CUSTOMIZE: HassKey[EntityValues] = HassKey("hass_customize")
 
 CONF_CREDENTIAL: Final = "credential"
+CONF_DISABLE_EDNS: Final = "disable_edns"
 CONF_ICE_SERVERS: Final = "ice_servers"
 CONF_WEBRTC: Final = "webrtc"
 
@@ -286,6 +287,7 @@ CORE_CONFIG_SCHEMA = vol.All(
                 cv.ensure_list, [cv.url]
             ),
             vol.Optional(CONF_PACKAGES, default={}): _PACKAGES_CONFIG_SCHEMA,
+            vol.Optional(CONF_DISABLE_EDNS): cv.boolean,
             vol.Optional(CONF_AUTH_PROVIDERS): vol.All(
                 cv.ensure_list,
                 [
@@ -358,6 +360,15 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     # Check if we need to raise an issue for imperial unit system
     config = _raise_issue_if_imperial_unit_system(hass, config)
+
+    if config.get(CONF_DISABLE_EDNS):
+        hac = hass.config
+        hac.disable_edns = True
+        _LOGGER.warning(
+            "DNS compatibility mode is enabled; EDNS and DNS Cookies are disabled "
+            "for Home Assistant's shared DNS resolver. A restart is required to "
+            "change this setting"
+        )
 
     # Only load auth during startup.
     if not hasattr(hass, "auth"):
@@ -603,6 +614,10 @@ class Config:
 
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
+
+        # If EDNS should be disabled for aiodns resolvers to work around
+        # forwarding resolvers that mishandle DNS Cookies.
+        self.disable_edns: bool = False
 
         self.webrtc = RTCConfiguration()
 

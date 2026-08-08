@@ -1094,3 +1094,34 @@ async def test_core_config_schema_imperial_unit(
 
     issue = issue_registry.async_get_issue("homeassistant", "imperial_unit_system")
     assert issue
+
+
+async def test_disable_edns_default_off(hass: HomeAssistant) -> None:
+    """Test disable_edns defaults to off."""
+    assert hass.config.disable_edns is False
+
+
+async def test_disable_edns_enabled(hass: HomeAssistant) -> None:
+    """Test disable_edns is stored when enabled."""
+    await async_process_ha_core_config(hass, {"disable_edns": True})
+    assert hass.config.disable_edns is True
+
+
+async def test_disable_edns_disabled(hass: HomeAssistant) -> None:
+    """Test disable_edns remains off when explicitly disabled."""
+    await async_process_ha_core_config(hass, {"disable_edns": False})
+    assert hass.config.disable_edns is False
+
+
+async def test_disable_edns_absent(hass: HomeAssistant) -> None:
+    """Test disable_edns remains off when not in config."""
+    await async_process_ha_core_config(hass, {})
+    assert hass.config.disable_edns is False
+
+
+def test_disable_edns_schema_invalid() -> None:
+    """Test disable_edns rejects non-boolean values."""
+    with pytest.raises(MultipleInvalid):
+        CORE_CONFIG_SCHEMA({"disable_edns": "invalid"})
+    with pytest.raises(MultipleInvalid):
+        CORE_CONFIG_SCHEMA({"disable_edns": [True]})
