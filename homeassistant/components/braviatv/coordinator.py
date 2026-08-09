@@ -143,26 +143,37 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         if sort_by:
             sources = sorted(sources, key=lambda d: d.get(sort_by, ""))
         # Reserve every generic connector name up front, so that a custom label
-        # can never shadow another input and leave it unreachable.
-        reserved = {item["title"] for item in sources if item.get("title")}
-        taken = set(self.source_list) if add_to_list else set()
+        # can never shadow another input and leave it unreachable. Names are
+        # compared casefolded, like async_source_find does.
+        reserved = {item["title"].casefold() for item in sources if item.get("title")}
+        taken = {name.casefold() for name in self.source_list} if add_to_list else set()
         for item in sources:
             title = item.get("title")
             uri = item.get("uri")
             # Sony TVs report the generic connector name in "title" and the name
             # the user configured on the TV itself in "label". Prefer the latter,
-            # as long as it is free and does not belong to another input.
+            # unless it is already used or belongs to a different input.
             label = item.get("label")
-            name = title
-            if (
-                label
-                and label not in taken
-                and (label == title or label not in reserved)
-            ):
-                name = label
+            name = None
+            if label:
+                folded = label.casefold()
+                own = title is not None and folded == title.casefold()
+                if folded not in taken and (own or folded not in reserved):
+                    name = label
+            # Otherwise fall back to the generic name, or to the label for the
+            # inputs that are reported without one.
+            if name is None:
+                name = title or label
             if not name or not uri:
                 continue
-            taken.add(name)
+            # The fallback can collide as well, so make it unique instead of
+            # dropping the input.
+            base = name
+            suffix = 2
+            while name.casefold() in taken:
+                name = f"{base} ({suffix})"
+                suffix += 1
+            taken.add(name.casefold())
             # "title" is kept untouched so that select_source keeps working with
             # the generic name for anyone already using it.
             self.source_map[uri] = {**item, "name": name, "type": source_type}
