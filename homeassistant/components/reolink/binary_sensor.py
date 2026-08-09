@@ -158,6 +158,7 @@ BINARY_PUSH_SENSORS = (
     ),
     ReolinkBinarySensorEntityDescription(
         key="tamper",
+        translation_key="tamper",
         cmd_id=[33],
         device_class=BinarySensorDeviceClass.TAMPER,
         value=lambda api, ch: api.baichuan.tamper_state(ch),
