@@ -1003,10 +1003,34 @@ async def test_presence_sensor_battery_range_mapping(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("adv_info", "sensor_type", "charging_state", "duress_state", "lockout_state"),
+    (
+        "adv_info",
+        "sensor_type",
+        "charging_state",
+        "duress_state",
+        "lockout_state",
+        "temperature_alarm_state",
+        "trigger_sensors",
+    ),
     [
-        (KEYPAD_VISION_INFO, "keypad_vision", STATE_ON, STATE_OFF, STATE_OFF),
-        (KEYPAD_VISION_PRO_INFO, "keypad_vision_pro", STATE_OFF, STATE_ON, STATE_ON),
+        (
+            KEYPAD_VISION_INFO,
+            "keypad_vision",
+            STATE_ON,
+            STATE_OFF,
+            STATE_OFF,
+            STATE_OFF,
+            {"pir_triggered_level": "2"},
+        ),
+        (
+            KEYPAD_VISION_PRO_INFO,
+            "keypad_vision_pro",
+            STATE_OFF,
+            STATE_ON,
+            STATE_ON,
+            STATE_ON,
+            {"radar_triggered_distance": "0", "radar_triggered_level": "0"},
+        ),
     ],
 )
 async def test_keypad_vision_sensor(
@@ -1016,6 +1040,8 @@ async def test_keypad_vision_sensor(
     charging_state: str,
     duress_state: str,
     lockout_state: str,
+    temperature_alarm_state: str,
+    trigger_sensors: dict[str, str],
 ) -> None:
     """Test setting up creates the sensors for Keypad Vision (Pro)."""
     await async_setup_component(hass, DOMAIN, {})
@@ -1041,8 +1067,8 @@ async def test_keypad_vision_sensor(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert len(hass.states.async_all("sensor")) == 2
-        assert len(hass.states.async_all("binary_sensor")) == 4
+        assert len(hass.states.async_all("sensor")) == 2 + len(trigger_sensors)
+        assert len(hass.states.async_all("binary_sensor")) == 6
 
         battery_sensor = hass.states.get("sensor.test_name_battery")
         battery_sensor_attrs = battery_sensor.attributes
@@ -1080,6 +1106,31 @@ async def test_keypad_vision_sensor(
         assert lockout_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Lockout alarm"
         assert lockout_sensor_attrs[ATTR_DEVICE_CLASS] == "problem"
         assert lockout_sensor.state == lockout_state
+
+        high_temperature_sensor = hass.states.get(
+            "binary_sensor.test_name_high_temperature"
+        )
+        assert high_temperature_sensor
+        assert high_temperature_sensor.state == temperature_alarm_state
+
+        low_temperature_sensor = hass.states.get(
+            "binary_sensor.test_name_low_temperature"
+        )
+        assert low_temperature_sensor
+        assert low_temperature_sensor.state == temperature_alarm_state
+
+        expected_names = {
+            "pir_triggered_level": "PIR triggered level",
+            "radar_triggered_distance": "Radar triggered distance",
+            "radar_triggered_level": "Radar triggered level",
+        }
+        for key, expected_state in trigger_sensors.items():
+            trigger_sensor = hass.states.get(f"sensor.test_name_{key}")
+            assert trigger_sensor
+            assert trigger_sensor.attributes[ATTR_FRIENDLY_NAME] == (
+                f"test-name {expected_names[key]}"
+            )
+            assert trigger_sensor.state == expected_state
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
