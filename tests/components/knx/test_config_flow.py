@@ -86,7 +86,8 @@ def _assert_mock_entry_data(
     expected_options: Mapping | None = None,
 ) -> None:
     """Assert the config entry stores connection data and options separately."""
-    expected_options = expected_options or DEFAULT_ENTRY_OPTIONS
+    if expected_options is None:
+        expected_options = DEFAULT_ENTRY_OPTIONS
     assert dict(mock_entry.data) == expected_data
     assert dict(mock_entry.options) == expected_options
 
