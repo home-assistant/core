@@ -982,7 +982,7 @@ eurotronic-cometblue-ha==1.4.0
 # evdev==1.9.3
 
 # homeassistant.components.evohome
-evohome-async==2.0.1
+evohome-async==2.1.0
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.19
@@ -1534,7 +1534,7 @@ lw12==0.9.2
 lxml==6.1.1
 
 # homeassistant.components.lyngdorf
-lyngdorf==1.4.4
+lyngdorf==1.4.8
 
 # homeassistant.components.matrix
 matrix-nio==0.26.0
@@ -2116,7 +2116,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.18.4
+pydaikin==2.18.5
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2620,7 +2620,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.14.0
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.5.0
+pystiebeleltron==0.6.2
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.7
@@ -2650,7 +2650,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==6.1.6
+python-bsblan==6.1.8
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3

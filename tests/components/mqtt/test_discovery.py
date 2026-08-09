@@ -3292,7 +3292,9 @@ async def test_discovery_with_late_via_device_discovery(
 
     # The child device links to the stub via device by via_device_id
     stub_id = via_device_entry.id
-    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    child_device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
     assert child_device_entry is not None
     assert child_device_entry.via_device_id == stub_id
 
@@ -3321,7 +3323,9 @@ async def test_discovery_with_late_via_device_discovery(
     # The stub merges into the announced device, keeping its id, so the link
     # from the child device survives
     assert via_device_entry.id == stub_id
-    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    child_device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
     assert child_device_entry is not None
     assert child_device_entry.via_device_id == stub_id
 
@@ -3384,7 +3388,9 @@ async def test_discovery_with_late_via_device_update(
 
     # The discovery update established the via_device_id link on the child device
     stub_id = via_device_entry.id
-    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    child_device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
     assert child_device_entry is not None
     assert child_device_entry.via_device_id == stub_id
 
@@ -3411,7 +3417,9 @@ async def test_discovery_with_late_via_device_update(
     assert via_device_entry is not None
     assert via_device_entry.name == "My Switch"
     assert via_device_entry.id == stub_id
-    child_device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    child_device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
     assert child_device_entry is not None
     assert child_device_entry.via_device_id == stub_id
 
@@ -3447,8 +3455,12 @@ async def test_via_device_relinks_after_parent_removed(
     )
     await hass.async_block_till_done()
 
-    parent = device_registry.async_get_device({("mqtt", "parent-id")})
-    child = device_registry.async_get_device({("mqtt", "child-id")})
+    parent = device_registry.async_get_device_by_identifier(
+        ("mqtt", "parent-id"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
+    child = device_registry.async_get_device_by_identifier(
+        ("mqtt", "child-id"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
     assert parent is not None
     assert child is not None
     assert child.via_device_id == parent.id
@@ -3456,7 +3468,9 @@ async def test_via_device_relinks_after_parent_removed(
     # Removing the parent clears the child's via_device_id
     device_registry.async_remove_device(parent.id)
     await hass.async_block_till_done()
-    child = device_registry.async_get_device({("mqtt", "child-id")})
+    child = device_registry.async_get_device_by_identifier(
+        ("mqtt", "child-id"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
     assert child is not None
     assert child.via_device_id is None
 
@@ -3467,8 +3481,12 @@ async def test_via_device_relinks_after_parent_removed(
     )
     await hass.async_block_till_done()
 
-    parent_stub = device_registry.async_get_device({("mqtt", "parent-id")})
-    child = device_registry.async_get_device({("mqtt", "child-id")})
+    parent_stub = device_registry.async_get_device_by_identifier(
+        ("mqtt", "parent-id"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
+    child = device_registry.async_get_device_by_identifier(
+        ("mqtt", "child-id"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
     assert parent_stub is not None
     assert child is not None
     assert child.via_device_id == parent_stub.id
@@ -3496,7 +3514,9 @@ async def test_via_device_across_subentries(
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id = next(iter(config_entry.subentries))
-    parent = device_registry.async_get_device({(DOMAIN, subentry_id)})
+    parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert parent is not None
     assert parent.config_subentry_id == subentry_id
 
@@ -3512,7 +3532,9 @@ async def test_via_device_across_subentries(
     )
     await hass.async_block_till_done()
 
-    child = device_registry.async_get_device({(DOMAIN, "child-id")})
+    child = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "child-id"), config_entry.entry_id
+    )
     assert child is not None
     # The parent lives in a subentry and the discovered child does not, yet the
     # link resolves because lookups are scoped to the config entry.
