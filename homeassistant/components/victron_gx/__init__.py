@@ -13,8 +13,8 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
+    start,
 )
-from homeassistant.helpers import start
 
 from .const import DOMAIN
 from .hub import Hub, VictronGxConfigEntry
