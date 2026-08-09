@@ -142,6 +142,8 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    # Only for the two fan speeds climate has no name of its own for.
+    _attr_translation_key = "air_conditioner"
     _attr_fan_modes = ALL_FAN_MODES
     _attr_hvac_modes = [
         HVACMode.COOL,

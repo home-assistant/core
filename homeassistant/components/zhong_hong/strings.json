@@ -22,6 +22,20 @@
       }
     }
   },
+  "entity": {
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "medium_high": "Medium high",
+              "medium_low": "Medium low"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Failed to connect to the ZhongHong gateway at {host}."
