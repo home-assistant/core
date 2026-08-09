@@ -1,6 +1,6 @@
 """Support for Mikrotik routers sensors."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Final, override
@@ -35,7 +35,36 @@ class MikrotikSensorEntityDescription(SensorEntityDescription):
 
     value: Callable[[dict[str, Any]], StateType | datetime]
     type: str
-    index: int
+    # Resource sensors are a single dict; health sensors are matched by name.
+    index: int = 0
+    # Preferred health metric names in priority order (first match wins).
+    data_names: tuple[str, ...] | None = None
+
+
+def _find_named_entry(
+    data_list: Sequence[dict[str, Any]], names: tuple[str, ...]
+) -> dict[str, Any] | None:
+    """Return the first health entry whose name is in names."""
+    by_name = {
+        entry["name"]: entry
+        for entry in data_list
+        if isinstance(entry.get("name"), str)
+    }
+    for name in names:
+        if name in by_name:
+            return by_name[name]
+    return None
+
+
+def _health_numeric_value(data: dict[str, Any]) -> float | None:
+    """Return a numeric health value, or None if not numeric."""
+    value = data.get("value")
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except TypeError, ValueError:
+        return None
 
 
 def _calculate_uptime(data: dict[str, Any]) -> datetime | None:
@@ -79,18 +108,19 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value=lambda _data: _data["value"],
+        value=_health_numeric_value,
         type=HEALTH,
-        index=1,
+        # Newer boards expose cpu-temperature instead of temperature.
+        data_names=("temperature", "cpu-temperature"),
     ),
     MikrotikSensorEntityDescription(
         key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        value=lambda _data: _data["value"],
+        value=_health_numeric_value,
         type=HEALTH,
-        index=0,
+        data_names=("voltage",),
     ),
     MikrotikSensorEntityDescription(
         key="cpu-load",
@@ -143,6 +173,17 @@ SENSORS: Final = (
 )
 
 
+def _sensor_data_available(
+    sensors: dict[str, Any], description: MikrotikSensorEntityDescription
+) -> bool:
+    """Return whether the coordinator has data for this sensor description."""
+    data_list = sensors.get(description.type, [])
+    if description.data_names is not None:
+        entry = _find_named_entry(data_list, description.data_names)
+        return entry is not None and _health_numeric_value(entry) is not None
+    return len(data_list) >= description.index + 1
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MikrotikConfigEntry,
@@ -155,8 +196,7 @@ async def async_setup_entry(
     sensors_list = [
         MikrotikSensorEntity(coordinator, sensor_desc)
         for sensor_desc in SENSORS
-        if len(coordinator.api.sensors.get(sensor_desc.type, []))
-        >= (sensor_desc.index + 1)
+        if _sensor_data_available(coordinator.api.sensors, sensor_desc)
     ]
 
     async_add_entities(sensors_list)
@@ -172,6 +212,13 @@ class MikrotikSensorEntity(MikrotikEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         data_list = self.coordinator.api.sensors[self.entity_description.type]
-        data_entry = data_list[self.entity_description.index]
+        if self.entity_description.data_names is not None:
+            data_entry = _find_named_entry(
+                data_list, self.entity_description.data_names
+            )
+            if data_entry is None:
+                return None
+        else:
+            data_entry = data_list[self.entity_description.index]
 
         return self.entity_description.value(data_entry)

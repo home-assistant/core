@@ -64,6 +64,43 @@ async def test_sensor_wrong_data(hass: HomeAssistant) -> None:
     assert (state := hass.states.get("sensor.mikrotik_uptime")) is None
 
 
+async def test_sensor_named_health_metrics(hass: HomeAssistant) -> None:
+    """Test health sensors match by name, not list position.
+
+    Newer RouterOS boards expose cpu-temperature and status strings like
+    fan-state=ok at positions that older boards used for temperature/voltage.
+    """
+    await setup_mikrotik_entry(
+        hass,
+        health_data=[
+            {"name": "cpu-temperature", "value": 57, "type": "C"},
+            {"name": "fan-state", "value": "ok", "type": ""},
+            {"name": "fan1-speed", "value": 3855, "type": "RPM"},
+            {"name": "board-temperature1", "value": 38, "type": "C"},
+            {"name": "psu1-state", "value": "ok", "type": ""},
+        ],
+    )
+
+    assert (state := hass.states.get("sensor.mikrotik_temperature"))
+    assert state.state == "57.0"
+
+    assert hass.states.get("sensor.mikrotik_voltage") is None
+
+
+async def test_sensor_non_numeric_health_value(hass: HomeAssistant) -> None:
+    """Test non-numeric health values do not create temperature/voltage sensors."""
+    await setup_mikrotik_entry(
+        hass,
+        health_data=[
+            {"name": "temperature", "value": "ok"},
+            {"name": "voltage", "value": "ok"},
+        ],
+    )
+
+    assert hass.states.get("sensor.mikrotik_temperature") is None
+    assert hass.states.get("sensor.mikrotik_voltage") is None
+
+
 @pytest.mark.parametrize(
     "uptime_api",
     [
