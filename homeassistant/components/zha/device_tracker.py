@@ -51,7 +51,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZHAEntity):
     @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
-        return self.entity_data.entity.is_connected
+        return self._zha_state.connected
 
     @property
     @override
@@ -60,7 +60,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZHAEntity):
 
         Percentage from 0-100.
         """
-        return self.entity_data.entity.battery_level
+        return self._zha_state.battery_level
 
     @property  # type: ignore[misc]
     @override

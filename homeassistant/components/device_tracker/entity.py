@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.components import zone
-from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
+from homeassistant.components.zone import ZoneEntityStateAttribute
 from homeassistant.const import (  # noqa: F401
     ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
@@ -16,6 +16,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_HOME,
     STATE_NOT_HOME,
     EntityCategory,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -368,10 +369,14 @@ class TrackerEntity(
                     for entity_id in zones
                     if (zone_state := self.hass.states.get(entity_id)) is not None
                 ),
-                key=lambda z: z.attributes[ATTR_RADIUS],
+                key=lambda z: z.attributes[ZoneEntityStateAttribute.RADIUS],
             )
             self.__active_zone = next(
-                (z for z in zone_states if not z.attributes.get(ATTR_PASSIVE)),
+                (
+                    z
+                    for z in zone_states
+                    if not z.attributes.get(ZoneEntityStateAttribute.PASSIVE)
+                ),
                 None,
             )
             self.__in_zones = [z.entity_id for z in zone_states]
@@ -418,8 +423,8 @@ class TrackerEntity(
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
-            attr[TrackerEntityStateAttribute.LATITUDE] = self.latitude
-            attr[TrackerEntityStateAttribute.LONGITUDE] = self.longitude
+            attr[EntityStateAttribute.LATITUDE] = self.latitude
+            attr[EntityStateAttribute.LONGITUDE] = self.longitude
             attr[TrackerEntityStateAttribute.GPS_ACCURACY] = self.location_accuracy
 
         return attr
@@ -641,13 +646,13 @@ class ScannerEntity(
     @override
     def entity_registry_enabled_default(self) -> bool:
         """Return if entity is enabled by default."""
-        # If mac_address is None, we can never find a device entry.
+        # If mac_address is None, we can never find a matching device.
         return (
-            # Do not disable if we won't activate our attach to device logic
+            # Do not disable if we won't activate our own device registration logic
             self.mac_address is None
             or self.device_info is not None
-            # Disable if we automatically attach but there is no device
-            or self.find_device_entry() is not None
+            # Disable if the tracked device is not known to any integration
+            or self._async_mac_address_registered()
         )
 
     @callback
@@ -676,12 +681,14 @@ class ScannerEntity(
                 )
 
     @callback
-    def find_device_entry(self) -> dr.DeviceEntry | None:
-        """Return device entry."""
+    def _async_mac_address_registered(self) -> bool:
+        """Return if a device with the entity's MAC address is registered."""
         assert self.mac_address is not None
 
-        return dr.async_get(self.hass).async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+        return bool(
+            dr.async_get(self.hass).async_get_devices(
+                connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+            )
         )
 
     @override
@@ -692,7 +699,7 @@ class ScannerEntity(
             not self.registry_entry
             or not self.platform.config_entry
             or not self.mac_address
-            or (device_entry := self.find_device_entry()) is None
+            or not self._async_mac_address_registered()
             # Entities should not have a device info. We opt them out
             # of this logic if they do.
             or self.device_info
@@ -702,17 +709,20 @@ class ScannerEntity(
             await super().async_internal_added_to_hass()
             return
 
-        # Attach entry to device
+        # Register our own device now that the tracked device is known to another
+        # integration; matching the split of a pre-migration composite device prunes
+        # the identifiers and connections copied from the composite.
+        device_entry = dr.async_get(self.hass).async_get_or_create(
+            config_entry_id=self.platform.config_entry.entry_id,
+            config_subentry_id=self.registry_entry.config_subentry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            default_name=self.hostname or self.mac_address,
+        )
+
+        # Link the entity's registry entry to the device
         if self.registry_entry.device_id != device_entry.id:
             self.registry_entry = er.async_get(self.hass).async_update_entity(
                 self.entity_id, device_id=device_entry.id
-            )
-
-        # Attach device to config entry
-        if self.platform.config_entry.entry_id not in device_entry.config_entries:
-            dr.async_get(self.hass).async_update_device(
-                device_entry.id,
-                add_config_entry_id=self.platform.config_entry.entry_id,
             )
 
         # Do this last or else the entity registry update listener has been installed

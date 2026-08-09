@@ -41,8 +41,9 @@ async def test_device_remove(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device_entry is not None
 
@@ -50,10 +51,13 @@ async def test_device_remove(
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac),
+            hass.config_entries.async_entries("tasmota")[0].entry_id,
+        )
+        is None
     )
-    assert device_entry is None
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_has_calls(
@@ -113,10 +117,12 @@ async def test_device_remove_non_tasmota_device(
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
+        )
+        is None
     )
-    assert device_entry is None
 
     # Verify no Tasmota discovery message was sent
     mqtt_mock.async_publish.assert_not_called()
@@ -144,10 +150,12 @@ async def test_device_remove_stale_tasmota_device(
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
+        )
+        is None
     )
-    assert device_entry is None
 
     # Verify retained discovery topic has not been cleared
     mqtt_mock.async_publish.assert_not_called()
@@ -169,8 +177,9 @@ async def test_tasmota_ws_remove_discovered_device(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device_entry is not None
 
@@ -180,7 +189,9 @@ async def test_tasmota_ws_remove_discovered_device(
     )
 
     # Verify device entry is cleared
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), tasmota_config_entry.entry_id
+        )
+        is None
     )
-    assert device_entry is None

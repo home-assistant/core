@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from roborock import (
+    CleaningMode,
     CleanRoutes,
     HomeDataRoom,
     MultiMapsListMapInfo,
@@ -238,7 +239,17 @@ def create_b01_q10_trait() -> Mock:
     q10_trait.button_light.enable = AsyncMock()
     q10_trait.button_light.disable = AsyncMock()
 
+    q10_trait.volume = AsyncMock()
+    q10_trait.volume.volume = 50
+    volume_notify = attach_update_listeners(q10_trait.volume)
+
+    async def _set_volume(volume: int) -> None:
+        q10_trait.volume.volume = volume
+        volume_notify()
+
+    q10_trait.volume.set_volume = AsyncMock(side_effect=_set_volume)
     q10_trait.map = Mock()
+    q10_trait.map.image_content = b"\x89PNG-q10"
     q10_trait.map.rooms = [
         Q10Room(id=9, raw_name="rr_bedroom", pixel_value=36, pixel_count=100),
         Q10Room(id=10, raw_name="rr_living_room", pixel_value=40, pixel_count=200),
@@ -406,6 +417,8 @@ def make_home_trait(
     home_trait.home_map_info = home_map_info
     home_trait.current_map_data = home_map_info[current_map]
     home_trait.home_map_content = home_map_content
+    notify = attach_update_listeners(home_trait)
+    home_trait.refresh.side_effect = notify
     return home_trait
 
 
@@ -414,7 +427,6 @@ def make_device_features() -> Mock:
     device_features = MagicMock(spec=DeviceFeaturesTrait)
     device_features.is_supported_drying = True
     device_features.is_support_water_mode = True
-    device_features.is_clean_fluid_delivery_supported = True
     device_features.is_support_clean_estimate = True
     device_features.is_clean_route_setting_supported = True
     device_features.is_field_supported.return_value = True
@@ -443,6 +455,8 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     v1_properties.status.mop_route_options = list(CleanRoutes)
     v1_properties.status.mop_route_mapping = _mop_route_mapping
     v1_properties.status.mop_route_name = _mop_route_mapping.get(STATUS.mop_mode)
+    v1_properties.status.cleaning_mode_options = list(CleaningMode)
+    v1_properties.status.current_cleaning_mode_name = CleaningMode.VAC_AND_MOP.value
     v1_properties.dnd = make_dnd_timer(dataclass_template=DND_TIMER)
     v1_properties.clean_summary = make_mock_trait(
         trait_spec=CleanSummaryTrait,

@@ -152,10 +152,6 @@ class AuthManagerFlowManager(
             cast(Mapping[str, str], result["data"]),
         )
 
-        if flow.context.get("credential_only"):
-            result["result"] = credentials
-            return result
-
         # multi-factor module cannot enabled for new credential
         # which has not linked to a user yet
         if auth_provider.support_mfa and not credentials.is_new:
@@ -675,7 +671,7 @@ class AuthManager:
             jwt_wrapper.verify_and_decode(
                 token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
             )
-        except jwt.InvalidTokenError:
+        except jwt.InvalidTokenError, jwt.InvalidKeyError:
             return None
 
         if refresh_token is None or not refresh_token.user.is_active:
