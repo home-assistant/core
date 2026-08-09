@@ -163,6 +163,10 @@ async def test_set_temperature_accepts_displayed_minimum_value(
     """Test temperature at the displayed minimum boundary is accepted."""
 
     class BoundaryWaterHeater(MockWaterHeaterEntity):
+        def __init__(self) -> None:
+            super().__init__()
+            self.last_set_temperature: dict[str, Any] | None = None
+
         async def async_set_temperature(self, **kwargs: Any) -> None:
             self.last_set_temperature = kwargs
 
@@ -230,6 +234,10 @@ async def test_set_temperature_with_no_bounds_skips_validation(
     """Test set temperature does not validate when bounds are not available."""
 
     class NoBoundsWaterHeater(MockWaterHeaterEntity):
+        def __init__(self) -> None:
+            super().__init__()
+            self.last_set_temperature: dict[str, Any] | None = None
+
         @property
         def min_temp(self) -> None:
             return None
@@ -238,7 +246,7 @@ async def test_set_temperature_with_no_bounds_skips_validation(
         def max_temp(self) -> None:
             return None
 
-        async def async_set_temperature(self, **kwargs):
+        async def async_set_temperature(self, **kwargs: Any) -> None:
             self.last_set_temperature = kwargs
 
     water_heater_entity = NoBoundsWaterHeater()
