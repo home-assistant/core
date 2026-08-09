@@ -16,7 +16,14 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import CONF_CACHE_CODES, DOMAIN, ENVIRONMENT, MAX_TRACKED_CACHES
+from .const import (
+    CONF_CACHE_CODES,
+    CONF_TRACKABLE_CODES,
+    DOMAIN,
+    ENVIRONMENT,
+    MAX_TRACKED_CACHES,
+    MAX_TRACKED_TRACKABLES,
+)
 
 
 class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -96,12 +103,33 @@ class GeocachingOptionsFlow(OptionsFlowWithReload):
             # Remove duplicates while preserving the entered order.
             cache_codes = list(dict.fromkeys(cache_codes))
 
+            raw_trackable_codes = user_input.get(CONF_TRACKABLE_CODES, "")
+
+            trackable_codes = [
+                code.strip().upper()
+                for code in raw_trackable_codes.replace(",", "\n").splitlines()
+                if code.strip()
+            ]
+
+            # Remove duplicates while preserving the entered order.
+            trackable_codes = list(dict.fromkeys(trackable_codes))
+
             if len(cache_codes) > MAX_TRACKED_CACHES:
                 errors["base"] = "too_many_caches"
+            elif len(trackable_codes) > MAX_TRACKED_TRACKABLES:
+                errors["base"] = "too_many_trackables"
             else:
-                return self.async_create_entry(data={CONF_CACHE_CODES: cache_codes})
+                return self.async_create_entry(
+                    data={
+                        CONF_CACHE_CODES: cache_codes,
+                        CONF_TRACKABLE_CODES: trackable_codes,
+                    }
+                )
 
         current_codes = self.config_entry.options.get(CONF_CACHE_CODES, [])
+        current_trackable_codes = self.config_entry.options.get(
+            CONF_TRACKABLE_CODES, []
+        )
 
         return self.async_show_form(
             step_id="init",
@@ -109,8 +137,12 @@ class GeocachingOptionsFlow(OptionsFlowWithReload):
                 {
                     vol.Optional(
                         CONF_CACHE_CODES,
-                        default="\n".join(current_codes),
-                    ): str
+                        default=", ".join(current_codes),
+                    ): str,
+                    vol.Optional(
+                        CONF_TRACKABLE_CODES,
+                        default=", ".join(current_trackable_codes),
+                    ): str,
                 }
             ),
             errors=errors,

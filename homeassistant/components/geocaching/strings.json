@@ -63,6 +63,9 @@
       "souvenir_count": {
         "name": "Total souvenirs",
         "unit_of_measurement": "souvenirs"
+      },
+      "trackable_kilometers_traveled": {
+        "name": "Distance traveled"
       }
     }
   },
@@ -73,18 +76,21 @@
   },
   "options": {
     "error": {
-      "too_many_caches": "A maximum of 50 caches can be tracked."
+      "too_many_caches": "A maximum of 50 caches can be tracked.",
+      "too_many_trackables": "A maximum of 50 trackables can be tracked."
     },
     "step": {
       "init": {
         "data": {
-          "cache_codes": "Cache codes"
+          "cache_codes": "Cache codes",
+          "trackable_codes": "Trackable codes"
         },
         "data_description": {
-          "cache_codes": "Enter the GC codes of the caches to track, separated by commas or new lines. A maximum of 50 caches can be tracked."
+          "cache_codes": "Enter the GC codes of the caches to track, separated by commas or new lines. A maximum of 50 caches can be tracked.",
+          "trackable_codes": "Enter the TB codes of the trackables to track, separated by commas or new lines. A maximum of 50 trackables can be tracked."
         },
-        "description": "Select which geocaches you want to track.",
-        "title": "Tracked caches"
+        "description": "Select which caches and trackables you want to track.",
+        "title": "Tracked caches and trackables."
       }
     }
   }

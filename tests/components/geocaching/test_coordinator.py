@@ -4,7 +4,10 @@ from unittest.mock import MagicMock, patch
 
 from geocachingapi.models import GeocachingSettings
 
-from homeassistant.components.geocaching.const import CONF_CACHE_CODES
+from homeassistant.components.geocaching.const import (
+    CONF_CACHE_CODES,
+    CONF_TRACKABLE_CODES,
+)
 from homeassistant.components.geocaching.coordinator import (
     GeocachingDataUpdateCoordinator,
 )
@@ -13,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_coordinator_uses_tracked_cache_codes(
+async def test_coordinator_uses_tracked_cache_and_trackable_codes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -24,6 +27,7 @@ async def test_coordinator_uses_tracked_cache_codes(
         mock_config_entry,
         options={
             CONF_CACHE_CODES: ["GC12345", "GC67890"],
+            CONF_TRACKABLE_CODES: ["TB12345", "TB67890"],
         },
     )
 
@@ -45,3 +49,4 @@ async def test_coordinator_uses_tracked_cache_codes(
 
     assert isinstance(settings, GeocachingSettings)
     assert settings.tracked_cache_codes == {"GC12345", "GC67890"}
+    assert settings.tracked_trackable_codes == {"TB12345", "TB67890"}

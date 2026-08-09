@@ -12,6 +12,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.geocaching.const import (
     CONF_CACHE_CODES,
+    CONF_TRACKABLE_CODES,
     DOMAIN,
     ENVIRONMENT,
     ENVIRONMENT_URLS,
@@ -249,15 +250,18 @@ async def test_options_flow(
         result["flow_id"],
         user_input={
             CONF_CACHE_CODES: "GC12345, gc67890\nGC12345",
+            CONF_TRACKABLE_CODES: "TB12345, tb67890\nTB12345",
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_CACHE_CODES: ["GC12345", "GC67890"],
+        CONF_TRACKABLE_CODES: ["TB12345", "TB67890"],
     }
     assert mock_config_entry.options == {
         CONF_CACHE_CODES: ["GC12345", "GC67890"],
+        CONF_TRACKABLE_CODES: ["TB12345", "TB67890"],
     }
 
 
@@ -282,3 +286,26 @@ async def test_options_flow_too_many_caches(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": "too_many_caches"}
+
+
+async def test_options_flow_too_many_trackables(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test configuring too many tracked trackables."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    trackable_codes = "\n".join(f"TB{number}" for number in range(51))
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TRACKABLE_CODES: trackable_codes,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "too_many_trackables"}
