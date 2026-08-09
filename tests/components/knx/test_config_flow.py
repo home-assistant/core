@@ -1,6 +1,7 @@
 """Test the KNX config flow."""
 
 import asyncio
+from collections.abc import Mapping
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -82,9 +83,10 @@ async def _mock_validate_ip_for_invalid_local(ip_address: str) -> str:
 def _assert_mock_entry_data(
     mock_entry: MockConfigEntry,
     expected_data: dict,
-    expected_options: dict = DEFAULT_ENTRY_OPTIONS,
+    expected_options: Mapping | None = None,
 ) -> None:
     """Assert the config entry stores connection data and options separately."""
+    expected_options = expected_options or DEFAULT_ENTRY_OPTIONS
     assert dict(mock_entry.data) == expected_data
     assert dict(mock_entry.options) == expected_options
 
