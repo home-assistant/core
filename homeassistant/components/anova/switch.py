@@ -57,11 +57,8 @@ class AnovaCookSwitch(AnovaEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start a cook."""
-        # coordinator.pending_* is seeded the moment coordinator.data first
-        # becomes non-None (see AnovaCoordinator._handle_device_update), the
-        # same condition AnovaEntity.available requires - so by the time HA
-        # considers this entity available enough to call turn_on, these are
-        # guaranteed to already be set.
+        # Guaranteed set once the entity is available - both are seeded
+        # alongside coordinator.data (see AnovaCoordinator._handle_device_update).
         assert self.coordinator.pending_target_temperature is not None
         assert self.coordinator.pending_cook_time_seconds is not None
         try:

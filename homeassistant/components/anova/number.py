@@ -80,7 +80,11 @@ class AnovaTargetTemperatureNumber(AnovaEntity, RestoreNumber):
             and last_number_data.native_value is not None
         ):
             self.coordinator.pending_target_temperature = last_number_data.native_value
-        self._attr_native_value = self.coordinator.pending_target_temperature
+        if self.coordinator.anova_device.is_cooking:
+            assert self.coordinator.data is not None
+            self._attr_native_value = self.coordinator.data.sensor.target_temperature
+        else:
+            self._attr_native_value = self.coordinator.pending_target_temperature
         await super().async_added_to_hass()
 
     @callback
@@ -88,6 +92,7 @@ class AnovaTargetTemperatureNumber(AnovaEntity, RestoreNumber):
     def _handle_coordinator_update(self) -> None:
         """Reflect the live job's target temperature while cooking, else the pending value."""
         if self.coordinator.anova_device.is_cooking:
+            assert self.coordinator.data is not None
             self._attr_native_value = self.coordinator.data.sensor.target_temperature
         else:
             self._attr_native_value = self.coordinator.pending_target_temperature
@@ -111,6 +116,7 @@ class AnovaTargetTemperatureNumber(AnovaEntity, RestoreNumber):
                 translation_key="set_target_temperature_failed",
                 translation_placeholders={"value": str(value)},
             ) from ex
+        self.coordinator.pending_target_temperature = value
 
 
 class AnovaTimerNumber(AnovaEntity, RestoreNumber):
@@ -128,7 +134,7 @@ class AnovaTimerNumber(AnovaEntity, RestoreNumber):
 
     _attr_device_class = NumberDeviceClass.DURATION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_native_min_value = 1
+    _attr_native_min_value = 0
     _attr_native_max_value = 60 * 72
     _attr_native_step = 1
     _attr_mode = NumberMode.BOX
@@ -153,9 +159,15 @@ class AnovaTimerNumber(AnovaEntity, RestoreNumber):
             self.coordinator.pending_cook_time_seconds = round(
                 last_number_data.native_value * 60
             )
-        self._attr_native_value = self._minutes(
-            self.coordinator.pending_cook_time_seconds
-        )
+        if self.coordinator.anova_device.is_cooking:
+            assert self.coordinator.data is not None
+            self._attr_native_value = self._minutes(
+                self.coordinator.data.sensor.cook_time
+            )
+        else:
+            self._attr_native_value = self._minutes(
+                self.coordinator.pending_cook_time_seconds
+            )
         await super().async_added_to_hass()
 
     @callback
@@ -163,6 +175,7 @@ class AnovaTimerNumber(AnovaEntity, RestoreNumber):
     def _handle_coordinator_update(self) -> None:
         """Reflect the live job's configured timer while cooking, else the pending value."""
         if self.coordinator.anova_device.is_cooking:
+            assert self.coordinator.data is not None
             self._attr_native_value = self._minutes(
                 self.coordinator.data.sensor.cook_time
             )
@@ -191,6 +204,7 @@ class AnovaTimerNumber(AnovaEntity, RestoreNumber):
                 translation_key="set_timer_failed",
                 translation_placeholders={"value": str(value)},
             ) from ex
+        self.coordinator.pending_cook_time_seconds = cook_time_seconds
 
     @staticmethod
     def _minutes(cook_time_seconds: int | None) -> float | None:

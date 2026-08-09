@@ -2,14 +2,13 @@
 
 from unittest.mock import AsyncMock
 
-from anova_wifi import AnovaCommand, CommandFailure
+from anova_wifi import CommandFailure
 import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import async_init_integration, get_device
-from .conftest import DUMMY_ID
 
 
 @pytest.mark.usefixtures("anova_api")
@@ -21,6 +20,24 @@ async def test_numbers_seeded_from_device_state(hass: HomeAssistant) -> None:
         == "54.72"
     )
     assert hass.states.get("number.anova_precision_cooker_timer").state == "0.0"
+
+
+@pytest.mark.usefixtures("anova_api_cooking")
+async def test_numbers_reflect_the_live_job_when_already_cooking_on_add(
+    hass: HomeAssistant,
+) -> None:
+    """Test the numbers show the live job's values, not the idle seed, on setup.
+
+    A restart during a cook must not show a stale target/timer until the next
+    websocket push - see AnovaTargetTemperatureNumber/AnovaTimerNumber's
+    async_added_to_hass.
+    """
+    await async_init_integration(hass)
+    assert (
+        hass.states.get("number.anova_precision_cooker_target_temperature").state
+        == "60"
+    )
+    assert hass.states.get("number.anova_precision_cooker_timer").state == "30.0"
 
 
 @pytest.mark.usefixtures("anova_api_unsupported_device_type")
@@ -37,7 +54,7 @@ async def test_setting_target_temperature_while_idle_is_local_only(
     """Test setting the target temperature while idle just stores it locally."""
     entry = await async_init_integration(hass)
     device = get_device(entry)
-    device.send_command = AsyncMock()
+    device.update_running_cook = AsyncMock()
 
     await hass.services.async_call(
         "number",
@@ -53,46 +70,55 @@ async def test_setting_target_temperature_while_idle_is_local_only(
         hass.states.get("number.anova_precision_cooker_target_temperature").state
         == "60.0"
     )
-    device.send_command.assert_not_called()
+    device.update_running_cook.assert_not_called()
+
+
+@pytest.mark.usefixtures("anova_api")
+async def test_setting_timer_to_zero_while_idle_is_allowed(
+    hass: HomeAssistant,
+) -> None:
+    """Test the timer accepts 0 minutes, the protocol's supported no-timer value."""
+    await async_init_integration(hass)
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": "number.anova_precision_cooker_timer", "value": 0},
+        blocking=True,
+    )
+
+    assert hass.states.get("number.anova_precision_cooker_timer").state == "0.0"
 
 
 @pytest.mark.usefixtures("anova_api_cooking")
 @pytest.mark.parametrize(
-    ("entity_id", "value", "expected_command", "expected_payload"),
+    ("entity_id", "value", "expected_kwargs"),
     [
         pytest.param(
             "number.anova_precision_cooker_target_temperature",
             65,
-            AnovaCommand.CMD_APC_SET_TARGET_TEMP,
-            {
-                "cookerId": DUMMY_ID,
-                "type": "a5",
-                "targetTemperature": 65.0,
-                "unit": "C",
-            },
+            {"target_temperature": 65.0, "temperature_unit": "C"},
             id="target_temperature",
         ),
         pytest.param(
             "number.anova_precision_cooker_timer",
             15,
-            AnovaCommand.CMD_APC_SET_TIMER,
-            {"cookerId": DUMMY_ID, "type": "a5", "timer": 900},
+            {"cook_time_seconds": 900},
             id="timer_in_minutes",
         ),
     ],
 )
-async def test_setting_while_cooking_sends_command(
+async def test_setting_while_cooking_updates_the_running_cook(
     hass: HomeAssistant,
     entity_id: str,
     value: float,
-    expected_command: AnovaCommand,
-    expected_payload: dict[str, object],
+    expected_kwargs: dict[str, object],
 ) -> None:
     """Test setting a number while cooking calls update_running_cook."""
     entry = await async_init_integration(hass)
     device = get_device(entry)
     assert device.is_cooking is True
-    device.send_command = AsyncMock()
+    device.update_running_cook = AsyncMock()
 
     await hass.services.async_call(
         "number",
@@ -101,7 +127,54 @@ async def test_setting_while_cooking_sends_command(
         blocking=True,
     )
 
-    device.send_command.assert_awaited_once_with(expected_command, expected_payload)
+    device.update_running_cook.assert_awaited_once_with(**expected_kwargs)
+
+
+@pytest.mark.usefixtures("anova_api_cooking")
+async def test_setting_target_temperature_while_cooking_persists_as_pending(
+    hass: HomeAssistant,
+) -> None:
+    """Test a live target-temperature change is remembered for the next cook.
+
+    Otherwise stopping the cook would make the entity revert to the pre-cook
+    target instead of the value just set while cooking.
+    """
+    entry = await async_init_integration(hass)
+    device = get_device(entry)
+    device.update_running_cook = AsyncMock()
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.anova_precision_cooker_target_temperature",
+            "value": 65,
+        },
+        blocking=True,
+    )
+
+    coordinator = entry.runtime_data.coordinators[0]
+    assert coordinator.pending_target_temperature == 65
+
+
+@pytest.mark.usefixtures("anova_api_cooking")
+async def test_setting_timer_while_cooking_persists_as_pending(
+    hass: HomeAssistant,
+) -> None:
+    """Test a live timer change is remembered, in seconds, for the next cook."""
+    entry = await async_init_integration(hass)
+    device = get_device(entry)
+    device.update_running_cook = AsyncMock()
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": "number.anova_precision_cooker_timer", "value": 15},
+        blocking=True,
+    )
+
+    coordinator = entry.runtime_data.coordinators[0]
+    assert coordinator.pending_cook_time_seconds == 900
 
 
 @pytest.mark.usefixtures("anova_api_cooking")
@@ -109,7 +182,7 @@ async def test_setting_target_temperature_failure_raises(hass: HomeAssistant) ->
     """Test a CommandFailure while cooking surfaces as HomeAssistantError."""
     entry = await async_init_integration(hass)
     device = get_device(entry)
-    device.send_command = AsyncMock(side_effect=CommandFailure("boom"))
+    device.update_running_cook = AsyncMock(side_effect=CommandFailure("boom"))
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

@@ -82,16 +82,9 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
             model="Precision Cooker",
         )
         self.sensor_data_set: bool = False
-        # The target temperature/timer number entities hold these locally while
-        # idle (mirroring the official app - the device itself only applies a
-        # target temperature while a cook is already running, see
-        # APCWifiDevice.update_running_cook), and read them here so the cook
-        # switch's turn_on can start a cook with whatever the user last set.
-        # Seeded (once, below) from this device's own last-reported job values
-        # (which persist into idle state), or overridden by restored entity
-        # state - never a hardcoded default. Seeded on the coordinator itself,
-        # tied directly to the device's update_listener, so it's available
-        # regardless of entity setup ordering/races.
+        # Owned by the coordinator, not the number entities, so it's seeded
+        # from the device's own state (see _handle_device_update) regardless
+        # of entity setup ordering.
         self.pending_target_temperature: float | None = None
         self.pending_cook_time_seconds: int | None = None
         self.anova_device.set_update_listener(self._handle_device_update)

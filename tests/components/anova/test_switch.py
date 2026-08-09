@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from anova_wifi import AnovaCommand, CommandFailure
+from anova_wifi import CommandFailure
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -37,7 +37,7 @@ async def test_turn_on_starts_a_cook_with_pending_values(hass: HomeAssistant) ->
     """Test turning the switch on starts a cook using the number entities' values."""
     entry = await async_init_integration(hass)
     device = get_device(entry)
-    device.send_command = AsyncMock()
+    device.start_cook = AsyncMock()
 
     await hass.services.async_call(
         "switch",
@@ -46,16 +46,7 @@ async def test_turn_on_starts_a_cook_with_pending_values(hass: HomeAssistant) ->
         blocking=True,
     )
 
-    device.send_command.assert_awaited_once_with(
-        AnovaCommand.CMD_APC_START,
-        {
-            "cookerId": "anova_id",
-            "type": "a5",
-            "targetTemperature": 54.72,
-            "unit": "C",
-            "timer": 0,
-        },
-    )
+    device.start_cook.assert_awaited_once_with(54.72, 0, "C")
 
 
 @pytest.mark.usefixtures("anova_api_cooking")
@@ -63,7 +54,7 @@ async def test_turn_off_stops_the_cook(hass: HomeAssistant) -> None:
     """Test turning the switch off stops the current cook."""
     entry = await async_init_integration(hass)
     device = get_device(entry)
-    device.send_command = AsyncMock()
+    device.stop_cook = AsyncMock()
 
     await hass.services.async_call(
         "switch",
@@ -72,10 +63,7 @@ async def test_turn_off_stops_the_cook(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    device.send_command.assert_awaited_once_with(
-        AnovaCommand.CMD_APC_STOP,
-        {"cookerId": "anova_id", "type": "a5"},
-    )
+    device.stop_cook.assert_awaited_once_with()
 
 
 @pytest.mark.usefixtures("anova_api_cooking")
@@ -83,7 +71,7 @@ async def test_turn_off_failure_raises(hass: HomeAssistant) -> None:
     """Test a CommandFailure while stopping surfaces as HomeAssistantError."""
     entry = await async_init_integration(hass)
     device = get_device(entry)
-    device.send_command = AsyncMock(side_effect=CommandFailure("boom"))
+    device.stop_cook = AsyncMock(side_effect=CommandFailure("boom"))
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
