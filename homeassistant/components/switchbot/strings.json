@@ -425,6 +425,9 @@
     "invalid_device_id": {
       "message": "The device ID {device_id} is not a valid device ID."
     },
+    "keypad_info_unavailable": {
+      "message": "Unable to retrieve information from the keypad."
+    },
     "not_keypad_vision_device": {
       "message": "This service is only supported for SwitchBot Keypad Vision devices."
     },
@@ -468,6 +471,16 @@
         }
       },
       "name": "Add password"
+    },
+    "get_keypad_info": {
+      "description": "Retrieve settings and credential counts from a Keypad Vision device.",
+      "fields": {
+        "device_id": {
+          "description": "The device ID of the Keypad Vision device",
+          "name": "Device ID"
+        }
+      },
+      "name": "Get keypad information"
     }
   }
 }

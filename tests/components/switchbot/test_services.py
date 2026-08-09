@@ -9,6 +9,7 @@ from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import DOMAIN
 from homeassistant.components.switchbot.services import (
     SERVICE_ADD_PASSWORD,
+    SERVICE_GET_KEYPAD_INFO,
     async_setup_services,
 )
 from homeassistant.const import ATTR_DEVICE_ID
@@ -70,6 +71,92 @@ async def test_add_password_service(
         )
 
         mocked_instance.assert_called_once_with("123456")
+
+
+@pytest.mark.parametrize(
+    ("ble_service_info", "sensor_type", "credential_counts"),
+    [
+        (
+            KEYPAD_VISION_INFO,
+            "keypad_vision",
+            {
+                "pin": 3,
+                "nfc": 2,
+                "fingerprint": 1,
+                "duress_pin": 1,
+                "duress_fingerprint": 0,
+            },
+        ),
+        (
+            KEYPAD_VISION_PRO_INFO,
+            "keypad_vision_pro",
+            {
+                "pin": 3,
+                "nfc": 2,
+                "fingerprint": 1,
+                "duress_pin": 1,
+                "duress_fingerprint": 0,
+                "face": 2,
+                "palm_vein": 1,
+            },
+        ),
+    ],
+)
+async def test_get_keypad_info_service(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    ble_service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
+    credential_counts: dict[str, int],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the get_keypad_info service."""
+    inject_bluetooth_service_info(hass, ble_service_info)
+
+    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
+    entry.add_to_hass(hass)
+
+    basic_info = {
+        "battery": 95,
+        "firmware": 2.4,
+        "hardware": 22,
+        "support_fingerprint": 1,
+        "lock_button_enabled": True,
+        "tamper_alarm_enabled": True,
+        "backlight_enabled": True,
+        "backlight_level": 5,
+        "prompt_tone_enabled": True,
+        "battery_charging": sensor_type == "keypad_vision",
+    }
+    get_basic_info = AsyncMock(return_value=basic_info)
+    get_password_count = AsyncMock(return_value=credential_counts)
+    with patch.multiple(
+        "homeassistant.components.switchbot.switchbot.SwitchbotKeypadVision",
+        update=AsyncMock(return_value=None),
+        get_basic_info=get_basic_info,
+        get_password_count=get_password_count,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        device_entry = dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        )[0]
+
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_KEYPAD_INFO,
+            {ATTR_DEVICE_ID: device_entry.id},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == {
+        "basic_info": basic_info,
+        "credential_counts": credential_counts,
+    }
+    get_basic_info.assert_awaited_once_with()
+    get_password_count.assert_awaited_once_with()
 
 
 async def test_device_not_found(
