@@ -1040,7 +1040,7 @@ async def test_keypad_vision_sensor(
         await hass.async_block_till_done()
 
         assert len(hass.states.async_all("sensor")) == 2
-        assert len(hass.states.async_all("binary_sensor")) == 2
+        assert len(hass.states.async_all("binary_sensor")) == 3
 
         battery_sensor = hass.states.get("sensor.test_name_battery")
         battery_sensor_attrs = battery_sensor.attributes
@@ -1065,6 +1065,13 @@ async def test_keypad_vision_sensor(
         assert charging_sensor
         assert charging_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Charging"
         assert charging_sensor.state == charging_state
+
+        duress_sensor = hass.states.get("binary_sensor.test_name_duress_alarm")
+        duress_sensor_attrs = duress_sensor.attributes
+        assert duress_sensor
+        assert duress_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Duress alarm"
+        assert duress_sensor_attrs[ATTR_DEVICE_CLASS] == "safety"
+        assert duress_sensor.state == STATE_OFF
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
