@@ -41,7 +41,7 @@ def mock_gatus_client() -> Generator[AsyncMock]:
                     key="backend_service",
                     name="Backend Service",
                     group="Core",
-                    results=[Result(success=True, status=200)],
+                    results=[Result(success=True, status=200, duration=23123100)],
                 )
             ]
         )
