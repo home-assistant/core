@@ -66,7 +66,20 @@ INPUTS = [
         "icon": "meta:hdmi",
     },
     {
+        "uri": "extInput:hdmi?port=5",
+        "title": "HDMI 5",
+        "connection": True,
+        "label": "hdmi 1",
+        "icon": "meta:hdmi",
+    },
+    {
         "uri": "extInput:cec?type=player&port=1",
+        "connection": True,
+        "label": "Streaming box",
+        "icon": "meta:cec",
+    },
+    {
+        "uri": "extInput:cec?type=player&port=2",
         "connection": True,
         "label": "Streaming box",
         "icon": "meta:cec",
@@ -129,8 +142,12 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
         "HDMI 3",
         # Labelled with the generic name of another input.
         "HDMI 4",
+        # Same, differing only in case.
+        "HDMI 5",
         # Reported with a label but no generic name at all.
         "Streaming box",
+        # Same, with the label already taken and no generic name to fall back to.
+        "Streaming box (2)",
     ]
     # The playing input is reported with the same name used in the source list.
     assert state.attributes[ATTR_INPUT_SOURCE] == "Game console"
@@ -149,8 +166,12 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
         # A label may not steal the generic name of a different input.
         ("HDMI 1", "extInput:hdmi?port=1"),
         ("HDMI 4", "extInput:hdmi?port=4"),
+        # A label may not steal it in a different case either.
+        ("HDMI 5", "extInput:hdmi?port=5"),
         # An input reported with a label but no title is selectable too.
         ("Streaming box", "extInput:cec?type=player&port=1"),
+        # And it keeps a distinct name when that label is already taken.
+        ("Streaming box (2)", "extInput:cec?type=player&port=2"),
     ],
 )
 async def test_select_source(
