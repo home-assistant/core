@@ -1,6 +1,6 @@
 """Sensor entities for Geocaching."""
 
-from typing import Any, cast
+from typing import cast
 
 from geocachingapi.models import GeocachingCache, GeocachingTrackable
 
@@ -79,10 +79,7 @@ class GeocachingTrackableEntity(GeocachingBaseEntity):
     @property
     def trackable(self) -> GeocachingTrackable:
         """Return the latest trackable data."""
-        for trackable in cast(
-            list[GeocachingTrackable],
-            cast(Any, self.coordinator.data).tracked_trackables,
-        ):
+        for trackable in self.coordinator.data.trackables.values():
             if trackable.reference_code == self._reference_code:
                 return trackable
 

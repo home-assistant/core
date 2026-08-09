@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
-from typing import Any, cast, override
+from typing import cast, override
 
 from geocachingapi.models import GeocachingCache, GeocachingStatus, GeocachingTrackable
 
@@ -135,10 +135,7 @@ async def async_setup_entry(
     # Add entities for tracked trackables
     entities.extend(
         GeoEntityTrackableSensorEntity(coordinator, trackable, description)
-        for trackable in cast(
-            list[GeocachingTrackable],
-            cast(Any, status).tracked_trackables,
-        )
+        for trackable in status.trackables.values()
         for description in TRACKABLE_SENSORS
     )
 
