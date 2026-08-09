@@ -131,6 +131,7 @@ async def test_set_temperature_raises_out_of_range(
         "check_temp": "20.0",
         "min_temp": str(water_heater_entity.min_temp),
         "max_temp": str(water_heater_entity.max_temp),
+        "temperature_unit": water_heater_entity.temperature_unit,
     }
 
 
@@ -197,6 +198,7 @@ async def test_set_temperature_raises_out_of_range_with_conversion(
         "check_temp": "104.0",
         "min_temp": str(water_heater_entity.min_temp),
         "max_temp": str(water_heater_entity.max_temp),
+        "temperature_unit": water_heater_entity.temperature_unit,
     }
 
 

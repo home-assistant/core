@@ -131,7 +131,7 @@
       "message": "Operation mode {operation_mode} is not valid for {entity_id}. The operation list is not defined."
     },
     "temp_out_of_range": {
-      "message": "Temperature {check_temp} is not valid for {entity_id}. Value must be between {min_temp} and {max_temp}."
+      "message": "Temperature {check_temp} {temperature_unit} is not valid for {entity_id}. Value must be between {min_temp} {temperature_unit} and {max_temp} {temperature_unit}."
     }
   },
   "services": {

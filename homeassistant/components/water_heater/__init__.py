@@ -453,6 +453,7 @@ async def async_service_temperature_set(
                         "check_temp": str(check_temp),
                         "min_temp": str(min_temp),
                         "max_temp": str(max_temp),
+                        "temperature_unit": entity.temperature_unit,
                     },
                 )
             kwargs[value] = check_temp
