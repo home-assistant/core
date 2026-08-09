@@ -72,7 +72,7 @@ def test_trackable_sensor_uses_latest_coordinator_data() -> None:
     )
 
     first_status = GeocachingStatus()
-    first_status.tracked_trackables = [first_trackable]
+    first_status.trackables = {"TB12345": first_trackable}
 
     coordinator = MagicMock()
     coordinator.data = first_status
@@ -99,7 +99,7 @@ def test_trackable_sensor_uses_latest_coordinator_data() -> None:
     )
 
     updated_status = GeocachingStatus()
-    updated_status.tracked_trackables = [updated_trackable]
+    updated_status.trackables = {"TB12345": updated_trackable}
 
     coordinator.data = updated_status
 
