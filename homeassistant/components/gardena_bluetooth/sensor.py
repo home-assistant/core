@@ -67,9 +67,9 @@ class GardenaBluetoothSensorEntityDescription[T](SensorEntityDescription):
     @property
     def context(self) -> set[str]:
         """Context needed for update coordinator."""
-        data = {self.char.uuid}
+        data = {self.char.unique_id}
         if self.connected_state:
-            data.add(self.connected_state.uuid)
+            data.add(self.connected_state.unique_id)
         return data
 
 
@@ -294,7 +294,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
         key: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, {char.uuid})
+        super().__init__(coordinator, {char.unique_id})
         self._attr_unique_id = f"{coordinator.address}-{key}"
         self._attr_translation_key = key
         self._char = char
