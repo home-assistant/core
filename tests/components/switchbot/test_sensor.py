@@ -1003,10 +1003,10 @@ async def test_presence_sensor_battery_range_mapping(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("adv_info", "sensor_type", "charging_state"),
+    ("adv_info", "sensor_type", "charging_state", "duress_state"),
     [
-        (KEYPAD_VISION_INFO, "keypad_vision", STATE_ON),
-        (KEYPAD_VISION_PRO_INFO, "keypad_vision_pro", STATE_OFF),
+        (KEYPAD_VISION_INFO, "keypad_vision", STATE_ON, STATE_OFF),
+        (KEYPAD_VISION_PRO_INFO, "keypad_vision_pro", STATE_OFF, STATE_ON),
     ],
 )
 async def test_keypad_vision_sensor(
@@ -1014,6 +1014,7 @@ async def test_keypad_vision_sensor(
     adv_info: BluetoothServiceInfoBleak,
     sensor_type: str,
     charging_state: str,
+    duress_state: str,
 ) -> None:
     """Test setting up creates the sensors for Keypad Vision (Pro)."""
     await async_setup_component(hass, DOMAIN, {})
@@ -1071,7 +1072,7 @@ async def test_keypad_vision_sensor(
         assert duress_sensor
         assert duress_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Duress alarm"
         assert duress_sensor_attrs[ATTR_DEVICE_CLASS] == "safety"
-        assert duress_sensor.state == STATE_OFF
+        assert duress_sensor.state == duress_state
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
