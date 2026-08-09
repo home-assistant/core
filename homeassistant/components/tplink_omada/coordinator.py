@@ -285,7 +285,10 @@ async def async_cleanup_client_trackers(
         if client_mac is None:
             continue
 
-        if client_mac not in known_macs:
+        if (
+            client_mac not in known_macs
+            and entity.disabled_by is not er.RegistryEntryDisabler.USER
+        ):
             entity_registry.async_remove(entity.entity_id)
 
 
@@ -319,6 +322,7 @@ async def async_cleanup_devices(
                 mac,
                 entry_id,
             )
+            controller.async_mark_device_removed(mac)
             device_registry.async_update_device(
                 device_entry.id,
                 remove_config_entry_id=entry_id,

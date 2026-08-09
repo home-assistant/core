@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 import logging
 
 from tplink_omada_client import OmadaSite
-from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -17,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -127,23 +126,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-def _remove_old_devices(
-    hass: HomeAssistant,
-    entry: OmadaConfigEntry,
-    omada_devices: dict[str, OmadaListDevice],
-) -> None:
-    device_registry = dr.async_get(hass)
-
-    for registered_device in device_registry.devices.get_devices_for_config_entry_id(
-        entry.entry_id
-    ):
-        mac = next(
-            (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
-        )
-        if mac and mac not in omada_devices:
-            device_registry.async_remove_device(registered_device.id)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:

@@ -4,8 +4,12 @@ from typing import override
 
 from tplink_omada_client.clients import OmadaWirelessClient
 
-from homeassistant.components.device_tracker import ScannerEntity
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    ScannerEntity,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,17 +30,39 @@ async def async_setup_entry(
     controller = config_entry.runtime_data
 
     site_id = config_entry.data[CONF_SITE]
+    known_clients_coordinator = controller.known_clients_coordinator
 
-    # Add all known WiFi devices as potentially tracked devices. They will only be
-    # tracked if the user enables the entity.
-    async_add_entities(
-        [
+    def _new_trackers() -> list[OmadaClientScannerEntity]:
+        """Return trackers for known clients without a registry entry."""
+        entity_registry = er.async_get(hass)
+        tracked_ids = {
+            entity.unique_id
+            for entity in er.async_entries_for_config_entry(
+                entity_registry, config_entry.entry_id
+            )
+            if entity.domain == DEVICE_TRACKER_DOMAIN
+        }
+        return [
             OmadaClientScannerEntity(
                 site_id, client.mac, client.name, controller.clients_coordinator
             )
-            for client in (controller.known_clients_coordinator.data or {}).values()
+            for client in (known_clients_coordinator.data or {}).values()
+            if f"scanner_{site_id}_{client.mac}" not in tracked_ids
         ]
+
+    @callback
+    def _handle_known_clients_update() -> None:
+        """Add trackers for clients that reappeared on the controller."""
+        if entities := _new_trackers():
+            async_add_entities(entities)
+
+    config_entry.async_on_unload(
+        known_clients_coordinator.async_add_listener(_handle_known_clients_update)
     )
+
+    # Add all known WiFi devices as potentially tracked devices. They will only be
+    # tracked if the user enables the entity.
+    async_add_entities(_new_trackers())
 
 
 class OmadaClientScannerEntity(

@@ -46,6 +46,7 @@ class OmadaSiteController:
         self._known_clients_coordinator = OmadaKnownClientsCoordinator(
             hass, config_entry, omada_client
         )
+        self._device_entity_registrations: list[set[str]] = []
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
@@ -79,6 +80,7 @@ class OmadaSiteController:
         """
         # Track which devices have been processed already
         processed_devices: set[str] = set()
+        self._device_entity_registrations.append(processed_devices)
 
         async def _async_register_entities() -> None:
             """Register entities for devices that match the filter."""
@@ -105,6 +107,11 @@ class OmadaSiteController:
 
         # Call once on initial setup
         await _async_register_entities()
+
+    def async_mark_device_removed(self, mac: str) -> None:
+        """Allow entities for a removed device to be re-registered if it reappears."""
+        for processed in self._device_entity_registrations:
+            processed.discard(mac)
 
     @property
     def omada_client(self) -> OmadaSiteClient:
