@@ -1,15 +1,13 @@
 """Tests for TP-Link Omada update entities."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
-from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
+from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     DOMAIN as UPDATE_DOMAIN,
@@ -19,16 +17,14 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import async_get_platforms
 
 from tests.common import (
     MockConfigEntry,
-    async_fire_time_changed,
     async_load_json_array_fixture,
     snapshot_platform,
 )
 from tests.typing import WebSocketGenerator
-
-POLL_INTERVAL = timedelta(seconds=POLL_DEVICES)
 
 
 async def _rebuild_device_list_with_update(
@@ -76,14 +72,10 @@ async def test_firmware_download_in_progress(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_omada_site_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update entity when firmware download is in progress."""
     entity_id = "update.test_poe_switch_firmware"
-
-    freezer.tick(POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    controller = init_integration.runtime_data
 
     # Rebuild device list with fwDownload set to True for the switch
     updated_devices = await _rebuild_device_list_with_update(
@@ -91,9 +83,14 @@ async def test_firmware_download_in_progress(
     )
     mock_omada_site_client.get_devices.return_value = updated_devices
 
-    # Trigger coordinator update
-    freezer.tick(POLL_INTERVAL)
-    async_fire_time_changed(hass)
+    # Refresh the devices coordinator so the firmware coordinator
+    # picks up the download state.
+    await controller.devices_coordinator.async_refresh()
+
+    # The firmware refresh is debounced, so drive it directly.
+    update_platform = async_get_platforms(hass, DOMAIN)[0]
+    update_entity = update_platform.entities[entity_id]
+    await update_entity.coordinator.async_refresh()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify update entity shows in progress
