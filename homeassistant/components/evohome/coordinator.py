@@ -64,6 +64,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         self.temps: dict[str, float | None] = {}
 
         self._first_refresh_done = False  # get schedules only after first refresh
+        self._v1_temps_warned = False  # only log v1 API faults once, until resolved
 
     # our version of async_config_entry_first_refresh()...
     async def async_first_refresh(self) -> None:
@@ -158,7 +159,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             await self.client_v1.update()
 
-        except ec1.BadUserCredentialsError as err:
+        except (ec1.BadUserCredentialsError, ec1.BadApiSchemaError) as err:
             self.logger.warning(
                 (
                     "Unable to obtain high-precision temperatures. "
@@ -169,16 +170,21 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             self.client_v1 = None
 
         except ec1.EvohomeError as err:
-            self.logger.warning(
-                (
-                    "Unable to obtain the latest high-precision temperatures. "
-                    "They will be ignored this refresh cycle: %r"
-                ),
-                err,
-            )
+            if not self._v1_temps_warned:
+                self.logger.warning(
+                    (
+                        "Unable to obtain the latest high-precision temperatures. "
+                        "They will be ignored until this feature recovers: %r"
+                    ),
+                    err,
+                )
+                self._v1_temps_warned = True
             self.temps = {}  # high-precision temps now considered stale
 
         else:
+            if self._v1_temps_warned:
+                self.logger.warning("High-precision temperatures are available again")
+                self._v1_temps_warned = False
             self.temps = await self.client_v1.location_by_id[
                 self.loc.id
             ].get_temperatures(dont_update_status=True)
