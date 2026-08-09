@@ -90,8 +90,8 @@ async def test_setup(
     mock_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_entry.entry_id) is True
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, service_info.address)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, service_info.address), mock_entry.entry_id
     )
     assert device == snapshot
 

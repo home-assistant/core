@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -119,6 +119,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     filtered_trackables = [item for item in trackables if item]
 
     entry.runtime_data = TractiveData(tractive, filtered_trackables)
+
+    # Register the tracker devices so entities on the pet devices can resolve
+    # their via_device link at construction time.
+    device_registry = dr.async_get(hass)
+    for item in filtered_trackables:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            configuration_url="https://my.tractive.com/",
+            identifiers={(DOMAIN, item.tracker_details["_id"])},
+            translation_key="tracker",
+            translation_placeholders={"id": item.tracker_details["_id"]},
+            manufacturer="Tractive GmbH",
+            sw_version=item.tracker_details["fw_version"],
+            model_id=item.tracker_details["model_number"],
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

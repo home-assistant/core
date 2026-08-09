@@ -3239,12 +3239,12 @@ async def test_remove_device_removes_entities(
     assert not entity_registry.async_is_registered(entry.entity_id)
 
 
-async def test_remove_config_entry_from_device_removes_entities(
+async def test_remove_device_with_shared_connection_removes_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that we remove entities tied to a device when its config entry is removed."""
+    """Test removing a device with a shared connection removes only its entities."""
     config_entry_1 = MockConfigEntry(domain="hue")
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="device_tracker")
@@ -3279,10 +3279,8 @@ async def test_remove_config_entry_from_device_removes_entities(
     assert entity_registry.async_is_registered(entry_1.entity_id)
     assert entity_registry.async_is_registered(entry_2.entity_id)
 
-    # Removing the first config entry removes its device and the tied entity
-    device_registry.async_update_device(
-        device_entry_1.id, remove_config_entry_id=config_entry_1.entry_id
-    )
+    # Removing the first device removes it along with its tied entity
+    device_registry.async_remove_device(device_entry_1.id)
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(device_entry_1.id)
@@ -3290,22 +3288,20 @@ async def test_remove_config_entry_from_device_removes_entities(
     assert device_registry.async_get(device_entry_2.id)
     assert entity_registry.async_is_registered(entry_2.entity_id)
 
-    # Removing the second config entry removes its device and entity too
-    device_registry.async_update_device(
-        device_entry_2.id, remove_config_entry_id=config_entry_2.entry_id
-    )
+    # Removing the second device removes it along with its entity too
+    device_registry.async_remove_device(device_entry_2.id)
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(device_entry_2.id)
     assert not entity_registry.async_is_registered(entry_2.entity_id)
 
 
-async def test_remove_config_entry_from_device_removes_entities_2(
+async def test_remove_device_keeps_other_config_entry_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test we don't remove entities not tied to the removed config entry."""
+    """Test removing a device keeps entities not owned by its config entry."""
     config_entry_1 = MockConfigEntry(domain="hue")
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="some_helper")
@@ -3335,14 +3331,12 @@ async def test_remove_config_entry_from_device_removes_entities_2(
     assert entity_registry.async_is_registered(entry_1.entity_id)
     assert entity_registry.async_is_registered(entry_2.entity_id)
 
-    # Removing the device's config entry removes the device
-    device_registry.async_update_device(
-        device_entry.id, remove_config_entry_id=config_entry_1.entry_id
-    )
+    # Removing the device
+    device_registry.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(device_entry.id)
-    # Entities not tied to the removed config entry are kept, but detached
+    # Entities not owned by the removed device's config entry are kept, but detached
     assert entity_registry.async_is_registered(entry_1.entity_id)
     assert entity_registry.async_is_registered(entry_2.entity_id)
     assert entity_registry.async_get(entry_1.entity_id).device_id is None
@@ -3449,12 +3443,12 @@ async def test_move_device_config_subentry_removes_old_subentry_entities(
     assert entity_registry.async_is_registered(sub2_entity.entity_id)
 
 
-async def test_remove_config_subentry_from_device_removes_entities(
+async def test_remove_device_removes_config_subentry_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that we remove entities tied to a device when its config subentry is removed."""
+    """Test removing a device removes the entities tied to its config subentry."""
     config_entry_1 = MockConfigEntry(
         domain="hue",
         subentries_data=[
@@ -3505,13 +3499,9 @@ async def test_remove_config_subentry_from_device_removes_entities(
     assert entity_registry.async_is_registered(entry_1.entity_id)
     assert entity_registry.async_is_registered(entry_2.entity_id)
 
-    # Removing the device's config subentry deletes the device; the entity tied to that
-    # subentry is removed, the entity tied to another subentry is detached
-    device_registry.async_update_device(
-        device_entry.id,
-        remove_config_entry_id=config_entry_1.entry_id,
-        remove_config_subentry_id="mock-subentry-id-1",
-    )
+    # Removing the device removes the entity tied to the device's subentry, and detaches
+    # the entity tied to another subentry of the same config entry
+    device_registry.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(device_entry.id)
@@ -3520,12 +3510,12 @@ async def test_remove_config_subentry_from_device_removes_entities(
     assert entity_registry.async_get(entry_2.entity_id).device_id is None
 
 
-async def test_remove_config_subentry_from_device_removes_entities_2(
+async def test_remove_device_keeps_other_config_subentry_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test we don't remove entities not tied to the removed config subentry."""
+    """Test removing a device keeps entities not tied to its config subentry."""
     config_entry_1 = MockConfigEntry(
         domain="hue",
         subentries_data=[
@@ -3572,13 +3562,9 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
     assert entity_registry.async_is_registered(entry_1.entity_id)
     assert entity_registry.async_is_registered(entry_2.entity_id)
 
-    # Removing the device's config subentry deletes the device; entities not tied to
-    # that subentry are kept but detached
-    device_registry.async_update_device(
-        device_entry.id,
-        remove_config_entry_id=config_entry_1.entry_id,
-        remove_config_subentry_id="mock-subentry-id-1",
-    )
+    # Removing the device keeps entities not owned by its config subentry (one with no
+    # config entry, one in another subentry) but detaches them
+    device_registry.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(device_entry.id)
