@@ -14,6 +14,7 @@ from gardena_bluetooth.exceptions import (
 )
 from gardena_bluetooth.parse import (
     Characteristic,
+    CharacteristicSegmented,
     CharacteristicTime,
     CharacteristicType,
 )
@@ -137,6 +138,11 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data: dict[str, Any] = {}
         for unique_id in unique_ids:
             char = self.characteristics[unique_id]
+            # Segmented characteristics are slow multi frame transfers carrying
+            # data that only changes when it is taught to the device again.
+            if isinstance(char, CharacteristicSegmented) and unique_id in self.data:
+                data[unique_id] = self.data[unique_id]
+                continue
             try:
                 data[unique_id] = await self.client.read_char(char)
             except CharacteristicNoAccess as exception:
