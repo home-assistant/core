@@ -10,14 +10,24 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import DOMAIN
 from .errors import CannotConnect, LoginError
 
 
 @contextmanager
-def mikrotik_config_entry_errors(suppress_errors: bool = False) -> Generator[None]:
-    """Handle common Mikrotik API exceptions as ConfigEntry errors."""
+def mikrotik_config_entry_errors(
+    suppress_errors: bool = False, during_setup: bool = False
+) -> Generator[None]:
+    """Handle common Mikrotik API exceptions as ConfigEntry errors.
+
+    `during_setup`:
+      - True when called from `async_setup_entry` so connectivity errors raise
+        `ConfigEntryNotReady`.
+      - False when called from the coordinator's update cycle, so connectivity errors
+        raise `UpdateFailed` instead.
+    """
     try:
         yield
     except LoginError as err:
@@ -26,7 +36,13 @@ def mikrotik_config_entry_errors(suppress_errors: bool = False) -> Generator[Non
             translation_key="invalid_auth",
         ) from err
     except (CannotConnect, OSError, TimeoutError, ConnectionClosed) as err:
-        raise ConfigEntryNotReady(
+        if during_setup:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
             translation_placeholders={"error": repr(err)},

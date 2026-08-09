@@ -3,7 +3,6 @@
 import asyncio
 import base64
 from contextlib import suppress
-from datetime import datetime
 import logging
 from pathlib import Path
 from typing import Any, override
@@ -40,6 +39,7 @@ from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util import dt as dt_util
 
 from .addon import get_addon_manager
 from .const import (
@@ -1629,7 +1629,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # save the backup to a file just in case
         self.backup_filepath = Path(
             self.hass.config.path(
-                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"  # pylint: disable=home-assistant-enforce-naive-now
+                f"zwavejs_nvm_backup_{dt_util.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
             )
         )
         try:

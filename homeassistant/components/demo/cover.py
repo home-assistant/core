@@ -219,6 +219,7 @@ class DemoCover(CoverEntity):
         """Stop the cover."""
         self._is_closing = False
         self._is_opening = False
+        self.async_write_ha_state()
         if self._position is None:
             return
         if self._unsub_listener_cover is not None:

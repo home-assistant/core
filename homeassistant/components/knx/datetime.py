@@ -8,13 +8,7 @@ from xknx.dpt.dpt_19 import KNXDateTime as XKNXDateTime
 
 from homeassistant import config_entries
 from homeassistant.components.datetime import DateTimeEntity
-from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
-    CONF_NAME,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -32,7 +26,12 @@ from .const import (
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY, CONF_GA_DATETIME
 from .storage.util import ConfigExtractor
@@ -120,9 +119,8 @@ class KnxYamlDateTime(_KNXDateTime, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.remote_value.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            unique_id=build_yaml_unique_id(self._device.remote_value.group_address),
+            entity_config=config,
         )
 
 
