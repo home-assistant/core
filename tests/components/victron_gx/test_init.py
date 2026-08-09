@@ -42,8 +42,8 @@ async def test_migrate_legacy_evcharger_sensors(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test legacy EV charger sensors are removed only during migration."""
-    mock_config_entry.minor_version = 1
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, minor_version=1)
     legacy_entries = [
         entity_registry.async_get_or_create(
             Platform.SENSOR,
