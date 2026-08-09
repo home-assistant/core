@@ -103,6 +103,9 @@
       "duress_alarm": {
         "name": "Duress alarm"
       },
+      "lockout_alarm": {
+        "name": "Lockout alarm"
+      },
       "half_lock_calibration": {
         "name": "Half-lock calibration"
       },

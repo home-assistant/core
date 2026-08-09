@@ -112,6 +112,11 @@ BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
         translation_key="duress_alarm",
         device_class=BinarySensorDeviceClass.SAFETY,
     ),
+    "lockout_alarm": SwitchbotBinarySensorEntityDescription(
+        key="lockout_alarm",
+        translation_key="lockout_alarm",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
     "tamper_alarm": SwitchbotBinarySensorEntityDescription(
         key="tamper_alarm",
         device_class=BinarySensorDeviceClass.TAMPER,

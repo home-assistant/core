@@ -1003,10 +1003,10 @@ async def test_presence_sensor_battery_range_mapping(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("adv_info", "sensor_type", "charging_state", "duress_state"),
+    ("adv_info", "sensor_type", "charging_state", "duress_state", "lockout_state"),
     [
-        (KEYPAD_VISION_INFO, "keypad_vision", STATE_ON, STATE_OFF),
-        (KEYPAD_VISION_PRO_INFO, "keypad_vision_pro", STATE_OFF, STATE_ON),
+        (KEYPAD_VISION_INFO, "keypad_vision", STATE_ON, STATE_OFF, STATE_OFF),
+        (KEYPAD_VISION_PRO_INFO, "keypad_vision_pro", STATE_OFF, STATE_ON, STATE_ON),
     ],
 )
 async def test_keypad_vision_sensor(
@@ -1015,6 +1015,7 @@ async def test_keypad_vision_sensor(
     sensor_type: str,
     charging_state: str,
     duress_state: str,
+    lockout_state: str,
 ) -> None:
     """Test setting up creates the sensors for Keypad Vision (Pro)."""
     await async_setup_component(hass, DOMAIN, {})
@@ -1041,7 +1042,7 @@ async def test_keypad_vision_sensor(
         await hass.async_block_till_done()
 
         assert len(hass.states.async_all("sensor")) == 2
-        assert len(hass.states.async_all("binary_sensor")) == 3
+        assert len(hass.states.async_all("binary_sensor")) == 4
 
         battery_sensor = hass.states.get("sensor.test_name_battery")
         battery_sensor_attrs = battery_sensor.attributes
@@ -1073,6 +1074,12 @@ async def test_keypad_vision_sensor(
         assert duress_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Duress alarm"
         assert duress_sensor_attrs[ATTR_DEVICE_CLASS] == "safety"
         assert duress_sensor.state == duress_state
+        lockout_sensor = hass.states.get("binary_sensor.test_name_lockout_alarm")
+        lockout_sensor_attrs = lockout_sensor.attributes
+        assert lockout_sensor
+        assert lockout_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Lockout alarm"
+        assert lockout_sensor_attrs[ATTR_DEVICE_CLASS] == "problem"
+        assert lockout_sensor.state == lockout_state
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
