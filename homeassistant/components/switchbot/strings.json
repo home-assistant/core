@@ -103,6 +103,12 @@
       "duress_alarm": {
         "name": "Duress alarm"
       },
+      "half_lock_calibration": {
+        "name": "Half-lock calibration"
+      },
+      "half_locked": {
+        "name": "Half locked"
+      },
       "high_temperature": {
         "name": "High temperature"
       },
@@ -111,12 +117,6 @@
       },
       "low_temperature": {
         "name": "Low temperature"
-      },
-      "half_lock_calibration": {
-        "name": "Half-lock calibration"
-      },
-      "half_locked": {
-        "name": "Half locked"
       }
     },
     "button": {
