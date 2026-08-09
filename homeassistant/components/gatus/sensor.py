@@ -1,6 +1,6 @@
 """Support for Gatus sensors."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -53,7 +53,8 @@ class GatusEndpointResponseTimeSensor(GatusEndpointEntity, SensorEntity):
     @override
     def native_value(self) -> float | None:
         """Return the response time in milliseconds."""
-        assert self.latest_result is not None
+        if TYPE_CHECKING:
+            assert self.latest_result is not None
         if (duration := self.latest_result.duration) is None:
             return None
 

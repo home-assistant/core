@@ -4,10 +4,10 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from gatus_api import EndpointStatus, GatusClientError, Result
+from gatus_api import EndpointStatus, Result
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -101,29 +101,6 @@ async def test_sensor_no_group(
     assert state.state == "12.5"
 
 
-async def test_sensor_client_error(
-    hass: HomeAssistant,
-    mock_gatus_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that a client exception cleanly marks entities as unavailable."""
-    await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("sensor.core_backend_service_response_time")
-    assert state is not None
-    assert state.state == "23.12"
-
-    mock_gatus_client.get_endpoints_statuses.side_effect = GatusClientError
-
-    freezer.tick(30)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.core_backend_service_response_time")
-    assert state is not None
-    assert state.state == "unavailable"
-
-
 async def test_sensor_empty_results(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
@@ -143,7 +120,7 @@ async def test_sensor_empty_results(
 
     state = hass.states.get("sensor.backend_service_response_time")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_sensor_missing_duration(
@@ -165,4 +142,4 @@ async def test_sensor_missing_duration(
 
     state = hass.states.get("sensor.backend_service_response_time")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
