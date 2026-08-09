@@ -2353,8 +2353,12 @@
     }
   },
   "issues": {
+    "deprecated_sensor": {
+      "description": "The legacy sensor `{entity_id}` has been removed and replaced by a number entity on the same device. Update any dashboards, automations, scripts, or templates that use the legacy sensor, then disable it. The legacy sensor will be removed after the next restart.",
+      "title": "Legacy EV charger sensor removed"
+    },
     "deprecated_sensor_in_use": {
-      "description": "The legacy sensor `{entity_id}` has been replaced by a number entity on the same device and is used in the following automations or scripts:\n{items}\n\nUpdate these automations or scripts to use the number entity.",
+      "description": "The legacy sensor `{entity_id}` has been removed and replaced by a number entity on the same device. It is used in the following automations or scripts:\n{items}\n\nUpdate these automations or scripts to use the number entity, then disable the legacy sensor. It will be removed after the next restart.",
       "title": "Legacy EV charger sensor in use"
     }
   }

@@ -63,7 +63,7 @@ def _automations_and_scripts_using_entity(
 def _async_check_legacy_sensors(
     hass: HomeAssistant, config_entry: VictronGxConfigEntry
 ) -> None:
-    """Create repairs for legacy sensors used by automations or scripts."""
+    """Create repairs for legacy sensors and remove them once disabled."""
     entity_registry = er.async_get(hass)
     for entity_entry in er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
@@ -75,11 +75,17 @@ def _async_check_legacy_sensors(
             continue
 
         issue_id = f"deprecated_sensor_{entity_entry.unique_id}"
-        items = _automations_and_scripts_using_entity(hass, entity_entry.entity_id)
-        if not items:
+        if entity_entry.disabled:
             entity_registry.async_remove(entity_entry.entity_id)
             ir.async_delete_issue(hass, DOMAIN, issue_id)
             continue
+
+        items = _automations_and_scripts_using_entity(hass, entity_entry.entity_id)
+        translation_key = "deprecated_sensor"
+        placeholders = {"entity_id": entity_entry.entity_id}
+        if items:
+            translation_key = "deprecated_sensor_in_use"
+            placeholders["items"] = "\n".join(items)
 
         ir.async_create_issue(
             hass,
@@ -88,11 +94,8 @@ def _async_check_legacy_sensors(
             breaks_in_ha_version=_LEGACY_SENSOR_BREAKS_IN_VERSION,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_sensor_in_use",
-            translation_placeholders={
-                "entity_id": entity_entry.entity_id,
-                "items": "\n".join(items),
-            },
+            translation_key=translation_key,
+            translation_placeholders=placeholders,
         )
 
 
