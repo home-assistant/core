@@ -444,7 +444,7 @@ async def async_service_temperature_set(
                 max_temp,
                 entity.temperature_unit,
             )
-            if check_temp < min_temp or check_temp > max_temp:
+            if not min_temp <= check_temp <= max_temp:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="temp_out_of_range",
