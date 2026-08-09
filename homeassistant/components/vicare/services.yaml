@@ -1,4 +1,5 @@
 .circulation_day_fields: &circulation_day_fields
+  required: true
   selector:
     object:
       multiple: true
@@ -21,7 +22,6 @@
                 - "on"
                 - "5/25-cycles"
                 - "5/10-cycles"
-              custom_value: true
               mode: dropdown
         position:
           required: true

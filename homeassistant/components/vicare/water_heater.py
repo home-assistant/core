@@ -80,7 +80,7 @@ CIRCULATION_SCHEDULE_SLOT_SCHEMA = vol.All(
 )
 
 CIRCULATION_SCHEDULE_SCHEMA: VolDictType = {
-    vol.Optional(day_name, default=list): vol.All(
+    vol.Required(day_name): vol.All(
         cv.ensure_list,
         [CIRCULATION_SCHEDULE_SLOT_SCHEMA],
     )

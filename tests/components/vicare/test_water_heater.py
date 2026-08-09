@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.vicare.water_heater import (
     SERVICE_SET_CIRCULATION_SCHEDULE,
@@ -409,6 +410,43 @@ async def test_set_circulation_schedule_service(
                 "sun": [],
             }
         )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_set_circulation_schedule_service_requires_every_weekday(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set_circulation_schedule rejects a call omitting a weekday."""
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(_FIXTURES).as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
+    schedule_without_sunday = {
+        day: slots
+        for day, slots in _EMPTY_CIRCULATION_SCHEDULE_DAYS.items()
+        if day != "sunday"
+    }
+    with (
+        patch.object(entity._api, "setDomesticHotWaterCirculationSchedule") as mock_set,
+        pytest.raises(vol.Invalid),
+    ):
+        await hass.services.async_call(
+            "vicare",
+            SERVICE_SET_CIRCULATION_SCHEDULE,
+            {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, **schedule_without_sunday},
+            blocking=True,
+        )
+    mock_set.assert_not_called()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
