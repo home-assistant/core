@@ -2278,6 +2278,69 @@ async def test_stt_vad_enabled_based_on_audio_processing(
         mock_vad.assert_not_called()
 
 
+async def test_stt_vad_events_emitted_when_requires_external_vad_false(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSTTProvider,
+    mock_stt_provider_entity: MockSTTProviderEntity,
+    mock_chat_session: chat_session.ChatSession,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+) -> None:
+    """Test that STT_VAD_START/STT_VAD_END events are emitted when requires_external_vad=False."""
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    async def audio_data() -> AsyncGenerator[bytes]:
+        yield make_10ms_chunk(b"speech!")
+        yield make_10ms_chunk(b"speech!")
+        yield b""
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    # Set the audio_processing on the mock provider to requires_external_vad=False
+    mock_stt_provider._audio_processing = stt.SpeechAudioProcessing(
+        requires_external_vad=False,
+        prefers_auto_gain_enabled=True,
+        prefers_noise_reduction_enabled=True,
+    )
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        session=mock_chat_session,
+        device_id=None,
+        stt_metadata=stt.SpeechMetadata(
+            language="en-US",
+            format=stt.AudioFormats.WAV,
+            codec=stt.AudioCodecs.PCM,
+            bit_rate=stt.AudioBitRates.BITRATE_16,
+            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+            channel=stt.AudioChannels.CHANNEL_MONO,
+        ),
+        stt_stream=audio_data(),
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.STT,
+            end_stage=assist_pipeline.PipelineStage.STT,
+            event_callback=lambda e: events.append(e),
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
+        ),
+    )
+    await pipeline_input.validate()
+    await pipeline_input.execute()
+
+    # Verify STT_VAD_START and STT_VAD_END events were emitted
+    event_types = [e.type for e in events]
+    assert assist_pipeline.PipelineEventType.STT_VAD_START in event_types
+    assert assist_pipeline.PipelineEventType.STT_VAD_END in event_types
+    assert assist_pipeline.PipelineEventType.STT_END in event_types
+    # STT_VAD_START should come before STT_VAD_END
+    vad_start_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_START)
+    vad_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_END)
+    assert vad_start_idx < vad_end_idx
+
+
 async def test_invalid_pipeline_does_not_create_tts_stream(
     hass: HomeAssistant,
     mock_wake_word_provider_entity: MockWakeWordEntity,

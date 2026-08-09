@@ -987,6 +987,27 @@ class PipelineRun:
                 code="stt-no-text-recognized", message="No text recognized"
             )
 
+        # When the STT entity handles VAD internally (requires_external_vad=False),
+        # the pipeline doesn't create a VoiceCommandSegmenter and thus never emits
+        # STT_VAD_START/STT_VAD_END. Synthesize them here so satellites and debug
+        # tooling see correct VAD timing.
+        if not self.stt_provider.audio_processing.requires_external_vad:
+            # Use current time as approximation; the STT entity's internal VAD
+            # timing is not exposed via SpeechResult.
+            vad_timestamp = int(time.monotonic() * 1000)
+            self.process_event(
+                PipelineEvent(
+                    PipelineEventType.STT_VAD_START,
+                    {"timestamp": vad_timestamp},
+                )
+            )
+            self.process_event(
+                PipelineEvent(
+                    PipelineEventType.STT_VAD_END,
+                    {"timestamp": vad_timestamp},
+                )
+            )
+
         self.process_event(
             PipelineEvent(
                 PipelineEventType.STT_END,
