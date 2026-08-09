@@ -871,6 +871,46 @@ async def test_ssdp_flow_updates_host_on_rediscovery(
 
 
 @pytest.mark.usefixtures("mock_victron_hub")
+async def test_ssdp_flow_adds_missing_host_on_rediscovery(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test SSDP discovery adds a missing host to an existing entry."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            key: value
+            for key, value in mock_config_entry.data.items()
+            if key != CONF_HOST
+        },
+    )
+
+    discovery_info = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="upnp:rootdevice",
+        ssdp_location="http://10.0.0.50:80/",
+        upnp={
+            "serialNumber": MOCK_SERIAL,
+            "X_VrmPortalId": MOCK_INSTALLATION_ID,
+            "modelName": MOCK_MODEL,
+            "friendlyName": MOCK_FRIENDLY_NAME,
+            "X_MqttOnLan": "1",
+            "manufacturer": "Victron Energy",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "10.0.0.50"
+
+
+@pytest.mark.usefixtures("mock_victron_hub")
 async def test_ssdp_flow_abort_on_invalid_hostname(
     hass: HomeAssistant,
 ) -> None:

@@ -186,7 +186,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if (
             existing_entry is not None
-            and existing_entry.data[CONF_HOST] != self.hostname
+            and existing_entry.data.get(CONF_HOST) != self.hostname
         ):
             # Update the entry with the new host and title, then reload and abort
             return self.async_update_reload_and_abort(
