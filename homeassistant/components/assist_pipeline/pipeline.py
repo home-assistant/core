@@ -989,24 +989,25 @@ class PipelineRun:
 
         # When the STT entity handles VAD internally (requires_external_vad=False),
         # the pipeline doesn't create a VoiceCommandSegmenter and thus never emits
-        # STT_VAD_START/STT_VAD_END. Synthesize them here so satellites and debug
-        # tooling see correct VAD timing.
+        # STT_VAD_START/STT_VAD_END. Synthesize them here using timestamps from the
+        # audio stream so satellites and debug tooling see correct VAD timing.
         if not self.stt_provider.audio_processing.requires_external_vad:
-            # Use current time as approximation; the STT entity's internal VAD
-            # timing is not exposed via SpeechResult.
-            vad_timestamp = int(time.monotonic() * 1000)
-            self.process_event(
-                PipelineEvent(
-                    PipelineEventType.STT_VAD_START,
-                    {"timestamp": vad_timestamp},
+            start_ts = self._first_chunk_timestamp
+            end_ts = self._last_chunk_timestamp
+            if start_ts is not None:
+                self.process_event(
+                    PipelineEvent(
+                        PipelineEventType.STT_VAD_START,
+                        {"timestamp": start_ts},
+                    )
                 )
-            )
-            self.process_event(
-                PipelineEvent(
-                    PipelineEventType.STT_VAD_END,
-                    {"timestamp": vad_timestamp},
+            if end_ts is not None:
+                self.process_event(
+                    PipelineEvent(
+                        PipelineEventType.STT_VAD_END,
+                        {"timestamp": end_ts},
+                    )
                 )
-            )
 
         self.process_event(
             PipelineEvent(
@@ -1030,7 +1031,12 @@ class PipelineRun:
     ) -> AsyncGenerator[bytes]:
         """Yield audio chunks until VAD detects silence or speech-to-text completes."""
         sent_vad_start = False
+        self._first_chunk_timestamp: int | None = None
+        self._last_chunk_timestamp: int | None = None
         async for chunk in audio_stream:
+            if self._first_chunk_timestamp is None:
+                self._first_chunk_timestamp = chunk.timestamp_ms
+            self._last_chunk_timestamp = chunk.timestamp_ms
             self._capture_chunk(chunk.audio)
 
             if stt_vad is not None:
