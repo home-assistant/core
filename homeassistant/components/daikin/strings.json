@@ -59,6 +59,9 @@
     }
   },
   "exceptions": {
+    "demand_control_unsupported": {
+      "message": "This Daikin device does not support demand control."
+    },
     "error_communicating": {
       "message": "Error communicating with Daikin device: {error}"
     },
@@ -82,6 +85,22 @@
     },
     "zone_temperature_missing": {
       "message": "Provide a temperature value when adjusting a zone."
+    }
+  },
+  "services": {
+    "set_demand_control": {
+      "description": "Limits the maximum power of the Daikin unit as a percentage of its nominal power, for example during peak electricity price periods.",
+      "fields": {
+        "en_demand": {
+          "description": "Whether demand control should be enabled.",
+          "name": "Enable"
+        },
+        "max_pow": {
+          "description": "Maximum power as a percentage of the unit's nominal power.",
+          "name": "Maximum power"
+        }
+      },
+      "name": "Set demand control"
     }
   }
 }

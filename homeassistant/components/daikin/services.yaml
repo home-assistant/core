@@ -1,0 +1,18 @@
+set_demand_control:
+  target:
+    entity:
+      integration: daikin
+      domain: climate
+  fields:
+    en_demand:
+      required: true
+      selector:
+        boolean:
+    max_pow:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"

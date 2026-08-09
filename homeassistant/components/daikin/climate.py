@@ -5,6 +5,7 @@ import logging
 from typing import Any, override
 
 from pydaikin.daikin_base import Appliance
+import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -23,7 +24,9 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ATTR_INSIDE_TEMPERATURE,
@@ -88,6 +91,15 @@ HA_ATTR_TO_DAIKIN = {
 
 DAIKIN_ATTR_ADVANCED = "adv"
 ZONE_TEMPERATURE_WINDOW = 2
+
+SERVICE_SET_DEMAND_CONTROL = "set_demand_control"
+ATTR_EN_DEMAND = "en_demand"
+ATTR_MAX_POW = "max_pow"
+
+SET_DEMAND_CONTROL_SCHEMA: VolDictType = {
+    vol.Required(ATTR_EN_DEMAND): bool,
+    vol.Required(ATTR_MAX_POW): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+}
 
 
 def _zone_error(
@@ -170,6 +182,13 @@ async def async_setup_entry(
             if _zone_is_configured(zone)
         )
     async_add_entities(entities)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_DEMAND_CONTROL,
+        SET_DEMAND_CONTROL_SCHEMA,
+        "async_set_demand_control",
+    )
 
 
 def format_target_temperature(target_temperature: float) -> str:
@@ -383,6 +402,19 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         """Turn device off."""
         await self.device.set(
             {HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]: HA_STATE_TO_DAIKIN[HVACMode.OFF]}
+        )
+        await self.coordinator.async_refresh()
+
+    async def async_set_demand_control(self, *, en_demand: bool, max_pow: int) -> None:
+        """Set the demand control maximum power of the unit."""
+        if not self.device.support_demand_control:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="demand_control_unsupported",
+            )
+        await self.device.set_demand_control(
+            en_demand="on" if en_demand else "off",
+            max_pow=max_pow,
         )
         await self.coordinator.async_refresh()
 
