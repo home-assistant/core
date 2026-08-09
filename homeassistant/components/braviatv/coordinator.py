@@ -160,8 +160,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 own = title is not None and folded == title.casefold()
                 if folded not in taken and (own or folded not in reserved):
                     name = label
-            # Otherwise fall back to the generic name, or to the label for the
-            # inputs that are reported without one.
+            # Inputs are reported without a title on some models.
             if name is None:
                 name = title or label
             if not name or not uri:
@@ -333,10 +332,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     if num and int(query) == int(num):
                         return await self.async_source_start(uri, source_type)
                 else:
-                    # Match both the name shown in source_list and the generic
-                    # one, so existing automations keep working.
-                    # Casefolded like the uniqueness checks above, so that a
-                    # name reserved as a duplicate also matches as one here.
+                    # Both names are matched so that automations written
+                    # before an input was renamed keep working.
                     folded_query = query.casefold()
                     for name in (item.get("name"), item.get("title")):
                         if not name:
