@@ -651,14 +651,14 @@ async def test_set_and_templates(
 
     # Temperature
     await common.async_set_temperature(
-        hass, temperature=107, entity_id=ENTITY_WATER_HEATER
+        hass, temperature=50, entity_id=ENTITY_WATER_HEATER
     )
     mqtt_mock.async_publish.assert_called_once_with(
-        "temperature-topic", "temp: 107.0", 0, False, message_expiry_interval=None
+        "temperature-topic", "temp: 50.0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("temperature") == 107
+    assert state.attributes.get("temperature") == 50
 
     # Power
     await common.async_turn_on(hass, entity_id=ENTITY_WATER_HEATER)
@@ -1065,10 +1065,10 @@ async def test_precision_default(
     mqtt_mock = await mqtt_mock_entry()
 
     await common.async_set_temperature(
-        hass, temperature=23.67, entity_id=ENTITY_WATER_HEATER
+        hass, temperature=43.67, entity_id=ENTITY_WATER_HEATER
     )
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("temperature") == 23.7
+    assert state.attributes.get("temperature") == 43.7
     mqtt_mock.async_publish.reset_mock()
 
 
@@ -1083,10 +1083,10 @@ async def test_precision_halves(
     mqtt_mock = await mqtt_mock_entry()
 
     await common.async_set_temperature(
-        hass, temperature=23.67, entity_id=ENTITY_WATER_HEATER
+        hass, temperature=43.67, entity_id=ENTITY_WATER_HEATER
     )
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("temperature") == 23.5
+    assert state.attributes.get("temperature") == 43.5
     mqtt_mock.async_publish.reset_mock()
 
 
@@ -1101,10 +1101,10 @@ async def test_precision_whole(
     mqtt_mock = await mqtt_mock_entry()
 
     await common.async_set_temperature(
-        hass, temperature=23.67, entity_id=ENTITY_WATER_HEATER
+        hass, temperature=43.67, entity_id=ENTITY_WATER_HEATER
     )
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("temperature") == 24.0
+    assert state.attributes.get("temperature") == 44.0
     mqtt_mock.async_publish.reset_mock()
 
 
@@ -1121,8 +1121,8 @@ async def test_precision_whole(
         (
             water_heater.SERVICE_SET_TEMPERATURE,
             "temperature_command_topic",
-            {"temperature": "20.1"},
-            20.1,
+            {"temperature": "43.1"},
+            43.1,
             "temperature_command_template",
         ),
         (
