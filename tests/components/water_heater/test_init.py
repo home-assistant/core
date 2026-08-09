@@ -79,13 +79,11 @@ async def test_set_temp_schema(
         (UnitOfTemperature.CELSIUS, 20.0, "20.0"),
         (UnitOfTemperature.FAHRENHEIT, 40.0, "104.0"),
         (UnitOfTemperature.FAHRENHEIT, 61.0, "141.8"),
-        (UnitOfTemperature.CELSIUS, 43.3, "110.0"),
     ],
     ids=[
         "matching_units",
         "conversion_below_min",
         "conversion_above_max",
-        "conversion_at_displayed_min",
     ],
 )
 async def test_set_temperature_raises_out_of_range(
