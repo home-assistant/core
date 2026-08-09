@@ -233,10 +233,16 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         # are treated as one device.
         if (
             parent is not None
-            and parent != registry_device
+            and parent.device_id != registry_device.device_id
             and parent.device_type is not Device.Type.WallSwitch
         ):
-            self._attr_device_info["via_device"] = (DOMAIN, parent.device_id)
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, parent.device_id),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                )
+            )
         else:
             self._attr_device_info["connections"] = {
                 (dr.CONNECTION_NETWORK_MAC, device.mac)
@@ -642,7 +648,6 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
                     platform_domain=platform_domain,
                 )
             )
-            has_parent_entities = bool(entities)
 
         children = _get_new_children(
             device, coordinator, known_child_device_ids, entity_class.__name__
@@ -678,16 +683,6 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
             )
             entities.extend(child_entities)
 
-        if first_check and entities and not has_parent_entities:
-            # Get or create the parent device for via_device.
-            # This is a timing factor in case this platform is loaded before
-            # other platforms that will have entities on the parent. Eventually
-            # those other platforms will update the parent with full DeviceInfo
-            device_registry = dr.async_get(hass)
-            device_registry.async_get_or_create(
-                config_entry_id=coordinator.config_entry.entry_id,
-                identifiers={(DOMAIN, device.device_id)},
-            )
         return entities
 
 

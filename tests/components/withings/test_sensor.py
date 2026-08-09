@@ -397,8 +397,9 @@ async def test_device_sensors_created_when_device_data_received(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.body_battery")
-    assert device_registry.async_get_device(
-        {(DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"),
+        polling_config_entry.entry_id,
     )
 
     withings.get_devices.return_value = []
@@ -408,8 +409,9 @@ async def test_device_sensors_created_when_device_data_received(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.body_battery") is None
-    assert not device_registry.async_get_device(
-        {(DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d")}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"),
+        polling_config_entry.entry_id,
     )
 
 

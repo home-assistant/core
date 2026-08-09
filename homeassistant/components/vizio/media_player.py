@@ -19,9 +19,8 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DATA_APPS
 from .const import (
@@ -41,11 +40,8 @@ from .const import (
     VIZIO_SOUND_MODE,
     VIZIO_VOLUME,
 )
-from .coordinator import (
-    VizioAppsDataUpdateCoordinator,
-    VizioConfigEntry,
-    VizioDeviceCoordinator,
-)
+from .coordinator import VizioAppsDataUpdateCoordinator, VizioConfigEntry
+from .entity import VizioEntity
 from .helpers import async_device_command
 
 PARALLEL_UPDATES = 0
@@ -98,7 +94,6 @@ async def async_setup_entry(
     entity = VizioDevice(
         config_entry,
         device_class,
-        config_entry.runtime_data.device_coordinator,
         hass.data.get(DATA_APPS) if device_class == MediaPlayerDeviceClass.TV else None,
     )
 
@@ -114,10 +109,9 @@ def _app_config_from_conf(config: dict[str, Any]) -> AppConfig:
     )
 
 
-class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
+class VizioDevice(VizioEntity, MediaPlayerEntity):
     """Media Player implementation which performs REST requests to device."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _current_input: str | None = None
     _current_app_config: AppConfig | None = None
@@ -126,11 +120,10 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         self,
         config_entry: VizioConfigEntry,
         device_class: MediaPlayerDeviceClass,
-        coordinator: VizioDeviceCoordinator,
         apps_coordinator: VizioAppsDataUpdateCoordinator | None,
     ) -> None:
         """Initialize Vizio device."""
-        super().__init__(coordinator)
+        super().__init__(config_entry)
 
         self._config_entry = config_entry
         self._apps_coordinator = apps_coordinator
@@ -142,7 +135,6 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
             CONF_ADDITIONAL_CONFIGS, []
         )
-        self._device = coordinator.device
         if apps_coordinator:
             self._device.set_app_catalog(apps_coordinator.data)
             self._device.set_app_availability(apps_coordinator.availability)
@@ -151,13 +143,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         # Entity class attributes that will change with each update (we only include
         # the ones that are initialized differently from the defaults)
         self._attr_supported_features = SUPPORTED_COMMANDS[device_class]
-
-        # Entity class attributes that will not change
-        unique_id = config_entry.unique_id
-        assert unique_id
-        self._attr_unique_id = unique_id
         self._attr_device_class = device_class
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
 
     @property
     def _volume_step(self) -> int:
@@ -367,12 +353,15 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        if sound_mode in (self._attr_sound_mode_list or ()):
-            await async_device_command(
-                self._device.set_setting(
-                    VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE, sound_mode
-                )
+        if sound_mode not in (self._attr_sound_mode_list or ()):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_mode",
+                translation_placeholders={"sound_mode": sound_mode},
             )
+        await async_device_command(
+            self._device.set_setting(VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE, sound_mode)
+        )
 
     @override
     async def async_turn_on(self) -> None:
@@ -423,6 +412,12 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
             )
         elif source in self._available_apps:
             await async_device_command(self._device.launch_app(source))
+        else:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={"source": source},
+            )
 
     @override
     async def async_volume_up(self) -> None:
@@ -447,16 +442,10 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
-        if self._attr_volume_level is not None:
-            if volume > self._attr_volume_level:
-                num = int(self._max_volume * (volume - self._attr_volume_level))
-                await async_device_command(self._device.volume_up(steps=num))
-                self._attr_volume_level = volume
-
-            elif volume < self._attr_volume_level:
-                num = int(self._max_volume * (self._attr_volume_level - volume))
-                await async_device_command(self._device.volume_down(steps=num))
-                self._attr_volume_level = volume
+        await async_device_command(
+            self._device.set_volume(round(volume * self._max_volume))
+        )
+        self._attr_volume_level = volume
 
     @override
     async def async_media_play(self) -> None:

@@ -181,12 +181,14 @@ class KNXConfigStore:
         entity_registry.async_remove(entity_id)
         await self._store.async_save(self.data)
 
+    def get_entity_uids(self) -> set[str]:
+        """Return unique_ids of all UI configured entities."""
+        return {uid for platform in self.data["entities"].values() for uid in platform}
+
     def get_entity_entries(self) -> list[er.RegistryEntry]:
         """Get entity_ids of all UI configured entities."""
         entity_registry = er.async_get(self.hass)
-        unique_ids = {
-            uid for platform in self.data["entities"].values() for uid in platform
-        }
+        unique_ids = self.get_entity_uids()
         return [
             registry_entry
             for registry_entry in er.async_entries_for_config_entry(

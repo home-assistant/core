@@ -169,7 +169,7 @@ async def test_adam_restore_state_climate(
             (
                 State("climate.living_room", "heat"),
                 PlugwiseClimateExtraStoredData(
-                    last_active_schedule=None,
+                    last_active_schedule="off",
                     previous_action_mode="heating",
                 ).as_dict(),
             ),
@@ -190,8 +190,6 @@ async def test_adam_restore_state_climate(
     assert (state := hass.states.get("climate.living_room"))
     assert state.state == "heat"
 
-    # Verify a HomeAssistantError is raised setting a schedule
-    # with last_active_schedule = None
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -233,7 +231,7 @@ async def test_adam_restore_state_climate(
         assert (state := hass.states.get("climate.bathroom"))
         assert state.state == "heat"
 
-        # Verify restoration is used when setting the schedule, schedule == "off"
+        # Verify restoration is used when setting the schedule, from "off"
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -287,13 +285,12 @@ async def test_adam_2_climate_snapshot(
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating_off_schedule"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [False], indirect=True)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_adam_off_regulation_mode_change(
+async def test_adam_none_restore(
     hass: HomeAssistant,
     mock_smile_adam_heat_cool: MagicMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test changing from regulation off mode."""
+    """Test last_active_schedule restored as None from before the plugwise v1.14.3 bump."""
     mock_restore_cache_with_extra_data(
         hass,
         [
@@ -318,10 +315,7 @@ async def test_adam_off_regulation_mode_change(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("climate.living_room"))
-    assert state.state == "off"
-
-    # Verify a HomeAssistantError is raised setting a schedule from regulation-off-mode with last_active_schedule = None
+    # Verify that setting a schedule with last_active_schedule=None fails
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -329,6 +323,43 @@ async def test_adam_off_regulation_mode_change(
             {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.AUTO},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating_off_schedule"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_adam_off_regulation_mode_change(
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test changing from regulation off mode."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("climate.living_room", "heat"),
+                PlugwiseClimateExtraStoredData(
+                    last_active_schedule="off",
+                    previous_action_mode="heating",
+                ).as_dict(),
+            ),
+            (
+                State("climate.bathroom", "heat"),
+                PlugwiseClimateExtraStoredData(
+                    last_active_schedule="Badkamer",
+                    previous_action_mode="heating",
+                ).as_dict(),
+            ),
+        ],
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("climate.living_room"))
+    assert state.state == "off"
 
     # Verify that the active schedule is turned off when transitioning from regulation-off-mode to a manual mode
     await hass.services.async_call(
@@ -346,13 +377,16 @@ async def test_adam_off_regulation_mode_change(
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
-async def test_adam_3_climate_entity_attributes(
+async def test_adam_climate_entity_attributes(
     hass: HomeAssistant,
     mock_smile_adam_heat_cool: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test creation of adam climate device environment."""
+    """Test creation of adam climate device environment.
+
+    Restored data is according to the plugwise v1.14.3 updated format.
+    """
     mock_restore_cache_with_extra_data(
         hass,
         [
@@ -652,8 +686,8 @@ async def test_anna_climate_entity_climate_changes(
 
     # Mock user deleting last schedule from app or browser
     data = mock_smile_anna.async_update.return_value
-    data["3cb70739631c4d17a86b8b12e8a5161b"]["available_schedules"] = []
-    data["3cb70739631c4d17a86b8b12e8a5161b"]["select_schedule"] = None
+    data["3cb70739631c4d17a86b8b12e8a5161b"]["available_schedules"] = ["off"]
+    data["3cb70739631c4d17a86b8b12e8a5161b"]["select_schedule"] = "off"
     data["3cb70739631c4d17a86b8b12e8a5161b"]["climate_mode"] = "heat_cool"
     with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
         freezer.tick(timedelta(minutes=1))
@@ -710,3 +744,18 @@ async def test_tom_without_temperature_measurement(
     assert (state := hass.states.get("climate.bathroom")) is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+
+
+async def test_legacy_anna_no_schedule(
+    hass: HomeAssistant,
+    mock_smile_legacy_anna: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test failing to set a schedule with no schedule defined."""
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.anna", ATTR_HVAC_MODE: HVACMode.AUTO},
+            blocking=True,
+        )

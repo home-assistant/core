@@ -119,13 +119,12 @@ async def test_device_remove_devices(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                "DEVICE-UUID",
-            )
-        },
+    device_entry = device_registry.async_get_device_by_identifier(
+        (
+            DOMAIN,
+            "DEVICE-UUID",
+        ),
+        mock_config_entry.entry_id,
     )
     client = await hass_ws_client(hass)
     response = await client.remove_device(device_entry.id, mock_config_entry.entry_id)
