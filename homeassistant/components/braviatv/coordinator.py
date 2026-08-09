@@ -167,10 +167,14 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if not name or not uri:
                 continue
             # The fallback can collide as well, so make it unique instead of
-            # dropping the input.
+            # dropping the input. A generated name may not take a generic name
+            # that belongs to another input either.
+            own = title.casefold() if title else None
             base = name
             suffix = 2
-            while name.casefold() in taken:
+            while name.casefold() in taken or (
+                name.casefold() in reserved and name.casefold() != own
+            ):
                 name = f"{base} ({suffix})"
                 suffix += 1
             taken.add(name.casefold())
