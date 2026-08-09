@@ -1121,8 +1121,8 @@ async def test_precision_whole(
         (
             water_heater.SERVICE_SET_TEMPERATURE,
             "temperature_command_topic",
-            {"temperature": "43.1"},
-            43.1,
+            {"temperature": "50.1"},
+            50.1,
             "temperature_command_template",
         ),
         (
