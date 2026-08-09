@@ -66,7 +66,7 @@ from .web_runner import HomeAssistantUnixSite
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-MAX_CLIENT_SIZE: Final = 1024**2 * 16
+MAX_CLIENT_SIZE: Final = 1024**2 * 128
 MAX_LINE_SIZE: Final = 24570
 
 _HAS_IPV6 = hasattr(socket, "AF_INET6")
