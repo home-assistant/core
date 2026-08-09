@@ -1,7 +1,6 @@
 """The Mikrotik router class."""
 
 from datetime import timedelta
-import logging
 import ssl
 from typing import Any, override
 
@@ -37,6 +36,7 @@ from .const import (
     IS_WIFI,
     IS_WIFIWAVE2,
     IS_WIRELESS,
+    LOGGER,
     MIKROTIK_SERVICES,
     NAME,
     POE,
@@ -50,8 +50,6 @@ from .const import (
 from .device import Device
 from .errors import CannotConnect, LoginError
 from .utils import mikrotik_config_entry_errors
-
-_LOGGER = logging.getLogger(__name__)
 
 type MikrotikConfigEntry = ConfigEntry[MikrotikDataUpdateCoordinator]
 
@@ -204,24 +202,24 @@ class MikrotikData:
             # Retrieve data
             self.all_devices = self.get_list_from_interface(DHCP)
             if self.support_capsman:
-                _LOGGER.debug("Hub is a CAPSman manager")
+                LOGGER.debug("Hub is a CAPSman manager")
                 device_list = wireless_devices = self.get_list_from_interface(CAPSMAN)
             elif self.support_wireless:
-                _LOGGER.debug("Hub supports wireless Interface")
+                LOGGER.debug("Hub supports wireless Interface")
                 device_list = wireless_devices = self.get_list_from_interface(WIRELESS)
             elif self.support_wifiwave2:
-                _LOGGER.debug("Hub supports wifiwave2 Interface")
+                LOGGER.debug("Hub supports wifiwave2 Interface")
                 device_list = wireless_devices = self.get_list_from_interface(WIFIWAVE2)
             elif self.support_wifi:
-                _LOGGER.debug("Hub supports wifi Interface")
+                LOGGER.debug("Hub supports wifi Interface")
                 device_list = wireless_devices = self.get_list_from_interface(WIFI)
 
             if not device_list or self.force_dhcp:
                 device_list = self.all_devices
-                _LOGGER.debug("Falling back to DHCP for scanning devices")
+                LOGGER.debug("Falling back to DHCP for scanning devices")
 
             if self.arp_enabled:
-                _LOGGER.debug("Using arp-ping to check devices")
+                LOGGER.debug("Using arp-ping to check devices")
                 arp_devices = self.get_list_from_interface(ARP)
 
             # get hub details and system info
@@ -270,7 +268,7 @@ class MikrotikData:
 
     def do_arp_ping(self, ip_address: str, interface: str) -> bool:
         """Attempt to arp ping MAC address via interface."""
-        _LOGGER.debug("pinging - %s", ip_address)
+        LOGGER.debug("pinging - %s", ip_address)
         params = {
             "arp-ping": "yes",
             "interval": "100ms",
@@ -286,7 +284,7 @@ class MikrotikData:
                 if "status" in result:
                     status += 1
             if status == len(data):
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Mikrotik %s - %s arp_ping timed out", ip_address, interface
                 )
                 return False
@@ -300,7 +298,7 @@ class MikrotikData:
         during_setup: bool = False,
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
-        _LOGGER.debug("Running command %s", cmd)
+        LOGGER.debug("Running command %s", cmd)
         with mikrotik_config_entry_errors(
             suppress_errors=suppress_errors, during_setup=during_setup
         ):
@@ -324,7 +322,7 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self._mk_data = MikrotikData(hass, config_entry, api)
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN} - {config_entry.data[CONF_HOST]}",
             update_interval=timedelta(seconds=10),
@@ -377,7 +375,7 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
 def get_api(entry: dict[str, Any]) -> librouteros.Api:
     """Connect to Mikrotik hub."""
-    _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
+    LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
     kwargs = {"port": entry["port"], "encoding": "utf8"}
 
@@ -408,10 +406,10 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
             _error = api_error
 
     if _error is not None:
-        _LOGGER.debug("Mikrotik %s error: %s", entry[CONF_HOST], _error)
+        LOGGER.debug("Mikrotik %s error: %s", entry[CONF_HOST], _error)
         if "invalid user name or password" in str(_error):
             raise LoginError from _error
         raise CannotConnect from _error
 
-    _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
+    LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
     return api
