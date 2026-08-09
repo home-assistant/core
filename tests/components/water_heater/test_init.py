@@ -31,6 +31,45 @@ from tests.common import (
 )
 
 
+async def async_setup_water_heater_entity(
+    hass: HomeAssistant, water_heater_entity: WaterHeaterEntity
+) -> None:
+    """Set up a mock water heater entity with test integration and platform."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.WATER_HEATER]
+        )
+        return True
+
+    async def async_setup_entry_water_heater_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        async_add_entities([water_heater_entity])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+        ),
+        built_in=False,
+    )
+    mock_platform(
+        hass,
+        "test.water_heater",
+        MockPlatform(async_setup_entry=async_setup_entry_water_heater_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+
 async def test_set_temp_schema_no_req(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -126,15 +165,7 @@ async def test_set_temperature_raises_out_of_range(
         ),
         built_in=False,
     )
-    mock_platform(
-        hass,
-        "test.water_heater",
-        MockPlatform(async_setup_entry=async_setup_entry_water_heater_platform),
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await async_setup_water_heater_entity(hass, water_heater_entity)
 
     data = {"entity_id": "water_heater.test", "temperature": input_temperature}
 
@@ -292,15 +323,7 @@ async def test_set_temperature_with_no_bounds_skips_validation(
         ),
         built_in=False,
     )
-    mock_platform(
-        hass,
-        "test.water_heater",
-        MockPlatform(async_setup_entry=async_setup_entry_water_heater_platform),
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await async_setup_water_heater_entity(hass, water_heater_entity)
 
     await hass.services.async_call(
         DOMAIN,
