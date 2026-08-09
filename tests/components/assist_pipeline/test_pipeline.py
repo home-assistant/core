@@ -2280,7 +2280,6 @@ async def test_stt_vad_enabled_based_on_audio_processing(
 
 async def test_stt_vad_events_emitted_when_requires_external_vad_false(
     hass: HomeAssistant,
-    mock_stt_provider: MockSTTProvider,
     mock_stt_provider_entity: MockSTTProviderEntity,
     mock_chat_session: chat_session.ChatSession,
     init_components,
@@ -2298,8 +2297,10 @@ async def test_stt_vad_events_emitted_when_requires_external_vad_false(
     pipeline_id = pipeline_store.async_get_preferred_item()
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
 
-    # Set the audio_processing on the mock provider to requires_external_vad=False
-    mock_stt_provider._audio_processing = stt.SpeechAudioProcessing(
+    # The preferred pipeline uses the STT entity (async_default_engine prefers
+    # entities over the legacy provider); set requires_external_vad=False so the
+    # pipeline skips external VAD and emits synthetic STT_VAD_START/STT_VAD_END.
+    mock_stt_provider_entity._audio_processing = stt.SpeechAudioProcessing(
         requires_external_vad=False,
         prefers_auto_gain_enabled=True,
         prefers_noise_reduction_enabled=True,
@@ -2339,6 +2340,10 @@ async def test_stt_vad_events_emitted_when_requires_external_vad_false(
     vad_start_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_START)
     vad_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_END)
     assert vad_start_idx < vad_end_idx
+    # Synthetic VAD events use the first/last chunk timestamps from the stream
+    # (two 10ms chunks => 0ms and 10ms)
+    assert events[vad_start_idx].data["timestamp"] == 0
+    assert events[vad_end_idx].data["timestamp"] == 10
 
 
 async def test_invalid_pipeline_does_not_create_tts_stream(
