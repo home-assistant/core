@@ -118,8 +118,8 @@ async def test_setup_entry_no_address_loads_and_registers(
 
     assert entry.state is ConfigEntryState.LOADED
     assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MAC))}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MAC)), entry.entry_id
     )
     issue = issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
     assert issue
@@ -420,8 +420,12 @@ async def test_setup_entry_registers_mac_less_devices_separately(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    bedroom = device_registry.async_get_device(identifiers={(DOMAIN, "SERIAL002")})
-    attic = device_registry.async_get_device(identifiers={(DOMAIN, "SERIAL003")})
+    bedroom = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SERIAL002"), entry.entry_id
+    )
+    attic = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SERIAL003"), entry.entry_id
+    )
     assert bedroom is not None
     assert attic is not None
     assert bedroom.id != attic.id

@@ -70,6 +70,8 @@ class MikrotikDataUpdateCoordinatorTracker(
 ):
     """Representation of network device."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, device: Device, coordinator: MikrotikDataUpdateCoordinator
     ) -> None:

@@ -40,13 +40,13 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
-    _LOGGER,
     ATTR_FAN_STATE,
     ATTR_HVAC_STATE,
     CONF_HUMIDIFIER,
     DEFAULT_SSL,
     DOMAIN,
     HOLD_MODE_TEMPERATURE,
+    LOGGER,
 )
 from .coordinator import VenstarConfigEntry, VenstarDataUpdateCoordinator
 from .entity import VenstarEntity
@@ -95,7 +95,7 @@ async def async_setup_platform(
     configuration.yaml, the import flow will attempt to import it and create
     a config entry.
     """
-    _LOGGER.warning(
+    LOGGER.warning(
         "Loading venstar via platform config is deprecated; The configuration"
         " has been migrated to a config entry and can be safely removed"
     )
@@ -266,7 +266,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             success = self._client.set_mode(self._client.MODE_OFF)
 
         if not success:
-            _LOGGER.error("Failed to change the operation mode")
+            LOGGER.error("Failed to change the operation mode")
         return success
 
     @override
@@ -295,7 +295,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
                 success = self._client.set_setpoints(temp_low, temp_high)
             else:
                 success = False
-                _LOGGER.error(
+                LOGGER.error(
                     (
                         "The thermostat is currently not in a mode "
                         "that supports target temperature: %s"
@@ -304,7 +304,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
                 )
 
             if not success:
-                _LOGGER.error("Failed to change the temperature")
+                LOGGER.error("Failed to change the temperature")
         self.schedule_update_ha_state()
 
     @override
@@ -316,7 +316,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             success = self._client.set_fan(self._client.FAN_AUTO)
 
         if not success:
-            _LOGGER.error("Failed to change the fan mode")
+            LOGGER.error("Failed to change the fan mode")
         self.schedule_update_ha_state()
 
     @override
@@ -331,7 +331,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         success = self._client.set_hum_setpoint(humidity)
 
         if not success:
-            _LOGGER.error("Failed to change the target humidity level")
+            LOGGER.error("Failed to change the target humidity level")
         self.schedule_update_ha_state()
 
     @override
@@ -346,9 +346,9 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             success = self._client.set_away(self._client.AWAY_HOME)
             success = success and self._client.set_schedule(1)
         else:
-            _LOGGER.error("Unknown hold mode: %s", preset_mode)
+            LOGGER.error("Unknown hold mode: %s", preset_mode)
             success = False
 
         if not success:
-            _LOGGER.error("Failed to change the schedule/hold state")
+            LOGGER.error("Failed to change the schedule/hold state")
         self.schedule_update_ha_state()

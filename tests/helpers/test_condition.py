@@ -3243,7 +3243,7 @@ async def _setup_numerical_condition(
     condition_options: dict[str, Any],
     target_config: dict[str, Any],
     domain_specs: Mapping[str, DomainSpec] | None = None,
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
@@ -3506,7 +3506,7 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
 )
 async def test_numerical_condition_valid_unit(
     hass: HomeAssistant,
-    valid_unit: str | None | UndefinedType,
+    valid_unit: str | UndefinedType | None,
     entity_unit: str | None,
     expected: bool,
 ) -> None:
@@ -6354,3 +6354,18 @@ async def test_async_unload_invokes_async_unload_hook(
 
     unload_hook.assert_called_once()
     assert checker._unloaded is True
+
+
+async def test_state_condition_empty_state_value(hass: HomeAssistant) -> None:
+    """Test that async_from_config does not raise an error for an empty state value."""
+    hass.states.async_set("sensor.temperature", "100")
+
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.temperature",
+        "state": [],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert not test.async_check()

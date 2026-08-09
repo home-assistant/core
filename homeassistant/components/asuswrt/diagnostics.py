@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import AsusWrtConfigEntry
+from .router import get_device_identifier
 
 TO_REDACT = {CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME}
 TO_REDACT_DEV = {ATTR_CONNECTIONS, ATTR_IDENTIFIERS}
@@ -34,8 +35,8 @@ async def async_get_config_entry_diagnostics(
     # Gather information how this AsusWrt device is represented in Home Assistant
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
-    hass_device = device_registry.async_get_device(
-        identifiers=router.device_info[ATTR_IDENTIFIERS]
+    hass_device = device_registry.async_get_device_by_identifier(
+        get_device_identifier(entry), entry.entry_id
     )
     if not hass_device:
         return data
