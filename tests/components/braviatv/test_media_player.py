@@ -34,6 +34,7 @@ BRAVIA_SYSTEM_INFO = {
 }
 
 # "title" is the generic connector name, "label" the name set on the TV itself.
+# The TV allows the same label on several inputs, and leaves it empty when unset.
 INPUTS = [
     {
         "uri": "extInput:hdmi?port=1",
@@ -45,6 +46,13 @@ INPUTS = [
     {
         "uri": "extInput:hdmi?port=2",
         "title": "HDMI 2",
+        "connection": True,
+        "label": "Game console",
+        "icon": "meta:hdmi",
+    },
+    {
+        "uri": "extInput:hdmi?port=3",
+        "title": "HDMI 3",
         "connection": True,
         "label": "Game console",
         "icon": "meta:hdmi",
@@ -95,21 +103,39 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_ID)
 
     assert state is not None
-    # "HDMI 1" has no label and keeps the generic name, "HDMI 2" was renamed.
-    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["HDMI 1", "Game console"]
+    # "HDMI 1" has no label and keeps the generic name, "HDMI 2" was renamed and
+    # "HDMI 3" repeats the same label, so it falls back to the generic name to
+    # stay reachable.
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
+        "HDMI 1",
+        "Game console",
+        "HDMI 3",
+    ]
     # The playing input is reported with the same name used in the source list.
     assert state.attributes[ATTR_INPUT_SOURCE] == "Game console"
 
 
-async def test_select_source_by_label(
-    hass: HomeAssistant, set_play_content: AsyncMock
+@pytest.mark.parametrize(
+    ("source", "expected_uri"),
+    [
+        # The label of a renamed input.
+        ("Game console", "extInput:hdmi?port=2"),
+        # The generic name of that same input, still accepted so that existing
+        # automations keep working after the input is renamed on the TV.
+        ("HDMI 2", "extInput:hdmi?port=2"),
+        # An input sharing a label with another one remains selectable.
+        ("HDMI 3", "extInput:hdmi?port=3"),
+    ],
+)
+async def test_select_source(
+    hass: HomeAssistant, set_play_content: AsyncMock, source: str, expected_uri: str
 ) -> None:
-    """Test that selecting a renamed input resolves to the right uri."""
+    """Test selecting an input by label or by generic name."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Game console"},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: source},
         blocking=True,
     )
 
-    set_play_content.assert_called_once_with("extInput:hdmi?port=2")
+    set_play_content.assert_called_once_with(expected_uri)
