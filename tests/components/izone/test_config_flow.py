@@ -877,10 +877,10 @@ async def test_runtime_integration_discovery_skips_for_ignored_unique_id(
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
-async def test_runtime_integration_discovery_skips_during_user_select_controller_step(
+async def test_runtime_integration_discovery_allows_during_user_select_controller_step(
     hass: HomeAssistant,
 ) -> None:
-    """Do not stack auto discovery while the user is choosing discovered controllers."""
+    """Runtime discovery may add shelf flows while the user is choosing controllers."""
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
@@ -898,22 +898,25 @@ async def test_runtime_integration_discovery_skips_during_user_select_controller
 
     new_ctrl = create_mock_controller("000000002", "192.0.2.2")
 
-    with patch(
-        "homeassistant.helpers.discovery_flow.async_create_flow"
-    ) as mock_create_flow:
-        izone_discovery.async_note_integration_discovery(
-            hass, endpoint_from_controller(new_ctrl)
-        )
-        await hass.async_block_till_done(wait_background_tasks=True)
+    izone_discovery.async_note_integration_discovery(
+        hass, endpoint_from_controller(new_ctrl)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_create_flow.assert_not_called()
+    discovery_flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        if flow["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
+    ]
+    assert len(discovery_flows) == 1
+    assert discovery_flows[0]["context"]["unique_id"] == new_ctrl.device_uid
 
 
 @pytest.mark.usefixtures("mock_entry_setup")
-async def test_runtime_integration_discovery_skips_during_user_confirm(
+async def test_runtime_integration_discovery_allows_during_user_confirm(
     hass: HomeAssistant,
 ) -> None:
-    """Runtime discovery stays suppressed while an interactive user flow is active."""
+    """Runtime discovery may add shelf flows while a user confirm step is open."""
     first = create_mock_controller("000000001", "192.0.2.1")
     second = create_mock_controller("000000002", "192.0.2.2")
     with patch_discovered_controllers(first):
@@ -928,8 +931,12 @@ async def test_runtime_integration_discovery_skips_during_user_confirm(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert len(progress) == 1
-    assert progress[0]["context"]["source"] == config_entries.SOURCE_USER
+    assert len(progress) == 2
+    sources = {flow["context"]["source"] for flow in progress}
+    assert sources == {
+        config_entries.SOURCE_USER,
+        config_entries.SOURCE_INTEGRATION_DISCOVERY,
+    }
 
 
 async def test_async_setup_starts_import_flow(hass: HomeAssistant) -> None:

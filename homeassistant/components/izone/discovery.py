@@ -75,8 +75,6 @@ def async_note_integration_discovery(
     """Start a config flow when discovery reports an unclaimed endpoint."""
     if endpoint.uid in yaml_excluded_uids(hass):
         return
-    if _async_blocks_runtime_integration_discovery(hass):
-        return
     discovery_flow.async_create_flow(
         hass,
         DOMAIN,
@@ -86,18 +84,6 @@ def async_note_integration_discovery(
         },
         data={CONF_HOST: endpoint.host},
     )
-
-
-@callback
-def _async_blocks_runtime_integration_discovery(hass: HomeAssistant) -> bool:
-    """Return True when an interactive setup flow should own the UI."""
-    for flw in hass.config_entries.flow.async_progress_by_handler(
-        DOMAIN, include_uninitialized=True
-    ):
-        src = flw["context"].get("source")
-        if src == config_entries.SOURCE_USER:
-            return True
-    return False
 
 
 @callback

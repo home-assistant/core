@@ -91,9 +91,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         Discovery is started if not yet running, then a fresh discovery cycle is triggered
         and this step waits briefly for replies.
-
-        While this interactive flow is active, runtime integration discovery remains
-        blocked by ``_async_blocks_runtime_integration_discovery`` to avoid UI races.
         """
 
         if self._async_in_progress(include_uninitialized=True):
