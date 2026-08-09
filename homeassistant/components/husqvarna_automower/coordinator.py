@@ -249,6 +249,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             for mower_id, mower_data in self.data.items()
             if mower_data.capabilities.stay_out_zones
             and mower_data.stay_out_zones is not None
+            and mower_data.stay_out_zones.zones is not None
         }
 
         entity_registry = er.async_get(self.hass)

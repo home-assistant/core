@@ -147,7 +147,9 @@ async def test_device_registry_model_and_version(
     """Test that coordinator populates device registry with model and version."""
     await setup_integration(hass, mock_tv_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIQUE_ID), mock_tv_config_entry.entry_id
+    )
     assert device is not None
     assert device.model == MODEL
     assert device.sw_version == VERSION
@@ -163,7 +165,9 @@ async def test_device_registry_without_model_or_version(
     """Test device registry when model and version are unavailable."""
     await setup_integration(hass, mock_tv_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIQUE_ID), mock_tv_config_entry.entry_id
+    )
     assert device is not None
     assert device.model is None
     assert device.sw_version is None

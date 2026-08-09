@@ -263,8 +263,8 @@ async def test_ble_device_populates_connections(
     assert config_entry.state is ConfigEntryState.LOADED
     dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
-        dev_reg.async_get_device(
-            identifiers={}, connections={("bluetooth", "AA:BB:CC:DD:EE:FF")}
+        dev_reg.async_get_device_by_connection(
+            ("bluetooth", "AA:BB:CC:DD:EE:FF"), config_entry.entry_id
         )
         is not None
     )
