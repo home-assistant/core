@@ -28,11 +28,11 @@ class GatusEndpointEntity(CoordinatorEntity[GatusDataUpdateCoordinator]):
 
         endpoint_data = self.endpoint_data
 
-        endpoint_name = endpoint_data.name
-        if endpoint_data.group is not None:
-            device_name = f"{endpoint_data.group} {endpoint_name}"
-        else:
-            device_name = endpoint_name
+        device_name = (
+            f"{endpoint_data.group} {endpoint_data.name}"
+            if endpoint_data.group is not None
+            else endpoint_data.name
+        )
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}_{endpoint_key}")},
