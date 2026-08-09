@@ -4,6 +4,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import DOMAIN
@@ -157,6 +158,100 @@ async def test_get_keypad_info_service(
     }
     get_basic_info.assert_awaited_once_with()
     get_password_count.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize(
+    ("basic_info", "credential_counts"),
+    [
+        (None, {"pin": 1}),
+        ({"battery": 95}, None),
+    ],
+)
+async def test_get_keypad_info_unavailable(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    device_registry: dr.DeviceRegistry,
+    basic_info: dict[str, int] | None,
+    credential_counts: dict[str, int] | None,
+) -> None:
+    """Test the get_keypad_info service when keypad information is unavailable."""
+    inject_bluetooth_service_info(hass, KEYPAD_VISION_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="keypad_vision")
+    entry.add_to_hass(hass)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.switchbot.SwitchbotKeypadVision",
+        update=AsyncMock(return_value=None),
+        get_basic_info=AsyncMock(return_value=basic_info),
+        get_password_count=AsyncMock(return_value=credential_counts),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        device_entry = dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        )[0]
+
+        with pytest.raises(ServiceValidationError) as err:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_GET_KEYPAD_INFO,
+                {ATTR_DEVICE_ID: device_entry.id},
+                blocking=True,
+                return_response=True,
+            )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "keypad_info_unavailable"
+
+
+@pytest.mark.parametrize("failing_method", ["get_basic_info", "get_password_count"])
+async def test_get_keypad_info_operation_error(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    device_registry: dr.DeviceRegistry,
+    failing_method: str,
+) -> None:
+    """Test the get_keypad_info service translates SwitchBot operation errors."""
+    inject_bluetooth_service_info(hass, KEYPAD_VISION_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="keypad_vision")
+    entry.add_to_hass(hass)
+
+    get_basic_info = AsyncMock(return_value={"battery": 95})
+    get_password_count = AsyncMock(return_value={"pin": 1})
+    operation_error = SwitchbotOperationError("Bluetooth command failed")
+    if failing_method == "get_basic_info":
+        get_basic_info.side_effect = operation_error
+    else:
+        get_password_count.side_effect = operation_error
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.switchbot.SwitchbotKeypadVision",
+        update=AsyncMock(return_value=None),
+        get_basic_info=get_basic_info,
+        get_password_count=get_password_count,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        device_entry = dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        )[0]
+
+        with pytest.raises(ServiceValidationError) as err:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_GET_KEYPAD_INFO,
+                {ATTR_DEVICE_ID: device_entry.id},
+                blocking=True,
+                return_response=True,
+            )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "operation_error"
+    assert err.value.translation_placeholders == {"error": "Bluetooth command failed"}
 
 
 async def test_device_not_found(

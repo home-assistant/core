@@ -1,5 +1,6 @@
 """Services for the SwitchBot integration."""
 
+from switchbot import SwitchbotOperationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -122,8 +123,15 @@ async def async_get_keypad_info(call: ServiceCall) -> ServiceResponse:
     device_id = call.data[ATTR_DEVICE_ID]
     coordinator = _async_target(call.hass, device_id)
 
-    basic_info = await coordinator.device.get_basic_info()
-    credential_counts = await coordinator.device.get_password_count()
+    try:
+        basic_info = await coordinator.device.get_basic_info()
+        credential_counts = await coordinator.device.get_password_count()
+    except SwitchbotOperationError as error:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="operation_error",
+            translation_placeholders={"error": str(error)},
+        ) from error
     if basic_info is None or credential_counts is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
