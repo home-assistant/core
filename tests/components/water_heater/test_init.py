@@ -157,10 +157,21 @@ async def test_set_temperature_raises_out_of_range(
     }
 
 
-async def test_set_temperature_accepts_displayed_minimum_value(
-    hass: HomeAssistant, config_flow_fixture: None
+@pytest.mark.parametrize(
+    ("input_temperature", "expected_check_temp"),
+    [
+        (43.3, 110.0),
+        (60.0, 140.0),
+    ],
+    ids=["displayed_min", "displayed_max"],
+)
+async def test_set_temperature_accepts_displayed_boundary_value(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    input_temperature: float,
+    expected_check_temp: float,
 ) -> None:
-    """Test temperature at the displayed minimum boundary is accepted."""
+    """Test temperature at the displayed boundary values is accepted."""
 
     class BoundaryWaterHeater(MockWaterHeaterEntity):
         def __init__(self) -> None:
@@ -212,7 +223,7 @@ async def test_set_temperature_accepts_displayed_minimum_value(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    data = {"entity_id": "water_heater.test", "temperature": 43.3}
+    data = {"entity_id": "water_heater.test", "temperature": input_temperature}
 
     await hass.services.async_call(
         DOMAIN,
@@ -224,7 +235,7 @@ async def test_set_temperature_accepts_displayed_minimum_value(
 
     assert water_heater_entity.last_set_temperature == {
         "entity_id": ["water_heater.test"],
-        "temperature": 110.0,
+        "temperature": expected_check_temp,
     }
 
 
