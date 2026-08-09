@@ -454,7 +454,7 @@ async def pin_form(
 @pytest.fixture
 async def options_form(hass: HomeAssistant) -> ConfigFlowResult:
     """Return options form for Subaru config flow."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG, options=None)
     entry.add_to_hass(hass)
     await async_setup_component(hass, DOMAIN, {})
     return await hass.config_entries.options.async_init(entry.entry_id)
