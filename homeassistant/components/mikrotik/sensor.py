@@ -3,6 +3,7 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from math import isfinite
 from typing import Any, Final, override
 
 from homeassistant.components.sensor import (
@@ -62,9 +63,12 @@ def _health_numeric_value(data: dict[str, Any]) -> float | None:
     if value is None:
         return None
     try:
-        return float(value)
+        numeric = float(value)
     except TypeError, ValueError:
         return None
+    if not isfinite(numeric):
+        return None
+    return numeric
 
 
 def _calculate_uptime(data: dict[str, Any]) -> datetime | None:

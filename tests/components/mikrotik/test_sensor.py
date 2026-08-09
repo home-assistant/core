@@ -87,15 +87,30 @@ async def test_sensor_named_health_metrics(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.mikrotik_voltage") is None
 
 
-async def test_sensor_non_numeric_health_value(hass: HomeAssistant) -> None:
-    """Test non-numeric health values do not create temperature/voltage sensors."""
-    await setup_mikrotik_entry(
-        hass,
-        health_data=[
-            {"name": "temperature", "value": "ok"},
-            {"name": "voltage", "value": "ok"},
-        ],
-    )
+@pytest.mark.parametrize(
+    "health_data",
+    [
+        pytest.param(
+            [
+                {"name": "temperature", "value": "ok"},
+                {"name": "voltage", "value": "ok"},
+            ],
+            id="non_numeric_string",
+        ),
+        pytest.param(
+            [
+                {"name": "temperature", "value": "nan"},
+                {"name": "voltage", "value": "inf"},
+            ],
+            id="non_finite",
+        ),
+    ],
+)
+async def test_sensor_invalid_health_value(
+    hass: HomeAssistant, health_data: list[dict[str, str]]
+) -> None:
+    """Test invalid health values do not create temperature/voltage sensors."""
+    await setup_mikrotik_entry(hass, health_data=health_data)
 
     assert hass.states.get("sensor.mikrotik_temperature") is None
     assert hass.states.get("sensor.mikrotik_voltage") is None
