@@ -33,6 +33,7 @@ from .const import (
     CONF_RADAR_COLORS,
     CONF_RADAR_DURATION,
     CONF_RADAR_FPS,
+    CONF_RADAR_FUTURE_MINUTES,
     CONF_RADAR_INTERPOLATION,
     CONF_RADAR_LAYER,
     CONF_RADAR_LEGEND,
@@ -45,6 +46,7 @@ from .const import (
     DEFAULT_RADAR_COLORS,
     DEFAULT_RADAR_DURATION,
     DEFAULT_RADAR_FPS,
+    DEFAULT_RADAR_FUTURE_MINUTES,
     DEFAULT_RADAR_INTERPOLATION,
     DEFAULT_RADAR_LAYER,
     DEFAULT_RADAR_LEGEND,
@@ -227,6 +229,16 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 ): NumberSelector(
                     NumberSelectorConfig(
                         min=0, max=180, step=5, unit_of_measurement="min"
+                    )
+                ),
+                vol.Required(
+                    CONF_RADAR_FUTURE_MINUTES,
+                    default=options.get(
+                        CONF_RADAR_FUTURE_MINUTES, DEFAULT_RADAR_FUTURE_MINUTES
+                    ),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=0, max=72, step=1, unit_of_measurement="min"
                     )
                 ),
                 vol.Required(
