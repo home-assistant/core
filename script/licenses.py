@@ -95,6 +95,15 @@ OSI_APPROVED_LICENSES_SPDX = {
     "ZPL-2.1",
 }
 
+OTHER_APPROVED_LICENSES_SPDX = {
+    # https://spdx.org/licenses/CC0-1.0.html
+    # https://opensource.org/faq#cc-zero
+    "CC0-1.0",
+}
+
+APPROVED_LICENSES_SPDX = OSI_APPROVED_LICENSES_SPDX | OTHER_APPROVED_LICENSES_SPDX
+
+
 OSI_APPROVED_LICENSES = {
     "Academic Free License (AFL)",
     "Apache Software License",
@@ -302,7 +311,7 @@ def check_license_expression(license_str: str) -> bool | None:
 def check_spdx_license(expr: LicenseExpression) -> bool:
     """Check a SPDX license expression."""
     if isinstance(expr, LicenseSymbol):
-        return expr.key in OSI_APPROVED_LICENSES_SPDX
+        return expr.key in APPROVED_LICENSES_SPDX
     if isinstance(expr, OR):
         return any(check_spdx_license(arg) for arg in expr.args)
     if isinstance(expr, AND):
