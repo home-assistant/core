@@ -13,6 +13,7 @@ from homeassistant.const import ATTR_NAME, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import slugify
 
 from .const import DOMAIN
@@ -74,20 +75,19 @@ def async_get_config_for_device(
     hass: HomeAssistant, device_entry: dr.DeviceEntry
 ) -> ConfigEntry:
     """Get the config entry related to a device entry."""
-    for entry_id in device_entry.config_entries:
-        entry = hass.config_entries.async_get_known_entry(entry_id)
-        if entry.domain == DOMAIN:
-            if entry.state is not ConfigEntryState.LOADED:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="entry_not_loaded",
-                )
-            return entry
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="invalid_device",
-        translation_placeholders={"device_id": device_entry.id},
-    )
+    entry = hass.config_entries.async_get_known_entry(device_entry.config_entry_id)
+    if entry.domain != DOMAIN:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_device",
+            translation_placeholders={"device_id": device_entry.id},
+        )
+    if entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_loaded",
+        )
+    return entry
 
 
 def async_get_energy_site_for_entry(
@@ -124,6 +124,14 @@ def _currency(value: Any) -> str:
     return vol.Match(r"^[A-Z]{3}$")(_non_empty_string(value).upper())
 
 
+def _whole_minute(value: Any) -> time:
+    """Validate a time Tesla can express, which is only hours and minutes."""
+    result = cv.time(value)
+    if result.second or result.microsecond:
+        raise vol.Invalid("Times must fall on a whole minute")
+    return result
+
+
 def _period_key(name: str) -> str:
     """Convert a period name into a Tesla time-of-use label."""
     if not (key := slugify(name).upper()):
@@ -145,8 +153,8 @@ TOU_PERIOD_SCHEMA = vol.All(
         {
             vol.Required(ATTR_NAME): _non_empty_string,
             vol.Optional(ATTR_DAYS): vol.All(cv.ensure_list, [vol.In(DAY_TO_TESLA)]),
-            vol.Optional(ATTR_START_TIME): cv.time,
-            vol.Optional(ATTR_END_TIME): cv.time,
+            vol.Optional(ATTR_START_TIME): _whole_minute,
+            vol.Optional(ATTR_END_TIME): _whole_minute,
             vol.Required(ATTR_BUY_RATE): _finite_float,
             vol.Optional(ATTR_SELL_RATE): _finite_float,
         }
@@ -176,6 +184,12 @@ TOU_SEASON_SCHEMA = vol.Schema(
 
 def _validate_seasons(seasons: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Validate season dates, label collisions and export rate coverage."""
+    for season in seasons:
+        if season[ATTR_NAME] == ALL_SEASON:
+            raise vol.Invalid(
+                f"{ALL_SEASON} is reserved by Tesla and cannot name a season"
+            )
+
     if not _is_year_round(seasons):
         season_names: set[str] = set()
         for season in seasons:
@@ -194,10 +208,6 @@ def _validate_seasons(seasons: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     date(2000, month, day)
                 except ValueError as err:
                     raise vol.Invalid(f"Invalid season date {day}/{month}") from err
-            if season[ATTR_NAME] == ALL_SEASON:
-                raise vol.Invalid(
-                    f"{ALL_SEASON} is reserved by Tesla and cannot name a season"
-                )
             if season[ATTR_NAME] in season_names:
                 raise vol.Invalid(f"Duplicate season name {season[ATTR_NAME]!r}")
             season_names.add(season[ATTR_NAME])
@@ -404,7 +414,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_placeholders={"error": error},
             )
 
-    hass.services.async_register(
+    # Replacing the tariff changes how the battery is billed, so keep it to admins.
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_TIME_OF_USE,
         time_of_use,
