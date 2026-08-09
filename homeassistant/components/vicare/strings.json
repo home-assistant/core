@@ -669,22 +669,7 @@
     },
     "water_heater": {
       "domestic_hot_water": {
-        "name": "Domestic hot water",
-        "state_attributes": {
-          "operation_mode": {
-            "state": {
-              "cooling": "Cooling",
-              "dhw": "Domestic hot water",
-              "dhw_and_heating": "Domestic hot water and heating",
-              "dhw_and_heating_cooling": "Domestic hot water, heating and cooling",
-              "forced_normal": "Forced normal",
-              "forced_reduced": "Forced reduced",
-              "heating": "Heating",
-              "heating_cooling": "Heating and cooling",
-              "standby": "[%key:common::state::standby%]"
-            }
-          }
-        }
+        "name": "Domestic hot water"
       }
     }
   },
