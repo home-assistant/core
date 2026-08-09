@@ -1,8 +1,8 @@
 """Sensor entities for Geocaching."""
 
-from typing import cast
+from typing import Any, cast
 
-from geocachingapi.models import GeocachingCache
+from geocachingapi.models import GeocachingCache, GeocachingTrackable
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -50,4 +50,42 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
 
         raise RuntimeError(
             f"Cache {self._reference_code} is no longer available in coordinator data"
+        )
+
+
+# Base class for trackable entities
+
+
+class GeocachingTrackableEntity(GeocachingBaseEntity):
+    """Base class for Geocaching trackable entities."""
+
+    def __init__(
+        self,
+        coordinator: GeocachingDataUpdateCoordinator,
+        trackable: GeocachingTrackable,
+    ) -> None:
+        """Initialize the Geocaching trackable entity."""
+        super().__init__(coordinator)
+
+        self._reference_code = trackable.reference_code
+
+        self._attr_device_info = DeviceInfo(
+            name=f"Trackable {trackable.name}",
+            identifiers={(DOMAIN, cast(str, trackable.reference_code))},
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer=trackable.owner.username if trackable.owner else None,
+        )
+
+    @property
+    def trackable(self) -> GeocachingTrackable:
+        """Return the latest trackable data."""
+        for trackable in cast(
+            list[GeocachingTrackable],
+            cast(Any, self.coordinator.data).tracked_trackables,
+        ):
+            if trackable.reference_code == self._reference_code:
+                return trackable
+
+        raise RuntimeError(
+            f"Trackable {self._reference_code} is no longer available in coordinator data"
         )

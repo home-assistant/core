@@ -10,7 +10,10 @@ from .models import GeocachingOAuthApiUrls
 
 DOMAIN: Final = "geocaching"
 CONF_CACHE_CODES: Final = "cache_codes"
+CONF_TRACKABLE_CODES: Final = "trackable_codes"
+
 MAX_TRACKED_CACHES: Final = 50
+MAX_TRACKED_TRACKABLES: Final = 50
 LOGGER = logging.getLogger(__package__)
 UPDATE_INTERVAL = timedelta(hours=1)
 
