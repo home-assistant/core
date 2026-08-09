@@ -38,6 +38,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "clean_filter": {
+        "name": "Clean filter"
+      },
+      "defrost_mode": {
+        "name": "Defrost mode"
+      }
+    },
     "sensor": {
       "compressor_capacity": {
         "name": "Compressor capacity"

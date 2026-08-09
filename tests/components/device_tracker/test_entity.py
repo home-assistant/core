@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
+from unittest.mock import patch
 
 import attr
 import pytest
@@ -1618,6 +1619,27 @@ async def test_register_mac_ignored(
     assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
+@pytest.fixture
+def allow_deprecated_device_registry_apis() -> Generator[None]:
+    """Allow tests to call the deprecated device registry APIs without raising.
+
+    A restored composite device can only be retrieved with async_get_device, so tests
+    exercising composite devices keep calling it; downgrade the deprecation report to a
+    log instead of raising.
+    """
+    real_report_usage = dr.report_usage
+
+    def _log_only(what: str, **kwargs: Any) -> None:
+        kwargs["core_behavior"] = dr.ReportBehavior.LOG
+        kwargs["core_integration_behavior"] = dr.ReportBehavior.LOG
+        kwargs["custom_integration_behavior"] = dr.ReportBehavior.LOG
+        real_report_usage(what, **kwargs)
+
+    with patch.object(dr, "report_usage", _log_only):
+        yield
+
+
+@pytest.mark.usefixtures("allow_deprecated_device_registry_apis")
 async def test_scanner_entity_attaches_to_split_of_composite_device(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -1664,6 +1686,7 @@ async def test_scanner_entity_attaches_to_split_of_composite_device(
     assert entity_entry.device_id == own_split.id
 
 
+@pytest.mark.usefixtures("allow_deprecated_device_registry_apis")
 async def test_scanner_entity_composite_device_without_own_split(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

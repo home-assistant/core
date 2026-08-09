@@ -568,7 +568,9 @@ async def test_entity_device_info_with_hub(
     async_fire_mqtt_message(hass, "homeassistant/event/bla/config", data)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "helloworld"), mqtt_config_entry.entry_id
+    )
     assert device is not None
     assert device.via_device_id == hub.id
 
