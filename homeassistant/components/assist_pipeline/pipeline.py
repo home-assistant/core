@@ -585,6 +585,12 @@ class PipelineRun:
     _satellite_id: str | None = None
     """Optional satellite id set during run start."""
 
+    _first_chunk_timestamp: int | None = None
+    """Timestamp of the first audio chunk processed by the STT stage."""
+
+    _last_chunk_timestamp: int | None = None
+    """Timestamp of the last audio chunk processed by the STT stage."""
+
     _conversation_data: PipelineConversationData | None = None
     """Data tied to the conversation ID."""
 

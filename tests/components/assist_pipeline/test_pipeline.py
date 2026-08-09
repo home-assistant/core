@@ -2323,7 +2323,7 @@ async def test_stt_vad_events_emitted_when_requires_external_vad_false(
             pipeline=pipeline,
             start_stage=assist_pipeline.PipelineStage.STT,
             end_stage=assist_pipeline.PipelineStage.STT,
-            event_callback=lambda e: events.append(e),
+            event_callback=events.append,
             audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
         ),
     )
