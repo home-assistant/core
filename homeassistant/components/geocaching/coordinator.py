@@ -12,7 +12,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_CACHE_CODES, DOMAIN, ENVIRONMENT, LOGGER, UPDATE_INTERVAL
+from .const import (
+    CONF_CACHE_CODES,
+    CONF_TRACKABLE_CODES,
+    DOMAIN,
+    ENVIRONMENT,
+    LOGGER,
+    UPDATE_INTERVAL,
+)
 
 type GeocachingConfigEntry = ConfigEntry[GeocachingDataUpdateCoordinator]
 
@@ -35,12 +42,14 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
         async def async_token_refresh() -> str:
             await session.async_ensure_token_valid()
             token = session.token["access_token"]
-            LOGGER.debug(str(token))
             return str(token)
 
         client_session = async_get_clientsession(hass)
         settings = GeocachingSettings()
         settings.set_tracked_caches(set(entry.options.get(CONF_CACHE_CODES, [])))
+        settings.set_tracked_trackables(
+            set(entry.options.get(CONF_TRACKABLE_CODES, []))
+        )
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,
             token=session.token["access_token"],

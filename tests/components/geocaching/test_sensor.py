@@ -2,11 +2,13 @@
 
 from unittest.mock import MagicMock
 
-from geocachingapi.models import GeocachingCache, GeocachingStatus
+from geocachingapi.models import GeocachingCache, GeocachingStatus, GeocachingTrackable
 
 from homeassistant.components.geocaching.sensor import (
     CACHE_SENSORS,
+    TRACKABLE_SENSORS,
     GeoEntityCacheSensorEntity,
+    GeoEntityTrackableSensorEntity,
 )
 
 
@@ -55,3 +57,50 @@ def test_cache_sensor_uses_latest_coordinator_data() -> None:
     coordinator.data = updated_status
 
     assert entity.native_value == 20
+
+
+def test_trackable_sensor_uses_latest_coordinator_data() -> None:
+    """Test that a trackable sensor uses the latest coordinator data."""
+    owner = MagicMock()
+    owner.username = "TrackableOwner"
+
+    first_trackable = GeocachingTrackable(
+        reference_code="TB12345",
+        name="Test trackable",
+        owner=owner,
+        kilometers_traveled=10.5,
+    )
+
+    first_status = GeocachingStatus()
+    first_status.tracked_trackables = [first_trackable]
+
+    coordinator = MagicMock()
+    coordinator.data = first_status
+
+    description = next(
+        description
+        for description in TRACKABLE_SENSORS
+        if description.key == "kilometers_traveled"
+    )
+
+    entity = GeoEntityTrackableSensorEntity(
+        coordinator,
+        first_trackable,
+        description,
+    )
+
+    assert entity.native_value == 10.5
+
+    updated_trackable = GeocachingTrackable(
+        reference_code="TB12345",
+        name="Test trackable",
+        owner=owner,
+        kilometers_traveled=20.5,
+    )
+
+    updated_status = GeocachingStatus()
+    updated_status.tracked_trackables = [updated_trackable]
+
+    coordinator.data = updated_status
+
+    assert entity.native_value == 20.5
