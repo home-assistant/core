@@ -207,6 +207,19 @@ async def async_discover_all_endpoints(
     return {endpoint.uid: endpoint for endpoint in await service.discover_all()}
 
 
+async def async_scan(hass: HomeAssistant) -> None:
+    """Broadcast IASD so ASPort replies fill the Discovered shelf.
+
+    Does not wait for replies or run ``discover_all``'s post-wait probe fan-out.
+    Callers that need replies to land should sleep after this (e.g. config flow).
+
+    Raises:
+        OSError: Discovery UDP socket could not be bound.
+    """
+    service = await async_ensure_discovery(hass)
+    await service.scan()
+
+
 async def async_discover_endpoint(
     hass: HomeAssistant, uid: str
 ) -> pizone.ControllerEndpoint | None:
