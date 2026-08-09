@@ -17,6 +17,13 @@ from . import (
 )
 
 
+def _empty_or_non_empty_string(value: str) -> str:
+    """Validate an empty or non-empty string."""
+    if value == "":
+        return value
+    return intent.non_empty_string(value)
+
+
 async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the climate intents."""
     intent.async_register(hass, SetTemperatureIntent())
@@ -29,9 +36,9 @@ class SetTemperatureIntent(intent.IntentHandler):
     description = "Sets the target temperature of a climate device or entity"
     slot_schema = {
         vol.Required("temperature"): vol.Coerce(float),
-        vol.Optional("area"): intent.non_empty_string,
-        vol.Optional("name"): intent.non_empty_string,
-        vol.Optional("floor"): intent.non_empty_string,
+        vol.Optional("area"): _empty_or_non_empty_string,
+        vol.Optional("name"): _empty_or_non_empty_string,
+        vol.Optional("floor"): _empty_or_non_empty_string,
         vol.Optional("preferred_area_id"): cv.string,
         vol.Optional("preferred_floor_id"): cv.string,
     }
@@ -41,12 +48,7 @@ class SetTemperatureIntent(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
-        slots = intent_obj.slots.copy()
-        for target in ("area", "name", "floor"):
-            slot = slots.get(target)
-            if isinstance(slot, dict) and slot.get("value") == "":
-                del slots[target]
-        slots = self.async_validate_slots(slots)
+        slots = self.async_validate_slots(intent_obj.slots)
 
         temperature: float = slots["temperature"]["value"]
 
