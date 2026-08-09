@@ -335,12 +335,16 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 else:
                     # Match both the name shown in source_list and the generic
                     # one, so existing automations keep working.
+                    # Casefolded like the uniqueness checks above, so that a
+                    # name reserved as a duplicate also matches as one here.
+                    folded_query = query.casefold()
                     for name in (item.get("name"), item.get("title")):
                         if not name:
                             continue
-                        if query.lower() == name.lower():
+                        folded = name.casefold()
+                        if folded_query == folded:
                             return await self.async_source_start(uri, source_type)
-                        if query.lower() in name.lower():
+                        if folded_query in folded:
                             coarse_uri = uri
         if coarse_uri:
             return await self.async_source_start(coarse_uri, source_type)
