@@ -84,6 +84,12 @@
       "reconnect_zigbee_router": {
         "name": "Reconnect Zigbee router"
       },
+      "z_wave_flash_mode": {
+        "name": "Z-Wave flash mode"
+      },
+      "z_wave_restart": {
+        "name": "Z-Wave restart"
+      },
       "zigbee_flash_mode": {
         "name": "Zigbee flash mode"
       },
@@ -160,6 +166,9 @@
       "core_update": {
         "name": "Core firmware"
       },
+      "z_wave_update": {
+        "name": "Z-Wave firmware"
+      },
       "zigbee_update": {
         "name": "Zigbee firmware"
       }
@@ -171,6 +180,9 @@
     },
     "firmware_update_failed": {
       "message": "Firmware update failed for {device_name}."
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "no_device_found": {
       "message": "No valid SMLIGHT device found for the given targets."

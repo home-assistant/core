@@ -37,7 +37,7 @@ from .const import (
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
 )
-from .data_handler import NetatmoConfigEntry, NetatmoDataHandler
+from .coordinator import NetatmoConfigEntry, NetatmoDataHandler
 
 _LOGGER = logging.getLogger(__name__)
 

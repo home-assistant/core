@@ -544,6 +544,73 @@
       "type": 1,
       "oid": "c198bcdd-8b8b-4dc6-a2b0-f86f7dc7c001",
       "uiClass": "VenetianBlind"
+    },
+    {
+      "creationTime": 1613676720000,
+      "lastUpdateTime": 1613676720000,
+      "label": "Living Room Screen",
+      "deviceURL": "rts://1234-1234-6362/16718220",
+      "shortcut": false,
+      "controllableName": "rts:GenericRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "rest",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 1
+          },
+          {
+            "commandName": "test",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 1
+          },
+          {
+            "commandName": "openConfiguration",
+            "nparams": 1
+          }
+        ],
+        "states": [],
+        "dataProperties": [
+          {
+            "value": "0",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "RTSGeneric",
+        "uiProfiles": ["UpDown"],
+        "uiClass": "Generic",
+        "qualifiedName": "rts:GenericRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [],
+      "attributes": [
+        {
+          "name": "rts:diy",
+          "type": 6,
+          "value": true
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+      "widget": "RTSGeneric",
+      "type": 1,
+      "oid": "97f85fd1-53f7-4cdf-8c73-9b2c172dbd62",
+      "uiClass": "Generic"
     }
   ],
   "zones": [],

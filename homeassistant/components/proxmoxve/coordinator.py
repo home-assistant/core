@@ -10,6 +10,7 @@ from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
 import requests
 from requests.exceptions import ConnectTimeout, SSLError
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -64,6 +65,32 @@ class ProxmoxNodeData:
     backups: list[dict[str, Any]] = field(default_factory=list)
 
 
+def proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
+    """Return the base URL for the Proxmox VE."""
+    data = coordinator.config_entry.data
+    return URL.build(
+        scheme="https",
+        host=data[CONF_HOST],
+        port=data[CONF_PORT],
+    )
+
+
+def node_device_info(
+    coordinator: ProxmoxCoordinator, node_data: ProxmoxNodeData
+) -> dr.DeviceInfo:
+    """Return the device info for a Proxmox VE node device."""
+    return dr.DeviceInfo(
+        identifiers={
+            (DOMAIN, f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}")
+        },
+        name=node_data.node.get("node", str(node_data.node["id"])),
+        model="Node",
+        configuration_url=proxmox_base_url(coordinator).with_fragment(
+            f"v1:0:=node/{node_data.node['node']}"
+        ),
+    )
+
+
 class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
     """Data Update Coordinator for Proxmox VE integration."""
 
@@ -110,25 +137,21 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except SSLError as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="ssl_error",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except ConnectTimeout as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except ProxmoxServerError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error_details",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except ProxmoxPermissionsError as err:
             raise ConfigEntryAuthFailed(
@@ -144,7 +167,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
     @override
@@ -157,19 +179,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except SSLError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="ssl_error",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except ConnectTimeout as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except ResourceException as err:
             raise UpdateFailed(
@@ -180,7 +199,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
         data: dict[str, ProxmoxNodeData] = {}
@@ -277,6 +295,12 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             _LOGGER.debug("New nodes found: %s", new_nodes)
             self.known_nodes.update(new_nodes)
             new_node_data = [data[node_name] for node_name in new_nodes]
+            device_registry = dr.async_get(self.hass)
+            for node_data in new_node_data:
+                device_registry.async_get_or_create(
+                    config_entry_id=self.config_entry.entry_id,
+                    **node_device_info(self, node_data),
+                )
             for nodes_callback in self.new_nodes_callbacks:
                 nodes_callback(new_node_data)
 
@@ -363,9 +387,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 for identifier in device.identifiers
             ):
                 _LOGGER.debug("Removing stale device: %s", device.identifiers)
-                registry.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                registry.async_remove_device(device.id)
 
 
 class ProxmoxSetupError(Exception):

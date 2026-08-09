@@ -2,19 +2,26 @@
 
 from unittest.mock import MagicMock
 
+from modbus_connection import ModbusError
 from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 import pytest
 
 from homeassistant.components.stiebel_eltron.const import DOMAIN
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_HOST: "1.1.1.1", CONF_PORT: 502}
 RECONFIGURE_INPUT = {CONF_HOST: "2.2.2.2", CONF_PORT: 502}
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip="1.1.1.2",
+    hostname="servicewelt",
+    macaddress="000000000001",
+)
 
 
 async def test_full_flow(hass: HomeAssistant) -> None:
@@ -35,16 +42,28 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["data"] == USER_INPUT
 
 
+@pytest.mark.parametrize(
+    ("failing_fixture", "side_effect"),
+    [
+        pytest.param(
+            "mock_get_controller_model", StiebelEltronModbusError, id="model_read"
+        ),
+        pytest.param("mock_connect_tcp", ModbusError, id="connect"),
+    ],
+)
 async def test_form_cannot_connect(
     hass: HomeAssistant,
-    mock_get_controller_model: MagicMock,
+    request: pytest.FixtureRequest,
+    failing_fixture: str,
+    side_effect: type[Exception],
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle a cannot connect error while opening or reading the device."""
+    failing_mock = request.getfixturevalue(failing_fixture)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_get_controller_model.side_effect = StiebelEltronModbusError
+    failing_mock.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -54,7 +73,7 @@ async def test_form_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_get_controller_model.side_effect = None
+    failing_mock.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -200,3 +219,82 @@ async def test_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_flow(hass: HomeAssistant) -> None:
+    """Test the full DHCP discovery flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Stiebel Eltron"
+    assert result["data"] == {CONF_HOST: "1.1.1.2", CONF_PORT: 502}
+    assert result["result"].unique_id == "00:00:00:00:00:01"
+
+
+async def test_dhcp_discovery_updates_host(hass: HomeAssistant) -> None:
+    """Test DHCP discovery updates the host of an entry with a matching MAC."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 502},
+        unique_id="00:00:00:00:00:01",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == "1.1.1.2"
+
+
+async def test_dhcp_discovery_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test DHCP discovery aborts for an already configured host."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.1",
+            hostname="servicewelt",
+            macaddress="000000000001",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_reason"),
+    [
+        pytest.param(StiebelEltronModbusError, "cannot_connect", id="cannot_connect"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_dhcp_discovery_errors(
+    hass: HomeAssistant,
+    mock_get_controller_model: MagicMock,
+    side_effect: type[Exception],
+    expected_reason: str,
+) -> None:
+    """Test DHCP discovery aborts when the device cannot be validated."""
+    mock_get_controller_model.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason

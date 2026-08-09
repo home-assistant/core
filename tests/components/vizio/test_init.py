@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import setup_integration
-from .const import APP_LIST, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
+from .const import APP_RECORDS, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -116,8 +116,8 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
-        return_value=APP_LIST,
+        "homeassistant.components.vizio.coordinator.fetch_remote_app_catalog",
+        return_value=APP_RECORDS,
     ) as mock_fetch:
         freezer.tick(timedelta(days=1))
         async_fire_time_changed(hass)
@@ -129,8 +129,8 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
-        return_value=APP_LIST,
+        "homeassistant.components.vizio.coordinator.fetch_remote_app_catalog",
+        return_value=APP_RECORDS,
     ) as mock_fetch:
         freezer.tick(timedelta(days=2))
         async_fire_time_changed(hass)
@@ -147,7 +147,9 @@ async def test_device_registry_model_and_version(
     """Test that coordinator populates device registry with model and version."""
     await setup_integration(hass, mock_tv_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIQUE_ID), mock_tv_config_entry.entry_id
+    )
     assert device is not None
     assert device.model == MODEL
     assert device.sw_version == VERSION
@@ -163,7 +165,9 @@ async def test_device_registry_without_model_or_version(
     """Test device registry when model and version are unavailable."""
     await setup_integration(hass, mock_tv_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIQUE_ID), mock_tv_config_entry.entry_id
+    )
     assert device is not None
     assert device.model is None
     assert device.sw_version is None
