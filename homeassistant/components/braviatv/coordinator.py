@@ -143,18 +143,23 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         if sort_by:
             sources = sorted(sources, key=lambda d: d.get(sort_by, ""))
         for item in sources:
+            title = item.get("title")
+            uri = item.get("uri")
             # Sony TVs report the generic connector name in "title" and the name
             # the user configured on the TV itself in "label". Prefer the latter,
             # falling back to "title" when no custom name has been set.
-            title = item.get("label") or item.get("title")
-            uri = item.get("uri")
-            if not title or not uri:
+            name = item.get("label") or title
+            if not name or not uri:
                 continue
-            # Store the resolved name so that lookups in async_source_find match
-            # what is exposed in source_list.
-            self.source_map[uri] = {**item, "title": title, "type": source_type}
-            if add_to_list and title not in self.source_list:
-                self.source_list.append(title)
+            # Several inputs are allowed to share the same label, so fall back to
+            # the generic name to keep every input reachable in source_list.
+            if add_to_list and name in self.source_list and title:
+                name = title
+            # "title" is kept untouched so that select_source keeps working with
+            # the generic name for anyone already using it.
+            self.source_map[uri] = {**item, "name": name, "type": source_type}
+            if add_to_list and name not in self.source_list:
+                self.source_list.append(name)
 
     @override
     async def _async_update_data(self) -> None:
@@ -257,7 +262,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.media_content_id = self.media_uri
             if self.media_uri[:8] == "extInput":
                 source = self.source_map.get(self.media_uri, {})
-                self.source = source.get("title") or playing_info.get("title")
+                self.source = source.get("name") or playing_info.get("title")
             if self.media_uri[:2] == "tv":
                 self.media_content_id = playing_info.get("dispNum")
                 self.media_title = (
@@ -305,11 +310,15 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     if num and int(query) == int(num):
                         return await self.async_source_start(uri, source_type)
                 else:
-                    title: str = item["title"]
-                    if query.lower() == title.lower():
-                        return await self.async_source_start(uri, source_type)
-                    if query.lower() in title.lower():
-                        coarse_uri = uri
+                    # Match both the name shown in source_list and the generic
+                    # one, so existing automations keep working.
+                    for name in (item.get("name"), item.get("title")):
+                        if not name:
+                            continue
+                        if query.lower() == name.lower():
+                            return await self.async_source_start(uri, source_type)
+                        if query.lower() in name.lower():
+                            coarse_uri = uri
         if coarse_uri:
             return await self.async_source_start(coarse_uri, source_type)
         raise ValueError(f"Not found {source_type}: {query}")
