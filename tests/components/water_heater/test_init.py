@@ -1,5 +1,6 @@
 """The tests for the water heater component."""
 
+from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
@@ -14,7 +15,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -77,8 +78,15 @@ async def test_set_temp_schema(
     [
         (UnitOfTemperature.CELSIUS, 20.0, "20.0"),
         (UnitOfTemperature.FAHRENHEIT, 40.0, "104.0"),
+        (UnitOfTemperature.FAHRENHEIT, 61.0, "141.8"),
+        (UnitOfTemperature.CELSIUS, 43.3, "110.0"),
     ],
-    ids=["matching_units", "conversion"],
+    ids=[
+        "matching_units",
+        "conversion_below_min",
+        "conversion_above_max",
+        "conversion_at_displayed_min",
+    ],
 )
 async def test_set_temperature_raises_out_of_range(
     hass: HomeAssistant,
@@ -148,6 +156,146 @@ async def test_set_temperature_raises_out_of_range(
         "min_temp": str(water_heater_entity.min_temp),
         "max_temp": str(water_heater_entity.max_temp),
         "temperature_unit": water_heater_entity.temperature_unit,
+    }
+
+
+async def test_set_temperature_accepts_displayed_minimum_value(
+    hass: HomeAssistant, config_flow_fixture: None
+) -> None:
+    """Test temperature at the displayed minimum boundary is accepted."""
+
+    class BoundaryWaterHeater(MockWaterHeaterEntity):
+        async def async_set_temperature(self, **kwargs: Any) -> None:
+            self.last_set_temperature = kwargs
+
+    water_heater_entity = BoundaryWaterHeater()
+    water_heater_entity.hass = hass
+    water_heater_entity._attr_name = "test"
+    water_heater_entity._attr_unique_id = "test"
+    water_heater_entity._attr_supported_features = (
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+    )
+    water_heater_entity._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.WATER_HEATER]
+        )
+        return True
+
+    async def async_setup_entry_water_heater_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        async_add_entities([water_heater_entity])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+        ),
+        built_in=False,
+    )
+    mock_platform(
+        hass,
+        "test.water_heater",
+        MockPlatform(async_setup_entry=async_setup_entry_water_heater_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    data = {"entity_id": "water_heater.test", "temperature": 43.3}
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_temperature",
+        data,
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert water_heater_entity.last_set_temperature == {
+        "entity_id": ["water_heater.test"],
+        "temperature": 110.0,
+    }
+
+
+async def test_set_temperature_with_no_bounds_skips_validation(
+    hass: HomeAssistant, config_flow_fixture: None
+) -> None:
+    """Test set temperature does not validate when bounds are not available."""
+
+    class NoBoundsWaterHeater(MockWaterHeaterEntity):
+        @property
+        def min_temp(self) -> None:
+            return None
+
+        @property
+        def max_temp(self) -> None:
+            return None
+
+        async def async_set_temperature(self, **kwargs):
+            self.last_set_temperature = kwargs
+
+    water_heater_entity = NoBoundsWaterHeater()
+    water_heater_entity.hass = hass
+    water_heater_entity._attr_name = "test"
+    water_heater_entity._attr_unique_id = "test"
+    water_heater_entity._attr_supported_features = (
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+    )
+    water_heater_entity._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.WATER_HEATER]
+        )
+        return True
+
+    async def async_setup_entry_water_heater_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        async_add_entities([water_heater_entity])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+        ),
+        built_in=False,
+    )
+    mock_platform(
+        hass,
+        "test.water_heater",
+        MockPlatform(async_setup_entry=async_setup_entry_water_heater_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_temperature",
+        {"entity_id": "water_heater.test", "temperature": 40.0},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert water_heater_entity.last_set_temperature == {
+        "entity_id": ["water_heater.test"],
+        "temperature": 104.0,
     }
 
 

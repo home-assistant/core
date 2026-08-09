@@ -427,12 +427,35 @@ async def async_service_temperature_set(
 
     min_temp = entity.min_temp
     max_temp = entity.max_temp
+    min_temp_displayed = (
+        show_temp(hass, min_temp, entity.temperature_unit, entity.precision)
+        if min_temp is not None
+        else None
+    )
+    max_temp_displayed = (
+        show_temp(hass, max_temp, entity.temperature_unit, entity.precision)
+        if max_temp is not None
+        else None
+    )
 
     for value, temp in service.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
-            check_temp = TemperatureConverter.convert(
-                temp, hass.config.units.temperature_unit, entity.temperature_unit
-            )
+            if (
+                min_temp_displayed is not None
+                and temp == min_temp_displayed
+                and min_temp is not None
+            ):
+                check_temp = min_temp
+            elif (
+                max_temp_displayed is not None
+                and temp == max_temp_displayed
+                and max_temp is not None
+            ):
+                check_temp = max_temp
+            else:
+                check_temp = TemperatureConverter.convert(
+                    temp, hass.config.units.temperature_unit, entity.temperature_unit
+                )
             _LOGGER.debug(
                 "Check valid temperature %s %s (%s %s) in range %s %s - %s %s",
                 check_temp,
@@ -444,18 +467,19 @@ async def async_service_temperature_set(
                 max_temp,
                 entity.temperature_unit,
             )
-            if not min_temp <= check_temp <= max_temp:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="temp_out_of_range",
-                    translation_placeholders={
-                        "entity_id": entity.entity_id,
-                        "check_temp": str(check_temp),
-                        "min_temp": str(min_temp),
-                        "max_temp": str(max_temp),
-                        "temperature_unit": entity.temperature_unit,
-                    },
-                )
+            if min_temp is not None and max_temp is not None:
+                if not min_temp <= check_temp <= max_temp:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="temp_out_of_range",
+                        translation_placeholders={
+                            "entity_id": entity.entity_id,
+                            "check_temp": str(check_temp),
+                            "min_temp": str(min_temp),
+                            "max_temp": str(max_temp),
+                            "temperature_unit": entity.temperature_unit,
+                        },
+                    )
             kwargs[value] = check_temp
         else:
             kwargs[value] = temp
