@@ -84,6 +84,13 @@ INPUTS = [
         "label": "Streaming box",
         "icon": "meta:cec",
     },
+    {
+        "uri": "extInput:composite?port=1",
+        "title": "Streaming box (2)",
+        "connection": False,
+        "label": "",
+        "icon": "meta:composite",
+    },
 ]
 
 PLAYING_INFO = {"uri": "extInput:hdmi?port=2", "title": "HDMI 2", "source": "HDMI"}
@@ -134,19 +141,13 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
     # "HDMI 3" repeats the same label, so it falls back to the generic name to
     # stay reachable.
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
-        # No label, so it keeps its generic name.
         "HDMI 1",
-        # Renamed on the TV.
         "Game console",
-        # Repeats the label of the previous input.
         "HDMI 3",
-        # Labelled with the generic name of another input.
         "HDMI 4",
-        # Same, differing only in case.
         "HDMI 5",
-        # Reported with a label but no generic name at all.
         "Streaming box",
-        # Same, with the label already taken and no generic name to fall back to.
+        "Streaming box (3)",
         "Streaming box (2)",
     ]
     # The playing input is reported with the same name used in the source list.
@@ -156,22 +157,25 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("source", "expected_uri"),
     [
-        # The label of a renamed input.
-        ("Game console", "extInput:hdmi?port=2"),
-        # The generic name of that same input, still accepted so that existing
-        # automations keep working after the input is renamed on the TV.
-        ("HDMI 2", "extInput:hdmi?port=2"),
-        # An input sharing a label with another one remains selectable.
-        ("HDMI 3", "extInput:hdmi?port=3"),
-        # A label may not steal the generic name of a different input.
-        ("HDMI 1", "extInput:hdmi?port=1"),
-        ("HDMI 4", "extInput:hdmi?port=4"),
-        # A label may not steal it in a different case either.
-        ("HDMI 5", "extInput:hdmi?port=5"),
-        # An input reported with a label but no title is selectable too.
-        ("Streaming box", "extInput:cec?type=player&port=1"),
-        # And it keeps a distinct name when that label is already taken.
-        ("Streaming box (2)", "extInput:cec?type=player&port=2"),
+        pytest.param("Game console", "extInput:hdmi?port=2", id="label"),
+        pytest.param("HDMI 2", "extInput:hdmi?port=2", id="generic_name_of_labelled"),
+        pytest.param("HDMI 3", "extInput:hdmi?port=3", id="shared_label"),
+        pytest.param("HDMI 1", "extInput:hdmi?port=1", id="generic_name_not_stolen"),
+        pytest.param("HDMI 4", "extInput:hdmi?port=4", id="label_of_another_input"),
+        pytest.param("HDMI 5", "extInput:hdmi?port=5", id="label_differing_in_case"),
+        pytest.param(
+            "Streaming box", "extInput:cec?type=player&port=1", id="label_without_title"
+        ),
+        pytest.param(
+            "Streaming box (3)",
+            "extInput:cec?type=player&port=2",
+            id="generated_name_avoids_generic_name",
+        ),
+        pytest.param(
+            "Streaming box (2)",
+            "extInput:composite?port=1",
+            id="generic_name_kept_by_its_own_input",
+        ),
     ],
 )
 async def test_select_source(
