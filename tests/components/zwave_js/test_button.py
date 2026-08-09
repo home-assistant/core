@@ -134,3 +134,19 @@ async def test_notification_idle_button(
         "property": "Home Security",
         "propertyKey": "Cover status",
     }
+
+
+@pytest.mark.usefixtures("wallmote_central_scene", "integration")
+async def test_power_management_notification_idle_button(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the idle button derived from the Power Management value still exists.
+
+    The battery charging binary sensor is derived from the same Notification value,
+    so this guards against the idle button being silently dropped in discovery.
+    """
+    entity_id = "button.mbr_wallmote_quad_idle_power_management_battery_load_status"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

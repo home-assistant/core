@@ -19,6 +19,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 
     websocket_api.async_register_command(hass, websocket_list_composite_splits)
     websocket_api.async_register_command(hass, websocket_list_devices)
+    websocket_api.async_register_command(hass, websocket_list_linked_devices)
     websocket_api.async_register_command(hass, websocket_update_device)
     websocket_api.async_register_command(
         hass, websocket_remove_config_entry_from_device
@@ -95,6 +96,44 @@ def websocket_list_devices(
     connection.send_message(msg_json)
 
 
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/device_registry/list_linked_devices",
+        vol.Required("device_id"): str,
+    }
+)
+def websocket_list_linked_devices(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle list linked devices command.
+
+    Linked devices share at least one connection or identifier with the given
+    device. Each such connection or identifier is unique within a config entry, so
+    the linked devices belong to other config entries.
+    """
+    registry = dr.async_get(hass)
+    device_id = msg["device_id"]
+
+    if (device := registry.async_get(device_id)) is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Device not found"
+        )
+        return
+
+    linked_devices = [
+        entry.id
+        for entry in registry.async_get_devices(
+            identifiers=device.identifiers, connections=device.connections
+        )
+        if entry.id != device_id
+    ]
+
+    connection.send_result(msg["id"], {"linked_devices": linked_devices})
+
+
 @require_admin
 @websocket_api.websocket_command(
     {
@@ -151,6 +190,10 @@ async def websocket_remove_config_entry_from_device(
     config_entry_id = msg["config_entry_id"]
     device_id = msg["device_id"]
 
+    # A composite device id has no single underlying device to remove; reject it.
+    if registry.async_is_composite_device_id(device_id):
+        raise HomeAssistantError("Cannot remove a composite device")
+
     if (config_entry := hass.config_entries.async_get_entry(config_entry_id)) is None:
         raise HomeAssistantError("Unknown config entry")
 
@@ -176,14 +219,8 @@ async def websocket_remove_config_entry_from_device(
             "Failed to remove device entry, rejected by integration"
         )
 
-    # Integration might have removed the config entry already, that is fine.
+    # The integration might have removed the device already, that is fine.
     if registry.async_get(device_id):
-        entry = registry.async_update_device(
-            device_id, remove_config_entry_id=config_entry_id
-        )
+        registry.async_remove_device(device_id)
 
-        entry_as_dict = entry.dict_repr if entry else None
-    else:
-        entry_as_dict = None
-
-    connection.send_message(websocket_api.result_message(msg["id"], entry_as_dict))
+    connection.send_message(websocket_api.result_message(msg["id"], None))

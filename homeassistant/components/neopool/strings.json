@@ -27,6 +27,11 @@
     }
   },
   "entity": {
+    "light": {
+      "light": {
+        "name": "Pool light"
+      }
+    },
     "sensor": {
       "cell_runtime_part": {
         "name": "Cell runtime since reset"
@@ -139,12 +144,29 @@
   "exceptions": {
     "modbus_communication_error": {
       "message": "An error occurred while communicating with the NeoPool controller: {error}"
+    },
+    "relay_in_auto_mode": {
+      "message": "This relay is currently in automatic mode. Change the mode to manual first to control it directly."
     }
   },
   "issues": {
     "corrupted_gpio": {
       "description": "The following GPIO register(s) on your pool controller contain invalid values:\n\n{details}\n\nThis typically happens when the Modbus gateway framing mode does not match the integration's framer setting. The affected function(s) will not work correctly until the register(s) are restored to valid values.\n\nSee the integration documentation for repair instructions.",
       "title": "Corrupted GPIO register(s) detected"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "use_light": "Enable pool light relay"
+        },
+        "data_description": {
+          "use_light": "Creates entities to control and monitor the pool light relay."
+        },
+        "description": "Changes take effect immediately and reload the integration.",
+        "title": "NeoPool settings"
+      }
     }
   }
 }

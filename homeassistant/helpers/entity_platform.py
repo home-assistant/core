@@ -210,7 +210,7 @@ class PlatformData:
             return await translation.async_get_translations(
                 self.hass, language, category, {integration}
             )
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.debug(
                 "Could not load translations for %s",
                 integration,

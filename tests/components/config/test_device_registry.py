@@ -48,7 +48,7 @@ async def test_list_devices(
         identifiers={("bridgeid", "1234")},
         manufacturer="manufacturer",
         model="model",
-        via_device=("bridgeid", "0123"),
+        via_device_id=device1.id,
         entry_type=dr.DeviceEntryType.SERVICE,
     )
 
@@ -318,7 +318,7 @@ async def test_update_device(
     await hass.async_block_till_done()
     assert len(device_registry.devices) == 1
 
-    device = device_registry.async_get_device(
+    [device] = device_registry.async_get_devices(
         identifiers={("bridgeid", "0123")},
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
     )
@@ -370,7 +370,7 @@ async def test_update_device_labels(
     await hass.async_block_till_done()
     assert len(device_registry.devices) == 1
 
-    device = device_registry.async_get_device(
+    [device] = device_registry.async_get_devices(
         identifiers={("bridgeid", "0123")},
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
     )
@@ -604,9 +604,7 @@ async def test_remove_config_entry_from_device_if_integration_remove(
         hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
     ) -> bool:
         if can_remove:
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_registry.async_remove_device(device_entry.id)
         return can_remove
 
     mock_integration(
@@ -675,3 +673,128 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     assert device_registry.async_get(device_entry_1.id).config_entries == {
         entry_1.entry_id
     }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_remove_config_entry_from_composite_device(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test removing a config entry from a pre-migration composite device id fails."""
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+
+    composite_id = "compositea000000000000000000000"
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                # Composite spanning two config entries; splitting it on load removes
+                # the composite device, so composite_id no longer refers to a device
+                _storage_device_v1_12(
+                    composite_id,
+                    [entry_1.entry_id, entry_2.entry_id],
+                    entry_1.entry_id,
+                    "a",
+                ),
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    registry = dr.async_get(hass)
+    assert registry.async_is_composite_device_id(composite_id) is True
+
+    response = await client.remove_device(composite_id, entry_1.entry_id)
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert response["error"]["message"] == "Cannot remove a composite device"
+
+
+async def test_list_linked_devices(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test listing devices sharing a connection or identifier."""
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry()
+    entry_3.add_to_hass(hass)
+
+    mac = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+
+    # device_1 shares its identifier with device_2 and its connection with device_3
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id,
+        connections={mac},
+        identifiers={("bridgeid", "0123")},
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+    device_3 = device_registry.async_get_or_create(
+        config_entry_id=entry_3.entry_id,
+        connections={mac},
+    )
+    # device_4 shares nothing with the others
+    device_4 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id,
+        identifiers={("bridgeid", "9999")},
+    )
+    assert len({device_1.id, device_2.id, device_3.id, device_4.id}) == 4
+
+    async def list_linked(device_id: str) -> dict:
+        await client.send_json_auto_id(
+            {
+                "type": "config/device_registry/list_linked_devices",
+                "device_id": device_id,
+            }
+        )
+        return await client.receive_json()
+
+    # device_1 is linked to both device_2 (identifier) and device_3 (connection)
+    msg = await list_linked(device_1.id)
+    assert msg["success"]
+    assert msg["result"]["linked_devices"] == unordered([device_2.id, device_3.id])
+
+    # device_2 and device_3 each only share with device_1, not with each other
+    msg = await list_linked(device_2.id)
+    assert msg["result"]["linked_devices"] == [device_1.id]
+
+    msg = await list_linked(device_3.id)
+    assert msg["result"]["linked_devices"] == [device_1.id]
+
+    # device_4 has no linked devices
+    msg = await list_linked(device_4.id)
+    assert msg["result"]["linked_devices"] == []
+
+
+async def test_list_linked_devices_unknown_device(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+) -> None:
+    """Test listing linked devices for an unknown device returns an error."""
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/list_linked_devices",
+            "device_id": "does_not_exist",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+    assert msg["error"]["message"] == "Device not found"
