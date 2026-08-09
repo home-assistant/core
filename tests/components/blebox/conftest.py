@@ -53,6 +53,7 @@ def mock_feature(category, spec, set_spec: bool = True, **kwargs):
     type(feature_mock.product).name = PropertyMock(return_value="Some name")
     type(feature_mock.product).type = PropertyMock(return_value="some type")
     type(feature_mock.product).model = PropertyMock(return_value="some model")
+    type(feature_mock.product).product = PropertyMock(return_value="some product")
     type(feature_mock.product).brand = PropertyMock(return_value="BleBox")
     type(feature_mock.product).firmware_version = PropertyMock(return_value="1.23")
     type(feature_mock.product).hardware_version = PropertyMock(return_value="0.1")

@@ -34,6 +34,7 @@ def _build_command_responses(
     interface_data: list[dict[str, Any]],
     routerboard_data: list[dict[str, Any]],
     update_data: list[dict[str, Any]],
+    poe_data: list[dict[str, Any]],
 ) -> dict[str, Any]:
     """Build mocked service responses for the Mikrotik coordinator."""
     return {
@@ -55,6 +56,7 @@ def _build_command_responses(
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.RESOURCE]: system_data,
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.INTERFACE]: interface_data,
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.UPDATE]: update_data,
+        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.POE]: poe_data,
     }
 
 
@@ -121,6 +123,7 @@ async def setup_mikrotik_entry(
         interface_data=kwargs.get("interface_data", []),
         routerboard_data=kwargs.get("routerboard_data", ROUTERBOARD_DATA),
         update_data=kwargs.get("update_data", UPDATE_DATA),
+        poe_data=kwargs.get("poe_data", []),
     )
 
     await setup_integration(hass, config_entry, command_responses=command_responses)
