@@ -34,7 +34,8 @@ BRAVIA_SYSTEM_INFO = {
 }
 
 # "title" is the generic connector name, "label" the name set on the TV itself.
-# The TV allows the same label on several inputs, and leaves it empty when unset.
+# The TV leaves the label empty when unset, allows the same label on several
+# inputs, and does not stop a label from matching another input's generic name.
 INPUTS = [
     {
         "uri": "extInput:hdmi?port=1",
@@ -56,6 +57,19 @@ INPUTS = [
         "connection": True,
         "label": "Game console",
         "icon": "meta:hdmi",
+    },
+    {
+        "uri": "extInput:hdmi?port=4",
+        "title": "HDMI 4",
+        "connection": True,
+        "label": "HDMI 1",
+        "icon": "meta:hdmi",
+    },
+    {
+        "uri": "extInput:cec?type=player&port=1",
+        "connection": True,
+        "label": "Streaming box",
+        "icon": "meta:cec",
     },
 ]
 
@@ -107,9 +121,16 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
     # "HDMI 3" repeats the same label, so it falls back to the generic name to
     # stay reachable.
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
+        # No label, so it keeps its generic name.
         "HDMI 1",
+        # Renamed on the TV.
         "Game console",
+        # Repeats the label of the previous input.
         "HDMI 3",
+        # Labelled with the generic name of another input.
+        "HDMI 4",
+        # Reported with a label but no generic name at all.
+        "Streaming box",
     ]
     # The playing input is reported with the same name used in the source list.
     assert state.attributes[ATTR_INPUT_SOURCE] == "Game console"
@@ -125,6 +146,11 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
         ("HDMI 2", "extInput:hdmi?port=2"),
         # An input sharing a label with another one remains selectable.
         ("HDMI 3", "extInput:hdmi?port=3"),
+        # A label may not steal the generic name of a different input.
+        ("HDMI 1", "extInput:hdmi?port=1"),
+        ("HDMI 4", "extInput:hdmi?port=4"),
+        # An input reported with a label but no title is selectable too.
+        ("Streaming box", "extInput:cec?type=player&port=1"),
     ],
 )
 async def test_select_source(
