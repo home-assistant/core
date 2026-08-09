@@ -62,7 +62,14 @@ async def async_setup_entry(
 
     # Add all known WiFi devices as potentially tracked devices. They will only be
     # tracked if the user enables the entity.
-    async_add_entities(_new_trackers())
+    async_add_entities(
+        [
+            OmadaClientScannerEntity(
+                site_id, client.mac, client.name, controller.clients_coordinator
+            )
+            for client in (known_clients_coordinator.data or {}).values()
+        ]
+    )
 
 
 class OmadaClientScannerEntity(
