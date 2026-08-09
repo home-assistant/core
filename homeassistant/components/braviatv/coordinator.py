@@ -142,19 +142,27 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Extend source map and source list."""
         if sort_by:
             sources = sorted(sources, key=lambda d: d.get(sort_by, ""))
+        # Reserve every generic connector name up front, so that a custom label
+        # can never shadow another input and leave it unreachable.
+        reserved = {item["title"] for item in sources if item.get("title")}
+        taken = set(self.source_list) if add_to_list else set()
         for item in sources:
             title = item.get("title")
             uri = item.get("uri")
             # Sony TVs report the generic connector name in "title" and the name
             # the user configured on the TV itself in "label". Prefer the latter,
-            # falling back to "title" when no custom name has been set.
-            name = item.get("label") or title
+            # as long as it is free and does not belong to another input.
+            label = item.get("label")
+            name = title
+            if (
+                label
+                and label not in taken
+                and (label == title or label not in reserved)
+            ):
+                name = label
             if not name or not uri:
                 continue
-            # Several inputs are allowed to share the same label, so fall back to
-            # the generic name to keep every input reachable in source_list.
-            if add_to_list and name in self.source_list and title:
-                name = title
+            taken.add(name)
             # "title" is kept untouched so that select_source keeps working with
             # the generic name for anyone already using it.
             self.source_map[uri] = {**item, "name": name, "type": source_type}
