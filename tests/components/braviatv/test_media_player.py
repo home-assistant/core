@@ -91,6 +91,13 @@ INPUTS = [
         "label": "",
         "icon": "meta:composite",
     },
+    {
+        "uri": "extInput:scart?port=1",
+        "title": "AV1",
+        "connection": False,
+        "label": "Stra\u00dfe",
+        "icon": "meta:scart",
+    },
 ]
 
 PLAYING_INFO = {"uri": "extInput:hdmi?port=2", "title": "HDMI 2", "source": "HDMI"}
@@ -149,6 +156,7 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
         "Streaming box",
         "Streaming box (3)",
         "Streaming box (2)",
+        "Stra\u00dfe",
     ]
     # The playing input is reported with the same name used in the source list.
     assert state.attributes[ATTR_INPUT_SOURCE] == "Game console"
@@ -176,6 +184,7 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
             "extInput:composite?port=1",
             id="generic_name_kept_by_its_own_input",
         ),
+        pytest.param("STRASSE", "extInput:scart?port=1", id="unicode_case_folding"),
     ],
 )
 async def test_select_source(
