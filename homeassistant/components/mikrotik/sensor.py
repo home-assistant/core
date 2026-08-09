@@ -22,8 +22,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import HEALTH, RESOURCE
-from .coordinator import LOGGER, MikrotikConfigEntry
+from .const import HEALTH, LOGGER, RESOURCE
+from .coordinator import MikrotikConfigEntry
 from .entity import MikrotikEntity
 
 PARALLEL_UPDATES = 0
