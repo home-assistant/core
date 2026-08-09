@@ -273,7 +273,8 @@ class GardenaBluetoothSensor(GardenaBluetoothDescriptorEntity, SensorEntity):
         value = self.entity_description.get(value)
         self._attr_native_value = value
 
-        if char := self.entity_description.connected_state:
+        char = self.entity_description.connected_state
+        if char and char.unique_id in self.coordinator.characteristics:
             self._attr_available = bool(self.coordinator.get_cached(char))
         else:
             self._attr_available = True

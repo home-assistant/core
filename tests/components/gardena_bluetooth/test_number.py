@@ -192,6 +192,29 @@ async def test_bluetooth_error_unavailable(
     assert hass.states.get("number.mock_title_manual_watering_time") == snapshot
 
 
+async def test_missing_connected_state(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_read_char_raw: dict[str, bytes],
+    scan_step: Callable[[], Awaitable[None]],
+) -> None:
+    """Verify a device lacking the connected state characteristic stays usable.
+
+    Entities are created on their primary characteristic alone, so their context
+    can name a connected state the device does not expose.
+    """
+
+    mock_read_char_raw[Sensor.threshold.unique_id] = Sensor.threshold.encode(45)
+
+    await setup_entry(hass, mock_entry, [Platform.NUMBER])
+    await scan_step()
+
+    # The primary characteristic still reports, so the entity stays available.
+    state = hass.states.get("number.mock_title_sensor_threshold")
+    assert state
+    assert state.state == "45.0"
+
+
 async def test_connected_state(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

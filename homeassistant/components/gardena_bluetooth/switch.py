@@ -59,7 +59,8 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if not (value := self.coordinator.get_cached(Valve.manual_watering_time)):
+        value = self.coordinator.get_cached(Valve.manual_watering_time)
+        if value is None:
             raise HomeAssistantError("Unable to get manual activation time.")
 
         await self.coordinator.write(Valve.remaining_open_time, value)

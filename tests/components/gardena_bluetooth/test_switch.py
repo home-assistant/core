@@ -85,3 +85,31 @@ async def test_switching(
         call(Valve.remaining_open_time, 1000),
         call(Valve.remaining_open_time, 0),
     ]
+
+
+async def test_switching_zero_watering_time(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_client: Mock,
+    mock_switch_chars: dict[str, bytes],
+) -> None:
+    """Test a manual watering time of zero is a valid duration, not a missing one."""
+
+    mock_switch_chars[Valve.manual_watering_time.unique_id] = (
+        Valve.manual_watering_time.encode(0)
+    )
+
+    entity_id = "switch.mock_title_open"
+    await setup_entry(hass, mock_entry, [Platform.SWITCH])
+    assert hass.states.get(entity_id)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert mock_client.write_char.mock_calls == [
+        call(Valve.remaining_open_time, 0),
+    ]

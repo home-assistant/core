@@ -163,7 +163,11 @@ async def test_missing_connected_state(
 
     coordinator = mock_entry.runtime_data
     assert coordinator.last_update_success
-    assert coordinator.get_cached(Sensor.battery_level) == 45
+
+    # The primary characteristic still reports, so the entity stays available.
+    state = hass.states.get("sensor.mock_title_sensor_battery")
+    assert state
+    assert state.state == "45"
 
 
 async def test_connected_state(

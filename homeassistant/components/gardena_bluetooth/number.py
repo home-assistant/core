@@ -178,7 +178,8 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
         else:
             self._attr_native_value = float(data) / self.entity_description.scale
 
-        if char := self.entity_description.connected_state:
+        char = self.entity_description.connected_state
+        if char and char.unique_id in self.coordinator.characteristics:
             self._attr_available = bool(self.coordinator.get_cached(char))
         else:
             self._attr_available = True
