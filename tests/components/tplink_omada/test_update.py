@@ -87,7 +87,8 @@ async def test_firmware_download_in_progress(
     # picks up the download state.
     await controller.devices_coordinator.async_refresh()
 
-    # The firmware refresh is debounced, so drive it directly.
+    # The firmware refresh is debounced, so a fire-based trigger
+    # would make this test timing-dependent.
     update_platform = async_get_platforms(hass, DOMAIN)[0]
     update_entity = update_platform.entities[entity_id]
     await update_entity.coordinator.async_refresh()
