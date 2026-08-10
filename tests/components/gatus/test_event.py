@@ -65,7 +65,7 @@ async def test_event_dynamic_update(
 ) -> None:
     """Test that event entities trigger when new event data arrives."""
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("event.core_backend_service_status_event")
+    state = hass.states.get("event.core_backend_service")
     assert state is not None
 
     mock_data = [
@@ -91,6 +91,6 @@ async def test_event_dynamic_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("event.core_backend_service_status_event")
+    state = hass.states.get("event.core_backend_service")
     assert state is not None
     assert state.attributes.get("event_type") == "healthy"

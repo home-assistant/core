@@ -28,15 +28,28 @@ async def async_setup_entry(
     """Set up Gatus event entities based on a config entry."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        GatusEndpointEvent(coordinator, entry, endpoint_key, EVENT_DESCRIPTION)
-        for endpoint_key in coordinator.data
-    )
+    known_endpoints: set[str] = set()
+
+    @callback
+    def _check_endpoints() -> None:
+        current_endpoints = set(coordinator.data)
+        new_endpoints = current_endpoints - known_endpoints
+        if new_endpoints:
+            known_endpoints.update(new_endpoints)
+            async_add_entities(
+                GatusEndpointEvent(coordinator, entry, endpoint_key, EVENT_DESCRIPTION)
+                for endpoint_key in new_endpoints
+            )
+        known_endpoints.intersection_update(current_endpoints)
+
+    _check_endpoints()
+    entry.async_on_unload(coordinator.async_add_listener(_check_endpoints))
 
 
 class GatusEndpointEvent(GatusEndpointEntity, EventEntity):
     """Representation of a Gatus endpoint event entity."""
 
+    _attr_name = None
     entity_description: EventEntityDescription
 
     def __init__(

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_event_setup_and_states[event.core_backend_service_status_event-entry]
+# name: test_event_setup_and_states[event.core_backend_service-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -20,7 +20,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.core_backend_service_status_event',
+    'entity_id': 'event.core_backend_service',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28,12 +28,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status event',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Status event',
+    'original_name': None,
     'platform': 'gatus',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -43,7 +43,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_event_setup_and_states[event.core_backend_service_status_event-state]
+# name: test_event_setup_and_states[event.core_backend_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
@@ -53,10 +53,10 @@
         'unhealthy',
         'resolved',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Core Backend Service Status event',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Core Backend Service',
     }),
     'context': <ANY>,
-    'entity_id': 'event.core_backend_service_status_event',
+    'entity_id': 'event.core_backend_service',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
