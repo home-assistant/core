@@ -800,7 +800,15 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Create an entry for device flow."""
-        if self.login_task is None:
+        login_task = self.login_task
+        if login_task and login_task.done():
+            if exc := login_task.exception():
+                self.device_flow_error = exc
+                return self.async_show_progress_done(next_step_id="device_flow_error")
+            self.device_token = login_task.result()
+            return self.async_show_progress_done(next_step_id="device_flow_complete")
+
+        if login_task is None:
             try:
                 async with asyncio.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
                     device_authorization = await self.flow_impl.async_register_device()
@@ -826,13 +834,6 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
 
             _LOGGER.debug("Starting login task")
             self.login_task = self.hass.async_create_task(_wait_for_login())
-
-        if self.login_task.done():
-            if exc := self.login_task.exception():
-                self.device_flow_error = exc
-                return self.async_show_progress_done(next_step_id="device_flow_error")
-            self.device_token = self.login_task.result()
-            return self.async_show_progress_done(next_step_id="device_flow_complete")
 
         return self.async_show_progress(
             step_id="device_flow",
