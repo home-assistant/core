@@ -1,12 +1,15 @@
 """Test the Google Generative AI Conversation config flow."""
 
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from requests.exceptions import Timeout
 
 from homeassistant import config_entries
+from homeassistant.components.google_generative_ai_conversation.config_flow import (
+    google_generative_ai_config_option_schema,
+)
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_DANGEROUS_BLOCK_THRESHOLD,
@@ -775,3 +778,48 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     assert [
         opt["value"] for opt in field_schema.config.get("options")
     ] == expected_options
+
+
+async def test_model_labels_only_drop_the_models_prefix(hass: HomeAssistant) -> None:
+    """The label must keep the model id intact.
+
+    `str.lstrip("models/")` strips the character *set* {m,o,d,e,l,s,/}, so ids
+    beginning with one of those letters lost it: models/embedding-001 rendered
+    as "bedding-001". Every model in `get_models_pager` starts with "g", which
+    is why this was invisible.
+    """
+    names = [
+        "models/gemini-2.5-pro",
+        "models/embedding-001",
+        "models/learnlm-2.0-flash-experimental",
+        "models/lyria-realtime-exp",
+    ]
+    models = []
+    for name in names:
+        model = Mock(supported_actions=["generateContent"])
+        model.name = name
+        models.append(model)
+
+    async def models_pager():
+        for model in models:
+            yield model
+
+    genai_client = Mock()
+    genai_client.aio.models.list = AsyncMock(return_value=models_pager())
+
+    schema = await google_generative_ai_config_option_schema(
+        hass,
+        is_new=True,
+        subentry_type="conversation",
+        options={CONF_RECOMMENDED: False},
+        genai_client=genai_client,
+    )
+
+    key = next(k for k in schema if k == CONF_CHAT_MODEL)
+    labels = [opt["label"] for opt in schema[key].config["options"]]
+    assert labels == [
+        "embedding-001",
+        "gemini-2.5-pro",
+        "learnlm-2.0-flash-experimental",
+        "lyria-realtime-exp",
+    ]
