@@ -1385,3 +1385,50 @@ async def test_energy_production_sensors(
 
         for attr in state_data.get("missing_attributes", []):
             assert attr not in state.attributes
+
+
+async def test_list_sensor_unmapped_enum_value(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ring_keypad: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that an unmapped value on an enum list sensor returns unknown."""
+    entity_id = "sensor.keypad_v2_chargingstatus"
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Maintaining"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": ring_keypad.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "chargingStatus",
+                "propertyName": "chargingStatus",
+                "newValue": 99,
+                "prevValue": 2,
+            },
+        },
+    )
+    ring_keypad.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_VALUE] == 99
