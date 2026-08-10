@@ -29,6 +29,16 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "response_time": {
+        "name": "Response time"
+      },
+      "status_code": {
+        "name": "Status code"
+      }
+    }
+  },
   "exceptions": {
     "update_failed": {
       "message": "Error communicating with Gatus API"

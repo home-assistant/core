@@ -22,10 +22,10 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import utcnow
 
 from .const import (
-    DEVICE_KEY_KINGSLYNN,
-    DEVICE_KEY_WAVERTREE,
     METOFFICE_CONFIG_KINGSLYNN,
     METOFFICE_CONFIG_WAVERTREE,
+    TEST_COORDINATES_KINGSLYNN,
+    TEST_COORDINATES_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
 )
 
@@ -170,8 +170,8 @@ async def test_one_weather_site_running(
     await hass.async_block_till_done()
 
     assert len(device_registry.devices) == 1
-    device_wavertree = device_registry.async_get_device(
-        identifiers=DEVICE_KEY_WAVERTREE
+    device_wavertree = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_COORDINATES_WAVERTREE), entry.entry_id
     )
     assert device_wavertree.name == "Met Office Wavertree"
 
@@ -226,12 +226,12 @@ async def test_two_weather_sites_running(
     await hass.async_block_till_done()
 
     assert len(device_registry.devices) == 2
-    device_kingslynn = device_registry.async_get_device(
-        identifiers=DEVICE_KEY_KINGSLYNN
+    device_kingslynn = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_COORDINATES_KINGSLYNN), entry2.entry_id
     )
     assert device_kingslynn.name == "Met Office King's Lynn"
-    device_wavertree = device_registry.async_get_device(
-        identifiers=DEVICE_KEY_WAVERTREE
+    device_wavertree = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_COORDINATES_WAVERTREE), entry.entry_id
     )
     assert device_wavertree.name == "Met Office Wavertree"
 
