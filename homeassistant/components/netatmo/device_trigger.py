@@ -99,8 +99,9 @@ async def async_get_triggers(
     triggers: list[dict[str, str]] = []
 
     for entry in er.async_entries_for_device(registry, device_id):
-        device = device_registry.async_get(device_id, include_child_devices=False)
-        if device is None or device.model is None:
+        if (
+            device := device_registry.async_get(device_id, include_child_devices=False)
+        ) is None or device.model is None:
             continue
 
         for trigger in DEVICES.get(device.model, []):

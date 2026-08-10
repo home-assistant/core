@@ -54,12 +54,13 @@ async def async_get_triggers(
 ) -> list[dict[str, str]]:
     """List device triggers for LCN devices."""
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get(device_id, include_child_devices=False)
-    if device is None:
+    if (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ) is None:
         return []
 
     identifier = next(iter(device.identifiers))
-    if identifier[1].count("-") != 1 or (device.model or "").startswith("LCN group"):
+    if (identifier[1].count("-") != 1) or device.model.startswith("LCN group"):  # type: ignore[union-attr]
         return []
 
     base_trigger = {
