@@ -38,7 +38,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        BruntDevice(coordinator, serial, thing, entry.entry_id)
+        BruntDevice(coordinator, serial, thing)
         for serial, thing in coordinator.data.items()
     )
 
@@ -64,20 +64,17 @@ class BruntDevice(CoordinatorEntity[BruntCoordinator], CoverEntity):
         coordinator: BruntCoordinator,
         serial: str | None,
         thing: Thing,
-        entry_id: str,
     ) -> None:
         """Init the Brunt device."""
         super().__init__(coordinator)
         self._attr_unique_id = serial
         self._thing = thing
-        self._entry_id = entry_id
 
         self._remove_update_listener = None
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},  # type: ignore[arg-type]
             name=self._thing.name,
-            via_device=(DOMAIN, self._entry_id),
             manufacturer="Brunt",
             sw_version=self._thing.fw_version,
             model=self._thing.model,

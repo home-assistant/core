@@ -21,7 +21,11 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
-from tests.common import async_get_device_automations, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    async_get_device_automations,
+    async_mock_service,
+)
 
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"
@@ -52,6 +56,7 @@ async def test_get_actions(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
@@ -80,7 +85,9 @@ async def test_get_actions(
     await hass.async_block_till_done(wait_background_tasks=True)
     ieee_address = str(zigpy_device.ieee)
 
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, ieee_address)})
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ieee_address), config_entry.entry_id
+    )
     siren_level_select = entity_registry.async_get(
         "select.fakemanufacturer_fakemodel_default_siren_level"
     )
@@ -138,6 +145,7 @@ async def test_get_actions(
 async def test_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
@@ -168,7 +176,9 @@ async def test_action(
     await hass.async_block_till_done(wait_background_tasks=True)
     ieee_address = str(zigpy_device.ieee)
 
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, ieee_address)})
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ieee_address), config_entry.entry_id
+    )
 
     with patch(
         "zigpy.zcl.Cluster.request",

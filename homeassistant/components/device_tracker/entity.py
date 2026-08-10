@@ -646,13 +646,13 @@ class ScannerEntity(
     @override
     def entity_registry_enabled_default(self) -> bool:
         """Return if entity is enabled by default."""
-        # If mac_address is None, we can never find a device entry.
+        # If mac_address is None, we can never find a matching device.
         return (
-            # Do not disable if we won't activate our attach to device logic
+            # Do not disable if we won't activate our own device registration logic
             self.mac_address is None
             or self.device_info is not None
-            # Disable if we automatically attach but there is no device
-            or self.find_device_entry() is not None
+            # Disable if the tracked device is not known to any integration
+            or self._async_mac_address_registered()
         )
 
     @callback
@@ -681,12 +681,14 @@ class ScannerEntity(
                 )
 
     @callback
-    def find_device_entry(self) -> dr.DeviceEntry | None:
-        """Return device entry."""
+    def _async_mac_address_registered(self) -> bool:
+        """Return if a device with the entity's MAC address is registered."""
         assert self.mac_address is not None
 
-        return dr.async_get(self.hass).async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+        return bool(
+            dr.async_get(self.hass).async_get_devices(
+                connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+            )
         )
 
     @override
@@ -697,7 +699,7 @@ class ScannerEntity(
             not self.registry_entry
             or not self.platform.config_entry
             or not self.mac_address
-            or (device_entry := self.find_device_entry()) is None
+            or not self._async_mac_address_registered()
             # Entities should not have a device info. We opt them out
             # of this logic if they do.
             or self.device_info
@@ -707,27 +709,18 @@ class ScannerEntity(
             await super().async_internal_added_to_hass()
             return
 
-        dev_reg = dr.async_get(self.hass)
-        # find_device_entry may return a synthesized pre-migration composite whose id is
-        # not a real device and can't be assigned to an entity; resolve it to the split
-        # owned by this config entry so we attach to a concrete device.
-        if device_entry.id not in dev_reg.devices:
-            device_entry = next(
-                (
-                    split
-                    for split in dev_reg.async_get_devices_for_composite_device_id(
-                        device_entry.id
-                    )
-                    if split.config_entry_id == self.platform.config_entry.entry_id
-                ),
-                None,
-            )
+        # Register our own device now that the tracked device is known to another
+        # integration; matching the split of a pre-migration composite device prunes
+        # the identifiers and connections copied from the composite.
+        device_entry = dr.async_get(self.hass).async_get_or_create(
+            config_entry_id=self.platform.config_entry.entry_id,
+            config_subentry_id=self.registry_entry.config_subentry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            default_name=self.hostname or self.mac_address,
+        )
 
-        # Attach entry to device
-        if (
-            device_entry is not None
-            and self.registry_entry.device_id != device_entry.id
-        ):
+        # Link the entity's registry entry to the device
+        if self.registry_entry.device_id != device_entry.id:
             self.registry_entry = er.async_get(self.hass).async_update_entity(
                 self.entity_id, device_id=device_entry.id
             )

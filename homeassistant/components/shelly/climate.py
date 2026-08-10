@@ -815,7 +815,12 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         self._attr_unique_id = f"{ble_addr}-{self.key}"
         fw_ver = coordinator.device.status[self.key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            self._config, ble_addr, self.coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            self._config,
+            ble_addr,
+            self.coordinator.mac,
+            fw_ver,
         )
 
     @property

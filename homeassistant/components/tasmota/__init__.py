@@ -122,9 +122,7 @@ async def _remove_device(
         return
 
     _LOGGER.debug("Removing tasmota from device %s", mac)
-    device_registry.async_update_device(
-        device.id, remove_config_entry_id=config_entry.entry_id
-    )
+    device_registry.async_remove_device(device.id)
 
 
 def _update_device(
