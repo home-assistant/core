@@ -24,13 +24,6 @@
         "description": "Do you want to add {name} to Home Assistant?",
         "title": "Add {name}"
       },
-      "ip_setup": {
-        "data": {
-          "ip_address": "IPv4 address",
-          "refresh_rate": "Scan interval (seconds)"
-        },
-        "title": "Network Configuration"
-      },
       "manual": {
         "data": {
           "ip_address": "IPv4 address",
@@ -38,18 +31,10 @@
         },
         "title": "Manual Setup"
       },
-      "serial_setup": {
-        "data": {
-          "refresh_rate": "Scan interval (seconds)",
-          "serial_port": "Serial port path (e.g. /dev/ttyUSB0, COM3)"
-        },
-        "title": "Serial Configuration"
-      },
       "user": {
-        "description": "Choose the connection method for your Papouch device.",
-        "menu_options": {
-          "ip_setup": "IP Network (Ethernet/WiFi)",
-          "serial_setup": "Serial port (RS485/RS232/USB)"
+        "data": {
+          "ip_address": "IPv4 address",
+          "refresh_rate": "Scan interval (seconds)"
         },
         "title": "Add a new device"
       },

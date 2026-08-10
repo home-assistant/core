@@ -89,51 +89,17 @@ async def test_manual_success(
         DOMAIN, context={"source": "user"}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.MENU
-    assert result["step_id"] == "user"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "manual"
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["step_id"] == "manual"
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Papouch 192.168.1.50"
-    assert result3["data"]["ip_address"] == "192.168.1.50"
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_serial_setup_success(hass: HomeAssistant, mock_setup_entry) -> None:
-    """Test successful setup of the serial port connection."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.MENU
-    assert result["step_id"] == "user"
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "serial_setup"}
-    )
-
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["step_id"] == "serial_setup"
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {"serial_port": "/dev/ttyUSB0", "refresh_rate": 60},
-    )
-
-    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Papouch /dev/ttyUSB0"
-    assert result3["data"]["serial_port"] == "/dev/ttyUSB0"
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Papouch (192.168.1.50)"
+    assert result2["data"]["ip_address"] == "192.168.1.50"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -149,16 +115,12 @@ async def test_manual_connection_error(
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
-    assert result3["errors"] == {"base": "cannot_connect"}
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_dhcp_discovery_success(
@@ -205,23 +167,19 @@ async def test_web_mode_switch(
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.MENU
-    assert result3["step_id"] == "web_mode"
+    assert result2["type"] == data_entry_flow.FlowResultType.MENU
+    assert result2["step_id"] == "web_mode"
 
-    result4 = await hass.config_entries.flow.async_configure(
-        result3["flow_id"], {"next_step_id": "execute_switch"}
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], {"next_step_id": "execute_switch"}
     )
 
-    assert result4["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result4["description"] == "web_mode_success"
+    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3["description"] == "web_mode_success"
     mock_create_device.return_value.switch_to_web_mode.assert_called_once()
 
 
@@ -232,16 +190,12 @@ async def test_invalid_ip_format(hass: HomeAssistant, mock_discover_none) -> Non
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "999.invalid.ip", "refresh_rate": 60},
     )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
-    assert result3["errors"]["ip_address"] == "invalid_ip_format"
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"]["ip_address"] == "invalid_ip_format"
 
 
 async def test_dhcp_unsupported_device(
@@ -287,20 +241,16 @@ async def test_user_udp_discovery_and_manual_choice(
         DOMAIN, context={"source": "user"}
     )
 
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["step_id"] == "ip_setup"
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "manual", "refresh_rate": 120},
     )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
-    assert result3["step_id"] == "manual"
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "manual"
 
 
 async def test_mode_missing_abort(
@@ -315,16 +265,12 @@ async def test_mode_missing_abort(
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result3["reason"] == "mode_is_missing"
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["reason"] == "mode_is_missing"
 
 
 async def test_web_mode_abort_switch(
@@ -339,16 +285,12 @@ async def test_web_mode_abort_switch(
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     result_cancel = await hass.config_entries.flow.async_configure(
-        result3["flow_id"], {"next_step_id": "abort_switch"}
+        result2["flow_id"], {"next_step_id": "abort_switch"}
     )
 
     assert result_cancel["type"] == data_entry_flow.FlowResultType.ABORT
@@ -367,17 +309,13 @@ async def test_web_mode_unsupported_device(
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     mock_create_device.return_value = None
     result_unsupported = await hass.config_entries.flow.async_configure(
-        result3["flow_id"], {"next_step_id": "execute_switch"}
+        result2["flow_id"], {"next_step_id": "execute_switch"}
     )
 
     assert result_unsupported["type"] == data_entry_flow.FlowResultType.ABORT
@@ -396,17 +334,13 @@ async def test_web_mode_client_error(
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     mock_create_device.side_effect = aiohttp.ClientError
     result_cannot_connect = await hass.config_entries.flow.async_configure(
-        result3["flow_id"], {"next_step_id": "execute_switch"}
+        result2["flow_id"], {"next_step_id": "execute_switch"}
     )
 
     assert result_cannot_connect["type"] == data_entry_flow.FlowResultType.ABORT
@@ -475,12 +409,8 @@ async def test_user_no_discovery_routes_to_manual(
         DOMAIN, context={"source": "user"}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["step_id"] == "manual"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "manual"
 
 
 async def test_manual_fallback_defaults_from_saved_input(
@@ -492,23 +422,19 @@ async def test_manual_fallback_defaults_from_saved_input(
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "manual", "refresh_rate": 123},
     )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
-    assert result3["step_id"] == "manual"
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "manual"
 
-    result4 = await hass.config_entries.flow.async_configure(
-        result3["flow_id"], {"ip_address": "999.invalid.ip", "refresh_rate": 123}
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"ip_address": "999.invalid.ip", "refresh_rate": 123}
     )
 
-    assert result4["type"] == data_entry_flow.FlowResultType.FORM
-    assert result4["errors"]["ip_address"] == "invalid_ip_format"
+    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["errors"]["ip_address"] == "invalid_ip_format"
 
 
 async def test_user_with_discovered_ip_not_in_options(
@@ -519,10 +445,10 @@ async def test_user_with_discovered_ip_not_in_options(
     flow.hass = hass
     flow.discovered_ip = "10.0.0.99"
 
-    result = await flow.async_step_ip_setup()
+    result = await flow.async_step_user()
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "ip_setup"
+    assert result["step_id"] == "user"
 
 
 async def test_user_step_connection_success(
@@ -534,16 +460,12 @@ async def test_user_step_connection_success(
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result3["data"]["ip_address"] == "192.168.1.50"
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["data"]["ip_address"] == "192.168.1.50"
 
 
 async def test_user_step_mode_missing(
@@ -558,16 +480,12 @@ async def test_user_step_mode_missing(
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result3["reason"] == "mode_is_missing"
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["reason"] == "mode_is_missing"
 
 
 async def test_user_step_web_mode_redirect(
@@ -582,16 +500,12 @@ async def test_user_step_web_mode_redirect(
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result["flow_id"],
         {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.MENU
-    assert result3["step_id"] == "web_mode"
+    assert result2["type"] == data_entry_flow.FlowResultType.MENU
+    assert result2["step_id"] == "web_mode"
 
 
 async def test_udp_discovery_all_configured_routes_to_manual(
@@ -607,12 +521,8 @@ async def test_udp_discovery_all_configured_routes_to_manual(
         DOMAIN, context={"source": "user"}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
-
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["step_id"] == "manual"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "manual"
 
 
 async def test_manual_already_configured(
@@ -628,14 +538,12 @@ async def test_manual_already_configured(
         DOMAIN, context={"source": "user"}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "ip_setup"}
-    )
+    assert result["step_id"] == "manual"
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result3["reason"] == "already_configured"
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"

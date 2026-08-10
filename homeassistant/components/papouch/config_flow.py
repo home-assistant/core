@@ -147,37 +147,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
-        """Main menu for selecting the connection type."""
-        return self.async_show_menu(
-            step_id="user", menu_options=["ip_setup", "serial_setup"]
-        )
-
-    async def async_step_serial_setup(self, user_input=None) -> ConfigFlowResult:
-        """Handle RS485 / Serial connection setup."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            # serial and tests TODO
-            self._saved_input = user_input
-            return self.async_create_entry(
-                title=f"Papouch ({user_input['serial_port']})", data=user_input
-            )
-
-        schema = vol.Schema(
-            {
-                vol.Required("serial_port", default="/dev/ttyUSB0"): str,
-                vol.Required("refresh_rate", default=DEFAULT_SCAN_INTERVAL): vol.All(
-                    int, vol.Range(min=1, max=3600)
-                ),
-            }
-        )
-
-        return self.async_show_form(
-            step_id="serial_setup", data_schema=schema, errors=errors
-        )
-
-    async def async_step_ip_setup(self, user_input=None) -> ConfigFlowResult:
-        """Handle the initial IP step featuring active UDP discovery."""
+        """Handle the initial step featuring active UDP discovery."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -234,9 +204,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(
-            step_id="ip_setup", data_schema=schema, errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_manual(self, user_input=None) -> ConfigFlowResult:
         """Handle manual IP entry when discovery fails or is bypassed."""
