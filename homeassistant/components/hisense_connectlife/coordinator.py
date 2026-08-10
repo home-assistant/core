@@ -70,11 +70,11 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
         except TimeoutError as error:
             _LOGGER.error("Timeout setting up coordinator: %s", error)
             await self.api_client.async_cleanup()
-            return None
+            raise UpdateFailed(f"Coordinator setup timeout: {error}") from error
         except ClientError as error:
             _LOGGER.error("Other client error: %s", error)
             await self.api_client.async_cleanup()
-            return None
+            raise UpdateFailed(f"ClientError setup timeout: {error}") from error
         return self._devices
 
     async def async_refresh_device(self, device_id: str) -> None:
@@ -163,7 +163,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             if not self._should_process_message(message):
                 return
 
-            content_data = message
+            content_data = message.get("content", {})
             if content_data is None:
                 return
 
