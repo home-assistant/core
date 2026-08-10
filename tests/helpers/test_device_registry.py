@@ -9662,6 +9662,16 @@ async def test_child_device_rejects_connectivity(
             **connectivity,
         )
 
+    # Validation precedes mutation, so no child device is partially created
+    assert not device_registry.child_devices
+    assert len(device_registry.devices) == 1
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            ("test", "strip_outlet_1"), mock_config_entry.entry_id
+        )
+        is None
+    )
+
 
 async def test_child_device_create(
     hass: HomeAssistant,
@@ -9854,7 +9864,7 @@ async def test_child_device_create_errors(
     error: str,
 ) -> None:
     """Test invalid child device registrations raise DeviceInfoError."""
-    _, child_device = _create_parent_and_child(
+    parent, child_device = _create_parent_and_child(
         device_registry, mock_config_entry.entry_id
     )
     other_strip = device_registry.async_get_or_create(
@@ -9875,6 +9885,13 @@ async def test_child_device_create_errors(
             parent_device_id=parent_device_ids[parent_key],
             name="Nope",
         )
+
+    # Validation precedes mutation, so the registry is unchanged by the rejection
+    assert len(device_registry.devices) == 2
+    assert len(device_registry.child_devices) == 1
+    unchanged_child = device_registry.async_get_child(child_device.id)
+    assert unchanged_child is not None
+    assert unchanged_child.parent_device_id == parent.id
 
 
 async def test_child_device_parent_in_other_config_entry(
@@ -9898,6 +9915,10 @@ async def test_child_device_parent_in_other_config_entry(
             parent_device_id=parent.id,
             name="Outlet 1",
         )
+
+    # Validation precedes mutation, so no child device is created
+    assert not device_registry.child_devices
+    assert len(device_registry.devices) == 1
 
 
 async def test_child_device_subentry(
@@ -9929,6 +9950,15 @@ async def test_child_device_subentry(
             parent_device_id=parent.id,
             name="Outlet 2",
         )
+
+    # Neither rejected registration created a child device
+    assert len(device_registry.child_devices) == 1
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            ("test", "strip_outlet_2"), entry_id
+        )
+        is None
+    )
 
 
 async def test_child_device_update(
@@ -10016,6 +10046,10 @@ async def test_child_device_update_rejects_device_kwargs(
 
     with pytest.raises(HomeAssistantError, match="not supported for a child device"):
         device_registry.async_update_device(child_device.id, **update_kwargs)
+
+    # The rejected update leaves the child device unchanged
+    assert device_registry.async_get_child(child_device.id) is child_device
+    assert len(device_registry.child_devices) == 1
 
 
 async def test_child_device_update_identifiers(
@@ -10258,6 +10292,41 @@ async def test_config_entry_disable_with_children(
     assert updated_child.disabled_by is None
 
 
+async def test_disable_child_device_directly_disables_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test disabling a child device directly disables and re-enables its entities."""
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "outlet_1",
+        config_entry=mock_config_entry,
+        device_id=child_device.id,
+    )
+
+    device_registry.async_update_device(
+        child_device.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    updated_entity = entity_registry.async_get(entity_entry.entity_id)
+    assert updated_entity is not None
+    assert updated_entity.disabled_by is er.RegistryEntryDisabler.DEVICE
+
+    device_registry.async_update_device(child_device.id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    updated_entity = entity_registry.async_get(entity_entry.entity_id)
+    assert updated_entity is not None
+    assert updated_entity.disabled_by is None
+
+
 async def test_move_parent_with_children_rejected(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -10272,6 +10341,12 @@ async def test_move_parent_with_children_rejected(
         device_registry.async_update_device(
             parent.id, new_config_entry_id=other_entry.entry_id
         )
+
+    # The rejected move leaves the parent and its child untouched
+    unchanged_parent = device_registry.async_get(parent.id)
+    assert unchanged_parent is not None
+    assert unchanged_parent.config_entry_id == mock_config_entry.entry_id
+    assert len(device_registry.child_devices) == 1
 
 
 async def test_convert_device_to_child_device(
@@ -10399,6 +10474,9 @@ async def test_convert_child_device_to_device(
     assert not device_registry.child_devices
 
     await hass.async_block_till_done()
+    # A single in-place conversion, never a remove + create: converting back must
+    # preserve the id, which a remove + create would not
+    assert all(event.data["action"] == "update" for event in update_events)
     assert update_events[0].data == {
         "action": "update",
         "device_id": child_device.id,
@@ -10997,6 +11075,7 @@ async def test_entries_for_label_includes_child_devices(
 
 async def test_async_cleanup_removes_child_device_with_missing_parent(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
@@ -11013,6 +11092,11 @@ async def test_async_cleanup_removes_child_device_with_missing_parent(
 
     assert device_registry.async_get_child(child_device.id) is None
     assert "Removing child device" in caplog.text
+
+    # The removal scheduled a save, so the drop persists instead of leaving the store
+    # dirty until an unrelated write
+    await flush_store(device_registry._store)
+    assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == []
 
 
 async def test_child_device_stale_identifier_reconciliation(
@@ -11063,3 +11147,57 @@ async def test_live_child_device_identifier_collision_raises(
             identifiers={("test", "hub"), ("test", "strip_outlet_1")},
             name="Hub",
         )
+
+
+async def test_child_and_main_device_same_identifier_across_entries(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a child and a main device in different entries can share an identifier.
+
+    Identifiers are unique only within a config entry, so a child device in one entry
+    coexists with a main device of another entry sharing its identifier, each resolvable
+    in its own namespace.
+    """
+    entry_a = mock_config_entry
+    _, child_device = _create_parent_and_child(device_registry, entry_a.entry_id)
+
+    entry_b = MockConfigEntry(title=None)
+    entry_b.add_to_hass(hass)
+    main_device = device_registry.async_get_or_create(
+        config_entry_id=entry_b.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        name="Standalone outlet",
+    )
+
+    assert isinstance(main_device, dr.DeviceEntry)
+    assert main_device.id != child_device.id
+    assert len(device_registry.devices) == 2
+    assert len(device_registry.child_devices) == 1
+
+    # The shared identifier resolves to the child in entry A and the main device in B
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            ("test", "strip_outlet_1"), entry_a.entry_id
+        )
+        is child_device
+    )
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            ("test", "strip_outlet_1"), entry_b.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            ("test", "strip_outlet_1"), entry_b.entry_id
+        )
+        is main_device
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            ("test", "strip_outlet_1"), entry_a.entry_id
+        )
+        is None
+    )

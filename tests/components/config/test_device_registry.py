@@ -972,12 +972,14 @@ async def test_list_devices_with_child_devices(
 
 
 @pytest.mark.parametrize(
-    ("payload_key", "payload_value"),
+    ("payload_key", "payload_value", "expected_registry_value"),
     [
-        pytest.param("area_id", "garden", id="area_id"),
-        pytest.param("labels", ["label1"], id="labels"),
-        pytest.param("name_by_user", "Garden lamp", id="name_by_user"),
-        pytest.param("disabled_by", "user", id="disabled_by"),
+        pytest.param("area_id", "garden", "garden", id="area_id"),
+        pytest.param("labels", ["label1"], {"label1"}, id="labels"),
+        pytest.param("name_by_user", "Garden lamp", "Garden lamp", id="name_by_user"),
+        pytest.param(
+            "disabled_by", "user", dr.DeviceEntryDisabler.USER, id="disabled_by"
+        ),
     ],
 )
 async def test_update_child_device(
@@ -986,6 +988,7 @@ async def test_update_child_device(
     device_registry: dr.DeviceRegistry,
     payload_key: str,
     payload_value: Any,
+    expected_registry_value: Any,
 ) -> None:
     """Test updating a child device through the websocket API."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -1003,6 +1006,11 @@ async def test_update_child_device(
     assert msg["success"]
     assert msg["result"][payload_key] == payload_value
     assert msg["result"]["parent_device_id"] == child_device.parent_device_id
+
+    # The update reached the registry entry, not just the websocket response
+    updated_child = device_registry.async_get_child(child_device.id)
+    assert updated_child is not None
+    assert getattr(updated_child, payload_key) == expected_registry_value
 
 
 async def test_update_child_device_area_round_trip(
