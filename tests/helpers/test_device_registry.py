@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager, nullcontext
+from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
 import json
@@ -373,7 +374,22 @@ async def test_loading_from_storage(
         "version": dr.STORAGE_VERSION_MAJOR,
         "minor_version": dr.STORAGE_VERSION_MINOR,
         "data": {
-            "child_devices": [],
+            "child_devices": [
+                {
+                    "area_id": None,
+                    "config_entry_id": mock_config_entry.entry_id,
+                    "config_subentry_id": None,
+                    "created_at": created_at,
+                    "disabled_by": "device",
+                    "id": "childdeviceid",
+                    "identifiers": [["test", "strip_outlet_1"]],
+                    "labels": [],
+                    "modified_at": modified_at,
+                    "name_by_user": None,
+                    "name": "Outlet 1",
+                    "parent_device_id": "abcdefghijklm",
+                }
+            ],
             "devices": [
                 {
                     "area_id": "12345A",
@@ -435,6 +451,13 @@ async def test_loading_from_storage(
     registry = dr.async_get(hass)
     assert len(registry.devices) == 1
     assert len(registry.deleted_devices) == 1
+
+    # A stored child device is loaded, with disabled_by "device" restored to the enum
+    loaded_child = registry.async_get_child("childdeviceid")
+    assert loaded_child is not None
+    assert loaded_child.parent_device_id == "abcdefghijklm"
+    assert loaded_child.disabled_by is dr.DeviceEntryDisabler.DEVICE
+    assert loaded_child.identifiers == {("test", "strip_outlet_1")}
 
     assert registry.deleted_devices["bcdefghijklmn"] == dr.DeletedDeviceEntry(
         area_id="12345A",
@@ -10814,10 +10837,11 @@ async def test_child_device_orphan_restore(
 
 async def test_child_device_load_and_save(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test child devices round-trip through the store."""
+    """Test child devices round-trip through the store, unchanged on re-save."""
     parent, child_device = _create_parent_and_child(
         device_registry, mock_config_entry.entry_id
     )
@@ -10827,6 +10851,7 @@ async def test_child_device_load_and_save(
 
     registry2 = dr.DeviceRegistry(hass)
     await flush_store(device_registry._store)
+    first_save = deepcopy(hass_storage[dr.STORAGE_KEY]["data"])
     await registry2.async_load()
 
     assert list(device_registry.devices) == list(registry2.devices)
@@ -10839,17 +10864,23 @@ async def test_child_device_load_and_save(
     assert loaded_child.name_by_user == "Lamp"
     assert loaded_child.identifiers == {("test", "strip_outlet_1")}
 
+    # Loading must not silently mutate a child device, so re-saving the freshly
+    # loaded registry reproduces the same stored data.
+    registry2.async_schedule_save()
+    await flush_store(registry2._store)
+    assert hass_storage[dr.STORAGE_KEY]["data"] == first_save
+
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_3_2_to_3_4(
+async def test_migration_3_3_to_3_4(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 3.2 adds the child devices list."""
+    """Test migration from 3.3 adds the child devices list."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 3,
-        "minor_version": 2,
+        "minor_version": 3,
         "key": dr.STORAGE_KEY,
         "data": {
             "devices": [
