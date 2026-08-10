@@ -103,6 +103,7 @@ async def register_panel(hass: HomeAssistant) -> None:
             module_url=f"{URL_BASE}/{knx_panel.entrypoint_js}",
             embed_iframe=True,
             require_admin=True,
+            handle_safe_area=True,
         )
 
 
