@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -27,6 +27,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 RECONNECT_RETRY_DELAY = 60
+MAX_RECONNECT_BACKOFF = timedelta(minutes=15)
 
 # Anova's protocol has no offline/disconnect signal for a device that's still
 # reachable over the websocket transport but has gone quiet (e.g. unplugged) -
@@ -47,6 +48,13 @@ class AnovaData:
     coordinators: list[AnovaCoordinator]
     api: AnovaApi
     reconnect_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    # Backs off reconnect attempts on repeated failure so a persistently
+    # unreachable/unresponsive Anova cloud isn't hammered with a fresh
+    # websocket + auth attempt every RECONNECT_RETRY_DELAY forever (observed
+    # live: 825 failed attempts over 15h on a fixed interval). Reset to the
+    # base delay as soon as a reconnect succeeds.
+    reconnect_backoff: timedelta = timedelta(seconds=RECONNECT_RETRY_DELAY)
+    next_reconnect_attempt: datetime | None = None
 
 
 type AnovaConfigEntry = ConfigEntry[AnovaData]
@@ -143,9 +151,17 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
                 listener = ws_handler._message_listener  # noqa: SLF001
                 if listener is not None and not listener.done():
                     return self._data_if_fresh()
-            await self._async_reconnect()
+            next_attempt = self.config_entry.runtime_data.next_reconnect_attempt
+            if next_attempt is None or dt_util.utcnow() >= next_attempt:
+                await self._async_reconnect()
 
         return self._data_if_fresh()
+
+    def _schedule_reconnect_backoff(self) -> None:
+        """Push the next reconnect attempt out and grow the backoff for next time."""
+        data = self.config_entry.runtime_data
+        data.next_reconnect_attempt = dt_util.utcnow() + data.reconnect_backoff
+        data.reconnect_backoff = min(data.reconnect_backoff * 2, MAX_RECONNECT_BACKOFF)
 
     async def _async_reconnect(self) -> None:
         """Reconnect the Anova websocket and re-wire all device coordinators."""
@@ -162,15 +178,22 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
                 await api.authenticate()
             except InvalidLogin as err:
                 _LOGGER.error("Anova re-authentication failed: %s", err)
+                self._schedule_reconnect_backoff()
                 raise UpdateFailed(str(err)) from err
             except LoginUnreachable as err:
                 _LOGGER.warning("Failed to re-authenticate with Anova: %s", err)
+                self._schedule_reconnect_backoff()
                 raise UpdateFailed(str(err)) from err
             try:
                 await api.create_websocket()
             except (NoDevicesFound, WebsocketFailure) as err:
                 _LOGGER.warning("Failed to reconnect to Anova websocket: %s", err)
+                self._schedule_reconnect_backoff()
                 raise UpdateFailed(str(err)) from err
+
+        data = self.config_entry.runtime_data
+        data.reconnect_backoff = timedelta(seconds=RECONNECT_RETRY_DELAY)
+        data.next_reconnect_attempt = None
 
         ws_handler = api.websocket_handler
         if ws_handler is None:

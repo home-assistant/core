@@ -188,6 +188,59 @@ async def test_websocket_reconnect_failure_paths(
     assert entry.state is ConfigEntryState.LOADED
 
 
+async def test_reconnect_backoff_skips_retries_until_elapsed(
+    hass: HomeAssistant,
+    anova_api: AnovaApi,
+) -> None:
+    """Test repeated reconnect failures back off instead of retrying every poll."""
+    entry = await async_init_integration(hass)
+    ws_handler = entry.runtime_data.api.websocket_handler
+    assert isinstance(ws_handler, MockedAnovaWebsocketHandler)
+
+    original_side_effect = entry.runtime_data.api.create_websocket.side_effect
+    entry.runtime_data.api.create_websocket.side_effect = NoDevicesFound("offline")
+    entry.runtime_data.api.authenticate = AsyncMock()
+
+    ws_handler.simulate_disconnect()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    attempts_after_first_failure = entry.runtime_data.api.create_websocket.call_count
+    assert entry.runtime_data.reconnect_backoff > timedelta(
+        seconds=RECONNECT_RETRY_DELAY
+    )
+    next_attempt = entry.runtime_data.next_reconnect_attempt
+    assert next_attempt is not None
+
+    # A poll before the backoff window elapses must not attempt to reconnect again.
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_RETRY_DELAY + 1)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert (
+        entry.runtime_data.api.create_websocket.call_count
+        == attempts_after_first_failure
+    )
+    assert entry.runtime_data.next_reconnect_attempt == next_attempt
+
+    # Once the backoff window elapses and the connection recovers, retry
+    # succeeds and the backoff resets to the base delay for the next outage.
+    entry.runtime_data.api.create_websocket.side_effect = original_side_effect
+    entry.runtime_data.next_reconnect_attempt = dt_util.utcnow() - timedelta(seconds=1)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_RETRY_DELAY + 1)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        entry.runtime_data.api.create_websocket.call_count
+        > attempts_after_first_failure
+    )
+    assert entry.runtime_data.reconnect_backoff == timedelta(
+        seconds=RECONNECT_RETRY_DELAY
+    )
+    assert entry.runtime_data.next_reconnect_attempt is None
+
+
 async def test_coordinator_poll_does_not_reconnect_when_connected(
     hass: HomeAssistant,
     anova_api: AnovaApi,
