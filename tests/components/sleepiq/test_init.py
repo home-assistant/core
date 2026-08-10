@@ -147,12 +147,8 @@ async def test_unique_id_migration(hass: HomeAssistant, mock_asyncsleepiq) -> No
     assert sensor_sleep_number.unique_id == f"{SLEEPER_L_ID}_{SLEEP_NUMBER}"
 
 
-async def test_duplicate_beds_filtered(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_asyncsleepiq: MagicMock,
-) -> None:
-    """Test that duplicate bed objects sharing sleeper IDs are filtered."""
+def _make_controller() -> MagicMock:
+    """Build a bare controller bed with no foundation features."""
     controller = create_autospec(SleepIQBed)
     controller.name = "Firmness Control"
     controller.id = "ctrl_001"
@@ -197,8 +193,16 @@ async def test_duplicate_beds_filtered(
     controller.foundation.presets = []
     controller.foundation.foot_warmers = []
     controller.foundation.core_climates = []
+    return controller
 
-    mock_asyncsleepiq.beds["ctrl_001"] = controller
+
+async def test_duplicate_beds_filtered(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_asyncsleepiq: MagicMock,
+) -> None:
+    """Test that duplicate bed objects sharing sleeper IDs are filtered."""
+    mock_asyncsleepiq.beds["ctrl_001"] = _make_controller()
 
     entry = await setup_platform(hass, "sensor")
     assert entry.state is ConfigEntryState.LOADED
@@ -218,6 +222,25 @@ async def test_duplicate_beds_filtered(
     assert len(sleeper_r_entities) > 0
 
     bed_ids = list(mock_asyncsleepiq.beds)
+    assert "ctrl_001" not in bed_ids
+    assert BED_ID in bed_ids
+
+
+async def test_duplicate_beds_controller_first(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_asyncsleepiq: MagicMock,
+) -> None:
+    """Test that the real bed survives even when the controller appears first."""
+    real_bed = mock_asyncsleepiq.beds.pop(BED_ID)
+    mock_asyncsleepiq.beds["ctrl_001"] = _make_controller()
+    mock_asyncsleepiq.beds[BED_ID] = real_bed
+
+    entry = await setup_platform(hass, "sensor")
+    assert entry.state is ConfigEntryState.LOADED
+
+    bed_ids = list(mock_asyncsleepiq.beds)
+    assert BED_ID in bed_ids
     assert "ctrl_001" not in bed_ids
 
 
