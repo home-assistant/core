@@ -152,6 +152,16 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             sw_version=version,
         )
 
+    def _update_failed(self) -> UpdateFailed:
+        """Return the translated failure raised when the device is unreachable."""
+        return UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_failed",
+            translation_placeholders={
+                "host": self.config_entry.data[CONF_HOST],
+            },
+        )
+
     @override
     async def _async_update_data(self) -> VizioDeviceData:
         """Fetch all device data."""
@@ -162,9 +172,7 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             except VizioNotFoundError:
                 self._use_state_extended = False
             except VizioError as err:
-                raise UpdateFailed(
-                    f"Unable to connect to {self.config_entry.data[CONF_HOST]}"
-                ) from err
+                raise self._update_failed() from err
 
         if state is not None:
             is_on = state.power_on
@@ -172,9 +180,7 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             try:
                 is_on = await self.device.get_power_state()
             except VizioError as err:
-                raise UpdateFailed(
-                    f"Unable to connect to {self.config_entry.data[CONF_HOST]}"
-                ) from err
+                raise self._update_failed() from err
 
         if not is_on:
             return VizioDeviceData(is_on=False)

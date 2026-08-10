@@ -8,8 +8,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
-from .const import PLATFORMS
+from .const import DOMAIN, PLATFORMS
 
 type LiteJetConfigEntry = ConfigEntry[pylitejet.LiteJet]
 
@@ -41,6 +42,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiteJetConfigEntry) -> b
     )
 
     entry.runtime_data = system
+
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{entry.entry_id}_mcp")},
+        name="LiteJet",
+        manufacturer="Centralite",
+        model=system.model_name,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

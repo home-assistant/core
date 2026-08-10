@@ -269,6 +269,8 @@ async def test_search(
             ]
         },
     )
+    # Scene entities are added by a task, wait for it to finish
+    await hass.async_block_till_done()
 
     # Automations
     assert await async_setup_component(

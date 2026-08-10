@@ -284,6 +284,7 @@ homeassistant.components.homekit_controller.storage
 homeassistant.components.homekit_controller.utils
 homeassistant.components.homewizard.*
 homeassistant.components.homeworks.*
+homeassistant.components.hortimax.*
 homeassistant.components.hr_energy_qube.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
@@ -354,6 +355,7 @@ homeassistant.components.litejet.*
 homeassistant.components.litellm.*
 homeassistant.components.litterrobot.*
 homeassistant.components.llama_cpp.*
+homeassistant.components.llm.*
 homeassistant.components.local_ip.*
 homeassistant.components.local_todo.*
 homeassistant.components.lock.*
@@ -409,6 +411,7 @@ homeassistant.components.nfandroidtv.*
 homeassistant.components.nightscout.*
 homeassistant.components.nissan_leaf.*
 homeassistant.components.no_ip.*
+homeassistant.components.nobo_hub.*
 homeassistant.components.nordpool.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
@@ -623,6 +626,7 @@ homeassistant.components.velux.*
 homeassistant.components.victron_gx.*
 homeassistant.components.vistapool.*
 homeassistant.components.vivotek.*
+homeassistant.components.vizio.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.vodafone_station.*
 homeassistant.components.volvo.*
