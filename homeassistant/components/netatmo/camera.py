@@ -139,6 +139,21 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 )
             )
 
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"signal-{DOMAIN}-update-HOME",
+                self.async_update_status_callback,
+            )
+        )
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"signal-{DOMAIN}-update-EVENT",
+                self.async_update_callback,
+            )
+        )
         self.data_handler.cameras[self.device.entity_id] = self.device.name
 
     @callback
@@ -355,11 +370,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
-        # Clear the webhook flags as polling has updated the state,
-        # and we want to reflect the actual state from the device.
-        self._webhook_connection = None
-        self._webhook_on = None
-
         if self.device_type == "NDB":
             self._attr_motion_detection_enabled = False
         # Other cameras have motion detection when monitoring.
@@ -371,6 +381,15 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         )
 
         self.async_write_ha_state()
+
+    @callback
+    def async_update_status_callback(self) -> None:
+        """Update state after a full HOME status refresh."""
+        # Clear the webhook flags as polling has updated the state,
+        # and we want to reflect the actual state from the device.
+        self._webhook_connection = None
+        self._webhook_on = None
+        self.async_update_callback()
 
     def process_events(self, event_list: list[NaEvent]) -> dict:
         """Add meta data to events."""
