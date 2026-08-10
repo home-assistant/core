@@ -943,7 +943,7 @@ enocean-async==0.4.2
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.18.0
+env-canada==0.19.0
 
 # homeassistant.components.season
 ephem==4.1.6
