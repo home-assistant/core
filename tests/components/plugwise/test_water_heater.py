@@ -52,7 +52,7 @@ async def test_adam_water_heater_setpoint_change(
         {
             ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
             ATTR_OPERATION_MODE: "eco",
-            ATTR_TEMPERATURE: 65,
+            ATTR_TEMPERATURE: 55,
         },
         blocking=True,
     )
