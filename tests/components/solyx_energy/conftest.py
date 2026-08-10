@@ -56,7 +56,7 @@ def mock_api_client_class(mock_solyx_api_client):
     """Patch SolyxEnergyApiClient so integration setup and config flow use the mock."""
     with (
         patch(
-            "solyx_energy_api.client.SolyxEnergyApiClient",
+            "homeassistant.components.solyx_energy.SolyxEnergyApiClient",
             return_value=mock_solyx_api_client,
         ),
         patch(
