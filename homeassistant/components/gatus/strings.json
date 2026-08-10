@@ -33,6 +33,9 @@
     "sensor": {
       "response_time": {
         "name": "Response time"
+      },
+      "status_code": {
+        "name": "Status code"
       }
     }
   },
