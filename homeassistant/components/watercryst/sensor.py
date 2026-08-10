@@ -63,8 +63,8 @@ TEMPERATURE_SENSORS = [
     SensorEntityDescription(
         key="water_temp",
         translation_key="water_temp",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=0,
     )
@@ -73,9 +73,8 @@ TEMPERATURE_SENSORS = [
 PRESSURE_SENSORS = [
     SensorEntityDescription(
         key="pressure",
-        translation_key="pressure",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
         suggested_display_precision=2,
     )
@@ -84,7 +83,6 @@ PRESSURE_SENSORS = [
 FLOWRATE_SENSORS = [
     SensorEntityDescription(
         key="flow_rate",
-        translation_key="flow_rate",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,

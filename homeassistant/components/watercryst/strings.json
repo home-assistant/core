@@ -6,7 +6,7 @@
     "error": {
       "api_disabled": "API endpoint disabled",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "Invalid authentication",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -37,9 +37,6 @@
       "event_title": {
         "name": "Event title"
       },
-      "flow_rate": {
-        "name": "Flow rate"
-      },
       "last_water_tap_duration": {
         "name": "Last water tap duration"
       },
@@ -54,9 +51,6 @@
       },
       "pause_leakage_protection_until_utc": {
         "name": "Pause leakage protection until"
-      },
-      "pressure": {
-        "name": "Water pressure"
       },
       "todays_consumption": {
         "name": "Today's water consumption"
