@@ -31,6 +31,9 @@
   },
   "entity": {
     "sensor": {
+      "certificate_expiration": {
+        "name": "Certificate expiration"
+      },
       "response_time": {
         "name": "Response time"
       },

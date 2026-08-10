@@ -48,6 +48,18 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda result: result.status,
     ),
+    GatusSensorEntityDescription(
+        key="certificate_expiration",
+        translation_key="certificate_expiration",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda result: (
+            round(result.certificate_expiration / 86_400_000_000_000, 2)
+            if result.certificate_expiration is not None
+            else None
+        ),
+    ),
 )
 
 
