@@ -213,8 +213,15 @@ class MatterAdapter:
         serial_number: str | None = None
         # if available, we also add the serialnumber as identifier
         if (
-            basic_info_serial_number := basic_info.serialNumber
-        ) and "test" not in basic_info_serial_number.lower():
+            (basic_info_serial_number := basic_info.serialNumber)
+            and "test" not in basic_info_serial_number.lower()
+            # some bridges report their own serialnumber for the devices they bridge,
+            # which would make the identifier resolve to the bridge's device
+            and not (
+                isinstance(basic_info, clusters.BridgedDeviceBasicInformation)
+                and basic_info_serial_number == endpoint.node.device_info.serialNumber
+            )
+        ):
             # prefix identifier with 'serial_' to be able to filter it
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info_serial_number}"))
             serial_number = basic_info_serial_number

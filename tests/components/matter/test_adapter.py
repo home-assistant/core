@@ -330,6 +330,38 @@ async def test_composed_bridged_device_endpoint_removed(
 
 
 @pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["atios_knx_bridge"])
+@pytest.mark.parametrize(
+    "attributes", [{"29/57/15": "glg5mxh"}], ids=["bridge_serial_number"]
+)
+async def test_device_registry_bridged_device_with_bridge_serial_number(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a bridged device reporting the serial number of the bridge itself.
+
+    The serial number identifier must be skipped, as it would otherwise resolve
+    to the bridge's own device entry.
+    """
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    bridge_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000003E-MatterNodeDevice"),
+        entry_id,
+    )
+    assert bridge_entry is not None
+    assert (DOMAIN, "serial_glg5mxh") in bridge_entry.identifiers
+
+    bridged_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000003E-29"), entry_id
+    )
+    assert bridged_entry is not None
+    assert bridged_entry.id != bridge_entry.id
+    assert bridged_entry.via_device_id == bridge_entry.id
+    assert (DOMAIN, "serial_glg5mxh") not in bridged_entry.identifiers
+    assert bridged_entry.serial_number is None
+
+
+@pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
 async def test_device_registry_single_node_composed_device(
     hass: HomeAssistant,
