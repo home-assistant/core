@@ -133,7 +133,9 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             )
         else:
             webhook_url = webhook.async_generate_url(
-                self.hass, self.config_entry.data[CONF_WEBHOOK_ID]
+                self.hass,
+                self.config_entry.data[CONF_WEBHOOK_ID],
+                prefer_external=False,
             )
 
         _LOGGER.debug("Webhook URL: %s", webhook_url)

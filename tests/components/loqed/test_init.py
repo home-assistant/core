@@ -71,6 +71,38 @@ async def test_setup_webhook_in_bridge(
     lock.registerWebhook.assert_called_with(f"{get_url(hass)}/api/webhook/Webhook_id")
 
 
+async def test_webhook_prefers_internal_url(
+    hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
+) -> None:
+    """Test webhook actually prefers internal url."""
+    await hass.config.async_update(
+        internal_url="http://192.168.1.10:8123",
+        external_url="https://this-is-external-url.hass.nabu.casa",
+    )
+
+    config: dict[str, Any] = {DOMAIN: {}}
+    config_entry.add_to_hass(hass)
+
+    lock_status = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+    webhooks_fixture = json.loads(
+        await async_load_fixture(hass, "get_all_webhooks.json", DOMAIN)
+    )
+    lock.getWebhooks = AsyncMock(side_effect=[[], webhooks_fixture])
+
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
+    ):
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    lock.registerWebhook.assert_called_with(
+        f"{hass.config.internal_url}/api/webhook/Webhook_id"
+    )
+
+
 async def test_cannot_connect_to_bridge_will_retry(
     hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
 ) -> None:
