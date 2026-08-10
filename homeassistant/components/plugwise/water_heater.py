@@ -150,7 +150,13 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = cast(float, kwargs[ATTR_TEMPERATURE])
-        if 
+
+        if self._attr_min_temp <= temperature >= self._attr_max_temp:
+            raise HomeAssistantError(
+                f"Temperature {temperature} is out of range "
+                f"({self._attr_min_temp} - {self._attr_max_temp})"
+            )
+
         if ATTR_OPERATION_MODE in kwargs:
             await self.async_set_operation_mode(kwargs[ATTR_OPERATION_MODE])
 
