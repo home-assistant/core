@@ -779,7 +779,7 @@ async def test_websocket_integration_list(ws_client: ClientFixture) -> None:
         assert await client.cmd_result("config") == {
             "domains": [TEST_DOMAIN, "example1"],
             "integrations": {
-                TEST_DOMAIN: {"auth_type": AuthorizationTypes.CLIENT_CREDENTIALS},
+                TEST_DOMAIN: {"auth_type": AuthorizationTypes.AUTHORIZATION_CODE},
                 "example1": {},
             },
         }

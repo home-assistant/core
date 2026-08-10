@@ -72,7 +72,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 class AuthorizationTypes(StrEnum):
     """Supported authorization types."""
 
-    CLIENT_CREDENTIALS = "client_credentials"
+    AUTHORIZATION_CODE = "authorization_code"
     DEVICE_FLOW = "device_flow"
 
 
@@ -391,7 +391,7 @@ async def _async_integration_config(hass: HomeAssistant, domain: str) -> dict[st
 
     result: dict[str, Any] = {}
     if hasattr(platform, "async_get_authorization_server"):
-        result["auth_type"] = AuthorizationTypes.CLIENT_CREDENTIALS
+        result["auth_type"] = AuthorizationTypes.AUTHORIZATION_CODE
     elif hasattr(platform, "async_get_device_flow_authorization_server"):
         result["auth_type"] = AuthorizationTypes.DEVICE_FLOW
 
