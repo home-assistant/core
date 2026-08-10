@@ -1219,3 +1219,54 @@ async def test_search_pre_migration_composite_device(
     }
     assert search(ItemType.AUTOMATION, "automation.composite") == expected_reverse
     assert search(ItemType.SCRIPT, "script.composite") == expected_reverse
+
+
+async def test_search_label_on_child_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    floor_registry: fr.FloorRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test searching a label that is carried by a child device.
+
+    A child device carrying a label is surfaced by a label search just like a
+    mains device (dr.async_entries_for_label includes child devices). Resolving
+    up the child yields the area it inherits from its parent (and that area's
+    floor), plus the child's config entry and integration. The parent device is
+    not returned: resolve-up follows the area/floor/config-entry edges, not the
+    child -> parent edge.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    label = label_registry.async_create("Outlet")
+
+    ground_floor = floor_registry.async_create("Ground Floor")
+    utility_area = area_registry.async_create("Utility", floor_id=ground_floor.floor_id)
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_update_device(parent_device.id, area_id=utility_area.id)
+
+    child_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip-outlet-1")},
+        parent_device_id=parent_device.id,
+        name="Outlet 1",
+    )
+    device_registry.async_update_device(child_device.id, labels={label.label_id})
+
+    searcher = Searcher(hass, {})
+    assert searcher.async_search(ItemType.LABEL, label.label_id) == {
+        ItemType.DEVICE: {child_device.id},
+        ItemType.AREA: {utility_area.id},
+        ItemType.FLOOR: {ground_floor.floor_id},
+        ItemType.CONFIG_ENTRY: {config_entry.entry_id},
+        ItemType.INTEGRATION: {"test"},
+    }

@@ -1619,6 +1619,55 @@ async def test_register_mac_ignored(
     assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
+@pytest.mark.parametrize(
+    ("mac_address", "unique_id"), [(TEST_MAC_ADDRESS, f"{TEST_MAC_ADDRESS}_yo1")]
+)
+async def test_register_mac_ignores_child_device_created(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    scanner_entity: MockScannerEntity,
+    entity_id: str,
+    mac_address: str,
+    unique_id: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the MAC listener skips a newly created child device.
+
+    Registering a scanner MAC installs a device-registry create listener. A child
+    device has no connections attribute, so the listener must resolve it to None
+    (include_child_devices=False) and skip it, instead of raising AttributeError
+    while reading connections.
+    """
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+    caplog.clear()
+
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(TEST_DOMAIN, "parent")},
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(TEST_DOMAIN, "child")},
+        parent_device_id=parent.id,
+    )
+    await hass.async_block_till_done()
+
+    # The listener must not have raised while handling the child's create event.
+    assert "Error running job" not in caplog.text
+
+    # A child device has no MAC, so the scanner entity stays disabled.
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
 @pytest.fixture
 def allow_deprecated_device_registry_apis() -> Generator[None]:
     """Allow tests to call the deprecated device registry APIs without raising.

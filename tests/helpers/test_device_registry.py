@@ -9736,6 +9736,37 @@ async def test_async_get_exclude_child_devices(
     )
 
 
+async def test_async_get_child_device_by_identifier(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test looking up a child device by identifier."""
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            ("test", "strip_outlet_1"), mock_config_entry.entry_id
+        )
+        is child_device
+    )
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            ("test", "unknown"), mock_config_entry.entry_id
+        )
+        is None
+    )
+    # Only child devices are searched, so a main device's identifier is not found
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            ("test", "strip"), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+
 async def test_child_device_create_idempotent(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -10228,6 +10259,9 @@ async def test_convert_device_to_child_device(
     device_registry.async_update_device(
         old_split.id, area_id="garden", name_by_user="Lamp"
     )
+    # A new setup session: the split device is no longer live, so the integration
+    # can now adopt it as a child device.
+    device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
 
     converted = device_registry.async_get_or_create(
@@ -10309,6 +10343,9 @@ async def test_convert_child_device_to_device(
         device_registry, mock_config_entry.entry_id
     )
     device_registry.async_update_device(child_device.id, area_id="garden")
+    # A new setup session: the child device is no longer live, so the integration
+    # can re-register its identifiers as a full device (e.g. after a rollback).
+    device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
 
     device = device_registry.async_get_or_create(
@@ -10353,6 +10390,184 @@ async def test_link_device_info_resolves_child_device(
         ("test", "strip_outlet_1"),
         ("test", "strip_outlet_1_alias"),
     }
+
+
+async def test_link_device_info_returns_existing_child(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test link device info (identifiers only) returns the existing child device."""
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    result = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+    )
+    assert isinstance(result, dr.ChildDeviceEntry)
+    assert result.id == child_device.id
+    assert result.identifiers == {("test", "strip_outlet_1")}
+    # A link device info neither creates a full device nor converts the child
+    assert len(device_registry.devices) == 1
+    assert len(device_registry.child_devices) == 1
+
+
+async def test_convert_device_to_child_detaches_via_links(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test converting a device to a child detaches inbound via_device links."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    outlet = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "outlet")},
+        name="Outlet",
+        via_device_id=parent.id,
+    )
+    nested = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "nested")},
+        name="Nested",
+        via_device_id=outlet.id,
+    )
+    assert nested.via_device_id == outlet.id
+    # A new setup session: the outlet is no longer live and can be adopted as a child
+    device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
+
+    converted = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "outlet")},
+        parent_device_id=parent.id,
+        name="Outlet",
+    )
+    assert isinstance(converted, dr.ChildDeviceEntry)
+    assert converted.id == outlet.id
+
+    # The inbound via link is detached so it can no longer resolve to a child device
+    nested_after = device_registry.async_get_device(identifiers={("test", "nested")})
+    assert nested_after is not None
+    assert nested_after.via_device_id is None
+    # No live device links to a child device through via_device_id
+    child_via_targets = [
+        device.id
+        for device in device_registry.devices.values()
+        if device.via_device_id is not None
+        and device_registry.async_get_child(device.via_device_id) is not None
+    ]
+    assert child_via_targets == []
+
+
+async def test_convert_device_to_child_same_session_raises(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test registering a live device's identifiers as a child raises."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        name="Outlet 1",
+    )
+
+    with pytest.raises(
+        dr.DeviceInfoError,
+        match="registered as a device and as a child device",
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("test", "strip_outlet_1")},
+            parent_device_id=parent.id,
+            name="Outlet 1",
+        )
+
+
+async def test_convert_child_to_device_same_session_raises(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test re-registering a live child's identifiers as a device raises."""
+    _create_parent_and_child(device_registry, mock_config_entry.entry_id)
+
+    with pytest.raises(
+        dr.DeviceInfoError,
+        match="registered as a device and as a child device",
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("test", "strip_outlet_1")},
+            manufacturer="acme",
+            name="Outlet 1",
+        )
+
+
+async def test_get_or_create_via_device_id_naming_child_raises(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a via_device_id resolving to a child device is rejected before mutation."""
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    with pytest.raises(dr.DeviceInfoError, match="is not a registered device id"):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("test", "new_device")},
+            via_device_id=child_device.id,
+        )
+
+    # Validation precedes mutation, so the rejected device is not partially created
+    assert (
+        device_registry.async_get_device(identifiers={("test", "new_device")}) is None
+    )
+    assert len(device_registry.devices) == 1
+
+    # The deprecated via_device (identifier form) resolves against main devices only, so
+    # a child's identifier is treated as an unknown via device: it logs a deprecation and
+    # links nothing rather than raising. Only the id form enforces the invariant.
+    linked = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "new_device")},
+        via_device=("test", "strip_outlet_1"),
+    )
+    assert linked.via_device_id is None
+
+
+async def test_update_device_via_device_id_naming_child_raises(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating via_device_id to a child device raises, leaving it unchanged."""
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "device")},
+        name="Device",
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="Can't link device to unknown via device"
+    ):
+        device_registry.async_update_device(device.id, via_device_id=child_device.id)
+
+    assert device_registry.async_get(device.id).via_device_id is None
 
 
 async def test_deleted_device_restored_as_child_device(
@@ -10656,6 +10871,35 @@ async def test_clear_label_id_with_child_devices(
     updated_child = device_registry.async_get_child(child_device.id)
     assert updated_child is not None
     assert updated_child.labels == {"outdoor"}
+
+
+async def test_entries_for_label_includes_child_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test label queries include child devices carrying the label."""
+    parent, labeled_child = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+    unlabeled_child = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_2")},
+        parent_device_id=parent.id,
+        name="Outlet 2",
+    )
+    parent = device_registry.async_update_device(parent.id, labels={"label1"})
+    labeled_child = device_registry.async_update_device(
+        labeled_child.id, labels={"label1"}
+    )
+
+    entries = dr.async_entries_for_label(device_registry, "label1")
+    assert len(entries) == 2
+    assert parent in entries
+    assert labeled_child in entries
+    # Labels are never inherited, so a child without the label is excluded even though
+    # its parent carries it
+    assert unlabeled_child not in entries
 
 
 async def test_async_cleanup_removes_child_device_with_missing_parent(

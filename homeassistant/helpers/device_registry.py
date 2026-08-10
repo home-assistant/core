@@ -1857,6 +1857,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> DeviceEntry | None:
         """Check if a device is registered.
 
+        Searches main devices only; a child device is found via
+        async_get_child_device_by_identifier.
+
         Identifiers and connections are unique per config entry. If several config
         entries share the looked-up identifier or connection, the match is resolved to a
         single device when possible - preferring the device whose config entry domain
@@ -1904,8 +1907,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> DeviceEntry | None:
         """Get the device with the identifier, owned by the config entry.
 
-        Identifiers are unique within a config entry, so unlike async_get_device
-        the lookup cannot be ambiguous.
+        Searches main devices only; use async_get_child_device_by_identifier for a
+        child device. Identifiers are unique within a config entry, so unlike
+        async_get_device the lookup cannot be ambiguous.
         """
         return self.devices.get_entry(
             identifiers={identifier}, config_entry_id=config_entry_id
@@ -1947,8 +1951,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> list[DeviceEntry]:
         """Get all devices matching any of the identifiers or connections.
 
-        If config_entry_id is given, only devices owned by that config entry are
-        returned.
+        Searches main devices only; a child device is found via
+        async_get_child_device_by_identifier. If config_entry_id is given, only
+        devices owned by that config entry are returned.
         """
         return self.devices.get_entries(
             identifiers, connections, config_entry_id=config_entry_id
@@ -2174,7 +2179,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         via_device: tuple[str, str] | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> AnyDeviceEntry:
-        """Get device or child device. Create if it doesn't exist."""
+        """Get device or child device. Create if it doesn't exist.
+
+        A device info with only identifiers (a "link", not carrying its own
+        connectivity or hardware) may resolve to an existing child device.
+        """
         default_manufacturer = _validate_str(
             "default_manufacturer", default_manufacturer
         )
@@ -2347,7 +2356,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # A "primary" device info re-registers a child device's identifiers as a
             # device: the integration stopped splitting the device (e.g. after a
             # rollback), so convert the child device back, preserving its id.
-            device = self._async_convert_child_to_device(matched_child_device)
+            device = self._async_convert_child_to_device(
+                matched_child_device, config_entry, device_info
+            )
 
         # Resolved after reconciliation so a removed stale duplicate can't be linked
         if via_device_id is not UNDEFINED and via_device_id is not None:
@@ -2721,6 +2732,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "a child device must belong to the same config subentry as its "
                 f"parent device {parent.id}",
             )
+        if device.id in self._live_device_ids.get(device.config_entry_id, ()):
+            raise DeviceInfoError(
+                config_entry.domain,
+                device_info,
+                "identifiers registered as a device and as a child device by the "
+                "same config entry",
+            )
 
         self.hass.verify_event_loop_thread("device_registry.async_get_or_create")
 
@@ -2773,6 +2791,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         del self.devices[device.id]
         self.child_devices[child_device.id] = child_device
 
+        # A via_device_id must not resolve to a child device; detach inbound via
+        # links to the converted device, as async_remove_device does, before firing
+        # the conversion event.
+        for other_device in list(self.devices.values()):
+            if other_device.via_device_id == device.id:
+                self._async_update_device(other_device.id, via_device_id=None)
+
         self.async_schedule_save()
         self.hass.bus.async_fire_internal(
             EVENT_DEVICE_REGISTRY_UPDATED,
@@ -2784,13 +2809,26 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     @callback
     def _async_convert_child_to_device(
-        self, child_device: ChildDeviceEntry
+        self,
+        child_device: ChildDeviceEntry,
+        config_entry: ConfigEntry,
+        device_info: DeviceInfo,
     ) -> DeviceEntry:
         """Convert a child device back to a device, preserving its id.
 
         Lets an integration that stops splitting a device into child devices (e.g.
         after a rollback) re-register the identifiers with no device id changes.
         """
+        if child_device.id in self._live_device_ids.get(
+            child_device.config_entry_id, ()
+        ):
+            raise DeviceInfoError(
+                config_entry.domain,
+                device_info,
+                "identifiers registered as a device and as a child device by the "
+                "same config entry",
+            )
+
         self.hass.verify_event_loop_thread("device_registry.async_get_or_create")
 
         disabled_by = child_device.disabled_by
@@ -4408,9 +4446,10 @@ def async_get_device_id_by_identifier(
 ) -> str:
     """Get the id of the device with the identifier, owned by the config entry.
 
-    Convenience wrapper for linking a device to its via device or parent device
-    through via_device_id or parent_device_id. Identifiers are unique within a
-    config entry, so the lookup cannot be ambiguous.
+    Searches main devices only; use async_get_child_device_by_identifier for a
+    child device. Convenience wrapper for linking a device to its via device or
+    parent device through via_device_id or parent_device_id. Identifiers are unique
+    within a config entry, so the lookup cannot be ambiguous.
 
     Raises ValueError if no such device exists.
     """
@@ -4461,9 +4500,17 @@ def async_entries_for_area(
 @callback
 def async_entries_for_label(
     registry: DeviceRegistry, label_id: str
-) -> list[DeviceEntry]:
-    """Return entries that match a label."""
-    return registry.devices.get_devices_for_label(label_id)
+) -> list[AnyDeviceEntry]:
+    """Return entries that match a label.
+
+    Includes child devices carrying the label; labels are never inherited from the
+    parent, so a child appears here only when the label is set on the child itself.
+    """
+    entries: list[AnyDeviceEntry] = list(
+        registry.devices.get_devices_for_label(label_id)
+    )
+    entries.extend(registry.child_devices.get_devices_for_label(label_id))
+    return entries
 
 
 @callback
