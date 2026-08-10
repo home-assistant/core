@@ -229,7 +229,9 @@ async def test_device_properties(
     target_value: str,
 ) -> None:
     """Test device properties."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "AC000Wxxxxxxxxx")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "AC000Wxxxxxxxxx"), ENTRY_ID
+    )
     assert getattr(device, device_property) == target_value
 
 

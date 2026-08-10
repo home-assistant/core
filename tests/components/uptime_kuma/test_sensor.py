@@ -101,8 +101,8 @@ async def test_migrate_unique_id(
     assert entity.unique_id == "123456789_1_status"
 
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{entity.config_entry_id}_1")}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{entity.config_entry_id}_1"), config_entry.entry_id
         )
     )
     assert device.sw_version == "2.0.2"

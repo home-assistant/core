@@ -151,28 +151,31 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Smart Lock Pro Wifi": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
     ),
-    "Strip Light": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.LIGHT,)),
-    "Strip Light 3": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.LIGHT,)),
-    "Floor Lamp": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.LIGHT,)),
-    "Color Bulb": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.LIGHT,)),
+    "Strip Light": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "Strip Light 3": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "Floor Lamp": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "Color Bulb": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
     "RGBICWW Floor Lamp": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.LIGHT,)
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "Permanent Outdoor Lights": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
     ),
     "RGBICWW Strip Light": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.LIGHT,)
+        True, entity_config=(Platform.LIGHT,)
     ),
-    "Ceiling Light": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.LIGHT,)),
+    "Ceiling Light": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
     "Ceiling Light Pro": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.LIGHT,)
+        True, entity_config=(Platform.LIGHT,)
     ),
     "RGBIC Neon Wire Rope Light": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.LIGHT,)
+        True, entity_config=(Platform.LIGHT,)
     ),
     "RGBIC Neon Rope Light": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.LIGHT,)
+        True, entity_config=(Platform.LIGHT,)
     ),
     "Candle Warmer Lamp": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.LIGHT,)
+        True, entity_config=(Platform.LIGHT,)
     ),
     "MeterPro(CO2)": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "AI Art Frame": SwitchbotCloudDeviceConfig(
