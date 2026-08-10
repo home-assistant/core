@@ -18,6 +18,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -149,6 +150,7 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = cast(float, kwargs[ATTR_TEMPERATURE])
+        if 
         if ATTR_OPERATION_MODE in kwargs:
             await self.async_set_operation_mode(kwargs[ATTR_OPERATION_MODE])
 
@@ -162,6 +164,9 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set the operation mode."""
+        if self.operation_list is None or operation_mode not in self.operation_list:
+            raise HomeAssistantError(f"Operation mode {operation_mode} not supported")
+
         await self.coordinator.api.set_dhw_mode(
             DHW_MODE,
             self._dev_id,
