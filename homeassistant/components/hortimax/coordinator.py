@@ -132,8 +132,8 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
         """
         registry = dr.async_get(self.hass)
         for key, name in device_data.source_names.items():
-            device = registry.async_get_device(
-                identifiers={(DOMAIN, f"{device_id}::{key}")}
+            device = registry.async_get_device_by_identifier(
+                (DOMAIN, f"{device_id}::{key}"), self.config_entry.entry_id
             )
             if device is not None and device.name != name:
                 registry.async_update_device(device.id, name=name)

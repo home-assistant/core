@@ -1,6 +1,7 @@
 """Tests for Vizio init."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -12,12 +13,18 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
 )
 from homeassistant.components.vizio import DATA_APPS
-from homeassistant.components.vizio.const import DOMAIN
+from homeassistant.components.vizio.const import (
+    CONF_ADDITIONAL_CONFIGS,
+    CONF_APPS,
+    CONF_VOLUME_STEP,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
     CONF_HOST,
+    CONF_INCLUDE,
     CONF_NAME,
     STATE_UNAVAILABLE,
 )
@@ -26,7 +33,9 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import setup_integration
 from .const import (
+    ADDITIONAL_APP_CONFIG,
     APP_RECORDS,
+    CURRENT_APP,
     HOST,
     HOST2,
     MOCK_USER_VALID_TV_CONFIG,
@@ -35,6 +44,7 @@ from .const import (
     PORTLESS_HOST,
     UNIQUE_ID,
     VERSION,
+    VOLUME_STEP,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -237,3 +247,66 @@ async def test_host_with_port_is_left_alone(
     await setup_integration(hass, mock_tv_config_entry)
 
     assert mock_tv_config_entry.data[CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+@pytest.mark.parametrize(
+    ("data", "options", "expected_data", "expected_options"),
+    [
+        pytest.param(
+            {
+                **MOCK_USER_VALID_TV_CONFIG,
+                CONF_VOLUME_STEP: VOLUME_STEP,
+                CONF_APPS: {
+                    CONF_INCLUDE: [CURRENT_APP],
+                    CONF_ADDITIONAL_CONFIGS: [ADDITIONAL_APP_CONFIG],
+                },
+            },
+            {},
+            {
+                **MOCK_USER_VALID_TV_CONFIG,
+                CONF_APPS: {CONF_ADDITIONAL_CONFIGS: [ADDITIONAL_APP_CONFIG]},
+            },
+            {
+                CONF_VOLUME_STEP: VOLUME_STEP,
+                CONF_APPS: {CONF_INCLUDE: [CURRENT_APP]},
+            },
+            id="moves_settings_to_options",
+        ),
+        pytest.param(
+            {**MOCK_USER_VALID_TV_CONFIG, CONF_VOLUME_STEP: VOLUME_STEP},
+            {CONF_VOLUME_STEP: VOLUME_STEP + 1},
+            MOCK_USER_VALID_TV_CONFIG,
+            {CONF_VOLUME_STEP: VOLUME_STEP + 1},
+            id="existing_options_win",
+        ),
+        pytest.param(
+            MOCK_USER_VALID_TV_CONFIG,
+            {},
+            MOCK_USER_VALID_TV_CONFIG,
+            {},
+            id="nothing_to_migrate",
+        ),
+    ],
+)
+async def test_migrate_entry_to_minor_version_2(
+    hass: HomeAssistant,
+    data: dict[str, Any],
+    options: dict[str, Any],
+    expected_data: dict[str, Any],
+    expected_options: dict[str, Any],
+) -> None:
+    """Test migrating a 1.1 entry moves settings from data to options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        options=options,
+        unique_id=UNIQUE_ID,
+        minor_version=1,
+    )
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
+    assert dict(config_entry.data) == expected_data
+    assert dict(config_entry.options) == expected_options

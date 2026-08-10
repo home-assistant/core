@@ -64,7 +64,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 3
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 CLEANUP_DELAY = 10
 
@@ -135,7 +135,6 @@ class DeviceInfo(TypedDict, total=False):
     hw_version: str | None
     translation_key: str | None
     translation_placeholders: Mapping[str, str] | None
-    via_device: tuple[str, str]  # Deprecated, use via_device_id instead
     via_device_id: str
 
 
@@ -1005,6 +1004,13 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 else:
                     device["via_device_id"] = None
 
+        if old_major_version < 3 or (old_major_version == 3 and old_minor_version < 3):
+            # Version 3.3, introduced in 2026.8, clears via_device_id self-references,
+            # which are no longer allowed.
+            for device in old_data["devices"]:
+                if device["via_device_id"] == device["id"]:
+                    device["via_device_id"] = None
+
         if old_major_version > 3:
             raise NotImplementedError
         return old_data
@@ -1532,6 +1538,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         one owned by the calling integration is preferred, falling back to the first
         match.
         """
+        report_usage(
+            "calls `device_registry.async_get_device`, which is deprecated because "
+            "device identifiers and connections are no longer unique across config "
+            "entries; use `async_get_device_by_identifier`, "
+            "`async_get_device_by_connection` or `async_get_devices` instead",
+            core_behavior=ReportBehavior.ERROR,
+            core_integration_behavior=ReportBehavior.ERROR,
+            breaks_in_ha_version="2027.8.0",
+        )
         matches = self._async_matching_devices(identifiers, connections)
         if len(matches) <= 1:
             return matches[0] if matches else None
@@ -1796,6 +1811,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "Passing both `via_device` and `via_device_id` is not allowed; "
                 "`via_device` is deprecated, pass `via_device_id` only"
             )
+        # Report the deprecated `via_device` here, before any registry mutation.
+        if via_device is not UNDEFINED:
+            report_usage(
+                "calls `device_registry.async_get_or_create` with a `via_device`, "
+                "which is deprecated because device identifiers are no longer unique; "
+                "pass `via_device_id` instead",
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                breaks_in_ha_version="2027.8.0",
+            )
         if (
             config_subentry_id is not UNDEFINED
             and config_subentry_id is not None
@@ -1989,7 +2014,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2025.12.0",
                 )
-            via_device_id = via.id if via else UNDEFINED
+                via_device_id = UNDEFINED
+            elif via.id == device.id:
+                # A device can not be its own via device. Ignore the self-reference;
+                # this will raise in HA Core 2027.8.
+                report_usage(
+                    "calls `device_registry.async_get_or_create` with a `via_device` "
+                    "referencing the device itself; the via device is ignored",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2027.8.0",
+                )
+                via_device_id = UNDEFINED
+            else:
+                via_device_id = via.id
         elif via_device is None:
             # An explicit `via_device=None` means "no via device" (a via_device_id
             # alongside it is rejected above).
@@ -2163,6 +2200,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Can't link device to unknown via device {via_device_id}"
             )
 
+        if via_device_id == device_id:
+            raise HomeAssistantError("A device can not be its own via device")
+
         # A device belongs to exactly one config entry and subentry:
         # - add_config_entry_id (with an optional add_config_subentry_id) records a
         #   transient pending move to that config entry and subentry; on its own it does
@@ -2228,6 +2268,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 ):
                     move_target = None
                 if move_target is None:
+                    # A composite via_device_id resolves to the split owned by the
+                    # entry being removed, i.e. this device, so it is a self-reference;
+                    # reject it before deleting, atomically like the direct-id check
+                    # before the ownership changes above.
+                    if (
+                        via_device_id is not UNDEFINED
+                        and via_device_id is not None
+                        and via_device_id == old.composite_device_id
+                    ):
+                        raise HomeAssistantError(
+                            "A device can not be its own via device"
+                        )
                     self.async_remove_device(device_id)
                     return None
                 target_config_entry_id = move_target.config_entry_id
@@ -2298,6 +2350,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             via_device_id = self._resolve_via_device_id(
                 via_device_id, effective_config_entry_id
             )
+            # Direct self-references were rejected before the ownership changes above;
+            # this catches a composite via_device_id that resolves to device_id.
+            if via_device_id == device_id:
+                raise HomeAssistantError("A device can not be its own via device")
 
         added_connections: set[tuple[str, str]] | None = None
         added_identifiers: set[tuple[str, str]] | None = None
@@ -2518,13 +2574,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         A device belongs to a single config entry and subentry. To move a device to
         another config entry or subentry, pass new_config_entry_id and/or
-        new_config_subentry_id. To remove a device, pass remove_config_entry_id with the
-        device's config entry.
+        new_config_subentry_id. To remove a device, call async_remove_device.
 
         :param add_config_entry_id: Deprecated. Combined with remove_config_entry_id it
-            moves the device; on its own it does nothing.
+            moves the device; on its own it does nothing. Use new_config_entry_id
+            instead.
         :param add_config_subentry_id: Deprecated. Combined with remove_config_subentry_id
-            it moves the device to another subentry; on its own it does nothing.
+            it moves the device to another subentry; on its own it does nothing. Use
+            new_config_subentry_id instead.
         :param disabled_by: Disable or enable the device. Must be consistent with the
             disabled state of the config entry owning the device after the update:
             a device can't be enabled when the owning config entry is disabled, and
@@ -2536,10 +2593,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             passed explicitly, the device's disabled state is updated to reflect the
             new config entry's disabled state.
         :param new_config_subentry_id: Move the device to this subentry.
-        :param remove_config_entry_id: Remove the device if it is the device's config
-            entry, unless combined with add_config_entry_id to move the device.
-        :param remove_config_subentry_id: Remove the device from a specific subentry of
-            remove_config_entry_id.
+        :param remove_config_entry_id: Deprecated. Remove the device if it is the
+            device's config entry, unless combined with add_config_entry_id to move the
+            device. Use new_config_entry_id to move, or async_remove_device to remove.
+        :param remove_config_subentry_id: Deprecated. Remove the device from a specific
+            subentry of remove_config_entry_id. Use new_config_subentry_id to move, or
+            async_remove_device to remove.
         """
         if (
             underlying_ids := self._async_device_ids_for_composite_device_id(device_id)
@@ -2575,6 +2634,23 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             }
             return self._async_update_composite_device(
                 device_id, underlying_ids, update_args
+            )
+        if (
+            add_config_entry_id is not UNDEFINED
+            or add_config_subentry_id is not UNDEFINED
+            or remove_config_entry_id is not UNDEFINED
+            or remove_config_subentry_id is not UNDEFINED
+        ):
+            report_usage(
+                "calls `device_registry.async_update_device` with one of "
+                "`add_config_entry_id`, `add_config_subentry_id`, "
+                "`remove_config_entry_id` or `remove_config_subentry_id`; a device now "
+                "belongs to a single config entry and subentry. Move a device with "
+                "`new_config_entry_id` and/or `new_config_subentry_id`, or remove it "
+                "with `async_remove_device`",
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                breaks_in_ha_version="2027.8.0",
             )
         if suggested_area is not UNDEFINED:
             report_usage(
