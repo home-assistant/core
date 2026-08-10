@@ -3,11 +3,13 @@
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus.exceptions import NeoPoolConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.neopool.helpers import prepare_device_time
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -45,14 +47,20 @@ async def test_sync_time_button_writes_time_and_commit(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """SYNC_TIME button delegates to async_sync_device_time."""
+    """SYNC_TIME button writes the encoded local time and refreshes."""
     await setup_integration(hass, mock_config_entry)
 
     entity_id = _button_entity_id(hass, mock_config_entry, "sync_time")
     mock_neopool_client.async_sync_device_time.reset_mock()
+    reads_before = mock_neopool_client.async_read_all.await_count
     await _press(hass, entity_id)
-    assert mock_neopool_client.async_sync_device_time.await_count == 1
+
+    mock_neopool_client.async_sync_device_time.assert_awaited_once_with(
+        prepare_device_time(hass)
+    )
+    assert mock_neopool_client.async_read_all.await_count > reads_before
 
 
 async def test_escape_button_writes_clear_register(
@@ -87,15 +95,17 @@ async def test_reset_cell_partial_button_writes_reset_and_save(
 @pytest.mark.usefixtures("mock_neopool_client")
 async def test_reset_cell_partial_button_disabled_by_default(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Reset button registers but is disabled-by-default (destructive action)."""
     await setup_integration(hass, mock_config_entry)
 
-    registry = er.async_get(hass)
     matches = [
         e
-        for e in er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
         if e.domain == BUTTON_DOMAIN and e.unique_id.endswith("_reset_cell_partial")
     ]
     assert len(matches) == 1
@@ -104,6 +114,7 @@ async def test_reset_cell_partial_button_disabled_by_default(
 
 async def test_reset_cell_partial_button_skipped_without_hydrolysis(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
@@ -114,10 +125,11 @@ async def test_reset_cell_partial_button_skipped_without_hydrolysis(
 
     await setup_integration(hass, mock_config_entry)
 
-    registry = er.async_get(hass)
     matches = [
         e
-        for e in er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
         if e.domain == BUTTON_DOMAIN and e.unique_id.endswith("_reset_cell_partial")
     ]
     assert matches == []
