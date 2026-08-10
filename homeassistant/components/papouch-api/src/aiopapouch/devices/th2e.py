@@ -83,6 +83,11 @@ class TH2E(PapouchDevice, HTTPMixin):
             item_id = element.attrib.get("id")
             sns_type = element.attrib.get("type")
             unit_code = element.attrib.get("unit", "0")
+
+            # unit 3 means percentage but in global unit map it would be 1
+            if unit_code == "3":
+                unit_code = "0"
+
             status = element.attrib.get("status", "0")
 
             self.sensors[item_id] = {
