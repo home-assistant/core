@@ -1092,7 +1092,7 @@ async def test_camera_image_with_attribute_change(
         # Trigger some polling cycle to let status change be picked up
         await advance_time(hass, freezer, polling_cycles, polling_delta)
 
-        # Check that the camera become unavailable with monitoring None
+        # Check that the camera become unavailable with monitoring off
         assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
