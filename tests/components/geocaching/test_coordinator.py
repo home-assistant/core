@@ -1,15 +1,12 @@
 """Test the Geocaching coordinator."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from geocachingapi.models import GeocachingSettings
+from geocachingapi.models import GeocachingSettings, GeocachingStatus
 
 from homeassistant.components.geocaching.const import (
     CONF_CACHE_CODES,
     CONF_TRACKABLE_CODES,
-)
-from homeassistant.components.geocaching.coordinator import (
-    GeocachingDataUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant
 
@@ -34,14 +31,24 @@ async def test_coordinator_uses_tracked_cache_and_trackable_codes(
     session = MagicMock()
     session.token = {"access_token": "mock-token"}
 
-    with patch(
-        "homeassistant.components.geocaching.coordinator.GeocachingApi"
-    ) as geocaching_api_mock:
-        GeocachingDataUpdateCoordinator(
-            hass,
-            entry=mock_config_entry,
-            session=session,
+    with (
+        patch(
+            "homeassistant.components.geocaching.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.geocaching.OAuth2Session",
+            return_value=session,
+        ),
+        patch(
+            "homeassistant.components.geocaching.coordinator.GeocachingApi"
+        ) as geocaching_api_mock,
+    ):
+        geocaching_api_mock.return_value.update = AsyncMock(
+            return_value=GeocachingStatus()
         )
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     geocaching_api_mock.assert_called_once()
 

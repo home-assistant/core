@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 import logging
+import re
 from typing import Any, override
 
 from geocachingapi.geocachingapi import GeocachingApi
@@ -116,8 +117,16 @@ class GeocachingOptionsFlow(OptionsFlowWithReload):
 
             if len(cache_codes) > MAX_TRACKED_CACHES:
                 errors["base"] = "too_many_caches"
+            elif any(
+                re.fullmatch(r"GC[A-Z0-9]+", code) is None for code in cache_codes
+            ):
+                errors["base"] = "invalid_cache_code"
             elif len(trackable_codes) > MAX_TRACKED_TRACKABLES:
                 errors["base"] = "too_many_trackables"
+            elif any(
+                re.fullmatch(r"TB[A-Z0-9]+", code) is None for code in trackable_codes
+            ):
+                errors["base"] = "invalid_trackable_code"
             else:
                 return self.async_create_entry(
                     data={
