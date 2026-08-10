@@ -2928,6 +2928,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             specific subentry of remove_config_entry_id
         """
         if device_id in self._child_device_data:
+            # A child device is removed with async_remove_device, so the config-entry
+            # membership arguments (add/remove) are rejected here rather than reaching
+            # _async_update_child_device. merge_identifiers is an internal get-or-create
+            # concern; the public API sets a child's identifiers with new_identifiers.
             if unsupported := [
                 arg_name
                 for arg_name, value in (
@@ -2939,11 +2943,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     ("hw_version", hw_version),
                     ("manufacturer", manufacturer),
                     ("merge_connections", merge_connections),
+                    ("merge_identifiers", merge_identifiers),
                     ("model", model),
                     ("model_id", model_id),
                     ("new_config_entry_id", new_config_entry_id),
                     ("new_config_subentry_id", new_config_subentry_id),
                     ("new_connections", new_connections),
+                    ("remove_config_entry_id", remove_config_entry_id),
+                    ("remove_config_subentry_id", remove_config_subentry_id),
                     ("serial_number", serial_number),
                     ("suggested_area", suggested_area),
                     ("sw_version", sw_version),
@@ -2955,13 +2962,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     f"Setting {', '.join(unsupported)} is not supported for a child "
                     "device"
                 )
-            if (
-                remove_config_subentry_id is not UNDEFINED
-                and remove_config_entry_id is UNDEFINED
-            ):
-                raise HomeAssistantError(
-                    "Can't remove config subentry without specifying config entry"
-                )
             return self._async_update_child_device(
                 device_id,
                 allow_collisions=allow_collisions,
@@ -2969,12 +2969,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 disabled_by=disabled_by,
                 is_new=is_new,
                 labels=labels,
-                merge_identifiers=merge_identifiers,
                 name=name,
                 name_by_user=name_by_user,
                 new_identifiers=new_identifiers,
-                remove_config_entry_id=remove_config_entry_id,
-                remove_config_subentry_id=remove_config_subentry_id,
             )
 
         old = self.devices[device_id]
@@ -3443,8 +3440,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         name_by_user: str | UndefinedType | None = UNDEFINED,
         name: str | UndefinedType | None = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        remove_config_entry_id: str | UndefinedType = UNDEFINED,
-        remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
     ) -> ChildDeviceEntry | None:
         """Private update child device attributes."""
         old = self.child_devices[child_device_id]
@@ -3459,13 +3454,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         if new_identifiers is not UNDEFINED and not new_identifiers:
             raise HomeAssistantError("A child device must have at least one identifier")
-
-        if remove_config_entry_id == old.config_entry_id and (
-            remove_config_subentry_id is UNDEFINED
-            or remove_config_subentry_id == old.config_subentry_id
-        ):
-            self._async_remove_child_device(old)
-            return None
 
         added_identifiers: set[tuple[str, str]] | None = None
 

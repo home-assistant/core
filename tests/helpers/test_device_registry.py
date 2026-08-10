@@ -9994,6 +9994,13 @@ async def test_child_device_update(
         pytest.param({"new_config_entry_id": "other"}, id="new_config_entry_id"),
         pytest.param({"new_config_subentry_id": "other"}, id="new_config_subentry_id"),
         pytest.param({"add_config_entry_id": "other"}, id="add_config_entry_id"),
+        pytest.param(
+            {"merge_identifiers": {("test", "extra")}}, id="merge_identifiers"
+        ),
+        pytest.param({"remove_config_entry_id": "other"}, id="remove_config_entry_id"),
+        pytest.param(
+            {"remove_config_subentry_id": "other"}, id="remove_config_subentry_id"
+        ),
     ],
 )
 async def test_child_device_update_rejects_device_kwargs(
@@ -10011,40 +10018,20 @@ async def test_child_device_update_rejects_device_kwargs(
         device_registry.async_update_device(child_device.id, **update_kwargs)
 
 
-async def test_child_device_update_rejects_orphan_remove_config_subentry(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test removing a config subentry from a child without a config entry raises.
-
-    Mirrors the main-device guard instead of silently no-opping.
-    """
-    _, child_device = _create_parent_and_child(
-        device_registry, mock_config_entry.entry_id
-    )
-
-    with pytest.raises(
-        HomeAssistantError,
-        match="Can't remove config subentry without specifying config entry",
-    ):
-        device_registry.async_update_device(
-            child_device.id, remove_config_subentry_id="mock-subentry-id-1"
-        )
-
-
 async def test_child_device_update_identifiers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test updating child device identifiers, including collisions."""
+    """Test setting child device identifiers with new_identifiers, incl. collisions."""
     parent, child_device = _create_parent_and_child(
         device_registry, mock_config_entry.entry_id
     )
 
+    # new_identifiers replaces the child device's identifiers
     updated = device_registry.async_update_device(
-        child_device.id, merge_identifiers={("test", "strip_outlet_1_alias")}
+        child_device.id,
+        new_identifiers={("test", "strip_outlet_1"), ("test", "strip_outlet_1_alias")},
     )
     assert updated.identifiers == {
         ("test", "strip_outlet_1"),
@@ -10059,10 +10046,10 @@ async def test_child_device_update_identifiers(
     with pytest.raises(HomeAssistantError, match="must have at least one identifier"):
         device_registry.async_update_device(child_device.id, new_identifiers=set())
 
-    # A child device can't take an identifier registered by a device
+    # A child device can't take an identifier registered by a device (its parent)
     with pytest.raises(dr.DeviceIdentifierCollisionError):
         device_registry.async_update_device(
-            child_device.id, merge_identifiers={("test", "strip")}
+            child_device.id, new_identifiers={("test", "strip")}
         )
 
     # A device can't take an identifier registered by a child device
@@ -10070,6 +10057,34 @@ async def test_child_device_update_identifiers(
         device_registry.async_update_device(
             parent.id, merge_identifiers={("test", "strip_outlet_1")}
         )
+
+
+async def test_child_device_get_or_create_merges_identifiers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test re-registering a child device merges additional identifiers into it.
+
+    merge_identifiers is rejected on the public update path for a child device, so
+    the internal merge only happens through async_get_or_create.
+    """
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    merged = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1"), ("test", "strip_outlet_1_alias")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+    assert merged.id == child_device.id
+    assert merged.identifiers == {
+        ("test", "strip_outlet_1"),
+        ("test", "strip_outlet_1_alias"),
+    }
+    assert len(device_registry.child_devices) == 1
 
 
 async def test_remove_parent_cascades_to_children(
