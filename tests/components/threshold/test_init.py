@@ -149,8 +149,8 @@ async def test_setup_and_remove_config_entry(
 async def test_entry_changed(hass: HomeAssistant, platform) -> None:
     """Test reconfiguring."""
 
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     def _create_mock_entity(domain: str, name: str) -> er.RegistryEntry:
         config_entry = MockConfigEntry(
@@ -233,15 +233,12 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
 
     events = track_entity_registry_actions(hass, threshold_entity_entry.entity_id)
 
-    # Remove the source sensor's config entry from the device, this removes the
-    # source sensor
+    # Remove the source device, this removes the source sensor
     with patch(
         "homeassistant.components.threshold.async_unload_entry",
         wraps=threshold.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            sensor_device.id, remove_config_entry_id=sensor_config_entry.entry_id
-        )
+        device_registry.async_remove_device(sensor_device.id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()

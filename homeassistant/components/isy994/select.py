@@ -34,7 +34,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import _LOGGER, UOM_INDEX
+from .const import LOGGER, UOM_INDEX
 from .entity import ISYAuxControlEntity
 from .models import IsyConfigEntry
 
@@ -102,7 +102,7 @@ async def async_setup_entry(
             entities.append(ISYAuxControlIndexSelectEntity(**entity_detail))
             continue
         # Future: support Node Server custom index UOMs
-        _LOGGER.debug(
+        LOGGER.debug(
             "ISY missing node index unit definitions for %s: %s", node.name, name
         )
     async_add_entities(entities)

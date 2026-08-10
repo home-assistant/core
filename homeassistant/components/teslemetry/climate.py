@@ -287,7 +287,7 @@ class TeslemetryStreamingClimateEntity(
                 ClimateEntityStateAttribute.CURRENT_TEMPERATURE
             )
             self._attr_target_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.TEMPERATURE
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE
             )
             self._attr_preset_mode = state.attributes.get(
                 ClimateEntityStateAttribute.PRESET_MODE
@@ -537,7 +537,7 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
                 ClimateEntityStateAttribute.CURRENT_TEMPERATURE
             )
             self._attr_target_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.TEMPERATURE
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE
             )
 
         self.async_on_remove(

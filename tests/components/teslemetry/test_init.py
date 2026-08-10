@@ -461,8 +461,8 @@ async def test_stale_device_removal(
 
         # Verify the device itself has been completely removed from the registry
         # since it had no other config entries
-        updated_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, "stale-vin")}
+        updated_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "stale-vin"), entry.entry_id
         )
         assert updated_device is None
 
@@ -494,7 +494,9 @@ async def test_skipped_energy_site_is_removed_as_stale_device(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
 
-    updated_device = device_registry.async_get_device(identifiers={(DOMAIN, "98765")})
+    updated_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "98765"), entry.entry_id
+    )
     assert updated_device is None
 
 
@@ -680,7 +682,7 @@ async def test_migrate_adds_subentries(
     wall_connector_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, WALL_CONNECTOR_DINS[0])},
-        via_device=(DOMAIN, ENERGY_SITE_ID),
+        via_device_id=energy_device.id,
         name="Wall Connector",
     )
     vehicle_device = device_registry.async_get_or_create(
@@ -746,7 +748,7 @@ async def test_migrate_ignores_foreign_and_orphan_devices(
 
     # A stale/manually created device linked to the entry without our identifier,
     # and a wall connector whose parent is that foreign (non-energy-site) device.
-    device_registry.async_get_or_create(
+    foreign_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={("other_domain", "foreign")},
         name="Foreign",
@@ -754,7 +756,7 @@ async def test_migrate_ignores_foreign_and_orphan_devices(
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "orphan-wall-connector")},
-        via_device=("other_domain", "foreign"),
+        via_device_id=foreign_device.id,
         name="Orphan Wall Connector",
     )
     vehicle_device = device_registry.async_get_or_create(
@@ -1049,7 +1051,9 @@ async def test_vehicle_streaming_version_update(
 
     # Check initial device sw_version
     vin = "LRW3F7EK4NC700000"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.0.0"
 
@@ -1059,7 +1063,9 @@ async def test_vehicle_streaming_version_update(
     await hass.async_block_till_done()
 
     # Check device sw_version was updated (build hash removed)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.1.0"
 
@@ -1083,7 +1089,9 @@ async def test_vehicle_streaming_version_update_ignores_none(
         assert entry.state is ConfigEntryState.LOADED
 
     vin = "LRW3F7EK4NC700000"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     original_version = device.sw_version
 
@@ -1093,7 +1101,9 @@ async def test_vehicle_streaming_version_update_ignores_none(
     await hass.async_block_till_done()
 
     # Check device sw_version was not changed
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == original_version
 
@@ -1110,7 +1120,9 @@ async def test_vehicle_polling_version_update(
     assert entry.state is ConfigEntryState.LOADED
 
     vin = "LRW3F7EK4NC700000"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.0.0"
 
@@ -1125,7 +1137,9 @@ async def test_vehicle_polling_version_update(
     await hass.async_block_till_done()
 
     # Check device sw_version was updated (build hash removed)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.2.0"
 
@@ -1141,7 +1155,9 @@ async def test_energy_site_version_update(
     assert entry.state is ConfigEntryState.LOADED
 
     site_id = "123456"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, site_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, site_id), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "23.44.0 eb113390"
 
@@ -1156,7 +1172,9 @@ async def test_energy_site_version_update(
     await hass.async_block_till_done()
 
     # Check device sw_version was updated
-    device = device_registry.async_get_device(identifiers={(DOMAIN, site_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, site_id), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "24.1.0 abc123"
 

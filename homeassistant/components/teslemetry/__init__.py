@@ -560,7 +560,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             entry.async_on_unload(
                 vehicle_data.coordinator.async_add_listener(
                     create_vehicle_polling_listener(
-                        hass, vehicle_data.vin, vehicle_data.coordinator
+                        hass, vehicle_data.vin, entry.entry_id, vehicle_data.coordinator
                     )
                 )
             )
@@ -654,18 +654,10 @@ def _migrate_devices_to_subentries(
             entity_registry.async_update_entity(
                 entity.entity_id, config_subentry_id=subentry_id
             )
-        # Two steps on purpose: adding and removing the same config entry in a
-        # single call would delete the device. Add the subentry link, then drop
-        # the original bare (subentry-less) link.
         device_registry.async_update_device(
             device.id,
-            add_config_entry_id=entry.entry_id,
-            add_config_subentry_id=subentry_id,
-        )
-        device_registry.async_update_device(
-            device.id,
-            remove_config_entry_id=entry.entry_id,
-            remove_config_subentry_id=None,
+            new_config_entry_id=entry.entry_id,
+            new_config_subentry_id=subentry_id,
         )
 
     # Wall connectors reference their energy site via via_device, so handle them
@@ -795,7 +787,7 @@ def async_setup_energy_device(
     entry.async_on_unload(
         energysite.info_coordinator.async_add_listener(
             create_energy_info_listener(
-                hass, energysite.id, energysite.info_coordinator
+                hass, energysite.id, entry.entry_id, energysite.info_coordinator
             )
         )
     )
@@ -814,13 +806,13 @@ async def async_setup_stream(
 
     entry.async_on_unload(
         vehicle.stream_vehicle.listen_Version(
-            create_vehicle_streaming_listener(hass, vehicle.vin)
+            create_vehicle_streaming_listener(hass, vehicle.vin, entry.entry_id)
         )
     )
 
 
 def create_vehicle_streaming_listener(
-    hass: HomeAssistant, vin: str
+    hass: HomeAssistant, vin: str, config_entry_id: str
 ) -> Callable[[str | None], None]:
     """Create a listener for vehicle streaming version updates."""
 
@@ -829,13 +821,16 @@ def create_vehicle_streaming_listener(
         if value is not None:
             # Remove build from version (e.g., "2024.44.25 abc123" -> "2024.44.25")
             sw_version = value.split(" ")[0]
-            async_update_device_sw_version(hass, vin, sw_version)
+            async_update_device_sw_version(hass, vin, config_entry_id, sw_version)
 
     return handle_version
 
 
 def create_vehicle_polling_listener(
-    hass: HomeAssistant, vin: str, coordinator: TeslemetryVehicleDataCoordinator
+    hass: HomeAssistant,
+    vin: str,
+    config_entry_id: str,
+    coordinator: TeslemetryVehicleDataCoordinator,
 ) -> Callable[[], None]:
     """Create a listener for vehicle polling coordinator updates."""
 
@@ -844,7 +839,7 @@ def create_vehicle_polling_listener(
         if version := coordinator.data.get("vehicle_state_car_version"):
             # Remove build from version (e.g., "2024.44.25 abc123" -> "2024.44.25")
             sw_version = version.split(" ")[0]
-            async_update_device_sw_version(hass, vin, sw_version)
+            async_update_device_sw_version(hass, vin, config_entry_id, sw_version)
 
     return handle_update
 
@@ -852,6 +847,7 @@ def create_vehicle_polling_listener(
 def create_energy_info_listener(
     hass: HomeAssistant,
     site_id: int,
+    config_entry_id: str,
     coordinator: TeslemetryEnergySiteInfoCoordinator,
 ) -> Callable[[], None]:
     """Create a listener for energy site info coordinator updates."""
@@ -859,6 +855,6 @@ def create_energy_info_listener(
     def handle_update() -> None:
         """Handle coordinator update."""
         if version := coordinator.data.get("version"):
-            async_update_device_sw_version(hass, str(site_id), version)
+            async_update_device_sw_version(hass, str(site_id), config_entry_id, version)
 
     return handle_update
