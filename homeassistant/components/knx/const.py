@@ -19,6 +19,11 @@ if TYPE_CHECKING:
 DOMAIN: Final = "knx"
 KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
 
+# Prefix of device identifiers created via the `knx/create_device` websocket
+# command (see websocket.py). A YAML `device.id` matching this prefix is
+# assumed to reference such a device verbatim and is not slugified.
+UI_DEVICE_ID_PREFIX: Final = "knx_vdev_"
+
 # Address is used for configuration and services by the
 # same functions so the key has to match
 KNX_ADDRESS: Final = "address"

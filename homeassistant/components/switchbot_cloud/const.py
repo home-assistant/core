@@ -151,6 +151,32 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Smart Lock Pro Wifi": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
     ),
+    "Strip Light": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "Strip Light 3": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "Floor Lamp": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "Color Bulb": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "RGBICWW Floor Lamp": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "Permanent Outdoor Lights": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "RGBICWW Strip Light": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "Ceiling Light": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "Ceiling Light Pro": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "RGBIC Neon Wire Rope Light": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "RGBIC Neon Rope Light": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "Candle Warmer Lamp": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
     "MeterPro(CO2)": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "AI Art Frame": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE)
@@ -164,5 +190,8 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     ),
     "Battery Circulator Fan 2 Pro": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.FAN)
+    ),
+    "Water Detector": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR)
     ),
 }
