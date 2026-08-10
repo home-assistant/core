@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, override
 
 from gatus_api import Result
@@ -15,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import GatusConfigEntry, GatusDataUpdateCoordinator
 from .entity import GatusEndpointEntity
@@ -26,7 +28,7 @@ PARALLEL_UPDATES = 0
 class GatusSensorEntityDescription(SensorEntityDescription):
     """Class describing Gatus sensor entities."""
 
-    value_fn: Callable[[Result], float | int | str | None]
+    value_fn: Callable[[Result], datetime | float | int | str | None]
 
 
 SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
@@ -51,11 +53,11 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
     GatusSensorEntityDescription(
         key="domain_expiration",
         translation_key="domain_expiration",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.DAYS,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda result: (
-            round(result.domain_expiration / 86_400_000_000_000, 2)
+            dt_util.utcnow()
+            + timedelta(seconds=result.domain_expiration / 1_000_000_000)
             if result.domain_expiration is not None
             else None
         ),
@@ -75,6 +77,12 @@ async def async_setup_entry(
         GatusEndpointSensor(coordinator, entry, endpoint_key, description)
         for endpoint_key in coordinator.data
         for description in SENSOR_TYPES
+        if description.key != "domain_expiration"
+        or (
+            (endpoint := coordinator.data.get(endpoint_key))
+            and endpoint.results
+            and endpoint.results[-1].domain_expiration is not None
+        )
     )
 
 
@@ -93,11 +101,12 @@ class GatusEndpointSensor(GatusEndpointEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entry, endpoint_key)
         self.entity_description = description
+        self._attr_translation_key = description.translation_key
         self._attr_unique_id = f"{entry.entry_id}_{endpoint_key}_{description.key}"
 
     @property
     @override
-    def native_value(self) -> float | int | str | None:
+    def native_value(self) -> datetime | float | int | str | None:
         """Return the state of the sensor."""
         if TYPE_CHECKING:
             assert self.latest_result is not None

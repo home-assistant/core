@@ -23,11 +23,8 @@
     'name': None,
     'object_id_base': 'Domain expiration',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Domain expiration',
     'platform': 'gatus',
@@ -36,22 +33,21 @@
     'supported_features': 0,
     'translation_key': 'domain_expiration',
     'unique_id': '1234567890abcdef1234567890abcdef_backend_service_domain_expiration',
-    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor_setup_and_states[sensor.core_backend_service_domain_expiration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Core Backend Service Domain expiration',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.core_backend_service_domain_expiration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '300.0',
+    'state': '2026-10-28T00:00:00+00:00',
   })
 # ---
 # name: test_sensor_setup_and_states[sensor.core_backend_service_response_time-entry]

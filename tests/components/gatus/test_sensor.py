@@ -27,8 +27,10 @@ async def test_sensor_setup_and_states(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test standard successful setup and entity snapshots using snapshot_platform."""
+    freezer.move_to("2026-01-01 00:00:00+00:00")
     with patch("homeassistant.components.gatus._PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
         await snapshot_platform(
@@ -173,7 +175,7 @@ async def test_sensor_missing_domain_expiration(
     mock_gatus_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that a result missing domain expiration evaluates to STATE_UNKNOWN."""
+    """Test that an endpoint missing domain_expiration does not create the domain expiration sensor."""
     mock_gatus_client.get_endpoints_statuses.return_value = [
         EndpointStatus(
             key="backend_service",
@@ -193,5 +195,4 @@ async def test_sensor_missing_domain_expiration(
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.backend_service_domain_expiration")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state is None
