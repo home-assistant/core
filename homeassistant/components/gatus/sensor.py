@@ -97,6 +97,7 @@ class GatusEndpointSensor(GatusEndpointEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entry, endpoint_key)
         self.entity_description = description
+        self._attr_translation_key = description.translation_key
         self._attr_unique_id = f"{entry.entry_id}_{endpoint_key}_{description.key}"
 
     @property
