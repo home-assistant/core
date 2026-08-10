@@ -1,7 +1,6 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Only one MAWAQIT entry is allowed. Delete the current integration, then set it up again.",
       "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
       "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one."
     },
