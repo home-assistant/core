@@ -3,7 +3,7 @@
 import pytest
 
 from homeassistant.components import cover
-from homeassistant.components.cover import ATTR_SPEED, CoverState, NotValidSpeedError
+from homeassistant.components.cover import ATTR_SPEED, CoverState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -13,6 +13,7 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
 
@@ -247,21 +248,21 @@ async def test_services_with_speed(
     assert speed_cover.last_kwargs == {"position": 75, "speed": "default"}
 
     speed_cover.last_kwargs = None
-    with pytest.raises(NotValidSpeedError) as exc:
+    with pytest.raises(ServiceValidationError) as exc:
         await call_service_with_data(
             hass, SERVICE_OPEN_COVER, speed_cover, {ATTR_SPEED: "invalid"}
         )
     assert speed_cover.last_kwargs is None
     assert exc.value.translation_key == "not_valid_speed"
 
-    with pytest.raises(NotValidSpeedError) as exc:
+    with pytest.raises(ServiceValidationError) as exc:
         await call_service_with_data(
             hass, SERVICE_CLOSE_COVER, speed_cover, {ATTR_SPEED: "invalid"}
         )
     assert speed_cover.last_kwargs is None
     assert exc.value.translation_key == "not_valid_speed"
 
-    with pytest.raises(NotValidSpeedError) as exc:
+    with pytest.raises(ServiceValidationError) as exc:
         await call_service_with_data(
             hass,
             SERVICE_SET_COVER_POSITION,

@@ -84,27 +84,11 @@ __all__ = [
     "CoverEntityFeature",
     "CoverEntityStateAttribute",
     "CoverState",
-    "NotValidSpeedError",
     "make_cover_closed_trigger",
     "make_cover_is_closed_condition",
     "make_cover_is_open_condition",
     "make_cover_opened_trigger",
 ]
-
-
-class NotValidSpeedError(ServiceValidationError):
-    """Raised when a speed is not in the supported_speeds list."""
-
-    def __init__(
-        self, *args: object, translation_placeholders: dict[str, str] | None = None
-    ) -> None:
-        """Initialize the exception."""
-        super().__init__(
-            *args,
-            translation_domain=DOMAIN,
-            translation_key="not_valid_speed",
-            translation_placeholders=translation_placeholders,
-        )
 
 
 def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
@@ -368,10 +352,12 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     def _valid_speed_or_raise(self, speed: str, supported: list[str]) -> None:
-        """Raise NotValidSpeedError if speed is not in the supported list."""
+        """Raise ServiceValidationError if speed is not in the supported list."""
         if speed not in supported:
             supported_str = ", ".join(supported)
-            raise NotValidSpeedError(
+            raise ServiceValidationError(
+                translation_key="not_valid_speed",
+                translation_domain=DOMAIN,
                 translation_placeholders={
                     "speed": speed,
                     "supported_speeds": supported_str,
