@@ -9705,8 +9705,6 @@ async def test_child_device_create(
 
     assert child_device.dict_repr == {
         "area_id": None,
-        "config_entries": [mock_config_entry.entry_id],
-        "config_entries_subentries": {mock_config_entry.entry_id: [None]},
         "config_entry_id": mock_config_entry.entry_id,
         "config_subentry_id": None,
         "created_at": child_device.created_at.timestamp(),
@@ -9718,7 +9716,6 @@ async def test_child_device_create(
         "name_by_user": None,
         "name": "Outlet 1",
         "parent_device_id": parent.id,
-        "primary_config_entry": mock_config_entry.entry_id,
     }
 
 
@@ -10595,7 +10592,10 @@ async def test_get_or_create_via_device_id_naming_child_raises(
         device_registry, mock_config_entry.entry_id
     )
 
-    with pytest.raises(dr.DeviceInfoError, match="is not a registered device id"):
+    with pytest.raises(
+        dr.DeviceInfoError,
+        match="is a child device, which can't be a via device",
+    ):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             identifiers={("test", "new_device")},

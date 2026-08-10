@@ -6293,3 +6293,55 @@ async def test_remove_child_device_removes_entities(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(entry.entity_id) is None
+
+
+async def test_remove_child_device_orphans_foreign_entry_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing a child device removes same-entry but orphans foreign entities.
+
+    A child device is treated like a main device: an entity of the child's own
+    config entry is removed, while an entity of a different config entry is detached
+    (device_id set to None) rather than removed.
+    """
+    config_entry = MockConfigEntry(domain="test", title=None)
+    config_entry.add_to_hass(hass)
+    foreign_config_entry = MockConfigEntry(domain="some_helper")
+    foreign_config_entry.add_to_hass(hass)
+
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+
+    same_entry_entity = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "outlet_1",
+        config_entry=config_entry,
+        device_id=child_device.id,
+    )
+    foreign_entry_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "some_helper",
+        "outlet_1_power",
+        config_entry=foreign_config_entry,
+        device_id=child_device.id,
+    )
+
+    device_registry.async_remove_device(child_device.id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(same_entry_entity.entity_id) is None
+    foreign_entity = entity_registry.async_get(foreign_entry_entity.entity_id)
+    assert foreign_entity is not None
+    assert foreign_entity.device_id is None

@@ -689,16 +689,9 @@ class ChildDeviceEntry(BaseDeviceEntry):
     @override
     def dict_repr(self) -> dict[str, Any]:
         """Return a dict representation of the entry."""
+        # Convert sets to lists so the JSON serializer does not have to each time.
         return {
             "area_id": self.area_id,
-            # config_entries, config_entries_subentries and primary_config_entry are
-            # deprecated and kept for backwards compatibility, they can be removed in
-            # HA Core 2027.8. Derived from the single owning config entry.
-            "config_entries": list(self.config_entries),
-            "config_entries_subentries": {
-                entry_id: list(subentries)
-                for entry_id, subentries in self.config_entries_subentries.items()
-            },
             "config_entry_id": self.config_entry_id,
             "config_subentry_id": self.config_subentry_id,
             "created_at": self.created_at.timestamp(),
@@ -710,7 +703,6 @@ class ChildDeviceEntry(BaseDeviceEntry):
             "name_by_user": self.name_by_user,
             "name": self.name,
             "parent_device_id": self.parent_device_id,
-            "primary_config_entry": self.primary_config_entry,
         }
 
     @under_cached_property
@@ -2152,6 +2144,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         translation_placeholders: Mapping[str, str] | None = None,
         via_device: tuple[str, str] | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
+        # A device info with only identifiers may resolve to an existing child device,
+        # which is returned.
     ) -> DeviceEntry: ...
 
     @callback
@@ -2381,11 +2375,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 via_device_id, config_entry_id
             )
             if resolved_via_device_id is None:
-                raise DeviceInfoError(
-                    config_entry.domain,
-                    device_info,
-                    f"via_device_id {via_device_id} is not a registered device id",
-                )
+                message = f"via_device_id {via_device_id} is not a registered device id"
+                if via_device_id in self._child_device_data:
+                    message += "; it is a child device, which can't be a via device"
+                raise DeviceInfoError(config_entry.domain, device_info, message)
             via_device_id = resolved_via_device_id
 
         is_new = False

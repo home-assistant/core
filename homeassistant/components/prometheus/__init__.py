@@ -369,6 +369,18 @@ class PrometheusMetrics:
         device_id = event.data["device_id"]
         _LOGGER.debug("Handling device update for %s", device_id)
 
+        self._refresh_device_entities_area(device_id)
+
+        # Child devices without an area of their own inherit the parent's area,
+        # so a parent area change must refresh their entities too.
+        for child in dr.async_entries_for_parent_device(
+            self.device_registry, device_id
+        ):
+            if child.area_id is None:
+                self._refresh_device_entities_area(child.id)
+
+    def _refresh_device_entities_area(self, device_id: str) -> None:
+        """Recompute the area label of a device's area-inheriting entities."""
         device = self.device_registry.async_get(device_id)
         if device is None:
             return

@@ -675,10 +675,11 @@ async def test_async_remove_helper_devices_fork_child_source(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """A child source device is deduplicated by identifier without crashing.
+    """A helper's fork of a child source device is relinked to the child.
 
     A ChildDeviceEntry has no connections, so the connections match is skipped; the
-    identifier match still finds and removes the helper's fork of the child.
+    identifier match still finds and removes the helper's fork of the child. A child is
+    a concrete device, so the fork's entity is relinked to the child, not detached.
     """
     source_config_entry = MockConfigEntry(domain=SOURCE_DOMAIN)
     source_config_entry.add_to_hass(hass)
@@ -719,9 +720,11 @@ async def test_async_remove_helper_devices_fork_child_source(
     # absent connections; the child source device itself is left untouched.
     assert device_registry.async_get(fork.id) is None
     assert device_registry.async_get(source_child.id) is not None
-    # A child source is not in the main devices collection, so (like a pre-migration
-    # composite) it is not a relink target: the fork's entity is left device-less.
-    assert entity_registry.async_get(helper_entity_entry.entity_id).device_id is None
+    # A child is a concrete relink target, so the fork's entity is relinked to the child.
+    assert (
+        entity_registry.async_get(helper_entity_entry.entity_id).device_id
+        == source_child.id
+    )
 
 
 async def test_async_remove_helper_devices_sweep(

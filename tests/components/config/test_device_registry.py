@@ -956,8 +956,6 @@ async def test_list_devices_with_child_devices(
         },
         {
             "area_id": None,
-            "config_entries": [entry.entry_id],
-            "config_entries_subentries": {entry.entry_id: [None]},
             "config_entry_id": entry.entry_id,
             "config_subentry_id": None,
             "created_at": child_device.created_at.timestamp(),
@@ -969,7 +967,6 @@ async def test_list_devices_with_child_devices(
             "name_by_user": None,
             "name": "Outlet 1",
             "parent_device_id": parent.id,
-            "primary_config_entry": entry.entry_id,
         },
     ]
 

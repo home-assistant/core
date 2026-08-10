@@ -1686,11 +1686,10 @@ class EntityRegistry(BaseRegistry):
             )
             removed_device_dict = event.data["device"]
             for entity in entities:
-                config_entry_id = entity.config_entry_id
                 if (
-                    config_entry_id in removed_device_dict["config_entries"]
+                    entity.config_entry_id == removed_device_dict["config_entry_id"]
                     and entity.config_subentry_id
-                    in removed_device_dict["config_entries_subentries"][config_entry_id]
+                    == removed_device_dict["config_subentry_id"]
                 ):
                     self.async_remove(entity.entity_id)
                 else:
