@@ -283,6 +283,13 @@ class Searcher:
             self._add(ItemType.DEVICE, device_entry.id)
             self._async_search_device(device_entry.id, entry_point=False)
 
+        # async_entries_for_config_entry returns mains only; add this entry's children.
+        for child_device_entry in dr.async_child_entries_for_config_entry(
+            self._device_registry, config_entry_id
+        ):
+            self._add(ItemType.DEVICE, child_device_entry.id)
+            self._async_search_device(child_device_entry.id, entry_point=False)
+
         for entity_entry in er.async_entries_for_config_entry(
             self._entity_registry, config_entry_id
         ):
@@ -322,6 +329,14 @@ class Searcher:
             self._add(ItemType.ENTITY, entity_entry.entity_id)
             # Add all entity information as well
             self._async_search_entity(entity_entry.entity_id, entry_point=False)
+
+        # Child devices are structurally part of this device; surface them and their
+        # entities, the way an area or config entry surfaces the devices under it.
+        for child_device_entry in dr.async_entries_for_parent_device(
+            self._device_registry, device_id
+        ):
+            self._add(ItemType.DEVICE, child_device_entry.id)
+            self._async_search_device(child_device_entry.id, entry_point=False)
 
     @callback
     def _async_add_automations_and_scripts_for_device(
@@ -598,6 +613,7 @@ class Searcher:
 
         Above a device is an area or floor.
         Above a device is also the config entry.
+        Above a child device is also its parent device.
         """
         if device_entry := self._device_registry.async_get(device_id):
             if area_id := self._device_registry.async_get_effective_area_id(
@@ -610,6 +626,15 @@ class Searcher:
             for config_entry_id in device_entry.config_entries:
                 if entry := self.hass.config_entries.async_get_entry(config_entry_id):
                     self._add(ItemType.INTEGRATION, entry.domain)
+
+            # A child device is contained by its parent. Unlike the informational
+            # via_device link (deliberately not followed here), the parent/child
+            # relation is first-class, so the parent is resolved up like the area and
+            # config entry. The parent is not fully searched, to avoid pulling in its
+            # unrelated sibling children.
+            if isinstance(device_entry, dr.ChildDeviceEntry):
+                self._add(ItemType.DEVICE, device_entry.parent_device_id)
+                self._async_resolve_up_device(device_entry.parent_device_id)
 
         return device_entry
 

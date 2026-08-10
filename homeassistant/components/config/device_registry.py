@@ -11,7 +11,7 @@ from homeassistant.components.websocket_api import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryDisabler
+from homeassistant.helpers.device_registry import DeviceEntryDisabler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,12 +128,14 @@ def websocket_list_linked_devices(
         )
         return
 
+    # async_get_devices resolves main devices only; children of other config
+    # entries that share an identifier are not surfaced here.
     linked_devices = [
         entry.id
         for entry in registry.async_get_devices(
             identifiers=device.identifiers,
             connections=(
-                device.connections if isinstance(device, DeviceEntry) else None
+                device.connections if isinstance(device, dr.DeviceEntry) else None
             ),
         )
         if entry.id != device_id

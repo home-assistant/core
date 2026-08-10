@@ -120,6 +120,9 @@ class DeviceEntryDisabler(StrEnum):
     """What disabled a device entry."""
 
     CONFIG_ENTRY = "config_entry"
+    # A child device disabled because its parent device is disabled. The value matches
+    # entity RegistryEntryDisabler.DEVICE; disabled_by consumers (e.g. the frontend)
+    # must recognize it as it now appears in dict_repr and storage.
     DEVICE = "device"
     INTEGRATION = "integration"
     USER = "user"
@@ -1575,6 +1578,12 @@ class ChildDeviceRegistryItems(BaseRegistryItems[ChildDeviceEntry]):
     @override
     def _index_entry(self, key: str, entry: ChildDeviceEntry) -> None:
         """Index an entry."""
+        # Unlike DeviceRegistryItems, this identifier index has no shadow tracking, so
+        # two same-entry children sharing an identifier let the last indexed own the
+        # slot. Normal operation can't reach this: _validate_child_identifiers rejects a
+        # same-entry identifier collision before insert. It's only possible via a
+        # hand-edited or corrupt store, and is acceptable (the slot stays consistent
+        # because _unindex_entry only clears the slot it still holds).
         for identifier in entry.identifiers:
             self._identifiers.setdefault(identifier, {})[entry.config_entry_id] = entry
         self._parent_device_id_index[entry.parent_device_id][key] = True
@@ -2275,6 +2284,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     ("connections", connections),
                     ("default_manufacturer", default_manufacturer),
                     ("default_model", default_model),
+                    ("default_name", default_name),
                     ("entry_type", entry_type),
                     ("hw_version", hw_version),
                     ("manufacturer", manufacturer),
@@ -2291,7 +2301,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 raise DeviceInfoError(
                     config_entry.domain,
                     device_info,
-                    f"a child device can not have {', '.join(invalid)}",
+                    f"a child device cannot have {', '.join(invalid)}",
                 )
 
         device_info_type = _determine_device_info_type(config_entry, device_info)
@@ -2324,7 +2334,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             config_entry_id=config_entry_id,
         )
         matched_child_device: ChildDeviceEntry | None = None
-        if device is None and not connections:
+        # A child device carries no connections. Connection-bearing device info still
+        # resolves to a child only when a "primary" device info re-registers the child's
+        # identifiers as a full device (a rollback): matching the child routes it to
+        # conversion, preserving its id, instead of a remove + recreate via collision
+        # reconciliation of its stale identifiers.
+        if device is None and (not connections or device_info_type == "primary"):
             matched_child_device = self.child_devices.get_entry(
                 identifiers=identifiers, config_entry_id=config_entry_id
             )
@@ -2775,6 +2790,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if disabled_by != device.disabled_by:
             changes["disabled_by"] = device.disabled_by
 
+        # A ChildDeviceEntry carries no composite_device_id, so a device split from a
+        # pre-migration composite loses that membership here: an action targeting the
+        # old composite id no longer reaches this split. Edge case that decays with the
+        # composite-device removal in HA Core 2027.8.
         child_device = ChildDeviceEntry(
             area_id=device.area_id,
             config_entry_id=device.config_entry_id,
@@ -2940,7 +2959,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 if value is not UNDEFINED
             ]:
                 raise HomeAssistantError(
-                    f"{', '.join(unsupported)} is not supported for a child device"
+                    f"Setting {', '.join(unsupported)} is not supported for a child "
+                    "device"
+                )
+            if (
+                remove_config_subentry_id is not UNDEFINED
+                and remove_config_entry_id is UNDEFINED
+            ):
+                raise HomeAssistantError(
+                    "Can't remove config subentry without specifying config entry"
                 )
             return self._async_update_child_device(
                 device_id,
@@ -3037,9 +3064,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             and via_device_id not in self.devices
             and not self.devices.get_devices_for_composite_device_id(via_device_id)
         ):
-            raise HomeAssistantError(
-                f"Can't link device to unknown via device {via_device_id}"
-            )
+            message = f"Can't link device to unknown via device {via_device_id}"
+            if via_device_id in self._child_device_data:
+                message += "; it is a child device, which can't be a via device"
+            raise HomeAssistantError(message)
 
         if via_device_id == device_id:
             raise HomeAssistantError("A device can not be its own via device")
@@ -4090,6 +4118,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         devices = ActiveDeviceRegistryItems()
         child_devices = ChildDeviceRegistryItems()
         deleted_devices = DeletedDeviceRegistryItems()
+        child_devices_dropped = False
 
         if data is not None:
             for device in data["devices"]:
@@ -4154,6 +4183,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                         child_device["id"],
                         parent_device_id,
                     )
+                    child_devices_dropped = True
                     continue
                 child_devices[child_device["id"]] = ChildDeviceEntry(
                     area_id=child_device["area_id"],
@@ -4228,6 +4258,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.deleted_devices = deleted_devices
         self._device_data = devices.data
         self._child_device_data = child_devices.data
+
+        # Persist dropped corrupt/orphaned children so the store isn't left dirty until
+        # an unrelated write
+        if child_devices_dropped:
+            self.async_schedule_save()
 
         self._loaded_event.set()
 

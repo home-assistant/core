@@ -9637,6 +9637,9 @@ def _create_parent_and_child(
             {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:78:9a:bc")}},
             id="connections",
         ),
+        pytest.param({"default_name": "Default"}, id="default_name"),
+        pytest.param({"default_manufacturer": "acme"}, id="default_manufacturer"),
+        pytest.param({"default_model": "m1"}, id="default_model"),
     ],
 )
 async def test_child_device_rejects_connectivity(
@@ -9645,13 +9648,13 @@ async def test_child_device_rejects_connectivity(
     mock_config_entry: MockConfigEntry,
     connectivity: dict[str, Any],
 ) -> None:
-    """A child device can not carry connectivity or hardware fields."""
+    """A child device cannot carry connectivity, hardware or default fields."""
     parent = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("test", "strip")},
         name="Power strip",
     )
-    with pytest.raises(dr.DeviceInfoError, match="a child device can not have"):
+    with pytest.raises(dr.DeviceInfoError, match="a child device cannot have"):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             identifiers={("test", "strip_outlet_1")},
@@ -10009,6 +10012,28 @@ async def test_child_device_update_rejects_device_kwargs(
 
     with pytest.raises(HomeAssistantError, match="not supported for a child device"):
         device_registry.async_update_device(child_device.id, **update_kwargs)
+
+
+async def test_child_device_update_rejects_orphan_remove_config_subentry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing a config subentry from a child without a config entry raises.
+
+    Mirrors the main-device guard instead of silently no-opping.
+    """
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't remove config subentry without specifying config entry",
+    ):
+        device_registry.async_update_device(
+            child_device.id, remove_config_subentry_id="mock-subentry-id-1"
+        )
 
 
 async def test_child_device_update_identifiers(
@@ -10369,6 +10394,53 @@ async def test_convert_child_device_to_device(
     }
 
 
+async def test_convert_child_device_to_device_with_connections(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a primary device info with connections converts a child back in place.
+
+    Re-registering the child's identifiers as a full device carrying connections must
+    convert the child in place (a single update preserving its id), not remove and
+    recreate it.
+    """
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+    device_registry.async_update_device(child_device.id, area_id="garden")
+    # A new setup session: the child device is no longer live, so the integration
+    # can re-register its identifiers as a full device (e.g. after a rollback).
+    device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
+    events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+
+    connection = (dr.CONNECTION_NETWORK_MAC, "12:34:56:78:9a:bc")
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={connection},
+        identifiers={("test", "strip_outlet_1")},
+        manufacturer="acme",
+        name="Outlet 1",
+    )
+    assert isinstance(device, dr.DeviceEntry)
+    assert device.id == child_device.id
+    assert device.connections == {connection}
+    assert device.manufacturer == "acme"
+    assert device.area_id == "garden"
+    assert len(device_registry.devices) == 2
+    assert not device_registry.child_devices
+
+    await hass.async_block_till_done()
+    # A single in-place conversion, never a remove + create; the connections and
+    # manufacturer follow as ordinary updates.
+    assert all(event.data["action"] == "update" for event in events)
+    assert events[0].data == {
+        "action": "update",
+        "device_id": child_device.id,
+        "changes": {"parent_device_id": parent.id},
+    }
+
+
 async def test_link_device_info_resolves_child_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -10563,7 +10635,8 @@ async def test_update_device_via_device_id_naming_child_raises(
     )
 
     with pytest.raises(
-        HomeAssistantError, match="Can't link device to unknown via device"
+        HomeAssistantError,
+        match="Can't link device to unknown via device .*it is a child device",
     ):
         device_registry.async_update_device(device.id, via_device_id=child_device.id)
 
@@ -10773,6 +10846,11 @@ async def test_loading_child_device_with_missing_parent(
     assert not registry.child_devices
     assert "Dropping child device childdeviceid" in caplog.text
 
+    # The drop scheduled a save, so it persists instead of leaving the store dirty
+    # until an unrelated write
+    await flush_store(registry._store)
+    assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == []
+
 
 async def test_effective_area_id(
     hass: HomeAssistant,
@@ -10955,11 +11033,18 @@ async def test_live_child_device_identifier_collision_raises(
 ) -> None:
     """Test a device colliding with a live child device raises."""
     _create_parent_and_child(device_registry, mock_config_entry.entry_id)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "hub")},
+        name="Hub",
+    )
 
+    # A device matched by its own identifier that also claims a live child's identifier
+    # collides with the child and is rejected by reconciliation. (Claiming only the
+    # child's identifier instead routes to conversion, covered separately.)
     with pytest.raises(dr.DeviceInfoError, match="already registered for child"):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
-            identifiers={("test", "strip_outlet_1")},
-            name="Not an outlet",
+            identifiers={("test", "hub"), ("test", "strip_outlet_1")},
+            name="Hub",
         )
