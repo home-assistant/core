@@ -1,12 +1,13 @@
 """Tests for the Actron Air integration setup."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from actron_neo_api import ActronAirAPIError, ActronAirAuthError
 import pytest
 
 from homeassistant.components.actron_air.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -41,20 +42,37 @@ async def test_setup_entry_api_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("init_integration_with_zone")
-async def test_zone_device_via_device_id(
+@pytest.mark.parametrize(
+    "identifier",
+    [
+        pytest.param("123456_zone_0", id="zone"),
+        pytest.param("PERIPH001", id="peripheral"),
+    ],
+)
+async def test_device_via_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
+    mock_actron_api: AsyncMock,
+    mock_zone: MagicMock,
+    identifier: str,
 ) -> None:
-    """Test the zone device links to the AC system device via via_device_id."""
+    """Test zone and peripheral devices link to the AC system device."""
+    mock_actron_api.state_manager.get_status.return_value.remote_zone_info = [mock_zone]
+
+    with patch(
+        "homeassistant.components.actron_air.PLATFORMS",
+        [Platform.CLIMATE, Platform.SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
     system_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "123456"), mock_config_entry.entry_id
     )
     assert system_device is not None
 
-    zone_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "123456_zone_0"), mock_config_entry.entry_id
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, identifier), mock_config_entry.entry_id
     )
-    assert zone_device is not None
-    assert zone_device.via_device_id == system_device.id
+    assert device is not None
+    assert device.via_device_id == system_device.id

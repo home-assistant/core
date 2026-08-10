@@ -131,7 +131,9 @@ async def test_device(
 ) -> None:
     """Test device parameters."""
     subentry = next(iter(mock_config_entry.subentries.values()))
-    device = device_registry.async_get_device({(DOMAIN, subentry.subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
+    )
 
     assert device is not None
     assert device.name == "Claude conversation"
