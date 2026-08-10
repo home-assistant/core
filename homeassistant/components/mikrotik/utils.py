@@ -3,7 +3,6 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
-import logging
 
 from librouteros.exceptions import ConnectionClosed, LibRouterosError
 
@@ -15,10 +14,8 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .errors import CannotConnect, LoginError
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def percentage(total: float, free: float) -> float | None:
@@ -48,13 +45,13 @@ def calculate_uptime(uptime_string: str) -> datetime | None:
             elif ch == "s":
                 total += num
             else:
-                _LOGGER.warning("Unknown uptime format: %s", uptime_string)
+                LOGGER.warning("Unknown uptime format: %s", uptime_string)
                 return None
 
             num = 0
 
     if num != 0:
-        _LOGGER.warning("Unknown uptime format: %s", uptime_string)
+        LOGGER.warning("Unknown uptime format: %s", uptime_string)
         return None
 
     return utcnow() - timedelta(seconds=total)
