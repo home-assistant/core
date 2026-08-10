@@ -277,9 +277,15 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             available = self._async_update_attrs()
         except Exception as ex:  # noqa: BLE001
             if self._attr_available:
+                try:
+                    device_repr = str(self._device)
+                except Exception:  # noqa: BLE001
+                    # __repr__ can itself raise if the device's last update
+                    # failed, e.g. a smartcam returning a SmartErrorCode
+                    device_repr = self._device.host
                 _LOGGER.warning(
                     "Unable to read data for %s %s: %s",
-                    self._device,
+                    device_repr,
                     self.entity_id,
                     ex,
                 )

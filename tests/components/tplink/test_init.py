@@ -430,6 +430,46 @@ async def test_update_attrs_fails_on_update(
     assert f"Unable to read data for MockLight {entity_id}:" not in caplog.text
 
 
+async def test_update_attrs_fails_with_broken_device_repr(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the unavailable warning still logs when device __str__ raises.
+
+    This can happen for smartcam devices when a query fails with a
+    SmartErrorCode, since __repr__ itself queries the device.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
+    light = _mocked_device(modules=[Module.Light], alias="my_light", features=features)
+    light_module = light.modules[Module.Light]
+    p = PropertyMock(side_effect=KasaException)
+    type(light_module).color_temp = p
+    light.__str__ = MagicMock(
+        side_effect=TypeError("'SmartErrorCode' object is not subscriptable")
+    )
+    with _patch_discovery(device=light), _patch_connect(device=light):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_light"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert f"Unable to read data for {IP_ADDRESS} {entity_id}:" in caplog.text
+
+
 async def test_feature_no_category(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
