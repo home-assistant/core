@@ -5,17 +5,26 @@ from dataclasses import dataclass
 import logging
 from typing import cast, override
 
-from homeassistant.components.device_tracker import ATTR_IN_ZONES
-from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN, ENTITY_ID_HOME
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    DeviceTrackerEntityStateAttribute,
+)
+from homeassistant.components.person import (
+    DOMAIN as PERSON_DOMAIN,
+    PersonEntityStateAttribute,
+)
+from homeassistant.components.zone import (
+    DOMAIN as ZONE_DOMAIN,
+    ENTITY_ID_HOME,
+    ZoneEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
     STATE_HOME,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -46,6 +55,19 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 type ProximityConfigEntry = ConfigEntry[ProximityDataUpdateCoordinator]
+
+
+def _tracked_in_zones(state: State) -> list[str] | None:
+    """Return the zone membership of a tracked entity state.
+
+    Only person and device_tracker entities report zone membership; each
+    exposes it under its own platform enum. Any other domain returns None.
+    """
+    if state.domain == PERSON_DOMAIN:
+        return state.attributes.get(PersonEntityStateAttribute.IN_ZONES)
+    if state.domain == DEVICE_TRACKER_DOMAIN:
+        return state.attributes.get(DeviceTrackerEntityStateAttribute.IN_ZONES)
+    return None
 
 
 @dataclass
@@ -143,7 +165,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 },
             )
 
-    def _device_in_zone(self, zone: State, device: State) -> bool:
+    def _tracked_entity_in_zone(self, zone: State, tracked_entity_state: State) -> bool:
         """Return whether the tracked entity is currently in the proximity zone."""
 
         # Modern entity-based trackers and person entities always report zone
@@ -160,35 +182,38 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         # (deprecated, removed in HA Core 2027.7).
 
         # For both, an empty or absent ``in_zones`` does not imply "in no zone", so we
-        # fall back to matching the device state against the zone's friendly name
-        # (what a tracker's state is set to for non-home zones), plus an explicit
+        # fall back to matching the tracked entity state against the zone's friendly name
+        # (what a tracked entity's state is set to for non-home zones), plus an explicit
         # home-zone check. Once both deprecations are gone, ``in_zones`` is
-        # authoritative for every tracker and this method should reduce to the
+        # authoritative for every tracked entity and this method should reduce to the
         # membership check alone; the fallback must be removed, as second-guessing an
         # empty list would then be incorrect.
-        if in_zones := device.attributes.get(ATTR_IN_ZONES):
+        if in_zones := _tracked_in_zones(tracked_entity_state):
             return zone.entity_id in in_zones
 
         # Remove once legacy device trackers (2027.5) and location_name (2027.7)
         # are gone, see detailed comment above
-        zone_friendly_name = zone.attributes.get(ATTR_FRIENDLY_NAME)
+        zone_friendly_name = zone.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
         return (
             zone_friendly_name is not None
-            and device.state.lower() == zone_friendly_name.lower()
-        ) or (device.state == STATE_HOME and zone.entity_id == ENTITY_ID_HOME)
+            and tracked_entity_state.state.lower() == zone_friendly_name.lower()
+        ) or (
+            tracked_entity_state.state == STATE_HOME
+            and zone.entity_id == ENTITY_ID_HOME
+        )
 
     def _calc_distance_to_zone(
         self,
         zone: State,
-        device: State,
+        tracked_entity_state: State,
         latitude: float | None,
         longitude: float | None,
     ) -> int | None:
-        if self._device_in_zone(zone, device):
+        if self._tracked_entity_in_zone(zone, tracked_entity_state):
             _LOGGER.debug(
                 "%s: %s in zone -> distance=0",
                 self.name,
-                device.entity_id,
+                tracked_entity_state.entity_id,
             )
             return 0
 
@@ -196,13 +221,13 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             _LOGGER.debug(
                 "%s: %s has no coordinates -> distance=None",
                 self.name,
-                device.entity_id,
+                tracked_entity_state.entity_id,
             )
             return None
 
         distance_to_centre = distance(
-            zone.attributes[ATTR_LATITUDE],
-            zone.attributes[ATTR_LONGITUDE],
+            zone.attributes[EntityStateAttribute.LATITUDE],
+            zone.attributes[EntityStateAttribute.LONGITUDE],
             latitude,
             longitude,
         )
@@ -211,7 +236,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         # since zones must have lat/lon coordinates
         assert distance_to_centre is not None
 
-        zone_radius: float = zone.attributes["radius"]
+        zone_radius: float = zone.attributes[ZoneEntityStateAttribute.RADIUS]
         if zone_radius > distance_to_centre:
             # we've arrived the zone
             return 0
@@ -220,17 +245,17 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     def _calc_direction_of_travel(
         self,
         zone: State,
-        device: State,
+        tracked_entity_state: State,
         old_latitude: float | None,
         old_longitude: float | None,
         new_latitude: float | None,
         new_longitude: float | None,
     ) -> str | None:
-        if self._device_in_zone(zone, device):
+        if self._tracked_entity_in_zone(zone, tracked_entity_state):
             _LOGGER.debug(
                 "%s: %s in zone -> direction_of_travel=arrived",
                 self.name,
-                device.entity_id,
+                tracked_entity_state.entity_id,
             )
             return "arrived"
 
@@ -243,14 +268,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             return None
 
         old_distance = distance(
-            zone.attributes[ATTR_LATITUDE],
-            zone.attributes[ATTR_LONGITUDE],
+            zone.attributes[EntityStateAttribute.LATITUDE],
+            zone.attributes[EntityStateAttribute.LONGITUDE],
             old_latitude,
             old_longitude,
         )
         new_distance = distance(
-            zone.attributes[ATTR_LATITUDE],
-            zone.attributes[ATTR_LONGITUDE],
+            zone.attributes[EntityStateAttribute.LATITUDE],
+            zone.attributes[EntityStateAttribute.LONGITUDE],
             new_latitude,
             new_longitude,
         )
@@ -306,8 +331,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             entities_data[entity_id][ATTR_DIST_TO] = self._calc_distance_to_zone(
                 zone_state,
                 tracked_entity_state,
-                tracked_entity_state.attributes.get(ATTR_LATITUDE),
-                tracked_entity_state.attributes.get(ATTR_LONGITUDE),
+                tracked_entity_state.attributes.get(EntityStateAttribute.LATITUDE),
+                tracked_entity_state.attributes.get(EntityStateAttribute.LONGITUDE),
             )
             if entities_data[entity_id][ATTR_DIST_TO] is None:
                 _LOGGER.debug(
@@ -328,8 +353,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
 
             if (old_state := state_change_data.old_state) is not None:
-                old_lat = old_state.attributes.get(ATTR_LATITUDE)
-                old_lon = old_state.attributes.get(ATTR_LONGITUDE)
+                old_lat = old_state.attributes.get(EntityStateAttribute.LATITUDE)
+                old_lon = old_state.attributes.get(EntityStateAttribute.LONGITUDE)
             else:
                 old_lat = None
                 old_lon = None
@@ -340,8 +365,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     new_state,
                     old_lat,
                     old_lon,
-                    new_state.attributes.get(ATTR_LATITUDE),
-                    new_state.attributes.get(ATTR_LONGITUDE),
+                    new_state.attributes.get(EntityStateAttribute.LATITUDE),
+                    new_state.attributes.get(EntityStateAttribute.LONGITUDE),
                 )
             )
 

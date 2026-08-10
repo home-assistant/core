@@ -61,8 +61,8 @@
 # name: test_numbers[number.wled_rgb_light_segment_1_intensity-42-intensity].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(
@@ -87,7 +87,6 @@
     'model_id': None,
     'name': 'WLED RGB Light',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': '0.14.4',
     'via_device_id': None,
@@ -155,8 +154,8 @@
 # name: test_numbers[number.wled_rgb_light_segment_1_speed-42-speed].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(
@@ -181,7 +180,6 @@
     'model_id': None,
     'name': 'WLED RGB Light',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': '0.14.4',
     'via_device_id': None,

@@ -1,0 +1,18 @@
+phase_changed:
+  fields:
+    phase:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: phase
+          options:
+            - any
+            - new_moon
+            - waxing_crescent
+            - first_quarter
+            - waxing_gibbous
+            - full_moon
+            - waning_gibbous
+            - last_quarter
+            - waning_crescent

@@ -14,6 +14,8 @@ from mastodon.Mastodon import (
     MastodonNotFoundError,
     MastodonUnauthorizedError,
     MediaAttachment,
+    ScheduledStatus,
+    Status,
 )
 import voluptuous as vol
 
@@ -177,7 +179,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=SERVICE_UNMUTE_ACCOUNT_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_POST, _async_post, schema=SERVICE_POST_SCHEMA
+        DOMAIN,
+        SERVICE_POST,
+        _async_post,
+        schema=SERVICE_POST_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,
@@ -326,7 +332,7 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             translation_key="idempotency_key_too_short",
         )
 
-    await call.hass.async_add_executor_job(
+    response = await call.hass.async_add_executor_job(
         partial(
             _post,
             hass=call.hass,
@@ -344,11 +350,14 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             quoted_status_id=quoted_status,
         )
     )
-
+    if call.return_response:
+        return response
     return None
 
 
-def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
+def _post(
+    hass: HomeAssistant, client: Mastodon, **kwargs: Any
+) -> Status | ScheduledStatus:
     """Post to Mastodon."""
 
     media_data: MediaAttachment | None = None
@@ -385,12 +394,15 @@ def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
     if media_data:
         media_ids = media_data.id
     try:
-        client.status_post(media_ids=media_ids, **kwargs)
+        response: Status | ScheduledStatus = client.status_post(
+            media_ids=media_ids, **kwargs
+        )
     except MastodonAPIError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="unable_to_send_message",
         ) from err
+    return response
 
 
 async def _async_update_profile(call: ServiceCall) -> ServiceResponse | None:

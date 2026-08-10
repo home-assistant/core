@@ -40,7 +40,6 @@ import pytest_socket
 import requests_mock
 import respx
 from syrupy.assertion import SnapshotAssertion
-from syrupy.session import SnapshotSession
 
 # Setup patching of JSON functions before any other Home Assistant imports
 from . import patch_json  # isort:skip
@@ -108,7 +107,7 @@ from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_han
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .syrupy import HomeAssistantSnapshotExtension, override_syrupy_finish
+from .syrupy import HomeAssistantSnapshotExtension
 from .typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -172,11 +171,6 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
-
-    # Override default finish to detect unused snapshots despite xdist
-    # Temporary workaround until it is finalised inside syrupy
-    # See https://github.com/syrupy-project/syrupy/pull/901
-    SnapshotSession.finish = override_syrupy_finish
 
 
 class HASocketBlockedError(pytest_socket.SocketBlockedError):
@@ -2020,7 +2014,6 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
-    # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
 
     # Mock BlueZ management controller to successfully setup
@@ -2030,7 +2023,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
     with (
         patch.object(
-            bluetooth_scanner.OriginalBleakScanner,  # pylint: disable=c-extension-no-member
+            bluetooth_scanner.OriginalBleakScanner,
             "start",
         ) as mock_bleak_scanner_start,
         patch.object(bluetooth_scanner, "HaScanner"),
@@ -2069,7 +2062,7 @@ async def hassio_stubs(
 ) -> None:
     """Create mock hassio http client."""
     with patch(
-        "homeassistant.components.hassio.issues.SupervisorIssues.setup",
+        "homeassistant.components.hassio.coordinator.SupervisorIssuesCoordinator.async_refresh",
     ):
         await async_setup_component(hass, "hassio", {})
 
@@ -2260,8 +2253,11 @@ DhcpServiceInfo.__init__ = _dhcp_service_info_init
 def disable_http_server() -> Generator[None]:
     """Disable automatic start of HTTP server during tests.
 
-    This prevents the HTTP server from starting in tests that setup
-    integrations which depend on the HTTP component.
+    This prevents the HTTP server from binding sockets and starting in tests
+    that setup integrations which depend on the HTTP component.
     """
-    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+    with (
+        patch("homeassistant.components.http.HomeAssistantHTTP.async_bind"),
+        patch("homeassistant.components.http.HomeAssistantHTTP.start"),
+    ):
         yield

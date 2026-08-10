@@ -126,10 +126,10 @@ async def test_rest_command_auth(
     assert len(aioclient_mock.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("aioclient_mock")
 async def test_rest_command_digest_auth(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
-    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Call a rest command with HTTP digest authentication."""
     config = {
@@ -144,11 +144,9 @@ async def test_rest_command_digest_auth(
 
     await setup_component(config)
 
-    # Mock the digest auth behavior - the request will be called
-    # with DigestAuthMiddleware
     with patch("aiohttp.ClientSession.get") as mock_get:
 
-        async def async_iter_chunks(self, chunk_size):
+        async def async_iter_chunks(self, chunk_size: int):
             yield b"success"
 
         mock_response = type(
@@ -167,13 +165,14 @@ async def test_rest_command_digest_auth(
         mock_get.return_value.__aenter__.return_value = mock_response
 
         await hass.services.async_call(DOMAIN, "digest_auth_test", {}, blocking=True)
+        await hass.services.async_call(DOMAIN, "digest_auth_test", {}, blocking=True)
 
-        # Verify that the request was made with DigestAuthMiddleware
-        assert mock_get.called
-        call_kwargs = mock_get.call_args[1]
-        assert "middlewares" in call_kwargs
-        assert len(call_kwargs["middlewares"]) == 1
-        assert isinstance(call_kwargs["middlewares"][0], aiohttp.DigestAuthMiddleware)
+        assert len(mock_get.call_args_list) == 2
+        first_middleware = mock_get.call_args_list[0].kwargs["middlewares"][0]
+        second_middleware = mock_get.call_args_list[1].kwargs["middlewares"][0]
+        assert isinstance(first_middleware, aiohttp.DigestAuthMiddleware)
+        assert isinstance(second_middleware, aiohttp.DigestAuthMiddleware)
+        assert first_middleware is not second_middleware
 
 
 async def test_rest_command_form_data(
