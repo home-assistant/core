@@ -916,11 +916,18 @@ async def test_camera_image_raises_exception(
 
 
 @pytest.mark.parametrize(
-    ("camera_type", "camera_id", "camera_entity", "expected_motion_detection"),
+    (
+        "camera_type",
+        "camera_id",
+        "camera_entity",
+        "expected_motion_detection",
+        "camera_has_monitoring",
+        "camera_has_stream",
+    ),
     [
-        ("NACamera", "12:34:56:00:f1:62", "camera.hall", True),
-        ("NOC", "12:34:56:10:b9:0e", "camera.front", True),
-        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell", None),
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall", True, True, True),
+        ("NOC", "12:34:56:10:b9:0e", "camera.front", True, True, True),
+        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell", None, False, False),
     ],
 )
 async def test_camera_image_with_attribute_change(
@@ -931,6 +938,8 @@ async def test_camera_image_with_attribute_change(
     camera_id: str,
     camera_entity: str,
     expected_motion_detection: bool | None,
+    camera_has_monitoring: bool,
+    camera_has_stream: bool,
 ) -> None:
     """Test camera image state and snapshot fetching as monitoring and power status change."""
     fake_post_hits = 0
@@ -1007,9 +1016,10 @@ async def test_camera_image_with_attribute_change(
         assert result.content_type == "image/jpeg"
         assert result.content == FAKE_IMG
 
-        # Check that getting stream source succeeds while camera is idle without exception
-        url = await camera.async_get_stream_source(hass, camera_entity)
-        assert url is not None
+        if camera_has_stream:
+            # Check that getting stream source succeeds while camera is idle without exception
+            url = await camera.async_get_stream_source(hass, camera_entity)
+            assert url is not None
 
         # Trigger some polling cycle to let API throttling work
         await advance_time(hass, freezer, polling_cycles, polling_delta)
@@ -1017,13 +1027,13 @@ async def test_camera_image_with_attribute_change(
         # Change mocked status (wrong alim_status, cannot monitor)
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
-        if camera_type == "NDB":
-            mock_state["attributes"] = {"alim_status": 1}
-        else:
+        if camera_has_monitoring:
             mock_state["attributes"] = {
                 "monitoring": "on",
                 "alim_status": 1,
             }
+        else:
+            mock_state["attributes"] = {"alim_status": 1}
 
         # Trigger some polling cycle to let status change be picked up
         await advance_time(hass, freezer, polling_cycles, polling_delta)
@@ -1038,21 +1048,22 @@ async def test_camera_image_with_attribute_change(
         with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_image(hass, camera_entity)
 
-        # Check that getting stream source raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_stream_source(hass, camera_entity)
+        if camera_has_stream:
+            # Check that getting stream source raises the exception
+            with pytest.raises(HomeAssistantError, match="Camera is off"):
+                await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (wrong alim_status, cannot monitor)
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
         mock_state["attributes"]["alim_status"] = 1
-        if camera_type == "NDB":
-            mock_state["attributes"] = {"alim_status": 1}
-        else:
+        if camera_has_monitoring:
             mock_state["attributes"] = {
                 "monitoring": "off",
                 "alim_status": 1,
             }
+        else:
+            mock_state["attributes"] = {"alim_status": 1}
 
         # Trigger some polling cycle to let status change be picked up
         await advance_time(hass, freezer, polling_cycles, polling_delta)
@@ -1066,20 +1077,21 @@ async def test_camera_image_with_attribute_change(
         with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_image(hass, camera_entity)
 
-        # Check that getting stream source raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_stream_source(hass, camera_entity)
+        if camera_has_stream:
+            # Check that getting stream source raises the exception
+            with pytest.raises(HomeAssistantError, match="Camera is off"):
+                await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (missing alim_status)
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
-        if camera_type == "NDB":
-            mock_state["attributes"] = {"alim_status": None}
-        else:
+        if camera_has_monitoring:
             mock_state["attributes"] = {
                 "monitoring": "off",
                 "alim_status": None,
             }
+        else:
+            mock_state["attributes"] = {"alim_status": None}
 
         # Trigger some polling cycle to let status change be picked up
         await advance_time(hass, freezer, polling_cycles, polling_delta)
@@ -1093,20 +1105,21 @@ async def test_camera_image_with_attribute_change(
         with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_image(hass, camera_entity)
 
-        # Check that getting stream source raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_stream_source(hass, camera_entity)
+        if camera_has_stream:
+            # Check that getting stream source raises the exception
+            with pytest.raises(HomeAssistantError, match="Camera is off"):
+                await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (missing alim_status and monitoring)
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
-        if camera_type == "NDB":
-            mock_state["attributes"] = {"alim_status": None}
-        else:
+        if camera_has_monitoring:
             mock_state["attributes"] = {
                 "monitoring": None,
                 "alim_status": None,
             }
+        else:
+            mock_state["attributes"] = {"alim_status": None}
 
         # Trigger some polling cycle to let status change be picked up
         await advance_time(hass, freezer, polling_cycles, polling_delta)
@@ -1120,21 +1133,22 @@ async def test_camera_image_with_attribute_change(
         with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_image(hass, camera_entity)
 
-        # Check that getting stream source raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_stream_source(hass, camera_entity)
+        if camera_has_stream:
+            # Check that getting stream source raises the exception
+            with pytest.raises(HomeAssistantError, match="Camera is off"):
+                await camera.async_get_stream_source(hass, camera_entity)
 
         # Change mocked status (missing monitoring, wrong alim_status)
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
         mock_state["attributes"]["alim_status"] = 1
-        if camera_type == "NDB":
-            mock_state["attributes"] = {"alim_status": 1}
-        else:
+        if camera_has_monitoring:
             mock_state["attributes"] = {
                 "monitoring": None,
                 "alim_status": 1,
             }
+        else:
+            mock_state["attributes"] = {"alim_status": 1}
 
         # Trigger some polling cycle to let status change be picked up
         await advance_time(hass, freezer, polling_cycles, polling_delta)
@@ -1148,6 +1162,7 @@ async def test_camera_image_with_attribute_change(
         with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_image(hass, camera_entity)
 
-        # Check that getting stream source raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_stream_source(hass, camera_entity)
+        if camera_has_stream:
+            # Check that getting stream source raises the exception
+            with pytest.raises(HomeAssistantError, match="Camera is off"):
+                await camera.async_get_stream_source(hass, camera_entity)
