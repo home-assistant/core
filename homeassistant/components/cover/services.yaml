@@ -8,7 +8,7 @@ open_cover:
         - cover.CoverEntityFeature.OPEN
   fields:
     speed:
-      advanced: true
+      example: "fast"
       selector:
         state:
           attribute: speed
@@ -21,7 +21,7 @@ close_cover:
         - cover.CoverEntityFeature.CLOSE
   fields:
     speed:
-      advanced: true
+      example: "fast"
       selector:
         state:
           attribute: speed
@@ -49,7 +49,7 @@ set_cover_position:
           max: 100
           unit_of_measurement: "%"
     speed:
-      advanced: true
+      example: "fast"
       selector:
         state:
           attribute: speed
