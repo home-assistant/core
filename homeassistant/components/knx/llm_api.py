@@ -8,13 +8,16 @@ the library input dataclasses' ``dataclasses.field`` metadata, so the descriptio
 stay single-sourced in the libraries.
 """
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import MISSING, asdict, dataclass, fields, is_dataclass
+from datetime import date, time
+from enum import Enum
 import types
 from typing import (
     TYPE_CHECKING,
     Any,
     Union,
+    cast,
     get_args,
     get_origin,
     get_type_hints,
@@ -118,24 +121,42 @@ def _schema_from_dataclass(input_type: type) -> vol.Schema:
     return vol.Schema(schema)
 
 
+def _json_safe(value: Any) -> Any:
+    """Recursively convert a library result into JSON-encodable primitives.
+
+    ``asdict`` recurses into nested dataclasses but leaves leaf objects as they
+    are, and the MCP server encodes tool results with a plain ``json.dumps``.
+    A telegram carrying a decoded DPT 10/11/19 value is the case that bites:
+    its value is an xknx ``KNXTime``/``KNXDate``/``KNXDateTime`` holding a
+    ``KNXDay`` enum, which would raise ``TypeError`` at request time.
+    """
+    if is_dataclass(value) and not isinstance(value, type):
+        value = asdict(value)
+    if isinstance(value, Mapping):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, Enum):
+        return _json_safe(value.value)
+    # ``datetime`` is a ``date`` subclass, so this covers all three.
+    if isinstance(value, (date, time)):
+        return value.isoformat()
+    if value is None or isinstance(value, (str, bool, int, float)):
+        return value
+    return str(value)
+
+
 def _serialize(result: Any) -> JsonObjectType:
     """Serialize a library result (dataclass, list or mapping) to a JSON object."""
     if is_dataclass(result) and not isinstance(result, type):
-        return asdict(result)
+        return cast(JsonObjectType, _json_safe(result))
     if isinstance(result, list):
-        return {
-            "items": [
-                asdict(item)
-                if is_dataclass(item) and not isinstance(item, type)
-                else item
-                for item in result
-            ]
-        }
+        return {"items": [_json_safe(item) for item in result]}
     if isinstance(result, dict):
-        return result
+        return cast(JsonObjectType, _json_safe(result))
     # A library function returning a bare scalar (or None): wrap it so the
     # tool's return value always satisfies the JsonObjectType contract.
-    return {"result": result}
+    return {"result": _json_safe(result)}
 
 
 class KNXTool(llm.Tool):

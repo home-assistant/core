@@ -1,10 +1,13 @@
 """Tests for the KNX LLM API."""
 
+from datetime import UTC, date, datetime, time
+import json
 from unittest.mock import AsyncMock, Mock
 
-from knx_telegram_store.mcp import QueryTelegramsResult
+from knx_telegram_store.mcp import QueryTelegramsResult, TelegramSummary
 import pytest
 import voluptuous as vol
+from xknx.dpt import DPTArray, DPTTime
 
 from homeassistant.components.knx import llm_api
 from homeassistant.core import Context, HomeAssistant
@@ -143,6 +146,64 @@ def test_schema_union_preserves_numeric_types(
 def test_serialize_always_returns_an_object(result: object, expected: dict) -> None:
     """`_serialize` wraps non-dataclass, non-list, non-dict results."""
     assert llm_api._serialize(result) == expected
+
+
+def test_serialize_result_is_json_encodable() -> None:
+    """A decoded DPT 10/11/19 value must not leak non-JSON objects.
+
+    Such a value is an xknx `KNXTime`/`KNXDate`/`KNXDateTime` holding a
+    `KNXDay` enum. `asdict` leaves the enum in place, which the MCP server's
+    plain `json.dumps` cannot encode.
+    """
+    telegram = TelegramSummary(
+        timestamp="2026-08-10T12:00:00+00:00",
+        source="1.1.1",
+        destination="1/1/1",
+        telegramtype="GroupValueWrite",
+        direction="Incoming",
+        dpt="10.001",
+        value=DPTTime.from_knx(DPTArray((0x0C, 0x1E, 0x2D))),
+        value_numeric=None,
+        raw_data="0c1e2d",
+        source_name="Sensor",
+        destination_name="Clock",
+    )
+    result = llm_api._serialize(
+        QueryTelegramsResult(
+            telegrams=[telegram],
+            total_count=1,
+            offset=0,
+            next_offset=None,
+            limit_reached=False,
+        )
+    )
+
+    assert result["telegrams"][0]["value"] == {
+        "hour": 12,
+        "minutes": 30,
+        "seconds": 45,
+        "day": 0,
+    }
+    json.dumps(result)  # must not raise
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (datetime(2026, 8, 10, 12, 0, tzinfo=UTC), "2026-08-10T12:00:00+00:00"),
+        (date(2026, 8, 10), "2026-08-10"),
+        (time(12, 30), "12:30:00"),
+        ({1, 2}, [1, 2]),
+        ((1, 2), [1, 2]),
+    ],
+)
+def test_serialize_normalizes_nested_containers(
+    value: object, expected: object
+) -> None:
+    """Nested dates, times and non-list sequences become JSON primitives."""
+    result = llm_api._serialize({"v": value})
+    assert result["v"] == expected
+    json.dumps(result)  # must not raise
 
 
 def test_schema_required_field_is_enforced() -> None:
