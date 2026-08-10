@@ -3,6 +3,7 @@
 import asyncio
 from http import HTTPStatus
 import logging
+import os
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from aiohttp import web
@@ -125,6 +126,11 @@ class InstallationTypeOnboardingView(NoAuthBaseOnboardingView):
             raise HTTPUnauthorized
 
         hass = request.app[KEY_HASS]
+        # On Supervisor based installations the hassio integration loads after
+        # the HTTP server already serves onboarding. Wait for it so the
+        # installation type is not misdetected while still starting up.
+        if "SUPERVISOR" in os.environ:
+            await async_wait_component(hass, "hassio")
         info = await async_get_system_info(hass)
         return self.json({"installation_type": info["installation_type"]})
 

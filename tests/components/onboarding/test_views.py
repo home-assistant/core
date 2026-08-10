@@ -588,6 +588,77 @@ async def test_onboarding_installation_type(
         assert resp_content["installation_type"] == "Home Assistant Core"
 
 
+async def test_onboarding_installation_type_waits_for_hassio(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test installation type waits for hassio on Supervisor installations.
+
+    The HTTP server serves onboarding before hassio is loaded, so answering
+    right away would misdetect the installation type.
+    """
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    async_set_domains_to_be_loaded(hass, {"hassio"})
+
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch(
+            "homeassistant.components.onboarding.views.async_get_system_info",
+            return_value={"installation_type": "Home Assistant OS"},
+        ),
+    ):
+        req_task = asyncio.create_task(client.get("/api/onboarding/installation_type"))
+        await asyncio.sleep(0.01)
+        # The response must not be produced while hassio is still pending
+        assert not req_task.done()
+
+        # hassio setup fails fast as the test provides no supervisor to talk
+        # to, which is enough to resolve the wait
+        assert not await async_setup_component(hass, "hassio", {})
+        resp = await req_task
+
+    assert resp.status == 200
+    resp_content = await resp.json()
+    assert resp_content["installation_type"] == "Home Assistant OS"
+
+
+async def test_onboarding_installation_type_no_wait_without_supervisor(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test installation type does not wait for hassio without Supervisor."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    async_set_domains_to_be_loaded(hass, {"hassio"})
+
+    with (
+        patch.dict(os.environ),
+        patch(
+            "homeassistant.components.onboarding.views.async_get_system_info",
+            return_value={"installation_type": "Home Assistant Container"},
+        ),
+    ):
+        os.environ.pop("SUPERVISOR", None)
+        resp = await client.get("/api/onboarding/installation_type")
+
+    assert resp.status == 200
+    resp_content = await resp.json()
+    assert resp_content["installation_type"] == "Home Assistant Container"
+
+
 @pytest.mark.parametrize(
     ("method", "view", "kwargs"),
     [
