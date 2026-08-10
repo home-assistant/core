@@ -95,15 +95,6 @@ OSI_APPROVED_LICENSES_SPDX = {
     "ZPL-2.1",
 }
 
-OTHER_APPROVED_LICENSES_SPDX = {
-    # https://spdx.org/licenses/CC0-1.0.html
-    # https://opensource.org/faq#cc-zero
-    "CC0-1.0",
-}
-
-APPROVED_LICENSES_SPDX = OSI_APPROVED_LICENSES_SPDX | OTHER_APPROVED_LICENSES_SPDX
-
-
 OSI_APPROVED_LICENSES = {
     "Academic Free License (AFL)",
     "Apache Software License",
@@ -202,6 +193,8 @@ EXCEPTIONS = {
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
+    # numpy: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
+    "numpy",  # CC0-1.0 is not OSI approved
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pymitv",  # MIT
@@ -311,7 +304,7 @@ def check_license_expression(license_str: str) -> bool | None:
 def check_spdx_license(expr: LicenseExpression) -> bool:
     """Check a SPDX license expression."""
     if isinstance(expr, LicenseSymbol):
-        return expr.key in APPROVED_LICENSES_SPDX
+        return expr.key in OSI_APPROVED_LICENSES_SPDX
     if isinstance(expr, OR):
         return any(check_spdx_license(arg) for arg in expr.args)
     if isinstance(expr, AND):
