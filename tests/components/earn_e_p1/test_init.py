@@ -68,7 +68,9 @@ async def test_device_info(
     trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device == snapshot
 
@@ -86,14 +88,18 @@ async def test_device_registry_not_updated_on_identical_callback(
     trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     first_modified = device.modified_at
 
     trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.modified_at == first_modified
 
@@ -111,13 +117,17 @@ async def test_device_registry_updated_on_sw_version_change(
     trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "1.0.0"
 
     trigger_callback(mock_listener, sw_version="2.0.0")
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2.0.0"

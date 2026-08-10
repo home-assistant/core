@@ -151,7 +151,9 @@ async def test_user_pools_snapshot_adds_new_pool(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.spa_temperature") is not None
-    assert device_registry.async_get_device(identifiers={(DOMAIN, _SECOND_POOL_ID)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, _SECOND_POOL_ID), mock_config_entry.entry_id
+    )
 
 
 async def test_user_pools_snapshot_retries_new_pool_after_refresh_failure(
@@ -224,7 +226,9 @@ async def test_user_pools_snapshot_removes_stale_pool(
 
     assert hass.states.get("sensor.spa_temperature") is None
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, _SECOND_POOL_ID)})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, _SECOND_POOL_ID), mock_config_entry.entry_id
+        )
         is None
     )
 
@@ -253,7 +257,10 @@ async def test_user_pools_snapshot_drops_stale_even_if_get_pools_fails(
     # New pool skipped (no name available), stale pool removed regardless.
     assert hass.states.get("sensor.spa_temperature") is None
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, _THIRD_POOL_ID)}) is None
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, _THIRD_POOL_ID), mock_config_entry.entry_id
+        )
+        is None
     )
 
 
@@ -274,9 +281,13 @@ async def test_setup_prunes_devices_removed_while_offline(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, MOCK_POOL_ID)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_POOL_ID), mock_config_entry.entry_id
+    )
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, _SECOND_POOL_ID)})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, _SECOND_POOL_ID), mock_config_entry.entry_id
+        )
         is None
     )
 
