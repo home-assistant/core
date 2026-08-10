@@ -1,6 +1,6 @@
 """Support for Gatus binary sensors."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -59,10 +59,9 @@ class GatusEndpointBinarySensor(GatusEndpointEntity, BinarySensorEntity):
 
     @property
     @override
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the endpoint is up and healthy."""
-        latest_result = self.latest_result
-        if latest_result is None:
-            return None
+        if TYPE_CHECKING:
+            assert self.latest_result is not None
 
-        return latest_result.success
+        return self.latest_result.success

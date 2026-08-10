@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from gatus_api import EndpointStatus, GatusClientError, Result
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -65,7 +65,7 @@ async def test_binary_sensor_dynamic_update(
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("binary_sensor.core_backend_service")
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     mock_data = await async_load_json_array_fixture(hass, "gatus/group.json")
 
@@ -78,7 +78,7 @@ async def test_binary_sensor_dynamic_update(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.core_backend_service")
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
 
 async def test_binary_sensor_no_group(
@@ -97,7 +97,7 @@ async def test_binary_sensor_no_group(
 
     state = hass.states.get("binary_sensor.backend_service")
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
 
 async def test_binary_sensor_client_error(
@@ -110,7 +110,7 @@ async def test_binary_sensor_client_error(
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("binary_sensor.core_backend_service")
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     mock_gatus_client.get_endpoints_statuses.side_effect = GatusClientError
 
@@ -119,7 +119,7 @@ async def test_binary_sensor_client_error(
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.core_backend_service")
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_binary_sensor_empty_results(
@@ -141,7 +141,7 @@ async def test_binary_sensor_empty_results(
 
     state = hass.states.get("binary_sensor.backend_service")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_binary_sensor_missing_status(
@@ -163,7 +163,7 @@ async def test_binary_sensor_missing_status(
 
     state = hass.states.get("binary_sensor.backend_service")
     assert state is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
 
 async def test_binary_sensor_dynamic_endpoints(
