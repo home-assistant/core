@@ -1,7 +1,7 @@
 """Plugwise water heater component for Home Assistant."""
 
 from dataclasses import dataclass
-from typing import Any, cast, override
+from typing import Any, Final, cast, override
 
 from homeassistant.components.water_heater import (
     ATTR_OPERATION_MODE,
@@ -37,6 +37,8 @@ from .util import plugwise_command
 
 PARALLEL_UPDATES = 0
 
+FAIL_SET_TEMP: Final = "temperature_out_of_range"
+FAIL_OPERATION_MODE: Final = "unsupported_operation_mode"
 
 @dataclass(frozen=True, kw_only=True)
 class PlugwiseWaterHeaterEntityDescription(WaterHeaterEntityDescription):
@@ -153,8 +155,13 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
 
         if self._attr_min_temp <= temperature >= self._attr_max_temp:
             raise HomeAssistantError(
-                f"Temperature {temperature} is out of range "
-                f"({self._attr_min_temp} - {self._attr_max_temp})"
+                translation_domain=DOMAIN,
+                translation_key=FAIL_SET_TEMP,
+                translation_placeholders={
+                    "temperature": temperature,
+                    "max_temp": self._attr_max_temp,
+                    "min_temp": self._attr_min_temp,
+                },
             )
 
         if ATTR_OPERATION_MODE in kwargs:
@@ -171,7 +178,11 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set the operation mode."""
         if self.operation_list is None or operation_mode not in self.operation_list:
-            raise HomeAssistantError(f"Operation mode {operation_mode} not supported")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=FAIL_OPERATION_MODE,
+                translation_placeholders={"op_mode": operation_mode},
+            )
 
         await self.coordinator.api.set_dhw_mode(
             DHW_MODE,
