@@ -492,10 +492,11 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
         )
         dev_reg = dr.async_get(hass)
         for device_id in referenced.referenced_devices:
-            if not (
-                dev_reg_ent := dev_reg.async_get(device_id, include_child_devices=False)
-            ):
+            if not (dev_reg_ent := dev_reg.async_get(device_id)):
                 raise HomeAssistantError(f"No device found for device id: {device_id}")
+            if isinstance(dev_reg_ent, dr.ChildDeviceEntry):
+                # A child device carries no HomeKit pairing; only its parent can.
+                continue
             macs = [
                 cval
                 for ctype, cval in dev_reg_ent.connections

@@ -1179,6 +1179,68 @@ async def test_homekit_unpair(
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_unpair_device_with_children(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test unpairing a device that has child devices.
+
+    Targeting a parent device expands to the parent and its children, but only
+    the parent carries the HomeKit pairing. The children must be skipped instead
+    of aborting the whole service call.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "light.demo"
+    hass.states.async_set("light.demo", "on")
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
+
+    with (
+        patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit),
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+    ):
+        await async_init_entry(hass, entry)
+
+        acc_mock = MagicMock()
+        acc_mock.entity_id = entity_id
+        acc_mock.stop = AsyncMock()
+
+        aid = homekit.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
+        homekit.bridge.accessories = {aid: acc_mock}
+        homekit.status = STATUS_RUNNING
+        homekit.driver.aio_stop_event = MagicMock()
+
+        state = homekit.driver.state
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"1")
+
+        formatted_mac = dr.format_mac(state.mac)
+        hk_bridge_dev = device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, formatted_mac), entry.entry_id
+        )
+        child_device = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, "child-outlet")},
+            parent_device_id=hk_bridge_dev.id,
+            name="Child outlet",
+        )
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_HOMEKIT_UNPAIR,
+            {ATTR_DEVICE_ID: hk_bridge_dev.id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        # The parent accessory is unpaired and the child device is skipped.
+        assert state.paired_clients == {}
+        assert isinstance(
+            device_registry.async_get(child_device.id), dr.ChildDeviceEntry
+        )
+        homekit.status = STATUS_STOPPED
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_homekit_unpair_missing_device_id(hass: HomeAssistant) -> None:
     """Test unpairing HomeKit accessories with invalid device id."""
 
