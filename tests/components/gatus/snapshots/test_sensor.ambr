@@ -47,7 +47,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2026-11-08T13:17:44+00:00',
+    'state': '2026-04-01T00:00:00+00:00',
   })
 # ---
 # name: test_sensor_setup_and_states[sensor.core_backend_service_response_time-entry]

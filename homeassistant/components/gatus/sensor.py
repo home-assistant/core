@@ -28,7 +28,7 @@ PARALLEL_UPDATES = 0
 class GatusSensorEntityDescription(SensorEntityDescription):
     """Class describing Gatus sensor entities."""
 
-    value_fn: Callable[[Result], float | int | str | None]
+    value_fn: Callable[[Result], datetime | float | int | str | None]
 
 
 SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (

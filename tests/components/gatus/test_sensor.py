@@ -27,8 +27,10 @@ async def test_sensor_setup_and_states(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test standard successful setup and entity snapshots using snapshot_platform."""
+    freezer.move_to("2026-01-01 00:00:00+00:00")
     with patch("homeassistant.components.gatus._PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
         await snapshot_platform(
