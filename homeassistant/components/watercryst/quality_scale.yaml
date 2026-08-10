@@ -55,7 +55,7 @@ rules:
     comment: This integration does not support discovery.
   discovery:
     status: exempt
-    comment: The cloud API does not provide a device discovery mechanism.
+    comment: The device does not provide a discovery mechanism.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
