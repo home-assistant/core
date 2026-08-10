@@ -566,8 +566,8 @@ class Recorder(threading.Thread):
         statistic_id: str,
         *,
         new_statistic_id: str | UndefinedType = UNDEFINED,
-        new_unit_class: str | None | UndefinedType = UNDEFINED,
-        new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        new_unit_class: str | UndefinedType | None = UNDEFINED,
+        new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
         on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""

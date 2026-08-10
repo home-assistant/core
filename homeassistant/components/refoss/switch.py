@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bridge import RefossConfigEntry, RefossDataUpdateCoordinator
-from .const import _LOGGER, DISPATCH_DEVICE_DISCOVERED
+from .const import DISPATCH_DEVICE_DISCOVERED, LOGGER
 from .entity import RefossEntity
 
 
@@ -34,7 +34,7 @@ async def async_setup_entry(
             new_entities.append(entity)
 
         async_add_entities(new_entities)
-        _LOGGER.debug("Device %s add switch entity success", device.dev_name)
+        LOGGER.debug("Device %s add switch entity success", device.dev_name)
 
     for coordinator in config_entry.runtime_data.coordinators:
         init_device(coordinator)
