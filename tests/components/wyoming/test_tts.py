@@ -202,10 +202,10 @@ async def test_get_tts_audio_audio_oserror(
 @pytest.mark.parametrize(
     ("error_code", "expected_message"),
     [
-        pytest.param(None, "Error from TTS service: Boom!", id="without_code"),
+        pytest.param(None, "Error from Wyoming service: Boom!", id="without_code"),
         pytest.param(
             "VoiceNotFoundError",
-            "Error from TTS service: Boom! (code: VoiceNotFoundError)",
+            "Error from Wyoming service: Boom! (code: VoiceNotFoundError)",
             id="with_code",
         ),
     ],
@@ -246,7 +246,9 @@ async def test_get_tts_audio_streaming_error_event(hass: HomeAssistant) -> None:
         )
         stream.async_set_message_stream(message_gen())
 
-        with pytest.raises(HomeAssistantError, match="Error from TTS service: Boom!"):
+        with pytest.raises(
+            HomeAssistantError, match="Error from Wyoming service: Boom!"
+        ):
             async for _chunk in stream.async_stream_result():
                 pass
 

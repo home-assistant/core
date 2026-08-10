@@ -26,18 +26,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_SPEAKER
 from .data import WyomingService
-from .error import WyomingError
+from .error import WyomingError, error_event_message
 from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _error_message(error: Error) -> str:
-    """Return a message for an error event from the TTS service."""
-    if error.code is None:
-        return f"Error from TTS service: {error.text}"
-
-    return f"Error from TTS service: {error.text} (code: {error.code})"
 
 
 async def async_setup_entry(
@@ -129,7 +121,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
 
                         if Error.is_type(event.type):
                             raise HomeAssistantError(
-                                _error_message(Error.from_event(event))
+                                error_event_message(Error.from_event(event))
                             )
 
                         if AudioStop.is_type(event.type):
@@ -229,7 +221,9 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         try:
             while event := await client.read_event():
                 if Error.is_type(event.type):
-                    raise HomeAssistantError(_error_message(Error.from_event(event)))
+                    raise HomeAssistantError(
+                        error_event_message(Error.from_event(event))
+                    )
 
                 if wav_header_sent and AudioChunk.is_type(event.type):
                     # PCM audio
