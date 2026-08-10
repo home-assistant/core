@@ -1,13 +1,10 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
 
-from collections.abc import Awaitable, Callable, Coroutine
-from functools import wraps
 import logging
-from typing import Any, Concatenate, override
+from typing import Any, override
 
 from afsapi import (
     AFSAPI,
-    FSApiError,
     FSConnectionError,
     FSNotImplementedError,
     PlayCaps,
@@ -25,47 +22,15 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import FrontierSiliconConfigEntry
 from .browse_media import browse_node, browse_top_level
-from .const import DOMAIN, MEDIA_CONTENT_ID_PRESET
+from .const import MEDIA_CONTENT_ID_PRESET
+from .entity import FrontierSiliconEntity, fs_command_exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def fs_command_exception_wrap[
-    _AFSAPIDeviceT: AFSAPIDevice,
-    **_P,
-    _R,
-](
-    func: Callable[Concatenate[_AFSAPIDeviceT, _P], Awaitable[_R]],
-) -> Callable[Concatenate[_AFSAPIDeviceT, _P], Coroutine[Any, Any, _R]]:
-    """Wrap command methods and map API exceptions to HA errors."""
-
-    @wraps(func)
-    async def _wrap(self: _AFSAPIDeviceT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-        try:
-            return await func(self, *args, **kwargs)
-        except FSConnectionError as err:
-            command = func.__name__.removeprefix("async_")
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="connection_error",
-                translation_placeholders={"command": command},
-            ) from err
-        except FSApiError as err:
-            command = func.__name__.removeprefix("async_")
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={"command": command, "message": str(err)},
-            ) from err
-
-    return _wrap
 
 
 async def async_setup_entry(
@@ -79,9 +44,8 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            AFSAPIDevice(
-                config_entry.entry_id,
-                config_entry.title,
+            AFSAPIMediaPlayer(
+                config_entry,
                 afsapi,
             )
         ],
@@ -89,7 +53,7 @@ async def async_setup_entry(
     )
 
 
-class AFSAPIDevice(MediaPlayerEntity):
+class AFSAPIMediaPlayer(FrontierSiliconEntity, MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
 
     _attr_media_content_type: str = MediaType.CHANNEL
@@ -107,15 +71,12 @@ class AFSAPIDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
-    def __init__(self, unique_id: str, name: str | None, afsapi: AFSAPI) -> None:
+    def __init__(
+        self, config_entry: FrontierSiliconConfigEntry, afsapi: AFSAPI
+    ) -> None:
         """Initialize the Frontier Silicon API device."""
-        self.fs_device = afsapi
+        super().__init__(afsapi, config_entry)
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=name,
-        )
-        self._attr_unique_id = unique_id
         self._max_volume: int | None = None
 
         self.__modes_by_label: dict[str, str] | None = None
@@ -160,6 +121,7 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         return features
 
+    @override
     async def async_update(self) -> None:
         """Get the latest date and update device state."""
         afsapi = self.fs_device
