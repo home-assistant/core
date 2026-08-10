@@ -26,6 +26,7 @@ from .const import (
     DHW_MODE,
     DHW_MODES,
     DHW_TEMP,
+    DOMAIN,
     LOWER_BOUND,
     UPPER_BOUND,
     WaterHeaterOptionsType,
@@ -39,6 +40,7 @@ PARALLEL_UPDATES = 0
 
 FAIL_SET_TEMP: Final = "temperature_out_of_range"
 FAIL_OPERATION_MODE: Final = "unsupported_operation_mode"
+
 
 @dataclass(frozen=True, kw_only=True)
 class PlugwiseWaterHeaterEntityDescription(WaterHeaterEntityDescription):
