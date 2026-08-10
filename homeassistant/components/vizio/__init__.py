@@ -1,13 +1,12 @@
 """The vizio component."""
 
-from pyvizio import VizioAsync
+from vizaio import Vizio
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
     CONF_HOST,
-    CONF_NAME,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -17,7 +16,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DEFAULT_TIMEOUT, DEVICE_ID, DOMAIN, VIZIO_DEVICE_CLASSES
+from .const import DEFAULT_TIMEOUT, DOMAIN, VIZIO_DEVICE_CLASSES
 from .coordinator import (
     VizioAppsDataUpdateCoordinator,
     VizioConfigEntry,
@@ -45,12 +44,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> boo
     device_class = entry.data[CONF_DEVICE_CLASS]
 
     # Create device
-    device = VizioAsync(
-        DEVICE_ID,
+    device = Vizio(
         host,
-        entry.data[CONF_NAME],
-        auth_token=token,
         device_type=VIZIO_DEVICE_CLASSES[device_class],
+        auth_token=token,
         session=async_get_clientsession(hass, False),
         timeout=DEFAULT_TIMEOUT,
     )

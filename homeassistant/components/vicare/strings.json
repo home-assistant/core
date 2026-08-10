@@ -365,6 +365,18 @@
       "evaporator_overheat_temperature": {
         "name": "Evaporator overheat temperature"
       },
+      "exhaust_humidity": {
+        "name": "Exhaust humidity"
+      },
+      "exhaust_temperature": {
+        "name": "Exhaust temperature"
+      },
+      "extract_humidity": {
+        "name": "Extract humidity"
+      },
+      "extract_temperature": {
+        "name": "Extract temperature"
+      },
       "filter_hours": {
         "name": "Filter hours"
       },
