@@ -15,8 +15,10 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
+    WaterHeaterCapabilityAttribute,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
+    WaterHeaterStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -76,12 +78,12 @@ DEFAULT_NAME = "MQTT Water Heater"
 
 MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED = frozenset(
     {
-        water_heater.ATTR_CURRENT_TEMPERATURE,
-        water_heater.ATTR_MAX_TEMP,
-        water_heater.ATTR_MIN_TEMP,
-        water_heater.ATTR_TEMPERATURE,
-        water_heater.ATTR_OPERATION_LIST,
-        water_heater.ATTR_OPERATION_MODE,
+        WaterHeaterStateAttribute.CURRENT_TEMPERATURE,
+        WaterHeaterCapabilityAttribute.MAX_TEMP,
+        WaterHeaterCapabilityAttribute.MIN_TEMP,
+        WaterHeaterStateAttribute.TEMPERATURE,
+        WaterHeaterCapabilityAttribute.OPERATION_LIST,
+        WaterHeaterStateAttribute.OPERATION_MODE,
     }
 )
 

@@ -79,6 +79,32 @@ SENSOR_DESCRIPTIONS = {
     ),
 }
 
+PROBE_SENSOR_DESCRIPTIONS = {
+    f"{translation_key}_{probe_id}": SensorEntityDescription(
+        key=f"{translation_key}_{probe_id}",
+        translation_key=translation_key,
+        translation_placeholders={"probe_id": str(probe_id)},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    )
+    for probe_id in range(1, 7)
+    for translation_key in (
+        "temperature_probe",
+        "temperature_alarm_probe",
+        "low_temperature_alarm_probe",
+    )
+} | {
+    "humidity_probe_1": SensorEntityDescription(
+        key="humidity_probe_1",
+        translation_key="humidity_probe",
+        translation_placeholders={"probe_id": "1"},
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    )
+}
+
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
@@ -90,9 +116,12 @@ def sensor_update_to_bluetooth_data_update(
             for device_id, device_info in sensor_update.devices.items()
         },
         entity_descriptions={
-            device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
-                (description.device_class, description.native_unit_of_measurement)
-            ]
+            device_key_to_bluetooth_entity_key(device_key): (
+                PROBE_SENSOR_DESCRIPTIONS.get(device_key.key)
+                or SENSOR_DESCRIPTIONS[
+                    (description.device_class, description.native_unit_of_measurement)
+                ]
+            )
             for device_key, description in sensor_update.entity_descriptions.items()
             if description.device_class and description.native_unit_of_measurement
         },
@@ -100,9 +129,10 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
+        # None overrides names restored from storage, {} would keep them
         entity_names={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
-            for device_key, sensor_values in sensor_update.entity_values.items()
+            device_key_to_bluetooth_entity_key(device_key): None
+            for device_key in sensor_update.entity_values
         },
     )
 

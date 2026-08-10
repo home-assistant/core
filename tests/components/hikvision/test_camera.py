@@ -72,14 +72,14 @@ async def test_nvr_entities_with_channel_names(
         await setup_integration(hass, mock_config_entry)
 
     # Verify device names use channel names instead of "Channel N"
-    device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_1")}
+    device_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_ID}_1"), mock_config_entry.entry_id
     )
     assert device_1 is not None
     assert device_1.name == "Front Camera channel 1"
 
-    device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_2")}
+    device_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_ID}_2"), mock_config_entry.entry_id
     )
     assert device_2 is not None
     assert device_2.name == "Front Camera channel 2"
@@ -94,8 +94,8 @@ async def test_camera_device_info(
     """Test camera is linked to device."""
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_ID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_ID), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.name == TEST_DEVICE_NAME

@@ -83,8 +83,8 @@ async def test_device_info(
     """Test device info."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert await async_setup_component(hass, DOMAIN, {})
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry.unique_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, config_entry.unique_id), config_entry.entry_id
     )
 
     assert device.manufacturer == "Dremel"
