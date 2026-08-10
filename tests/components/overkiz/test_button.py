@@ -48,11 +48,17 @@ GARAGE_DOOR = FixtureDevice(
     "io://1234-1234-6233/16730050",
     "button.living_room_garage_door_partial_position",
 )
+GATE = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe_2.json",
+    "io://1234-5678-1516/4204152",
+    "button.elixo_3s_io_pedestrian_position",
+)
 
 SNAPSHOT_FIXTURES = [
     MY_POSITION,
     CHECK_EVENT_TRIGGER,
     VELUX_WINDOW,
+    GATE,
 ]
 
 
@@ -110,6 +116,7 @@ async def test_button_press(
         pytest.param(VELUX_WINDOW, "55299", id="ventilation"),
         pytest.param(STUDIO_WINDOW, "1", id="favorite1"),
         pytest.param(GARAGE_DOOR, "55305", id="partial"),
+        pytest.param(GATE, "55303", id="pedestrian"),
     ],
 )
 async def test_button_press_alias(

@@ -96,6 +96,9 @@
       "go_to_alias_partial": {
         "name": "Partial position"
       },
+      "go_to_alias_pedestrian": {
+        "name": "Pedestrian position"
+      },
       "go_to_alias_ventilation": {
         "name": "Ventilation position"
       }

@@ -1656,6 +1656,386 @@
       ]
     },
     {
+      "attributes": [
+        {
+          "type": 3,
+          "name": "core:Manufacturer",
+          "value": "Somfy"
+        },
+        {
+          "type": 3,
+          "name": "core:FirmwareRevision",
+          "value": "5186820A01"
+        },
+        {
+          "type": 10,
+          "name": "core:SupportedAliases",
+          "value": [
+            {
+              "features": ["openClose"],
+              "type": "pedestrian",
+              "id": "55303"
+            }
+          ]
+        },
+        {
+          "type": 10,
+          "name": "core:SupportedManufacturerProcedures",
+          "value": [
+            {
+              "procedureName": "calibrate_bus_cells"
+            },
+            {
+              "params": {
+                "duration": {}
+              },
+              "procedureName": "dead_man_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "params": {
+                "duration": {}
+              },
+              "procedureName": "dead_man_up"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "refresh_all_access_settings"
+            },
+            {
+              "procedureName": "reset_actuator_settings"
+            },
+            {
+              "procedureName": "reset_actuator_settings_simple"
+            },
+            {
+              "procedureName": "reset_io_1W_and_key"
+            },
+            {
+              "procedureName": "start_autolearning"
+            }
+          ]
+        },
+        {
+          "type": 10,
+          "name": "core:SupportedReadableManufacturerData",
+          "value": [
+            "anti_freeze_status",
+            "area_lighting_activation",
+            "area_lighting_tempo",
+            "autolearning_state",
+            "auxiliary_control_activation",
+            "auxiliary_control_tempo",
+            "cells_activation",
+            "close_short_tempo_partial_mode",
+            "close_tempo_total_mode",
+            "cruising_speed_type_closing",
+            "cruising_speed_type_opening",
+            "current_position",
+            "details_of_product",
+            "docking_area_speed_closing",
+            "docking_area_speed_opening",
+            "docking_area_type_in_closing",
+            "docking_area_type_in_opening",
+            "intermediary_position_in_cm",
+            "leaf_number",
+            "low_power_mode",
+            "mode_user_total",
+            "motor1_closing_slowdown_torque_limitation",
+            "motor1_closing_torque_limitation",
+            "motor1_opening_slowdown_torque_limitation",
+            "motor1_opening_torque_limitation",
+            "motor_configuration",
+            "nb_closing_obstacle_detections",
+            "nb_global_cycles",
+            "nb_global_cycles_after_learning",
+            "nb_obstacle_detections_after_learning",
+            "nb_opening_obstacle_detections",
+            "nb_partial_cycles",
+            "nb_rtx_1w_remote_for_auxiliary",
+            "nb_rtx_1w_remote_for_light",
+            "orange_light_prelighting",
+            "pop_value",
+            "programmable_safety_input",
+            "programmable_safety_input_action",
+            "programmable_safety_input_function",
+            "rtx_info_request",
+            "rtx_info_request_partial",
+            "rtx_info_request_total",
+            "safety_edge_activation",
+            "setting_state",
+            "settings_lock_status",
+            "supply_power_type",
+            "wired_control"
+          ]
+        },
+        {
+          "type": 10,
+          "name": "io:Features",
+          "value": [
+            {
+              "name": "alias"
+            },
+            {
+              "name": "openClose"
+            },
+            {
+              "name": "stop"
+            },
+            {
+              "name": "manufacturerData"
+            }
+          ]
+        }
+      ],
+      "deviceURL": "io://1234-5678-1516/4204152",
+      "definition": {
+        "attributes": [
+          {
+            "name": "core:Manufacturer"
+          },
+          {
+            "name": "core:FirmwareRevision"
+          },
+          {
+            "name": "core:SupportedAliases"
+          },
+          {
+            "name": "core:SupportedManufacturerProcedures"
+          },
+          {
+            "name": "core:SupportedReadableManufacturerData"
+          },
+          {
+            "name": "io:Features"
+          }
+        ],
+        "uiClass": "Gate",
+        "commands": [
+          {
+            "nparams": 1,
+            "paramsSig": "p1,*p2",
+            "commandName": "addLockLevel"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1,*p2",
+            "commandName": "advancedRefresh"
+          },
+          {
+            "nparams": 0,
+            "commandName": "close"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "delayedStopIdentify"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1,*p2",
+            "commandName": "executeManufacturerProcedure"
+          },
+          {
+            "nparams": 0,
+            "commandName": "getName"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "goToAlias"
+          },
+          {
+            "nparams": 0,
+            "commandName": "identify"
+          },
+          {
+            "nparams": 0,
+            "commandName": "keepOneWayControllersAndDeleteNode"
+          },
+          {
+            "nparams": 0,
+            "commandName": "open"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1,*p2",
+            "commandName": "pairOneWayController"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "readManufacturerData"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "removeLockLevel"
+          },
+          {
+            "nparams": 0,
+            "commandName": "resetLockLevels"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "saveAlias"
+          },
+          {
+            "nparams": 0,
+            "commandName": "sendIOKey"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "setConfigState"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "setName"
+          },
+          {
+            "nparams": 0,
+            "commandName": "startIdentify"
+          },
+          {
+            "nparams": 0,
+            "commandName": "stop"
+          },
+          {
+            "nparams": 0,
+            "commandName": "stopIdentify"
+          },
+          {
+            "nparams": 0,
+            "commandName": "unpairAllOneWayControllers"
+          },
+          {
+            "nparams": 0,
+            "commandName": "unpairAllOneWayControllersAndDeleteNode"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1,*p2",
+            "commandName": "unpairOneWayController"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "writeManufacturerData"
+          }
+        ],
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "core:ReachedAliasesState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "type": "ACTUATOR",
+        "widgetName": "DynamicGate"
+      },
+      "controllableName": "io:DynamicGateIOComponent",
+      "label": "Elixo 3S+ IO",
+      "enabled": true,
+      "type": 1,
+      "subsystemId": 0,
+      "synced": true,
+      "available": true,
+      "states": [
+        {
+          "type": 3,
+          "name": "core:StatusState",
+          "value": "available"
+        },
+        {
+          "type": 11,
+          "name": "core:CommandLockLevelsState",
+          "value": []
+        },
+        {
+          "type": 3,
+          "name": "core:DiscreteRSSILevelState",
+          "value": "normal"
+        },
+        {
+          "type": 1,
+          "name": "core:RSSILevelState",
+          "value": 58
+        },
+        {
+          "type": 3,
+          "name": "core:OpenClosedState",
+          "value": "closed"
+        },
+        {
+          "type": 11,
+          "name": "core:ReachedAliasesState",
+          "value": []
+        },
+        {
+          "type": 3,
+          "name": "core:NameState",
+          "value": "Elixo 3S+ IO"
+        },
+        {
+          "type": 1,
+          "name": "core:PriorityLockTimerState",
+          "value": 0
+        },
+        {
+          "type": 3,
+          "name": "io:PriorityLockOriginatorState",
+          "value": "unknown"
+        }
+      ]
+    },
+    {
       "attributes": [],
       "deviceURL": "io://1234-5678-1516/8006045",
       "definition": {

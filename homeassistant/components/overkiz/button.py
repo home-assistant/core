@@ -91,7 +91,12 @@ SUPPORTED_COMMANDS = {
     description.key: description for description in BUTTON_DESCRIPTIONS
 }
 
-ALIAS_TYPES_WITH_TRANSLATION: set[str] = {"favorite1", "ventilation", "partial"}
+ALIAS_TYPES_WITH_TRANSLATION: set[str] = {
+    "favorite1",
+    "ventilation",
+    "partial",
+    "pedestrian",
+}
 
 
 async def async_setup_entry(
