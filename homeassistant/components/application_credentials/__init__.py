@@ -377,7 +377,9 @@ async def _get_platform(
     ) and not hasattr(platform, "async_get_auth_implementation"):
         raise ValueError(
             f"Integration '{integration_domain}' platform {DOMAIN} did not implement"
-            " 'async_get_authorization_server' or 'async_get_auth_implementation'"
+            " 'async_get_authorization_server', "
+            "'async_get_device_flow_authorization_server', "
+            "or 'async_get_auth_implementation'"
         )
     return platform
 
