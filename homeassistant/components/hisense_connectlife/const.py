@@ -168,9 +168,9 @@ OPERATION_MODE_VACATION = "vacation"
 # Custom Fan Modes (not in climate.const)
 # Standard fan modes (auto, low, medium, high) should be imported from homeassistant.components.climate
 FAN_ULTRA_LOW = "ultra_low"
-SFAN_ULTRA_LOW = "medium_low"
+FAN_MEDIUM_LOW = "medium_low"
 FAN_ULTRA_HIGH = "ultra_high"
-SFAN_ULTRA_HIGH = "medium_high"
+FAN_MEDIUM_HIGH = "medium_high"
 
 
 # Message Types

@@ -35,10 +35,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFa
 
 from .const import (
     DOMAIN,
+    FAN_MEDIUM_HIGH,
+    FAN_MEDIUM_LOW,
     MAX_TEMP,
     MIN_TEMP,
-    SFAN_ULTRA_HIGH,
-    SFAN_ULTRA_LOW,
     StatusKey,
 )
 from .coordinator import HisenseACPluginDataUpdateCoordinator
@@ -54,10 +54,10 @@ HA_FAN_STR_TO_CONST = {
     "low": FAN_LOW,
     "medium": FAN_MEDIUM,
     "high": FAN_HIGH,
-    "ultra_low": SFAN_ULTRA_LOW,
-    "medium_low": SFAN_ULTRA_LOW,
-    "ultra_high": SFAN_ULTRA_HIGH,
-    "medium_high": SFAN_ULTRA_HIGH,
+    "ultra_low": FAN_MEDIUM_LOW,
+    "medium_low": FAN_MEDIUM_LOW,
+    "ultra_high": FAN_MEDIUM_HIGH,
+    "medium_high": FAN_MEDIUM_HIGH,
 }
 
 # Reverse mapping: HA constant to string format
@@ -70,49 +70,37 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hisense AC climate platform."""
-    coordinator: HisenseACPluginDataUpdateCoordinator | None = getattr(
-        config_entry, "runtime_data", None
-    )
+    coordinator: HisenseACPluginDataUpdateCoordinator = config_entry.runtime_data
     if coordinator is None:
         coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    try:
-        # The coordinator has already been refreshed during entry setup.
-        # Use the current cached data directly for entity initialization.
-        devices = coordinator.data
-        _LOGGER.debug("Coordinator data after refresh: %s", devices)
+    # The coordinator has already been refreshed during entry setup.
+    # Use the current cached data directly for entity initialization.
+    devices = coordinator.data
+    _LOGGER.debug("Coordinator data after refresh: %s", devices)
 
-        if not devices:
-            _LOGGER.debug("No devices found in coordinator data")
-            return
+    if not devices:
+        _LOGGER.debug("No devices found in coordinator data")
+        return
 
-        entities = []
-        for device in devices.values():
-            _LOGGER.debug("Processing device: %s", device.to_dict())
-            if isinstance(device, HisenseDeviceInfo) and device.is_supported():
-                entity = HisenseClimate(coordinator, device)
-                entities.append(entity)
-        if not entities:
-            _LOGGER.debug("No supported devices found")
-            return
-        async_add_entities(entities)
-
-    except Exception as err:
-        _LOGGER.error("Failed to set up climate platform: %s", err)
-        raise
+    entities = []
+    for device in devices.values():
+        _LOGGER.debug("Processing device: %s", device.to_dict())
+        if isinstance(device, HisenseDeviceInfo) and device.is_supported():
+            entity = HisenseClimate(coordinator, device)
+            entities.append(entity)
+    if not entities:
+        _LOGGER.debug("No supported devices found")
+        return
+    async_add_entities(entities)
 
 
-class HisenseClimate(CoordinatorEntity, ClimateEntity):
+class HisenseClimate(
+    CoordinatorEntity[HisenseACPluginDataUpdateCoordinator], ClimateEntity
+):
     """Hisense AC Climate entity."""
 
     _attr_has_entity_name = True
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.SWING_MODE
-        | ClimateEntityFeature.TURN_ON
-        | ClimateEntityFeature.TURN_OFF
-    )
     _attr_parallel_updates = PARALLEL_UPDATES
 
     def __init__(
@@ -124,7 +112,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         super().__init__(coordinator)
         self._coordinator = coordinator
         self._device_id: str | None = device.puid
-        self._attr_unique_id = f"{device.device_id or self._device_id}_climate"
+        self._attr_unique_id = device.device_id or self._device_id
         self._attr_name = device.name
         self._attr_translation_key = "climate"
 
@@ -139,7 +127,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._attr_max_temp = MAX_TEMP
 
         # State tracking
-        self.hasAuto = False
+        self.has_auto = False
         self._last_command_time: float = 0.0
         self.wait_time = 3
         self._cached_target_temp: float | None = None
@@ -216,11 +204,11 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         if not hasattr(self, "_attr_fan_modes"):
             self._attr_fan_modes = [
                 FAN_AUTO,
-                SFAN_ULTRA_LOW,
+                FAN_MEDIUM_LOW,
                 FAN_LOW,
                 FAN_MEDIUM,
                 FAN_HIGH,
-                SFAN_ULTRA_HIGH,
+                FAN_MEDIUM_HIGH,
             ]
 
         if not hasattr(self, "_attr_swing_modes"):
@@ -285,7 +273,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                     if ha_fan_const not in fan_modes:
                         fan_modes.append(ha_fan_const)
                         if ha_fan_const == FAN_AUTO:
-                            self.hasAuto = True
+                            self.has_auto = True
 
         if fan_modes:
             # Filter modes based on position6_damper_control
@@ -294,7 +282,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                 fan_modes = [
                     mode
                     for mode in fan_modes
-                    if mode not in (SFAN_ULTRA_LOW, SFAN_ULTRA_HIGH)
+                    if mode not in (FAN_MEDIUM_LOW, FAN_MEDIUM_HIGH)
                 ]
             self._attr_fan_modes = fan_modes
 
@@ -441,7 +429,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         if self.hvac_mode == HVACMode.FAN_ONLY:
             if FAN_AUTO in modes:
                 modes.remove(FAN_AUTO)
-        elif FAN_AUTO not in modes and self.hasAuto:
+        elif FAN_AUTO not in modes and self.has_auto:
             modes.append(FAN_AUTO)
         return modes
 

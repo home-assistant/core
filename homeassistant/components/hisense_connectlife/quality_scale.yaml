@@ -5,15 +5,9 @@ rules:
   appropriate-polling:
     status: done
     comment: Basic polling/update mechanism implemented
-  brands:
-    status: exempt
-    comment: Not required for Bronze
-  common-modules:
-    status: exempt
-    comment: Not required for Bronze
-  config-flow-test-coverage:
-    status: exempt
-    comment: Not required for Bronze
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
   config-flow:
     status: done
     comment: Config flow implemented for UI setup
@@ -72,7 +66,7 @@ rules:
     comment: Not applicable for this integration
   discovery:
     status: exempt
-    comment: This integration does not support device discovery
+    comment: All devices connect exclusively to the cloud server, no local LAN broadcast available, local discovery is technically impossible.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

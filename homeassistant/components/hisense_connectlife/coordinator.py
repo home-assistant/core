@@ -45,12 +45,19 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_setup(self) -> bool:
         """Set up the coordinator."""
+        # Update initial device statuses
+        if await self._async_update_data():
+            return True
+        return False
+
+    async def _async_update_data(self):
+        """Set up the coordinator."""
         try:
             # Get initial device list
             devices = await self.api_client.async_get_devices()
             if not devices:
                 _LOGGER.error("No devices found during setup")
-                return False
+                return None
 
             _LOGGER.debug("Initial device list: %s", devices)
             self._devices = devices
@@ -60,38 +67,14 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             await self.api_client.async_setup_websocket(self._handle_ws_message)
             _LOGGER.debug("WebSocket connection established")
 
-            # Update initial device statuses
-            await self._async_update_data()
         except TimeoutError as error:
             _LOGGER.error("Timeout setting up coordinator: %s", error)
             await self.api_client.async_cleanup()
-            return False
+            return None
         except ClientError as error:
             _LOGGER.error("Other client error: %s", error)
             await self.api_client.async_cleanup()
-            return False
-        return True
-
-    async def _async_update_data(self):
-        """Update data via library."""
-        try:
-            _LOGGER.debug("Starting periodic update for all devices")
-
-            # Get all device statuses in one call
-            devices = await self.api_client.async_get_devices()
-            if not devices:
-                _LOGGER.warning("No devices found during update")
-                raise UpdateFailed("No devices found")
-
-            # Update coordinator data
-            self._devices = devices
-            self.data = devices
-            _LOGGER.debug("Successfully updated %d devices", len(devices))
-
-        except (TimeoutError, ClientError) as error:
-            _LOGGER.error("Error updating device data: %s", error)
-            raise UpdateFailed(f"Error communicating with API: {error}") from error
-
+            return None
         return self._devices
 
     async def async_refresh_device(self, device_id: str) -> None:
@@ -180,7 +163,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             if not self._should_process_message(message):
                 return
 
-            content_data = self._parse_content(message)
+            content_data = message
             if content_data is None:
                 return
 
@@ -208,26 +191,6 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
         if msg_type not in {"status_wifistatus", "status_devicestatus"}:
             return False
         return True
-
-    def _parse_content(self, message: dict[str, Any]) -> dict | None:
-        """Parse 'content' field to 'dict'."""
-        content = message.get("content", "{}")
-        _LOGGER.debug("Raw content: %s", content)
-
-        if not isinstance(content, str):
-            _LOGGER.warning("Content is not a string: %s", type(content))
-            return None
-
-        try:
-            content_data = json.loads(content)
-        except json.JSONDecodeError as e:
-            _LOGGER.warning("Failed to parse message content: %s", e)
-            return None
-        if not isinstance(content_data, dict):
-            _LOGGER.warning("Message content is not an object")
-            return None
-        _LOGGER.debug("Parsed message content: %s", content_data)
-        return content_data
 
     def _find_device_by_puid(self, puid: str | None) -> DeviceInfo | None:
         """Find device with puid."""

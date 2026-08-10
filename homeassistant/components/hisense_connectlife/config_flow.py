@@ -1,11 +1,11 @@
 """Config flow for Hisense AC Plugin integration."""
 
-from __future__ import annotations
+from __future__ import annotations  # noqa: I001
 
 import logging
 from typing import Any
+import jwt
 
-from connectlife_cloud import CLIENT_ID
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
@@ -133,10 +133,6 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Handle a flow start."""
         _LOGGER.debug("Starting user step with input: %s", user_input)
-
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
-
         if user_input is None:
             # Show initial form
             try:
@@ -157,7 +153,6 @@ class OAuth2FlowHandler(
                 description_placeholders={
                     "oauth_callback_url": oauth_callback_url,
                     "app_name": "Hisense AC",
-                    "app_id": CLIENT_ID,
                 },
                 last_step=True,
             )
@@ -194,7 +189,17 @@ class OAuth2FlowHandler(
             "Creating entry with data: %s",
             {k: "***" if k in ("token", "token_type") else v for k, v in data.items()},
         )
+        try:
+            token = jwt.decode(
+                data["token"]["access_token"], options={"verify_signature": False}
+            )
+            user_id = token["sub"]
+        except jwt.DecodeError, KeyError:
+            return self.async_abort(reason="oauth_error")
 
+        await self.async_set_unique_id(user_id)
+
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
     @staticmethod
