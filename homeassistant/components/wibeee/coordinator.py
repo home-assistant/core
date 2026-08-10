@@ -12,15 +12,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type WibeeeData = dict[str, dict[str, Any]]
 type WibeeeConfigEntry = ConfigEntry[WibeeeCoordinator]
 
 
-class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
+class WibeeeCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Coordinator that polls a Wibeee energy monitor for sensor data."""
 
     config_entry: WibeeeConfigEntry
@@ -46,27 +45,37 @@ class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
             device_info = await self.api.async_fetch_device_info(retries=3)
         except (TimeoutError, aiohttp.ClientError) as exc:
             raise UpdateFailed(
-                f"Could not connect to Wibeee at {self.api.host}: {exc}"
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": self.api.host, "error": str(exc)},
             ) from exc
 
         if device_info is None:
             raise UpdateFailed(
-                f"No device info received from Wibeee at {self.api.host}"
+                translation_domain=DOMAIN,
+                translation_key="no_device_info",
+                translation_placeholders={"host": self.api.host},
             )
 
         self.device_info = device_info
 
     @override
-    async def _async_update_data(self) -> WibeeeData:
+    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch data from the Wibeee device."""
         try:
             data = await self.api.async_fetch_sensors_data(retries=2)
         except (TimeoutError, aiohttp.ClientError) as exc:
             raise UpdateFailed(
-                f"Error fetching data from {self.api.host}: {exc}"
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"host": self.api.host, "error": str(exc)},
             ) from exc
 
         if data is None:
-            raise UpdateFailed(f"No data received from Wibeee at {self.api.host}")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_data",
+                translation_placeholders={"host": self.api.host},
+            )
 
         return data

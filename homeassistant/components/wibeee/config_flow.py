@@ -30,12 +30,20 @@ async def validate_input(
     try:
         device = await api.async_fetch_device_info(retries=3)
     except (TimeoutError, aiohttp.ClientError) as exc:
-        raise NoDeviceInfo(f"Cannot connect: {exc}") from exc
+        raise NoDeviceInfo(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": data[CONF_HOST], "error": str(exc)},
+        ) from exc
 
     # The library returns None (instead of raising) when the MAC cannot be
     # determined; treat that as a connection failure for the user.
     if device is None:
-        raise NoDeviceInfo("No device info received")
+        raise NoDeviceInfo(
+            translation_domain=DOMAIN,
+            translation_key="no_device_info",
+            translation_placeholders={"host": data[CONF_HOST]},
+        )
 
     return (
         f"Wibeee {device.mac_addr_short}",

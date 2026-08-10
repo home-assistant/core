@@ -1,46 +1,172 @@
 {
   "entity": {
     "sensor": {
-      "active_energy": {
+      "l1_active_energy": {
         "default": "mdi:pulse"
       },
-      "active_power": {
+      "l1_active_power": {
         "default": "mdi:flash"
       },
-      "capacitive_reactive_energy": {
+      "l1_capacitive_reactive_energy": {
         "default": "mdi:alpha-e-circle-outline"
       },
-      "capacitive_reactive_power": {
+      "l1_capacitive_reactive_power": {
         "default": "mdi:flash-outline"
       },
-      "inductive_reactive_energy": {
+      "l1_inductive_reactive_energy": {
         "default": "mdi:alpha-e-circle-outline"
       },
-      "inductive_reactive_power": {
+      "l1_inductive_reactive_power": {
         "default": "mdi:flash-outline"
       },
-      "phase_angle": {
+      "l1_phase_angle": {
         "default": "mdi:angle-acute"
       },
-      "thd_current": {
+      "l1_thd_current": {
         "default": "mdi:chart-bubble"
       },
-      "thd_current_fundamental": {
+      "l1_thd_current_fundamental": {
         "default": "mdi:vector-point"
       },
-      "thd_current_harmonic": {
+      "l1_thd_current_harmonic": {
         "default": "mdi:sine-wave"
       },
-      "thd_voltage": {
+      "l1_thd_voltage": {
         "default": "mdi:chart-bubble"
       },
-      "thd_voltage_fundamental": {
+      "l1_thd_voltage_fundamental": {
         "default": "mdi:vector-point"
       },
-      "thd_voltage_harmonic": {
+      "l1_thd_voltage_harmonic": {
         "default": "mdi:sine-wave"
       },
-      "voltage": {
+      "l1_voltage": {
+        "default": "mdi:sine-wave"
+      },
+      "l2_active_energy": {
+        "default": "mdi:pulse"
+      },
+      "l2_active_power": {
+        "default": "mdi:flash"
+      },
+      "l2_capacitive_reactive_energy": {
+        "default": "mdi:alpha-e-circle-outline"
+      },
+      "l2_capacitive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "l2_inductive_reactive_energy": {
+        "default": "mdi:alpha-e-circle-outline"
+      },
+      "l2_inductive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "l2_phase_angle": {
+        "default": "mdi:angle-acute"
+      },
+      "l2_thd_current": {
+        "default": "mdi:chart-bubble"
+      },
+      "l2_thd_current_fundamental": {
+        "default": "mdi:vector-point"
+      },
+      "l2_thd_current_harmonic": {
+        "default": "mdi:sine-wave"
+      },
+      "l2_thd_voltage": {
+        "default": "mdi:chart-bubble"
+      },
+      "l2_thd_voltage_fundamental": {
+        "default": "mdi:vector-point"
+      },
+      "l2_thd_voltage_harmonic": {
+        "default": "mdi:sine-wave"
+      },
+      "l2_voltage": {
+        "default": "mdi:sine-wave"
+      },
+      "l3_active_energy": {
+        "default": "mdi:pulse"
+      },
+      "l3_active_power": {
+        "default": "mdi:flash"
+      },
+      "l3_capacitive_reactive_energy": {
+        "default": "mdi:alpha-e-circle-outline"
+      },
+      "l3_capacitive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "l3_inductive_reactive_energy": {
+        "default": "mdi:alpha-e-circle-outline"
+      },
+      "l3_inductive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "l3_phase_angle": {
+        "default": "mdi:angle-acute"
+      },
+      "l3_thd_current": {
+        "default": "mdi:chart-bubble"
+      },
+      "l3_thd_current_fundamental": {
+        "default": "mdi:vector-point"
+      },
+      "l3_thd_current_harmonic": {
+        "default": "mdi:sine-wave"
+      },
+      "l3_thd_voltage": {
+        "default": "mdi:chart-bubble"
+      },
+      "l3_thd_voltage_fundamental": {
+        "default": "mdi:vector-point"
+      },
+      "l3_thd_voltage_harmonic": {
+        "default": "mdi:sine-wave"
+      },
+      "l3_voltage": {
+        "default": "mdi:sine-wave"
+      },
+      "total_active_energy": {
+        "default": "mdi:pulse"
+      },
+      "total_active_power": {
+        "default": "mdi:flash"
+      },
+      "total_capacitive_reactive_energy": {
+        "default": "mdi:alpha-e-circle-outline"
+      },
+      "total_capacitive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "total_inductive_reactive_energy": {
+        "default": "mdi:alpha-e-circle-outline"
+      },
+      "total_inductive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "total_phase_angle": {
+        "default": "mdi:angle-acute"
+      },
+      "total_thd_current": {
+        "default": "mdi:chart-bubble"
+      },
+      "total_thd_current_fundamental": {
+        "default": "mdi:vector-point"
+      },
+      "total_thd_current_harmonic": {
+        "default": "mdi:sine-wave"
+      },
+      "total_thd_voltage": {
+        "default": "mdi:chart-bubble"
+      },
+      "total_thd_voltage_fundamental": {
+        "default": "mdi:vector-point"
+      },
+      "total_thd_voltage_harmonic": {
+        "default": "mdi:sine-wave"
+      },
+      "total_voltage": {
         "default": "mdi:sine-wave"
       }
     }
