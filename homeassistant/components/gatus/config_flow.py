@@ -1,5 +1,6 @@
 """Config flow for the Gatus integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -155,7 +156,9 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthorization request from Home Assistant."""
         return await self.async_step_reauth_confirm()
 
