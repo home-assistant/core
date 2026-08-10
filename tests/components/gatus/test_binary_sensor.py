@@ -165,7 +165,7 @@ async def test_binary_sensor_missing_status(
     assert state is not None
     assert state.state == STATE_OFF
 
-    
+
 async def test_binary_sensor_dynamic_endpoints(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
