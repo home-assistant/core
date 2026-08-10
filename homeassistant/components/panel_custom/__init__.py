@@ -90,9 +90,6 @@ async def async_register_panel(
     embed_iframe: bool = DEFAULT_EMBED_IFRAME,
     # Should user be asked for confirmation when loading external source
     trust_external: bool = DEFAULT_TRUST_EXTERNAL,
-    # If your panel handles the safe area insets itself, opting out of the
-    # padding Home Assistant would otherwise add around it
-    handle_safe_area: bool = DEFAULT_HANDLE_SAFE_AREA,
     # Configuration to be passed to the panel
     config: ConfigType | None = None,
     # If your panel should only be shown to admin users
@@ -100,6 +97,9 @@ async def async_register_panel(
     # If your panel is used to configure an integration,
     # needs the domain of the integration
     config_panel_domain: str | None = None,
+    # If your panel handles the safe area insets itself, opting out of the
+    # padding Home Assistant would otherwise add around it
+    handle_safe_area: bool = DEFAULT_HANDLE_SAFE_AREA,
 ) -> None:
     """Register a new custom panel."""
     if js_url is None and module_url is None:
