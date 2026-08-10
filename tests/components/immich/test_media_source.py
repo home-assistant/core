@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import web
 from aioimmich.assets.models import AssetType
-from aioimmich.exceptions import ImmichError, ImmichForbiddenError
+from aioimmich.exceptions import ImmichError, ImmichForbiddenError, ImmichNotFoundError
 import pytest
 
 from homeassistant.components.immich.const import DOMAIN
@@ -510,10 +510,11 @@ async def test_browse_media_collection_get_items(
 
 
 @pytest.mark.parametrize(
-    ("collection", "collection_id"),
+    ("collection", "mocked_get_fn"),
     [
-        pytest.param("people", "unknown-person-id", id="people"),
-        pytest.param("tags", "unknown-tag-id", id="tags"),
+        pytest.param("albums", ("albums", "async_get_album_info"), id="albums"),
+        pytest.param("people", ("people", "async_get_person_by_id"), id="people"),
+        pytest.param("tags", ("tags", "async_get_tag_by_id"), id="tags"),
     ],
 )
 async def test_browse_media_title_of_unknown_collection_item(
@@ -521,7 +522,7 @@ async def test_browse_media_title_of_unknown_collection_item(
     mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
     collection: str,
-    collection_id: str,
+    mocked_get_fn: tuple[str, str],
 ) -> None:
     """Test browse_media falls back to the collection name for unknown items."""
     assert await async_setup_component(hass, "media_source", {})
@@ -529,17 +530,29 @@ async def test_browse_media_title_of_unknown_collection_item(
     with patch("homeassistant.components.immich.PLATFORMS", []):
         await setup_integration(hass, mock_config_entry)
 
+    getattr(
+        getattr(mock_immich, mocked_get_fn[0]), mocked_get_fn[1]
+    ).side_effect = ImmichNotFoundError(
+        {
+            "message": "Not found or no permission",
+            "error": "Bad Request",
+            "statusCode": 400,
+            "correlationId": "e0hlizyl",
+        }
+    )
+
     source = await async_get_media_source(hass)
 
     item = MediaSourceItem(
         hass,
         DOMAIN,
-        f"{mock_config_entry.unique_id}|{collection}|{collection_id}",
+        f"{mock_config_entry.unique_id}|{collection}|unknown-id",
         None,
     )
     root_media_source = await source.async_browse_media(item)
 
     assert root_media_source.title == collection
+    assert len(root_media_source.children) == 0
 
 
 async def test_media_view(

@@ -152,6 +152,7 @@ def mock_immich_people() -> AsyncMock:
             }
         ),
     ]
+    mock.async_get_person_by_id.return_value = mock.async_get_all_people.return_value[0]
     mock.async_get_person_thumbnail.return_value = b"yyyy"
     return mock
 
@@ -258,6 +259,7 @@ def mock_immich_tags() -> AsyncMock:
             },
         ),
     ]
+    mock.async_get_tag_by_id.return_value = mock.async_get_all_tags.return_value[0]
     return mock
 
 

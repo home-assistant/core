@@ -326,7 +326,9 @@ class ImmichMediaSource(MediaSource):
                 identifier.collection_id,
             )
             try:
-                tags = await immich_api.tags.async_get_all_tags()
+                tag = await immich_api.tags.async_get_tag_by_id(
+                    identifier.collection_id
+                )
                 assets = await immich_api.search.async_get_all_by_tag_ids(
                     [identifier.collection_id]
                 )
@@ -339,10 +341,7 @@ class ImmichMediaSource(MediaSource):
             except ImmichError:
                 return title, []
 
-            title = next(
-                (tag.name for tag in tags if tag.tag_id == identifier.collection_id),
-                title,
-            )
+            title = tag.name
 
         elif identifier.collection == "people":
             LOGGER.debug(
@@ -350,7 +349,9 @@ class ImmichMediaSource(MediaSource):
                 identifier.collection_id,
             )
             try:
-                people = await immich_api.people.async_get_all_people()
+                person = await immich_api.people.async_get_person_by_id(
+                    identifier.collection_id
+                )
                 assets = await immich_api.search.async_get_all_by_person_ids(
                     [identifier.collection_id]
                 )
@@ -363,14 +364,7 @@ class ImmichMediaSource(MediaSource):
             except ImmichError:
                 return title, []
 
-            title = next(
-                (
-                    person.name
-                    for person in people
-                    if person.person_id == identifier.collection_id
-                ),
-                title,
-            )
+            title = person.name
 
         elif identifier.collection == "favorites":
             LOGGER.debug("Render all assets for favorites collection")
