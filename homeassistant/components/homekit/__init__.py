@@ -492,17 +492,15 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
         )
         dev_reg = dr.async_get(hass)
         for device_id in referenced.referenced_devices:
-            if not (dev_reg_ent := dev_reg.async_get(device_id)):
+            if not (
+                dev_reg_ent := dev_reg.async_get(device_id, include_child_devices=False)
+            ):
                 raise HomeAssistantError(f"No device found for device id: {device_id}")
-            macs = (
-                [
-                    cval
-                    for ctype, cval in dev_reg_ent.connections
-                    if ctype == dr.CONNECTION_NETWORK_MAC
-                ]
-                if isinstance(dev_reg_ent, dr.DeviceEntry)
-                else []
-            )
+            macs = [
+                cval
+                for ctype, cval in dev_reg_ent.connections
+                if ctype == dr.CONNECTION_NETWORK_MAC
+            ]
             matching_instances = [
                 homekit
                 for homekit in _async_all_homekit_instances(hass)
@@ -1072,7 +1070,7 @@ class HomeKit:
         dev_reg = dr.async_get(self.hass)
         valid_device_ids = []
         for device_id in self._devices:
-            if not dev_reg.async_get(device_id):
+            if not dev_reg.async_get(device_id, include_child_devices=False):
                 _LOGGER.warning(
                     (
                         "HomeKit %s cannot add device %s because it is missing from the"
@@ -1090,8 +1088,8 @@ class HomeKit:
                 valid_device_ids,
             )
         ).items():
-            device = dev_reg.async_get(device_id)
-            assert isinstance(device, dr.DeviceEntry)
+            device = dev_reg.async_get(device_id, include_child_devices=False)
+            assert device is not None
             valid_device_triggers: list[dict[str, Any]] = []
             for trigger in device_triggers:
                 try:

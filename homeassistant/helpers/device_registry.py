@@ -1755,8 +1755,20 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             serialize_in_event_loop=False,
         )
 
+    @overload
+    def async_get(
+        self, device_id: str, *, include_child_devices: Literal[True] = True
+    ) -> AnyDeviceEntry | None: ...
+
+    @overload
+    def async_get(
+        self, device_id: str, *, include_child_devices: Literal[False]
+    ) -> DeviceEntry | None: ...
+
     @callback
-    def async_get(self, device_id: str) -> AnyDeviceEntry | None:
+    def async_get(
+        self, device_id: str, *, include_child_devices: bool = True
+    ) -> AnyDeviceEntry | None:
         """Get device or child device.
 
         We retrieve the entry from the underlying dicts to avoid
@@ -1767,10 +1779,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         device by id (e.g. in a service handler) keeps working. The composite is
         synthesized on demand and never stored, so it stays invisible to enumeration,
         identifier search and the frontend device list.
+
+        With include_child_devices=False a child-device id resolves to None (the child
+        is treated as absent) and the return type excludes children, so callers needn't
+        narrow the result.
         """
         if (device := self._device_data.get(device_id)) is not None:
             return device
-        if (child_device := self._child_device_data.get(device_id)) is not None:
+        if (
+            include_child_devices
+            and (child_device := self._child_device_data.get(device_id)) is not None
+        ):
             return child_device
         if split_devices := self.devices.get_devices_for_composite_device_id(device_id):
             return self._restore_composite_device(device_id, split_devices)

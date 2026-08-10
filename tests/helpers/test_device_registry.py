@@ -9685,6 +9685,23 @@ async def test_child_device_create(
     }
 
 
+async def test_async_get_exclude_child_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_get with include_child_devices=False treats children as absent."""
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    assert device_registry.async_get(child_device.id) is child_device
+    assert device_registry.async_get(parent.id, include_child_devices=False) is parent
+    assert (
+        device_registry.async_get(child_device.id, include_child_devices=False) is None
+    )
+
+
 async def test_child_device_create_idempotent(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

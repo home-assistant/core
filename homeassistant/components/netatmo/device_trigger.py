@@ -69,7 +69,9 @@ async def async_validate_trigger_config(
     config = TRIGGER_SCHEMA(config)
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    device = device_registry.async_get(
+        config[CONF_DEVICE_ID], include_child_devices=False
+    )
 
     if not device or device.model is None:
         raise InvalidDeviceAutomationConfig(
@@ -97,9 +99,8 @@ async def async_get_triggers(
     triggers: list[dict[str, str]] = []
 
     for entry in er.async_entries_for_device(registry, device_id):
-        if (
-            device := device_registry.async_get(device_id)
-        ) is None or device.model is None:
+        device = device_registry.async_get(device_id, include_child_devices=False)
+        if device is None or device.model is None:
             continue
 
         for trigger in DEVICES.get(device.model, []):
@@ -137,7 +138,9 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    device = device_registry.async_get(
+        config[CONF_DEVICE_ID], include_child_devices=False
+    )
 
     if not device:
         return lambda: None

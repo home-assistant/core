@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from async_upnp_client.exceptions import UpnpConnectionError
 
@@ -129,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
         connections.append((dr.CONNECTION_NETWORK_MAC, device_mac_address))
 
     dev_registry = dr.async_get(hass)
-    device_entry = None
+    device_entry: dr.AnyDeviceEntry | None = None
     for identifier in identifiers:
         if device_entry := dev_registry.async_get_device_by_identifier(
             identifier, entry.entry_id
@@ -168,6 +169,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
         )
 
     assert device_entry
+    if TYPE_CHECKING:
+        assert isinstance(device_entry, dr.DeviceEntry)
     update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
     coordinator = UpnpDataUpdateCoordinator(
         hass,

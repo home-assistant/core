@@ -642,7 +642,7 @@ class ZHAGatewayProxy(EventBase):
             or entity_entry.device_id is None
         ):
             return
-        device_entry: dr.DeviceEntry | None = dr.async_get(self.hass).async_get(
+        device_entry: dr.AnyDeviceEntry | None = dr.async_get(self.hass).async_get(
             entity_entry.device_id
         )
         assert device_entry
