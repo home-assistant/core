@@ -9,6 +9,7 @@ import wave
 
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
+from wyoming.error import Error
 from wyoming.tts import (
     Synthesize,
     SynthesizeChunk,
@@ -20,6 +21,7 @@ from wyoming.tts import (
 
 from homeassistant.components import tts
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_SPEAKER
@@ -28,6 +30,14 @@ from .error import WyomingError
 from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _error_message(error: Error) -> str:
+    """Return a message for an error event from the TTS service."""
+    if error.code is None:
+        return f"Error from TTS service: {error.text}"
+
+    return f"Error from TTS service: {error.text} (code: {error.code})"
 
 
 async def async_setup_entry(
@@ -116,6 +126,11 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
                         if event is None:
                             _LOGGER.debug("Connection lost")
                             return (None, None)
+
+                        if Error.is_type(event.type):
+                            raise HomeAssistantError(
+                                _error_message(Error.from_event(event))
+                            )
 
                         if AudioStop.is_type(event.type):
                             break
@@ -213,6 +228,9 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
 
         try:
             while event := await client.read_event():
+                if Error.is_type(event.type):
+                    raise HomeAssistantError(_error_message(Error.from_event(event)))
+
                 if wav_header_sent and AudioChunk.is_type(event.type):
                     # PCM audio
                     yield AudioChunk.from_event(event).audio
