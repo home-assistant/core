@@ -22,6 +22,8 @@ async def test_device(
 ) -> None:
     """Test the Chess.com device."""
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device({(DOMAIN, "532748851")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "532748851"), mock_config_entry.entry_id
+    )
     assert device
     assert device == snapshot
