@@ -7,6 +7,7 @@ from typing import override
 from gatus_api import EndpointStatus, GatusClient, GatusClientError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -25,7 +26,13 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
     def __init__(self, hass: HomeAssistant, entry: GatusConfigEntry, url: str) -> None:
         """Initialize the coordinator."""
         self.url = url.rstrip("/")
-        self.client = GatusClient(url=self.url, session=async_get_clientsession(hass))
+        self.client = GatusClient(
+            url=self.url,
+            session=async_get_clientsession(hass),
+            username=entry.data.get(CONF_USERNAME),
+            password=entry.data.get(CONF_PASSWORD),
+            token=entry.data.get(CONF_TOKEN),
+        )
         self._entry_id = entry.entry_id
         device_registry = dr.async_get(hass)
         self._known_endpoint_keys = {

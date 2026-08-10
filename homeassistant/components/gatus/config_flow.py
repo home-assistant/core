@@ -8,7 +8,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -30,18 +30,43 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
                 autocomplete="url",
             ),
         ),
+        vol.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        vol.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
+        vol.Optional(CONF_TOKEN): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+            ),
+        ),
     }
 )
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate that the user input allows us to connect to Gatus and return data."""
-    client = GatusClient(url=data[CONF_URL], session=async_get_clientsession(hass))
+    client = GatusClient(
+        url=data[CONF_URL],
+        session=async_get_clientsession(hass),
+        username=data.get(CONF_USERNAME),
+        password=data.get(CONF_PASSWORD),
+        token=data.get(CONF_TOKEN),
+    )
 
     try:
         await client.get_endpoints_statuses()
     except GatusClientError as err:
         _LOGGER.debug("Cannot connect to Gatus instance at %s: %s", data[CONF_URL], err)
+        if "401" in str(err) or "403" in str(err):
+            raise InvalidAuth from err
         raise CannotConnect from err
 
 
@@ -71,6 +96,8 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception during Gatus setup")
                 errors["base"] = "unknown"
@@ -109,6 +136,8 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception during Gatus reconfigure")
                 errors["base"] = "unknown"
@@ -129,3 +158,7 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect to the server."""
+
+
+class InvalidAuth(HomeAssistantError):
+    """Error to indicate there is invalid auth."""

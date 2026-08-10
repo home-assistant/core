@@ -65,6 +65,7 @@ async def test_form_success_with_path(
     ("side_effect", "error_key"),
     [
         (GatusClientError("Cannot connect"), "cannot_connect"),
+        (GatusClientError("401 Unauthorized"), "invalid_auth"),
         (Exception("Unexpected backend explosion"), "unknown"),
     ],
 )
@@ -148,6 +149,7 @@ async def test_flow_reconfigure(
     ("side_effect", "error_key"),
     [
         (GatusClientError("Cannot connect"), "cannot_connect"),
+        (GatusClientError("401 Unauthorized"), "invalid_auth"),
         (Exception("Unexpected backend explosion"), "unknown"),
     ],
 )
