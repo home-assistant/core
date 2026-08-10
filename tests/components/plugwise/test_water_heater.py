@@ -64,7 +64,7 @@ async def test_adam_water_heater_setpoint_change(
     mock_smile_adam_jip.set_number.assert_called_with(
         "e4684553153b44afbef2200885f379dc",
         "dhw_temperature",
-        65.0,
+        55.0,
     )
 
     await hass.services.async_call(
