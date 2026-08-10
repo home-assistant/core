@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -41,6 +41,12 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
             if result.duration is not None
             else None
         ),
+    ),
+    GatusSensorEntityDescription(
+        key="status_code",
+        translation_key="status_code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda result: result.status,
     ),
 )
 
