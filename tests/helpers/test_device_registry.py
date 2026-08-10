@@ -9626,6 +9626,40 @@ def _create_parent_and_child(
     return parent, child_device
 
 
+@pytest.mark.parametrize(
+    "connectivity",
+    [
+        pytest.param({"manufacturer": "manufacturer"}, id="manufacturer"),
+        pytest.param({"model": "model"}, id="model"),
+        pytest.param({"sw_version": "1.0"}, id="sw_version"),
+        pytest.param({"via_device_id": "abc"}, id="via_device_id"),
+        pytest.param(
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:78:9a:bc")}},
+            id="connections",
+        ),
+    ],
+)
+async def test_child_device_rejects_connectivity(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    connectivity: dict[str, Any],
+) -> None:
+    """A child device can not carry connectivity or hardware fields."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    with pytest.raises(dr.DeviceInfoError, match="a child device can not have"):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("test", "strip_outlet_1")},
+            parent_device_id=parent.id,
+            **connectivity,
+        )
+
+
 async def test_child_device_create(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

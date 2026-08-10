@@ -2255,6 +2255,36 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if val is not UNDEFINED
         }
 
+        if parent_device_id is not UNDEFINED and parent_device_id is not None:
+            # A child device carries none of a device's connectivity or hardware; reject
+            # those fields with a clear error instead of the generic device-info type
+            # mismatch from _determine_device_info_type below.
+            invalid = sorted(
+                name
+                for name, value in (
+                    ("configuration_url", configuration_url),
+                    ("connections", connections),
+                    ("default_manufacturer", default_manufacturer),
+                    ("default_model", default_model),
+                    ("entry_type", entry_type),
+                    ("hw_version", hw_version),
+                    ("manufacturer", manufacturer),
+                    ("model", model),
+                    ("model_id", model_id),
+                    ("serial_number", serial_number),
+                    ("sw_version", sw_version),
+                    ("via_device", via_device),
+                    ("via_device_id", via_device_id),
+                )
+                if value not in (UNDEFINED, None)
+            )
+            if invalid:
+                raise DeviceInfoError(
+                    config_entry.domain,
+                    device_info,
+                    f"a child device can not have {', '.join(invalid)}",
+                )
+
         device_info_type = _determine_device_info_type(config_entry, device_info)
 
         if identifiers is None or identifiers is UNDEFINED:
