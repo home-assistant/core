@@ -27,6 +27,17 @@
     }
   },
   "entity": {
+    "button": {
+      "escape": {
+        "name": "Clear error messages"
+      },
+      "reset_cell_partial": {
+        "name": "Reset cell runtime counter"
+      },
+      "sync_time": {
+        "name": "Synchronize device time"
+      }
+    },
     "light": {
       "light": {
         "name": "Pool light"
