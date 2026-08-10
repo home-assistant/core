@@ -647,6 +647,7 @@ class UnitOfPressure(StrEnum):
     INHG = "inHg"
     INH2O = "inH₂O"
     PSI = "psi"
+    ATM = "atm"
 
 
 # Sound pressure units
