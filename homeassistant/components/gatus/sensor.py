@@ -73,8 +73,10 @@ async def async_setup_entry(
 
     async_add_entities(
         GatusEndpointSensor(coordinator, entry, endpoint_key, description)
-        for endpoint_key in coordinator.data
+        for endpoint_key, endpoint in coordinator.data.items()
         for description in SENSOR_TYPES
+        if description.key != "certificate_expiration"
+        or (endpoint.results and endpoint.results[-1].certificate_expiration is not None)
     )
 
 
