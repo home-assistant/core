@@ -4,7 +4,8 @@ from __future__ import annotations  # noqa: I001
 
 import logging
 from typing import Any
-import jwt
+import time
+import uuid
 
 import voluptuous as vol
 
@@ -189,18 +190,15 @@ class OAuth2FlowHandler(
             "Creating entry with data: %s",
             {k: "***" if k in ("token", "token_type") else v for k, v in data.items()},
         )
-        try:
-            token = jwt.decode(
-                data["token"]["access_token"], options={"verify_signature": False}
-            )
-            user_id = token["sub"]
-        except jwt.DecodeError, KeyError:
-            return self.async_abort(reason="oauth_error")
 
-        await self.async_set_unique_id(user_id)
+        await self.async_set_unique_id(self.generate_uuid())
 
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=self.flow_impl.name, data=data)
+
+    def generate_uuid(self) -> str:
+        """Generate a UUID string without dashes."""
+        return f"{uuid.uuid1().hex}{int(time.time() * 1000)}"
 
     @staticmethod
     @callback
