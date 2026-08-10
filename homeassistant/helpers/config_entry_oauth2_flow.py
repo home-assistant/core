@@ -824,12 +824,12 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
                     self.device_authorization
                 )
 
-            _LOGGER.info("Starting login task")
+            _LOGGER.debug("Starting login task")
             self.login_task = self.hass.async_create_task(_wait_for_login())
 
         if self.login_task.done():
-            if self.login_task.exception():
-                self.device_flow_error = self.login_task.exception()
+            if exc := self.login_task.exception():
+                self.device_flow_error = exc
                 return self.async_show_progress_done(next_step_id="device_flow_error")
             self.device_token = self.login_task.result()
             return self.async_show_progress_done(next_step_id="device_flow_complete")
