@@ -92,6 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
     except SleepIQAPIException as err:
         raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
 
+    _filter_duplicate_beds(gateway)
     await _async_migrate_unique_ids(hass, entry, gateway)
 
     coordinator = SleepIQDataUpdateCoordinator(hass, entry, gateway)
@@ -118,6 +119,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
     """Unload the config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+def _filter_duplicate_beds(gateway: AsyncSleepIQ) -> None:
+    """Remove duplicate bed objects that share sleeper IDs."""
+    seen_sleeper_ids: set[str] = set()
+    beds_to_remove: list[str] = []
+    for bed_id, bed in gateway.beds.items():
+        bed_sleeper_ids = {s.sleeper_id for s in bed.sleepers if s.sleeper_id}
+        if not bed_sleeper_ids:
+            continue
+        if bed_sleeper_ids <= seen_sleeper_ids:
+            _LOGGER.debug(
+                "Skipping duplicate bed '%s' (id=%s) with sleeper IDs"
+                " already claimed by another bed",
+                bed.name,
+                bed_id,
+            )
+            beds_to_remove.append(bed_id)
+        else:
+            seen_sleeper_ids.update(bed_sleeper_ids)
+    for bed_id in beds_to_remove:
+        del gateway.beds[bed_id]
 
 
 async def _async_migrate_unique_ids(
