@@ -7,7 +7,6 @@ from .coordinator import GatusConfigEntry, GatusDataUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
-    Platform.EVENT,
     Platform.SENSOR,
 ]
 
