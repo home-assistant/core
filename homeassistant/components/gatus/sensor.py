@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, override
 
 from gatus_api import Result
@@ -15,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import GatusConfigEntry, GatusDataUpdateCoordinator
 from .entity import GatusEndpointEntity
@@ -51,11 +53,11 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
     GatusSensorEntityDescription(
         key="certificate_expiration",
         translation_key="certificate_expiration",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.DAYS,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda result: (
-            round(result.certificate_expiration / 86_400_000_000_000, 2)
+            dt_util.utcnow()
+            + timedelta(seconds=result.certificate_expiration / 1_000_000_000)
             if result.certificate_expiration is not None
             else None
         ),
@@ -102,7 +104,7 @@ class GatusEndpointSensor(GatusEndpointEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> float | int | str | None:
+    def native_value(self) -> datetime | float | int | str | None:
         """Return the state of the sensor."""
         if TYPE_CHECKING:
             assert self.latest_result is not None
