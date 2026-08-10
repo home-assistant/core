@@ -53,8 +53,8 @@ async def test_device_diagnostics(
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_VIN_2_EV)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_VIN_2_EV), config_entry.entry_id
     )
     assert reg_device is not None
 
@@ -79,8 +79,8 @@ async def test_device_diagnostics_vehicle_not_found(
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_VIN_2_EV)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_VIN_2_EV), config_entry.entry_id
     )
     assert reg_device is not None
 
