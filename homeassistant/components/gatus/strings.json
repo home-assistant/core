@@ -31,6 +31,9 @@
   },
   "entity": {
     "sensor": {
+      "dns_rcode": {
+        "name": "DNS response code"
+      },
       "response_time": {
         "name": "Response time"
       },

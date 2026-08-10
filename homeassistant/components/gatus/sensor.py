@@ -48,6 +48,12 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda result: result.status,
     ),
+    GatusSensorEntityDescription(
+        key="dns_rcode",
+        translation_key="dns_rcode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda result: result.dns_rcode,
+    ),
 )
 
 
