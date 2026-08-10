@@ -95,33 +95,6 @@ async def all_mosques_neighborhood(
             await client.close()
 
 
-async def all_mosques_by_keyword(
-    search_keyword: str | None,
-    page: int = 1,
-    username: str | None = None,
-    password: str | None = None,
-    token: str | None = None,
-    session: ClientSession | None = None,
-    client_instance: AsyncMawaqitClient | None = None,
-) -> list[MawaqitMosqueData]:
-    """Return mosques matching the keyword. Returns a list of dicts."""
-    client = client_instance
-    try:
-        if client is None:
-            client = AsyncMawaqitClient(
-                username=username, password=password, token=token, session=session
-            )
-        await client.get_api_token()
-
-        if search_keyword is not None:
-            response = await client.fetch_mosques_by_keyword(search_keyword, page=page)
-            return [MawaqitMosqueData.from_dict(mosque) for mosque in response]
-        return []
-    finally:
-        if client is not None:
-            await client.close()
-
-
 async def fetch_prayer_times(
     latitude: float | None = None,
     longitude: float | None = None,

@@ -28,7 +28,6 @@ def mock_client() -> MagicMock:
     client.close = AsyncMock()
     client.get_api_token = AsyncMock(return_value=MOCK_TOKEN)
     client.all_mosques_neighborhood = AsyncMock(return_value=[{"uuid": "abc"}])
-    client.fetch_mosques_by_keyword = AsyncMock(return_value=[{"uuid": "abc"}])
     client.fetch_prayer_times = AsyncMock(return_value={"calendar": []})
     client.fetch_mosque_by_id = AsyncMock(return_value={"name": "Test"})
     return client
@@ -176,63 +175,6 @@ async def test_all_mosques_neighborhood_creates_client(
         assert len(result) == len(mock_mosques_search_api_raw)
         assert result == mock_mosques_search_api_wrapper
         assert mock_cls.call_args.kwargs["session"] is session
-
-
-# ---------------------------------------------------------------------------
-# all_mosques_by_keyword
-# ---------------------------------------------------------------------------
-
-
-async def test_all_mosques_by_keyword_success(
-    mock_client: MagicMock,
-    mock_mosques_search_api_raw: list[dict],
-    mock_mosques_search_api_wrapper: list[MawaqitMosqueData],
-) -> None:
-    """Test successful keyword search."""
-    mock_client.fetch_mosques_by_keyword = AsyncMock(
-        return_value=mock_mosques_search_api_raw
-    )
-    result = await mawaqit_wrapper.all_mosques_by_keyword(
-        search_keyword="test", client_instance=mock_client
-    )
-    assert result == mock_mosques_search_api_wrapper
-    mock_client.get_api_token.assert_called_once()
-    mock_client.close.assert_called_once()
-
-
-async def test_all_mosques_by_keyword_none_keyword(mock_client: MagicMock) -> None:
-    """Test keyword search with None returns empty list."""
-    result = await mawaqit_wrapper.all_mosques_by_keyword(
-        search_keyword=None, client_instance=mock_client
-    )
-    assert result == []
-    mock_client.close.assert_called_once()
-
-
-async def test_all_mosques_by_keyword_creates_client(
-    mock_mosques_search_api_raw: list[dict],
-    mock_mosques_search_api_wrapper: list[MawaqitMosqueData],
-) -> None:
-    """Test client creation for keyword search forwards the injected session."""
-    session = MagicMock()
-    with patch(
-        "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
-        autospec=True,
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.get_api_token = AsyncMock()
-        client.fetch_mosques_by_keyword = AsyncMock(
-            return_value=mock_mosques_search_api_raw
-        )
-        client.close = AsyncMock()
-
-        result = await mawaqit_wrapper.all_mosques_by_keyword(
-            search_keyword="test", token=MOCK_TOKEN, session=session
-        )
-        assert result == mock_mosques_search_api_wrapper
-        mock_cls.assert_called_once_with(
-            username=None, password=None, token=MOCK_TOKEN, session=session
-        )
 
 
 # ---------------------------------------------------------------------------
