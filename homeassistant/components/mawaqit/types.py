@@ -6,14 +6,13 @@ from typing import TYPE_CHECKING
 from homeassistant.config_entries import ConfigEntry
 
 if TYPE_CHECKING:
-    from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
+    from .coordinator import PrayerTimeCoordinator
 
 
 @dataclass
 class MawaqitData:
     """Runtime data for the Mawaqit integration."""
 
-    mosque_coordinator: MosqueCoordinator
     prayer_time_coordinator: PrayerTimeCoordinator
 
 

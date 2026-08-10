@@ -6,7 +6,7 @@ from homeassistant.const import CONF_API_KEY, CONF_UUID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
+from .coordinator import PrayerTimeCoordinator
 from .types import MawaqitConfigEntry, MawaqitData
 
 PLATFORMS = [Platform.SENSOR]
@@ -22,14 +22,10 @@ async def async_setup_entry(
         session=async_get_clientsession(hass),
     )
 
-    mosque_coordinator = MosqueCoordinator(hass, config_entry, client)
-    await mosque_coordinator.async_config_entry_first_refresh()
-
     prayer_time_coordinator = PrayerTimeCoordinator(hass, config_entry, client)
     await prayer_time_coordinator.async_config_entry_first_refresh()
 
     config_entry.runtime_data = MawaqitData(
-        mosque_coordinator=mosque_coordinator,
         prayer_time_coordinator=prayer_time_coordinator,
     )
 

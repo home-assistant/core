@@ -16,9 +16,6 @@
       "iqama_maghrib": {
         "default": "mdi:weather-sunset-down"
       },
-      "mosque_info": {
-        "default": "mdi:mosque"
-      },
       "next_salat_name": {
         "default": "mdi:calendar-star"
       },

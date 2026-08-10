@@ -16,7 +16,6 @@ async def test_async_setup_entry(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data is not None
-    assert mock_config_entry.runtime_data.mosque_coordinator is not None
     assert mock_config_entry.runtime_data.prayer_time_coordinator is not None
 
 

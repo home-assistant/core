@@ -6,15 +6,11 @@ from unittest.mock import MagicMock
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.mawaqit.coordinator import (
-    MosqueCoordinator,
-    PrayerTimeCoordinator,
-)
+from homeassistant.components.mawaqit.coordinator import PrayerTimeCoordinator
 from homeassistant.components.mawaqit.sensor import (
     PRAYER_TIME_SENSOR_DESCRIPTIONS,
     MawaqitPrayerTimeSensor,
     MawaqitPrayerTimeSensorEntityDescription,
-    MyMosqueSensor,
     NextPrayerSensor,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
@@ -33,12 +29,12 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("prayer_data_kwargs", "expected_count"),
     [
-        ({}, 16),  # 1 mosque + 6 prayers + 2 jumua + 5 iqama + 2 next = 16
-        ({"iqama_enabled": False}, 11),  # no iqama sensors
-        ({"with_iqama_calendar": False}, 11),  # no iqama sensors
-        ({"jumua2": None}, 15),  # only 1 Jumua
-        ({"jumua3": "15:00"}, 17),  # 3 Jumua prayers
-        ({"jumua2": None, "iqama_enabled": False}, 10),  # 1 Jumua, no iqama
+        ({}, 15),  # 6 prayers + 2 jumua + 5 iqama + 2 next = 15
+        ({"iqama_enabled": False}, 10),  # no iqama sensors
+        ({"with_iqama_calendar": False}, 10),  # no iqama sensors
+        ({"jumua2": None}, 14),  # only 1 Jumua
+        ({"jumua3": "15:00"}, 16),  # 3 Jumua prayers
+        ({"jumua2": None, "iqama_enabled": False}, 9),  # 1 Jumua, no iqama
     ],
 )
 async def test_sensor_setup_creates_entities(
@@ -86,26 +82,9 @@ async def test_conditional_sensor_creation(
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
-async def test_mosque_sensor_native_value(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    setup_mawaqit_integration,
-) -> None:
-    """Test mosque sensor returns the mosque name."""
-    await setup_mawaqit_integration(
-        prayer_data=build_prayer_data(fill_all_months=False)
-    )
-
-    state = hass.states.get("sensor.mosque_information")
-    assert state is not None
-    assert state.state == "Test Mosque"
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
 @pytest.mark.parametrize(
     ("coordinator_attr", "entity_id"),
     [
-        ("mosque_coordinator", "sensor.mosque_information"),
         ("prayer_time_coordinator", "sensor.fajr_prayer"),
         ("prayer_time_coordinator", "sensor.next_salat_name"),
     ],
@@ -217,7 +196,6 @@ async def test_prayer_sensors_return_valid_state(
 @pytest.mark.parametrize(
     ("sensor_cls", "coordinator_spec", "extra_args"),
     [
-        (MyMosqueSensor, MosqueCoordinator, [MOCK_UUID]),
         (
             MawaqitPrayerTimeSensor,
             PrayerTimeCoordinator,

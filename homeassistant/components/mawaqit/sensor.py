@@ -37,7 +37,7 @@ import homeassistant.util.dt as dt_util
 
 from . import MawaqitConfigEntry, utils
 from .const import PRAYER_NAMES
-from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
+from .coordinator import PrayerTimeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,16 +168,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Mawaqit sensor platform."""
-    mosque_coordinator = config_entry.runtime_data.mosque_coordinator
     prayer_time_coordinator = config_entry.runtime_data.prayer_time_coordinator
 
     prayer_data = prayer_time_coordinator.data
     mosque_uuid = config_entry.data[CONF_UUID]
 
     entities: list[SensorEntity] = []
-
-    # Mosque Sensor
-    entities.append(MyMosqueSensor(mosque_coordinator, mosque_uuid))
 
     # Prayer Time Sensors
     entities.extend(
@@ -221,32 +217,6 @@ async def async_setup_entry(
     async_add_entities(new_entities=entities)
 
     _LOGGER.info("Mawaqit sensors successfully initialized")
-
-
-class MyMosqueSensor(SensorEntity, CoordinatorEntity[MosqueCoordinator]):
-    """Representation of a mosque sensor."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, coordinator: MosqueCoordinator, mosque_uuid: str) -> None:
-        """Initialize the mosque sensor."""
-        super().__init__(coordinator)
-        self.entity_description = MOSQUE_SENSOR_DESCRIPTION
-        self._attr_unique_id = f"{mosque_uuid}_{self.entity_description.key.lower()}"
-
-    @property
-    @override
-    def native_value(self) -> str | None:
-        """Return the current mosque name as the sensor state."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.get("name")
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.coordinator.data is not None
 
 
 class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):

@@ -7,7 +7,6 @@ from typing import override
 from mawaqit import AsyncMawaqitClient
 from mawaqit.exceptions import BadCredentialsException, MawaqitException
 
-from homeassistant.const import CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -15,62 +14,6 @@ from .const import DOMAIN
 from .types import MawaqitConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class MosqueCoordinator(DataUpdateCoordinator[dict]):
-    """Coordinator to fetch mosque information."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: MawaqitConfigEntry,
-        client: AsyncMawaqitClient,
-    ) -> None:
-        """Initialize the mosque coordinator."""
-        self.client = client
-        self.mosque_uuid: str = config_entry.data[CONF_UUID]
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name="Mosque Data",
-            update_method=self._async_update_data,
-            update_interval=timedelta(days=1),
-        )
-
-    @override
-    async def _async_update_data(self) -> dict:
-        """Fetch mosque details from the API."""
-        mosque_data: dict | None
-        try:
-            mosque_data = await self.client.fetch_mosque_by_id(self.mosque_uuid)
-        except BadCredentialsException as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="mawaqit_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except MawaqitException as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="mawaqit_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except (ConnectionError, TimeoutError) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="network_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-        if not mosque_data:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="no_mosque_data",
-            )
-
-        return mosque_data
 
 
 class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
