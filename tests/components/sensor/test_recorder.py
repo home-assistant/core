@@ -5308,7 +5308,7 @@ async def async_record_states(
             "pressure",
             "psi",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
@@ -5316,7 +5316,7 @@ async def async_record_states(
             "pressure",
             "Pa",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
     ],
 )
@@ -5547,7 +5547,7 @@ async def test_validate_statistics_unit_ignore_device_class(
             "pressure",
             "psi",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
@@ -5555,7 +5555,7 @@ async def test_validate_statistics_unit_ignore_device_class(
             "pressure",
             "Pa",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
+            "Pa, atm, bar, cbar, hPa, inHg, inH₂O, kPa, mPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
