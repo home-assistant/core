@@ -22,7 +22,7 @@ from homeassistant.components.homekit import (
     TYPE_AIR_PURIFIER,
     HomeKit,
 )
-from homeassistant.components.homekit.accessories import HomeBridge
+from homeassistant.components.homekit.accessories import HomeBridge, HomeDriver
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
@@ -878,6 +878,68 @@ async def test_homekit_start_with_a_device(
     assert isinstance(
         list(homekit.driver.accessory.accessories.values())[0], DeviceTriggerAccessory
     )
+    await homekit.async_stop()
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_start_with_a_child_device(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test HomeKit start skips a child device in the configured devices list.
+
+    A child device has no connections/hardware attributes; bridge setup must
+    exclude it (include_child_devices=False) and warn, instead of asserting it is
+    a full DeviceEntry and aborting bridge creation.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+    device_config_entry = MockConfigEntry(domain="test", data={})
+    device_config_entry.add_to_hass(hass)
+    # A valid full device keeps the configured devices list non-empty so it does
+    # not fall back to matching every device in the registry.
+    parent = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "parent")},
+    )
+    child = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "child")},
+        parent_device_id=parent.id,
+    )
+    # A light entity on the child exposes device triggers; without the fix the
+    # child id in the devices list reached `assert isinstance(device, DeviceEntry)`.
+    entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "child_light",
+        device_id=child.id,
+    )
+
+    await async_init_entry(hass, entry)
+    homekit = _mock_homekit(
+        hass, entry, HOMEKIT_MODE_BRIDGE, None, devices=[parent.id, child.id]
+    )
+    homekit.driver = hk_driver
+    homekit.aid_storage = MagicMock()
+
+    with (
+        patch(f"{PATH_HOMEKIT}.get_accessory", side_effect=Exception),
+        patch(f"{PATH_HOMEKIT}.async_show_setup_message"),
+    ):
+        await homekit.async_start()
+        await hass.async_block_till_done()
+
+    # Setup completed (no AssertionError) and the child was skipped with a warning.
+    assert homekit.status == STATUS_RUNNING
+    assert f"cannot add device {child.id}" in caplog.text
     await homekit.async_stop()
 
 

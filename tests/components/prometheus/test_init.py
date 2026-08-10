@@ -3277,6 +3277,53 @@ async def test_area_in_device(
 
 
 @pytest.mark.parametrize("namespace", [""])
+async def test_area_inherited_from_parent_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test an entity on a child device inherits the parent device's area."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    area = area_registry.async_create("Parent Area")
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "parent")},
+    )
+    device_registry.async_update_device(parent.id, area_id=area.id)
+    child = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "child")},
+        parent_device_id=parent.id,
+    )
+
+    entity = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="child_sensor",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="child_sensor",
+        original_name="Child Sensor",
+        device_id=child.id,
+    )
+    # The entity is seen for the first time only now, so its area is resolved via the
+    # child device, which has no area of its own and inherits the parent's.
+    set_state_with_entry(hass, entity, 21.0)
+    await hass.async_block_till_done()
+
+    body = await generate_latest_metrics(client)
+    InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.child_sensor",
+        area="parent_area",
+    ).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
 async def test_area_in_entity_on_entity_id_update(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
