@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.neopool.const import (
+    CONF_USE_AUX1,
+    CONF_USE_AUX2,
+    CONF_USE_AUX3,
+    CONF_USE_AUX4,
+    CONF_USE_COVER_SENSOR,
     CONF_USE_LIGHT,
     CURRENT_VERSION,
     DEFAULT_PORT,
@@ -63,6 +68,8 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "MBF_PAR_INTELLIGENT_INTERVALS": 4,
     "MBF_PAR_INTELLIGENT_TT_NEXT_INTERVAL": 7200,
     "MBF_PAR_FILTVALVE_REMAINING": 0,
+    "MBF_PAR_FILTVALVE_INTERVAL": 150,
+    "MBF_PAR_FILTVALVE_MODE": 0,
     "HIDRO_POLARITY": 0,
     "ION_POLARITY": 0,
     "PH_PUMP_STATUS": "off",
@@ -78,6 +85,12 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "Filtration Pump": False,
     "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
     "Pool Cover": 0,
+    # Aux relays default to a manual (ALWAYS_OFF) timer mode so switch writes
+    # pass the manual-mode guard; auto-mode tests override these per case.
+    "relay_aux1_enable": 4,
+    "relay_aux2_enable": 4,
+    "relay_aux3_enable": 4,
+    "relay_aux4_enable": 4,
     "CELL_RUNTIME_TOTAL": 0x00010000,
     "CELL_RUNTIME_PART": 0x00000E10,
     "CELL_RUNTIME_POLA": 0x00000708,
@@ -133,6 +146,31 @@ def mock_config_entry_light() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_config_entry_switch() -> MockConfigEntry:
+    """Return a config entry with the option-gated switches enabled."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_NAME: MOCK_NAME,
+            "unit_id": DEFAULT_UNIT_ID,
+            "modbus_framer": "tcp",
+        },
+        options={
+            CONF_USE_COVER_SENSOR: True,
+            CONF_USE_AUX1: True,
+            CONF_USE_AUX2: True,
+            CONF_USE_AUX3: True,
+            CONF_USE_AUX4: True,
+        },
+    )
+
+
+@pytest.fixture
 def mock_neopool_client() -> Generator[MagicMock]:
     """Patch the NeoPoolModbusClient and return a configurable mock instance."""
     with (
@@ -149,6 +187,11 @@ def mock_neopool_client() -> Generator[MagicMock]:
         mock_client.async_read_all = AsyncMock(return_value=dict(MOCK_POOL_DATA))
         mock_client.read_all_timers = AsyncMock(return_value={})
         mock_client.async_set_relay_state = AsyncMock(return_value={})
+        mock_client.async_set_manual_filtration = AsyncMock(return_value={})
+        mock_client.async_set_binary_flag = AsyncMock(return_value={})
+        mock_client.async_set_bitmask_flag = AsyncMock(return_value={})
+        mock_client.async_start_backwash = AsyncMock(return_value=None)
+        mock_client.async_stop_backwash = AsyncMock(return_value=None)
         mock_client.close = AsyncMock()
         yield mock_client
 

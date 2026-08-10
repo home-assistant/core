@@ -20,6 +20,11 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
 from .const import (
+    CONF_USE_AUX1,
+    CONF_USE_AUX2,
+    CONF_USE_AUX3,
+    CONF_USE_AUX4,
+    CONF_USE_COVER_SENSOR,
     CONF_USE_LIGHT,
     CURRENT_VERSION,
     DEFAULT_PORT,
@@ -112,6 +117,26 @@ class NeoPoolOptionsFlowHandler(OptionsFlowWithReload):
                 vol.Optional(
                     CONF_USE_LIGHT,
                     default=options.get(CONF_USE_LIGHT, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_COVER_SENSOR,
+                    default=options.get(CONF_USE_COVER_SENSOR, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX1,
+                    default=options.get(CONF_USE_AUX1, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX2,
+                    default=options.get(CONF_USE_AUX2, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX3,
+                    default=options.get(CONF_USE_AUX3, False),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_AUX4,
+                    default=options.get(CONF_USE_AUX4, False),
                 ): bool,
             }
         )
