@@ -308,3 +308,51 @@ async def test_flow_reauth(
         "username": "reauth_user",
         "password": "reauth_password",
     }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_key"),
+    [
+        (GatusClientError("Cannot connect"), "cannot_connect"),
+        (GatusClientError("401 Unauthorized"), "invalid_auth"),
+        (Exception("Unexpected backend explosion"), "unknown"),
+    ],
+)
+async def test_flow_reauth_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gatus_client: AsyncMock,
+    side_effect: Exception,
+    error_key: str,
+) -> None:
+    """Test reauth flow errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_gatus_client.get_endpoints_statuses.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "user", "password": "wrong_password"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_key}
+
+    mock_gatus_client.get_endpoints_statuses.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "user", "password": "correct_password"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_URL: "http://gatus.example.com:8080",
+        "username": "user",
+        "password": "correct_password",
+    }
