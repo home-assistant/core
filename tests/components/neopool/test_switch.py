@@ -246,6 +246,35 @@ async def test_hidro_cover_enable_bitmask_writes(
     )
 
 
+async def test_hidro_bitmask_switches_reflect_options_bitfield(
+    hass: HomeAssistant,
+    mock_config_entry_switch: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Both hidro switches read is_on from the shared MBF_PAR_HIDRO_COVER_ENABLE bitfield."""
+    await setup_integration(hass, mock_config_entry_switch)
+    cover_id = _entity_id_by_suffix(
+        hass, mock_config_entry_switch, "_mbf_par_hidro_cover_enable"
+    )
+    shutdown_id = _entity_id_by_suffix(
+        hass, mock_config_entry_switch, "_mbf_par_hidro_temp_shutdown"
+    )
+    assert hass.states.get(cover_id).state == STATE_OFF
+    assert hass.states.get(shutdown_id).state == STATE_OFF
+
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_HIDRO_COVER_ENABLE": 0x0003,
+    }
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(cover_id).state == STATE_ON
+    assert hass.states.get(shutdown_id).state == STATE_ON
+
+
 async def test_aux_relay_turn_on_off_writes_relay_state(
     hass: HomeAssistant,
     mock_config_entry_switch: MockConfigEntry,
@@ -531,7 +560,7 @@ async def test_aux_and_cover_absent_when_options_off(
         if e.domain == SWITCH_DOMAIN
         and (
             e.unique_id.endswith(("_aux1", "_aux2", "_aux3", "_aux4"))
-            or "hidro" in e.unique_id
+            or e.unique_id.endswith("_mbf_par_hidro_cover_enable")
         )
     ]
     assert gated == []

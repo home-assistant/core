@@ -84,6 +84,7 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "pH acid pump active": False,
     "Filtration Pump": False,
     "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
+    "MBF_PAR_HIDRO_COVER_ENABLE": 0x0000,
     "Pool Cover": 0,
     # Aux relays default to a manual (ALWAYS_OFF) timer mode so switch writes
     # pass the manual-mode guard; auto-mode tests override these per case.

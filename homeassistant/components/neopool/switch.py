@@ -283,7 +283,6 @@ SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
 # Entities gated on a config-entry option (in addition to their supported_fn).
 _ENTITY_OPTION_KEY: dict[str, str] = {
     "MBF_PAR_HIDRO_COVER_ENABLE": CONF_USE_COVER_SENSOR,
-    "MBF_PAR_HIDRO_TEMP_SHUTDOWN": CONF_USE_COVER_SENSOR,
     "aux1": CONF_USE_AUX1,
     "aux2": CONF_USE_AUX2,
     "aux3": CONF_USE_AUX3,
