@@ -228,6 +228,9 @@ class AbstractOAuth2Implementation(ABC):
 class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     """Local OAuth2 implementation."""
 
+    # Enforce str, and not optional. This implementation always has a secret
+    client_secret: str
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -417,15 +420,24 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
     """Device Flow OAuth2 implementation (RFC 8628).
 
     The call sequence is:
-    1. Call async_register_device to start the flow. The returned dict is the
-       raw device authorization response (RFC 8628, 3.2).
-       An optional interval (default 5 sec.) controls the polling frequency.
-    2. Display user_code and verification_uri to the user so they can
-       authorize on a device.
-    3. Pass the entire response dict from step 1 directly to
-       async_check_device_activation, which polls the token endpoint using
-       device_code until the user approves, the code expires, or an
-       unrecoverable error occurs
+    1.  Call async_register_device to start. It POSTs to the
+        authorization server's device endpoint and returns
+        that endpoint's response.
+        That response carries, according to RFC 8628 section 3.2:
+        - device_code: opaque code used to poll for activation in step 3.
+        - user_code: short code to show the user.
+        - verification_uri: URL to show the user, where user_code is entered.
+        - expires_in: lifetime in seconds of device_code and user_code.
+        - interval: optional, minimum seconds between polls in step 3
+            (defaults to 5 if absent)
+            The token endpoint may raise it later via a "slow_down" response.
+    2.  Display user_code and verification_uri to the user so they can
+        authorize on a device.
+    3.  Pass the entire response dict from step 1 directly to
+        async_check_device_activation, which polls the token endpoint (RFC
+        8628 section 3.4, the "device access token request") using
+        device_code until it returns a token response (section 3.5), the
+        code expires, or an unrecoverable error occurs.
     """
 
     def __init__(
