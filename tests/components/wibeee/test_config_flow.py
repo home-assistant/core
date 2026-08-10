@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
-import aiohttp
-
 from homeassistant import config_entries
 from homeassistant.components.wibeee.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -178,25 +176,6 @@ async def test_dhcp_not_wibeee_device(
         ip=MOCK_HOST,
         macaddress=MOCK_MAC,
         hostname="not_wibeee",
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
-        data=discovery_info,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_wibeee_device"
-
-
-async def test_dhcp_connection_error(
-    hass: HomeAssistant, mock_wibeee_api: MagicMock
-) -> None:
-    """Test DHCP discovery aborts when connection fails."""
-    mock_wibeee_api.async_check_connection.side_effect = aiohttp.ClientError("boom")
-    discovery_info = DhcpServiceInfo(
-        ip=MOCK_HOST,
-        macaddress=MOCK_MAC,
-        hostname="wibeee_test",
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

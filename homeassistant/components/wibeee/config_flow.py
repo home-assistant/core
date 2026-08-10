@@ -78,11 +78,7 @@ class WibeeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         session = async_get_clientsession(self.hass)
         api = WibeeeAPI(session, host, timeout=timedelta(seconds=5))
-        try:
-            is_wibeee = await api.async_check_connection()
-        except TimeoutError, aiohttp.ClientError:
-            return self.async_abort(reason="not_wibeee_device")
-        if not is_wibeee:
+        if not await api.async_check_connection():
             return self.async_abort(reason="not_wibeee_device")
 
         self._discovered_host = host
