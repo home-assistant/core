@@ -57,6 +57,7 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
             "expires_at": (time.time() + tokens["AuthenticationResult"]["ExpiresIn"]),
         }
 
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         session = async_get_clientsession(self.hass)

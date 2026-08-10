@@ -149,28 +149,27 @@ class AbstractOAuth2Implementation(ABC):
         Should raise OAuth2TokenRequestError on token refresh failure.
         """
 
-    async def _token_request(
-        self,
-        data: dict,
-        *,
-        url: str | None = None,
-        headers: dict[str, str] | None = None,
-    ) -> dict:
-        """Make a request to the token endpoint (or another OAuth2 endpoint).
+    async def _token_request(self, data: dict) -> dict:
+        """Make a token request.
 
-        Raises OAuth2TokenRequestError on request failure.
+        Raises OAuth2TokenRequestError on token request failure.
         """
+        return await self._oauth2_post_request(data, self.token_url)
+
+    async def _oauth2_post_request(
+        self, data: dict, url: str, headers: dict[str, str] | None = None
+    ) -> dict:
+        """POST an OAuth2 request and convert failures to OAuth2TokenRequestError."""
         session = async_get_clientsession(self.hass)
-        request_url = url or self.token_url
 
         data["client_id"] = self.client_id
         if self.client_secret:
             data["client_secret"] = self.client_secret
 
-        _LOGGER.debug("Sending token request to %s", request_url)
+        _LOGGER.debug("Sending token request to %s", url)
 
         try:
-            resp = await session.post(request_url, data=data, headers=headers)
+            resp = await session.post(url, data=data, headers=headers)
             if resp.status >= 400:
                 error_body = ""
                 try:
@@ -480,9 +479,9 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
 
     async def async_register_device(self) -> dict[str, Any]:
         """Register the device and return the device code response."""
-        return await self._token_request(
-            data=self._device_authorization_data(),
-            url=self.authorize_url,
+        return await self._oauth2_post_request(
+            self._device_authorization_data(),
+            self.authorize_url,
             headers={"Accept": "application/json"},
         )
 
@@ -788,7 +787,7 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
         self.login_task: asyncio.Task | None = None
         self.device_token: dict[str, str] | None = None
         self.device_flow_error: BaseException | None = None
-        self.device_registry: dict[str, Any] = {}
+        self.device_authorization: dict[str, str] = {}
 
     @override
     async def async_step_auth(
@@ -804,7 +803,7 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
         if self.login_task is None:
             try:
                 async with asyncio.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
-                    device_registry = await self.flow_impl.async_register_device()
+                    device_authorization = await self.flow_impl.async_register_device()
             except TimeoutError as err:
                 _LOGGER.error("Timeout registering device: %s", err)
                 return self.async_abort(reason="authorize_url_timeout")
@@ -817,12 +816,12 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
                     return self.async_abort(reason="oauth_unauthorized")
                 return self.async_abort(reason="oauth_failed")
 
-            self.device_registry = device_registry
+            self.device_authorization = device_authorization
 
             async def _wait_for_login() -> dict[str, str]:
                 """Wait for the user to authorize the device."""
                 return await self.flow_impl.async_check_device_activation(
-                    device_registry
+                    self.device_authorization
                 )
 
             _LOGGER.info("Starting login task")
@@ -839,8 +838,8 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
             step_id="device_flow",
             progress_action="wait_for_device",
             description_placeholders={
-                "url": self.device_registry["verification_uri"],
-                "code": self.device_registry["user_code"],
+                "url": self.device_authorization["verification_uri"],
+                "code": self.device_authorization["user_code"],
             },
             progress_task=self.login_task,
         )
