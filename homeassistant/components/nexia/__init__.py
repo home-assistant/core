@@ -61,6 +61,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> boo
     coordinator = NexiaDataUpdateCoordinator(hass, entry, nexia_home)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+
+    # Register thermostat devices before forwarding platforms so zone sub-devices
+    # can resolve their via_device_id regardless of platform setup order.
+    device_registry = dr.async_get(hass)
+    for thermostat_id in nexia_home.get_thermostat_ids():
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, thermostat_id)},  # type: ignore[arg-type] # until fix issue #139773
+        )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

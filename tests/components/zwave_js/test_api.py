@@ -116,7 +116,9 @@ def get_device(hass: HomeAssistant, node):
     """Get device ID for a node."""
     dev_reg = dr.async_get(hass)
     device_id = get_device_id(node.client.driver, node)
-    return dev_reg.async_get_device(identifiers={device_id})
+    return dev_reg.async_get_device_by_identifier(
+        device_id, hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
 
 async def test_no_driver(
@@ -180,8 +182,8 @@ async def test_network_status(
     assert result["controller"]["supports_long_range"]
 
     # Try API call with device ID
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "3245146787-52")},
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3245146787-52"), entry.entry_id
     )
     assert device
     with patch(
@@ -491,7 +493,9 @@ async def test_node_alerts(
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "3245146787-35")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3245146787-35"), entry.entry_id
+    )
     assert device
 
     await ws_client.send_json_auto_id(
@@ -742,6 +746,25 @@ async def test_add_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "interview stage completed"
     assert msg["event"]["stage"] == "NodeInfo"
+
+    event = Event(
+        type="interview progress",
+        data={
+            "source": "node",
+            "event": "interview progress",
+            "nodeId": 67,
+            "stage": "CommandClasses",
+            "progress": 42.5,
+            "endpoint": 0,
+            "commandClass": 112,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview progress"
+    assert msg["event"]["stage"] == "CommandClasses"
+    assert msg["event"]["progress"] == 42.5
 
     event = Event(
         type="interview completed",
@@ -1265,8 +1288,8 @@ async def test_provision_smart_start_node(
     assert msg["success"]
 
     # verify a device was created
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "provision_test")},
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "provision_test"), entry.entry_id
     )
     assert device is not None
     assert device.name == "test_name"
@@ -1926,8 +1949,8 @@ async def test_remove_node(
     assert msg["event"]["event"] == "node removed"
 
     # Verify device was removed from device registry
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "3245146787-67")},
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3245146787-67"), entry.entry_id
     )
     assert device is None
 
@@ -2114,8 +2137,8 @@ async def test_replace_failed_node(
 
     # Verify device was removed from device registry
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, "3245146787-67")},
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "3245146787-67"), entry.entry_id
         )
         is None
     )
@@ -2159,6 +2182,25 @@ async def test_replace_failed_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "interview stage completed"
     assert msg["event"]["stage"] == "NodeInfo"
+
+    event = Event(
+        type="interview progress",
+        data={
+            "source": "node",
+            "event": "interview progress",
+            "nodeId": 67,
+            "stage": "CommandClasses",
+            "progress": 42.5,
+            "endpoint": 0,
+            "commandClass": 112,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview progress"
+    assert msg["event"]["stage"] == "CommandClasses"
+    assert msg["event"]["progress"] == 42.5
 
     event = Event(
         type="interview completed",
@@ -2411,8 +2453,8 @@ async def test_remove_failed_node(
 
     # Verify device was removed from device registry
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, "3245146787-67")},
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "3245146787-67"), entry.entry_id
         )
         is None
     )
@@ -2763,6 +2805,25 @@ async def test_refresh_node_info(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "interview stage completed"
     assert msg["event"]["stage"] == "NodeInfo"
+
+    event = Event(
+        type="interview progress",
+        data={
+            "source": "node",
+            "event": "interview progress",
+            "nodeId": 52,
+            "stage": "CommandClasses",
+            "progress": 42.5,
+            "endpoint": 0,
+            "commandClass": 112,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview progress"
+    assert msg["event"]["stage"] == "CommandClasses"
+    assert msg["event"]["progress"] == 42.5
 
     event = Event(
         type="interview completed",
@@ -3481,6 +3542,107 @@ async def test_get_raw_config_parameter(
             TYPE: "zwave_js/get_raw_config_parameter",
             DEVICE_ID: device.id,
             PROPERTY: 102,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_subscribe_config_parameter_updates(
+    hass: HomeAssistant,
+    multisensor_6,
+    integration,
+    client,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the subscribe_config_parameter_updates command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+    multisensor_6_device = get_device(hass, multisensor_6)
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
+            DEVICE_ID: multisensor_6_device.id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    # Fire value updated
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": multisensor_6.node_id,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "newValue": 1,
+                "prevValue": 0,
+                "propertyName": "Stay Awake in Battery Mode",
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+    msg = await ws_client.receive_json()
+    # The initial state is no longer right since a config parameter has been updated
+    assert msg["event"] == {"id": "52-112-0-2", "value": 1}
+
+    # Validate that a non config parameter value update does not trigger an event
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": multisensor_6.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "newValue": 68,
+                "prevValue": 9,
+                "propertyName": "Air temperature",
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+
+    with pytest.raises(TimeoutError):
+        await ws_client.receive_json(timeout=0.1)
+
+    # Test sending command with improper entry ID fails
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
+            DEVICE_ID: "fake_device",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
+            DEVICE_ID: multisensor_6_device.id,
         }
     )
     msg = await ws_client.receive_json()
@@ -5132,8 +5294,8 @@ async def test_hard_reset_controller(
     msg = await ws_client.receive_json()
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, client.driver.controller.nodes[1]), entry.entry_id
     )
     assert device is not None
     assert msg["result"] == device.id
@@ -5157,8 +5319,8 @@ async def test_hard_reset_controller(
     msg = await ws_client.receive_json()
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, client.driver.controller.nodes[1]), entry.entry_id
     )
     assert device is not None
     assert msg["result"] == device.id
@@ -5192,8 +5354,8 @@ async def test_hard_reset_controller(
         msg = await ws_client.receive_json()
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, client.driver.controller.nodes[1]), entry.entry_id
     )
     assert device is not None
     assert msg["result"] == device.id

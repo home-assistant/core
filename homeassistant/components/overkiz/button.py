@@ -99,6 +99,9 @@ ALIAS_TYPES_WITH_TRANSLATION: set[str] = {
 }
 
 
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,

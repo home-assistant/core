@@ -36,10 +36,27 @@ async def setup_integration(
 @pytest.fixture
 def device_entry(
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     setup_integration: None,
 ) -> dr.DeviceEntry:
     """Get the device entry for testing."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), mock_config_entry.entry_id
+    )
+    assert device is not None
+    return device
+
+
+@pytest.fixture
+def water_heater_device_entry(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    setup_integration: None,
+) -> dr.DeviceEntry:
+    """Get the water heater sub-device entry for testing."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-water-heater"), mock_config_entry.entry_id
+    )
     assert device is not None
     return device
 
@@ -119,13 +136,13 @@ def device_entry(
 async def test_set_hot_water_schedule(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
     service_data: dict[str, Any],
     expected_schedules: dict[str, DaySchedule],
 ) -> None:
     """Test setting hot water schedule with various configurations."""
     # Call the service with device_id and slot fields
-    service_call_data = {"device_id": device_entry.id}
+    service_call_data = {"device_id": water_heater_device_entry.id}
     service_call_data.update(service_data)
 
     await hass.services.async_call(
@@ -216,7 +233,7 @@ async def test_no_config_entry_for_device(
 async def test_config_entry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test error when config entry is not loaded."""
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -226,7 +243,7 @@ async def test_config_entry_not_loaded(
             DOMAIN,
             "set_hot_water_schedule",
             {
-                "device_id": device_entry.id,
+                "device_id": water_heater_device_entry.id,
                 "monday_slots": [
                     {"start_time": time(6, 0), "end_time": time(8, 0)},
                 ],
@@ -241,12 +258,34 @@ async def test_config_entry_not_loaded(
 async def test_api_error(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test error when BSB-LAN API call fails."""
     mock_bsblan.set_hot_water_schedule.side_effect = BSBLANError("API Error")
 
     with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_hot_water_schedule",
+            {
+                "device_id": water_heater_device_entry.id,
+                "monday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "set_schedule_failed"
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_set_hot_water_schedule_rejects_main_device(
+    hass: HomeAssistant,
+    device_entry: dr.DeviceEntry,
+) -> None:
+    """Test that picking the main device for hot water schedule is rejected."""
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             "set_hot_water_schedule",
@@ -259,7 +298,7 @@ async def test_api_error(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "set_schedule_failed"
+    assert exc_info.value.translation_key == "not_a_water_heater_device"
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -276,7 +315,7 @@ async def test_api_error(
 )
 async def test_time_validation_errors(
     hass: HomeAssistant,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
     start_time: time | str,
     end_time: time | str,
     expected_error: str,
@@ -287,7 +326,7 @@ async def test_time_validation_errors(
             DOMAIN,
             "set_hot_water_schedule",
             {
-                "device_id": device_entry.id,
+                "device_id": water_heater_device_entry.id,
                 "monday_slots": [
                     {"start_time": start_time, "end_time": end_time},
                 ],
@@ -302,7 +341,7 @@ async def test_time_validation_errors(
 async def test_unprovided_days_are_none(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test that unprovided days are sent as None to BSB-LAN API."""
     # Only provide Monday and Tuesday, leave other days unprovided
@@ -310,7 +349,7 @@ async def test_unprovided_days_are_none(
         DOMAIN,
         "set_hot_water_schedule",
         {
-            "device_id": device_entry.id,
+            "device_id": water_heater_device_entry.id,
             "monday_slots": [
                 {"start_time": time(6, 0), "end_time": time(8, 0)},
             ],
@@ -346,7 +385,7 @@ async def test_unprovided_days_are_none(
 async def test_string_time_formats(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test service with string time formats."""
     # Test with string time formats
@@ -354,7 +393,7 @@ async def test_string_time_formats(
         DOMAIN,
         "set_hot_water_schedule",
         {
-            "device_id": device_entry.id,
+            "device_id": water_heater_device_entry.id,
             "monday_slots": [
                 {"start_time": "06:00:00", "end_time": "08:00:00"},  # With seconds
             ],
@@ -382,7 +421,7 @@ async def test_string_time_formats(
 @pytest.mark.usefixtures("setup_integration")
 async def test_non_standard_time_types(
     hass: HomeAssistant,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test service with non-standard time types raises error."""
     # Test with integer time values - schema validation will reject these
@@ -391,7 +430,7 @@ async def test_non_standard_time_types(
             DOMAIN,
             "set_hot_water_schedule",
             {
-                "device_id": device_entry.id,
+                "device_id": water_heater_device_entry.id,
                 "monday_slots": [
                     {"start_time": 600, "end_time": 800},
                 ],
@@ -431,7 +470,9 @@ async def test_sync_time_service(
     await hass.async_block_till_done()
 
     # Get the device
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), mock_config_entry.entry_id
+    )
     assert device is not None
 
     # Mock device time that differs from HA time
@@ -471,7 +512,9 @@ async def test_sync_time_service_no_update_when_same(
     await hass.async_block_till_done()
 
     # Get the device
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), mock_config_entry.entry_id
+    )
     assert device is not None
 
     # Mock device time that matches HA time
@@ -510,7 +553,9 @@ async def test_sync_time_service_error_handling(
     await hass.async_block_till_done()
 
     # Get the device
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), mock_config_entry.entry_id
+    )
     assert device is not None
 
     # Mock time() to raise an error
@@ -544,7 +589,9 @@ async def test_sync_time_service_set_time_error(
     await hass.async_block_till_done()
 
     # Get the device
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), mock_config_entry.entry_id
+    )
     assert device is not None
 
     # Mock device time that differs

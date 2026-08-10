@@ -6,7 +6,7 @@ from homeassistant.components.knx.const import (
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import SwitchSchema
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 
 from . import KnxEntityGenerator
@@ -70,6 +70,8 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # StateUpdater initialize state
     await knx.assert_read(_STATE_ADDRESS)
+    # state is unknown until the first GroupValueRead response is received
+    assert hass.states.get("switch.test").state is STATE_UNKNOWN
     await knx.receive_response(_STATE_ADDRESS, True)
     state = hass.states.get("switch.test")
     assert state.state is STATE_ON
@@ -109,6 +111,39 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # switch does not respond to read by default
     await knx.receive_read(_ADDRESS)
     await knx.assert_telegram_count(0)
+
+
+async def test_switch_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX switch with state_address restores last known state until bus read completes."""
+    _ADDRESS = "1/1/1"
+    _STATE_ADDRESS = "2/2/2"
+    fake_state = State("switch.test", STATE_ON)
+    mock_restore_cache(hass, (fake_state,))
+
+    await knx.setup_integration(
+        {
+            SwitchSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: _ADDRESS,
+                CONF_STATE_ADDRESS: _STATE_ADDRESS,
+            },
+        }
+    )
+
+    # StateUpdater initialize state - restored value is used before response is received
+    await knx.assert_read(_STATE_ADDRESS)
+    state = hass.states.get("switch.test")
+    assert state.state is STATE_ON
+
+    # bus confirms restored value - no additional state change expected
+    await knx.receive_response(_STATE_ADDRESS, True)
+    state = hass.states.get("switch.test")
+    assert state.state is STATE_ON
+
+    # bus reports a different value than restored - state updates to the real value
+    await knx.receive_write(_STATE_ADDRESS, False)
+    state = hass.states.get("switch.test")
+    assert state.state is STATE_OFF
 
 
 async def test_switch_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) -> None:

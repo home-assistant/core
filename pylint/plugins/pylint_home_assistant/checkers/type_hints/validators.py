@@ -34,7 +34,7 @@ _TYPE_HINT_MATCHERS.update(
 
 
 def is_valid_type(
-    expected_type: list[str] | str | None | object,
+    expected_type: list[str] | str | object | None,
     node: nodes.NodeNG,
     in_return: bool = False,
 ) -> bool:

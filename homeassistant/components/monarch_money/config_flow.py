@@ -68,9 +68,8 @@ async def validate_login(
         LOGGER.debug("Attempting to authenticate with MFA code")
         try:
             await monarch_client.multi_factor_authenticate(email, password, mfa_code)
-        except KeyError as err:
-            # A bug in the backing lib that I don't control
-            # throws a KeyError if the MFA code is wrong
+        except (KeyError, RequireMFAException, LoginFailedException) as err:
+            # Backing library MFA failures can surface as a KeyError or auth error.
             LOGGER.debug("Bad MFA Code")
             raise BadMFA from err
     else:

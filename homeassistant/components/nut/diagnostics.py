@@ -2,9 +2,11 @@
 
 from typing import Any
 
-import attr
-
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -34,14 +36,14 @@ async def async_get_config_entry_diagnostics(
     # Gather information how this Nut device is represented in Home Assistant
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
-    hass_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, hass_data.unique_id)}
+    hass_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, hass_data.unique_id), entry.entry_id
     )
     # Device is always created
     assert hass_device is not None
 
     data["device"] = {
-        **attr.asdict(hass_device),
+        **device_entry_as_dict(hass_device),
         "entities": {},
     }
 
@@ -61,10 +63,11 @@ async def async_get_config_entry_diagnostics(
             # The context doesn't provide useful information in this case.
             state_dict.pop("context", None)
 
+        entity_dict = entity_entry_as_dict(entity_entry)
+        # The entity_id is already provided at root level (the key).
+        del entity_dict["entity_id"]
         data["device"]["entities"][entity_entry.entity_id] = {
-            **attr.asdict(
-                entity_entry, filter=lambda attr, value: attr.name != "entity_id"
-            ),
+            **entity_dict,
             "state": state_dict,
         }
 

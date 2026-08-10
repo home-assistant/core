@@ -4,7 +4,7 @@ from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent
-from homeassistant.helpers.llm import IntentTool, LLMContext, Tool
+from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
 
 from .const import DOMAIN
 from .intent import (
@@ -22,16 +22,21 @@ LLM_INTENTS = (
 
 
 @callback
-def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
+def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools | None:
     """Return LLM tools for the integration's intents when its domain is exposed."""
+    if api_id != LLM_API_ASSIST:
+        return None
+
     if not llm_context.assistant:
-        return LLMTools(tools=[])
+        return None
 
     if not any(
         async_should_expose(hass, llm_context.assistant, state.entity_id)
         for state in hass.states.async_all(DOMAIN)
     ):
-        return LLMTools(tools=[])
+        return None
 
     tools: list[Tool] = [
         IntentTool(handler.intent_type, handler)

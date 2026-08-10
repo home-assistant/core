@@ -38,17 +38,22 @@ def doorbird_info() -> dict[str, Any]:
     return load_json_value_fixture("info.json", "doorbird")["BHA"]["VERSION"][0]
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture
 def doorbird_schedule() -> list[DoorBirdScheduleEntry]:
-    """Return a loaded DoorBird schedule fixture."""
+    """Return a freshly parsed DoorBird schedule fixture.
+
+    Function-scoped because the integration mutates schedule entries in place
+    via `_configure_unconfigured_favorites` — sharing one instance across tests
+    would let earlier tests poison later ones.
+    """
     return DoorBirdScheduleEntry.parse_all(
         load_json_value_fixture("schedule.json", "doorbird")
     )
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture
 def doorbird_schedule_wrong_param() -> list[DoorBirdScheduleEntry]:
-    """Return a loaded DoorBird schedule fixture with an incorrect param."""
+    """Return a freshly parsed DoorBird schedule fixture with an incorrect param."""
     return DoorBirdScheduleEntry.parse_all(
         load_json_value_fixture("schedule_wrong_param.json", "doorbird")
     )
