@@ -84,10 +84,7 @@ class PowerwallKeyRejectedError(Exception):
     """
 
 
-_PENDING_STATES = (
-    AuthorizedClientState.PENDING,
-    AuthorizedClientState.PENDING_VERIFICATION,
-)
+_PENDING_STATES = (AuthorizedClientState.PENDING_VERIFICATION,)
 
 
 def _is_gateway_unreachable(err: TeslaFleetError | ClientError) -> bool:
@@ -306,6 +303,10 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_credentials()
             if client.state in _PENDING_STATES:
                 return await self.async_step_pair()
+            if client.state == AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
+                # Terminal: the approval window expired, so the key can no longer
+                # be verified without restarting setup.
+                return self.async_abort(reason="key_verification_timeout")
             # The typed accessor preserves an unrecognized state verbatim. Such
             # a read is not usable, so treat it as a lookup failure rather than
             # resuming pairing on a state we cannot reason about.
@@ -359,15 +360,15 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             )
         if client.state == AuthorizedClientState.VERIFIED:
             return await self.async_step_credentials()
-        if client.state == AuthorizedClientState.PENDING:
-            return self.async_show_form(step_id="pair", errors={"base": "key_pending"})
         if client.state == AuthorizedClientState.PENDING_VERIFICATION:
-            return self.async_show_form(
-                step_id="pair", errors={"base": "key_pending_verification"}
-            )
+            return self.async_show_form(step_id="pair", errors={"base": "key_pending"})
+        if client.state == AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
+            # Terminal: the approval window expired. Aborting lets the user
+            # restart setup instead of re-submitting the form forever.
+            return self.async_abort(reason="key_verification_timeout")
         # Only an explicit PENDING_VERIFICATION may claim the approval is still
-        # being verified; an unrecognized state is a failed read, and reporting
-        # it as pending would trap the user in the form retrying forever.
+        # awaiting the user; an unrecognized state is a failed read, and
+        # reporting it as pending would trap the user in the form retrying forever.
         LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
         return self.async_show_form(step_id="pair", errors={"base": "cannot_connect"})
 

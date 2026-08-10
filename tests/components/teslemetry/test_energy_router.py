@@ -160,9 +160,17 @@ def _own_key_clients(
             AuthorizedClient(
                 public_key="some-other-key",
                 state=AuthorizedClientState.VERIFIED,
+                roles=None,
+                verification=None,
                 raw={},
             ),
-            AuthorizedClient(public_key=PUBLIC_KEY_B64, state=state, raw={}),
+            AuthorizedClient(
+                public_key=PUBLIC_KEY_B64,
+                state=state,
+                roles=None,
+                verification=None,
+                raw={},
+            ),
         ],
         raw=None,
     )
@@ -275,7 +283,7 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
             new=AsyncMock(
                 side_effect=[
                     _empty_clients(),
-                    _own_key_clients(AuthorizedClientState.PENDING),
+                    _own_key_clients(AuthorizedClientState.PENDING_VERIFICATION),
                     _own_key_clients(AuthorizedClientState.VERIFIED),
                 ]
             ),

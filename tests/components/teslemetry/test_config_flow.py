@@ -855,7 +855,9 @@ async def test_energy_subentry_resume_pending_key_not_reregistered(
         clients=[
             AuthorizedClient(
                 public_key=_TEST_PUBLIC_KEY_B64,
-                state=AuthorizedClientState.PENDING,
+                state=AuthorizedClientState.PENDING_VERIFICATION,
+                roles=None,
+                verification=None,
                 raw={},
             )
         ],
@@ -891,6 +893,8 @@ async def test_energy_subentry_verified_key_advances_to_credentials(
             AuthorizedClient(
                 public_key=_TEST_PUBLIC_KEY_B64,
                 state=AuthorizedClientState.VERIFIED,
+                roles=None,
+                verification=None,
                 raw={},
             )
         ],
@@ -913,29 +917,22 @@ async def test_energy_subentry_verified_key_advances_to_credentials(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-@pytest.mark.parametrize(
-    ("state", "expected_error"),
-    [
-        pytest.param(AuthorizedClientState.PENDING, "key_pending", id="pending"),
-        pytest.param(
-            AuthorizedClientState.PENDING_VERIFICATION,
-            "key_pending_verification",
-            id="pending_verification",
-        ),
-    ],
-)
 async def test_energy_subentry_pair_submit_still_pending(
     hass: HomeAssistant,
-    state: AuthorizedClientState,
-    expected_error: str,
 ) -> None:
-    """Submitting the pair form while the key is still pending re-shows it with an error."""
+    """Submitting the pair form while the key is still awaiting approval re-shows it with an error."""
     entry = await setup_platform(hass)
     subentry_id = _energy_subentry_id(entry)
 
     pending = AuthorizedClients(
         clients=[
-            AuthorizedClient(public_key=_TEST_PUBLIC_KEY_B64, state=state, raw={})
+            AuthorizedClient(
+                public_key=_TEST_PUBLIC_KEY_B64,
+                state=AuthorizedClientState.PENDING_VERIFICATION,
+                roles=None,
+                verification=None,
+                raw={},
+            )
         ],
         raw=None,
     )
@@ -959,8 +956,93 @@ async def test_energy_subentry_pair_submit_still_pending(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
-    assert result["errors"] == {"base": expected_error}
+    assert result["errors"] == {"base": "key_pending"}
     add_client.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_energy_subentry_resume_verification_timeout_aborts(
+    hass: HomeAssistant,
+) -> None:
+    """Resuming with a key whose approval window has expired aborts instead of pairing."""
+    entry = await setup_platform(hass)
+    subentry_id = _energy_subentry_id(entry)
+
+    timed_out = AuthorizedClients(
+        clients=[
+            AuthorizedClient(
+                public_key=_TEST_PUBLIC_KEY_B64,
+                state=AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT,
+                roles=None,
+                verification=None,
+                raw={},
+            )
+        ],
+        raw=None,
+    )
+    add_client = AsyncMock(return_value={})
+    with (
+        patch.object(
+            TeslemetryEnergySite,
+            "find_authorized_clients",
+            AsyncMock(return_value=timed_out),
+        ),
+        patch.object(TeslemetryEnergySite, "add_authorized_client", add_client),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "key_verification_timeout"
+    add_client.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_energy_subentry_pair_submit_verification_timeout_aborts(
+    hass: HomeAssistant,
+) -> None:
+    """A key whose approval window expires while pairing aborts instead of hanging."""
+    entry = await setup_platform(hass)
+    subentry_id = _energy_subentry_id(entry)
+
+    pending = AuthorizedClients(
+        clients=[
+            AuthorizedClient(
+                public_key=_TEST_PUBLIC_KEY_B64,
+                state=AuthorizedClientState.PENDING_VERIFICATION,
+                roles=None,
+                verification=None,
+                raw={},
+            )
+        ],
+        raw=None,
+    )
+    timed_out = AuthorizedClients(
+        clients=[
+            AuthorizedClient(
+                public_key=_TEST_PUBLIC_KEY_B64,
+                state=AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT,
+                roles=None,
+                verification=None,
+                raw={},
+            )
+        ],
+        raw=None,
+    )
+    with patch.object(
+        TeslemetryEnergySite,
+        "find_authorized_clients",
+        AsyncMock(side_effect=[pending, timed_out]),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pair"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "key_verification_timeout"
 
 
 _UNKNOWN_CLIENT_STATES = [
@@ -987,7 +1069,13 @@ async def test_energy_subentry_unknown_state_aborts_as_lookup_failure(
 
     unknown = AuthorizedClients(
         clients=[
-            AuthorizedClient(public_key=_TEST_PUBLIC_KEY_B64, state=state, raw={})
+            AuthorizedClient(
+                public_key=_TEST_PUBLIC_KEY_B64,
+                state=state,
+                roles=None,
+                verification=None,
+                raw={},
+            )
         ],
         raw=None,
     )
@@ -1025,7 +1113,9 @@ async def test_energy_subentry_pair_submit_unknown_state(
         clients=[
             AuthorizedClient(
                 public_key=_TEST_PUBLIC_KEY_B64,
-                state=AuthorizedClientState.PENDING,
+                state=AuthorizedClientState.PENDING_VERIFICATION,
+                roles=None,
+                verification=None,
                 raw={},
             )
         ],
@@ -1033,7 +1123,13 @@ async def test_energy_subentry_pair_submit_unknown_state(
     )
     unknown = AuthorizedClients(
         clients=[
-            AuthorizedClient(public_key=_TEST_PUBLIC_KEY_B64, state=state, raw={})
+            AuthorizedClient(
+                public_key=_TEST_PUBLIC_KEY_B64,
+                state=state,
+                roles=None,
+                verification=None,
+                raw={},
+            )
         ],
         raw=None,
     )
@@ -1068,7 +1164,9 @@ async def test_energy_subentry_pair_submit_verified_advances_to_credentials(
         clients=[
             AuthorizedClient(
                 public_key=_TEST_PUBLIC_KEY_B64,
-                state=AuthorizedClientState.PENDING,
+                state=AuthorizedClientState.PENDING_VERIFICATION,
+                roles=None,
+                verification=None,
                 raw={},
             )
         ],
@@ -1079,6 +1177,8 @@ async def test_energy_subentry_pair_submit_verified_advances_to_credentials(
             AuthorizedClient(
                 public_key=_TEST_PUBLIC_KEY_B64,
                 state=AuthorizedClientState.VERIFIED,
+                roles=None,
+                verification=None,
                 raw={},
             )
         ],
@@ -1150,6 +1250,8 @@ async def test_energy_subentry_pair_recovers_after_error(
             AuthorizedClient(
                 public_key=_TEST_PUBLIC_KEY_B64,
                 state=AuthorizedClientState.VERIFIED,
+                roles=None,
+                verification=None,
                 raw={},
             )
         ],
