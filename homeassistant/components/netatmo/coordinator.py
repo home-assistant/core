@@ -51,6 +51,7 @@ from .const import (
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
 )
+from .device import async_register_parent_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,6 +174,7 @@ class NetatmoDataHandler:
         self.device_ids: dict[str, str] = {}
         self.cameras: dict[str, str] = {}
         self.events: dict[str, dict] = {}
+        self.parent_device_ids: dict[str, str] = {}
 
     async def async_setup(self) -> None:
         """Set up the Netatmo data handler."""
@@ -346,6 +348,10 @@ class NetatmoDataHandler:
 
     async def async_dispatch(self) -> None:
         """Dispatch the creation of entities."""
+        self.parent_device_ids = async_register_parent_devices(
+            self.hass, self.config_entry, self.account
+        )
+
         await self.subscribe(WEATHER, WEATHER, None)
         await self.subscribe(AIR_CARE, AIR_CARE, None)
 
