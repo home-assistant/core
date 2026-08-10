@@ -159,10 +159,16 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
     async def _remove_stale_webhooks(
         self, webhook_id: str, webhook_index: int, webhooks: list[dict]
     ) -> None:
+        cloudhook_url = self.config_entry.data.get(CONF_CLOUDHOOK_URL)
+
         for existing_webhook in webhooks:
             url = existing_webhook["url"]
             index = existing_webhook["id"]
-            if webhook_id in url and webhook_index != index:
+            is_integration_webhook = url.endswith(f"/{webhook_id}") or (
+                cloudhook_url and url == cloudhook_url
+            )
+
+            if is_integration_webhook and webhook_index != index:
                 _LOGGER.debug("Removing stale webhook with URL: %s", url)
                 try:
                     await self.lock.deleteWebhook(index)
@@ -182,7 +188,8 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
                 webhook_url = self.config_entry.data[CONF_CLOUDHOOK_URL]
             else:
                 webhook_url = next(
-                    (x["url"] for x in webhooks if webhook_id in x["url"]), None
+                    (x["url"] for x in webhooks if x["url"].endswith(f"/{webhook_id}")),
+                    None,
                 )
                 _LOGGER.debug("Webhook URL: %s", webhook_url)
 
