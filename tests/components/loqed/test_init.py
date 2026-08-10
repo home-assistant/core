@@ -152,6 +152,50 @@ async def test_ensure_webhooks_removes_stale_webhooks(
     lock.deleteWebhook.assert_has_calls([call(14), call(4)], any_order=True)
 
 
+async def test_ensure_webhooks_handles_bridge_error_on_cleanup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lock: loqed.Lock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that stale webhook cleanup handles bridge connection errors smoothly."""
+    await hass.config.async_update(internal_url="http://192.168.1.10:8123")
+
+    config: dict[str, Any] = {DOMAIN: {}}
+    config_entry.add_to_hass(hass)
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+
+    lock_status = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+
+    stale_webhook = {
+        "id": 14,
+        "url": f"https://this-is-external-url.hass.nabu.casa/api/webhook/{webhook_id}",
+    }
+    new_webhook = {
+        "id": 15,
+        "url": f"{hass.config.internal_url}/api/webhook/{webhook_id}",
+    }
+
+    lock.getWebhooks = AsyncMock(
+        side_effect=[[stale_webhook], [stale_webhook, new_webhook]]
+    )
+
+    lock.deleteWebhook = AsyncMock(side_effect=aiohttp.ClientError)
+
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
+    ):
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    lock.deleteWebhook.assert_called_once_with(14)
+
+    assert "Could not remove stale webhook from LOQED bridge" in caplog.text
+
+
 async def test_cannot_connect_to_bridge_will_retry(
     hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
 ) -> None:

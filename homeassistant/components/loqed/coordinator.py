@@ -150,9 +150,11 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             await self.lock.registerWebhook(webhook_url)
             webhooks = await self.lock.getWebhooks()
             webhook_index = next(x["id"] for x in webhooks if x["url"] == webhook_url)
-            await self._remove_stale_webhooks(webhook_id, webhook_index, webhooks)
 
             _LOGGER.debug("Webhook got index %s", webhook_index)
+
+        if webhook_index:
+            await self._remove_stale_webhooks(webhook_id, webhook_index, webhooks)
 
     async def _remove_stale_webhooks(
         self, webhook_id: str, webhook_index: int, webhooks: list[dict]
