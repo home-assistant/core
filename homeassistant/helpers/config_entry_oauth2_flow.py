@@ -14,7 +14,6 @@ from collections.abc import Awaitable, Callable
 import hashlib
 from http import HTTPStatus
 import json
-from json import JSONDecodeError
 import logging
 from random import randint
 import secrets
@@ -90,6 +89,11 @@ def async_get_redirect_uri(hass: HomeAssistant) -> str:
 class AbstractOAuth2Implementation(ABC):
     """Base class to abstract OAuth2 authentication."""
 
+    hass: HomeAssistant
+    client_id: str
+    client_secret: str | None = None
+    token_url: str
+
     @property
     @abstractmethod
     def name(self) -> str:
@@ -144,6 +148,82 @@ class AbstractOAuth2Implementation(ABC):
 
         Should raise OAuth2TokenRequestError on token refresh failure.
         """
+
+    async def _token_request(
+        self,
+        data: dict,
+        *,
+        url: str | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict:
+        """Make a request to the token endpoint (or another OAuth2 endpoint).
+
+        Raises OAuth2TokenRequestError on request failure.
+        """
+        session = async_get_clientsession(self.hass)
+        request_url = url or self.token_url
+
+        data["client_id"] = self.client_id
+        if self.client_secret:
+            data["client_secret"] = self.client_secret
+
+        _LOGGER.debug("Sending token request to %s", request_url)
+
+        try:
+            resp = await session.post(request_url, data=data, headers=headers)
+            if resp.status >= 400:
+                error_body = ""
+                try:
+                    error_body = await resp.text()
+                    error_data = json.loads(error_body)
+                    error_code = error_data.get("error", "unknown error")
+                    error_description = error_data.get("error_description")
+                    detail = (
+                        f"{error_code}: {error_description}"
+                        if error_description
+                        else error_code
+                    )
+                except ClientError, ValueError, AttributeError:
+                    detail = error_body[:200] if error_body else "unknown error"
+                _LOGGER.debug(
+                    "Token request for %s failed (%s): %s",
+                    self.domain,
+                    resp.status,
+                    detail,
+                )
+            resp.raise_for_status()
+        except ClientResponseError as err:
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+                # Recoverable error
+                raise OAuth2TokenRequestTransientError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self.domain,
+                ) from err
+            if 400 <= err.status <= 499:
+                # Non-recoverable error
+                raise OAuth2TokenRequestReauthError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self.domain,
+                ) from err
+
+            raise OAuth2TokenRequestError(
+                request_info=err.request_info,
+                history=err.history,
+                status=err.status,
+                message=err.message,
+                headers=err.headers,
+                domain=self.domain,
+            ) from err
+
+        return cast(dict, await resp.json())
 
 
 class LocalOAuth2Implementation(AbstractOAuth2Implementation):
@@ -236,75 +316,6 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         )
 
         return {**token, **new_token}
-
-    async def _token_request(self, data: dict) -> dict:
-        """Make a token request.
-
-        Raises OAuth2TokenRequestError on token request failure.
-        """
-        session = async_get_clientsession(self.hass)
-
-        data["client_id"] = self.client_id
-        if self.client_secret:
-            data["client_secret"] = self.client_secret
-
-        _LOGGER.debug("Sending token request to %s", self.token_url)
-
-        try:
-            resp = await session.post(self.token_url, data=data)
-            if resp.status >= 400:
-                error_body = ""
-                try:
-                    error_body = await resp.text()
-                    error_data = json.loads(error_body)
-                    error_code = error_data.get("error", "unknown error")
-                    error_description = error_data.get("error_description")
-                    detail = (
-                        f"{error_code}: {error_description}"
-                        if error_description
-                        else error_code
-                    )
-                except ClientError, ValueError, AttributeError:
-                    detail = error_body[:200] if error_body else "unknown error"
-                _LOGGER.debug(
-                    "Token request for %s failed (%s): %s",
-                    self.domain,
-                    resp.status,
-                    detail,
-                )
-            resp.raise_for_status()
-        except ClientResponseError as err:
-            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
-                # Recoverable error
-                raise OAuth2TokenRequestTransientError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self._domain,
-                ) from err
-            if 400 <= err.status <= 499:
-                # Non-recoverable error
-                raise OAuth2TokenRequestReauthError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self._domain,
-                ) from err
-
-            raise OAuth2TokenRequestError(
-                request_info=err.request_info,
-                history=err.history,
-                status=err.status,
-                message=err.message,
-                headers=err.headers,
-                domain=self._domain,
-            ) from err
-
-        return cast(dict, await resp.json())
 
 
 class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
@@ -469,65 +480,11 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
 
     async def async_register_device(self) -> dict[str, Any]:
         """Register the device and return the device code response."""
-        session = async_get_clientsession(self.hass)
-
-        try:
-            _LOGGER.debug(
-                "Sending device authorization request to %s", self.authorize_url
-            )
-            resp = await session.post(
-                self.authorize_url,
-                data=self._device_authorization_data(),
-                headers={"Accept": "application/json"},
-            )
-            if resp.status >= 400:
-                try:
-                    error_response = await resp.json()
-                except ClientError, JSONDecodeError:
-                    error_response = {}
-                error_code = error_response.get("error", "unknown")
-                error_description = error_response.get(
-                    "error_description", "unknown error"
-                )
-                _LOGGER.error(
-                    "Device authorization request for %s failed (%s): %s",
-                    self.domain,
-                    error_code,
-                    error_description,
-                )
-            resp.raise_for_status()
-        except ClientResponseError as err:
-            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
-                # Recoverable error
-                raise OAuth2TokenRequestTransientError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self._domain,
-                ) from err
-            if 400 <= err.status <= 499:
-                # Non-recoverable error
-                raise OAuth2TokenRequestReauthError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self._domain,
-                ) from err
-
-            raise OAuth2TokenRequestError(
-                request_info=err.request_info,
-                history=err.history,
-                status=err.status,
-                message=err.message,
-                headers=err.headers,
-                domain=self._domain,
-            ) from err
-
-        return cast(dict, await resp.json())
+        return await self._token_request(
+            data=self._device_authorization_data(),
+            url=self.authorize_url,
+            headers={"Accept": "application/json"},
+        )
 
     @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
@@ -598,73 +555,6 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
 
             await asyncio.sleep(interval + jitter)
         return cast(dict, response)
-
-    async def _token_request(self, data: dict) -> dict:
-        """Make a token request.
-
-        Raises OAuth2TokenRequestError on token request failure.
-        """
-        session = async_get_clientsession(self.hass)
-
-        data["client_id"] = self.client_id
-
-        _LOGGER.debug("Sending token request to %s", self.token_url)
-
-        try:
-            resp = await session.post(self.token_url, data=data)
-            if resp.status >= 400:
-                error_body = ""
-                try:
-                    error_body = await resp.text()
-                    error_data = json.loads(error_body)
-                    error_code = error_data.get("error", "unknown error")
-                    error_description = error_data.get("error_description")
-                    detail = (
-                        f"{error_code}: {error_description}"
-                        if error_description
-                        else error_code
-                    )
-                except ClientError, ValueError, AttributeError:
-                    detail = error_body[:200] if error_body else "unknown error"
-                _LOGGER.debug(
-                    "Token request for %s failed (%s): %s",
-                    self._domain,
-                    resp.status,
-                    detail,
-                )
-            resp.raise_for_status()
-        except ClientResponseError as err:
-            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
-                # Recoverable error
-                raise OAuth2TokenRequestTransientError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self._domain,
-                ) from err
-            if 400 <= err.status <= 499:
-                # Non-recoverable error
-                raise OAuth2TokenRequestReauthError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self._domain,
-                ) from err
-
-            raise OAuth2TokenRequestError(
-                request_info=err.request_info,
-                history=err.history,
-                status=err.status,
-                message=err.message,
-                headers=err.headers,
-                domain=self._domain,
-            ) from err
-
-        return cast(dict, await resp.json())
 
 
 class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
