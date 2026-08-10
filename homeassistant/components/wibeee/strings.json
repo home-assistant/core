@@ -256,6 +256,9 @@
     "no_device_info": {
       "message": "No device info received from the Wibeee device at {host}"
     },
+    "unexpected_device": {
+      "message": "Unexpected device found at {host}; expected {expected}, found {found}"
+    },
     "update_error": {
       "message": "Error fetching data from the Wibeee device at {host}: {error}"
     }

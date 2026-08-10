@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for Wibeee energy monitors."""
 
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 import aiohttp
 from pywibeee import WibeeeAPI, WibeeeDeviceInfo
@@ -55,6 +55,19 @@ class WibeeeCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 translation_domain=DOMAIN,
                 translation_key="no_device_info",
                 translation_placeholders={"host": self.api.host},
+            )
+
+        # All wibeee entries have a MAC unique_id
+        expected_mac = cast(str, self.config_entry.unique_id)
+        if device_info.mac_addr_formatted != expected_mac:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_device",
+                translation_placeholders={
+                    "host": self.api.host,
+                    "expected": expected_mac,
+                    "found": device_info.mac_addr_formatted,
+                },
             )
 
         self.device_info = device_info
