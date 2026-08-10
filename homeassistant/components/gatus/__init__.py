@@ -5,7 +5,11 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import GatusConfigEntry, GatusDataUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.EVENT,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GatusConfigEntry) -> bool:

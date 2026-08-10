@@ -30,6 +30,21 @@
     }
   },
   "entity": {
+    "event": {
+      "status_event": {
+        "name": "Status event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "healthy": "Healthy",
+              "resolved": "Resolved",
+              "start": "Started",
+              "unhealthy": "Unhealthy"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "response_time": {
         "name": "Response time"
