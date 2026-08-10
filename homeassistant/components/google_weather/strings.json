@@ -107,6 +107,15 @@
     },
     "update_error": {
       "message": "Error fetching weather data: {error}"
+    },
+    "minute_forecast_error": {
+      "message": "Error fetching minute forecast: {error}"
+    }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "name": "Get minute forecast",
+      "description": "Retrieves the minute-by-minute precipitation forecast (nowcast) for the next 6 hours."
     }
   }
 }

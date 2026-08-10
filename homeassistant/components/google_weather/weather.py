@@ -1,9 +1,10 @@
 """Weather entity."""
 
-from typing import override
+from typing import Any, override
 
 from google_weather_api import (
     DailyForecastResponse,
+    GoogleWeatherApiError,
     HourlyForecastResponse,
     WeatherCondition,
 )
@@ -42,15 +43,22 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
+)
 
+from .const import DOMAIN
 from .coordinator import (
     GoogleWeatherConfigEntry,
     GoogleWeatherCurrentConditionsCoordinator,
@@ -60,6 +68,8 @@ from .coordinator import (
 from .entity import GoogleWeatherBaseEntity
 
 PARALLEL_UPDATES = 0
+
+SERVICE_GET_MINUTE_FORECAST = "get_minute_forecast"
 
 # Maps https://developers.google.com/maps/documentation/weather/weather-condition-icons
 # to https://developers.home-assistant.io/docs/core/entity/weather/#recommended-values-for-state-and-condition
@@ -130,6 +140,14 @@ async def async_setup_entry(
             config_subentry_id=subentry.subentry_id,
         )
 
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        name=SERVICE_GET_MINUTE_FORECAST,
+        schema=None,
+        func="async_get_minute_forecast",
+        supports_response=SupportsResponse.ONLY,
+    )
+
 
 class GoogleWeatherEntity(
     CoordinatorWeatherEntity[
@@ -174,6 +192,23 @@ class GoogleWeatherEntity(
             twice_daily_coordinator=subentry_runtime_data.coordinator_daily_forecast,
         )
         GoogleWeatherBaseEntity.__init__(self, entry, subentry)
+        self._api = entry.runtime_data.api
+        self._latitude: float = subentry.data[CONF_LATITUDE]
+        self._longitude: float = subentry.data[CONF_LONGITUDE]
+
+    async def async_get_minute_forecast(self) -> dict[str, Any]:
+        """Return the minute-by-minute precipitation nowcast."""
+        try:
+            response = await self._api.async_get_minute_forecast(
+                self._latitude, self._longitude
+            )
+        except GoogleWeatherApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="minute_forecast_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        return response.to_dict()
 
     @property
     @override

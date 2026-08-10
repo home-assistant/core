@@ -2,16 +2,14 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: No actions.
+    comment: Only entity services, which are registered in the weather platform.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: No actions.
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
@@ -32,9 +30,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: No actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

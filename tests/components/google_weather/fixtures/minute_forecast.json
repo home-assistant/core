@@ -1,0 +1,36 @@
+{
+  "overallPredictionTimeframe": {
+    "startTime": "2025-06-01T00:00:00Z",
+    "endTime": "2025-06-01T06:00:00Z"
+  },
+  "timeZone": {
+    "id": "America/New_York"
+  },
+  "segments": [
+    {
+      "timeFrame": {
+        "startTime": "2025-06-01T00:00:00Z",
+        "endTime": "2025-06-01T00:01:00Z"
+      },
+      "type": "RAIN",
+      "probability": 62,
+      "qpf": {
+        "quantity": 0.5,
+        "unit": "MILLIMETERS"
+      },
+      "snowfallAmount": {
+        "quantity": 0,
+        "unit": "MILLIMETERS"
+      },
+      "intensity": "MODERATE"
+    },
+    {
+      "timeFrame": {
+        "startTime": "2025-06-01T00:01:00Z",
+        "endTime": "2025-06-01T00:02:00Z"
+      },
+      "type": "NONE",
+      "intensity": "NO_INTENSITY"
+    }
+  ]
+}
