@@ -48,14 +48,18 @@ _LOGGER = logging.getLogger(__name__)
 EVICT_EXPIRED_HOUR = 3
 
 # Interval at which buffered telegram writes are flushed to the database.
-# Websocket queries flush on demand (``flush_first=True``), so the only telegrams
-# at risk from a longer interval are those buffered during an ungraceful shutdown.
-FLUSH_INTERVAL_SECONDS = 600
+# Postgres flushes far more often than sqlite: push-based consumers, unlike
+# on-demand-flushed (``flush_first=True``) queries, only see a telegram once
+# it is actually written.
+FLUSH_INTERVAL_SECONDS_SQLITE = 600
+FLUSH_INTERVAL_SECONDS_POSTGRES = 1
 
 # The buffer drops the oldest telegrams when full. Size it to cover a full
-# flush interval at ~50 telegrams/s, the maximum rate of a KNX TP line, so
-# nothing is dropped while the database is healthy.
-MAX_BUFFER_TELEGRAMS = FLUSH_INTERVAL_SECONDS * 50
+# flush interval at ~50 telegrams/s, the maximum rate of a single KNX TP line,
+# times 4 for headroom - routing can record multiple TP lines concurrently -
+# so nothing is dropped while the database is healthy.
+MAX_BUFFER_TELEGRAMS_SQLITE = FLUSH_INTERVAL_SECONDS_SQLITE * 50 * 4
+MAX_BUFFER_TELEGRAMS_POSTGRES = FLUSH_INTERVAL_SECONDS_POSTGRES * 50 * 4
 
 # Timeout for the migration probe and store initialization, so an unreachable
 # database cannot block KNX setup until the driver/OS connection timeout expires.
@@ -127,8 +131,8 @@ class Telegrams:
             self._uninitialized_store = BufferedPostgresStore(
                 self.dsn,
                 retention_days=self.retention_days,
-                flush_interval=FLUSH_INTERVAL_SECONDS,
-                max_buffer_size=MAX_BUFFER_TELEGRAMS,
+                flush_interval=FLUSH_INTERVAL_SECONDS_POSTGRES,
+                max_buffer_size=MAX_BUFFER_TELEGRAMS_POSTGRES,
             )
         else:
             full_path = hass.config.path(STORAGE_DIR, KNX_TELEGRAM_DB_PATH_SQLITE)
@@ -136,8 +140,8 @@ class Telegrams:
             self._uninitialized_store = BufferedSqliteStore(
                 full_path,
                 retention_days=self.retention_days,
-                flush_interval=FLUSH_INTERVAL_SECONDS,
-                max_buffer_size=MAX_BUFFER_TELEGRAMS,
+                flush_interval=FLUSH_INTERVAL_SECONDS_SQLITE,
+                max_buffer_size=MAX_BUFFER_TELEGRAMS_SQLITE,
             )
 
         self._xknx_telegram_cb_handle = (

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.8.0.dev0"
+version = "2026.9.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -71,10 +71,10 @@ dependencies = [
   "SQLAlchemy==2.0.51",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
-  "typing-extensions>=4.15.0,<5.0",
+  "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.11.30",
+  "uv==0.12.0",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.4.1",
@@ -594,8 +594,6 @@ filterwarnings = [
   "ignore:websockets.legacy is deprecated:DeprecationWarning:websockets.legacy",
 
   # -- unmaintained projects, last release about 2+ years
-  # https://pypi.org/project/aiomodernforms/ - v0.1.8 - 2021-06-27
-  "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:aiomodernforms.modernforms",
   # https://pypi.org/project/colorthief/ - v0.2.1 - 2017-02-09
   "ignore:Image.Image.getdata is deprecated and will be removed in Pillow 14.* Use get_flattened_data instead:DeprecationWarning:colorthief",
   # https://pypi.org/project/directv/ - v0.4.0 - 2020-09-12
@@ -645,7 +643,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.15.22"
+required-version = ">=0.16.0"
 
 [tool.ruff.lint]
 select = [
@@ -736,6 +734,7 @@ ignore = [
   "PLR0912", # Too many branches ({branches} > {max_branches})
   "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
   "PLR0915", # Too many statements ({statements} > {max_statements})
+  "PLR0917", # Too many positional arguments defined for a function ({p_args} > {max_args})
   "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
   "PLW0108", # Unnecessary lambda wrapping a function call; can often be replaced by the function itself
   "PLW1641", # __eq__ without __hash__
@@ -779,6 +778,10 @@ ignore = [
   "PLE0605",
 
   "FURB116",
+
+  # Disabled to implement in follow up PRs after ruff 0.16 bump
+  "ISC004",
+  "LOG004",
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
