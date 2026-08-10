@@ -150,22 +150,39 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             await self.lock.registerWebhook(webhook_url)
             webhooks = await self.lock.getWebhooks()
             webhook_index = next(x["id"] for x in webhooks if x["url"] == webhook_url)
+            await self._remove_stale_webhooks(webhook_id, webhook_index, webhooks)
 
             _LOGGER.debug("Webhook got index %s", webhook_index)
+
+    async def _remove_stale_webhooks(
+        self, webhook_id: str, webhook_index: int, webhooks: list[dict]
+    ) -> None:
+        for existing_webhook in webhooks:
+            url = existing_webhook["url"]
+            index = existing_webhook["id"]
+            if webhook_id in url and webhook_index != index:
+                _LOGGER.debug("Removing stale webhook with URL: %s", url)
+                try:
+                    await self.lock.deleteWebhook(index)
+                except (TimeoutError, aiohttp.ClientError) as err:
+                    _LOGGER.warning(
+                        "Could not remove stale webhook from LOQED bridge: %s", err
+                    )
 
     async def remove_webhooks(self) -> None:
         """Remove webhook from LOQED bridge."""
         webhook_id = self.config_entry.data[CONF_WEBHOOK_ID]
 
-        if CONF_CLOUDHOOK_URL in self.config_entry.data:
-            webhook_url = self.config_entry.data[CONF_CLOUDHOOK_URL]
-        else:
-            webhook_url = webhook.async_generate_url(self.hass, webhook_id)
-
-        _LOGGER.debug("Webhook URL: %s", webhook_url)
-
         try:
             webhooks = await self.lock.getWebhooks()
+
+            if CONF_CLOUDHOOK_URL in self.config_entry.data:
+                webhook_url = self.config_entry.data[CONF_CLOUDHOOK_URL]
+            else:
+                webhook_url = next(
+                    (x["url"] for x in webhooks if webhook_id in x["url"]), None
+                )
+                _LOGGER.debug("Webhook URL: %s", webhook_url)
 
             webhook_index = next(
                 (x["id"] for x in webhooks if x["url"] == webhook_url), None
