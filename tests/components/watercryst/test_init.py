@@ -8,7 +8,7 @@ from httpx import HTTPStatusError, Request, RequestError, Response
 from pyocat import WTCApiDisabledError, WTCApiTemporaryError, WTCApiUnauthorizedError
 import pytest
 
-from homeassistant.components.watercryst.const import CONF_BSN, DOMAIN
+from homeassistant.components.watercryst.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
@@ -66,7 +66,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="BIOCAT utility room",
-        data={CONF_BSN: MOCK_BSN, CONF_API_KEY: MOCK_API_KEY},
+        data={CONF_API_KEY: MOCK_API_KEY},
         unique_id=MOCK_BSN,
     )
     entry.add_to_hass(hass)
@@ -200,22 +200,6 @@ async def test_setup_temporary_api_error(
     assert config_entry.reason == "Temporary API error"
 
     mock_watercryst_client.get_device_info.assert_awaited_once_with()
-    mock_watercryst_client.get_state.assert_not_awaited()
-
-
-async def test_setup_serial_number_mismatch(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_watercryst_client: MagicMock,
-) -> None:
-    """Test a device response for another BIOCAT fails authentication."""
-    mock_watercryst_client.get_device_info.return_value = _device_info(
-        biocat_serial="0987654321"
-    )
-
-    assert not await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert config_entry.reason == "BIOCAT serial number mismatch"
     mock_watercryst_client.get_state.assert_not_awaited()
 
 

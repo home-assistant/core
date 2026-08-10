@@ -27,7 +27,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_BSN, DOMAIN
+from .const import DOMAIN
 from .coordinator import MeasurementsUpdateCoordinator, StateUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [
@@ -56,20 +56,13 @@ type WatercrystConfigEntry = ConfigEntry[RuntimeData]
 async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -> bool:
     """Set up a WATERCryst BIOCAT device from a config entry."""
 
-    biocat_serial_number: str = entry.data[CONF_BSN]
     key: str = entry.data[CONF_API_KEY]
-
     auth = AsyncAuth(client=get_async_client(hass), api_key=key)
     client = AsyncApiClient(auth=auth)
 
     try:
         info = await client.get_device_info()
-
-        if info.biocat_serial != biocat_serial_number:
-            raise ConfigEntryAuthFailed("BIOCAT serial number mismatch")
-
         initial_state = await client.get_state()
-
     except WTCApiUnauthorizedError as err:
         raise ConfigEntryAuthFailed("Invalid authentication") from err
     except WTCApiDisabledError as err:
@@ -90,16 +83,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
         connections.add((CONNECTION_BLUETOOTH, format_mac(info.ble_mac_address)))
 
     device_info = DeviceInfo(
-        identifiers={(DOMAIN, biocat_serial_number)},
+        identifiers={(DOMAIN, info.biocat_serial)},
         connections=connections,
         manufacturer="WATERCryst",
         model=" ".join(part for part in (info.line, info.series) if part) or None,
         model_id=info.device_type_number,
         name=info.name,
-        serial_number=biocat_serial_number,
+        serial_number=info.biocat_serial,
         sw_version=info.current_firmware_version,
         hw_version=info.current_hardware_version,
-        configuration_url=f"https://app.watercryst.com/devices/{biocat_serial_number}",
+        configuration_url=f"https://app.watercryst.com/devices/{info.biocat_serial}",
     )
 
     state = StateUpdateCoordinator(hass=hass, entry=entry, client=client)
@@ -111,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
     await measurements.async_config_entry_first_refresh()
 
     entry.runtime_data = RuntimeData(
-        biocat_serial_number=biocat_serial_number,
+        biocat_serial_number=info.biocat_serial,
         has_flow_rate_sensor=info.has_flow_rate_sensor,
         has_leakage_protection_system=info.has_leakage_protection_system,
         has_pressure_sensor=info.has_pressure_sensor,

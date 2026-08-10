@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.watercryst import sensor as sensor_module
-from homeassistant.components.watercryst.const import CONF_BSN, DOMAIN
+from homeassistant.components.watercryst.const import DOMAIN
 from homeassistant.components.watercryst.sensor import (
     EVENT_SENSORS,
     FLOWRATE_SENSORS,
@@ -150,7 +150,6 @@ async def test_async_setup_entry_adds_supported_sensors(
         domain=DOMAIN,
         title="BIOCAT utility room",
         data={
-            CONF_BSN: MOCK_BSN,
             CONF_API_KEY: MOCK_API_KEY,
         },
         unique_id=MOCK_BSN,

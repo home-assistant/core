@@ -7,7 +7,7 @@ from pyocat import WTCApiDisabledError, WTCApiTemporaryError, WTCApiUnauthorized
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.watercryst.const import CONF_BSN, DOMAIN
+from homeassistant.components.watercryst.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -29,7 +29,6 @@ async def test_form_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_BSN: "2026123456789123",
             CONF_API_KEY: "<api-key>",
         },
     )
@@ -38,7 +37,6 @@ async def test_form_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "HA Device"
     assert result["data"] == {
-        CONF_BSN: "2026123456789123",
         CONF_API_KEY: "<api-key>",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -64,7 +62,6 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_BSN: "2026123456789123",
             CONF_API_KEY: "<api-key>",
         },
     )
@@ -122,7 +119,6 @@ async def test_form_raise_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_BSN: "2026123456789123",
             CONF_API_KEY: "<api-key>",
         },
     )
@@ -135,7 +131,6 @@ async def test_form_raise_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_BSN: "2026123456789123",
             CONF_API_KEY: "<api-key>",
         },
     )
@@ -143,33 +138,8 @@ async def test_form_raise_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "HA Device"
     assert result["data"] == {
-        CONF_BSN: "2026123456789123",
         CONF_API_KEY: "<api-key>",
     }
 
     mock_setup_entry.assert_awaited_once()
     mock_api_client.get_state.assert_not_awaited()
-
-
-@pytest.mark.usefixtures("mock_api_client")
-async def test_form_wrong_device_serial(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test an incorrect BIOCAT serial number."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_BSN: "2026123456789124",
-            CONF_API_KEY: "<api-key>",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "wrong_device_serial"}
-    mock_setup_entry.assert_not_awaited()
