@@ -225,78 +225,93 @@ async def test_services_with_speed(
     assert state.attributes["supported_speeds"] == ["slow", "fast", "default"]
 
     speed_cover.last_kwargs = None
-    await call_service_with_data(
-        hass, SERVICE_OPEN_COVER, speed_cover, {ATTR_SPEED: "fast"}
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "fast"},
+        blocking=True,
     )
     assert speed_cover.last_kwargs == {"speed": "fast"}
     assert is_opening(hass, speed_cover, 50)
 
     speed_cover.last_kwargs = None
-    await call_service_with_data(
-        hass, SERVICE_CLOSE_COVER, speed_cover, {ATTR_SPEED: "slow"}
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "slow"},
+        blocking=True,
     )
     assert speed_cover.last_kwargs == {"speed": "slow"}
     assert is_closing(hass, speed_cover, 50)
 
     speed_cover.last_kwargs = None
-    await call_service_with_data(
-        hass,
+    await hass.services.async_call(
+        cover.DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        speed_cover,
-        {"position": 75, ATTR_SPEED: "default"},
+        {ATTR_ENTITY_ID: speed_cover.entity_id, "position": 75, ATTR_SPEED: "default"},
+        blocking=True,
     )
     assert speed_cover.last_kwargs == {"position": 75, "speed": "default"}
 
     speed_cover.last_kwargs = None
     with pytest.raises(ServiceValidationError) as exc:
-        await call_service_with_data(
-            hass, SERVICE_OPEN_COVER, speed_cover, {ATTR_SPEED: "invalid"}
+        await hass.services.async_call(
+            cover.DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "invalid"},
+            blocking=True,
         )
     assert speed_cover.last_kwargs is None
     assert exc.value.translation_key == "not_valid_speed"
 
     with pytest.raises(ServiceValidationError) as exc:
-        await call_service_with_data(
-            hass, SERVICE_CLOSE_COVER, speed_cover, {ATTR_SPEED: "invalid"}
+        await hass.services.async_call(
+            cover.DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "invalid"},
+            blocking=True,
         )
     assert speed_cover.last_kwargs is None
     assert exc.value.translation_key == "not_valid_speed"
 
     with pytest.raises(ServiceValidationError) as exc:
-        await call_service_with_data(
-            hass,
+        await hass.services.async_call(
+            cover.DOMAIN,
             SERVICE_SET_COVER_POSITION,
-            speed_cover,
-            {"position": 50, ATTR_SPEED: "invalid"},
+            {
+                ATTR_ENTITY_ID: speed_cover.entity_id,
+                "position": 50,
+                ATTR_SPEED: "invalid",
+            },
+            blocking=True,
         )
     assert speed_cover.last_kwargs is None
     assert exc.value.translation_key == "not_valid_speed"
 
-    await call_service_with_data(hass, SERVICE_OPEN_COVER, ent1, {ATTR_SPEED: "ignore"})
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: ent1.entity_id, ATTR_SPEED: "ignore"},
+        blocking=True,
+    )
     assert is_open(hass, ent1)
     assert ent1.last_kwargs == {}
 
     ent1.last_kwargs = None
-    await call_service_with_data(
-        hass, SERVICE_CLOSE_COVER, ent1, {ATTR_SPEED: "ignore"}
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: ent1.entity_id, ATTR_SPEED: "ignore"},
+        blocking=True,
     )
     assert is_closed(hass, ent1)
     assert ent1.last_kwargs == {}
 
     ent2.last_kwargs = None
-    await call_service_with_data(
-        hass, SERVICE_SET_COVER_POSITION, ent2, {"position": 49, ATTR_SPEED: "ignore"}
-    )
-    assert ent2.last_kwargs == {"position": 49}
-
-
-def call_service_with_data(
-    hass: HomeAssistant, service: str, ent: Entity, data: dict[str, object]
-) -> ServiceResponse:
-    """Call any service on entity with data."""
-    return hass.services.async_call(
+    await hass.services.async_call(
         cover.DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: ent.entity_id, **data},
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: ent2.entity_id, "position": 49, ATTR_SPEED: "ignore"},
         blocking=True,
     )
+    assert ent2.last_kwargs == {"position": 49}
