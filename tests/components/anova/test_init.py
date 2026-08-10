@@ -254,7 +254,14 @@ async def test_websocket_reconnect_retries_after_transient_failure(
     hass: HomeAssistant,
     anova_api: AnovaApi,
 ) -> None:
-    """Test that a transient reconnect failure is retried after a delay."""
+    """Test that a transient NoDevicesFound is retried immediately via re-auth.
+
+    A stale session can connect but never have the device attached
+    (NoDevicesFound) just as easily as it can fail outright
+    (WebsocketFailure), so this must not wait for the next poll cycle to
+    retry with the same session - it should re-authenticate and retry within
+    the same reconnect attempt, same as WebsocketFailure does.
+    """
     entry = await async_init_integration(hass)
     ws_handler = entry.runtime_data.api.websocket_handler
     assert isinstance(ws_handler, MockedAnovaWebsocketHandler)
@@ -269,16 +276,16 @@ async def test_websocket_reconnect_retries_after_transient_failure(
         await original_side_effect()
 
     entry.runtime_data.api.create_websocket.side_effect = create_websocket_fails_once
+    entry.runtime_data.api.authenticate = AsyncMock()
 
     ws_handler.simulate_disconnect()
     await hass.async_block_till_done()
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert len(attempts) == 1
 
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_RETRY_DELAY + 1)
-    )
-    await hass.async_block_till_done(wait_background_tasks=True)
+    entry.runtime_data.api.authenticate.assert_called_once()
+    assert len(attempts) == 2
+    new_ws_handler = entry.runtime_data.api.websocket_handler
+    assert new_ws_handler is not ws_handler
 
     assert len(attempts) == 2
     assert entry.runtime_data.api.websocket_handler is not ws_handler

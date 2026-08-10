@@ -153,7 +153,11 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
         _LOGGER.warning("Anova websocket connection lost, attempting to reconnect")
         try:
             await api.create_websocket()
-        except WebsocketFailure:
+        except NoDevicesFound, WebsocketFailure:
+            # A stale JWT can connect fine but never have the device attached to
+            # it (NoDevicesFound) as easily as it can fail outright
+            # (WebsocketFailure) - re-authenticate on either so we don't keep
+            # retrying with the same session that's already stopped working.
             try:
                 await api.authenticate()
             except InvalidLogin as err:
@@ -167,9 +171,6 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
             except (NoDevicesFound, WebsocketFailure) as err:
                 _LOGGER.warning("Failed to reconnect to Anova websocket: %s", err)
                 raise UpdateFailed(str(err)) from err
-        except NoDevicesFound as err:
-            _LOGGER.warning("Failed to reconnect to Anova websocket: %s", err)
-            raise UpdateFailed(str(err)) from err
 
         ws_handler = api.websocket_handler
         if ws_handler is None:
