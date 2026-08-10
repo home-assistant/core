@@ -2014,7 +2014,6 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
-    # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
 
     # Mock BlueZ management controller to successfully setup
@@ -2024,7 +2023,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
     with (
         patch.object(
-            bluetooth_scanner.OriginalBleakScanner,  # pylint: disable=c-extension-no-member
+            bluetooth_scanner.OriginalBleakScanner,
             "start",
         ) as mock_bleak_scanner_start,
         patch.object(bluetooth_scanner, "HaScanner"),

@@ -117,8 +117,8 @@ async def test_device_info_optional_metadata(
     await setup_integration(hass, config_entry, device)
 
     assert (
-        device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, str(TEST_DEVICE_ID))}
+        device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(TEST_DEVICE_ID)), config_entry.entry_id
         )
     ) is not None
 

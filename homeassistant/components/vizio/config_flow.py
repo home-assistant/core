@@ -214,6 +214,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Vizio config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -230,18 +231,6 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         self._must_show_form: bool | None = None
         self._pair_challenge: PairChallenge | None = None
         self._data: dict[str, Any] | None = None
-        self._apps: dict[str, list] = {}
-
-    async def _create_entry(self, input_dict: dict[str, Any]) -> ConfigFlowResult:
-        """Create vizio config entry."""
-        # Remove extra keys that will not be used by entry setup
-        input_dict.pop(CONF_APPS_TO_INCLUDE_OR_EXCLUDE, None)
-        input_dict.pop(CONF_INCLUDE_OR_EXCLUDE, None)
-
-        if self._apps:
-            input_dict[CONF_APPS] = self._apps
-
-        return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
     def _async_show_source_form(
         self, errors: dict[str, str] | None = None
@@ -261,7 +250,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = self._user_schema or _get_config_schema()
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def _async_finish_flow(self) -> ConfigFlowResult:
+    def _async_finish_flow(self) -> ConfigFlowResult:
         """Save the validated config for the flow's source."""
         assert self._data
         if self.source == SOURCE_REAUTH:
@@ -272,7 +261,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(), data=self._data
             )
-        return await self._create_entry(self._data)
+        return self.async_create_entry(title=self._data[CONF_NAME], data=self._data)
 
     async def _async_validate_and_continue(self) -> ConfigFlowResult:
         """Validate the device and continue to saving or pairing.
@@ -306,7 +295,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         if device_class == MediaPlayerDeviceClass.TV and not token:
             return await self.async_step_pair_tv()
         if await _async_validate_config(self.hass, host, token, device_class):
-            return await self._async_finish_flow()
+            return self._async_finish_flow()
         if device_class == MediaPlayerDeviceClass.TV and self.source in (
             SOURCE_REAUTH,
             SOURCE_RECONFIGURE,
@@ -436,7 +425,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self._data[CONF_ACCESS_TOKEN] = auth_token
                 if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
-                    return await self._async_finish_flow()
+                    return self._async_finish_flow()
                 self._must_show_form = True
                 return await self.async_step_pairing_complete()
 
@@ -446,33 +435,13 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _pairing_complete(self, step_id: str) -> ConfigFlowResult:
-        """Handle config flow completion."""
-        assert self._data
-        if not self._must_show_form:
-            return await self._create_entry(self._data)
-
-        self._must_show_form = False
-        return self.async_show_form(
-            step_id=step_id,
-            description_placeholders={"access_token": self._data[CONF_ACCESS_TOKEN]},
-        )
-
     async def async_step_pairing_complete(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Complete non-import sourced config flow.
+        """Display final message to user confirming pairing."""
+        assert self._data
+        if not self._must_show_form:
+            return self.async_create_entry(title=self._data[CONF_NAME], data=self._data)
 
-        Display final message to user confirming pairing.
-        """
-        return await self._pairing_complete("pairing_complete")
-
-    async def async_step_pairing_complete_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Complete import sourced config flow.
-
-        Display final message to user confirming pairing and displaying
-        access token.
-        """
-        return await self._pairing_complete("pairing_complete_import")
+        self._must_show_form = False
+        return self.async_show_form(step_id="pairing_complete")
