@@ -209,7 +209,24 @@ class MatterAdapter:
             server_info,
             endpoint,
         )
-        identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+        node_device_identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
+        # a bridged device that was merged into the bridge's device by a shared serial
+        # number keeps resolving to it through the identifier it left behind there
+        if (
+            via_device_id is not UNDEFINED
+            and (
+                merged_device := device_registry.async_get_device_by_identifier(
+                    node_device_identifier, self.config_entry.entry_id
+                )
+            )
+            and merged_device.id == via_device_id
+        ):
+            device_registry.async_update_device(
+                merged_device.id,
+                new_identifiers=merged_device.identifiers - {node_device_identifier},
+            )
+
+        identifiers = {node_device_identifier}
         serial_number: str | None = None
         # if available, we also add the serialnumber as identifier
         if (

@@ -10,7 +10,7 @@ from homeassistant.components.matter.adapter import get_clean_name
 from homeassistant.components.matter.const import DOMAIN, ID_TYPE_DEVICE_ID
 from homeassistant.components.matter.helpers import get_device_id
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import create_node_from_fixture
 
@@ -359,6 +359,67 @@ async def test_device_registry_bridged_device_with_bridge_serial_number(
     assert bridged_entry.via_device_id == bridge_entry.id
     assert (DOMAIN, "serial_glg5mxh") not in bridged_entry.identifiers
     assert bridged_entry.serial_number is None
+
+
+async def test_device_registry_bridged_device_merged_into_bridge(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a bridged device that was merged into the bridge's device is split off.
+
+    A bridged device reporting the serial number of the bridge used to be merged
+    into the bridge's device entry, which keeps resolving to it through the
+    identifier that is left behind there.
+    """
+    node = create_node_from_fixture("atios_knx_bridge", {"29/57/15": "glg5mxh"})
+    matter_client.get_nodes.return_value = [node]
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}
+    )
+    config_entry.add_to_hass(hass)
+
+    merged_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-000000000000003E-MatterNodeDevice"),
+            (DOMAIN, "deviceid_00000000000004D2-000000000000003E-29"),
+            (DOMAIN, "serial_glg5mxh"),
+        },
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "00000000000004D2-000000000000003E-29-29-ElectricalPowerMeasurementWatt-144-8",
+        config_entry=config_entry,
+        device_id=merged_entry.id,
+        suggested_object_id="electricity_monitor_ac_power",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    bridge_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000003E-MatterNodeDevice"),
+        config_entry.entry_id,
+    )
+    assert bridge_entry is not None
+    assert bridge_entry.id == merged_entry.id
+    assert (DOMAIN, "serial_glg5mxh") in bridge_entry.identifiers
+
+    bridged_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000003E-29"), config_entry.entry_id
+    )
+    assert bridged_entry is not None
+    assert bridged_entry.id != bridge_entry.id
+    assert bridged_entry.via_device_id == bridge_entry.id
+    assert hass.states.get("sensor.electricity_monitor_ac_power")
+
+    # the entities of the bridged device move to the device it is split off into
+    assert (
+        entity_registry.async_get(entity_entry.entity_id).device_id == bridged_entry.id
+    )
 
 
 @pytest.mark.usefixtures("matter_node")
