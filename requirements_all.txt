@@ -1601,7 +1601,7 @@ millheater==0.14.1
 minio==7.1.12
 
 # homeassistant.components.mitsubishi_comfort
-mitsubishi-comfort==0.5.1
+mitsubishi-comfort==0.5.2
 
 # homeassistant.components.moat
 moat-ble==0.1.1
@@ -1872,7 +1872,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.14.4
+plugwise==1.14.5
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2354,7 +2354,7 @@ pyliebherrhomeapi==0.5.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.5.0
+pylitterbot==2025.6.4
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.29.0
