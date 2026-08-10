@@ -244,7 +244,7 @@ async def test_handle_ws_message_triggers_notify_update(
 
     message = {
         "msgTypeCode": "status_wifistatus",
-        "content": json.dumps({"puid": device.puid, "onlinestats": "1"}),
+        "content": {"puid": device.puid, "onlinestats": "1"},
     }
 
     with patch(
