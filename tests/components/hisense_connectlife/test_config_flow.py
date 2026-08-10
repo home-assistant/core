@@ -490,8 +490,8 @@ async def test_options_flow_refresh_devices_exception(
 
     result = await handler.async_step_init({"refresh_devices": True})
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"]["refresh_devices"] is True
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "refresh_failed"}
     # Code always creates entry even with errors
 
 
