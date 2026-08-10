@@ -10763,7 +10763,7 @@ async def test_child_device_load_and_save(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_3_2_to_3_3(
+async def test_migration_3_2_to_3_4(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
@@ -10816,7 +10816,7 @@ async def test_migration_3_2_to_3_3(
     assert not registry.child_devices
 
     await flush_store(registry._store)
-    assert hass_storage[dr.STORAGE_KEY]["minor_version"] == 3
+    assert hass_storage[dr.STORAGE_KEY]["minor_version"] == 4
     assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == []
 
 
