@@ -196,9 +196,8 @@ async def test_setup_api_ping_fails(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_entry_created_before_started(
-    hass: HomeAssistant, supervisor_client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("supervisor_client")
+async def test_setup_entry_created_before_started(hass: HomeAssistant) -> None:
     """Test the entry is created and loaded during startup on first boot.
 
     Consumers of system info such as onboarding need Supervisor data before
