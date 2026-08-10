@@ -638,7 +638,7 @@ async def test_user_flow_resolves_host_without_port(hass: HomeAssistant) -> None
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
 async def test_user_flow_unresolvable_host_errors(hass: HomeAssistant) -> None:
-    """Test an unresolvable host surfaces as a cannot_connect error."""
+    """Test an unresolvable host surfaces as a cannot_determine_port error."""
     with patch(
         "homeassistant.components.vizio.config_flow.async_resolve_host",
         AsyncMock(side_effect=VizioConnectionError("no SmartCast API")),
@@ -650,7 +650,7 @@ async def test_user_flow_unresolvable_host_errors(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "cannot_connect"}
+    assert result["errors"] == {CONF_HOST: "cannot_determine_port"}
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")

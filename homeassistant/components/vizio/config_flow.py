@@ -265,7 +265,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
                     session=async_get_clientsession(self.hass, False),
                 )
             except VizioError:
-                errors[CONF_HOST] = "cannot_connect"
+                errors[CONF_HOST] = "cannot_determine_port"
 
         if user_input is not None and not errors:
             # Zeroconf discovery provides the device class; detect it otherwise
