@@ -5,8 +5,7 @@ from typing import Any, cast, override
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes, MideaACDevice
-from midealocal.devices.c3 import MideaC3Device
-from midealocal.devices.c3.const import DeviceAttributes as C3Attributes
+from midealocal.devices.c3 import DeviceAttributes as C3Attributes, MideaC3Device
 from midealocal.devices.cc import DeviceAttributes as CCAttributes, MideaCCDevice
 from midealocal.devices.cf import DeviceAttributes as CFAttributes, MideaCFDevice
 from midealocal.devices.fb import DeviceAttributes as FBAttributes, MideaFBDevice
