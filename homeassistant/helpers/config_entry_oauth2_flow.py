@@ -450,11 +450,6 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         """Extra data that needs to be appended to the device authorization request."""
         return {}
 
-    @property
-    def extra_token_resolve_data(self) -> dict:
-        """Extra data for the token resolve request."""
-        return {}
-
     @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
@@ -536,14 +531,8 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
 
     @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
-        """Resolve the authorization code to tokens."""
-        request_data: dict = {
-            "grant_type": "authorization_code",
-            "code": external_data["code"],
-            "redirect_uri": external_data["state"]["redirect_uri"],
-        }
-        request_data.update(self.extra_token_resolve_data)
-        return await self._token_request(request_data)
+        """Not used by the device flow."""
+        raise NotImplementedError
 
     @override
     async def _async_refresh_token(self, token: dict) -> dict:
