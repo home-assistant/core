@@ -2177,8 +2177,13 @@ class EntityRegistry(BaseRegistry):
         ) -> str | None:
             """Map a device id to the split device matching the entity's config entry."""
             # Note: check container membership, not async_get, which returns a restored
-            # composite for a composite device id
-            if device_id is None or device_id in device_registry.devices:
+            # composite for a composite device id. Child devices are their own container
+            # and are never composites, so an entity on one keeps its device id.
+            if (
+                device_id is None
+                or device_id in device_registry.devices
+                or device_id in device_registry.child_devices
+            ):
                 return device_id
             successors = device_registry.async_get_devices_for_composite_device_id(
                 device_id
