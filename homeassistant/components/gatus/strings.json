@@ -31,6 +31,9 @@
   },
   "entity": {
     "sensor": {
+      "domain_expiration": {
+        "name": "Domain expiration"
+      },
       "response_time": {
         "name": "Response time"
       },
