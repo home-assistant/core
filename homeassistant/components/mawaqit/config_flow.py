@@ -4,6 +4,7 @@ import logging
 from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectorError
+from mawaqit import AsyncMawaqitClient
 from mawaqit.exceptions import BadCredentialsException, MawaqitException, NoMosqueAround
 import voluptuous as vol
 
@@ -24,10 +25,11 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    client: AsyncMawaqitClient
+
     def __init__(self) -> None:
         """Initialize."""
         self.mosques: dict[str, MawaqitMosqueData] = {}
-        self.token: str | None = None
 
     @override
     async def async_step_user(
@@ -48,13 +50,18 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-            username = user_input[CONF_USERNAME]
-            password = user_input[CONF_PASSWORD]
+            client = AsyncMawaqitClient(
+                latitude=self.hass.config.latitude,
+                longitude=self.hass.config.longitude,
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
+                session=async_get_clientsession(self.hass),
+            )
 
             try:
-                valid = await mawaqit_wrapper.validate_credentials(
-                    username, password, session=async_get_clientsession(self.hass)
-                )
+                token = await client.get_api_token()
+            except BadCredentialsException:
+                errors["base"] = WRONG_CREDENTIAL
             except (
                 ClientConnectorError,
                 ConnectionError,
@@ -63,28 +70,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = CANNOT_CONNECT_TO_SERVER
             else:
-                if valid:
-                    try:
-                        mawaqit_token = await mawaqit_wrapper.get_mawaqit_api_token(
-                            username,
-                            password,
-                            session=async_get_clientsession(self.hass),
-                        )
-                    except (
-                        ClientConnectorError,
-                        ConnectionError,
-                        TimeoutError,
-                        MawaqitException,
-                    ):
-                        errors["base"] = CANNOT_CONNECT_TO_SERVER
-                    else:
-                        if not mawaqit_token:
-                            errors["base"] = CANNOT_CONNECT_TO_SERVER
-                        else:
-                            self.token = mawaqit_token
-                            return await self.async_step_mosques_coordinates()
-                else:
-                    errors["base"] = WRONG_CREDENTIAL
+                if token:
+                    self.client = client
+                    return await self.async_step_mosques_coordinates()
+                errors["base"] = CANNOT_CONNECT_TO_SERVER
 
         return self.async_show_form(
             step_id="user",
@@ -108,7 +97,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title, data_entry = utils.save_mosque(
                 self.mosques[mosque_uuid].display_name,
                 mosque_uuid,
-                self.token,
+                self.client.token,
                 lat,
                 longi,
             )
@@ -117,10 +106,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.mosques:
             try:
                 neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-                    lat,
-                    longi,
-                    token=self.token,
-                    session=async_get_clientsession(self.hass),
+                    self.client
                 )
                 if neighborhood_mosques:
                     self.mosques = {

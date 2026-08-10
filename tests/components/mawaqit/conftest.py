@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -247,29 +247,6 @@ def mock_mosque_data() -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Mawaqit client mock
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture
-def mock_mawaqit_client() -> Generator[MagicMock]:
-    """Return a mocked AsyncMawaqitClient."""
-    with patch(
-        "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
-        autospec=True,
-    ) as client_mock:
-        client = client_mock.return_value
-        client.login = AsyncMock()
-        client.close = AsyncMock()
-        client.get_api_token = AsyncMock(return_value=MOCK_TOKEN)
-        client.all_mosques_neighborhood = AsyncMock(return_value=[])
-        client.fetch_mosques_by_keyword = AsyncMock(return_value=[])
-        client.fetch_prayer_times = AsyncMock(return_value={})
-        client.fetch_mosque_by_id = AsyncMock(return_value={})
-        yield client
-
-
-# ---------------------------------------------------------------------------
 # Integration setup helper fixture
 # ---------------------------------------------------------------------------
 
@@ -313,20 +290,17 @@ def setup_mawaqit_integration(
 
         mock_config_entry.add_to_hass(hass)
 
-        with (
-            patch(
-                "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_mosque_by_id",
-                new_callable=AsyncMock,
-                return_value=resolved_mosque,
-                side_effect=mosque_side_effect,
-            ),
-            patch(
-                "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
-                new_callable=AsyncMock,
-                return_value=resolved_prayer,
-                side_effect=prayer_side_effect,
-            ),
-        ):
+        with patch(
+            "homeassistant.components.mawaqit.AsyncMawaqitClient"
+        ) as mock_client_class:
+            client = mock_client_class.return_value
+            client.fetch_mosque_by_id = AsyncMock(
+                return_value=resolved_mosque, side_effect=mosque_side_effect
+            )
+            client.fetch_prayer_times = AsyncMock(
+                return_value=resolved_prayer, side_effect=prayer_side_effect
+            )
+
             await hass.config_entries.async_setup(mock_config_entry.entry_id)
             await hass.async_block_till_done()
 
