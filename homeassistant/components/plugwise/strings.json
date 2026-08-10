@@ -344,14 +344,14 @@
     "set_schedule_first": {
       "message": "Failed setting HVACMode, set a schedule first."
     },
-    "temperature_out_of_range":{
+    "temperature_out_of_range": {
       "message": "Temperature {temperature} is out of range ({min_temp} - {max_temp})"
     },
     "unsupported_firmware": {
       "message": "[%key:component::plugwise::config::error::unsupported%]"
     },
     "unsupported_operation_mode": {
-        "message": "Operation mode {operation_mode} is not supported"
+      "message": "Operation mode {operation_mode} is not supported"
     }
   }
 }
