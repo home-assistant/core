@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import HEALTH, LOGGER, RESOURCE
+from .const import HEALTH, RESOURCE
 from .coordinator import MikrotikConfigEntry
 from .entity import MikrotikEntity
 
