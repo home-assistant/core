@@ -2134,6 +2134,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/zeversolar/ @kvanzuijlen @mhuiskes
 /homeassistant/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /tests/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
+/homeassistant/components/zhong_hong/ @crhan
 /homeassistant/components/zimi/ @markhannon
 /tests/components/zimi/ @markhannon
 /homeassistant/components/zinvolt/ @joostlek
