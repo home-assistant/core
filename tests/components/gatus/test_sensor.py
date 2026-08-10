@@ -61,15 +61,11 @@ async def test_sensor_dynamic_update(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that sensor entities update when the mock client returns new data."""
+    """Test that the sensor entity updates when the mock client returns new data."""
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("sensor.core_backend_service_response_time")
     assert state is not None
     assert state.state == "23.12"
-
-    status_code_state = hass.states.get("sensor.core_backend_service_status_code")
-    assert status_code_state is not None
-    assert status_code_state.state == "200"
 
     mock_data = await async_load_json_array_fixture(hass, "gatus/group.json")
 
@@ -85,17 +81,13 @@ async def test_sensor_dynamic_update(
     assert state is not None
     assert state.state == "45.0"
 
-    status_code_state = hass.states.get("sensor.core_backend_service_status_code")
-    assert status_code_state is not None
-    assert status_code_state.state == "500"
-
 
 async def test_sensor_no_group(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that sensor entities are created correctly when an endpoint has no group."""
+    """Test that the sensor entity is created correctly when an endpoint has no group."""
     mock_data = await async_load_json_array_fixture(hass, "gatus/no_group.json")
 
     mock_gatus_client.get_endpoints_statuses.return_value = _to_endpoint_statuses(
@@ -107,10 +99,6 @@ async def test_sensor_no_group(
     state = hass.states.get("sensor.backend_service_response_time")
     assert state is not None
     assert state.state == "12.5"
-
-    status_code_state = hass.states.get("sensor.backend_service_status_code")
-    assert status_code_state is not None
-    assert status_code_state.state == "200"
 
 
 async def test_sensor_empty_results(
@@ -133,10 +121,6 @@ async def test_sensor_empty_results(
     state = hass.states.get("sensor.backend_service_response_time")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-    status_code_state = hass.states.get("sensor.backend_service_status_code")
-    assert status_code_state is not None
-    assert status_code_state.state == STATE_UNAVAILABLE
 
 
 async def test_sensor_missing_duration(
