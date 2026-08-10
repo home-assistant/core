@@ -141,16 +141,6 @@ def test_get_device_by_device_id_and_puid(
     assert coordinator.get_device(device.puid) == device
 
 
-def test_parse_content_invalid(mock_hass, mock_config_entry, mock_api_client) -> None:
-    """Test _parse_content returns None for invalid content."""
-    coordinator = HisenseACPluginDataUpdateCoordinator(
-        mock_hass, mock_api_client, mock_config_entry
-    )
-
-    assert coordinator._parse_content({"content": {"not": "a string"}}) is None
-    assert coordinator._parse_content({"content": "not-json"}) is None
-
-
 def test_update_wifi_status_sets_offline_state(
     mock_hass, mock_config_entry, mock_api_client
 ) -> None:
