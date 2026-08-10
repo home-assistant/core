@@ -219,8 +219,18 @@ async def test_dynamic_devices(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert device_registry.async_get_device({(DOMAIN, "ABCDEFG")}) is None
-    assert device_registry.async_get_device({(DOMAIN, "HIJKLMN")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "ABCDEFG"), config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "HIJKLMN"), config_entry.entry_id
+        )
+        is None
+    )
 
     xbox_live_client.smartglass.get_console_list.return_value = SmartglassConsoleList(
         **await async_load_json_object_fixture(
@@ -232,8 +242,12 @@ async def test_dynamic_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device({(DOMAIN, "ABCDEFG")})
-    assert device_registry.async_get_device({(DOMAIN, "HIJKLMN")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ABCDEFG"), config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "HIJKLMN"), config_entry.entry_id
+    )
 
     xbox_live_client.smartglass.get_console_list.return_value = SmartglassConsoleList(
         **await async_load_json_object_fixture(
@@ -245,5 +259,15 @@ async def test_dynamic_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device({(DOMAIN, "ABCDEFG")}) is None
-    assert device_registry.async_get_device({(DOMAIN, "HIJKLMN")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "ABCDEFG"), config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "HIJKLMN"), config_entry.entry_id
+        )
+        is None
+    )

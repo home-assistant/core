@@ -61,8 +61,8 @@ async def test_setup_creates_nvr_device(
 
     # Verify NVR device was created
     nvr = ufp.api.bootstrap.nvr
-    nvr_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, nvr.mac)},
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, nvr.mac), ufp.entry.entry_id
     )
     assert nvr_device == snapshot
 

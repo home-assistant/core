@@ -48,8 +48,8 @@ async def test_info_skill_service(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry
 
@@ -78,8 +78,8 @@ async def test_send_sound_service(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry
 
@@ -108,8 +108,8 @@ async def test_send_text_service(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry
 
@@ -253,8 +253,8 @@ async def test_config_entry_not_loaded(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry
 
@@ -324,8 +324,8 @@ async def test_missing_config_entry(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry
 
@@ -333,10 +333,7 @@ async def test_missing_config_entry(
     other_entry = MockConfigEntry(domain="other_domain", data={})
     other_entry.add_to_hass(hass)
     device_registry.async_update_device(
-        device_entry.id, add_config_entry_id=other_entry.entry_id
-    )
-    device_registry.async_update_device(
-        device_entry.id, remove_config_entry_id=mock_config_entry.entry_id
+        device_entry.id, new_config_entry_id=other_entry.entry_id
     )
 
     # Call Service

@@ -63,15 +63,15 @@ from tests.common import MockConfigEntry, async_get_device_automations
         }
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_get_triggers(
     hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test triggers work."""
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a"), config_entry_setup.entry_id
     )
     battery_sensor_entry = entity_registry.async_get(
         "sensor.tradfri_on_off_switch_battery"
@@ -174,15 +174,15 @@ async def test_get_triggers(
         }
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_get_triggers_for_alarm_event(
     hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test triggers work."""
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:00:00:00")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:00:00:00"), config_entry_setup.entry_id
     )
     bat_entity = entity_registry.async_get("sensor.keypad_battery")
     low_bat_entity = entity_registry.async_get("binary_sensor.keypad_low_battery")
@@ -261,13 +261,14 @@ async def test_get_triggers_for_alarm_event(
         }
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_get_triggers_manage_unsupported_remotes(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Verify no triggers for an unsupported remote."""
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a"), config_entry_setup.entry_id
     )
 
     triggers = await async_get_device_automations(
@@ -303,16 +304,16 @@ async def test_get_triggers_manage_unsupported_remotes(
         }
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_functional_device_trigger(
     hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
     sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test proper matching and attachment of device trigger automation."""
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a"), config_entry_setup.entry_id
     )
 
     assert await async_setup_component(
