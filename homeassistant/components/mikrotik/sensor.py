@@ -22,8 +22,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import HEALTH, RESOURCE
-from .coordinator import _LOGGER, MikrotikConfigEntry
+from .const import HEALTH, LOGGER, RESOURCE
+from .coordinator import MikrotikConfigEntry
 from .entity import MikrotikEntity
 
 PARALLEL_UPDATES = 0
@@ -61,13 +61,13 @@ def _calculate_uptime(data: dict[str, Any]) -> datetime | None:
             elif ch == "s":
                 total += num
             else:
-                _LOGGER.warning("Unknown uptime format: %s", uptime_string)
+                LOGGER.warning("Unknown uptime format: %s", uptime_string)
                 return None
 
             num = 0
 
     if num != 0:
-        _LOGGER.warning("Unknown uptime format: %s", uptime_string)
+        LOGGER.warning("Unknown uptime format: %s", uptime_string)
         return None
 
     return utcnow() - timedelta(seconds=total)
@@ -162,9 +162,7 @@ async def async_setup_entry(
     async_add_entities(sensors_list)
 
 
-class MikrotikSensorEntity(
-    MikrotikEntity[MikrotikSensorEntityDescription], SensorEntity
-):
+class MikrotikSensorEntity(MikrotikEntity, SensorEntity):
     """Sensor device."""
 
     entity_description: MikrotikSensorEntityDescription

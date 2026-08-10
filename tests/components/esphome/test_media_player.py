@@ -468,8 +468,9 @@ async def test_media_player_proxy(
         ],
     )
     await hass.async_block_till_done()
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
     assert dev is not None
     state = hass.states.get("media_player.test_my_media_player")

@@ -64,7 +64,7 @@
   },
   "3cb70739631c4d17a86b8b12e8a5161b": {
     "active_preset": "home",
-    "available_schedules": ["standaard", "off"],
+    "available_schedules": ["off", "standaard"],
     "climate_mode": "auto",
     "control_state": "cooling",
     "dev_class": "thermostat",

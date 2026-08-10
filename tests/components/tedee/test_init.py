@@ -137,7 +137,9 @@ async def test_lock_device(
     """Ensure the lock device is registered."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device({(mock_config_entry.domain, "12345")})
+    device = device_registry.async_get_device_by_identifier(
+        (mock_config_entry.domain, "12345"), mock_config_entry.entry_id
+    )
     assert device
     assert device == snapshot
 
@@ -152,8 +154,9 @@ async def test_bridge_device(
     """Ensure the bridge device is registered."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(
-        {(mock_config_entry.domain, mock_tedee.get_local_bridge.return_value.serial)}
+    device = device_registry.async_get_device_by_identifier(
+        (mock_config_entry.domain, mock_tedee.get_local_bridge.return_value.serial),
+        mock_config_entry.entry_id,
     )
     assert device
     assert device == snapshot

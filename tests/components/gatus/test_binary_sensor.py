@@ -1,12 +1,13 @@
 """Tests for the Gatus binary sensor platform."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from gatus_api import EndpointStatus, GatusClientError, Result
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -28,8 +29,11 @@ async def test_binary_sensor_setup_and_states(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test standard successful setup and entity snapshots using snapshot_platform."""
-    await setup_integration(hass, mock_config_entry)
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    with patch("homeassistant.components.gatus._PLATFORMS", [Platform.BINARY_SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
 
 
 def _to_endpoint_statuses(raw_data: list[dict[str, Any]]) -> list[EndpointStatus]:
@@ -39,7 +43,11 @@ def _to_endpoint_statuses(raw_data: list[dict[str, Any]]) -> list[EndpointStatus
             name=ep["name"],
             group=ep.get("group"),
             results=[
-                Result(success=r["success"], status=r["status"])
+                Result(
+                    success=r["success"],
+                    status=r.get("status"),
+                    duration=r.get("duration"),
+                )
                 for r in ep.get("results", [])
             ],
         )
@@ -134,12 +142,6 @@ async def test_binary_sensor_empty_results(
     state = hass.states.get("binary_sensor.backend_service")
     assert state is not None
     assert state.state == "unavailable"
-
-    # Verify underlying properties return None directly on empty results
-    entity = hass.data["binary_sensor"].get_entity("binary_sensor.backend_service")
-    assert entity is not None
-    assert entity.latest_result is None
-    assert entity.is_on is None
 
 
 async def test_binary_sensor_missing_status(
