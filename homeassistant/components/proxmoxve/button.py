@@ -134,7 +134,7 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         key="hibernate",
         translation_key="hibernate",
         press_action=lambda coordinator, node, vmid: (
-            coordinator.proxmox.nodes(node).qemu(vmid).status.hibernate.post()
+            coordinator.proxmox.nodes(node).qemu(vmid).status.suspend.post()
         ),
         entity_category=EntityCategory.CONFIG,
     ),
