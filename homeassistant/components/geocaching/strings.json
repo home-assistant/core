@@ -76,6 +76,8 @@
   },
   "options": {
     "error": {
+      "invalid_cache_code": "Enter valid cache codes starting with GC.",
+      "invalid_trackable_code": "Enter valid trackable codes starting with TB.",
       "too_many_caches": "A maximum of 50 caches can be tracked.",
       "too_many_trackables": "A maximum of 50 trackables can be tracked."
     },

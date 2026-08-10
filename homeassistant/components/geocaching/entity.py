@@ -53,9 +53,6 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
         )
 
 
-# Base class for trackable entities
-
-
 class GeocachingTrackableEntity(GeocachingBaseEntity):
     """Base class for Geocaching trackable entities."""
 
@@ -73,7 +70,7 @@ class GeocachingTrackableEntity(GeocachingBaseEntity):
             name=f"Trackable {trackable.name}",
             identifiers={(DOMAIN, cast(str, trackable.reference_code))},
             entry_type=DeviceEntryType.SERVICE,
-            manufacturer=trackable.owner.username if trackable.owner else None,
+            manufacturer="Groundspeak, Inc.",
         )
 
     @property
