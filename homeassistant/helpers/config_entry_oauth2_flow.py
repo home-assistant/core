@@ -330,7 +330,7 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         client_id: str,
         authorize_url: str,
         token_url: str,
-        client_secret: str = "",
+        client_secret: str | None = "",
         code_verifier_length: int = 128,
     ) -> None:
         """Initialize local auth implementation."""
@@ -338,7 +338,7 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
             hass,
             domain,
             client_id,
-            client_secret,
+            client_secret or "",
             authorize_url,
             token_url,
         )
