@@ -1,19 +1,27 @@
 """Test the Remember The Milk integration."""
 
+from collections.abc import Callable
 from unittest.mock import MagicMock
 
 from aiortm import AioRTMError, AuthError
 import pytest
 
-from homeassistant.components.remember_the_milk.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.remember_the_milk.const import (
+    CONF_LIST_ID,
+    DOMAIN,
+    SUBENTRY_TYPE_LIST,
+)
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryDataWithId
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .const import PROFILE
+from .const import CREATE_ENTRY_DATA, PROFILE
 
 from tests.common import MockConfigEntry
+
+LIST_ID = 42
+SUBENTRY_ID = "test-subentry-id"
 
 CONFIG = {
     "name": "myprofile",
@@ -22,10 +30,29 @@ CONFIG = {
 }
 
 
-@pytest.mark.usefixtures("storage")
+@pytest.fixture
+def config_entry_with_subentry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a mock config entry with one list subentry."""
+    entry = MockConfigEntry(
+        data=CREATE_ENTRY_DATA,
+        domain=DOMAIN,
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={CONF_LIST_ID: LIST_ID},
+                subentry_type=SUBENTRY_TYPE_LIST,
+                title="Shopping",
+                unique_id=str(LIST_ID),
+                subentry_id=SUBENTRY_ID,
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.mark.usefixtures("client", "storage")
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
-    client: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test loading and unloading a config entry."""
@@ -92,6 +119,32 @@ async def test_import_creates_deprecation_issue(
     )
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        pytest.param(
+            AuthError("Invalid token!"), ConfigEntryState.SETUP_ERROR, id="auth_error"
+        ),
+        pytest.param(
+            AioRTMError("Boom!"), ConfigEntryState.SETUP_RETRY, id="api_error"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("storage")
+async def test_coordinator_update_errors(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    side_effect: Exception,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test config entry state when the first coordinator refresh fails."""
+    client.rtm.tasks.get_list.side_effect = side_effect
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is expected_state
+
+
 @pytest.mark.parametrize("ignore_missing_translations", [[]])
 @pytest.mark.usefixtures("client")
 async def test_import_without_token_creates_issue(
@@ -113,3 +166,229 @@ async def test_import_without_token_creates_issue(
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_invalid_auth"
     )
+
+
+@pytest.mark.usefixtures("storage")
+async def test_remove_subentry_deletes_list(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry_with_subentry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+) -> None:
+    """Test that removing a list sub-entry deletes the list on the RTM server."""
+    rtm_list_mock(LIST_ID, "Shopping")
+
+    await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry_with_subentry.state is ConfigEntryState.LOADED
+
+    hass.config_entries.async_remove_subentry(config_entry_with_subentry, SUBENTRY_ID)
+    await hass.async_block_till_done()
+
+    client.rtm.timelines.create.assert_called_once()
+    client.rtm.lists.delete.assert_called_once_with(
+        timeline=client.rtm.timelines.create.return_value.timeline,
+        list_id=LIST_ID,
+    )
+
+
+@pytest.mark.usefixtures("storage")
+async def test_rename_subentry_does_not_delete_list(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry_with_subentry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+) -> None:
+    """Test that renaming a sub-entry (no list removed) does not trigger deletion."""
+    rtm_list_mock(LIST_ID, "Shopping")
+
+    await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry_with_subentry.state is ConfigEntryState.LOADED
+
+    subentry = next(iter(config_entry_with_subentry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        config_entry_with_subentry, subentry, title="Grocery Shopping"
+    )
+    await hass.async_block_till_done()
+
+    client.rtm.lists.delete.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(AuthError("Invalid token!"), id="auth_error"),
+        pytest.param(AioRTMError("Boom!"), id="api_error"),
+    ],
+)
+@pytest.mark.usefixtures("storage")
+async def test_remove_subentry_delete_list_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry_with_subentry: MockConfigEntry,
+    side_effect: Exception,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+) -> None:
+    """Test that a server error when deleting a list is logged and reload still runs."""
+    rtm_list_mock(LIST_ID, "Shopping")
+
+    await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry_with_subentry.state is ConfigEntryState.LOADED
+
+    client.rtm.lists.delete.side_effect = side_effect
+
+    hass.config_entries.async_remove_subentry(config_entry_with_subentry, SUBENTRY_ID)
+    await hass.async_block_till_done()
+
+    client.rtm.lists.delete.assert_called_once()
+    assert config_entry_with_subentry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("storage")
+async def test_coordinator_creates_subentry_for_new_list(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+) -> None:
+    """Test that a list on the server creates a subentry and todo entity during first refresh."""
+    rtm_list_mock(LIST_ID, "Shopping")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(config_entry.subentries) == 1
+    subentry = next(iter(config_entry.subentries.values()))
+    assert subentry.data[CONF_LIST_ID] == LIST_ID
+    assert subentry.title == "Shopping"
+    assert subentry.unique_id == str(LIST_ID)
+    assert hass.states.get("todo.shopping") is not None
+    client.rtm.lists.delete.assert_not_called()
+
+
+@pytest.mark.usefixtures("storage")
+async def test_coordinator_removes_subentry_when_list_gone(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry_with_subentry: MockConfigEntry,
+) -> None:
+    """Test that a list gone from the server removes the subentry without a server delete."""
+    # rtm.lists.get_list returns empty by default — list 42 has disappeared from the server.
+    await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_with_subentry.state is ConfigEntryState.LOADED
+    assert len(config_entry_with_subentry.subentries) == 0
+    client.rtm.lists.delete.assert_not_called()
+
+
+@pytest.mark.usefixtures("client", "storage")
+async def test_coordinator_updates_subentry_title_on_rename(
+    hass: HomeAssistant,
+    config_entry_with_subentry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+) -> None:
+    """Test that a server-side list rename updates the subentry title."""
+    rtm_list_mock(
+        LIST_ID, "Grocery Shopping"
+    )  # Different from the subentry title "Shopping"
+
+    await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_with_subentry.state is ConfigEntryState.LOADED
+    subentry = config_entry_with_subentry.subentries.get(SUBENTRY_ID)
+    assert subentry is not None
+    assert subentry.title == "Grocery Shopping"
+
+
+@pytest.mark.usefixtures("storage")
+async def test_coordinator_ignores_filtered_lists(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    make_rtm_list_mock: Callable[..., MagicMock],
+) -> None:
+    """Test that smart, archived, locked, and deleted lists are not synced as subentries."""
+    lists_response = MagicMock()
+    lists_response.lists = [
+        make_rtm_list_mock(1, "Normal"),
+        make_rtm_list_mock(2, "Smart", smart=True),
+        make_rtm_list_mock(3, "Archived", archived=True),
+        make_rtm_list_mock(4, "Locked", locked=True),
+        make_rtm_list_mock(5, "Deleted", deleted=True),
+    ]
+    client.rtm.lists.get_list.return_value = lists_response
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(config_entry.subentries) == 1
+    subentry = next(iter(config_entry.subentries.values()))
+    assert subentry.title == "Normal"
+    assert subentry.data[CONF_LIST_ID] == 1
+
+
+@pytest.mark.usefixtures("storage")
+async def test_coordinator_skips_tasks_for_filtered_list(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+) -> None:
+    """Test that tasks for a list absent from the lists result (e.g. filtered) are ignored."""
+    rtm_list_mock(LIST_ID, "Shopping")
+    # A task_list whose id is not in the coordinator result (simulates a filtered list).
+    task_list = MagicMock()
+    task_list.id = 999
+    tasks_response = MagicMock()
+    tasks_response.tasks.task_list = [task_list]
+    client.rtm.tasks.get_list.return_value = tasks_response
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(config_entry.subentries) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state", "ignore_missing_translations"),
+    [
+        pytest.param(
+            AuthError("Invalid token!"),
+            ConfigEntryState.SETUP_ERROR,
+            [
+                f"component.{DOMAIN}.services.{PROFILE}_create_task.",
+                f"component.{DOMAIN}.services.{PROFILE}_complete_task.",
+            ],
+            id="auth_error",
+        ),
+        pytest.param(
+            AioRTMError("Boom!"),
+            ConfigEntryState.SETUP_RETRY,
+            [
+                f"component.{DOMAIN}.services.{PROFILE}_create_task.",
+                f"component.{DOMAIN}.services.{PROFILE}_complete_task.",
+            ],
+            id="api_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("storage")
+async def test_coordinator_lists_fetch_errors(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    side_effect: Exception,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test config entry state when the list fetch in the coordinator fails."""
+    client.rtm.lists.get_list.side_effect = side_effect
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is expected_state
