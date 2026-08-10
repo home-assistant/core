@@ -81,7 +81,7 @@ class ClientCredential:
     """Represent an OAuth client credential."""
 
     client_id: str
-    client_secret: str
+    client_secret: str | None = None
     name: str | None = None
 
 
@@ -205,10 +205,10 @@ async def async_import_client_credential(
     """Import an existing credential from configuration.yaml."""
     if DOMAIN not in hass.data:
         raise ValueError("Integration 'application_credentials' not setup")
-    item = {
+    item: dict[str, str] = {
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
-        CONF_CLIENT_SECRET: credential.client_secret,
+        CONF_CLIENT_SECRET: credential.client_secret or "",
         CONF_AUTH_DOMAIN: auth_domain or domain,
     }
     item[CONF_NAME] = credential.name or DEFAULT_IMPORT_NAME

@@ -154,7 +154,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         hass: HomeAssistant,
         domain: str,
         client_id: str,
-        client_secret: str,
+        client_secret: str | None,
         authorize_url: str,
         token_url: str,
     ) -> None:
