@@ -230,7 +230,7 @@ class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
             hass,
             auth_domain,
             credential.client_id,
-            credential.client_secret,
+            credential.client_secret or "",
             authorization_server.authorize_url,
             authorization_server.token_url,
         )
