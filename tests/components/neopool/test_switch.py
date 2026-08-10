@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus import InvalidStateReason, NeoPoolInvalidStateError
 from neopool_modbus.decoders import encode_cell_boost
 from neopool_modbus.exceptions import NeoPoolConnectionError
@@ -92,7 +93,7 @@ async def test_manual_filtration_raises_when_not_manual_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """turn_on/off raises ServiceValidationError when filtration mode is not manual."""
     await setup_integration(hass, mock_config_entry)
@@ -118,7 +119,7 @@ async def test_manual_filtration_raises_when_boost_active(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Manual mode but active boost: the pre-check must block the write."""
     await setup_integration(hass, mock_config_entry)
@@ -143,7 +144,7 @@ async def test_manual_filtration_is_on_reflects_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """is_on tracks the "Filtration Pump" relay state, regardless of mode."""
     await setup_integration(hass, mock_config_entry)
@@ -288,7 +289,7 @@ async def test_aux_relay_refuses_when_not_in_manual_mode(
     hass: HomeAssistant,
     mock_config_entry_switch: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
     aux_suffix: str,
     enable_key: str,
     enable_value: int | None,
@@ -421,7 +422,7 @@ async def test_backwash_is_on_tracks_remaining_countdown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """is_on follows MBF_PAR_FILTVALVE_REMAINING, so it clears when the cycle ends."""
     await setup_integration(hass, mock_config_entry)
@@ -540,7 +541,7 @@ async def test_switch_write_schedules_follow_up_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A successful write triggers a second refresh after the follow-up delay."""
     await setup_integration(hass, mock_config_entry)
