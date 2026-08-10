@@ -1078,7 +1078,7 @@ gardena-bluetooth==2.8.1
 gassist-text==0.0.14
 
 # homeassistant.components.gatus
-gatus-api==1.0.5
+gatus-api==1.1.0
 
 # homeassistant.components.google
 gcal-sync==9.1.0
@@ -3409,7 +3409,7 @@ wyoming==1.10.0
 xiaomi-ble==1.11.0
 
 # homeassistant.components.knx
-xknx==3.18.0
+xknx==3.19.0
 
 # homeassistant.components.knx
 xknxproject==3.10.0
