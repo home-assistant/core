@@ -274,20 +274,20 @@ async def test_services_with_speed(
 
     await call_service_with_data(hass, SERVICE_OPEN_COVER, ent1, {ATTR_SPEED: "ignore"})
     assert is_open(hass, ent1)
-    assert ent1.last_kwargs == {"speed": "ignore"}
+    assert ent1.last_kwargs == {}
 
     ent1.last_kwargs = None
     await call_service_with_data(
         hass, SERVICE_CLOSE_COVER, ent1, {ATTR_SPEED: "ignore"}
     )
     assert is_closed(hass, ent1)
-    assert ent1.last_kwargs == {"speed": "ignore"}
+    assert ent1.last_kwargs == {}
 
     ent2.last_kwargs = None
     await call_service_with_data(
         hass, SERVICE_SET_COVER_POSITION, ent2, {"position": 49, ATTR_SPEED: "ignore"}
     )
-    assert ent2.last_kwargs == {"position": 49, "speed": "ignore"}
+    assert ent2.last_kwargs == {"position": 49}
 
 
 def call_service_with_data(
