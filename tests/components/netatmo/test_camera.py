@@ -5,7 +5,6 @@
 
 from datetime import timedelta
 from functools import partial
-import importlib
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -38,8 +37,6 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
-
-importlib.import_module("homeassistant.components.netatmo.data_handler")
 
 
 async def test_entity(
@@ -107,16 +104,13 @@ async def test_monitoring_component(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch(
-            "homeassistant.components.netatmo.data_handler.PLATFORMS",
-            ["camera"],
-        ),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
             return_value=AsyncMock(),
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_camera_post
@@ -965,16 +959,13 @@ async def test_camera_image_with_attribute_change(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch(
-            "homeassistant.components.netatmo.data_handler.PLATFORMS",
-            ["camera"],
-        ),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
             return_value=AsyncMock(),
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_camera_post
