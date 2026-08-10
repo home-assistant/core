@@ -9,7 +9,11 @@ import voluptuous as vol
 from homeassistant.const import ATTR_DEVICE_ID, CONF_PIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    service,
+)
 
 from .const import ATTR_BONUS_TIME, DOMAIN
 from .coordinator import NintendoParentalControlsConfigEntry
@@ -40,11 +44,12 @@ def async_setup_services(
             }
         ),
     )
-    hass.services.async_register(
-        domain=DOMAIN,
-        service=NintendoParentalServices.UPDATE_PIN_CODE,
-        service_func=async_update_pin_code,
-        schema=vol.Schema(
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        NintendoParentalServices.UPDATE_PIN_CODE,
+        async_update_pin_code,
+        vol.Schema(
             {
                 vol.Required(ATTR_DEVICE_ID): cv.string,
                 vol.Required(CONF_PIN): cv.string,

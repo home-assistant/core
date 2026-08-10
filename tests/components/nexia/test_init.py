@@ -76,3 +76,25 @@ async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:
         assert entry.version == 1
         assert entry.minor_version == 2
         assert entry.unique_id == "123456"
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    patch_nexia_home: NexiaHome,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a zone device links to its thermostat via via_device_id."""
+    config_entry = await setup_integration(hass, patch_nexia_home)
+
+    thermostat_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, 2000000),  # type: ignore[arg-type] # until fix issue #139773
+        config_entry.entry_id,
+    )
+    assert thermostat_device is not None
+
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, 100),  # type: ignore[arg-type] # until fix issue #139773
+        config_entry.entry_id,
+    )
+    assert zone_device is not None
+    assert zone_device.via_device_id == thermostat_device.id
