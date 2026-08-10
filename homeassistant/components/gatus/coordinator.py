@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from gatus_api import EndpointStatus, GatusClient, GatusClientError
+from gatus_api import EndpointStatus, GatusAuthError, GatusClient, GatusClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
@@ -59,14 +59,9 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
         """Fetch endpoint statuses from the Gatus API."""
         try:
             raw_endpoints = await self.client.get_endpoints_statuses()
+        except GatusAuthError as err:
+            raise ConfigEntryAuthFailed from err
         except GatusClientError as err:
-            if (
-                "401" in str(err)
-                or "403" in str(err)
-                or "unauthorized" in str(err).lower()
-                or "forbidden" in str(err).lower()
-            ):
-                raise ConfigEntryAuthFailed from err
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

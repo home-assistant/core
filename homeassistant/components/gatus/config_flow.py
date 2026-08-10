@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from gatus_api import GatusClient, GatusClientError
+from gatus_api import GatusAuthError, GatusClient, GatusClientError
 import voluptuous as vol
 from yarl import URL
 
@@ -64,10 +64,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     try:
         await client.get_endpoints_statuses()
+    except GatusAuthError as err:
+        _LOGGER.debug(
+            "Authentication failed for Gatus instance at %s: %s", data[CONF_URL], err
+        )
+        raise InvalidAuth from err
     except GatusClientError as err:
         _LOGGER.debug("Cannot connect to Gatus instance at %s: %s", data[CONF_URL], err)
-        if "401" in str(err) or "403" in str(err):
-            raise InvalidAuth from err
         raise CannotConnect from err
 
 
