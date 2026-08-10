@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'NOERROR',
+    'state': 'noerror',
   })
 # ---
 # name: test_sensor_setup_and_states[sensor.core_backend_service_response_time-entry]

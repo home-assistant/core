@@ -32,7 +32,15 @@
   "entity": {
     "sensor": {
       "dns_rcode": {
-        "name": "DNS response code"
+        "name": "DNS response code",
+        "state": {
+          "formerr": "Format error",
+          "noerror": "No error",
+          "notimp": "Not implemented",
+          "nxdomain": "Non-existent domain",
+          "refused": "Refused",
+          "servfail": "Server failure"
+        }
       },
       "response_time": {
         "name": "Response time"

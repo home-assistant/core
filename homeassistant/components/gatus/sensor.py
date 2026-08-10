@@ -52,7 +52,9 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         key="dns_rcode",
         translation_key="dns_rcode",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda result: result.dns_rcode,
+        value_fn=lambda result: (
+            result.dns_rcode.lower() if result.dns_rcode is not None else None
+        ),
     ),
 )
 
