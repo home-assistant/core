@@ -217,3 +217,94 @@ async def test_flow_reconfigure_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_gatus_client")
+async def test_form_success_with_credentials(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test setup with username, password, and token credentials."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "http://gatus.example.com:8080",
+            "username": "user",
+            "password": "pass",
+            "token": "secret_token",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_URL: "http://gatus.example.com:8080",
+        "username": "user",
+        "password": "pass",
+        "token": "secret_token",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_gatus_client")
+async def test_flow_reconfigure_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow updating stored credentials."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "http://gatus.example.com:8080",
+            "username": "new_user",
+            "password": "new_password",
+            "token": "new_token",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_URL: "http://gatus.example.com:8080",
+        "username": "new_user",
+        "password": "new_password",
+        "token": "new_token",
+    }
+
+
+@pytest.mark.usefixtures("mock_gatus_client")
+async def test_flow_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "reauth_user",
+            "password": "reauth_password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_URL: "http://gatus.example.com:8080",
+        "username": "reauth_user",
+        "password": "reauth_password",
+    }

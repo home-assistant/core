@@ -9,6 +9,7 @@ from gatus_api import EndpointStatus, GatusClient, GatusClientError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -59,6 +60,13 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
         try:
             raw_endpoints = await self.client.get_endpoints_statuses()
         except GatusClientError as err:
+            if (
+                "401" in str(err)
+                or "403" in str(err)
+                or "unauthorized" in str(err).lower()
+                or "forbidden" in str(err).lower()
+            ):
+                raise ConfigEntryAuthFailed from err
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

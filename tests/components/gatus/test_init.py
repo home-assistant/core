@@ -48,6 +48,21 @@ async def test_setup_failure_retry(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_failure_auth(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an authentication failure places the entry in SETUP_ERROR state."""
+    mock_gatus_client.get_endpoints_statuses.side_effect = GatusClientError(
+        "401 Unauthorized"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 @pytest.mark.usefixtures("mock_gatus_client")
 async def test_remove_stale_device_runtime(
     hass: HomeAssistant,
