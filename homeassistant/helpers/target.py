@@ -178,7 +178,17 @@ def _resolve_referenced_devices(
             # it resolves to the devices it was split into so actions targeting it
             # still trickle down. Only the splits are referenced, not the composite id,
             # so a device-id consumer does not act on the same underlying device twice.
-            selected.referenced_devices.update(device.id for device in split_devices)
+            # Each split's children are included too, matching the direct-device branch.
+            for split_device in split_devices:
+                selected.referenced_devices.add(split_device.id)
+                selected.referenced_devices.update(
+                    child_device.id
+                    for child_device in (
+                        dev_reg.child_devices.get_children_for_device_id(
+                            split_device.id
+                        )
+                    )
+                )
         else:
             selected.missing_devices.add(device_id)
             selected.referenced_devices.add(device_id)
@@ -246,19 +256,12 @@ def async_extract_referenced_entity_ids(
                 if entity_entry.hidden_by is None:
                     selected.indirectly_referenced.add(entity_entry.entity_id)
 
-            for device_entry in dev_reg.devices.get_devices_for_label(label_id):
+            # Labels are never inherited by child devices (see
+            # dr.async_entries_for_label): a labeled parent is not expanded into its
+            # children. Only devices that carry the label themselves are targeted,
+            # which is consistent with template label_devices() and search.
+            for device_entry in dr.async_entries_for_label(dev_reg, label_id):
                 selected.referenced_devices.add(device_entry.id)
-                selected.referenced_devices.update(
-                    child_device.id
-                    for child_device in (
-                        dev_reg.child_devices.get_children_for_device_id(
-                            device_entry.id
-                        )
-                    )
-                )
-
-            for child_entry in dev_reg.child_devices.get_devices_for_label(label_id):
-                selected.referenced_devices.add(child_entry.id)
 
             for area_entry in area_reg.areas.get_areas_for_label(label_id):
                 selected.referenced_areas.add(area_entry.id)

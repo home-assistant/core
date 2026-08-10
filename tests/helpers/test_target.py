@@ -1080,6 +1080,7 @@ async def test_target_trickle_down_to_splits(
     }
 
     dr.async_setup(hass)
+    await ar.async_load(hass)
     await dr.async_load(hass)
     await er.async_load(hass)
     device_registry = dr.async_get(hass)
@@ -1097,6 +1098,33 @@ async def test_target_trickle_down_to_splits(
     assert selected.referenced_devices == splits
     assert COMPOSITE_ID not in selected.referenced_devices
     assert selected.indirectly_referenced == {"sensor.a", "sensor.b"}
+
+    # A child of a split device is reached too, matching a direct device target
+    split_a = next(
+        d
+        for d in device_registry.async_get_devices_for_composite_device_id(COMPOSITE_ID)
+        if entry_a.entry_id in d.config_entries
+    )
+    child = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id,
+        identifiers={("domain_a", "child")},
+        parent_device_id=split_a.id,
+        name="Child",
+    )
+    entity_registry = er.async_get(hass)
+    child_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "domain_a",
+        "child",
+        config_entry=entry_a,
+        device_id=child.id,
+    ).entity_id
+
+    selected = target.async_extract_referenced_entity_ids(
+        hass, target.TargetSelection({"device_id": COMPOSITE_ID})
+    )
+    assert selected.referenced_devices == splits | {child.id}
+    assert selected.indirectly_referenced == {"sensor.a", "sensor.b", child_entity}
 
 
 @pytest.fixture
@@ -1233,17 +1261,21 @@ async def test_extract_label_with_child_devices(
     hass: HomeAssistant,
     child_device_setup: dict[str, str],
 ) -> None:
-    """Test a label on a parent device expands to its child devices."""
+    """Test labels are not inherited by child devices when targeting.
+
+    A labeled parent targets only the parent and its own entities; a labeled child
+    targets only that child. This mirrors dr.async_entries_for_label, which
+    documents that labels are never inherited from the parent.
+    """
     ids = child_device_setup
 
+    # The label is on the parent; it does not expand to the child devices, and only
+    # the parent's own entities are indirectly referenced.
     selected = target.async_extract_referenced_entity_ids(
         hass, target.TargetSelection({"label_id": "strip-label"})
     )
-    assert selected.referenced_devices == {
-        ids["parent"],
-        ids["outlet_1"],
-        ids["outlet_2"],
-    }
+    assert selected.referenced_devices == {ids["parent"]}
+    assert selected.indirectly_referenced == {ids["strip_switch"]}
 
     # A label on a child device targets only the child device
     selected = target.async_extract_referenced_entity_ids(
