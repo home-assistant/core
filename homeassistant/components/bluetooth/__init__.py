@@ -346,8 +346,10 @@ async def async_update_device(
     )
     if via_device_id and (via_device_entry := device_registry.async_get(via_device_id)):
         kwargs: dict[str, Any] = {"via_device_id": via_device_id}
-        if not device_entry.area_id and via_device_entry.area_id:
-            kwargs["area_id"] = via_device_entry.area_id
+        # The source device may be an area-inheriting child, so use its effective area.
+        via_area_id = device_registry.async_get_effective_area_id(via_device_entry)
+        if not device_entry.area_id and via_area_id:
+            kwargs["area_id"] = via_area_id
         device_registry.async_update_device(device_entry.id, **kwargs)
 
 

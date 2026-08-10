@@ -58,12 +58,18 @@ def _lookup_area(
     if entity_entry is None or entity_entry.device_id is None:
         return None
 
-    device_entry = perm_lookup.device_registry.async_get(entity_entry.device_id)
+    device_registry = perm_lookup.device_registry
+    device_entry = device_registry.async_get(entity_entry.device_id)
 
-    if device_entry is None or device_entry.area_id is None:
+    if device_entry is None:
         return None
 
-    return area_dict.get(device_entry.area_id)
+    area_id = device_registry.async_get_effective_area_id(device_entry)
+
+    if area_id is None:
+        return None
+
+    return area_dict.get(area_id)
 
 
 def _lookup_device(
