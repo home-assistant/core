@@ -684,6 +684,10 @@
               "description": "Default is UP (0) to open a cover and DOWN (1) to close a cover. Enable this to invert the open/close commands from/to your KNX actuator.",
               "label": "Invert open/close"
             },
+            "position_state_send": {
+              "description": "Publish the position calculated by Home Assistant to the address above instead of listening on it. This is meant for actuators that do not report their position themselves, so that displays can show it.",
+              "label": "Actively send the calculated position"
+            },
             "section_position_control": {
               "description": "Control cover position.",
               "title": "Position"

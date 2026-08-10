@@ -237,6 +237,9 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
             vol.Optional(CONF_GA_POSITION_STATE): GASelector(
                 write=False, valid_dpt="5.001"
             ),
+            vol.Optional(
+                CoverConf.POSITION_STATE_SEND, default=False
+            ): selector.BooleanSelector(),
             vol.Optional(CoverConf.INVERT_POSITION): selector.BooleanSelector(),
             "section_tilt_control": KNXSectionFlat(collapsible=True),
             vol.Optional(CONF_GA_ANGLE): GASelector(valid_dpt="5.001"),
@@ -280,6 +283,24 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
         msg=(
             "At least one of 'Open/Close control' or"
             " 'Position - Set position' is required."
+        ),
+    ),
+    vol.Any(
+        vol.Schema(
+            {vol.Required(CoverConf.POSITION_STATE_SEND): False},
+            extra=vol.ALLOW_EXTRA,
+        ),
+        vol.Schema(
+            {
+                vol.Required(CONF_GA_POSITION_STATE): GASelector(
+                    write=False, state_required=True
+                )
+            },
+            extra=vol.ALLOW_EXTRA,
+        ),
+        msg=(
+            "'Actively send the calculated position' requires a"
+            " 'Current position' group address."
         ),
     ),
 )

@@ -243,6 +243,7 @@ class CoverConf:
     INVERT_UPDOWN: Final = "invert_updown"
     INVERT_POSITION: Final = "invert_position"
     INVERT_ANGLE: Final = "invert_angle"
+    POSITION_STATE_SEND: Final = "position_state_send"
 
 
 class ClimateConf:

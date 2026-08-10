@@ -478,6 +478,7 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CONF_POSITION_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_ANGLE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_ANGLE_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CoverConf.POSITION_STATE_SEND, default=False): cv.boolean,
                 vol.Optional(
                     CoverConf.TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
                 ): cv.positive_float,
@@ -502,6 +503,20 @@ class CoverSchema(KNXPlatformSchema):
             msg=(
                 f"At least one of '{CONF_MOVE_LONG_ADDRESS}' or"
                 f" '{CONF_POSITION_ADDRESS}' is required."
+            ),
+        ),
+        vol.Any(
+            vol.Schema(
+                {vol.Required(CoverConf.POSITION_STATE_SEND): False},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            vol.Schema(
+                {vol.Required(CONF_POSITION_STATE_ADDRESS): object},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            msg=(
+                f"'{CoverConf.POSITION_STATE_SEND}' requires"
+                f" '{CONF_POSITION_STATE_ADDRESS}'."
             ),
         ),
     )
