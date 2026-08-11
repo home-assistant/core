@@ -16,6 +16,10 @@ env:
   # Base image version from https://github.com/home-assistant/docker
   BASE_IMAGE_VERSION: "2026.07.0"
   ARCHITECTURES: '["amd64", "aarch64"]'
+  MACHINES: >-
+    ["generic-x86-64", "khadas-vim3", "odroid-c2", "odroid-c4", "odroid-m1",
+    "odroid-n2", "qemuarm-64", "qemux86-64", "raspberrypi3-64",
+    "raspberrypi4-64", "raspberrypi5-64", "yellow", "green"]
 
 permissions: {}
 
@@ -35,6 +39,7 @@ jobs:
       channel: ${{ steps.version.outputs.channel }}
       publish: ${{ steps.version.outputs.publish }}
       architectures: ${{ env.ARCHITECTURES }}
+      machines: ${{ env.MACHINES }}
       base_image_version: ${{ env.BASE_IMAGE_VERSION }}
     steps:
       - name: Checkout the repository
@@ -218,20 +223,7 @@ jobs:
       id-token: write # For cosign signing
     strategy:
       matrix:
-        machine:
-          - generic-x86-64
-          - khadas-vim3
-          - odroid-c2
-          - odroid-c4
-          - odroid-m1
-          - odroid-n2
-          - qemuarm-64
-          - qemux86-64
-          - raspberrypi3-64
-          - raspberrypi4-64
-          - raspberrypi5-64
-          - yellow
-          - green
+        machine: ${{ fromJson(needs.init.outputs.machines) }}
         include:
           # Default: aarch64 on native ARM runner
           - arch: aarch64
@@ -282,11 +274,29 @@ jobs:
           push: true
           version: ${{ needs.init.outputs.version }}
 
+  run_e2e_tests_base:
+    name: Run E2E tests on base images
+    if: github.repository_owner == 'home-assistant'
+    needs: ["init", "build_base"]
+    uses: ./.github/workflows/e2e-tests.yml
+    with:
+      version: ${{ needs.init.outputs.version }}
+      image_prefixes: ${{ needs.init.outputs.architectures }}
+
+  run_e2e_tests_machine:
+    name: Run E2E tests on machine images
+    if: github.repository_owner == 'home-assistant'
+    needs: ["init", "build_machine"]
+    uses: ./.github/workflows/e2e-tests.yml
+    with:
+      version: ${{ needs.init.outputs.version }}
+      image_prefixes: ${{ needs.init.outputs.machines }}
+
   publish_ha:
     name: Publish version files
     environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
-    needs: ["init", "build_machine"]
+    needs: ["init", "build_machine", "run_e2e_tests_machine"]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -326,7 +336,7 @@ jobs:
     name: Publish to ${{ matrix.registry }}
     environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
-    needs: ["init", "build_base"]
+    needs: ["init", "build_base", "run_e2e_tests_base"]
     runs-on: ubuntu-latest
     permissions:
       contents: read # To check out the repository
@@ -461,7 +471,7 @@ jobs:
   build_python:
     name: Build PyPi package
     environment: ${{ needs.init.outputs.channel }}
-    needs: ["init", "build_base"]
+    needs: ["init", "build_base", "run_e2e_tests_base"]
     runs-on: ubuntu-latest
     permissions:
       contents: read # To check out the repository
