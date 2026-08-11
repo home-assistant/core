@@ -291,7 +291,7 @@ aioharmony==1.0.8
 aiohasupervisor==0.6.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.38.0
+aiohomeconnect==0.39.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==4.0.0
@@ -1072,7 +1072,7 @@ gTTS==2.5.4
 
 # homeassistant.components.gardena_bluetooth
 # homeassistant.components.husqvarna_automower_ble
-gardena-bluetooth==2.8.1
+gardena-bluetooth==2.10.1
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.14
