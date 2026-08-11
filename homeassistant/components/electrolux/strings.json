@@ -141,6 +141,20 @@
         "name": "Upper oven stop"
       }
     },
+    "light": {
+      "bottomoven_cavity_light": {
+        "name": "Lower cavity light"
+      },
+      "cavity_light": {
+        "name": "Cavity light"
+      },
+      "hood_light": {
+        "name": "[%key:component::light::title%]"
+      },
+      "upperoven_cavity_light": {
+        "name": "Upper cavity light"
+      }
+    },
     "sensor": {
       "appliance_state": {
         "name": "Appliance state",
