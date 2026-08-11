@@ -23,6 +23,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "demand_control": {
+        "name": "Demand control"
+      }
+    },
     "sensor": {
       "compressor_energy_consumption": {
         "name": "Compressor energy consumption (today)"
