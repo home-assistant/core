@@ -14,11 +14,8 @@ publish:
     publish_options:
       collapsed: true
       fields:
-        evaluate_payload:
-          default: false
-          selector:
-            boolean:
         qos:
+          required: true
           default: "0"
           selector:
             select:
@@ -27,6 +24,12 @@ publish:
                 - "1"
                 - "2"
         retain:
+          required: true
+          default: false
+          selector:
+            boolean:
+        evaluate_payload:
+          required: true
           default: false
           selector:
             boolean:
