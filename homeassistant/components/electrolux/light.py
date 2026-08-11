@@ -48,10 +48,10 @@ class ElectroluxLightBaseDescription[T: ApplianceData, **P = []](
     color_mode: ColorMode
     supported_color_modes: set[ColorMode]
     exists_fn: Callable[Concatenate[T, P], bool]
-    min_color_fn: Callable[Concatenate[T, P], int | None] | None
-    max_color_fn: Callable[Concatenate[T, P], int | None] | None
-    color_fn: Callable[Concatenate[T, P], int | None] | None
-    brightness_fn: Callable[Concatenate[T, P], int | None] | None
+    min_color_fn: Callable[Concatenate[T, P], int | None] | None = None
+    max_color_fn: Callable[Concatenate[T, P], int | None] | None = None
+    color_fn: Callable[Concatenate[T, P], int | None] | None = None
+    brightness_fn: Callable[Concatenate[T, P], int | None] | None = None
     is_on_fn: Callable[Concatenate[T, P], bool]
     turn_on_command_fn: Callable[
         Concatenate[T, int | None, int | None, P], list[dict[str, Any]]
@@ -156,20 +156,6 @@ HOOD_LIGHTS: tuple[ElectroluxLightDescription[HDAppliance], ...] = (
 )
 
 
-def oven_cavity_light_turn_on_command_fn(
-    appliance: OVAppliance, brightness: int | None, color_temp: int | None
-) -> list[dict[str, Any]]:
-    """Generate the commands to turn on the cavity light of an oven."""
-    return [appliance.get_cavity_light_command(True)]
-
-
-def oven_cavity_light_turn_off_command_fn(
-    appliance: OVAppliance,
-) -> list[dict[str, Any]]:
-    """Generate the commands to turn off the cavity light of an oven."""
-    return [appliance.get_cavity_light_command(False)]
-
-
 OVEN_LIGHTS: tuple[ElectroluxLightDescription[OVAppliance], ...] = (
     ElectroluxLightDescription(
         key="cavity_light",
@@ -177,29 +163,15 @@ OVEN_LIGHTS: tuple[ElectroluxLightDescription[OVAppliance], ...] = (
         supported_color_modes={ColorMode.ONOFF},
         color_mode=ColorMode.ONOFF,
         exists_fn=lambda appliance: appliance.is_feature_supported(CAVITY_LIGHT),
-        min_color_fn=None,
-        max_color_fn=None,
-        color_fn=None,
-        brightness_fn=None,
         is_on_fn=lambda appliance: appliance.get_current_cavity_light(),
-        turn_on_command_fn=oven_cavity_light_turn_on_command_fn,
-        turn_off_command_fn=oven_cavity_light_turn_off_command_fn,
+        turn_on_command_fn=lambda appliance, brightness, color_temp: [
+            appliance.get_cavity_light_command(True)
+        ],
+        turn_off_command_fn=lambda appliance: [
+            appliance.get_cavity_light_command(False)
+        ],
     ),
 )
-
-
-def structured_oven_cavity_light_turn_on_command_fn(
-    appliance: SOAppliance, brightness: int | None, color_temp: int | None, cavity: str
-) -> list[dict[str, Any]]:
-    """Generate the commands to turn on the cavity light of an oven."""
-    return [appliance.get_cavity_light_command(cavity, True)]
-
-
-def structured_oven_cavity_light_turn_off_command_fn(
-    appliance: SOAppliance, cavity: str
-) -> list[dict[str, Any]]:
-    """Generate the commands to turn off the cavity light of an oven."""
-    return [appliance.get_cavity_light_command(cavity, False)]
 
 
 STRUCTURED_OVEN_LIGHTS: tuple[ElectroluxSubmoduleLightDescription[SOAppliance], ...] = (
@@ -211,15 +183,15 @@ STRUCTURED_OVEN_LIGHTS: tuple[ElectroluxSubmoduleLightDescription[SOAppliance], 
         exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
             cavity, CAVITY_LIGHT
         ),
-        min_color_fn=None,
-        max_color_fn=None,
-        color_fn=None,
-        brightness_fn=None,
         is_on_fn=lambda appliance, cavity: appliance.get_current_cavity_cavity_light(
             cavity
         ),
-        turn_on_command_fn=structured_oven_cavity_light_turn_on_command_fn,
-        turn_off_command_fn=structured_oven_cavity_light_turn_off_command_fn,
+        turn_on_command_fn=lambda appliance, brightness, color_temp, cavity: [
+            appliance.get_cavity_light_command(cavity, True)
+        ],
+        turn_off_command_fn=lambda appliance, cavity: [
+            appliance.get_cavity_light_command(cavity, False)
+        ],
     ),
 )
 
@@ -385,8 +357,6 @@ class ElectroluxLight[T: ApplianceData](ElectroluxBaseLight[T]):
     @override
     def _is_on(self) -> bool | None:
         description = self.entity_description
-        if description.is_on_fn is None:
-            return None
 
         return description.is_on_fn(self._appliance_data)
 
@@ -476,8 +446,6 @@ class ElectroluxSubmoduleLight[T: ApplianceData](ElectroluxBaseLight[T]):
     @override
     def _is_on(self) -> bool | None:
         description = self.entity_description
-        if description.is_on_fn is None:
-            return None
 
         return description.is_on_fn(self._appliance_data, self._submodule)
 

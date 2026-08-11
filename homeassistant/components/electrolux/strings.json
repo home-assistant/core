@@ -149,7 +149,7 @@
         "name": "Cavity light"
       },
       "hood_light": {
-        "name": "Light"
+        "name": "[%key:component::light::title%]"
       },
       "upperoven_cavity_light": {
         "name": "Upper cavity light"
