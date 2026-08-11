@@ -642,7 +642,9 @@ async def test_home_devices_registered(
 
         await hass.async_block_till_done()
 
-    home_device = device_registry.async_get_device(identifiers={(DOMAIN, HOME_ID)})
+    home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HOME_ID), config_entry.entry_id
+    )
     assert home_device is not None
     assert home_device.name == "MYHOME"
     assert home_device.manufacturer == "Netatmo"
@@ -651,8 +653,8 @@ async def test_home_devices_registered(
     assert config_entry.runtime_data.parent_device_ids[HOME_ID] == home_device.id
 
     # A home with no rooms and no modules still gets a device
-    empty_home_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "91763b24c43d3e344f424e8c")}
+    empty_home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "91763b24c43d3e344f424e8c"), config_entry.entry_id
     )
     assert empty_home_device is not None
     assert empty_home_device.name == "Unknown"
@@ -670,7 +672,9 @@ async def test_device_hierarchy(
 
         await hass.async_block_till_done()
 
-    home_device = device_registry.async_get_device(identifiers={(DOMAIN, HOME_ID)})
+    home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HOME_ID), config_entry.entry_id
+    )
     assert home_device is not None
 
     device_entries = dr.async_entries_for_config_entry(
@@ -690,8 +694,8 @@ async def test_device_hierarchy(
     assert home_device.via_device_id is None
 
     # Air care modules belong to the account rather than a home, so stay unlinked
-    air_care_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "12:34:56:25:cf:a8")}
+    air_care_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:25:cf:a8"), config_entry.entry_id
     )
     assert air_care_device is not None
     assert air_care_device.via_device_id is None
@@ -722,7 +726,9 @@ async def test_device_remove_devices(
     response = await client.remove_device(device_entry.id, config_entry.entry_id)
     assert not response["success"]
 
-    home_device = device_registry.async_get_device(identifiers={(DOMAIN, HOME_ID)})
+    home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HOME_ID), config_entry.entry_id
+    )
     assert home_device is not None
     response = await client.remove_device(home_device.id, config_entry.entry_id)
     assert not response["success"]
