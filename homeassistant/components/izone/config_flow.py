@@ -111,12 +111,13 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         self._user_discovery_failed = False
         try:
             await izone_discovery.async_scan(self.hass)
-            # Sleep is the ASPort reply window; the event loop processes datagrams
-            # and eager discovery-flow inits during it (no post-sleep drain).
-            await asyncio.sleep(USER_SCAN_WAIT_SECONDS)
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             self._user_discovery_failed = True
+            return
+        # Sleep is the ASPort reply window; the event loop processes datagrams
+        # and eager discovery-flow inits during it (no post-sleep drain).
+        await asyncio.sleep(USER_SCAN_WAIT_SECONDS)
 
     async def async_step_discover(
         self, _user_input: dict[str, Any] | None = None
