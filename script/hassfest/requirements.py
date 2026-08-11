@@ -3,7 +3,7 @@
 from collections import deque
 from collections.abc import Collection
 from functools import cache
-from importlib.metadata import files, metadata
+from importlib.metadata import PackageMetadata, files, metadata
 import json
 import os
 import re
@@ -525,7 +525,7 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
 
 
 @cache
-def metadata_cache(package: str) -> dict:
+def metadata_cache(package: str) -> PackageMetadata:
     """Return package metadata, cached."""
     return metadata(package)
 
