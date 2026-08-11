@@ -8,9 +8,9 @@ from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 
 from homeassistant.components import cloud
 from homeassistant.components.webhook import async_generate_id
-from homeassistant.const import CONF_WEBHOOK_ID, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, OAuth2TokenRequestError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -18,7 +18,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .api import AuthenticatedMonzoAPI
+from .api import AuthenticatedMonzoAPI, MonzoAPI
 from .const import CONF_CLOUDHOOK_URL, CONF_WEBHOOK_URL, DOMAIN
 from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoRuntimeData
 from .webhook import MonzoWebhookManager, async_delete_remote_webhooks
@@ -35,6 +35,18 @@ async def _async_create_api(
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
     return AuthenticatedMonzoAPI(async_get_clientsession(hass), session)
+
+
+async def _async_create_removal_api(
+    hass: HomeAssistant, entry: MonzoConfigEntry
+) -> MonzoAPI:
+    """Create a Monzo API client without updating a deleted config entry."""
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    session = OAuth2Session(hass, entry, implementation)
+    token = session.token
+    if not session.valid_token:
+        token = await implementation.async_refresh_token(token)
+    return MonzoAPI(async_get_clientsession(hass), token[CONF_ACCESS_TOKEN])
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:
@@ -102,7 +114,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> No
     """Remove webhooks for a deleted config entry."""
     if webhook_url := entry.data.get(CONF_WEBHOOK_URL):
         try:
-            api = await _async_create_api(hass, entry)
+            api = await _async_create_removal_api(hass, entry)
             accounts = await api.user_account.accounts()
             await async_delete_remote_webhooks(
                 api, (account["id"] for account in accounts), webhook_url
@@ -112,6 +124,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> No
             ClientError,
             ImplementationUnavailableError,
             InvalidMonzoAPIResponseError,
+            OAuth2TokenRequestError,
             TimeoutError,
         ) as err:
             _LOGGER.warning("Unable to remove Monzo webhooks: %s", err)

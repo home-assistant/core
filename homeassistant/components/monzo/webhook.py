@@ -9,7 +9,11 @@ from typing import Any
 from aiohttp import ClientError
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request
-from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
+from monzopy import (
+    AbstractMonzoApi,
+    AuthorisationExpiredError,
+    InvalidMonzoAPIResponseError,
+)
 
 from homeassistant.components import cloud, webhook
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_CORE_CONFIG_UPDATE
@@ -18,7 +22,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError
 
-from .api import AuthenticatedMonzoAPI
 from .const import (
     ATTR_DATA,
     CONF_CLOUDHOOK_URL,
@@ -40,7 +43,7 @@ def webhook_signal(account_id: str) -> str:
 
 
 async def async_delete_remote_webhooks(
-    api: AuthenticatedMonzoAPI, account_ids: Iterable[str], webhook_url: str
+    api: AbstractMonzoApi, account_ids: Iterable[str], webhook_url: str
 ) -> None:
     """Delete remote Monzo webhooks registered to a Home Assistant URL."""
     for account_id in account_ids:
@@ -137,12 +140,17 @@ class MonzoWebhookManager:
                     await self._async_remove_previous_remote_webhooks()
                     return
 
+            registered_webhook_ids: list[str] = []
             try:
-                await self._async_reconcile_remote_webhooks(webhook_url)
+                await self._async_reconcile_remote_webhooks(
+                    webhook_url, registered_webhook_ids
+                )
             except AuthorisationExpiredError:
+                await self._async_rollback_remote_webhooks(registered_webhook_ids)
                 self.entry.async_start_reauth(self.hass)
                 return
             except (ClientError, InvalidMonzoAPIResponseError, TimeoutError) as err:
+                await self._async_rollback_remote_webhooks(registered_webhook_ids)
                 _LOGGER.warning("Unable to register Monzo webhooks: %s", err)
                 self._schedule_retry()
                 return
@@ -155,7 +163,9 @@ class MonzoWebhookManager:
                     data={**self.entry.data, CONF_WEBHOOK_URL: webhook_url},
                 )
 
-    async def _async_reconcile_remote_webhooks(self, webhook_url: str) -> None:
+    async def _async_reconcile_remote_webhooks(
+        self, webhook_url: str, registered_webhook_ids: list[str]
+    ) -> None:
         """Ensure each account has exactly one webhook using our URL."""
         previous_url = self.entry.data.get(CONF_WEBHOOK_URL)
 
@@ -182,8 +192,24 @@ class MonzoWebhookManager:
                 for duplicate in matching_webhooks[1:]:
                     await self.coordinator.api.user_account.delete_webhook(duplicate.id)
             else:
-                await self.coordinator.api.user_account.register_webhook(
+                registered = await self.coordinator.api.user_account.register_webhook(
                     account_id, webhook_url
+                )
+                registered_webhook_ids.append(registered.id)
+
+    async def _async_rollback_remote_webhooks(self, webhook_ids: list[str]) -> None:
+        """Roll back webhooks created during an incomplete reconciliation."""
+        for webhook_id in webhook_ids:
+            try:
+                await self.coordinator.api.user_account.delete_webhook(webhook_id)
+            except (
+                AuthorisationExpiredError,
+                ClientError,
+                InvalidMonzoAPIResponseError,
+                TimeoutError,
+            ) as err:
+                _LOGGER.warning(
+                    "Unable to roll back Monzo webhook %s: %s", webhook_id, err
                 )
 
     async def _async_remove_previous_remote_webhooks(self) -> None:
@@ -254,7 +280,11 @@ class MonzoWebhookManager:
             EVENT_TRANSACTION_CREATED,
             transaction,
         )
-        await self.coordinator.async_request_refresh()
+        self.entry.async_create_background_task(
+            self.hass,
+            self.coordinator.async_request_refresh(),
+            "refresh Monzo data",
+        )
 
     @callback
     def _async_cloud_connection_changed(
