@@ -152,7 +152,7 @@ async def async_remove_config_entry_device(
     """Remove a config entry from a device."""
     homes = config_entry.runtime_data.account.homes.values()
     valid_ids = {
-        *(home.entity_id for home in homes),
+        *config_entry.runtime_data.account.all_home_names,
         *(module for home in homes for module in home.modules),
         *(room for home in homes for room in home.rooms),
     }
