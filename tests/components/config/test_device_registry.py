@@ -1008,7 +1008,9 @@ async def test_update_child_device(
     assert msg["result"]["parent_device_id"] == child_device.parent_device_id
 
     # The update reached the registry entry, not just the websocket response
-    updated_child = device_registry.async_get_child(child_device.id)
+    updated_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert updated_child is not None
     assert getattr(updated_child, payload_key) == expected_registry_value
 
@@ -1046,7 +1048,9 @@ async def test_update_child_device_area_round_trip(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"]["area_id"] is None
-    updated_child = device_registry.async_get_child(child_device.id)
+    updated_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert updated_child is not None
     assert dr.async_get_effective_area_id(hass, updated_child) == "garage"
 
