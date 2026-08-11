@@ -68,8 +68,6 @@ def _get_registry_entries(
     area_reg = ar.async_get(hass)
 
     if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
-        # async_get resolves child devices, and the effective-area helper lets a
-        # child-device entity inherit its parent's area.
         device_entry = dev_reg.async_get(entity_entry.device_id)
     else:
         device_entry = None

@@ -119,9 +119,7 @@ class DeviceEntryDisabler(StrEnum):
     """What disabled a device entry."""
 
     CONFIG_ENTRY = "config_entry"
-    # A child device disabled because its parent device is disabled. The value matches
-    # entity RegistryEntryDisabler.DEVICE; disabled_by consumers (e.g. the frontend)
-    # must recognize it as it now appears in dict_repr and storage.
+    # A child device disabled because its parent device is disabled.
     DEVICE = "device"
     INTEGRATION = "integration"
     USER = "user"
@@ -567,21 +565,6 @@ class DeviceEntry(BaseDeviceEntry):
                 for entry_id, subentries in self._composite_subentries.items()
             }
         return {self.config_entry_id: {self.config_subentry_id}}
-
-    @property
-    @override
-    def primary_config_entry(self) -> str:
-        """Return the primary config entry of this device.
-
-        Deprecated compatibility shim: a device now belongs to a single config
-        entry, available as config_entry_id, which is its primary config entry.
-
-        For a restored composite device (synthesized on the fly by async_get for a
-        pre-migration composite device id), this returns the composite's former
-        primary_config_entry, which is recorded on the split devices during migration as
-        composite_primary_config_entry.
-        """
-        return self.config_entry_id
 
     @property
     @override
@@ -1545,8 +1528,8 @@ class ChildDeviceRegistryItems(BaseRegistryItems[ChildDeviceEntry]):
     shared with the parent devices' identifier namespace:
     - (DOMAIN, identifier) -> {config_entry_id: entry}
     - parent_device_id -> dict[key, True]
-    - area_id -> dict[key, True] (explicitly set areas only, not inherited ones)
     - config_entry_id -> dict[key, True]
+    - area_id -> dict[key, True] (explicitly set areas only, not inherited ones)
     - label -> dict[key, True]
     """
 
@@ -1555,8 +1538,8 @@ class ChildDeviceRegistryItems(BaseRegistryItems[ChildDeviceEntry]):
         super().__init__()
         self._identifiers: dict[tuple[str, str], dict[str, ChildDeviceEntry]] = {}
         self._parent_device_id_index: RegistryIndexType = defaultdict(dict)
-        self._area_id_index: RegistryIndexType = defaultdict(dict)
         self._config_entry_id_index: RegistryIndexType = defaultdict(dict)
+        self._area_id_index: RegistryIndexType = defaultdict(dict)
         self._labels_index: RegistryIndexType = defaultdict(dict)
 
     @override
@@ -1571,9 +1554,9 @@ class ChildDeviceRegistryItems(BaseRegistryItems[ChildDeviceEntry]):
         for identifier in entry.identifiers:
             self._identifiers.setdefault(identifier, {})[entry.config_entry_id] = entry
         self._parent_device_id_index[entry.parent_device_id][key] = True
+        self._config_entry_id_index[entry.config_entry_id][key] = True
         if (area_id := entry.area_id) is not None:
             self._area_id_index[area_id][key] = True
-        self._config_entry_id_index[entry.config_entry_id][key] = True
         for label in entry.labels:
             self._labels_index[label][key] = True
 
@@ -1595,11 +1578,11 @@ class ChildDeviceRegistryItems(BaseRegistryItems[ChildDeviceEntry]):
         self._unindex_entry_value(
             key, entry.parent_device_id, self._parent_device_id_index
         )
-        if area_id := entry.area_id:
-            self._unindex_entry_value(key, area_id, self._area_id_index)
         self._unindex_entry_value(
             key, entry.config_entry_id, self._config_entry_id_index
         )
+        if area_id := entry.area_id:
+            self._unindex_entry_value(key, area_id, self._area_id_index)
         for label in entry.labels:
             self._unindex_entry_value(key, label, self._labels_index)
 
@@ -1626,11 +1609,6 @@ class ChildDeviceRegistryItems(BaseRegistryItems[ChildDeviceEntry]):
             data[key] for key in self._parent_device_id_index.get(parent_device_id, ())
         ]
 
-    def get_devices_for_area_id(self, area_id: str) -> list[ChildDeviceEntry]:
-        """Get child devices with an explicitly set area."""
-        data = self.data
-        return [data[key] for key in self._area_id_index.get(area_id, ())]
-
     def get_devices_for_config_entry_id(
         self, config_entry_id: str
     ) -> list[ChildDeviceEntry]:
@@ -1639,6 +1617,11 @@ class ChildDeviceRegistryItems(BaseRegistryItems[ChildDeviceEntry]):
         return [
             data[key] for key in self._config_entry_id_index.get(config_entry_id, ())
         ]
+
+    def get_devices_for_area_id(self, area_id: str) -> list[ChildDeviceEntry]:
+        """Get child devices with an explicitly set area."""
+        data = self.data
+        return [data[key] for key in self._area_id_index.get(area_id, ())]
 
     def get_devices_for_label(self, label: str) -> list[ChildDeviceEntry]:
         """Get child devices for label."""
@@ -1909,8 +1892,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Get the device with the identifier, owned by the config entry.
 
         Searches main devices only; use async_get_child_device_by_identifier for a
-        child device. Identifiers are unique within a config entry, so unlike
-        async_get_device the lookup cannot be ambiguous.
+        child device.
+        Identifiers are unique within a config entry, so unlike async_get_device
+        the lookup cannot be ambiguous.
         """
         return self.devices.get_entry(
             identifiers={identifier}, config_entry_id=config_entry_id
@@ -1953,8 +1937,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Get all devices matching any of the identifiers or connections.
 
         Searches main devices only; a child device is found via
-        async_get_child_device_by_identifier. If config_entry_id is given, only
-        devices owned by that config entry are returned.
+        async_get_child_device_by_identifier.
+        If config_entry_id is given, only devices owned by that config entry are
+        returned.
         """
         return self.devices.get_entries(
             identifiers, connections, config_entry_id=config_entry_id
@@ -2563,11 +2548,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         child_device = self.child_devices.get_entry(
             identifiers=identifiers, config_entry_id=config_entry_id
         )
-        matched_device: DeviceEntry | None = None
-        if child_device is None:
-            matched_device = self.devices.get_entry(
-                identifiers=identifiers, config_entry_id=config_entry_id
-            )
 
         if child_device is not None and child_device.parent_device_id != parent.id:
             raise DeviceInfoError(
@@ -2576,6 +2556,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "the child device is already registered with a different parent "
                 f"device {child_device.parent_device_id}; reparenting is not "
                 "supported, remove the child device first",
+            )
+
+        matched_device: DeviceEntry | None = None
+        if child_device is None:
+            matched_device = self.devices.get_entry(
+                identifiers=identifiers, config_entry_id=config_entry_id
             )
 
         # Validate the device -> child conversion before the reconcile below, whose
@@ -4462,9 +4448,10 @@ def async_get_device_id_by_identifier(
     """Get the id of the device with the identifier, owned by the config entry.
 
     Searches main devices only; use async_get_child_device_by_identifier for a
-    child device. Convenience wrapper for linking a device to its via device or
-    parent device through via_device_id or parent_device_id. Identifiers are unique
-    within a config entry, so the lookup cannot be ambiguous.
+    child device.
+    Convenience wrapper for linking a device to its via device through
+    via_device_id. Identifiers are unique within a config entry, so the lookup
+    cannot be ambiguous.
 
     Raises ValueError if no such device exists.
     """
