@@ -540,8 +540,9 @@ async def help_test_discovery_removal(
         await hass.async_block_till_done()
 
     # Verify device and entity registry entries are created
-    device_entry = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, config1[CONF_MAC])}
+    device_entry = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, config1[CONF_MAC]),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device_entry is not None
     entity_entry = entity_reg.async_get(f"{domain}.{object_id}")
@@ -563,8 +564,9 @@ async def help_test_discovery_removal(
         await hass.async_block_till_done()
 
     # Verify entity registry entries are cleared
-    device_entry = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, config2[CONF_MAC])}
+    device_entry = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, config2[CONF_MAC]),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device_entry is not None
     entity_entry = entity_reg.async_get(f"{domain}.{object_id}")
@@ -654,8 +656,9 @@ async def help_test_discovery_device_remove(
         )
         await hass.async_block_till_done()
 
-    device = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, config[CONF_MAC])}
+    device = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, config[CONF_MAC]),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device is not None
     assert entity_reg.async_get_entity_id(domain, "tasmota", unique_id)
@@ -663,8 +666,9 @@ async def help_test_discovery_device_remove(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", "")
     await hass.async_block_till_done()
 
-    device = device_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, config[CONF_MAC])}
+    device = device_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, config[CONF_MAC]),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     assert device is None
     assert not entity_reg.async_get_entity_id(domain, "tasmota", unique_id)

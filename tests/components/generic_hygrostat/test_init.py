@@ -183,15 +183,12 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
         hass, generic_hygrostat_entity_entry.entity_id
     )
 
-    # Remove the source entity's config entry from the device, this removes the
-    # source entity
+    # Remove the source device, this removes the source entity
     with patch(
         "homeassistant.components.generic_hygrostat.async_unload_entry",
         wraps=generic_hygrostat.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            source_device.id, remove_config_entry_id=source_entity_entry.config_entry_id
-        )
+        device_registry.async_remove_device(source_device.id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()

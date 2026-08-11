@@ -78,6 +78,7 @@
       "down": { "name": "Down" },
       "fav": { "name": "Favorite" },
       "open": { "name": "Open" },
+      "second_output": { "name": "Second output" },
       "up": { "name": "Up" }
     },
     "light": { "channel": { "name": "Channel {index}" } },

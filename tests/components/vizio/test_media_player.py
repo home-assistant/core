@@ -45,6 +45,8 @@ from homeassistant.components.vizio.services import SERVICE_UPDATE_SETTING
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_EXCLUDE,
+    CONF_INCLUDE,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -71,8 +73,7 @@ from .const import (
     INPUT_LIST_WITH_APPS,
     MAX_VOLUME,
     MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG,
-    MOCK_TV_WITH_EXCLUDE_CONFIG,
-    MOCK_TV_WITH_INCLUDE_CONFIG,
+    MOCK_USER_VALID_TV_CONFIG,
     NAME,
     UNIQUE_ID,
     UNKNOWN_APP_CONFIG,
@@ -463,15 +464,12 @@ async def test_options_update(
     """Test when config entry update event fires."""
     await _test_setup_speaker(hass, mock_speaker_config_entry, True)
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.options
-    new_options = config_entry.options.copy()
-    updated_options = {CONF_VOLUME_STEP: VOLUME_STEP}
-    new_options.update(updated_options)
+    assert not config_entry.options
     hass.config_entries.async_update_entry(
         entry=config_entry,
-        options=new_options,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
     )
-    assert config_entry.options == updated_options
+    assert config_entry.options == {CONF_VOLUME_STEP: VOLUME_STEP}
     await hass.async_block_till_done()
     await _test_service(
         hass, MP_DOMAIN, "volume_up", SERVICE_VOLUME_UP, None, steps=VOLUME_STEP
@@ -560,9 +558,12 @@ async def test_setup_with_apps_include(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test device setup with apps and apps["include"] in config."""
+    """Test device setup with apps and apps["include"] in options."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_TV_WITH_INCLUDE_CONFIG, unique_id=UNIQUE_ID
+        domain=DOMAIN,
+        data=MOCK_USER_VALID_TV_CONFIG,
+        options={CONF_APPS: {CONF_INCLUDE: [CURRENT_APP]}},
+        unique_id=UNIQUE_ID,
     )
     async with _cm_for_test_setup_tv_with_apps(
         hass, config_entry, CURRENT_APP_CONFIG_OBJ
@@ -580,9 +581,12 @@ async def test_setup_with_apps_exclude(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test device setup with apps and apps["exclude"] in config."""
+    """Test device setup with apps and apps["exclude"] in options."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_TV_WITH_EXCLUDE_CONFIG, unique_id=UNIQUE_ID
+        domain=DOMAIN,
+        data=MOCK_USER_VALID_TV_CONFIG,
+        options={CONF_APPS: {CONF_EXCLUDE: ["Netflix"]}},
+        unique_id=UNIQUE_ID,
     )
     async with _cm_for_test_setup_tv_with_apps(
         hass, config_entry, CURRENT_APP_CONFIG_OBJ
