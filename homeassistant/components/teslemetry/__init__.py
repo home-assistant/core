@@ -44,7 +44,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CLIENT_ID, DOMAIN, LOGGER, VEHICLE_ISSUE_LEARN_MORE
+from .const import CLIENT_ID, DOMAIN, LOGGER, STREAM_TOPICS, VEHICLE_ISSUE_LEARN_MORE
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -340,6 +340,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     server=f"{region.lower()}.teslemetry.com",
                     parse_timestamp=True,
                     manual=True,
+                    topics=STREAM_TOPICS,
                 )
 
             # Remove the protobuff 'cached_data' that we do not use to save memory

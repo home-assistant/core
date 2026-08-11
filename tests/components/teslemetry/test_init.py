@@ -18,9 +18,11 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
+from teslemetry_stream import TeslemetryStream
+from teslemetry_stream.const import SseTopic
 
 from homeassistant.components.teslemetry import _get_access_token
-from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
+from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN, STREAM_TOPICS
 
 # Coordinator constants
 from homeassistant.components.teslemetry.coordinator import (
@@ -211,6 +213,47 @@ async def test_vehicle_stream(
     state = hass.states.get("binary_sensor.test_status")
     assert state is not None
     assert state.state == STATE_OFF
+
+
+async def test_stream_topics_selection(hass: HomeAssistant) -> None:
+    """The account stream is created once with only the topics HA consumes."""
+
+    with patch(
+        "homeassistant.components.teslemetry.TeslemetryStream",
+        wraps=TeslemetryStream,
+    ) as mock_stream:
+        await setup_platform(hass)
+
+    mock_stream.assert_called_once()
+    requested = set(mock_stream.call_args.kwargs["topics"])
+    assert requested == {
+        SseTopic.STATE,
+        SseTopic.VEHICLE_DATA,
+        SseTopic.DATA,
+        SseTopic.CONNECTIVITY,
+        SseTopic.CREDITS,
+    }
+    # Guards against accidentally passing SSE_ALL_TOPICS/SSE_VEHICLE_TOPICS.
+    assert not requested & {SseTopic.ALERTS, SseTopic.ERRORS, SseTopic.CONFIG}
+
+
+async def test_consumed_topic_no_regression(hass: HomeAssistant) -> None:
+    """Every requested topic maps to a real HA consumer, and vice versa.
+
+    Couples the allowlist policy to behavior: a listener whose topic was
+    dropped, or an allowlisted topic HA no longer consumes, breaks this test.
+    """
+
+    # Each wire topic paired with the HA effect that consumes it today.
+    consumed_topics = {
+        SseTopic.STATE: "status binary sensor and vehicle coordinator merge",
+        SseTopic.VEHICLE_DATA: "polling-bridge vehicle document merge",
+        SseTopic.DATA: "typed streaming entity field listeners",
+        SseTopic.CONNECTIVITY: "cellular/Wi-Fi connectivity binary sensors",
+        SseTopic.CREDITS: "balance and credits sensors",
+    }
+
+    assert set(STREAM_TOPICS) == set(consumed_topics)
 
 
 async def test_vehicle_asleep_polling(

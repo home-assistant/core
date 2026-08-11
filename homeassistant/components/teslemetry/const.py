@@ -3,6 +3,8 @@
 from enum import StrEnum
 import logging
 
+from teslemetry_stream.const import SseTopic
+
 DOMAIN = "teslemetry"
 
 LOGGER = logging.getLogger(__package__)
@@ -11,6 +13,16 @@ LOGGER = logging.getLogger(__package__)
 AUTHORIZE_URL = "https://teslemetry.com/connect"
 TOKEN_URL = "https://api.teslemetry.com/oauth/token"
 CLIENT_ID = "homeassistant"
+
+# Exact SSE wire topics Home Assistant consumes. Passed to the account-wide
+# stream so unconsumed topics (alerts/errors/config) are never delivered.
+STREAM_TOPICS: tuple[SseTopic, ...] = (
+    SseTopic.STATE,
+    SseTopic.VEHICLE_DATA,
+    SseTopic.DATA,
+    SseTopic.CONNECTIVITY,
+    SseTopic.CREDITS,
+)
 
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",
