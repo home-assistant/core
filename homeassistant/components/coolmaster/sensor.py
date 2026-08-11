@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import CoolmasterConfigEntry
-from .entity import CoolmasterEntity
+from .entity import CoolmasterDescriptionEntity
 
 
 async def async_setup_entry(
@@ -23,7 +23,7 @@ async def async_setup_entry(
     )
 
 
-class CoolmasterCleanFilter(CoolmasterEntity, SensorEntity):
+class CoolmasterCleanFilter(CoolmasterDescriptionEntity, SensorEntity):
     """Representation of a unit's error code."""
 
     entity_description = SensorEntityDescription(
