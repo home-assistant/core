@@ -1,6 +1,5 @@
 """Custom actions (previously known as services) for the Home Connect integration."""
 
-import asyncio
 from collections.abc import Awaitable
 from typing import Any, cast
 
@@ -339,10 +338,10 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
         if option_key not in writable_keys:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="start_program",
+                translation_key="start_program_option_not_writable",
                 translation_placeholders={
-                    "program": program,
-                    "error": f"Option {option_key} is not writable for this program",
+                    "option": option_key.value,
+                    "program": program.value,
                 },
             )
         options_dict[option_key] = Option(option_key, value)
@@ -353,7 +352,6 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
             program_key=program,
             options=list(options_dict.values()) if options_dict else None,
         )
-
     except HomeConnectError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -364,12 +362,6 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
             },
         ) from err
 
-    # Debug Log which Program settings are currently on the machine
-    await asyncio.sleep(10)
-    try:
-        await client.get_active_program(ha_id)
-    except Exception:
-        pass
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
