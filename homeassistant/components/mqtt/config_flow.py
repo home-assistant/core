@@ -1266,7 +1266,7 @@ class PlatformField:
     required: bool
     validator: Callable[[Any], Any] | None = None
     error: str | None = None
-    default: Any | None | Callable[[dict[str, Any]], Any] | vol.Undefined = (
+    default: Any | Callable[[dict[str, Any]], Any] | vol.Undefined | None = (
         vol.UNDEFINED
     )
     is_schema_default: bool = False

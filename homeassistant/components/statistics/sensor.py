@@ -44,6 +44,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -599,7 +600,6 @@ async def async_setup_platform(
     async_add_entities(
         new_entities=[
             StatisticsSensor(
-                hass=hass,
                 source_entity_id=config[CONF_ENTITY_ID],
                 name=config[CONF_NAME],
                 unique_id=config.get(CONF_UNIQUE_ID),
@@ -632,7 +632,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             StatisticsSensor(
-                hass=hass,
                 source_entity_id=entry.options[CONF_ENTITY_ID],
                 name=entry.options[CONF_NAME],
                 unique_id=entry.entry_id,
@@ -642,6 +641,7 @@ async def async_setup_entry(
                 samples_keep_last=entry.options[CONF_KEEP_LAST_SAMPLE],
                 precision=int(entry.options[CONF_PRECISION]),
                 percentile=int(entry.options[CONF_PERCENTILE]),
+                device=async_entity_id_to_device(hass, entry.options[CONF_ENTITY_ID]),
             )
         ],
         True,
@@ -656,7 +656,6 @@ class StatisticsSensor(SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         source_entity_id: str,
         name: str,
@@ -667,16 +666,13 @@ class StatisticsSensor(SensorEntity):
         samples_keep_last: bool,
         precision: int,
         percentile: int,
+        device: DeviceEntry | None = None,
     ) -> None:
         """Initialize the Statistics sensor."""
         self._attr_name: str = name
         self._attr_unique_id: str | None = unique_id
         self._source_entity_id: str = source_entity_id
-        if source_entity_id:  # Guard against empty source_entity_id in preview mode
-            self.device_entry = async_entity_id_to_device(
-                hass,
-                source_entity_id,
-            )
+        self.device_entry = device
         self.is_binary: bool = (
             split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )

@@ -1,14 +1,62 @@
 {
   "entity": {
     "button": {
+      "blue_down": {
+        "default": "mdi:alpha-b-circle-outline"
+      },
+      "blue_up": {
+        "default": "mdi:alpha-b-circle"
+      },
       "brightness_down": {
         "default": "mdi:brightness-5"
       },
       "brightness_up": {
         "default": "mdi:brightness-7"
       },
+      "green_down": {
+        "default": "mdi:alpha-g-circle-outline"
+      },
+      "green_up": {
+        "default": "mdi:alpha-g-circle"
+      },
+      "quick": {
+        "default": "mdi:speedometer"
+      },
+      "red_down": {
+        "default": "mdi:alpha-r-circle-outline"
+      },
+      "red_up": {
+        "default": "mdi:alpha-r-circle"
+      },
+      "slow": {
+        "default": "mdi:speedometer-slow"
+      },
       "timer": {
         "default": "mdi:timer"
+      },
+      "white_brightness_100": {
+        "default": "mdi:lightbulb-on"
+      },
+      "white_brightness_25": {
+        "default": "mdi:lightbulb-on-30"
+      },
+      "white_brightness_50": {
+        "default": "mdi:lightbulb-on-50"
+      },
+      "white_brightness_75": {
+        "default": "mdi:lightbulb-on-80"
+      },
+      "white_brightness_down": {
+        "default": "mdi:brightness-5"
+      },
+      "white_brightness_up": {
+        "default": "mdi:brightness-7"
+      },
+      "white_off": {
+        "default": "mdi:power-off"
+      },
+      "white_on": {
+        "default": "mdi:power-on"
       }
     },
     "event": {

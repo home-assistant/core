@@ -267,19 +267,22 @@ async def test_event_type_template_updates(
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "single")
 
     state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == TEST_FROZEN_STATE
+    single_triggered = state.state
     assert state.attributes["event_type"] == "single"
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "double")
 
     state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == TEST_FROZEN_STATE
+    # Each event advances the timestamp; events within the same millisecond are
+    # bumped so every one stays a distinct state change.
+    double_triggered = state.state
+    assert double_triggered > single_triggered
     assert state.attributes["event_type"] == "double"
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "hold")
 
     state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == TEST_FROZEN_STATE
+    assert state.state > double_triggered
     assert state.attributes["event_type"] == "hold"
 
 
@@ -413,7 +416,7 @@ async def test_event_types_template_updates(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == TEST_FROZEN_STATE
+    first_triggered = state.state
     assert state.attributes["event_type"] == "single"
     assert state.attributes["event_types"] == ["single", "double", "hold"]
 
@@ -423,7 +426,9 @@ async def test_event_types_template_updates(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == TEST_FROZEN_STATE
+    # A second event fired, so its timestamp strictly increases (events within
+    # the same millisecond are bumped so each stays a distinct state change).
+    assert state.state > first_triggered
     assert state.attributes["event_type"] == "double"
     assert state.attributes["event_types"] == ["double", "hold"]
 

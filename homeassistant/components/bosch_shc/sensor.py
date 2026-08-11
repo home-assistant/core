@@ -33,6 +33,8 @@ from homeassistant.helpers.typing import StateType
 from . import BoschConfigEntry
 from .entity import SHCEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class SHCSensorEntityDescription[_DeviceT: SHCDevice](SensorEntityDescription):
@@ -210,6 +212,7 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = [
         SHCSensor(
+            hass,
             device,
             description,
             shc_info.unique_id,
@@ -224,6 +227,7 @@ async def async_setup_entry(
 
     entities.extend(
         SHCSensor(
+            hass,
             device,
             description,
             shc_info.unique_id,
@@ -238,6 +242,7 @@ async def async_setup_entry(
 
     entities.extend(
         SHCSensor(
+            hass,
             device,
             description,
             shc_info.unique_id,
@@ -261,6 +266,7 @@ async def async_setup_entry(
     ]
     entities.extend(
         SHCSensor(
+            hass,
             device,
             description,
             shc_info.unique_id,
@@ -272,6 +278,7 @@ async def async_setup_entry(
 
     entities.extend(
         SHCSensor(
+            hass,
             device,
             description,
             shc_info.unique_id,
@@ -295,13 +302,14 @@ class SHCSensor[_DeviceT: SHCDevice](SHCEntity, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         device: _DeviceT,
         entity_description: SHCSensorEntityDescription[_DeviceT],
         parent_id: str,
         entry_id: str,
     ) -> None:
         """Initialize sensor."""
-        super().__init__(device, parent_id, entry_id)
+        super().__init__(hass, device, parent_id, entry_id)
         self._device: _DeviceT = device
         self.entity_description = entity_description
         self._attr_unique_id = f"{device.serial}_{entity_description.key}"

@@ -7,14 +7,9 @@ from pyairnow import WebServiceAPI
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlowWithReload,
-)
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -60,7 +55,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
 class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for AirNow."""
 
-    VERSION = 2
+    VERSION = 3
 
     @override
     async def async_step_user(
@@ -90,14 +85,12 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Create Entry
-                radius = user_input.pop(CONF_RADIUS)
                 return self.async_create_entry(
                     title=(
                         f"AirNow Sensor at {user_input[CONF_LATITUDE]},"
                         f" {user_input[CONF_LONGITUDE]}"
                     ),
                     data=user_input,
-                    options={CONF_RADIUS: radius},
                 )
 
         return self.async_show_form(
@@ -111,44 +104,10 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
-                    vol.Optional(CONF_RADIUS, default=150): vol.All(
-                        int, vol.Range(min=5)
-                    ),
                 }
             ),
             description_placeholders={"api_key_url": _API_KEY_URL},
             errors=errors,
-        )
-
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> AirNowOptionsFlowHandler:
-        """Return the options flow."""
-        return AirNowOptionsFlowHandler()
-
-
-class AirNowOptionsFlowHandler(OptionsFlowWithReload):
-    """Handle an options flow for AirNow."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        options_schema = vol.Schema(
-            {vol.Optional(CONF_RADIUS): vol.All(int, vol.Range(min=5))}
-        )
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                options_schema, self.config_entry.options
-            ),
         )
 
 
