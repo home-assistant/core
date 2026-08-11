@@ -17,6 +17,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, webhook
 from homeassistant.components.netatmo import DOMAIN, coordinator
+from homeassistant.components.netatmo.device import (
+    async_register_parent_devices,
+    netatmo_module_parents,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
@@ -660,45 +664,221 @@ async def test_home_devices_registered(
     assert empty_home_device.name == "Unknown"
 
 
-async def test_device_hierarchy(
+async def test_module_parents(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test each module is mapped to the module it reports through."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    parents = netatmo_module_parents(config_entry.runtime_data.account)
+
+    # A valve reports through the relay that lists it as a bridged module
+    assert parents["12:34:56:03:a5:54"] == "12:34:56:00:fa:d0"
+    # "Garden" names its station as its bridge, but the station does not list
+    # it, so a parent-side-only walk would orphan it
+    assert parents["12:34:56:03:1b:e4"] == "12:34:56:80:bb:26"
+    # A gateway itself reports through nothing
+    assert "12:34:56:00:fa:d0" not in parents
+
+
+async def test_bridge_devices_registered(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     netatmo_auth: AsyncMock,
 ) -> None:
-    """Test rooms and modules are linked to their home."""
-    with selected_platforms([Platform.CLIMATE, Platform.COVER, Platform.SENSOR]):
+    """Test a device is registered for a gateway that has no entities."""
+    with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
+
+    relay = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:00:fa:d0"), config_entry.entry_id
+    )
+    assert relay is not None
+    assert relay.name == "Thermostat"
+    assert relay.manufacturer == "Netatmo"
+    assert relay.model == "Smart Thermostat Gateway"
 
     home_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, HOME_ID), config_entry.entry_id
     )
     assert home_device is not None
+    assert relay.via_device_id == home_device.id
+
+
+async def test_module_links_to_its_bridge(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a module is linked to its gateway rather than to its home."""
+    with selected_platforms([Platform.CLIMATE, Platform.COVER, Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    gateway = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:30:d5:d4"), config_entry.entry_id
+    )
+    assert gateway is not None
+
+    blinds = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "0009999992"), config_entry.entry_id
+    )
+    assert blinds is not None
+    assert blinds.via_device_id == gateway.id
+
+    # "Garden" is reached only through its own `bridge`; its station does not
+    # list it as a bridged module
+    station = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:80:bb:26"), config_entry.entry_id
+    )
+    assert station is not None
+
+    garden = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:03:1b:e4"), config_entry.entry_id
+    )
+    assert garden is not None
+    assert garden.via_device_id == station.id
+
+    home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HOME_ID), config_entry.entry_id
+    )
+    assert home_device is not None
+    assert station.via_device_id == home_device.id
+
+    # Rooms keep linking to the home
+    livingroom = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "2746182631"), config_entry.entry_id
+    )
+    assert livingroom is not None
+    assert livingroom.via_device_id == home_device.id
+
+
+async def test_nested_bridges(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a gateway that itself reports through another gateway."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    account = config_entry.runtime_data.account
+    account.homes[HOME_ID].modules["12:34:56:00:fa:d0"].bridge = "12:34:56:80:60:40"
+
+    parent_device_ids = async_register_parent_devices(
+        hass, config_entry, account, netatmo_module_parents(account)
+    )
+
+    relay = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:00:fa:d0"), config_entry.entry_id
+    )
+    assert relay is not None
+    gateway = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:80:60:40"), config_entry.entry_id
+    )
+    assert gateway is not None
+
+    assert relay.via_device_id == gateway.id
+    assert parent_device_ids["12:34:56:00:fa:d0"] == relay.id
+
+
+async def test_conflicting_claims_resolve_to_the_bridge(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a child claimed by two parents keeps the one its bridge names."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    account = config_entry.runtime_data.account
+    camera = account.homes[HOME_ID].modules["12:34:56:00:f1:62"]
+    camera.modules = [*camera.modules, "12:34:56:03:a5:54"]
+
+    parents = netatmo_module_parents(account)
+
+    # Valve1 names the relay as its bridge, so the camera's claim loses
+    assert parents["12:34:56:03:a5:54"] == "12:34:56:00:fa:d0"
+
+
+async def test_conflicting_claims_without_a_bridge(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a child that names no bridge stays with its first claimant."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    account = config_entry.runtime_data.account
+    home = account.homes[HOME_ID]
+    home.modules["12:34:56:03:a5:54"].bridge = None
+    camera = home.modules["12:34:56:00:f1:62"]
+    camera.modules = [*camera.modules, "12:34:56:03:a5:54"]
+
+    parents = netatmo_module_parents(account)
+
+    # The relay is listed before the camera in the API response
+    assert parents["12:34:56:03:a5:54"] == "12:34:56:00:fa:d0"
+
+
+async def test_device_hierarchy(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test every device is linked to the device it reports through."""
+    with selected_platforms(
+        [
+            Platform.CAMERA,
+            Platform.CLIMATE,
+            Platform.COVER,
+            Platform.LIGHT,
+            Platform.SELECT,
+            Platform.SENSOR,
+            Platform.SWITCH,
+        ]
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    linked = {
-        device.name
+    netatmo_ids = {
+        device.id: next(
+            identifier[1]
+            for identifier in device.identifiers
+            if identifier[0] == DOMAIN
+        )
         for device in device_entries
-        if device.via_device_id == home_device.id
+    }
+    hierarchy = {
+        netatmo_ids[device.id]: netatmo_ids.get(device.via_device_id)
+        for device in device_entries
     }
 
-    # Rooms link to the home
-    assert "Livingroom" in linked
-    # Modules link to the home
-    assert "Entrance Blinds" in linked
-    # The home links to nothing
-    assert home_device.via_device_id is None
-
-    # Air care modules belong to the account rather than a home, so stay unlinked
-    air_care_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "12:34:56:25:cf:a8"), config_entry.entry_id
-    )
-    assert air_care_device is not None
-    assert air_care_device.via_device_id is None
+    assert dict(sorted(hierarchy.items())) == snapshot
 
 
 async def test_device_remove_devices(

@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 import pyatmo
+from pyatmo.modules.device_types import DEVICE_DESCRIPTION_MAP
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -13,11 +14,88 @@ if TYPE_CHECKING:
     from .coordinator import NetatmoConfigEntry
 
 
+def netatmo_module_parents(account: pyatmo.AsyncAccount) -> dict[str, str]:
+    """Map each module id to the id of the module it reports through.
+
+    The API records the relationship from both ends and neither end is
+    complete: a station lists bridged children that never name it back, and a
+    module can name a bridge that does not list it. `bridge` is single-valued,
+    so it wins wherever the two disagree.
+    """
+    parents: dict[str, str] = {}
+    for home in account.homes.values():
+        for module in home.modules.values():
+            for child_id in module.modules or ():
+                if child_id in home.modules and child_id != module.entity_id:
+                    parents.setdefault(child_id, module.entity_id)
+
+        for module in home.modules.values():
+            bridge = module.bridge
+            if (
+                bridge is not None
+                and bridge in home.modules
+                and bridge != module.entity_id
+            ):
+                parents[module.entity_id] = bridge
+
+    return parents
+
+
+def _register_bridge(
+    device_registry: dr.DeviceRegistry,
+    entry: NetatmoConfigEntry,
+    home: pyatmo.Home,
+    module_id: str,
+    module_parents: dict[str, str],
+    parent_device_ids: dict[str, str],
+    seen: set[str],
+) -> str:
+    """Register a bridging module after its own bridge and return its device id."""
+    if (device_id := parent_device_ids.get(module_id)) is not None:
+        return device_id
+
+    seen.add(module_id)
+    via_device_id = parent_device_ids[home.entity_id]
+    parent_id = module_parents.get(module_id)
+    # `seen` bounds the walk; a cycle in unvalidated API data would not terminate
+    if parent_id is not None and parent_id not in seen:
+        via_device_id = _register_bridge(
+            device_registry,
+            entry,
+            home,
+            parent_id,
+            module_parents,
+            parent_device_ids,
+            seen,
+        )
+
+    module = home.modules[module_id]
+    manufacturer, model = DEVICE_DESCRIPTION_MAP.get(
+        module.device_type, (MANUFACTURER, module.device_type.value)
+    )
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, module_id)},
+        manufacturer=manufacturer,
+        model=model,
+        name=module.name,
+        via_device_id=via_device_id,
+    )
+    parent_device_ids[module_id] = device_entry.id
+    return device_entry.id
+
+
 @callback
 def async_register_parent_devices(
-    hass: HomeAssistant, entry: NetatmoConfigEntry, account: pyatmo.AsyncAccount
+    hass: HomeAssistant,
+    entry: NetatmoConfigEntry,
+    account: pyatmo.AsyncAccount,
+    module_parents: dict[str, str],
 ) -> dict[str, str]:
-    """Register a device per home and map Netatmo ids to device registry ids."""
+    """Register a device per home and per bridging module.
+
+    Maps Netatmo ids to device registry ids.
+    """
     device_registry = dr.async_get(hass)
     parent_device_ids: dict[str, str] = {}
 
@@ -31,5 +109,23 @@ def async_register_parent_devices(
             configuration_url=CONF_URL_CONTROL,
         )
         parent_device_ids[home.entity_id] = device_entry.id
+
+    for home in account.homes.values():
+        bridges = {
+            module_parents[module_id]
+            for module_id in home.modules
+            if module_id in module_parents
+        }
+        for module_id in home.modules:
+            if module_id in bridges:
+                _register_bridge(
+                    device_registry,
+                    entry,
+                    home,
+                    module_id,
+                    module_parents,
+                    parent_device_ids,
+                    set(),
+                )
 
     return parent_device_ids
