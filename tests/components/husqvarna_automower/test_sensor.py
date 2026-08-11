@@ -128,6 +128,21 @@ async def test_work_area_sensor(
     state = hass.states.get("sensor.garden_test_mower_1_work_area")
     assert state.state == "no_work_area_active"
 
+    values[TEST_MOWER_ID].capabilities.work_areas = False
+    values[TEST_MOWER_ID].work_areas = None
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for entity_id in (
+        "sensor.garden_test_mower_1_work_area",
+        "sensor.garden_test_mower_1_front_lawn_progress",
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
+
 
 async def test_restricted_reason_sensor(
     hass: HomeAssistant,

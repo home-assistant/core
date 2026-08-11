@@ -107,7 +107,9 @@ async def test_select_entity_registering_device(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test entity registering as an assist device."""
-    device = device_registry.async_get_device(identifiers={("test", "test")})
+    device = device_registry.async_get_device_by_identifier(
+        ("test", "test"), init_select.entry_id
+    )
     assert device is not None
 
     # Test device is registered

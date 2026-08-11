@@ -4,11 +4,14 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from google_health_api.const import HealthApiScope
+from google_health_api.model import ListPairedDevicesResult, _ListPairedDevicesModel
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_health.const import DOMAIN
+from homeassistant.components.google_health.coordinator import DEVICE_POLLING_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -18,7 +21,9 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from tests.common import MockConfigEntry, snapshot_platform
+from .conftest import paired_devices_fixture
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_google_health_client")
@@ -175,3 +180,101 @@ async def test_device_sensor_via_device_id(
     )
     assert paired_device is not None
     assert paired_device.via_device_id == account_device.id
+
+
+async def test_stale_device_removed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_google_health_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test stale devices are removed when no longer returned by API."""
+    assert await integration_setup()
+
+    battery_state = hass.states.get("sensor.fitbit_charge_6_battery")
+    assert battery_state is not None
+    assert battery_state.state == "85"
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "watch_123"), config_entry.entry_id
+    )
+    assert device is not None
+
+    mock_google_health_client.paired_devices.list.return_value = (
+        ListPairedDevicesResult(_ListPairedDevicesModel([]))
+    )
+
+    freezer.tick(DEVICE_POLLING_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.fitbit_charge_6_battery") is None
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "watch_123"), config_entry.entry_id
+    )
+    assert device is None
+
+
+@pytest.mark.usefixtures("mock_google_health_client")
+async def test_stale_device_removed_on_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test stale device present in registry before setup is removed during setup."""
+    config_entry.add_to_hass(hass)
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "old_stale_watch")},
+        name="Old Stale Watch",
+    )
+    assert device_registry.async_get(stale_device.id) is not None
+
+    assert await integration_setup()
+
+    assert device_registry.async_get(stale_device.id) is None
+
+
+async def test_auto_add_new_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_google_health_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test new paired devices returned on coordinator update are automatically added."""
+    mock_google_health_client.paired_devices.list.return_value = (
+        ListPairedDevicesResult(_ListPairedDevicesModel([]))
+    )
+
+    assert await integration_setup()
+
+    assert hass.states.get("sensor.fitbit_charge_6_battery") is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "watch_123"), config_entry.entry_id
+        )
+        is None
+    )
+
+    mock_google_health_client.paired_devices.list.return_value = paired_devices_fixture(
+        "paired_devices.json"
+    )
+
+    freezer.tick(DEVICE_POLLING_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    battery_state = hass.states.get("sensor.fitbit_charge_6_battery")
+    assert battery_state is not None
+    assert battery_state.state == "85"
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "watch_123"), config_entry.entry_id
+    )
+    assert device is not None

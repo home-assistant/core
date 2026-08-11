@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     ACK_ECHO,
@@ -17,6 +17,7 @@ from .conftest import (
     EMPTY_STATIONS_RESPONSE,
     HOST,
     MAC_ADDRESS,
+    MAC_ADDRESS_UNIQUE_ID,
     PASSWORD,
     RAIN_DELAY_OFF,
     RAIN_SENSOR_OFF,
@@ -111,6 +112,25 @@ async def test_zones(
     # Verify unique id for one of the switches
     entity_entry = entity_registry.async_get("switch.rain_bird_sprinkler_3")
     assert entity_entry.unique_id == "4c:a1:61:00:11:22-3"
+
+
+@pytest.mark.usefixtures("hass")
+async def test_zone_device_linked_to_controller(
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the zone switch device is linked to the controller device."""
+
+    controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MAC_ADDRESS_UNIQUE_ID), config_entry.entry_id
+    )
+    assert controller_device is not None
+
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MAC_ADDRESS_UNIQUE_ID}-1"), config_entry.entry_id
+    )
+    assert zone_device is not None
+    assert zone_device.via_device_id == controller_device.id
 
 
 async def test_switch_on(

@@ -79,17 +79,16 @@ async def test_bluetooth_device_linked_via_device(
         "bluetooth", "AA:BB:CC:DD:EE:FC"
     )
     assert entry is not None
-    esp_device = device_registry.async_get_device(
-        connections={
-            (
-                dr.CONNECTION_NETWORK_MAC,
-                mock_bluetooth_entry_with_raw_adv.device_info.mac_address,
-            )
-        }
+    esp_device = device_registry.async_get_device_by_connection(
+        (
+            dr.CONNECTION_NETWORK_MAC,
+            mock_bluetooth_entry_with_raw_adv.device_info.mac_address,
+        ),
+        mock_bluetooth_entry_with_raw_adv.entry.entry_id,
     )
     assert esp_device is not None
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_BLUETOOTH, "AA:BB:CC:DD:EE:FC")}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, "AA:BB:CC:DD:EE:FC"), entry.entry_id
     )
     assert device is not None
     assert device.via_device_id == esp_device.id
