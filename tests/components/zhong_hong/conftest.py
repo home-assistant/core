@@ -72,7 +72,7 @@ class FakeGateway:
         self.discovery_result: list[tuple[int, int]] = [DEVICE_ADDRESS]
         self.discovery_error: Exception | None = None
         # The bound each discovery was given, so a test can tell the config
-        # flow's bounded call from the coordinator's unbounded one.
+        # flow's bounded call from the config entry's unbounded one.
         self.discovery_timeouts: list[float | None] = []
 
         self.send_result = True
@@ -165,10 +165,10 @@ def gateway() -> FakeGateway:
 
 @pytest.fixture
 def mock_gateway(gateway: FakeGateway) -> Generator[FakeGateway]:
-    """Patch the gateway used by both the config flow and the coordinator."""
+    """Patch the gateway used by both the config flow and the config entry."""
     with (
         patch(
-            "homeassistant.components.zhong_hong.coordinator.ZhongHongGateway",
+            "homeassistant.components.zhong_hong.ZhongHongGateway",
             return_value=gateway,
         ),
         patch(

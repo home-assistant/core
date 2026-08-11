@@ -7,13 +7,12 @@ from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_GATEWAY_ADDRESS, DOMAIN, LOGGER, READBACK_DELAY, SCAN_INTERVAL
+from .const import LOGGER, READBACK_DELAY, SCAN_INTERVAL
 
 type ZhongHongConfigEntry = ConfigEntry[ZhongHongCoordinator]
 
@@ -37,17 +36,26 @@ def legacy_device_unique_id(address: DeviceAddress) -> str:
 
 
 class ZhongHongCoordinator(DataUpdateCoordinator[dict[DeviceAddress, ZhongHongHVAC]]):
-    """Own the gateway connection and fan its pushes out to the entities.
+    """Fan the gateway's pushes out to the entities.
 
     The gateway pushes state on its own socket, so this coordinator is mostly a
     dispatch point: the library calls back on its listener thread and we hand
     the devices to the entities from the event loop. Polling remains as a
     fallback for pushes missed while the connection was down.
+
+    The connection itself belongs to the config entry, which hands it over
+    already listening.
     """
 
     config_entry: ZhongHongConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ZhongHongConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ZhongHongConfigEntry,
+        hub: ZhongHongGateway,
+        devices: dict[DeviceAddress, ZhongHongHVAC],
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -56,46 +64,12 @@ class ZhongHongCoordinator(DataUpdateCoordinator[dict[DeviceAddress, ZhongHongHV
             name=config_entry.data[CONF_HOST],
             update_interval=SCAN_INTERVAL,
         )
-        self.hub = ZhongHongGateway(
-            config_entry.data[CONF_HOST],
-            config_entry.data[CONF_PORT],
-            config_entry.data[CONF_GATEWAY_ADDRESS],
-        )
-        self.devices: dict[DeviceAddress, ZhongHongHVAC] = {}
+        self.hub = hub
+        self.devices = devices
         self._readback_cancel: CALLBACK_TYPE | None = None
 
-    @override
-    async def _async_setup(self) -> None:
-        """Discover the devices behind the gateway and start listening.
-
-        Discovery has to happen before the listener thread starts, because both
-        read from the same socket.
-        """
-        try:
-            addresses = await self.hass.async_add_executor_job(self.hub.discovery_ac)
-        except OSError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"host": self.hub.ip_addr},
-            ) from err
-
-        if not addresses:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="no_devices_found",
-                translation_placeholders={"host": self.hub.ip_addr},
-            )
-
-        # Creating the device registers it with the hub, which is what routes
-        # the gateway's pushes to _handle_device_update below.
-        self.devices = {
-            address: ZhongHongHVAC(self.hub, *address) for address in addresses
-        }
-        for device in self.devices.values():
+        for device in devices.values():
             device.register_update_callback(self._handle_device_update)
-
-        await self.hass.async_add_executor_job(self.hub.start_listen)
 
     def schedule_readback(self) -> None:
         """Schedule a re-read from the executor the commands are sent on."""
@@ -141,10 +115,9 @@ class ZhongHongCoordinator(DataUpdateCoordinator[dict[DeviceAddress, ZhongHongHV
 
     @override
     async def async_shutdown(self) -> None:
-        """Stop the listener thread and close the gateway socket."""
+        """Drop the pending re-read, which would outlive the entry."""
         if self._readback_cancel is not None:
             self._readback_cancel()
             self._readback_cancel = None
 
         await super().async_shutdown()
-        await self.hass.async_add_executor_job(self.hub.stop_listen)
