@@ -9,6 +9,7 @@ from homeassistant.components.image import (
     DOMAIN as IMAGE_DOMAIN,
     ENTITY_ID_FORMAT,
     ImageEntity,
+    ImageEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
@@ -43,7 +44,11 @@ IMAGE_YAML_SCHEMA = vol.Schema(
         vol.Required(CONF_URL): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
-).extend(make_template_entity_common_schema(IMAGE_DOMAIN, DEFAULT_NAME).schema)
+).extend(
+    make_template_entity_common_schema(
+        IMAGE_DOMAIN, DEFAULT_NAME, ImageEntityStateAttribute
+    ).schema
+)
 
 
 IMAGE_CONFIG_ENTRY_SCHEMA = vol.Schema(
