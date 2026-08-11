@@ -1,14 +1,14 @@
 """Test the Frontier Silicon init flow."""
 
 import logging
-from typing import TypeVar, overload
+from typing import TypeVar
 from unittest.mock import patch
-
-from afsapi import Endpoint, ListEndpoint
 
 from homeassistant.components.frontier_silicon.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from .conftest import FakeAFSAPIDevice
 
 from tests.common import MockConfigEntry
 
@@ -18,41 +18,6 @@ V = TypeVar("V", bound=str | int)
 ListValue = TypeVar("ListValue")
 
 
-@overload
-def mock_get(endpoint: Endpoint[str]) -> str | None: ...
-
-
-@overload
-def mock_get(endpoint: Endpoint[int]) -> int | None: ...
-
-
-@overload
-def mock_get(
-    endpoint: ListEndpoint[ListValue],
-) -> list[tuple[str, ListValue]]: ...
-
-
-def mock_get(
-    endpoint: Endpoint[str] | Endpoint[int] | ListEndpoint[ListValue],
-) -> str | int | list[tuple[str, ListValue]] | None:
-    """Mock GET from an AFSAPI endpoint enough to run through init."""
-    match endpoint.path:
-        case "netRemote.sys.power":
-            return True
-        case "netRemote.play.status":
-            return 0
-        case "netRemote.sys.caps.validModes":
-            return [(0, {"id": "mocked_mode0", "label": "MockedMode"})]
-        case "netRemote.play.caps":
-            return 0
-        case "netRemote.sys.caps.eqPresets":
-            return [(0, {"id": "mocked_eqpreset0", "label": "MockedEq"})]
-        case _:
-            _LOGGER.warning("Unhandled GET: %s", endpoint.path)
-            return None
-    return True
-
-
 async def test_device_in_dr(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -60,8 +25,8 @@ async def test_device_in_dr(
 ) -> None:
     """Test Frontier Silicon device registry data."""
     with patch(
-        "afsapi.AFSAPI.get",
-        side_effect=mock_get,
+        "homeassistant.components.frontier_silicon.AFSAPI",
+        FakeAFSAPIDevice,
     ):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -87,11 +52,9 @@ async def test_entities_in_er(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the expected number of entities are created."""
-    with (
-        patch(
-            "afsapi.AFSAPI.get",
-            side_effect=mock_get,
-        ),
+    with patch(
+        "homeassistant.components.frontier_silicon.AFSAPI",
+        FakeAFSAPIDevice,
     ):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
