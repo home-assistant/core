@@ -604,3 +604,4 @@ async def test_remove_config_entry_from_device_entry_not_loaded(
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Config entry is not loaded"
+    assert device_registry.async_get(device_entry.id) is not None
