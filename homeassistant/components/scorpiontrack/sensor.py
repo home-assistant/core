@@ -1,5 +1,6 @@
 """Sensor platform for ScorpionTrack."""
 
+from datetime import datetime
 from typing import override
 
 from homeassistant.components.sensor import (
@@ -7,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfSpeed
+from homeassistant.const import EntityCategory, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -22,11 +23,15 @@ async def async_setup_entry(
     entry: ScorpionTrackConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up ScorpionTrack speed sensors."""
+    """Set up ScorpionTrack sensors."""
     coordinator = entry.runtime_data
     async_add_entities(
-        ScorpionTrackSpeedSensor(coordinator, vehicle.id)
+        sensor
         for vehicle in coordinator.data.vehicles
+        for sensor in (
+            ScorpionTrackSpeedSensor(coordinator, vehicle.id),
+            ScorpionTrackLastReportedSensor(coordinator, vehicle.id),
+        )
     )
 
 
@@ -63,3 +68,32 @@ class ScorpionTrackSpeedSensor(ScorpionTrackEntity, SensorEntity):
     def native_value(self) -> float | None:
         """Return the speed in kilometres per hour."""
         return self._available_speed()
+
+
+class ScorpionTrackLastReportedSensor(ScorpionTrackEntity, SensorEntity):
+    """Represent when the vehicle last reported its position."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "last_reported"
+
+    def __init__(self, coordinator: ScorpionTrackCoordinator, vehicle_id: int) -> None:
+        """Initialize the last reported sensor."""
+        super().__init__(coordinator, vehicle_id)
+        self._attr_unique_id = f"{coordinator.data.id}_{vehicle_id}_last_reported"
+
+    def _available_timestamp(self) -> datetime | None:
+        """Return the timestamp if the sensor is available."""
+        return self.get_vehicle().position.timestamp
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the last reported sensor is available."""
+        return super().available and self._available_timestamp() is not None
+
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        """Return when the vehicle last reported."""
+        return self._available_timestamp()
