@@ -1802,20 +1802,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return self._child_device_data.get(child_device_id)
 
     @callback
-    def async_get_effective_area_id(self, device: AnyDeviceEntry) -> str | None:
-        """Return the effective area of a device or child device.
-
-        A child device without an area of its own inherits its parent's area.
-        """
-        if device.area_id is not None:
-            return device.area_id
-        if isinstance(device, ChildDeviceEntry) and (
-            parent := self._device_data.get(device.parent_device_id)
-        ):
-            return parent.area_id
-        return None
-
-    @callback
     def _restore_composite_device(
         self, device_id: str, split_devices: list[DeviceEntry]
     ) -> DeviceEntry:
@@ -4579,6 +4565,25 @@ def async_entries_for_area(
             if child_device.area_id is None
         )
     return entries
+
+
+@callback
+def async_get_effective_area_id(
+    hass: HomeAssistant, device: AnyDeviceEntry
+) -> str | None:
+    """Return the effective area of a device or child device.
+
+    A child device without an area of its own inherits its parent's area.
+    """
+    if device.area_id is not None:
+        return device.area_id
+    if isinstance(device, ChildDeviceEntry):
+        registry = async_get(hass)
+        if parent := registry.async_get(
+            device.parent_device_id, include_child_devices=False
+        ):
+            return parent.area_id
+    return None
 
 
 @callback

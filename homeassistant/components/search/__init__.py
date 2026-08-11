@@ -616,9 +616,7 @@ class Searcher:
         Above a child device is also its parent device.
         """
         if device_entry := self._device_registry.async_get(device_id):
-            if area_id := self._device_registry.async_get_effective_area_id(
-                device_entry
-            ):
+            if area_id := dr.async_get_effective_area_id(self.hass, device_entry):
                 self._add(ItemType.AREA, area_id)
                 self._async_resolve_up_area(area_id)
 
@@ -655,9 +653,7 @@ class Searcher:
             elif entity_entry.device_id and (
                 device_entry := self._device_registry.async_get(entity_entry.device_id)
             ):
-                if area_id := self._device_registry.async_get_effective_area_id(
-                    device_entry
-                ):
+                if area_id := dr.async_get_effective_area_id(self.hass, device_entry):
                     self._add(ItemType.AREA, area_id)
                     self._async_resolve_up_area(area_id)
 

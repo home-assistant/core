@@ -1048,7 +1048,7 @@ async def test_update_child_device_area_round_trip(
     assert msg["result"]["area_id"] is None
     updated_child = device_registry.async_get_child(child_device.id)
     assert updated_child is not None
-    assert device_registry.async_get_effective_area_id(updated_child) == "garage"
+    assert dr.async_get_effective_area_id(hass, updated_child) == "garage"
 
 
 async def test_remove_config_entry_from_child_device(

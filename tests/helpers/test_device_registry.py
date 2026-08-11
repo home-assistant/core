@@ -11142,8 +11142,8 @@ async def test_loading_child_device_with_missing_parent(
     assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == []
 
 
-@pytest.mark.usefixtures("hass")
 async def test_effective_area_id(
+    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -11152,24 +11152,26 @@ async def test_effective_area_id(
         device_registry, mock_config_entry.entry_id
     )
 
-    assert device_registry.async_get_effective_area_id(parent) is None
-    assert device_registry.async_get_effective_area_id(child_device) is None
+    assert dr.async_get_effective_area_id(hass, parent) is None
+    assert dr.async_get_effective_area_id(hass, child_device) is None
 
     # The child inherits the parent's area, resolved at read time
     updated_parent = device_registry.async_update_device(parent.id, area_id="garage")
-    child_device = device_registry.async_get_child(child_device.id)
-    assert device_registry.async_get_effective_area_id(child_device) == "garage"
+    child_device = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
+    assert dr.async_get_effective_area_id(hass, child_device) == "garage"
 
     # An explicitly set area overrides the inherited one
     child_device = device_registry.async_update_device(
         child_device.id, area_id="garden"
     )
-    assert device_registry.async_get_effective_area_id(child_device) == "garden"
+    assert dr.async_get_effective_area_id(hass, child_device) == "garden"
 
     # A parent area change is reflected immediately for inheriting children
     child_device = device_registry.async_update_device(child_device.id, area_id=None)
     device_registry.async_update_device(updated_parent.id, area_id="attic")
-    assert device_registry.async_get_effective_area_id(child_device) == "attic"
+    assert dr.async_get_effective_area_id(hass, child_device) == "attic"
 
 
 @pytest.mark.usefixtures("hass")

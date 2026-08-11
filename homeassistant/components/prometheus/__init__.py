@@ -385,7 +385,7 @@ class PrometheusMetrics:
         if device is None:
             return
 
-        area_id = self.device_registry.async_get_effective_area_id(device)
+        area_id = dr.async_get_effective_area_id(self.device_registry.hass, device)
 
         for entity_id in (
             entity.entity_id
@@ -624,7 +624,9 @@ class PrometheusMetrics:
         if area_id is None and entity.device_id is not None:
             device = self.device_registry.async_get(entity.device_id)
             if device is not None:
-                area_id = self.device_registry.async_get_effective_area_id(device)
+                area_id = dr.async_get_effective_area_id(
+                    self.device_registry.hass, device
+                )
 
         return area_id
 

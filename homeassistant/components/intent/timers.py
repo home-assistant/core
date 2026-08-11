@@ -294,7 +294,7 @@ class TimerManager:
         # Fill in area/floor info
         device_registry = dr.async_get(self.hass)
         if device_id and (device := device_registry.async_get(device_id)):
-            area_id = device_registry.async_get_effective_area_id(device)
+            area_id = dr.async_get_effective_area_id(self.hass, device)
             timer.area_id = area_id
             area_registry = ar.async_get(self.hass)
             if area_id and (area := area_registry.async_get_area(area_id)):
@@ -621,7 +621,7 @@ def _find_timer(
         area_registry = ar.async_get(hass)
         if (
             (device := device_registry.async_get(device_id))
-            and (area_id := device_registry.async_get_effective_area_id(device))
+            and (area_id := dr.async_get_effective_area_id(hass, device))
             and (area := area_registry.async_get_area(area_id))
         ):
             # Try area
@@ -730,7 +730,7 @@ def _find_timers(
     device = device_registry.async_get(device_id)
     if device is None:
         return matching_timers
-    area_id = device_registry.async_get_effective_area_id(device)
+    area_id = dr.async_get_effective_area_id(hass, device)
     if area_id is None:
         return matching_timers
 

@@ -5,6 +5,8 @@ from collections.abc import Callable
 
 import voluptuous as vol
 
+from homeassistant.helpers import device_registry as dr
+
 from .const import POLICY_CONTROL, POLICY_EDIT, POLICY_READ, SUBCAT_ALL
 from .models import PermissionLookup
 from .types import CategoryType, SubCategoryDict, ValueType
@@ -64,7 +66,7 @@ def _lookup_area(
     if device_entry is None:
         return None
 
-    area_id = device_registry.async_get_effective_area_id(device_entry)
+    area_id = dr.async_get_effective_area_id(device_registry.hass, device_entry)
 
     if area_id is None:
         return None
