@@ -64,7 +64,9 @@ async def test_device_info(
 
     device_identifer = get_hyperion_device_id(TEST_SYSINFO_ID, TEST_INSTANCE)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, device_identifer)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_identifer), TEST_CONFIG_ENTRY_ID
+    )
     assert device
     assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
     assert device.identifiers == {(DOMAIN, device_identifer)}

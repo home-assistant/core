@@ -136,17 +136,17 @@ async def prune_images(call: ServiceCall) -> None:
     except PortainerAuthenticationError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="invalid_auth_no_details",
+            translation_key="invalid_auth",
         ) from err
     except PortainerConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="cannot_connect_no_details",
+            translation_key="cannot_connect",
         ) from err
     except PortainerTimeoutError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="timeout_connect_no_details",
+            translation_key="timeout_connect",
         ) from err
 
 
@@ -170,17 +170,17 @@ async def recreate_container(call: ServiceCall) -> None:
     except PortainerAuthenticationError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="invalid_auth_no_details",
+            translation_key="invalid_auth",
         ) from err
     except PortainerConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="cannot_connect_no_details",
+            translation_key="cannot_connect",
         ) from err
     except PortainerTimeoutError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="timeout_connect_no_details",
+            translation_key="timeout_connect",
         ) from err
 
     await coordinator.async_request_refresh()
@@ -196,7 +196,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_PRUNE_IMAGES_SCHEMA,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RECREATE_CONTAINER,
         recreate_container,

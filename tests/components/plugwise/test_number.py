@@ -91,7 +91,7 @@ async def test_adam_dhw_setpoint_change(
 
     assert mock_smile_adam_heat_cool.set_number.call_count == 1
     mock_smile_adam_heat_cool.set_number.assert_called_with(
-        "056ee145a816487eaa69243c3280f8bf", "max_dhw_temperature", 55.0
+        "056ee145a816487eaa69243c3280f8bf", "dhw_temperature", 55.0
     )
 
 
@@ -128,5 +128,5 @@ async def test_anna_max_boiler_temp_change(
 
     assert mock_smile_anna.set_number.call_count == 1
     mock_smile_anna.set_number.assert_called_with(
-        "1cbf783bb11e4a7c8a6843dee3a86927", "maximum_boiler_temperature", 65.0
+        "1cbf783bb11e4a7c8a6843dee3a86927", "boiler_temperature", 65.0
     )

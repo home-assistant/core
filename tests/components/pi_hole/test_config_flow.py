@@ -1,7 +1,7 @@
 """Test pi_hole config flow."""
 
 from homeassistant.components import pi_hole
-from homeassistant.components.pi_hole.const import DOMAIN
+from homeassistant.components.pi_hole.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -12,7 +12,6 @@ from . import (
     CONFIG_ENTRY_WITH_API_KEY,
     CONFIG_FLOW_USER,
     FTL_ERROR,
-    NAME,
     ZERO_DATA,
     _create_mocked_hole,
     _patch_config_flow_hole,
@@ -54,6 +53,7 @@ async def test_flow_user_with_api_key_v6(hass: HomeAssistant) -> None:
 
         # form should be complete with a valid config entry
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == DEFAULT_NAME
         assert result["data"] == CONFIG_ENTRY_WITH_API_KEY
         mock_setup.assert_called_once()
 
@@ -103,7 +103,7 @@ async def test_flow_user_with_api_key_v5(hass: HomeAssistant) -> None:
         assert mocked_hole.instances[-1].data == ZERO_DATA
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == NAME
+        assert result["title"] == DEFAULT_NAME
         assert result["data"] == {**CONFIG_ENTRY_WITH_API_KEY}
         mock_setup.assert_called_once()
 

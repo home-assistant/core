@@ -3,7 +3,12 @@
 import asyncio
 from typing import Any, override
 
-from switchbot_api import CommonCommands, HumidifierCommands, HumidifierV2Commands
+from switchbot_api import (
+    CommonCommands,
+    Humidifier2Mode,
+    HumidifierCommands,
+    HumidifierV2Commands,
+)
 
 from homeassistant.components.humidifier import (
     MODE_AUTO,
@@ -17,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudConfigEntry
-from .const import AFTER_COMMAND_REFRESH, HUMIDITY_LEVELS, Humidifier2Mode
+from .const import AFTER_COMMAND_REFRESH, HUMIDITY_LEVELS
 from .entity import SwitchBotCloudEntity
 
 PARALLEL_UPDATES = 0

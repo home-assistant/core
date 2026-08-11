@@ -80,7 +80,7 @@ async def test_mac_migration(
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert entity_registry.async_get(entity_entry.entity_id).unique_id == TEST_MAC
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry.unique_id)}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, config_entry.unique_id), config_entry.entry_id
     ).identifiers == {(DOMAIN, TEST_MAC)}
     assert config_entry.unique_id == TEST_MAC

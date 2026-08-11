@@ -387,8 +387,8 @@ LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="status_light",
         translation_key="status_light",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="light_device_settings.is_indicator_enabled",
-        ufp_set_method="set_status_light",
+        ufp_public_value="light_device_settings.is_indicator_enabled",
+        ufp_set_method="set_status_light_public",
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -615,14 +615,13 @@ class ProtectRelayOutputSwitch(SwitchEntity):
         self._attr_translation_placeholders = {
             "output_name": output.name or str(output.id),
         }
-        nvr = data.api.bootstrap.nvr
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, relay.mac)},
             identifiers={(DOMAIN, relay.mac)},
             manufacturer=DEFAULT_BRAND,
             name=relay.name,
             model="Relay",
-            via_device=(DOMAIN, nvr.mac),
+            via_device_id=data.nvr_device_id,
         )
         self._update_from_relay(relay)
 
