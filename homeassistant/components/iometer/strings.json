@@ -60,21 +60,15 @@
           "unknown": "Unknown"
         }
       },
-      "power_l1": {
-        "name": "Power on phase 1"
-      },
-      "power_l2": {
-        "name": "Power on phase 2"
-      },
-      "power_l3": {
-        "name": "Power on phase 3"
-      },
       "power_status": {
         "name": "Power supply",
         "state": {
           "battery": "Battery",
           "wired": "Wired"
         }
+      },
+      "power_three_phase": {
+        "name": "Power on phase {phase_number}"
       },
       "total_consumption": {
         "name": "Total consumption"
