@@ -1758,17 +1758,38 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     @overload
     def async_get(
-        self, device_id: str, *, include_child_devices: Literal[True] = True
+        self,
+        device_id: str,
+        *,
+        include_child_devices: Literal[True] = True,
+        include_main_devices: Literal[True] = True,
     ) -> AnyDeviceEntry | None: ...
 
     @overload
     def async_get(
-        self, device_id: str, *, include_child_devices: Literal[False]
+        self,
+        device_id: str,
+        *,
+        include_child_devices: Literal[False],
+        include_main_devices: Literal[True] = True,
     ) -> DeviceEntry | None: ...
+
+    @overload
+    def async_get(
+        self,
+        device_id: str,
+        *,
+        include_child_devices: Literal[True] = True,
+        include_main_devices: Literal[False],
+    ) -> ChildDeviceEntry | None: ...
 
     @callback
     def async_get(
-        self, device_id: str, *, include_child_devices: bool = True
+        self,
+        device_id: str,
+        *,
+        include_child_devices: bool = True,
+        include_main_devices: bool = True,
     ) -> AnyDeviceEntry | None:
         """Get device or child device.
 
@@ -1782,24 +1803,25 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         identifier search and the frontend device list.
 
         With include_child_devices=False a child-device id resolves to None (the child
-        is treated as absent) and the return type excludes children, so callers needn't
-        narrow the result.
+        is treated as absent) and the return type excludes children. With
+        include_main_devices=False a main-device id (including a composite) resolves to
+        None and the return type excludes main devices.
         """
-        if (device := self._device_data.get(device_id)) is not None:
+        if (
+            include_main_devices
+            and (device := self._device_data.get(device_id)) is not None
+        ):
             return device
         if (
             include_child_devices
             and (child_device := self._child_device_data.get(device_id)) is not None
         ):
             return child_device
-        if split_devices := self.devices.get_devices_for_composite_device_id(device_id):
+        if include_main_devices and (
+            split_devices := self.devices.get_devices_for_composite_device_id(device_id)
+        ):
             return self._restore_composite_device(device_id, split_devices)
         return None
-
-    @callback
-    def async_get_child(self, child_device_id: str) -> ChildDeviceEntry | None:
-        """Get child device."""
-        return self._child_device_data.get(child_device_id)
 
     @callback
     def _restore_composite_device(

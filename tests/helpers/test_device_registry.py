@@ -453,7 +453,7 @@ async def test_loading_from_storage(
     assert len(registry.deleted_devices) == 1
 
     # A stored child device is loaded, with disabled_by "device" restored to the enum
-    loaded_child = registry.async_get_child("childdeviceid")
+    loaded_child = registry.async_get("childdeviceid", include_main_devices=False)
     assert loaded_child is not None
     assert loaded_child.parent_device_id == "abcdefghijklm"
     assert loaded_child.disabled_by is dr.DeviceEntryDisabler.DEVICE
@@ -9723,7 +9723,10 @@ async def test_child_device_create(
     assert child_device.disabled_by is None
 
     assert device_registry.async_get(child_device.id) is child_device
-    assert device_registry.async_get_child(child_device.id) is child_device
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False)
+        is child_device
+    )
     assert len(device_registry.devices) == 1
     assert len(device_registry.child_devices) == 1
     assert dr.async_entries_for_parent_device(device_registry, parent.id) == [
@@ -9942,7 +9945,9 @@ async def test_child_device_create_errors(
     # Validation precedes mutation, so the registry is unchanged by the rejection
     assert len(device_registry.devices) == 2
     assert len(device_registry.child_devices) == 1
-    unchanged_child = device_registry.async_get_child(child_device.id)
+    unchanged_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert unchanged_child is not None
     assert unchanged_child.parent_device_id == parent.id
 
@@ -10105,7 +10110,10 @@ async def test_child_device_update_rejects_device_kwargs(
         device_registry.async_update_device(child_device.id, **update_kwargs)
 
     # The rejected update leaves the child device unchanged
-    assert device_registry.async_get_child(child_device.id) is child_device
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False)
+        is child_device
+    )
     assert len(device_registry.child_devices) == 1
 
 
@@ -10129,7 +10137,10 @@ async def test_child_device_update_rejects_has_composite_identifiers(
             child_device.id, has_composite_identifiers=True
         )
 
-    assert device_registry.async_get_child(child_device.id) is child_device
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False)
+        is child_device
+    )
     assert len(device_registry.child_devices) == 1
 
 
@@ -10275,12 +10286,16 @@ async def test_parent_disable_cascades_to_children(
     device_registry.async_update_device(
         parent.id, disabled_by=dr.DeviceEntryDisabler.USER
     )
-    updated_child = device_registry.async_get_child(child_device.id)
+    updated_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert updated_child is not None
     assert updated_child.disabled_by is dr.DeviceEntryDisabler.DEVICE
 
     device_registry.async_update_device(parent.id, disabled_by=None)
-    updated_child = device_registry.async_get_child(child_device.id)
+    updated_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert updated_child is not None
     assert updated_child.disabled_by is None
 
@@ -10302,7 +10317,9 @@ async def test_parent_enable_keeps_user_disabled_child(
     )
     device_registry.async_update_device(parent.id, disabled_by=None)
 
-    updated_child = device_registry.async_get_child(child_device.id)
+    updated_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert updated_child is not None
     assert updated_child.disabled_by is dr.DeviceEntryDisabler.USER
 
@@ -10365,7 +10382,9 @@ async def test_config_entry_reenable_with_user_disabled_parent_no_warning(
     )
     await hass.async_block_till_done()
     disabled_parent = device_registry.async_get(parent.id)
-    disabled_child = device_registry.async_get_child(child_device.id)
+    disabled_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert disabled_parent is not None
     assert disabled_child is not None
     assert disabled_parent.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
@@ -10376,7 +10395,9 @@ async def test_config_entry_reenable_with_user_disabled_parent_no_warning(
     device_registry.async_update_device(
         parent.id, disabled_by=dr.DeviceEntryDisabler.USER
     )
-    child_after_parent_disable = device_registry.async_get_child(child_device.id)
+    child_after_parent_disable = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert child_after_parent_disable is not None
     assert child_after_parent_disable.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
 
@@ -10384,7 +10405,9 @@ async def test_config_entry_reenable_with_user_disabled_parent_no_warning(
     await hass.config_entries.async_set_disabled_by(mock_config_entry.entry_id, None)
     await hass.async_block_till_done()
     updated_parent = device_registry.async_get(parent.id)
-    updated_child = device_registry.async_get_child(child_device.id)
+    updated_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert updated_parent is not None
     assert updated_child is not None
     assert updated_parent.disabled_by is dr.DeviceEntryDisabler.USER
@@ -10413,7 +10436,9 @@ async def test_config_entry_disable_with_children(
     )
     await hass.async_block_till_done()
     updated_parent = device_registry.async_get(parent.id)
-    updated_child = device_registry.async_get_child(child_device.id)
+    updated_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert updated_parent is not None
     assert updated_child is not None
     assert updated_parent.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
@@ -10422,7 +10447,9 @@ async def test_config_entry_disable_with_children(
     await hass.config_entries.async_set_disabled_by(mock_config_entry.entry_id, None)
     await hass.async_block_till_done()
     updated_parent = device_registry.async_get(parent.id)
-    updated_child = device_registry.async_get_child(child_device.id)
+    updated_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert updated_parent is not None
     assert updated_child is not None
     assert updated_parent.disabled_by is None
@@ -10796,7 +10823,8 @@ async def test_convert_device_to_child_detaches_via_links(
         device.id
         for device in device_registry.devices.values()
         if device.via_device_id is not None
-        and device_registry.async_get_child(device.via_device_id) is not None
+        and device_registry.async_get(device.via_device_id, include_main_devices=False)
+        is not None
     ]
     assert child_via_targets == []
 
@@ -10859,7 +10887,10 @@ async def test_convert_child_to_device_same_session_raises(
 
     # The conversion guard runs before any reconcile, so the rejection leaves the child
     # device untouched and creates no main device for its identifiers
-    assert device_registry.async_get_child(child_device.id) is child_device
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False)
+        is child_device
+    )
     assert len(device_registry.child_devices) == 1
     assert len(device_registry.devices) == 1
 
@@ -11022,7 +11053,7 @@ async def test_child_device_load_and_save(
 
     assert list(device_registry.devices) == list(registry2.devices)
     assert list(device_registry.child_devices) == list(registry2.child_devices)
-    loaded_child = registry2.async_get_child(child_device.id)
+    loaded_child = registry2.async_get(child_device.id, include_main_devices=False)
     assert loaded_child is not None
     assert loaded_child.parent_device_id == parent.id
     assert loaded_child.area_id == "garden"
@@ -11193,8 +11224,12 @@ async def test_entries_for_area_with_child_devices(
     device_registry.async_update_device(overriding_child.id, area_id="garden")
 
     parent = device_registry.async_get(parent.id)
-    inheriting_child = device_registry.async_get_child(inheriting_child.id)
-    overriding_child = device_registry.async_get_child(overriding_child.id)
+    inheriting_child = device_registry.async_get(
+        inheriting_child.id, include_main_devices=False
+    )
+    overriding_child = device_registry.async_get(
+        overriding_child.id, include_main_devices=False
+    )
 
     assert dr.async_entries_for_area(device_registry, "garage") == [
         parent,
@@ -11218,7 +11253,9 @@ async def test_clear_area_id_with_child_devices(
     device_registry.async_clear_area_id("garage")
 
     updated_parent = device_registry.async_get(parent.id)
-    updated_child = device_registry.async_get_child(inheriting_child.id)
+    updated_child = device_registry.async_get(
+        inheriting_child.id, include_main_devices=False
+    )
     assert updated_parent is not None
     assert updated_child is not None
     assert updated_parent.area_id is None
@@ -11238,7 +11275,9 @@ async def test_clear_label_id_with_child_devices(
 
     device_registry.async_clear_label_id("xmas")
 
-    updated_child = device_registry.async_get_child(child_device.id)
+    updated_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert updated_child is not None
     assert updated_child.labels == {"outdoor"}
 
@@ -11289,7 +11328,9 @@ async def test_async_cleanup_removes_child_device_with_missing_parent(
 
     dr.async_cleanup(hass, device_registry, entity_registry)
 
-    assert device_registry.async_get_child(child_device.id) is None
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False) is None
+    )
     assert "Removing child device" in caplog.text
 
     # The removal scheduled a save, so the drop persists instead of leaving the store
@@ -11372,13 +11413,13 @@ async def test_async_cleanup_removes_child_device_with_stale_config_entry(
 
     # The child loads because its parent is present; the stale config entry is only
     # caught by the cleanup sweep below
-    assert registry.async_get_child("childdeviceid") is not None
+    assert registry.async_get("childdeviceid", include_main_devices=False) is not None
 
     entity_registry = er.EntityRegistry(hass)
     await entity_registry.async_load()
     dr.async_cleanup(hass, registry, entity_registry)
 
-    assert registry.async_get_child("childdeviceid") is None
+    assert registry.async_get("childdeviceid", include_main_devices=False) is None
     assert "its config entry stale-config-entry-id no longer exists" in caplog.text
 
     # The parent, on a valid config entry, is left untouched
@@ -11411,7 +11452,9 @@ async def test_child_device_stale_identifier_reconciliation(
     )
     assert isinstance(device, dr.DeviceEntry)
     assert device.id == child_device.id
-    assert device_registry.async_get_child(child_device.id) is None
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False) is None
+    )
     assert not device_registry.child_devices
 
 
@@ -11531,7 +11574,9 @@ async def test_deleted_child_device_restored_as_device_clears_device_disable(
     device_registry.async_update_device(
         parent.id, disabled_by=dr.DeviceEntryDisabler.USER
     )
-    disabled_child = device_registry.async_get_child(child_device.id)
+    disabled_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert disabled_child is not None
     assert disabled_child.disabled_by is dr.DeviceEntryDisabler.DEVICE
 
@@ -11883,7 +11928,9 @@ async def test_convert_disabled_child_device_to_device(
     device_registry.async_update_device(
         parent.id, disabled_by=dr.DeviceEntryDisabler.USER
     )
-    disabled_child = device_registry.async_get_child(child_device.id)
+    disabled_child = device_registry.async_get(
+        child_device.id, include_main_devices=False
+    )
     assert disabled_child is not None
     assert disabled_child.disabled_by is dr.DeviceEntryDisabler.DEVICE
     device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
@@ -12047,7 +12094,7 @@ async def test_recreate_child_clears_stale_config_entry_disable(
         device_registry, mock_config_entry.entry_id
     )
     device_registry.child_devices[child_device.id] = attr.evolve(
-        device_registry.async_get_child(child_device.id),
+        device_registry.async_get(child_device.id, include_main_devices=False),
         disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY,
     )
 
@@ -12107,7 +12154,10 @@ async def test_child_device_identifier_collision_with_other_child(
             child_device.id, new_identifiers={("test", "strip_outlet_2")}
         )
     # The rejected update leaves both children unchanged
-    assert device_registry.async_get_child(other_child.id) is other_child
+    assert (
+        device_registry.async_get(other_child.id, include_main_devices=False)
+        is other_child
+    )
 
 
 @pytest.mark.parametrize(
@@ -12158,7 +12208,7 @@ async def test_stale_child_device_collision_stripped_or_removed(
     assert registered.id == hub.id
     assert ("test", "strip_outlet_1") in registered.identifiers
 
-    result = device_registry.async_get_child(child_device.id)
+    result = device_registry.async_get(child_device.id, include_main_devices=False)
     assert (result.identifiers if result is not None else None) == expected_remaining
 
 
@@ -12180,7 +12230,9 @@ async def test_clear_config_entry_removes_orphaned_child_device(
 
     device_registry.async_clear_config_entry(mock_config_entry.entry_id)
 
-    assert device_registry.async_get_child(child_device.id) is None
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False) is None
+    )
     assert not device_registry.child_devices
 
 
@@ -12228,5 +12280,5 @@ async def test_clear_config_subentry_removes_orphaned_child_device(
     device_registry.async_clear_config_subentry(entry_id, "mock-subentry-id-1-1")
 
     # The child in the cleared subentry is removed, the one in the other subentry kept
-    assert device_registry.async_get_child(child_1.id) is None
-    assert device_registry.async_get_child(child_2.id) is not None
+    assert device_registry.async_get(child_1.id, include_main_devices=False) is None
+    assert device_registry.async_get(child_2.id, include_main_devices=False) is not None

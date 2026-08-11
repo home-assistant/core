@@ -1073,7 +1073,7 @@ class HomeKit:
         for device_id in self._devices:
             if dev_reg.async_get(device_id, include_child_devices=False):
                 valid_device_ids.append(device_id)
-            elif dev_reg.async_get_child(device_id):
+            elif dev_reg.async_get(device_id, include_main_devices=False):
                 _LOGGER.warning(
                     (
                         "HomeKit %s cannot add device %s because a child device cannot"
