@@ -937,9 +937,14 @@ async def test_homekit_start_with_a_child_device(
         await homekit.async_start()
         await hass.async_block_till_done()
 
-    # Setup completed (no AssertionError) and the child was skipped with a warning.
+    # Setup completed (no AssertionError) and the child was skipped with a warning
+    # that identifies it as a child, not as missing from the device registry.
     assert homekit.status == STATUS_RUNNING
-    assert f"cannot add device {child.id}" in caplog.text
+    assert (
+        f"cannot add device {child.id} because a child device cannot be a HomeKit"
+        " accessory" in caplog.text
+    )
+    assert "missing from the device registry" not in caplog.text
     await homekit.async_stop()
 
 

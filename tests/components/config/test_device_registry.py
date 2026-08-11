@@ -890,7 +890,7 @@ async def test_list_linked_devices_unknown_device(
     assert msg["error"]["message"] == "Device not found"
 
 
-async def _create_parent_and_child(
+def _create_parent_and_child(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     *,
@@ -921,7 +921,7 @@ async def test_list_devices_with_child_devices(
     """Test child devices are included in the device list."""
     assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
-    entry, parent, child_device = await _create_parent_and_child(hass, device_registry)
+    entry, parent, child_device = _create_parent_and_child(hass, device_registry)
 
     await client.send_json_auto_id({"type": "config/device_registry/list"})
     msg = await client.receive_json()
@@ -993,7 +993,7 @@ async def test_update_child_device(
     """Test updating a child device through the websocket API."""
     assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
-    _, _, child_device = await _create_parent_and_child(hass, device_registry)
+    _, _, child_device = _create_parent_and_child(hass, device_registry)
 
     await client.send_json_auto_id(
         {
@@ -1021,7 +1021,7 @@ async def test_update_child_device_area_round_trip(
     """Test overriding and re-inheriting a child device area via the API."""
     assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
-    _, parent, child_device = await _create_parent_and_child(hass, device_registry)
+    _, parent, child_device = _create_parent_and_child(hass, device_registry)
     device_registry.async_update_device(parent.id, area_id="garage")
 
     await client.send_json_auto_id(
@@ -1077,7 +1077,7 @@ async def test_remove_config_entry_from_child_device(
             "comp1", async_remove_config_entry_device=async_remove_config_entry_device
         ),
     )
-    entry, parent, child_device = await _create_parent_and_child(
+    entry, parent, child_device = _create_parent_and_child(
         hass, device_registry, domain="comp1"
     )
     entry.supports_remove_device = True
@@ -1124,7 +1124,7 @@ async def test_remove_config_entry_from_parent_with_children(
             "comp1", async_remove_config_entry_device=async_remove_config_entry_device
         ),
     )
-    entry, parent, child_device = await _create_parent_and_child(
+    entry, parent, child_device = _create_parent_and_child(
         hass, device_registry, domain="comp1"
     )
     entry.supports_remove_device = True
@@ -1142,10 +1142,25 @@ async def test_list_linked_devices_child_device(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test list_linked_devices for a child device."""
+    """Test a child device is never reported as linked.
+
+    A child shares its parent's per-config-entry identifier namespace, so even
+    when a main device of another config entry carries the same identifier the
+    child must still yield an empty result.
+    """
     assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
-    _, _, child_device = await _create_parent_and_child(hass, device_registry)
+    _, _, child_device = _create_parent_and_child(hass, device_registry)
+
+    # A main device of another config entry that shares the child's identifier
+    # would be surfaced if children were matched like main devices; it must not.
+    other_entry = MockConfigEntry()
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+    )
+    assert other_device.identifiers == child_device.identifiers
 
     await client.send_json_auto_id(
         {

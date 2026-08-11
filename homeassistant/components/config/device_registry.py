@@ -128,15 +128,18 @@ def websocket_list_linked_devices(
         )
         return
 
-    # async_get_devices resolves main devices only; children of other config
-    # entries that share an identifier are not surfaced here.
+    # A child device is never linked: its identifiers share the parent's
+    # per-config-entry namespace, so matching them against other entries' main
+    # devices is not meaningful.
+    if isinstance(device, dr.ChildDeviceEntry):
+        connection.send_result(msg["id"], {"linked_devices": []})
+        return
+
     linked_devices = [
         entry.id
         for entry in registry.async_get_devices(
             identifiers=device.identifiers,
-            connections=(
-                device.connections if isinstance(device, dr.DeviceEntry) else None
-            ),
+            connections=device.connections,
         )
         if entry.id != device_id
     ]
