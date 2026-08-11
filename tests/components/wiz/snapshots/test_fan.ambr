@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'breeze',
       ]),
     }),
@@ -43,15 +43,15 @@
 # name: test_entity[bulb_type0][fan.mock_title-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'direction': 'forward',
-      'friendly_name': 'Mock Title',
-      'percentage': 16,
-      'percentage_step': 16.666666666666668,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.DIRECTION: 'direction'>: 'forward',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 16,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 16.666666666666668,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'breeze',
       ]),
-      'supported_features': <FanEntityFeature: 61>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 61>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.mock_title',
@@ -68,7 +68,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'breeze',
       ]),
     }),
@@ -105,15 +105,15 @@
 # name: test_entity[bulb_type1][fan.mock_title-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'direction': 'forward',
-      'friendly_name': 'Mock Title',
-      'percentage': 16,
-      'percentage_step': 16.666666666666668,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.DIRECTION: 'direction'>: 'forward',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 16,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 16.666666666666668,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'breeze',
       ]),
-      'supported_features': <FanEntityFeature: 61>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 61>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.mock_title',

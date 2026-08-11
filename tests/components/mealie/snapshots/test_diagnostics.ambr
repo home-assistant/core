@@ -40,6 +40,8 @@
             'slug': 'roast-chicken',
             'tags': list([
             ]),
+            'tools': list([
+            ]),
             'total_time': '1 Hour 35 Minutes',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
           }),
@@ -81,6 +83,8 @@
             'recipe_yield_quantity': None,
             'slug': 'greek-turkey-meatballs-with-lemon-orzo-creamy-feta-yogurt-sauce',
             'tags': list([
+            ]),
+            'tools': list([
             ]),
             'total_time': '1 Hour',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -124,6 +128,8 @@
             'slug': 'zoete-aardappel-curry-traybake',
             'tags': list([
             ]),
+            'tools': list([
+            ]),
             'total_time': '40 Minutes',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
           }),
@@ -163,6 +169,8 @@
             'recipe_yield_quantity': None,
             'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno-1',
             'tags': list([
+            ]),
+            'tools': list([
             ]),
             'total_time': None,
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -214,6 +222,8 @@
                 'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
               }),
             ]),
+            'tools': list([
+            ]),
             'total_time': '1 Hour 15 Minutes',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
           }),
@@ -264,6 +274,8 @@
                 'tag_id': '941558d2-50d5-4c9d-8890-a0258f18d493',
               }),
             ]),
+            'tools': list([
+            ]),
             'total_time': '30 Minutes',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
           }),
@@ -309,6 +321,8 @@
                 'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
               }),
             ]),
+            'tools': list([
+            ]),
             'total_time': '3 Hours 15 Minutes',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
           }),
@@ -348,6 +362,8 @@
             'recipe_yield_quantity': None,
             'slug': 'miso-udon-noodles-with-spinach-and-tofu',
             'tags': list([
+            ]),
+            'tools': list([
             ]),
             'total_time': '25 Minutes',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -410,6 +426,8 @@
                 'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
               }),
             ]),
+            'tools': list([
+            ]),
             'total_time': '35 Minutes',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
           }),
@@ -451,6 +469,23 @@
             'recipe_yield_quantity': None,
             'slug': 'receta-de-pollo-al-curry-en-10-minutos-con-video-incluido',
             'tags': list([
+            ]),
+            'tools': list([
+              dict({
+                'name': 'Backofen',
+                'slug': 'backofen',
+                'tool_id': '1170e609-20d3-45b8-b0c7-3a4cfa614e88',
+              }),
+              dict({
+                'name': 'Magimix blender',
+                'slug': 'magimix-blender',
+                'tool_id': '9ab522ad-c3be-4dad-8b4f-d9d53817f4d0',
+              }),
+              dict({
+                'name': 'Alluminio',
+                'slug': 'alluminio',
+                'tool_id': 'b4ca27dc-9bf6-48be-ad10-3e7056cb24bc',
+              }),
             ]),
             'total_time': '10 Minutes',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -552,6 +587,8 @@
                 'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
               }),
             ]),
+            'tools': list([
+            ]),
             'total_time': '5 Hours',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
           }),
@@ -597,6 +634,8 @@
                 'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
               }),
             ]),
+            'tools': list([
+            ]),
             'total_time': '3 Hours 15 Minutes',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
           }),
@@ -618,10 +657,7 @@
           'recipe': dict({
             'categories': list([
             ]),
-            'date_added': dict({
-              '__type': "<class 'datetime.date'>",
-              'isoformat': '2024-01-21',
-            }),
+            'date_added': None,
             'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
             'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
             'household_id': None,
@@ -643,6 +679,8 @@
                 'slug': '4-hours',
                 'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
               }),
+            ]),
+            'tools': list([
             ]),
             'total_time': '35 Minutes',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -685,6 +723,8 @@
             'recipe_yield_quantity': None,
             'slug': 'mousse-de-saumon',
             'tags': list([
+            ]),
+            'tools': list([
             ]),
             'total_time': '17 Minutes',
             'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
@@ -843,6 +883,7 @@
           }),
         ]),
         'shopping_list': dict({
+          'group_id': '9ed7c880-3e85-4955-9318-1443d6e080fe',
           'list_id': '27edbaab-2ec6-441f-8490-0283ea77585f',
           'name': 'Supermarket',
         }),
@@ -995,6 +1036,7 @@
           }),
         ]),
         'shopping_list': dict({
+          'group_id': '9ed7c880-3e85-4955-9318-1443d6e080fe',
           'list_id': 'e9d78ff2-4b23-4b77-a3a8-464827100b46',
           'name': 'Freezer',
         }),
@@ -1147,6 +1189,7 @@
           }),
         ]),
         'shopping_list': dict({
+          'group_id': '9ed7c880-3e85-4955-9318-1443d6e080fe',
           'list_id': 'f8438635-8211-4be8-80d0-0aa42e37a5f2',
           'name': 'Special groceries',
         }),

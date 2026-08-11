@@ -1,9 +1,7 @@
 """Config flow for Casper Glow integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from bluetooth_data_tools import human_readable_name
 from pycasperglow import CasperGlow, CasperGlowError
@@ -22,6 +20,16 @@ from .const import DOMAIN, LOCAL_NAMES
 _LOGGER = logging.getLogger(__name__)
 
 
+def _is_casper_glow_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool:
+    """Return whether the Bluetooth discovery looks like a Casper Glow."""
+    return bool(
+        discovery_info.name
+        and any(
+            discovery_info.name.startswith(local_name) for local_name in LOCAL_NAMES
+        )
+    )
+
+
 class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Casper Glow."""
 
@@ -33,10 +41,14 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
+        if not _is_casper_glow_discovery(discovery_info):
+            return self.async_abort(reason="not_supported")
+
         await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
         self._discovery_info = discovery_info
@@ -75,6 +87,7 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -118,13 +131,7 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
                 if (
                     format_mac(discovery.address) in current_addresses
                     or discovery.address in self._discovered_devices
-                    or not (
-                        discovery.name
-                        and any(
-                            discovery.name.startswith(local_name)
-                            for local_name in LOCAL_NAMES
-                        )
-                    )
+                    or not _is_casper_glow_discovery(discovery)
                 ):
                     continue
                 self._discovered_devices[discovery.address] = discovery

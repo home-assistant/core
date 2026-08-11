@@ -1,9 +1,8 @@
 """Support for Enigma2 media players."""
 
-from __future__ import annotations
-
 import contextlib
 from logging import getLogger
+from typing import override
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
@@ -67,9 +66,11 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
 
         self._attr_device_info = coordinator.device_info
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         if self.coordinator.device.turn_off_to_deep:
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             with contextlib.suppress(ServerDisconnectedError):
                 await self.coordinator.device.set_powerstate(PowerState.DEEP_STANDBY)
             self._attr_available = False
@@ -77,26 +78,31 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
             await self.coordinator.device.set_powerstate(PowerState.STANDBY)
             await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self.coordinator.device.turn_on()
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.coordinator.device.set_volume(int(volume * 100))
         await self.coordinator.async_refresh()
 
+    @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self.coordinator.device.set_volume(SetVolumeOption.UP)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self.coordinator.device.set_volume(SetVolumeOption.DOWN)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self.coordinator.device.send_remote_control_action(
@@ -104,6 +110,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_play(self) -> None:
         """Play media."""
         await self.coordinator.device.send_remote_control_action(
@@ -111,6 +118,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause the media player."""
         await self.coordinator.device.send_remote_control_action(
@@ -118,6 +126,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.coordinator.device.send_remote_control_action(
@@ -125,6 +134,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.coordinator.device.send_remote_control_action(
@@ -132,25 +142,30 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""
         if mute != self.coordinator.data.muted:
             await self.coordinator.device.toggle_mute()
             await self.coordinator.async_refresh()
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self.coordinator.device.zap(self.coordinator.device.sources[source])
         await self.coordinator.async_refresh()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update state of the media_player."""
 
         if not self.coordinator.data.in_standby:
             self._attr_extra_state_attributes = {
                 ATTR_MEDIA_CURRENTLY_RECORDING: self.coordinator.data.is_recording,
-                ATTR_MEDIA_DESCRIPTION: self.coordinator.data.currservice.fulldescription,
+                ATTR_MEDIA_DESCRIPTION: (
+                    self.coordinator.data.currservice.fulldescription
+                ),
                 ATTR_MEDIA_START_TIME: self.coordinator.data.currservice.begin,
                 ATTR_MEDIA_END_TIME: self.coordinator.data.currservice.end,
             }

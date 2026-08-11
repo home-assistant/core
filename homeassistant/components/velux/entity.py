@@ -3,11 +3,13 @@
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any, ParamSpec
+from typing import Any, override
 
 from pyvlx import Node, PyVLXException
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -15,10 +17,30 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-P = ParamSpec("P")
+
+def velux_unique_id(node: Node, config_entry_id: str) -> str:
+    """Build unique ID base for a Velux node."""
+    return node.serial_number or f"{config_entry_id}_{node.node_id}"
 
 
-def wrap_pyvlx_call_exceptions(
+def velux_device_info(
+    hass: HomeAssistant, node: Node, config_entry_id: str
+) -> DeviceInfo:
+    """Build DeviceInfo for a Velux node."""
+    unique_id = velux_unique_id(node, config_entry_id)
+    return DeviceInfo(
+        identifiers={(DOMAIN, unique_id)},
+        name=node.name or f"#{node.node_id}",
+        serial_number=node.serial_number,
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass,
+            (DOMAIN, f"gateway_{config_entry_id}"),
+            config_entry_id=config_entry_id,
+        ),
+    )
+
+
+def wrap_pyvlx_call_exceptions[**P](
     func: Callable[P, Coroutine[Any, Any, None]],
 ) -> Callable[P, Coroutine[Any, Any, None]]:
     """Decorate pyvlx calls to handle exceptions.
@@ -51,24 +73,11 @@ class VeluxEntity(Entity):
     _attr_available = True
     _unavailable_logged = False
 
-    def __init__(self, node: Node, config_entry_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
         self.node = node
-        unique_id = node.serial_number or f"{config_entry_id}_{node.node_id}"
-        self._attr_unique_id = unique_id
-        self.unsubscribe = None
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (
-                    DOMAIN,
-                    unique_id,
-                )
-            },
-            name=node.name or f"#{node.node_id}",
-            serial_number=node.serial_number,
-            via_device=(DOMAIN, f"gateway_{config_entry_id}"),
-        )
+        self._attr_unique_id = velux_unique_id(node, config_entry_id)
+        self._attr_device_info = velux_device_info(hass, node, config_entry_id)
 
     async def after_update_callback(self, _: Node) -> None:
         """Call after device was updated."""
@@ -83,12 +92,14 @@ class VeluxEntity(Entity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback and store reference for cleanup."""
 
         self.update_callback = self.after_update_callback
         self.node.register_device_updated_cb(self.update_callback)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up registered callbacks."""
         if self.update_callback:

@@ -25,10 +25,38 @@
       }
     }
   },
-  "services": {
-    "reboot": {
-      "description": "Reboots the Freebox.",
-      "name": "Reboot"
+  "entity": {
+    "binary_sensor": {
+      "cover": {
+        "name": "Cover"
+      },
+      "raid_degraded": {
+        "name": "RAID array {id} degraded"
+      }
+    },
+    "button": {
+      "mark_calls_as_read": {
+        "name": "Mark calls as read"
+      }
+    },
+    "sensor": {
+      "missed": {
+        "name": "Missed calls"
+      },
+      "partition_free_space": {
+        "name": "{partition} free space"
+      },
+      "rate_down": {
+        "name": "Download speed"
+      },
+      "rate_up": {
+        "name": "Upload speed"
+      }
+    },
+    "switch": {
+      "wifi": {
+        "name": "Wi-Fi"
+      }
     }
   }
 }

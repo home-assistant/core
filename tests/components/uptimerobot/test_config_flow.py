@@ -4,11 +4,11 @@ from unittest.mock import patch
 
 import pytest
 from pyuptimerobot import (
-    API_PATH_USER_ME,
     UptimeRobotAuthenticationException,
     UptimeRobotConnectionException,
     UptimeRobotException,
 )
+from pyuptimerobot.const import API_PATH_USER_ME
 
 from homeassistant import config_entries
 from homeassistant.components.uptimerobot.const import DOMAIN

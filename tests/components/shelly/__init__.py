@@ -61,13 +61,18 @@ async def init_integration(
         data[CONF_GEN] = gen
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options, title="Test name"
+        domain=DOMAIN,
+        data=data,
+        unique_id=MOCK_MAC,
+        options=options,
+        title="Test name",
+        minor_version=3,
     )
     entry.add_to_hass(hass)
 
     if not skip_setup:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return entry
 
@@ -75,7 +80,7 @@ async def init_integration(
 async def mock_block_device_push_update_failure(
     hass: HomeAssistant, mock_block_device: Mock
 ) -> None:
-    """Create updates with COAP_REPLY indicating push update failure for block device."""
+    """Create COAP_REPLY updates indicating push update failure."""
     for _ in range(MAX_PUSH_UPDATE_FAILURES):
         mock_block_device.mock_update_reply()
         await hass.async_block_till_done()
@@ -177,10 +182,13 @@ def register_sub_device(
     device_registry: DeviceRegistry, config_entry: ConfigEntry, unique_id: str
 ) -> DeviceEntry:
     """Register Shelly sub-device."""
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_MAC), config_entry.entry_id
+    )
     return device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, f"{MOCK_MAC}-{unique_id}")},
-        via_device=(DOMAIN, MOCK_MAC),
+        via_device_id=main_device.id if main_device else None,
     )
 
 

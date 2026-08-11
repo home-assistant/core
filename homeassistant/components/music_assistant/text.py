@@ -1,8 +1,6 @@
 """Music Assistant text platform."""
 
-from __future__ import annotations
-
-from typing import Final
+from typing import Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import PlayerOption, PlayerOptionType
@@ -13,13 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .const import PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
-PLAYER_OPTIONS_TRANSLATION_KEYS_TEXT: Final[list[str]] = [
-    "network_name",
-]
+PLAYER_OPTIONS_TEXT: Final[dict[str, bool]] = {
+    # translation_key: enabled_by_default
+    "network_name": True
+}
 
 
 async def async_setup_entry(
@@ -42,19 +40,8 @@ async def async_setup_entry(
                 and player_option.type == PlayerOptionType.STRING
                 and not player_option.options  # these we map to select
             ):
-                # the MA translation key must have the format player_options.<translation key>
                 # we ignore entities with unknown translation keys.
-                if (
-                    player_option.translation_key is None
-                    or not player_option.translation_key.startswith(
-                        PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
-                    )
-                ):
-                    continue
-                translation_key = player_option.translation_key[
-                    len(PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX) :
-                ]
-                if translation_key not in PLAYER_OPTIONS_TRANSLATION_KEYS_TEXT:
+                if player_option.translation_key not in PLAYER_OPTIONS_TEXT:
                     continue
 
                 entities.append(
@@ -64,7 +51,10 @@ async def async_setup_entry(
                         player_option=player_option,
                         entity_description=TextEntityDescription(
                             key=player_option.key,
-                            translation_key=translation_key,
+                            translation_key=player_option.translation_key,
+                            entity_registry_enabled_default=PLAYER_OPTIONS_TEXT[
+                                player_option.translation_key
+                            ],
                         ),
                     )
                 )
@@ -90,10 +80,12 @@ class MusicAssistantPlayerConfigText(MusicAssistantPlayerOptionEntity, TextEntit
         self.entity_description = entity_description
 
     @catch_musicassistant_error
+    @override
     async def async_set_value(self, value: str) -> None:
         """Set text value."""
         await self.mass.players.set_option(self.player_id, self.mass_option_key, value)
 
+    @override
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
         self._attr_native_value = (

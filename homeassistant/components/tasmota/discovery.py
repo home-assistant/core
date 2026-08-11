@@ -1,7 +1,5 @@
 """Support for Tasmota device discovery."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import logging
 from typing import TypedDict, cast
@@ -303,8 +301,8 @@ async def async_start(  # noqa: C901
 
         device_registry = dr.async_get(hass)
         entity_registry = er.async_get(hass)
-        device = device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+        device = device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
         )
 
         if device is None:

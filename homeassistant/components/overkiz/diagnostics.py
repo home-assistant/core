@@ -1,7 +1,5 @@
 """Provides diagnostics for Overkiz."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyoverkiz.enums import APIType
@@ -21,13 +19,13 @@ async def async_get_config_entry_diagnostics(
     client = entry.runtime_data.coordinator.client
 
     data = {
-        "setup": await client.get_diagnostic_data(),
+        **await client.get_diagnostic_data(),
         "server": entry.data[CONF_HUB],
         "api_type": entry.data.get(CONF_API_TYPE, APIType.CLOUD),
     }
 
     # Only Overkiz cloud servers expose an endpoint with execution history
-    if client.api_type == APIType.CLOUD:
+    if client.server_config.api_type == APIType.CLOUD:
         execution_history = [
             repr(execution) for execution in await client.get_execution_history()
         ]
@@ -51,13 +49,13 @@ async def async_get_device_diagnostics(
             "device_url": obfuscate_id(device_url),
             "model": device.model,
         },
-        "setup": await client.get_diagnostic_data(),
+        **await client.get_diagnostic_data(),
         "server": entry.data[CONF_HUB],
         "api_type": entry.data.get(CONF_API_TYPE, APIType.CLOUD),
     }
 
     # Only Overkiz cloud servers expose an endpoint with execution history
-    if client.api_type == APIType.CLOUD:
+    if client.server_config.api_type == APIType.CLOUD:
         data["execution_history"] = [
             repr(execution)
             for execution in await client.get_execution_history()

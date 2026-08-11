@@ -1,14 +1,12 @@
 """Local backup support for Core and Container installations."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 import copy
 from dataclasses import dataclass, replace
 from io import BytesIO
 import json
-from pathlib import Path, PurePath
+from pathlib import Path, PurePath, PureWindowsPath
 from queue import SimpleQueue
 import tarfile
 import threading
@@ -36,7 +34,7 @@ from homeassistant.util.async_iterator import (
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import BUF_SIZE, LOGGER, SECURETAR_CREATE_VERSION
-from .models import AddonInfo, AgentBackup, Folder
+from .models import AddonInfo, AgentBackup, Folder, InvalidBackupFilename
 
 
 class DecryptError(HomeAssistantError):
@@ -111,6 +109,13 @@ def read_backup(backup_path: Path) -> AgentBackup:
         extra_metadata = cast(dict[str, bool | str], data.get("extra", {}))
         date = extra_metadata.get("supervisor.backup_request_date", data["date"])
 
+        name = cast(str, data["name"])
+        # The name is used to derive the on-disk filename via suggested_filename;
+        # reject anything that could escape the backup directory.
+        safe_name = PureWindowsPath(name).name
+        if safe_name != name or name in ("", ".", ".."):
+            raise InvalidBackupFilename(f"Invalid backup name: {name!r}")
+
         return AgentBackup(
             addons=addons,
             backup_id=cast(str, data["slug"]),
@@ -120,7 +125,7 @@ def read_backup(backup_path: Path) -> AgentBackup:
             folders=folders,
             homeassistant_included=homeassistant_included,
             homeassistant_version=homeassistant_version,
-            name=cast(str, data["name"]),
+            name=name,
             protected=cast(bool, data.get("protected", False)),
             size=backup_path.stat().st_size,
         )

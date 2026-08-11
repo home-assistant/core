@@ -1,9 +1,11 @@
 """Test the Ruckus config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
+from aioruckus import RuckusAjaxApi
 from aioruckus.const import ERROR_CONNECT_TIMEOUT, ERROR_LOGIN_INCORRECT
-from aioruckus.exceptions import AuthenticationError
+from aioruckus.exceptions import AuthenticationError, SchemaError
+import pytest
 
 from homeassistant.components.ruckus_unleashed.const import (
     API_AP_DEVNAME,
@@ -58,13 +60,12 @@ async def test_router_device_setup(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test a router device is created."""
-    await init_integration(hass)
+    entry = await init_integration(hass)
 
     device_info = DEFAULT_AP_INFO[0]
 
-    device = device_registry.async_get_device(
-        identifiers={(CONNECTION_NETWORK_MAC, device_info[API_AP_MAC])},
-        connections={(CONNECTION_NETWORK_MAC, device_info[API_AP_MAC])},
+    device = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, device_info[API_AP_MAC]), entry.entry_id
     )
 
     assert device
@@ -90,3 +91,30 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("method", "error"),
+    [
+        ("get_system_info", ConnectionError("connection lost")),
+        ("get_aps", SchemaError("unexpected schema")),
+    ],
+)
+async def test_setup_entry_error_post_login(
+    hass: HomeAssistant, method: str, error: Exception
+) -> None:
+    """Test entry setup retries on post-login API errors."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    with (
+        RuckusAjaxApiPatchContext(),
+        patch.object(
+            RuckusAjaxApi,
+            method,
+            new=AsyncMock(side_effect=error),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY

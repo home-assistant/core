@@ -70,7 +70,7 @@ async def test_entity_registry(
 async def test_connection_error(
     hass: HomeAssistant, init_integration, mock_auth, mock_config_entry
 ) -> None:
-    """Test the alarm control panel when connection can't be made to the cloud service."""
+    """Test alarm panel when cloud connection fails."""
 
     install = AsyncMock()
     install.arm = AsyncMock(return_value=False)

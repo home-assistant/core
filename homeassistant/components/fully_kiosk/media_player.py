@@ -1,8 +1,6 @@
 """Fully Kiosk Browser media player."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -45,6 +43,7 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
         self._attr_unique_id = f"{coordinator.data['deviceID']}-mediaplayer"
         self._attr_state = MediaPlayerState.IDLE
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -76,6 +75,7 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
         self._attr_state = MediaPlayerState.PLAYING
         self.async_write_ha_state()
 
+    @override
     async def async_media_stop(self) -> None:
         """Stop playing media."""
         if self._attr_media_content_type == MediaType.VIDEO:
@@ -85,6 +85,7 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
         self._attr_state = MediaPlayerState.IDLE
         self.async_write_ha_state()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.coordinator.fully.setAudioVolume(
@@ -93,6 +94,7 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
         self._attr_volume_level = volume
         self.async_write_ha_state()
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -109,6 +111,7 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_state = (

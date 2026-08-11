@@ -8,6 +8,9 @@
   "dhcp": [
     {
       "macaddress": "0024E4*"
+    },
+    {
+      "macaddress": "A47EFA*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/withings",

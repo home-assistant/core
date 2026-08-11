@@ -49,10 +49,14 @@ async def async_setup_entry(
 
     await coordinator.async_config_entry_first_refresh()
 
-    system_info = await ruckus.api.get_system_info()
+    try:
+        system_info = await ruckus.api.get_system_info()
+        aps = await ruckus.api.get_aps()
+    except (ConnectionError, SchemaError) as err:
+        await ruckus.close()
+        raise ConfigEntryNotReady from err
 
     registry = dr.async_get(hass)
-    aps = await ruckus.api.get_aps()
     for access_point in aps:
         _LOGGER.debug("AP [%s] %s", access_point[API_AP_MAC], entry.entry_id)
         registry.async_get_or_create(

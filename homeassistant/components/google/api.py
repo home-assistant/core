@@ -1,10 +1,8 @@
 """Client library for talking to Google APIs."""
 
-from __future__ import annotations
-
 import datetime
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import aiohttp
 from gcal_sync.auth import AbstractAuth
@@ -46,6 +44,7 @@ class InvalidCredential(OAuthError):
 class GoogleHybridAuth(AuthImplementation):
     """OAuth implementation that supports both Web Auth (base class) and Device Auth."""
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentials object to Home Assistant token."""
         if DEVICE_AUTH_CREDS not in external_data:
@@ -197,6 +196,7 @@ class ApiAuthImpl(AbstractAuth):
         super().__init__(websession)
         self._session = session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._session.async_ensure_token_valid()
@@ -220,6 +220,7 @@ class AccessTokenAuthImpl(AbstractAuth):
         super().__init__(websession)
         self._access_token = access_token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return the access token."""
         return self._access_token

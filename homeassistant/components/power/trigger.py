@@ -1,7 +1,5 @@
 """Provides triggers for power."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
@@ -22,8 +20,10 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "changed": make_entity_numerical_state_changed_with_unit_trigger(
         POWER_DOMAIN_SPECS, UnitOfPower.WATT, PowerConverter
     ),
-    "crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-        POWER_DOMAIN_SPECS, UnitOfPower.WATT, PowerConverter
+    "crossed_threshold": (
+        make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+            POWER_DOMAIN_SPECS, UnitOfPower.WATT, PowerConverter
+        )
     ),
 }
 

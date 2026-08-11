@@ -1,7 +1,5 @@
 """Handle legacy speech-to-text platforms."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Coroutine
 import logging
@@ -26,7 +24,12 @@ from .const import (
     AudioFormats,
     AudioSampleRates,
 )
-from .models import SpeechMetadata, SpeechResult
+from .models import (
+    DEFAULT_AUDIO_PROCESSING,
+    SpeechAudioProcessing,
+    SpeechMetadata,
+    SpeechResult,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,6 +145,11 @@ class Provider(ABC):
     @abstractmethod
     def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
+
+    @property
+    def audio_processing(self) -> SpeechAudioProcessing:
+        """Return required/preferred input audio processing settings."""
+        return DEFAULT_AUDIO_PROCESSING
 
     @abstractmethod
     async def async_process_audio_stream(

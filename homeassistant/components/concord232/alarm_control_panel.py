@@ -1,9 +1,8 @@
 """Support for Concord232 alarm control panels."""
 
-from __future__ import annotations
-
 import datetime
 import logging
+from typing import override
 
 from concord232 import client as concord232_client
 import requests
@@ -104,12 +103,14 @@ class Concord232Alarm(AlarmControlPanelEntity):
         else:
             self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
 
+    @override
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._validate_code(code, AlarmControlPanelState.DISARMED):
             return
         self._alarm.disarm(code)
 
+    @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if not self._validate_code(code, AlarmControlPanelState.ARMED_HOME):
@@ -119,6 +120,7 @@ class Concord232Alarm(AlarmControlPanelEntity):
         else:
             self._alarm.arm("stay")
 
+    @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if not self._validate_code(code, AlarmControlPanelState.ARMED_AWAY):

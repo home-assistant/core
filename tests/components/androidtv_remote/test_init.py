@@ -65,7 +65,10 @@ async def test_config_entry_reauth_at_setup(
 async def test_config_entry_reauth_while_reconnecting(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
-    """Test the Android TV Remote configuration entry needs reauth while reconnecting."""
+    """Test the Android TV Remote config entry needs reauth.
+
+    Occurs while reconnecting.
+    """
     invalid_auth_callback: Callable | None = None
 
     def mocked_keep_reconnecting(callback: Callable):

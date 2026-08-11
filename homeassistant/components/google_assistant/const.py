@@ -1,32 +1,41 @@
 """Constants for Google Assistant."""
 
 from homeassistant.components import (
-    alarm_control_panel,
     binary_sensor,
-    button,
-    camera,
-    climate,
     cover,
     event,
-    fan,
-    group,
     humidifier,
-    input_boolean,
-    input_button,
-    input_select,
-    lawn_mower,
-    light,
-    lock,
     media_player,
-    scene,
-    script,
-    select,
     sensor,
     switch,
-    vacuum,
-    valve,
-    water_heater,
 )
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
+from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
+from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
+from homeassistant.components.lawn_mower import DOMAIN as LAWN_MOWER_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 
 DOMAIN = "google_assistant"
 
@@ -140,70 +149,71 @@ EVENT_QUERY_RECEIVED = "google_assistant_query"
 EVENT_SYNC_RECEIVED = "google_assistant_sync"
 
 DOMAIN_TO_GOOGLE_TYPES = {
-    alarm_control_panel.DOMAIN: TYPE_ALARM,
-    binary_sensor.DOMAIN: TYPE_SENSOR,
-    button.DOMAIN: TYPE_SCENE,
-    camera.DOMAIN: TYPE_CAMERA,
-    climate.DOMAIN: TYPE_THERMOSTAT,
-    cover.DOMAIN: TYPE_BLINDS,
-    fan.DOMAIN: TYPE_FAN,
-    group.DOMAIN: TYPE_SWITCH,
-    humidifier.DOMAIN: TYPE_HUMIDIFIER,
-    input_boolean.DOMAIN: TYPE_SWITCH,
-    input_button.DOMAIN: TYPE_SCENE,
-    input_select.DOMAIN: TYPE_SENSOR,
-    lawn_mower.DOMAIN: TYPE_MOWER,
-    light.DOMAIN: TYPE_LIGHT,
-    lock.DOMAIN: TYPE_LOCK,
-    media_player.DOMAIN: TYPE_SETTOP,
-    scene.DOMAIN: TYPE_SCENE,
-    script.DOMAIN: TYPE_SCENE,
-    select.DOMAIN: TYPE_SENSOR,
-    sensor.DOMAIN: TYPE_SENSOR,
-    switch.DOMAIN: TYPE_SWITCH,
-    vacuum.DOMAIN: TYPE_VACUUM,
-    valve.DOMAIN: TYPE_VALVE,
-    water_heater.DOMAIN: TYPE_WATERHEATER,
+    ALARM_CONTROL_PANEL_DOMAIN: TYPE_ALARM,
+    BINARY_SENSOR_DOMAIN: TYPE_SENSOR,
+    BUTTON_DOMAIN: TYPE_SCENE,
+    CAMERA_DOMAIN: TYPE_CAMERA,
+    CLIMATE_DOMAIN: TYPE_THERMOSTAT,
+    COVER_DOMAIN: TYPE_BLINDS,
+    FAN_DOMAIN: TYPE_FAN,
+    GROUP_DOMAIN: TYPE_SWITCH,
+    HUMIDIFIER_DOMAIN: TYPE_HUMIDIFIER,
+    INPUT_BOOLEAN_DOMAIN: TYPE_SWITCH,
+    INPUT_BUTTON_DOMAIN: TYPE_SCENE,
+    INPUT_SELECT_DOMAIN: TYPE_SENSOR,
+    LAWN_MOWER_DOMAIN: TYPE_MOWER,
+    LIGHT_DOMAIN: TYPE_LIGHT,
+    LOCK_DOMAIN: TYPE_LOCK,
+    MEDIA_PLAYER_DOMAIN: TYPE_SETTOP,
+    SCENE_DOMAIN: TYPE_SCENE,
+    SCRIPT_DOMAIN: TYPE_SCENE,
+    SELECT_DOMAIN: TYPE_SENSOR,
+    SENSOR_DOMAIN: TYPE_SENSOR,
+    SWITCH_DOMAIN: TYPE_SWITCH,
+    VACUUM_DOMAIN: TYPE_VACUUM,
+    VALVE_DOMAIN: TYPE_VALVE,
+    WATER_HEATER_DOMAIN: TYPE_WATERHEATER,
 }
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {
-    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.DOOR): TYPE_DOOR,
-    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.LOCK): TYPE_SENSOR,
-    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.OPENING): TYPE_SENSOR,
-    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.WINDOW): TYPE_WINDOW,
+    (BINARY_SENSOR_DOMAIN, binary_sensor.BinarySensorDeviceClass.DOOR): TYPE_DOOR,
+    (BINARY_SENSOR_DOMAIN, binary_sensor.BinarySensorDeviceClass.LOCK): TYPE_SENSOR,
+    (BINARY_SENSOR_DOMAIN, binary_sensor.BinarySensorDeviceClass.OPENING): TYPE_SENSOR,
+    (BINARY_SENSOR_DOMAIN, binary_sensor.BinarySensorDeviceClass.WINDOW): TYPE_WINDOW,
     (
-        binary_sensor.DOMAIN,
+        BINARY_SENSOR_DOMAIN,
         binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
     ): TYPE_GARAGE,
     (
-        binary_sensor.DOMAIN,
+        BINARY_SENSOR_DOMAIN,
         binary_sensor.BinarySensorDeviceClass.SMOKE,
     ): TYPE_SMOKE_DETECTOR,
     (
-        binary_sensor.DOMAIN,
+        BINARY_SENSOR_DOMAIN,
         binary_sensor.BinarySensorDeviceClass.CO,
     ): TYPE_CARBON_MONOXIDE_DETECTOR,
-    (cover.DOMAIN, cover.CoverDeviceClass.AWNING): TYPE_AWNING,
-    (cover.DOMAIN, cover.CoverDeviceClass.CURTAIN): TYPE_CURTAIN,
-    (cover.DOMAIN, cover.CoverDeviceClass.DOOR): TYPE_DOOR,
-    (cover.DOMAIN, cover.CoverDeviceClass.GARAGE): TYPE_GARAGE,
-    (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GATE,
-    (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
-    (cover.DOMAIN, cover.CoverDeviceClass.WINDOW): TYPE_WINDOW,
-    (event.DOMAIN, event.EventDeviceClass.DOORBELL): TYPE_DOORBELL,
+    (COVER_DOMAIN, cover.CoverDeviceClass.AWNING): TYPE_AWNING,
+    (COVER_DOMAIN, cover.CoverDeviceClass.CURTAIN): TYPE_CURTAIN,
+    (COVER_DOMAIN, cover.CoverDeviceClass.DOOR): TYPE_DOOR,
+    (COVER_DOMAIN, cover.CoverDeviceClass.GARAGE): TYPE_GARAGE,
+    (COVER_DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GATE,
+    (COVER_DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
+    (COVER_DOMAIN, cover.CoverDeviceClass.WINDOW): TYPE_WINDOW,
+    (EVENT_DOMAIN, event.EventDeviceClass.DOORBELL): TYPE_DOORBELL,
     (
-        humidifier.DOMAIN,
+        HUMIDIFIER_DOMAIN,
         humidifier.HumidifierDeviceClass.DEHUMIDIFIER,
     ): TYPE_DEHUMIDIFIER,
-    (humidifier.DOMAIN, humidifier.HumidifierDeviceClass.HUMIDIFIER): TYPE_HUMIDIFIER,
-    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.RECEIVER): TYPE_RECEIVER,
-    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.SPEAKER): TYPE_SPEAKER,
-    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.TV): TYPE_TV,
-    (sensor.DOMAIN, sensor.SensorDeviceClass.AQI): TYPE_SENSOR,
-    (sensor.DOMAIN, sensor.SensorDeviceClass.HUMIDITY): TYPE_SENSOR,
-    (sensor.DOMAIN, sensor.SensorDeviceClass.TEMPERATURE): TYPE_SENSOR,
-    (switch.DOMAIN, switch.SwitchDeviceClass.OUTLET): TYPE_OUTLET,
-    (switch.DOMAIN, switch.SwitchDeviceClass.SWITCH): TYPE_SWITCH,
+    (HUMIDIFIER_DOMAIN, humidifier.HumidifierDeviceClass.HUMIDIFIER): TYPE_HUMIDIFIER,
+    (MEDIA_PLAYER_DOMAIN, media_player.MediaPlayerDeviceClass.RECEIVER): TYPE_RECEIVER,
+    (MEDIA_PLAYER_DOMAIN, media_player.MediaPlayerDeviceClass.SPEAKER): TYPE_SPEAKER,
+    (MEDIA_PLAYER_DOMAIN, media_player.MediaPlayerDeviceClass.TV): TYPE_TV,
+    (MEDIA_PLAYER_DOMAIN, media_player.MediaPlayerDeviceClass.PROJECTOR): TYPE_TV,
+    (SENSOR_DOMAIN, sensor.SensorDeviceClass.AQI): TYPE_SENSOR,
+    (SENSOR_DOMAIN, sensor.SensorDeviceClass.HUMIDITY): TYPE_SENSOR,
+    (SENSOR_DOMAIN, sensor.SensorDeviceClass.TEMPERATURE): TYPE_SENSOR,
+    (SWITCH_DOMAIN, switch.SwitchDeviceClass.OUTLET): TYPE_OUTLET,
+    (SWITCH_DOMAIN, switch.SwitchDeviceClass.SWITCH): TYPE_SWITCH,
 }
 
 CHALLENGE_ACK_NEEDED = "ackNeeded"

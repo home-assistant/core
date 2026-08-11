@@ -1,1 +1,1 @@
-"""Tests for the iAqualink component."""
+"""Tests for the iAquaLink component."""

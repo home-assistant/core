@@ -81,14 +81,24 @@ def mock_entry_options() -> dict[str, Any] | None:
 
 
 @pytest.fixture
+def mock_entry_unique_id() -> str | None:
+    """Mock config entry unique_id for fixture."""
+    return None
+
+
+@pytest.fixture
 def mock_config_entry(
     hass: HomeAssistant,
     mock_entry_data: dict[str, Any],
     mock_entry_options: dict[str, Any],
+    mock_entry_unique_id: str | None,
 ) -> MockConfigEntry:
     """Mock a config entry setup for incomfort integration."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data=mock_entry_data, options=mock_entry_options
+        domain=DOMAIN,
+        data=mock_entry_data,
+        options=mock_entry_options,
+        unique_id=mock_entry_unique_id,
     )
     entry.add_to_hass(hass)
     return entry
@@ -171,9 +181,15 @@ def mock_incomfort(
                 setattr(self, key, value)
             self.rooms = [MockRoom()]
 
-    with patch(
-        "homeassistant.components.incomfort.coordinator.InComfortGateway", MagicMock()
-    ) as patch_gateway:
+    mock_cls = MagicMock()
+    with (
+        patch(
+            "homeassistant.components.incomfort.InComfortGateway", mock_cls
+        ) as patch_gateway,
+        patch(
+            "homeassistant.components.incomfort.config_flow.InComfortGateway", mock_cls
+        ),
+    ):
         patch_gateway().heaters = AsyncMock()
         patch_gateway().heaters.return_value = [MockHeater()]
         patch_gateway().mock_heater_status = mock_heater_status

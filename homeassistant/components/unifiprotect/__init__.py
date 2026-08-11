@@ -1,7 +1,5 @@
 """UniFi Protect Platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -40,7 +38,6 @@ from .const import (
     PLATFORMS,
 )
 from .data import ProtectData, UFPConfigEntry
-from .discovery import DATA_UNIFIPROTECT, UniFiProtectRuntimeData, async_start_discovery
 from .migrate import async_migrate_data
 from .services import async_setup_services
 from .utils import (
@@ -64,11 +61,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the UniFi Protect."""
-    # Initialize domain data structure (setdefault in case discovery already started)
-    hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
-    # Only start discovery once regardless of how many entries they have
     async_setup_services(hass)
-    async_start_discovery(hass)
     return True
 
 
@@ -78,20 +71,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     protect = async_create_api_client(hass, entry)
     _LOGGER.debug("Connect to UniFi Protect")
 
+    # Reuse ProtectData from previous retry or create new
+    if hasattr(entry, "runtime_data"):
+        data_service = entry.runtime_data
+        data_service.api = protect
+    else:
+        data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
+        entry.runtime_data = data_service
+
     try:
         await protect.update()
     except NotAuthorized as err:
-        domain_data = hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
-        retries = domain_data.auth_retries.get(entry.entry_id, 0)
-        if retries < AUTH_RETRIES:
-            retries += 1
-            domain_data.auth_retries[entry.entry_id] = retries
-            raise ConfigEntryNotReady from err
-        raise ConfigEntryAuthFailed(err) from err
+        data_service.auth_retries += 1
+        if data_service.auth_retries > AUTH_RETRIES:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="entry_auth_failed",
+            ) from err
+        raise ConfigEntryNotReady from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err
-
-    data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
     bootstrap = protect.bootstrap
     nvr_info = bootstrap.nvr
     auth_user = bootstrap.users.get(bootstrap.auth_user_id)
@@ -142,7 +141,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=nvr_info.mac)
 
-    entry.runtime_data = data_service
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
@@ -161,6 +159,32 @@ async def _async_setup_entry(
     await async_migrate_data(hass, entry, data_service.api, bootstrap)
     data_service.async_setup()
 
+    # Prime the public bootstrap (subscribe-then-prime, per library docs). Camera
+    # streams depend on it, so a failed prime retries instead of building
+    # streamless cameras.
+    try:
+        await data_service.api.update_public()
+    except NotAuthorized as err:
+        # A public 401 means a bad/revoked API key (independent of the private
+        # session); route to reauth instead of retrying forever.
+        await data_service.async_stop()
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="api_key_required",
+        ) from err
+    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
+        # async_setup() already subscribed the websockets and started polling;
+        # tear them down so a setup retry does not leak another set.
+        await data_service.async_stop()
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="public_bootstrap_failed",
+        ) from err
+
+    # The bootstrap is primed above (a failed prime aborts setup and HA retries),
+    # so the public events websocket can be subscribed here.
+    data_service.async_subscribe_public_events()
+
     # Load PTZ patrol data before loading platforms
     await data_service.async_load_ptz_patrols()
 
@@ -168,7 +192,7 @@ async def _async_setup_entry(
     # This ensures via_device references work for all device entities
     nvr = bootstrap.nvr
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    nvr_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, nvr.mac)},
         identifiers={(DOMAIN, nvr.mac)},
@@ -178,6 +202,7 @@ async def _async_setup_entry(
         sw_version=str(nvr.version),
         configuration_url=nvr.api.base_url,
     )
+    data_service.nvr_device_id = nvr_device.id
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.http.register_view(ThumbnailProxyView(hass))
@@ -232,9 +257,6 @@ async def async_remove_config_entry_device(
 async def async_migrate_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     """Migrate entry."""
     _LOGGER.debug("Migrating configuration from version %s", entry.version)
-
-    if entry.version > 1:
-        return False
 
     if entry.version == 1:
         options = dict(entry.options)

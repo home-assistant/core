@@ -35,8 +35,10 @@ def test_sockets_disabled() -> None:
 @pytest.mark.usefixtures("socket_enabled")
 def test_sockets_enabled() -> None:
     """Test we can't connect to an address different from 127.0.0.1."""
-    mysocket = socket.socket()
-    with pytest.raises(pytest_socket.SocketConnectBlockedError):
+    with (
+        socket.socket() as mysocket,
+        pytest.raises(pytest_socket.SocketConnectBlockedError),
+    ):
         mysocket.connect(("127.0.0.2", 1234))
 
 
@@ -120,6 +122,7 @@ async def test_evict_faked_translations(
     fake_domain = "test"
     real_domain = "homeassistant"
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "en" in cache.loaded:
         # Evict the real domain from the cache in case it's been loaded before
         cache.loaded["en"].discard(real_domain)
@@ -145,6 +148,7 @@ async def test_evict_faked_translations(
     with pytest.raises(StopIteration):
         next(gen)
 
-    # The mock integration should be removed from the cache, the real domain should still be there
+    # The mock integration should be removed from the cache,
+    # the real domain should still be there
     assert fake_domain not in cache.loaded["en"]
     assert real_domain in cache.loaded["en"]

@@ -1,19 +1,11 @@
 """The met component."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
-from .const import (
-    CONF_TRACK_HOME,
-    DEFAULT_HOME_LATITUDE,
-    DEFAULT_HOME_LONGITUDE,
-    DOMAIN,
-)
+from .const import CONF_TRACK_HOME, DEFAULT_HOME_LATITUDE, DEFAULT_HOME_LONGITUDE
 from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
 
 PLATFORMS = [Platform.WEATHER]
@@ -51,8 +43,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    await cleanup_old_device(hass)
-
     return True
 
 
@@ -61,12 +51,3 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-async def cleanup_old_device(hass: HomeAssistant) -> None:
-    """Cleanup device without proper device identifier."""
-    device_reg = dr.async_get(hass)
-    device = device_reg.async_get_device(identifiers={(DOMAIN,)})  # type: ignore[arg-type]
-    if device:
-        _LOGGER.debug("Removing improper device %s", device.name)
-        device_reg.async_remove_device(device.id)

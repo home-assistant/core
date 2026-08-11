@@ -1,8 +1,6 @@
 """Support for Satel Integra modifiable outputs represented as switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigSubentry
@@ -19,6 +17,8 @@ from .const import (
 from .coordinator import SatelConfigEntry, SatelIntegraOutputsCoordinator
 from .entity import SatelIntegraEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -29,12 +29,9 @@ async def async_setup_entry(
 
     runtime_data = config_entry.runtime_data
 
-    switchable_output_subentries = filter(
-        lambda entry: entry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-        config_entry.subentries.values(),
-    )
-
-    for subentry in switchable_output_subentries:
+    for subentry in config_entry.get_subentries_of_type(
+        SUBENTRY_TYPE_SWITCHABLE_OUTPUT
+    ):
         switchable_output_num: int = subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
 
         async_add_entities(
@@ -55,6 +52,8 @@ class SatelIntegraSwitch(
     SatelIntegraEntity[SatelIntegraOutputsCoordinator], SwitchEntity
 ):
     """Representation of an Satel Integra switch."""
+
+    _attr_name = None
 
     def __init__(
         self,
@@ -77,6 +76,7 @@ class SatelIntegraSwitch(
         self._attr_is_on = self._get_state_from_coordinator()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self._get_state_from_coordinator()
@@ -86,6 +86,7 @@ class SatelIntegraSwitch(
         """Method to get switch state from coordinator data."""
         return self.coordinator.data.get(self._device_number)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._code is None:
@@ -98,6 +99,7 @@ class SatelIntegraSwitch(
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._code is None:

@@ -7,17 +7,23 @@ from aioamazondevices.const.schedules import (
     NOTIFICATION_REMINDER,
     NOTIFICATION_TIMER,
 )
-from aioamazondevices.structures import AmazonDevice, AmazonDeviceSensor, AmazonSchedule
+from aioamazondevices.structures import (
+    AmazonDevice,
+    AmazonDeviceSensor,
+    AmazonSchedule,
+    AmazonVocalRecord,
+)
 
 TEST_CODE = "023123"
 TEST_PASSWORD = "fake_password"
 TEST_USERNAME = "fake_email@gmail.com"
+TEST_USER_ID = "amzn1.account.fake_user_id"
 
 TEST_DEVICE_1_SN = "echo_test_serial_number"
 TEST_DEVICE_1_ID = "echo_test_device_id"
 TEST_DEVICE_1 = AmazonDevice(
     account_name="Echo Test",
-    capabilities=["AUDIO_PLAYER", "MICROPHONE"],
+    capabilities=["AUDIO_PLAYER", "MICROPHONE", "ALEXA_DEVICE_REBOOT"],
     device_family="mine",
     device_type="echo",
     household_device=False,
@@ -71,18 +77,22 @@ TEST_DEVICE_1 = AmazonDevice(
         ),
     },
     media_player_supported=True,
+    communication_settings={
+        "announcements": "ON",
+        "communications": "ON",
+        "dropin": "All",
+    },
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
-TEST_DEVICE_2_ID = "echo_test_2_device_id"
 TEST_DEVICE_2 = AmazonDevice(
     account_name="Echo Test 2",
-    capabilities=["AUDIO_PLAYER", "MICROPHONE"],
+    capabilities=["AUDIO_PLAYER", "MICROPHONE", "ALEXA_DEVICE_REBOOT"],
     device_family="mine",
     device_type="echo",
     household_device=True,
     device_owner_customer_id="amazon_ower_id",
-    device_cluster_members={TEST_DEVICE_2_SN: TEST_DEVICE_2_ID},
+    device_cluster_members={TEST_DEVICE_2_SN: "echo_test_2_device_id"},
     online=True,
     serial_number=TEST_DEVICE_2_SN,
     manufacturer="Test manufacturer 2",
@@ -104,4 +114,21 @@ TEST_DEVICE_2 = AmazonDevice(
     notifications_supported=False,
     notifications={},
     media_player_supported=False,
+    communication_settings={},
+)
+
+TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(
+    timestamp=1000,
+    history_type="WAKE_WORD_UTTERANCE",
+    intent="PlayMusicIntent",
+    title="Play some music",
+    sub_title="Echo Test",
+)
+
+TEST_VOCAL_RECORD_EVENT = AmazonVocalRecord(
+    timestamp=1234567890,
+    history_type="WAKE_WORD_UTTERANCE",
+    intent="PlayMusicIntent",
+    title="Play some music",
+    sub_title="Echo Test",
 )

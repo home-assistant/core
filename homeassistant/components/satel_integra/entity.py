@@ -1,13 +1,12 @@
 """Satel Integra base entity."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from satel_integra import AsyncSatel
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -35,7 +34,6 @@ class SatelIntegraEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
 
     _attr_should_poll = False
     _attr_has_entity_name = True
-    _attr_name = None
 
     _controller: AsyncSatel
 
@@ -63,5 +61,15 @@ class SatelIntegraEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
         self._attr_device_info = DeviceInfo(
             name=subentry.data[CONF_NAME],
             identifiers={(DOMAIN, self._attr_unique_id)},
-            via_device=(DOMAIN, config_entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, config_entry_id),
+                config_entry_id=config_entry_id,
+            ),
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._controller.connected

@@ -1,9 +1,7 @@
 """Entity classes for the Airzone integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioairzone.const import (
     API_SYSTEM_ID,
@@ -69,14 +67,22 @@ class AirzoneSystemEntity(AirzoneEntity):
             sw_version=self.get_airzone_value(AZD_FIRMWARE),
         )
         if AZD_WEBSERVER in self.coordinator.data:
-            self._attr_device_info["via_device"] = (DOMAIN, f"{entry.entry_id}_ws")
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, f"{entry.entry_id}_ws"),
+                    config_entry_id=entry.entry_id,
+                )
+            )
         self._attr_unique_id = entry.unique_id or entry.entry_id
 
     @property
+    @override
     def available(self) -> bool:
         """Return system availability."""
         return super().available and self.get_airzone_value(AZD_AVAILABLE)
 
+    @override
     def get_airzone_value(self, key: str) -> Any:
         """Return system value by key."""
         value = None
@@ -120,9 +126,16 @@ class AirzoneHotWaterEntity(AirzoneEntity):
             name=self.get_airzone_value(AZD_NAME),
         )
         if AZD_WEBSERVER in self.coordinator.data:
-            self._attr_device_info["via_device"] = (DOMAIN, f"{entry.entry_id}_ws")
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, f"{entry.entry_id}_ws"),
+                    config_entry_id=entry.entry_id,
+                )
+            )
         self._attr_unique_id = entry.unique_id or entry.entry_id
 
+    @override
     def get_airzone_value(self, key: str) -> Any:
         """Return DHW value by key."""
         return self.coordinator.data[AZD_HOT_WATER].get(key)
@@ -165,6 +178,7 @@ class AirzoneWebServerEntity(AirzoneEntity):
         )
         self._attr_unique_id = entry.unique_id or entry.entry_id
 
+    @override
     def get_airzone_value(self, key: str) -> Any:
         """Return system value by key."""
         return self.coordinator.data[AZD_WEBSERVER].get(key)
@@ -193,15 +207,21 @@ class AirzoneZoneEntity(AirzoneEntity):
             model=self.get_airzone_value(AZD_THERMOSTAT_MODEL),
             name=zone_data[AZD_NAME],
             sw_version=self.get_airzone_value(AZD_THERMOSTAT_FW),
-            via_device=(DOMAIN, f"{entry.entry_id}_{self.system_id}"),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, f"{entry.entry_id}_{self.system_id}"),
+                config_entry_id=entry.entry_id,
+            ),
         )
         self._attr_unique_id = entry.unique_id or entry.entry_id
 
     @property
+    @override
     def available(self) -> bool:
         """Return zone availability."""
         return super().available and self.get_airzone_value(AZD_AVAILABLE)
 
+    @override
     def get_airzone_value(self, key: str) -> Any:
         """Return zone value by key."""
         value = None

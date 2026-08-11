@@ -212,6 +212,14 @@ def ring_keypad_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("ring_keypad_state.json", DOMAIN)
 
 
+@pytest.fixture(name="zooz_zac36_titan_valve_actuator_state")
+def zooz_zac36_titan_valve_actuator_state_fixture() -> dict[str, Any]:
+    """Load the Zooz ZAC36 Titan valve actuator node state fixture data."""
+    return load_json_object_fixture(
+        "zooz_zac36_titan_valve_actuator_state.json", DOMAIN
+    )
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="package")
 def nortek_thermostat_state_fixture() -> dict[str, Any]:
     """Load the nortek thermostat node state fixture data."""
@@ -400,12 +408,13 @@ def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture() -> dict[
     ),
     scope="package",
 )
-def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state_fixture() -> (
-    dict[str, Any]
-):
-    """Load climate device w/ mode+setpoint on diff endpoints node state fixture data."""
+def climate_radio_thermostat_ct100_mode_setpoint_diff_endpoints_state_fixture() -> dict[
+    str, Any
+]:
+    """Load climate with mode+setpoint on different endpoints."""
     return load_json_object_fixture(
-        "climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state.json",
+        "climate_radio_thermostat_ct100_mode_and_setpoint"
+        "_on_different_endpoints_state.json",
         DOMAIN,
     )
 
@@ -540,7 +549,7 @@ def basic_cc_sensor_state_fixture() -> dict[str, Any]:
 
 @pytest.fixture(name="window_covering_outbound_bottom_state", scope="package")
 def window_covering_outbound_bottom_state_fixture() -> dict[str, Any]:
-    """Load node with Window Covering CC fixture data, with only the outbound bottom position supported."""
+    """Load node with Window Covering CC and outbound bottom only."""
     return load_json_object_fixture("window_covering_outbound_bottom.json", DOMAIN)
 
 
@@ -595,6 +604,17 @@ def hoppe_ehandle_connectsense_state_fixture() -> NodeDataType:
     return cast(
         NodeDataType,
         load_json_object_fixture("hoppe_ehandle_connectsense_state.json", DOMAIN),
+    )
+
+
+@pytest.fixture(name="fibaro_fgms001_v2_8_state")
+def fibaro_fgms001_v2_8_state_fixture() -> NodeDataType:
+    """Load node state fixture data for Fibaro FGMS001 on firmware 2.8."""
+    return cast(
+        NodeDataType,
+        # Note: this fixture was created from a simulated device.
+        # If necessary, replace it with one created from a real FGMS001
+        load_json_object_fixture("fibaro_fgms001_v2_8_state.json", DOMAIN),
     )
 
 
@@ -966,6 +986,16 @@ def ring_keypad_fixture(client: MagicMock, ring_keypad_state: NodeDataType) -> N
     return node
 
 
+@pytest.fixture(name="zooz_zac36_titan_valve_actuator")
+def zooz_zac36_titan_valve_actuator_fixture(
+    client: MagicMock, zooz_zac36_titan_valve_actuator_state: NodeDataType
+) -> Node:
+    """Mock a Zooz ZAC36 Titan valve actuator node."""
+    node = Node(client, zooz_zac36_titan_valve_actuator_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="integration")
 async def integration_fixture(
     hass: HomeAssistant,
@@ -975,7 +1005,7 @@ async def integration_fixture(
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org"},
         unique_id=str(client.driver.controller.home_id),
     )
@@ -989,7 +1019,13 @@ async def integration_fixture(
     # Make sure no errors logged during setup.
     # Eg. unique id collisions are only logged as errors and not raised,
     # and may not cause tests to fail otherwise.
-    assert not any(record.levelno == logging.ERROR for record in caplog.records)
+    # Only check loggers relevant to this integration to avoid flaky failures
+    # from unrelated log sources (e.g. sqlalchemy pool cleanup on other threads).
+    _error_loggers = ("homeassistant", "zwave_js_server")
+    assert not any(
+        record.levelno == logging.ERROR and record.name.startswith(_error_loggers)
+        for record in caplog.records
+    )
 
     return entry
 
@@ -1428,7 +1464,7 @@ def basic_cc_sensor_fixture(client, basic_cc_sensor_state) -> Node:
 def window_covering_outbound_bottom_fixture(
     client, window_covering_outbound_bottom_state
 ) -> Node:
-    """Load node with Window Covering CC fixture data, with only the outbound bottom position supported."""
+    """Load node with Window Covering CC and outbound bottom only."""
     node = Node(client, copy.deepcopy(window_covering_outbound_bottom_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
@@ -1490,5 +1526,27 @@ def hoppe_ehandle_connectsense_fixture(
 ) -> Node:
     """Load node for Hoppe eHandle ConnectSense."""
     node = Node(client, hoppe_ehandle_connectsense_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fibaro_fgms001_v2_8")
+def fibaro_fgms001_v2_8_fixture(
+    client: MagicMock, fibaro_fgms001_v2_8_state: NodeDataType
+) -> Node:
+    """Load node for Fibaro FGMS001 on firmware 2.8."""
+    node = Node(client, fibaro_fgms001_v2_8_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fibaro_fgms001_unknown_firmware")
+def fibaro_fgms001_unknown_firmware_fixture(
+    client: MagicMock, fibaro_fgms001_v2_8_state: NodeDataType
+) -> Node:
+    """Load FGMS001 node with no reported firmware version."""
+    state = copy.deepcopy(fibaro_fgms001_v2_8_state)
+    state.pop("firmwareVersion", None)
+    node = Node(client, state)
     client.driver.controller.nodes[node.node_id] = node
     return node

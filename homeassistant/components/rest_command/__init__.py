@@ -1,7 +1,5 @@
 """Support for exposing regular REST commands as services."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 import logging
@@ -119,12 +117,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         skip_url_encoding = command_config[CONF_SKIP_URL_ENCODING]
 
         auth = None
-        digest_middleware = None
+        digest_auth: tuple[str, str] | None = None
         if CONF_USERNAME in command_config:
             username = command_config[CONF_USERNAME]
             password = command_config.get(CONF_PASSWORD, "")
             if command_config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-                digest_middleware = aiohttp.DigestAuthMiddleware(username, password)
+                digest_auth = (username, password)
             else:
                 auth = aiohttp.BasicAuth(username, password=password)
 
@@ -179,8 +177,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 # Add authentication
                 if auth is not None:
                     request_kwargs["auth"] = auth
-                elif digest_middleware is not None:
-                    request_kwargs["middlewares"] = (digest_middleware,)
+                elif digest_auth is not None:
+                    request_kwargs["middlewares"] = (
+                        aiohttp.DigestAuthMiddleware(*digest_auth),
+                    )
 
                 async with getattr(websession, method)(
                     URL(request_url, encoded=skip_url_encoding),
@@ -202,8 +202,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         )
 
                     if not service.return_response:
-                        # always read the response to avoid closing the connection
-                        # before the server has finished sending it, while avoiding excessive memory usage
+                        # always read the response to avoid closing
+                        # the connection before the server has
+                        # finished sending it, while avoiding
+                        # excessive memory usage
                         async for _ in response.content.iter_chunked(1024):
                             pass
 
@@ -237,7 +239,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     return {
                         "content": _content,
                         "status": response.status,
-                        "headers": dict(response.headers),
+                        "headers": {
+                            key: values[0] if len(values) == 1 else values
+                            for key in response.headers
+                            if (values := response.headers.getall(key))
+                        },
                     }
 
             except TimeoutError as err:

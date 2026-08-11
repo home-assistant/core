@@ -12,7 +12,8 @@ async def test_is_error_response() -> None:
     assert not is_error_response("")
     assert is_error_response(
         json.loads(
-            '{"errorCode": "INVALID_NUMBER_PARAMETER_VALUE", "minValue": 0.0, "maxValue": 1.01}'
+            '{"errorCode": "INVALID_NUMBER_PARAMETER_VALUE",'
+            ' "minValue": 0.0, "maxValue": 1.01}'
         )
     )
     assert not is_error_response(json.loads('{"errorCode": ""}'))

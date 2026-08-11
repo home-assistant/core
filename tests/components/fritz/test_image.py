@@ -108,7 +108,9 @@ async def test_image_entity(
     access_token = state.attributes["access_token"]
     assert state.attributes == {
         "access_token": access_token,
-        "entity_picture": f"/api/image_proxy/image.mock_title_guestwifi?token={access_token}",
+        "entity_picture": (
+            f"/api/image_proxy/image.mock_title_guestwifi?token={access_token}"
+        ),
         "friendly_name": "Mock Title GuestWifi",
     }
 
@@ -235,7 +237,7 @@ async def test_migrate_to_new_unique_id(
     entity_registry.async_get_or_create(
         suggested_object_id="mock_title_mywifi",
         disabled_by=None,
-        domain=IMAGE_DOMAIN,
+        domain=Platform.IMAGE,
         platform=DOMAIN,
         unique_id=old_unique_id,
         config_entry=entry,

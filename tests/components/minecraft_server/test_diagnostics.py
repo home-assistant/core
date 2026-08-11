@@ -49,7 +49,8 @@ async def test_config_entry_diagnostics(
 ) -> None:
     """Test fetching of the config entry diagnostics."""
 
-    # Use 'request' fixture to access 'mock_config_entry' fixture, as it cannot be used directly in 'parametrize'.
+    # Use 'request' fixture to access 'mock_config_entry' fixture,
+    # as it cannot be used directly in 'parametrize'.
     mock_config_entry = request.getfixturevalue(mock_config_entry)
     mock_config_entry.add_to_hass(hass)
 

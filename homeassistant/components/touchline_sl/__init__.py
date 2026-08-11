@@ -1,7 +1,5 @@
 """The Roth Touchline SL integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from pytouchlinesl import TouchlineSL

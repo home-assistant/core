@@ -1,7 +1,5 @@
 """The Epion integration."""
 
-from __future__ import annotations
-
 from epion import Epion
 
 from homeassistant.const import CONF_API_KEY, Platform

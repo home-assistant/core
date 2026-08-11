@@ -1,9 +1,7 @@
 """WiZ integration entities."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from pywizlight.bulblibrary import BulbType
 
@@ -43,6 +41,7 @@ class WizEntity(CoordinatorEntity[WizCoordinator], Entity):
         self._attr_device_info[ATTR_MODEL] = model
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -58,10 +57,12 @@ class WizToggleEntity(WizEntity, ToggleEntity):
     """Representation of WiZ toggle entity."""
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         self._attr_is_on = self._device.status
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the device to turn off."""
         await self._device.turn_off()

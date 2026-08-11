@@ -317,7 +317,7 @@ async def test_get_integration_with_requirements_concurrency(
 async def test_get_integration_with_requirements_pip_install_fails_two_passes(
     hass: HomeAssistant,
 ) -> None:
-    """Check getting an integration with loaded requirements and the pip install fails two passes."""
+    """Check integration with requirements when pip install fails."""
     hass.config.skip_pip = False
     mock_integration(
         hass, MockModule("test_component_dep", requirements=["test-comp-dep==1.0.0"])
@@ -491,7 +491,7 @@ async def test_get_integration_with_missing_dependencies(hass: HomeAssistant) ->
 async def test_get_built_in_integration_with_missing_after_dependencies(
     hass: HomeAssistant,
 ) -> None:
-    """Check getting a built_in integration with missing after_dependencies results in exception."""
+    """Check built-in integration with missing after_dependencies."""
     hass.config.skip_pip = False
     mock_integration(
         hass,

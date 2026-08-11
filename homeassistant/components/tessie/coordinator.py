@@ -1,11 +1,9 @@
 """Tessie Data Coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import TeslaEnergyPeriod
@@ -72,6 +70,7 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.session = async_get_clientsession(hass)
         self.data = flatten(data)
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Tessie API."""
         try:
@@ -126,6 +125,7 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         }
         self.data = data
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Tessie API."""
 
@@ -165,6 +165,7 @@ class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Tessie API."""
 
@@ -203,6 +204,7 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.data = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy history data using Tessie API."""
 
@@ -224,10 +226,13 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             or not isinstance(data.get("time_series"), list)
             or not data["time_series"]
         ):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_energy_history_data",
+            _LOGGER.warning(
+                "Tessie returned no energy history"
+                " time_series for coordinator %s;"
+                " skipping update",
+                self.config_entry.entry_id,
             )
+            return self.data
 
         time_series = data["time_series"]
         output: dict[str, Any] = {}

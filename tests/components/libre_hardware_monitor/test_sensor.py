@@ -55,7 +55,7 @@ async def test_sensors_are_created(
 @pytest.mark.parametrize(
     "error", [LibreHardwareMonitorConnectionError, LibreHardwareMonitorNoDevicesError]
 )
-async def test_sensors_go_unavailable_in_case_of_error_and_recover_after_successful_retry(
+async def test_sensors_go_unavailable_on_error_and_recover(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -222,7 +222,7 @@ async def test_orphaned_devices_are_removed_if_not_present_after_update(
     freezer: FrozenDateTimeFactory,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that devices in HA that are not found in LHM's data after sensor update are removed."""
+    """Test devices not found in LHM data after update are removed."""
     orphaned_device = await _mock_orphaned_device(
         device_registry, hass, mock_config_entry, mock_lhm_client
     )
@@ -240,7 +240,7 @@ async def test_orphaned_devices_are_removed_if_not_present_during_startup(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that devices in HA that are not found in LHM's data during integration startup are removed."""
+    """Test devices not found in LHM data during startup are removed."""
     orphaned_device = await _mock_orphaned_device(
         device_registry, hass, mock_config_entry, mock_lhm_client
     )
@@ -354,7 +354,7 @@ async def test_non_deprecated_version_does_not_raise_issue(
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test that a non-deprecated Libre Hardware Monitor version does not raise an issue."""
+    """Test non-deprecated LHM version does not raise an issue."""
     await init_integration(hass, mock_config_entry)
 
     assert (
@@ -370,7 +370,7 @@ async def test_deprecated_version_raises_issue_and_is_removed_after_update(
     freezer: FrozenDateTimeFactory,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test that a deprecated Libre Hardware Monitor version raises an issue that is removed after updating."""
+    """Test deprecated LHM version raises issue removed after update."""
     mock_lhm_client.get_data.return_value = replace(
         mock_lhm_client.get_data.return_value,
         is_deprecated_version=True,

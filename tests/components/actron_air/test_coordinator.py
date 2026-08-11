@@ -56,3 +56,26 @@ async def test_coordinator_update_api_error(
     # UpdateFailed sets last_update_success to False on the coordinator
     coordinator = list(mock_config_entry.runtime_data.system_coordinators.values())[0]
     assert coordinator.last_update_success is False
+
+
+async def test_coordinator_update_status_none(
+    hass: HomeAssistant,
+    mock_actron_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator handles get_status returning None."""
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_actron_api.state_manager.get_status.return_value = None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # UpdateFailed sets last_update_success to False on the coordinator
+    coordinator = list(mock_config_entry.runtime_data.system_coordinators.values())[0]
+    assert coordinator.last_update_success is False

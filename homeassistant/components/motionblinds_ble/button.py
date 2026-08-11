@@ -1,11 +1,9 @@
 """Button entities for the Motionblinds Bluetooth integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from motionblindsble.device import MotionDevice
 
@@ -77,6 +75,7 @@ class MotionblindsBLEButtonEntity(MotionblindsBLEEntity, ButtonEntity):
 
     entity_description: MotionblindsBLEButtonEntityDescription
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Log button entity information."""
         _LOGGER.debug(
@@ -85,6 +84,7 @@ class MotionblindsBLEButtonEntity(MotionblindsBLEEntity, ButtonEntity):
             self.entity_description.key,
         )
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.command(self.device)

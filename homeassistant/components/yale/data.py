@@ -1,7 +1,5 @@
 """Support for Yale devices."""
 
-from __future__ import annotations
-
 from yalexs.lock import LockDetail
 from yalexs.manager.data import YaleXSData
 from yalexs_ble import YaleXSBLEDiscovery

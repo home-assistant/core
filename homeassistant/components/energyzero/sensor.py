@@ -1,10 +1,9 @@
 """Support for EnergyZero sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -181,7 +180,10 @@ class EnergyZeroSensorEntity(
         self.entity_id = (
             f"{SENSOR_DOMAIN}.{DOMAIN}_{description.service_type}_{description.key}"
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.service_type}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{description.service_type}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
@@ -195,6 +197,7 @@ class EnergyZeroSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

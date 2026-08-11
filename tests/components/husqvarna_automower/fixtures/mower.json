@@ -98,24 +98,36 @@
           {
             "workAreaId": 123456,
             "name": "Front lawn",
+            "type": "SYSTEMATIC",
             "cuttingHeight": 50,
             "enabled": true,
+            "orientation": 1800,
+            "orientationShift": 1800,
+            "currentOrientation": 0,
             "progress": 40,
-            "lastTimeCompleted": 1723449269
+            "lastTimeCompleted": 1723449269,
+            "lastTimeAbandoned": 0,
+            "useGlobalCuttingHeight": true
           },
           {
             "workAreaId": 654321,
             "name": "Back lawn",
+            "type": "RANDOM",
             "cuttingHeight": 25,
-            "enabled": true
+            "enabled": true,
+            "lastTimeAbandoned": 0,
+            "useGlobalCuttingHeight": true
           },
           {
             "workAreaId": 0,
             "name": "",
+            "type": "SYSTEMATIC",
             "cuttingHeight": 50,
             "enabled": false,
             "progress": 20,
-            "lastTimeCompleted": 1723439269
+            "lastTimeCompleted": 1723439269,
+            "lastTimeAbandoned": 0,
+            "useGlobalCuttingHeight": true
           }
         ],
         "positions": [

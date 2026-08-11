@@ -1,7 +1,5 @@
 """Validate dependencies."""
 
-from __future__ import annotations
-
 import ast
 from collections import deque
 import multiprocessing
@@ -12,6 +10,10 @@ from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
 from . import ast_parse_module
 from .model import Config, Integration
+
+# Duplicated from homeassistant.bootstrap to avoid importing bootstrap (and its
+# eager component pre-imports) into hassfest. Kept in sync via test_dependencies.
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 
 
 class ImportCollector(ast.NodeVisitor):
@@ -68,7 +70,8 @@ class ImportCollector(ast.NodeVisitor):
             return
 
         if node.module.startswith("homeassistant.components."):
-            # from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
+            # from homeassistant.components.alexa.smart_home
+            #   import EVENT_ALEXA_SMART_HOME
             # from homeassistant.components.logbook import bla
             self._add_reference(node.module.split(".")[2])
 
@@ -86,6 +89,7 @@ class ImportCollector(ast.NodeVisitor):
 
 
 ALLOWED_USED_COMPONENTS = {
+    *CORE_INTEGRATIONS,
     *{platform.value for platform in Platform},
     # Internal integrations
     "alert",
@@ -95,7 +99,6 @@ ALLOWED_USED_COMPONENTS = {
     "device_automation",
     "frontend",
     "group",
-    "homeassistant",
     "input_boolean",
     "input_button",
     "input_datetime",
@@ -106,7 +109,6 @@ ALLOWED_USED_COMPONENTS = {
     "media_source",
     "onboarding",
     "panel_custom",
-    "persistent_notification",
     "person",
     "script",
     "shopping_list",
@@ -278,7 +280,9 @@ def _check_circular_deps(
         if domain == start_domain:
             integrations[start_domain].add_error(
                 "dependencies",
-                f"Found a circular dependency with {integration.domain} ({', '.join(checking)})",
+                f"Found a circular dependency with"
+                f" {integration.domain}"
+                f" ({', '.join(checking)})",
             )
             break
 
@@ -290,7 +294,10 @@ def _check_circular_deps(
             if domain == start_domain:
                 integrations[start_domain].add_error(
                     "dependencies",
-                    f"Found a circular dependency with after dependencies of {integration.domain} ({', '.join(checking)})",
+                    f"Found a circular dependency"
+                    " with after dependencies of"
+                    f" {integration.domain}"
+                    f" ({', '.join(checking)})",
                 )
                 break
 
@@ -330,6 +337,13 @@ def _validate_dependencies(
             if dep not in integrations:
                 integration.add_error(
                     "dependencies", f"Dependency {dep} does not exist"
+                )
+
+            if dep in CORE_INTEGRATIONS:
+                integration.add_error(
+                    "dependencies",
+                    f"Dependency {dep} is a core integration and is "
+                    "unconditionally loaded",
                 )
 
 

@@ -1,11 +1,9 @@
 """Facebook platform for notify component."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -47,6 +45,7 @@ class FacebookNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.page_access_token = access_token
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send some message."""
         payload = {"access_token": self.page_access_token}

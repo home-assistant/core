@@ -2,12 +2,14 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pydaikin.daikin_base import Appliance
+from pydaikin.exceptions import DaikinException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, TIMEOUT_SEC
 
@@ -32,5 +34,13 @@ class DaikinCoordinator(DataUpdateCoordinator[None]):
         )
         self.device = device
 
+    @override
     async def _async_update_data(self) -> None:
-        await self.device.update_status()
+        try:
+            await self.device.update_status()
+        except DaikinException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="error_communicating",
+                translation_placeholders={"error": str(err)},
+            ) from err

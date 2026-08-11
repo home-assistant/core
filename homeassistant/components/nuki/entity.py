@@ -1,9 +1,10 @@
 """The nuki component."""
 
-from __future__ import annotations
+from typing import override
 
 from pynuki.device import NukiDevice
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -29,6 +30,7 @@ class NukiEntity[_NukiDeviceT: NukiDevice](CoordinatorEntity[NukiCoordinator]):
         self._nuki_device = nuki_device
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Device info for Nuki entities."""
         return DeviceInfo(
@@ -37,6 +39,10 @@ class NukiEntity[_NukiDeviceT: NukiDevice](CoordinatorEntity[NukiCoordinator]):
             manufacturer="Nuki Home Solutions GmbH",
             model=self._nuki_device.device_model_str.capitalize(),
             sw_version=self._nuki_device.firmware_version,
-            via_device=(DOMAIN, self.coordinator.bridge_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, self.coordinator.bridge_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             serial_number=parse_id(self._nuki_device.nuki_id),
         )

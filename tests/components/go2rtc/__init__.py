@@ -9,10 +9,11 @@ class MockCamera(Camera):
     _attr_name = "Test"
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
 
-    def __init__(self) -> None:
+    def __init__(self, unique_id: str | None) -> None:
         """Initialize the mock entity."""
         super().__init__()
         self._stream_source: str | None = "rtsp://stream"
+        self._attr_unique_id = unique_id
 
     def set_stream_source(self, stream_source: str | None) -> None:
         """Set the stream source."""

@@ -1,7 +1,5 @@
 """Component to interact with Hassbian tools."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohttp import web
@@ -54,7 +52,7 @@ class CheckConfigView(HomeAssistantView):
         "type": "config/core/update",
         vol.Optional("country"): cv.country,
         vol.Optional("currency"): cv.currency,
-        vol.Optional("elevation"): int,
+        vol.Optional("elevation"): vol.Coerce(int),
         vol.Optional("external_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("internal_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("language"): cv.language,
@@ -62,7 +60,9 @@ class CheckConfigView(HomeAssistantView):
         vol.Optional("location_name"): str,
         vol.Optional("longitude"): cv.longitude,
         vol.Optional("radius"): cv.positive_int,
-        vol.Optional("time_zone"): cv.time_zone,
+        # Validated by async_set_time_zone in the executor to avoid
+        # blocking I/O loading zoneinfo data on the event loop.
+        vol.Optional("time_zone"): str,
         vol.Optional("update_units"): bool,
         vol.Optional("unit_system"): unit_system.validate_unit_system,
     }

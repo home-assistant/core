@@ -1,8 +1,5 @@
 """The Overseerr integration."""
 
-from __future__ import annotations
-
-import json
 from typing import cast
 
 from aiohttp.hdrs import METH_POST
@@ -135,7 +132,7 @@ class OverseerrWebhookManager:
         return (
             not current_config.enabled
             or current_config.options.webhook_url not in self.webhook_urls
-            or current_config.options.json_payload != json.loads(JSON_PAYLOAD)
+            or current_config.options.json_payload != JSON_PAYLOAD
             or current_config.types != REGISTERED_NOTIFICATIONS
         )
 

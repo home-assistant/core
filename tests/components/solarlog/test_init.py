@@ -193,15 +193,20 @@ async def test_timeout_increase_refresh(
 ) -> None:
     """Test the correct timeout increase if API request for energy times out."""
 
+    timeout_error = SolarLogConnectionError(
+        "Timeout occurred while connecting to Solar-Log"
+    )
+    timeout_error.__cause__ = TimeoutError("Connection timed out")
+
     mock_solarlog_connector.update_energy_data.side_effect = [
-        SolarLogConnectionError,
+        timeout_error,
         EnergyData(950, 545),
     ]
 
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     await hass.async_block_till_done()
 
-    freezer.tick(delta=timedelta(minutes=1))
+    freezer.tick(delta=timedelta(minutes=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

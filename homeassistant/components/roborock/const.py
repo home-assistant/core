@@ -13,8 +13,21 @@ CONF_USER_DATA = "user_data"
 CONF_SHOW_BACKGROUND = "show_background"
 CONF_SHOW_WALLS = "show_walls"
 CONF_SHOW_ROOMS = "show_rooms"
-CONF_REGION = "region"
-REGION_OPTIONS = ["auto", "us", "eu", "ru", "cn"]
+CONF_ROBOROCK_SERVER_URL = "roborock_server_url"
+REGION_AUTO = "auto"
+REGION_CUSTOM = "custom"
+REGION_US = "us"
+REGION_EU = "eu"
+REGION_RU = "ru"
+REGION_CN = "cn"
+REGION_OPTIONS = [
+    REGION_AUTO,
+    REGION_US,
+    REGION_EU,
+    REGION_RU,
+    REGION_CN,
+    REGION_CUSTOM,
+]
 
 # Option Flow steps
 DRAWABLES = "drawables"

@@ -1,8 +1,6 @@
 """Support for StarLine lock."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
@@ -39,11 +37,13 @@ class StarlineLock(StarlineEntity, LockEntity):
         super().__init__(account, device, "lock")
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._device.online
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the state attributes of the lock.
 
@@ -65,14 +65,17 @@ class StarlineLock(StarlineEntity, LockEntity):
         return self._device.alarm_state
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
         return self._device.car_state.get("arm")
 
+    @override
     def lock(self, **kwargs: Any) -> None:
         """Lock the car."""
         self._account.api.set_car_state(self._device.device_id, "arm", True)
 
+    @override
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
         self._account.api.set_car_state(self._device.device_id, "arm", False)

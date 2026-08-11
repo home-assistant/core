@@ -1,10 +1,9 @@
 """Config flow for the BLE Tracker."""
 
-from __future__ import annotations
-
 import base64
 import binascii
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -47,6 +46,7 @@ class BLEDeviceTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

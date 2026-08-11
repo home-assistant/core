@@ -39,7 +39,7 @@
 # name: test_calendar[calendar.cookidoo_meal_plan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cookidoo Meal plan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cookidoo Meal plan',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.cookidoo_meal_plan',

@@ -1,7 +1,5 @@
 """Provides device automations for Alarm control panel."""
 
-from __future__ import annotations
-
 from typing import Final
 
 import voluptuous as vol
@@ -27,8 +25,8 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import ATTR_CODE_ARM_REQUIRED, DOMAIN
-from .const import AlarmControlPanelEntityFeature
+from . import DOMAIN
+from .const import AlarmControlPanelEntityFeature, AlarmControlPanelEntityStateAttribute
 
 ACTION_TYPES: Final[set[str]] = {
     "arm_away",
@@ -124,12 +122,16 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""
-    # We need to refer to the state directly because ATTR_CODE_ARM_REQUIRED is not a
+    # We need to refer to the state directly because CODE_ARM_REQUIRED is not a
     # capability attribute
     registry = er.async_get(hass)
     entity_id = er.async_resolve_entity_id(registry, config[CONF_ENTITY_ID])
     state = hass.states.get(entity_id) if entity_id else None
-    code_required = state.attributes.get(ATTR_CODE_ARM_REQUIRED) if state else False
+    code_required = (
+        state.attributes.get(AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED)
+        if state
+        else False
+    )
 
     if config[CONF_TYPE] == "trigger" or (
         config[CONF_TYPE] != "disarm" and not code_required

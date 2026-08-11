@@ -1,0 +1,12 @@
+{
+  "id": "dev_light_002",
+  "name": "Hallway Light",
+  "type": "light",
+  "model": "XT-LT100",
+  "version": "1.0.0",
+  "online": true,
+  "status": {
+    "on": false,
+    "brightness": 50
+  }
+}

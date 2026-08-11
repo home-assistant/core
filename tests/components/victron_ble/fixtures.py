@@ -72,6 +72,22 @@ VICTRON_DC_DC_CONVERTER_SERVICE_INFO = BluetoothServiceInfo(
 
 VICTRON_DC_DC_CONVERTER_TOKEN = "64ba49f1a8562e45197a8e1fe50d7658"
 
+# Orion XS
+
+VICTRON_ORION_XS_SERVICE_INFO = BluetoothServiceInfo(
+    name="Orion XS",
+    address="01:02:03:04:05:15",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("1000f0a30f3412aa471c3ac637f436dd184693849c9c081a"),
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+VICTRON_ORION_XS_TOKEN = "aabbccdd11223344aabbccdd11223344"
+
 # DC energy meter
 
 VICTRON_DC_ENERGY_METER_SERVICE_INFO = BluetoothServiceInfo(
@@ -105,8 +121,21 @@ VICTRON_INVERTER_SERVICE_INFO = BluetoothServiceInfo(
     address="01:02:03:04:05:10",
     rssi=-60,
     manufacturer_data={
-        0x02E1: bytes.fromhex("1003a2a2031252dad26f0b8eb39162074d140df410"),
-    },  # not a valid advertisement, but model id mangled to match inverter
+        0x02E1: bytes.fromhex("100064a2033412aa4d1c7c1e0100570c5f4d938199990f1d"),
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+VICTRON_INVERTER_TOKEN = "aabbccdd11223344aabbccdd11223344"
+
+VICTRON_INVERTER_RS_SERVICE_INFO = BluetoothServiceInfo(
+    name="Inverter RS",
+    address="01:02:03:04:05:16",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("1000a2a2061252dad26f0b8eb39162074d140df410"),
+    },
     service_data={},
     service_uuids=[],
     source="local",
@@ -196,6 +225,22 @@ VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO = BluetoothServiceInfo(
     address="01:02:03:04:05:08",
     rssi=-60,
     manufacturer_data={0x02E1: bytes.fromhex("1000c0a304121d64ca8d442b90bbde6a8cba")},
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+# Same Victron manufacturer data prefix but with an unrecognized mode byte
+# (0xEE at offset 4).  detect_device_type returns None for this payload,
+# so validate_advertisement_key would also return False.  The reauth logic
+# must treat this as neutral (not a key failure).
+VICTRON_VEBUS_UNRECOGNIZED_MODE_SERVICE_INFO = BluetoothServiceInfo(
+    name="Inverter Charger",
+    address="01:02:03:04:05:06",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("10038027ee1252dad26f0b8eb39162074d140df410")
+    },
     service_data={},
     service_uuids=[],
     source="local",

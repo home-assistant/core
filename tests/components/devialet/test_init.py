@@ -30,7 +30,7 @@ async def test_load_unload_config_entry(
 async def test_load_unload_config_entry_when_device_unavailable(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test the Devialet configuration entry loading and unloading when the device is unavailable."""
+    """Test the Devialet config entry loading/unloading when device is unavailable."""
     entry = await setup_integration(hass, aioclient_mock, state="unavailable")
 
     assert entry.state is ConfigEntryState.LOADED

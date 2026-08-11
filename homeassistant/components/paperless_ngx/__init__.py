@@ -42,7 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
     try:
         await status_coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
-        # Catch the error so the integration doesn't fail just because status coordinator fails.
+        # Catch the error so the integration doesn't fail
+        # just because status coordinator fails.
         LOGGER.warning("Could not initialize status coordinator: %s", err)
 
     entry.runtime_data = PaperlessData(
@@ -66,7 +67,7 @@ async def _get_paperless_api(
 ) -> Paperless:
     """Create and initialize paperless-ngx API."""
 
-    api = Paperless(
+    api = Paperless(  # type: ignore[abstract]
         entry.data[CONF_URL],
         entry.data[CONF_API_KEY],
         session=async_get_clientsession(hass, entry.data.get(CONF_VERIFY_SSL, True)),

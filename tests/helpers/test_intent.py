@@ -1,6 +1,7 @@
 """Tests for the intent helpers."""
 
 import asyncio
+from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -344,7 +345,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.MatchFailedReason.DUPLICATE_NAME
+    assert result.no_match_reason is intent.MatchFailedReason.DUPLICATE_NAME
     assert result.no_match_name == "bathroom light"
 
     # Works with duplicate names allowed
@@ -410,7 +411,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.MatchFailedReason.DUPLICATE_NAME
+    assert result.no_match_reason is intent.MatchFailedReason.DUPLICATE_NAME
 
     # Disambiguate by area name, if unique
     result = intent.async_match_targets(
@@ -431,7 +432,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.MatchFailedReason.DUPLICATE_NAME
+    assert result.no_match_reason is intent.MatchFailedReason.DUPLICATE_NAME
 
     # Does work if floor/area name combo is unique
     result = intent.async_match_targets(
@@ -456,7 +457,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.MatchFailedReason.AREA
+    assert result.no_match_reason is intent.MatchFailedReason.AREA
 
     # Check state constraint (only third floor bathroom light is on)
     result = intent.async_match_targets(
@@ -532,7 +533,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.MatchFailedReason.MULTIPLE_TARGETS
+    assert result.no_match_reason is intent.MatchFailedReason.MULTIPLE_TARGETS
 
     # Only one light on the ground floor
     result = intent.async_match_targets(
@@ -641,7 +642,7 @@ def test_async_register(hass: HomeAssistant) -> None:
 
 
 def test_async_register_overwrite(hass: HomeAssistant) -> None:
-    """Test registering multiple intents with the same type, ensuring the last one overwrites the previous one and a warning is emitted."""
+    """Test registering duplicate intent types overwrites and emits a warning."""
     handler1 = MagicMock()
     handler1.intent_type = "test_intent"
 
@@ -660,7 +661,7 @@ def test_async_register_overwrite(hass: HomeAssistant) -> None:
 
 
 def test_async_remove(hass: HomeAssistant) -> None:
-    """Test removing an intent and verifying it is no longer present in the Home Assistant data."""
+    """Test removing an intent and verifying it is no longer present."""
     handler = MagicMock()
     handler.intent_type = "test_intent"
 
@@ -717,7 +718,7 @@ async def test_validate_then_run_in_background(hass: HomeAssistant) -> None:
         slots={"name": {"value": "kitchen"}},
     )
 
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response_type is intent.IntentResponseType.ACTION_DONE
 
     assert not call_done.is_set()
     await call_done.wait()
@@ -764,7 +765,7 @@ async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
             "TestType",
             slots={"area": {"value": "invalid area"}},
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_AREA
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.INVALID_AREA
 
     with pytest.raises(intent.MatchFailedError) as err:
         await intent.async_handle(
@@ -773,7 +774,7 @@ async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
             "TestType",
             slots={"floor": {"value": "invalid floor"}},
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_FLOOR
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.INVALID_FLOOR
 
 
 async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> None:
@@ -797,7 +798,7 @@ async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> N
         "TestType",
         slots={"name": {"value": "kitchen"}, "domain": {"value": "light"}},
     )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
 
     # Fails because the intent handler is restricted to lights only
@@ -915,7 +916,7 @@ async def test_service_handler_device_classes(
 async def test_service_handler_matched_states_uses_updated_state(
     hass: HomeAssistant,
 ) -> None:
-    """Test that matched_states reflects the post-service-call state, not the pre-call state."""
+    """Test matched_states reflects post-service-call state, not pre-call."""
     hass.states.async_set("light.kitchen", "off")
 
     async def mock_turn_on(call):
@@ -934,7 +935,7 @@ async def test_service_handler_matched_states_uses_updated_state(
         slots={"name": {"value": "kitchen"}},
     )
 
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(result.matched_states) == 1
     assert result.matched_states[0].entity_id == "light.kitchen"
     assert result.matched_states[0].state == "on"
@@ -983,3 +984,76 @@ async def test_get_all_entity_aliases(
 
     state = State("light.test", "on", {"friendly_name": friendly_name})
     assert intent.async_get_entity_aliases(hass, entry, state=state) == expected
+
+
+async def test_intent_response_dict() -> None:
+    """Test that IntentResponse.as_dict() copies mutable objects."""
+    response = intent.IntentResponse(
+        language="en",
+        intent=None,
+    )
+    # Prepare the intent response initial state
+    response.async_set_speech(
+        speech="Hello", speech_type="plain", extra_data={"key": "value"}
+    )
+    response.async_set_reprompt(
+        speech="Hi", speech_type="plain", extra_data={"key2": "value2"}
+    )
+    response.async_set_card(title="Title", content="Content", card_type="simple")
+    response.async_set_results(
+        success_results=[
+            intent.IntentResponseTarget(
+                type=intent.IntentResponseTargetType.FLOOR,
+                name="first floor",
+                id="floor-1",
+            )
+        ],
+        failed_results=[
+            intent.IntentResponseTarget(
+                type=intent.IntentResponseTargetType.ENTITY,
+                name="kitchen light",
+                id="light.kitchen",
+            )
+        ],
+    )
+    response.async_set_states(
+        matched_states=[State("light.kitchen", "on")],
+        unmatched_states=[State("light.bedroom", "off")],
+    )
+    response.async_set_speech_slots({"name": {"value": "kitchen"}})
+
+    response_dict1 = response.as_dict()
+    response_dict2 = deepcopy(response_dict1)
+
+    # Mutate the original object
+    response.async_set_speech(
+        speech="Changed", speech_type="plain", extra_data={"key": "changed"}
+    )
+    response.async_set_reprompt(
+        speech="Changed", speech_type="plain", extra_data={"key2": "changed2"}
+    )
+    response.async_set_card(title="Changed", content="Changed", card_type="simple")
+    response.async_set_results(
+        success_results=[
+            intent.IntentResponseTarget(
+                type=intent.IntentResponseTargetType.FLOOR,
+                name="changed floor",
+                id="floor-changed",
+            )
+        ],
+        failed_results=[
+            intent.IntentResponseTarget(
+                type=intent.IntentResponseTargetType.ENTITY,
+                name="changed light",
+                id="light.changed",
+            )
+        ],
+    )
+    response.async_set_states(
+        matched_states=[State("light.changed", "on")],
+        unmatched_states=[State("light.changed_bedroom", "off")],
+    )
+    response.async_set_speech_slots({"name": {"value": "changed"}})
+
+    # The original dict should not be affected by the mutations
+    assert response_dict1 == response_dict2

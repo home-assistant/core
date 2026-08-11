@@ -18,8 +18,15 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "url": "[%key:common::config_flow::data::url%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "name": "More options"
+          }
         }
       }
     }
@@ -49,14 +56,6 @@
         "name": "Wanted",
         "unit_of_measurement": "[%key:component::sonarr::entity::sensor::queue::unit_of_measurement%]"
       }
-    }
-  },
-  "exceptions": {
-    "integration_not_found": {
-      "message": "Config entry for integration \"{target}\" not found."
-    },
-    "not_loaded": {
-      "message": "Config entry \"{target}\" is not loaded."
     }
   },
   "options": {

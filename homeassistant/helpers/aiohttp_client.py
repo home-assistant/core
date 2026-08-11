@@ -1,7 +1,5 @@
 """Helper for aiohttp webclient stuff."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Sequence
 from contextlib import suppress
@@ -11,7 +9,7 @@ import socket
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, override
 
 import aiohttp
 from aiohttp import ClientMiddlewareType, hdrs, web
@@ -24,7 +22,6 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
@@ -171,6 +168,7 @@ class HassAsyncDNSResolver(AsyncDualMDNSResolver):
         """Close the resolver."""
         await super().close()
 
+    @override
     async def close(self) -> None:
         """Close the resolver."""
 
@@ -178,6 +176,7 @@ class HassAsyncDNSResolver(AsyncDualMDNSResolver):
 class HassClientResponse(aiohttp.ClientResponse):
     """aiohttp.ClientResponse with a json method that uses json_loads by default."""
 
+    @override
     async def json(
         self,
         *args: Any,
@@ -214,7 +213,6 @@ class ChunkAsyncStreamIterator:
 
 
 @callback
-@bind_hass
 def async_get_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool = True,
@@ -244,7 +242,6 @@ def async_get_clientsession(
 
 
 @callback
-@bind_hass
 def async_create_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool = True,
@@ -318,7 +315,6 @@ def _async_create_clientsession(
     return clientsession
 
 
-@bind_hass
 async def async_aiohttp_proxy_web(
     hass: HomeAssistant,
     request: web.BaseRequest,
@@ -351,7 +347,6 @@ async def async_aiohttp_proxy_web(
         req.close()
 
 
-@bind_hass
 async def async_aiohttp_proxy_stream(
     hass: HomeAssistant,
     request: web.BaseRequest,

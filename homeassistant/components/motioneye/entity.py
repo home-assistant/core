@@ -1,9 +1,7 @@
 """The motionEye integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import KEY_ID
@@ -56,16 +54,19 @@ class MotionEyeEntity(CoordinatorEntity[MotionEyeUpdateCoordinator]):
         super().__init__(coordinator)
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique id for this instance."""
         return self._unique_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(identifiers={self._device_identifier})
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self._camera is not None and super().available

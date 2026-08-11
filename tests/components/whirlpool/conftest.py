@@ -182,6 +182,7 @@ def mock_oven_single_cavity_api():
     mock_oven.get_oven_cavity_exists.side_effect = lambda cavity: (
         cavity == oven.Cavity.Upper
     )
+    mock_oven.get_light.return_value = True
     mock_oven.get_temp.return_value = 180
     mock_oven.get_target_temp.return_value = 200
     return mock_oven
@@ -205,6 +206,7 @@ def mock_oven_dual_cavity_api():
             oven.Cavity.Lower,
         )
     )
+    mock_oven.get_light.side_effect = lambda cavity: cavity == oven.Cavity.Upper
     mock_oven.get_temp.return_value = 180
     mock_oven.get_target_temp.return_value = 200
     return mock_oven

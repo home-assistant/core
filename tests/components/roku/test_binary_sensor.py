@@ -95,9 +95,11 @@ async def test_rokutv_binary_sensors(
     mock_roku: MagicMock,
 ) -> None:
     """Test the Roku binary sensors."""
-    state = hass.states.get("binary_sensor.58_onn_roku_tv_headphones_connected")
+    state = hass.states.get(
+        "binary_sensor.living_room_58_onn_roku_tv_headphones_connected"
+    )
     entry = entity_registry.async_get(
-        "binary_sensor.58_onn_roku_tv_headphones_connected"
+        "binary_sensor.living_room_58_onn_roku_tv_headphones_connected"
     )
     assert entry
     assert state
@@ -110,8 +112,10 @@ async def test_rokutv_binary_sensors(
     )
     assert ATTR_DEVICE_CLASS not in state.attributes
 
-    state = hass.states.get("binary_sensor.58_onn_roku_tv_supports_airplay")
-    entry = entity_registry.async_get("binary_sensor.58_onn_roku_tv_supports_airplay")
+    state = hass.states.get("binary_sensor.living_room_58_onn_roku_tv_supports_airplay")
+    entry = entity_registry.async_get(
+        "binary_sensor.living_room_58_onn_roku_tv_supports_airplay"
+    )
     assert entry
     assert state
     assert entry.unique_id == "YN00H5555555_supports_airplay"
@@ -122,8 +126,12 @@ async def test_rokutv_binary_sensors(
     )
     assert ATTR_DEVICE_CLASS not in state.attributes
 
-    state = hass.states.get("binary_sensor.58_onn_roku_tv_supports_ethernet")
-    entry = entity_registry.async_get("binary_sensor.58_onn_roku_tv_supports_ethernet")
+    state = hass.states.get(
+        "binary_sensor.living_room_58_onn_roku_tv_supports_ethernet"
+    )
+    entry = entity_registry.async_get(
+        "binary_sensor.living_room_58_onn_roku_tv_supports_ethernet"
+    )
     assert entry
     assert state
     assert entry.unique_id == "YN00H5555555_supports_ethernet"
@@ -134,9 +142,11 @@ async def test_rokutv_binary_sensors(
     )
     assert ATTR_DEVICE_CLASS not in state.attributes
 
-    state = hass.states.get("binary_sensor.58_onn_roku_tv_supports_find_remote")
+    state = hass.states.get(
+        "binary_sensor.living_room_58_onn_roku_tv_supports_find_remote"
+    )
     entry = entity_registry.async_get(
-        "binary_sensor.58_onn_roku_tv_supports_find_remote"
+        "binary_sensor.living_room_58_onn_roku_tv_supports_find_remote"
     )
     assert entry
     assert state

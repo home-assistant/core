@@ -1,10 +1,8 @@
 """Support for the JustNimbus platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -133,6 +131,7 @@ class JustNimbusSensor(JustNimbusEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return sensor state."""
         return self.entity_description.value_fn(self.coordinator)

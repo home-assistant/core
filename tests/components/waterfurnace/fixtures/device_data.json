@@ -5,12 +5,30 @@
   "leavingairtemp": 110.5,
   "tstatroomtemp": 70.2,
   "enteringwatertemp": 42.8,
+  "tstatdehumidsetpoint": 55,
   "tstathumidsetpoint": 45,
   "tstatrelativehumidity": 43,
+  "humidity_offset_settings": { "fan_mode": 0, "accessory_type": 2 },
   "compressorpower": 800,
   "fanpower": 150,
   "auxpower": 0,
   "looppumppower": 50,
   "actualcompressorspeed": 1200,
-  "airflowcurrentspeed": 850
+  "airflowcurrentspeed": 850,
+  "tstatheatingsetpoint": 68,
+  "tstatcoolingsetpoint": 74,
+  "activesettings": {
+    "activemode": 3,
+    "heatingsp_read": 68,
+    "coolingsp_read": 74,
+    "fanmode_read": 0,
+    "temporaryoverride": 0,
+    "permanenthold": 0,
+    "vacationhold": 0,
+    "onpeakhold": 0,
+    "superboost": 0,
+    "tstatmode": 3,
+    "intertimeon_read": 0,
+    "intertimeoff_read": 0
+  }
 }

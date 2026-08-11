@@ -1,6 +1,7 @@
 {
   "common": {
-    "condition_behavior_name": "Condition passes if"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least"
   },
   "conditions": {
     "is_equal_to": {
@@ -8,6 +9,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::text::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::text::common::condition_for_name%]"
         },
         "value": {
           "description": "The value to compare the text to.",
@@ -48,14 +52,6 @@
       }
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    }
-  },
   "services": {
     "set_value": {
       "description": "Sets the value of a text entity.",
@@ -71,7 +67,7 @@
   "title": "Text",
   "triggers": {
     "changed": {
-      "description": "Triggers after one or more texts change.",
+      "description": "Triggers when one or more texts change.",
       "name": "Text changed"
     }
   }

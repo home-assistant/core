@@ -1,18 +1,17 @@
 """Sensor platform for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from itertools import chain
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorEntityStateAttribute,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -282,6 +281,10 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
     ),
+    TeslaFleetSensorEntityDescription(
+        key="drive_state_active_route_destination",
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -511,6 +514,7 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -523,10 +527,16 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
         if (
             self.entity_description.key in CHARGE_ENERGY_RESET_KEYS
             and (last_state := await self.async_get_last_state()) is not None
-            and (last_reset := last_state.attributes.get("last_reset")) is not None
+            and (
+                last_reset := last_state.attributes.get(
+                    SensorEntityStateAttribute.LAST_RESET
+                )
+            )
+            is not None
         ):
             self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         if self.has:
@@ -564,6 +574,7 @@ class TeslaFleetVehicleTimeSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
 
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = isinstance(self._value, int | float) and self._value > 0
@@ -585,6 +596,7 @@ class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, SensorEntity)
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_native_value = self.entity_description.value_fn(self._value)
@@ -604,6 +616,7 @@ class TeslaFleetEnergyHistorySensorEntity(TeslaFleetEnergyHistoryEntity, SensorE
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_native_value = self._value
@@ -629,6 +642,7 @@ class TeslaFleetWallConnectorSensorEntity(TeslaFleetWallConnectorEntity, SensorE
             description.key,
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = not self.is_none
@@ -649,6 +663,7 @@ class TeslaFleetEnergyInfoSensorEntity(TeslaFleetEnergyInfoEntity, SensorEntity)
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = not self.is_none

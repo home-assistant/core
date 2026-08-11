@@ -1,10 +1,9 @@
 """Support for Tibber binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 import tibber
 from tibber.data_api import TibberDevice
@@ -111,6 +110,7 @@ class TibberDataAPIBinarySensor(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -123,6 +123,7 @@ class TibberDataAPIBinarySensor(
         return self.coordinator.sensors_by_device[self._device_id]
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(

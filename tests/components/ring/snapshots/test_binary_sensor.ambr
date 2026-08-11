@@ -39,9 +39,9 @@
 # name: test_states[binary_sensor.front_door_ding-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'device_class': 'occupancy',
-      'friendly_name': 'Front Door Ding',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Ding',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.front_door_ding',
@@ -91,9 +91,9 @@
 # name: test_states[binary_sensor.front_door_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'device_class': 'motion',
-      'friendly_name': 'Front Door Motion',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.front_door_motion',
@@ -143,9 +143,9 @@
 # name: test_states[binary_sensor.front_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'device_class': 'motion',
-      'friendly_name': 'Front Motion',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.front_motion',
@@ -195,9 +195,9 @@
 # name: test_states[binary_sensor.ingress_ding-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'device_class': 'occupancy',
-      'friendly_name': 'Ingress Ding',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ingress Ding',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ingress_ding',
@@ -247,9 +247,9 @@
 # name: test_states[binary_sensor.internal_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'device_class': 'motion',
-      'friendly_name': 'Internal Motion',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Internal Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.internal_motion',

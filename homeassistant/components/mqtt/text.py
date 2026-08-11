@@ -1,16 +1,14 @@
 """Support for MQTT text platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components import text
-from homeassistant.components.text import TextEntity
+from homeassistant.components.text import TextEntity, TextEntityCapabilityAttribute
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
@@ -53,10 +51,10 @@ DEFAULT_NAME = "MQTT Text"
 
 MQTT_TEXT_ATTRIBUTES_BLOCKED = frozenset(
     {
-        text.ATTR_MAX,
-        text.ATTR_MIN,
-        text.ATTR_MODE,
-        text.ATTR_PATTERN,
+        TextEntityCapabilityAttribute.MAX,
+        TextEntityCapabilityAttribute.MIN,
+        TextEntityCapabilityAttribute.MODE,
+        TextEntityCapabilityAttribute.PATTERN,
     }
 )
 
@@ -125,10 +123,12 @@ class MqttTextEntity(MqttEntity, TextEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_native_max = config[CONF_MAX]
@@ -160,6 +160,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
         self._attr_native_value = payload
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -168,10 +169,12 @@ class MqttTextEntity(MqttEntity, TextEntity):
             {"_attr_native_value"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_set_value(self, value: str) -> None:
         """Change the text."""
         payload = self._command_template(value)
