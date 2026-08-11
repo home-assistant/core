@@ -495,7 +495,9 @@ def _add_areas(
             candidate.area = areas.async_get_area(candidate.entity.area_id)
             assert candidate.area is not None
         elif candidate.device is not None and (
-            device_area_id := devices.async_get_effective_area_id(candidate.device)
+            device_area_id := dr.async_get_effective_area_id(
+                devices.hass, candidate.device
+            )
         ):
             # Fall back to device area
             candidate.area = areas.async_get_area(device_area_id)

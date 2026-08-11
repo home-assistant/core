@@ -265,7 +265,7 @@ class IntentTool(Tool):
             if device:
                 area_reg = ar.async_get(hass)
                 if (
-                    device_area_id := device_reg.async_get_effective_area_id(device)
+                    device_area_id := dr.async_get_effective_area_id(hass, device)
                 ) and (area := area_reg.async_get_area(device_area_id)):
                     if area.floor_id:
                         floor_reg = fr.async_get(hass)

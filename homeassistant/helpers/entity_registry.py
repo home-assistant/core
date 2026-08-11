@@ -521,7 +521,7 @@ def _async_get_full_entity_name(
                 device_name = device.name_by_user or device.name
 
                 if area_id is None:
-                    area_id = device_registry.async_get_effective_area_id(device)
+                    area_id = dr.async_get_effective_area_id(hass, device)
 
         area_name: str | None = None
         floor_name: str | None = None
@@ -2538,7 +2538,7 @@ def async_get_effective_area_id(
     device_registry = dr.async_get(hass)
     if (device := device_registry.async_get(entry.device_id)) is None:
         return None
-    return device_registry.async_get_effective_area_id(device)
+    return dr.async_get_effective_area_id(hass, device)
 
 
 @callback
