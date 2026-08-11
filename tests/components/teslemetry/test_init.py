@@ -25,8 +25,6 @@ from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
 # Coordinator constants
 from homeassistant.components.teslemetry.coordinator import (
     ENERGY_HISTORY_INTERVAL,
-    ENERGY_INFO_INTERVAL,
-    ENERGY_LIVE_INTERVAL,
     INSUFFICIENT_CREDITS_RETRY_AFTER,
     METADATA_INTERVAL,
     VEHICLE_INTERVAL,
@@ -165,7 +163,7 @@ async def test_energy_site_refresh_error(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_vehicle_stream(
     hass: HomeAssistant,
-    mock_add_listener: AsyncMock,
+    mock_add_listener: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test vehicle stream events."""
@@ -593,7 +591,6 @@ async def test_vehicle_data_retry_exceptions(
 @pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
 async def test_live_status_coordinator_retry_exceptions(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_live_status: AsyncMock,
     exception: TeslaFleetError,
     expected_retry_after: float,
@@ -616,9 +613,8 @@ async def test_live_status_coordinator_retry_exceptions(
     assert entry.state is ConfigEntryState.LOADED
     assert call_count == 1
 
-    # Trigger coordinator refresh - this will raise the exception
-    freezer.tick(ENERGY_LIVE_INTERVAL)
-    async_fire_time_changed(hass)
+    # The recovery/manual REST path still raises the exception
+    await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
     await hass.async_block_till_done()
 
     # API was called exactly once for this refresh (no manual retry loop)
@@ -665,7 +661,6 @@ async def test_energy_history_coordinator_retry_exceptions(
 
 async def test_live_status_auth_error(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test live status coordinator handles auth errors."""
     call_count = 0
@@ -684,9 +679,8 @@ async def test_live_status_auth_error(
         entry = await setup_platform(hass)
         assert entry.state is ConfigEntryState.LOADED
 
-        # Trigger a coordinator refresh by advancing time
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
+        # The recovery/manual REST path surfaces the auth error
+        await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
         await hass.async_block_till_done()
 
         # Auth error triggers reauth flow
@@ -695,7 +689,6 @@ async def test_live_status_auth_error(
 
 async def test_live_status_generic_error(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test live status coordinator handles generic TeslaFleetError."""
     call_count = 0
@@ -714,9 +707,8 @@ async def test_live_status_generic_error(
         entry = await setup_platform(hass)
         assert entry.state is ConfigEntryState.LOADED
 
-        # Trigger a coordinator refresh by advancing time
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
+        # The recovery/manual REST path surfaces the error
+        await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
         await hass.async_block_till_done()
 
         # Entry stays loaded but coordinator will have failed
@@ -860,10 +852,9 @@ async def test_vehicle_polling_version_update(
 async def test_energy_site_version_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_site_info: AsyncMock,
-    freezer: FrozenDateTimeFactory,
+    mock_add_listener: MagicMock,
 ) -> None:
-    """Test energy site sw_version updates when info coordinator refreshes."""
+    """Test energy site sw_version updates from a site_info stream event."""
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
@@ -874,14 +865,11 @@ async def test_energy_site_version_update(
     assert device is not None
     assert device.sw_version == "23.44.0 eb113390"
 
-    # Update mock to return new version on next poll
-    updated_site_info = deepcopy(SITE_INFO)
-    updated_site_info["response"]["version"] = "24.1.0 abc123"
-    mock_site_info.side_effect = lambda: updated_site_info
-
-    # Trigger coordinator refresh
-    freezer.tick(ENERGY_INFO_INTERVAL)
-    async_fire_time_changed(hass)
+    # A slim site_info stream event carries the new version
+    updated_site_info = deepcopy(SITE_INFO["response"])
+    updated_site_info.pop("tariff_content_v2", None)
+    updated_site_info["version"] = "24.1.0 abc123"
+    mock_add_listener.send({"site_id": site_id, "site_info": updated_site_info})
     await hass.async_block_till_done()
 
     # Check device sw_version was updated
@@ -911,7 +899,6 @@ async def test_live_status_auth_failed_forbidden(
 )
 async def test_live_status_coordinator_refresh_error(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_live_status: AsyncMock,
     side_effect: list,
 ) -> None:
@@ -921,8 +908,7 @@ async def test_live_status_coordinator_refresh_error(
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    freezer.tick(ENERGY_LIVE_INTERVAL)
-    async_fire_time_changed(hass)
+    await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED

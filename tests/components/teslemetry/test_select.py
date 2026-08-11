@@ -16,10 +16,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.teslemetry.coordinator import (
-    ENERGY_INFO_INTERVAL,
-    VEHICLE_INTERVAL,
-)
+from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.select import HIGH, LEVEL, LOW, MEDIUM, OFF
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -534,7 +531,6 @@ async def test_export_rule_restore(
 )
 async def test_export_rule_update_attrs_logic(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_site_info: AsyncMock,
     previous_data: dict,
     new_data: str | None,
@@ -547,16 +543,14 @@ async def test_export_rule_update_attrs_logic(
     mock_site_info.side_effect = lambda: test_site_info
 
     # Set up platform
-    await setup_platform(hass, [Platform.SELECT])
+    entry = await setup_platform(hass, [Platform.SELECT])
 
-    # Change the state
+    # Change the state via the recovery/manual REST refresh path
     test_site_info = deepcopy(SITE_INFO)
     test_site_info["response"]["components"].update(new_data)
     mock_site_info.side_effect = lambda: test_site_info
 
-    # Coordinator refresh
-    freezer.tick(ENERGY_INFO_INTERVAL)
-    async_fire_time_changed(hass)
+    await entry.runtime_data.energysites[0].info_coordinator.async_refresh()
     await hass.async_block_till_done()
 
     # Check the final state matches expected
