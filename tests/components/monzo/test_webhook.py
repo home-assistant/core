@@ -229,11 +229,11 @@ async def test_transaction_payload_is_preserved_and_data_is_refreshed(
     )
     assert response.status == 200
 
-    state = hass.states.get("event.current_account")
+    state = hass.states.get("event.current_account_transaction")
     assert state is not None
     assert state.attributes["event_type"] == EVENT_TRANSACTION_CREATED
     assert state.attributes[ATTR_DATA] == TRANSACTION
-    flex_state = hass.states.get("event.flex")
+    flex_state = hass.states.get("event.flex_transaction")
     assert flex_state is not None
     assert flex_state.state == "unknown"
     monzo.user_account.accounts.assert_awaited_once_with()
@@ -319,7 +319,7 @@ async def test_invalid_webhook_is_ignored(
 
     response = await client.post(async_generate_path(WEBHOOK_ID), json=payload)
     assert response.status == 200
-    state = hass.states.get("event.current_account")
+    state = hass.states.get("event.current_account_transaction")
     assert state is not None
     assert state.state == "unknown"
     monzo.user_account.accounts.assert_not_awaited()
