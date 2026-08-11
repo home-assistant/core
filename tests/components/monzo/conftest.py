@@ -89,7 +89,7 @@ def polling_config_entry(expires_at: float) -> MockConfigEntry:
             "profile": TITLE,
             CONF_WEBHOOK_ID: WEBHOOK_ID,
         },
-        minor_version=4,
+        minor_version=3,
     )
 
 

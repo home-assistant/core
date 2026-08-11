@@ -3,6 +3,9 @@
 import contextlib
 import logging
 
+from aiohttp import ClientError
+from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
+
 from homeassistant.components import cloud
 from homeassistant.components.webhook import async_generate_id
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
@@ -16,13 +19,22 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .api import AuthenticatedMonzoAPI
-from .const import CONF_CLOUDHOOK_URL, DOMAIN
+from .const import CONF_CLOUDHOOK_URL, CONF_WEBHOOK_URL, DOMAIN
 from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoRuntimeData
-from .webhook import MonzoWebhookManager
+from .webhook import MonzoWebhookManager, async_delete_remote_webhooks
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.EVENT, Platform.SENSOR]
+
+
+async def _async_create_api(
+    hass: HomeAssistant, entry: MonzoConfigEntry
+) -> AuthenticatedMonzoAPI:
+    """Create an authenticated Monzo API client."""
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    session = OAuth2Session(hass, entry, implementation)
+    return AuthenticatedMonzoAPI(async_get_clientsession(hass), session)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:
@@ -39,10 +51,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> b
             unique_id = str(unique_id)
             minor_version = 2
 
-        # 1.2/1.3 -> 1.4: Add a stable webhook ID
-        if minor_version < 4:
+        # 1.2 -> 1.3: Add a stable webhook ID
+        if minor_version < 3:
             data[CONF_WEBHOOK_ID] = async_generate_id()
-            minor_version = 4
+            minor_version = 3
 
         hass.config_entries.async_update_entry(
             entry,
@@ -59,16 +71,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> b
 async def async_setup_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:
     """Set up Monzo from a config entry."""
     try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
+        external_api = await _async_create_api(hass, entry)
     except ImplementationUnavailableError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="oauth2_implementation_unavailable",
         ) from err
-
-    session = OAuth2Session(hass, entry, implementation)
-
-    external_api = AuthenticatedMonzoAPI(async_get_clientsession(hass), session)
 
     coordinator = MonzoCoordinator(hass, entry, external_api)
 
@@ -91,8 +99,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bo
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> None:
-    """Remove the cloudhook for a deleted config entry."""
-    if CONF_CLOUDHOOK_URL not in entry.data:
-        return
-    with contextlib.suppress(cloud.CloudNotAvailable):
-        await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
+    """Remove webhooks for a deleted config entry."""
+    if webhook_url := entry.data.get(CONF_WEBHOOK_URL):
+        try:
+            api = await _async_create_api(hass, entry)
+            accounts = await api.user_account.accounts()
+            await async_delete_remote_webhooks(
+                api, (account["id"] for account in accounts), webhook_url
+            )
+        except (
+            AuthorisationExpiredError,
+            ClientError,
+            ImplementationUnavailableError,
+            InvalidMonzoAPIResponseError,
+            TimeoutError,
+        ) as err:
+            _LOGGER.warning("Unable to remove Monzo webhooks: %s", err)
+
+    if CONF_CLOUDHOOK_URL in entry.data:
+        with contextlib.suppress(cloud.CloudNotAvailable):
+            await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])

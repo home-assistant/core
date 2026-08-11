@@ -28,7 +28,7 @@ class MonzoFlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
-    MINOR_VERSION = 4
+    MINOR_VERSION = 3
 
     oauth_data: dict[str, Any]
     approval_task: asyncio.Task[None] | None = None

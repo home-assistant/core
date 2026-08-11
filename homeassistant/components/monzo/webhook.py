@@ -1,7 +1,7 @@
 """Webhook support for the Monzo integration."""
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 import logging
 from typing import Any
@@ -10,15 +10,15 @@ from aiohttp import ClientError
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
-from yarl import URL
 
 from homeassistant.components import cloud, webhook
-from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import CONF_WEBHOOK_ID, EVENT_CORE_CONFIG_UPDATE
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError
 
+from .api import AuthenticatedMonzoAPI
 from .const import (
     ATTR_DATA,
     CONF_CLOUDHOOK_URL,
@@ -39,6 +39,17 @@ def webhook_signal(account_id: str) -> str:
     return f"{DOMAIN}_webhook_{account_id}"
 
 
+async def async_delete_remote_webhooks(
+    api: AuthenticatedMonzoAPI, account_ids: Iterable[str], webhook_url: str
+) -> None:
+    """Delete remote Monzo webhooks registered to a Home Assistant URL."""
+    for account_id in account_ids:
+        account_webhooks = await api.user_account.list_account_webhooks(account_id)
+        for account_webhook in account_webhooks:
+            if account_webhook.url == webhook_url:
+                await api.user_account.delete_webhook(account_webhook.id)
+
+
 class MonzoWebhookManager:
     """Manage Home Assistant and Monzo webhooks for a config entry."""
 
@@ -54,7 +65,6 @@ class MonzoWebhookManager:
         self.coordinator = coordinator
         self._active = True
         self._register_lock = asyncio.Lock()
-        self._remote_webhook_ids: set[str] = set()
         self._retry_cancel: CALLBACK_TYPE | None = None
         self._webhook_url: str | None = None
 
@@ -80,6 +90,11 @@ class MonzoWebhookManager:
                 self.hass,
                 self.entry.data[CONF_WEBHOOK_ID],
                 self._async_cloudhook_changed,
+            )
+        )
+        self.entry.async_on_unload(
+            self.hass.bus.async_listen(
+                EVENT_CORE_CONFIG_UPDATE, self._async_core_config_updated
             )
         )
         await self.async_register_remote_webhooks()
@@ -119,12 +134,8 @@ class MonzoWebhookManager:
                     _LOGGER.warning(
                         "Monzo webhooks require an external Home Assistant URL"
                     )
+                    await self._async_remove_previous_remote_webhooks()
                     return
-
-            url = URL(webhook_url)
-            if url.scheme != "https" or url.port != 443:
-                _LOGGER.warning("Monzo webhooks require an HTTPS URL using port 443")
-                return
 
             try:
                 await self._async_reconcile_remote_webhooks(webhook_url)
@@ -147,7 +158,6 @@ class MonzoWebhookManager:
     async def _async_reconcile_remote_webhooks(self, webhook_url: str) -> None:
         """Ensure each account has exactly one webhook using our URL."""
         previous_url = self.entry.data.get(CONF_WEBHOOK_URL)
-        self._remote_webhook_ids.clear()
 
         for account_id in self.coordinator.data.accounts:
             account_webhooks = (
@@ -169,36 +179,44 @@ class MonzoWebhookManager:
                     matching_webhooks.append(account_webhook)
 
             if matching_webhooks:
-                self._remote_webhook_ids.add(matching_webhooks[0].id)
                 for duplicate in matching_webhooks[1:]:
                     await self.coordinator.api.user_account.delete_webhook(duplicate.id)
             else:
-                registered = await self.coordinator.api.user_account.register_webhook(
+                await self.coordinator.api.user_account.register_webhook(
                     account_id, webhook_url
                 )
-                self._remote_webhook_ids.add(registered.id)
+
+    async def _async_remove_previous_remote_webhooks(self) -> None:
+        """Remove remote webhooks when no callback URL is available."""
+        if (previous_url := self.entry.data.get(CONF_WEBHOOK_URL)) is None:
+            return
+
+        try:
+            await async_delete_remote_webhooks(
+                self.coordinator.api,
+                self.coordinator.data.accounts,
+                previous_url,
+            )
+        except AuthorisationExpiredError:
+            self.entry.async_start_reauth(self.hass)
+            return
+        except (ClientError, InvalidMonzoAPIResponseError, TimeoutError) as err:
+            _LOGGER.warning("Unable to remove obsolete Monzo webhooks: %s", err)
+            self._schedule_retry()
+            return
+
+        self._webhook_url = None
+        data = dict(self.entry.data)
+        data.pop(CONF_WEBHOOK_URL, None)
+        self.hass.config_entries.async_update_entry(self.entry, data=data)
 
     async def async_unload(self) -> None:
-        """Remove remote subscriptions and the local webhook handler."""
+        """Unload the webhook manager while preserving remote subscriptions."""
         self._active = False
         self._cancel_retry()
 
         async with self._register_lock:
-            for webhook_id in self._remote_webhook_ids:
-                try:
-                    await self.coordinator.api.user_account.delete_webhook(webhook_id)
-                except (
-                    AuthorisationExpiredError,
-                    ClientError,
-                    InvalidMonzoAPIResponseError,
-                    TimeoutError,
-                ) as err:
-                    _LOGGER.warning(
-                        "Unable to remove Monzo webhook %s: %s", webhook_id, err
-                    )
-            self._remote_webhook_ids.clear()
-
-        self._async_unregister_local_webhook()
+            self._async_unregister_local_webhook()
 
     async def async_handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
@@ -254,12 +272,30 @@ class MonzoWebhookManager:
     def _async_cloudhook_changed(self, cloudhook: dict[str, Any] | None) -> None:
         """Reconcile remote webhooks when our cloudhook changes."""
         cloudhook_url = cloudhook.get("cloudhook_url") if cloudhook else None
+        data = dict(self.entry.data)
+        if cloudhook_url is None:
+            data.pop(CONF_CLOUDHOOK_URL, None)
+        else:
+            data[CONF_CLOUDHOOK_URL] = cloudhook_url
+        self.hass.config_entries.async_update_entry(self.entry, data=data)
         if self._webhook_url == cloudhook_url:
             return
+        self._async_schedule_registration("update Monzo webhooks")
+
+    @callback
+    def _async_core_config_updated(self, event: Event[dict[str, Any]]) -> None:
+        """Reconcile remote webhooks when the external URL changes."""
+        if "external_url" not in event.data:
+            return
+        self._async_schedule_registration("update Monzo webhooks")
+
+    @callback
+    def _async_schedule_registration(self, name: str) -> None:
+        """Schedule remote webhook reconciliation."""
         self.entry.async_create_task(
             self.hass,
             self.async_register_remote_webhooks(),
-            "update Monzo webhooks",
+            name,
         )
 
     def _schedule_retry(self) -> None:

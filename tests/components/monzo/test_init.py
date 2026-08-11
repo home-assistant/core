@@ -47,13 +47,12 @@ async def test_api_can_trigger_reauth(
     [
         pytest.param(1, 600, id="minor-version-1"),
         pytest.param(2, "600", id="minor-version-2"),
-        pytest.param(3, "600", id="minor-version-3"),
     ],
 )
 async def test_migrate_entry(
     hass: HomeAssistant, minor_version: int, unique_id: int | str
 ) -> None:
-    """Test migrating an older config entry to 1.4."""
+    """Test migrating an older config entry to 1.3."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -82,7 +81,7 @@ async def test_migrate_entry(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         assert entry.version == 1
-        assert entry.minor_version == 4
+        assert entry.minor_version == 3
         assert entry.unique_id == "600"
         assert entry.data[CONF_WEBHOOK_ID] == "generated-webhook-id"
         assert await hass.config_entries.async_unload(entry.entry_id)

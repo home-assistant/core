@@ -31,6 +31,8 @@ from tests.common import (
 from tests.typing import ClientSessionGenerator
 
 CLOUDHOOK_URL = "https://hooks.nabu.casa/test-cloudhook"
+NEW_CLOUDHOOK_URL = "https://hooks.nabu.casa/new-cloudhook"
+NEW_WEBHOOK_URL = f"https://new.example.com/api/webhook/{WEBHOOK_ID}"
 TRANSACTION = {
     "account_id": "acc_curr",
     "amount": -350,
@@ -67,6 +69,25 @@ async def test_registers_one_remote_webhook_per_account(
         call("acc_flex", WEBHOOK_URL),
     ]
     assert polling_config_entry.data[CONF_WEBHOOK_URL] == WEBHOOK_URL
+
+
+async def test_registers_non_https_remote_webhook(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test Monzo webhooks do not require HTTPS or a standard port."""
+    webhook_url = f"http://example.com:8123/api/webhook/{WEBHOOK_ID}"
+    with patch(
+        "homeassistant.components.monzo.webhook.webhook.async_generate_url",
+        return_value=webhook_url,
+    ):
+        await setup_integration(hass, polling_config_entry)
+
+    assert monzo.user_account.register_webhook.await_args_list == [
+        call("acc_curr", webhook_url),
+        call("acc_flex", webhook_url),
+    ]
 
 
 async def test_reuses_webhook_and_removes_exact_duplicate(
@@ -197,30 +218,29 @@ async def test_invalid_webhook_is_ignored(
     monzo.user_account.pots.assert_not_awaited()
 
 
-async def test_unload_removes_owned_remote_and_local_webhooks(
+async def test_unload_preserves_remote_and_removes_local_webhooks(
     hass: HomeAssistant,
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test unloading cleans up only the subscriptions owned by the entry."""
+    """Test unloading preserves remote subscriptions and removes the handler."""
     await setup_integration(hass, polling_config_entry)
     monzo.user_account.delete_webhook.reset_mock()
+    monzo.user_account.accounts.reset_mock()
+    monzo.user_account.pots.reset_mock()
 
     assert await hass.config_entries.async_unload(polling_config_entry.entry_id)
 
-    assert {
-        item.args[0] for item in monzo.user_account.delete_webhook.await_args_list
-    } == {
-        "webhook-acc_curr",
-        "webhook-acc_flex",
-    }
+    monzo.user_account.delete_webhook.assert_not_awaited()
     client = await hass_client_no_auth()
     response = await client.post(
         async_generate_path(WEBHOOK_ID),
         json={"type": MONZO_WEBHOOK_TRANSACTION_CREATED, ATTR_DATA: TRANSACTION},
     )
     assert response.status == 200
+    monzo.user_account.accounts.assert_not_awaited()
+    monzo.user_account.pots.assert_not_awaited()
 
 
 async def test_uses_and_removes_cloudhook(
@@ -229,6 +249,12 @@ async def test_uses_and_removes_cloudhook(
     polling_config_entry: MockConfigEntry,
 ) -> None:
     """Test a cloudhook is reused for remote subscriptions and entry removal."""
+    monzo.user_account.list_account_webhooks.side_effect = [
+        [],
+        [],
+        [Webhook("webhook-acc_curr", "acc_curr", CLOUDHOOK_URL)],
+        [Webhook("webhook-acc_flex", "acc_flex", CLOUDHOOK_URL)],
+    ]
     with (
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch.object(cloud, "async_is_connected", return_value=True),
@@ -252,6 +278,10 @@ async def test_uses_and_removes_cloudhook(
         await hass.config_entries.async_remove(polling_config_entry.entry_id)
 
     delete_cloudhook.assert_awaited_once_with(hass, WEBHOOK_ID)
+    assert monzo.user_account.delete_webhook.await_args_list == [
+        call("webhook-acc_curr"),
+        call("webhook-acc_flex"),
+    ]
 
 
 async def test_uses_external_url_until_cloud_connects(
@@ -284,6 +314,76 @@ async def test_uses_external_url_until_cloud_connects(
     assert monzo.user_account.register_webhook.await_args_list[-2:] == [
         call("acc_curr", CLOUDHOOK_URL),
         call("acc_flex", CLOUDHOOK_URL),
+    ]
+
+
+async def test_cloudhook_change_is_persisted_and_reconciled(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test a changed cloudhook replaces the persisted remote callback."""
+    with (
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch.object(
+            cloud,
+            "async_get_or_create_cloudhook",
+            return_value=CLOUDHOOK_URL,
+        ),
+        patch.object(cloud, "async_listen_cloudhook_change") as listen_cloudhook,
+    ):
+        await setup_integration(hass, polling_config_entry)
+        monzo.user_account.list_account_webhooks.side_effect = [
+            [Webhook("old-current", "acc_curr", CLOUDHOOK_URL)],
+            [Webhook("old-flex", "acc_flex", CLOUDHOOK_URL)],
+        ]
+        monzo.user_account.register_webhook.reset_mock()
+
+        cloudhook_changed = listen_cloudhook.call_args.args[2]
+        cloudhook_changed({"cloudhook_url": NEW_CLOUDHOOK_URL})
+        await hass.async_block_till_done()
+
+    assert polling_config_entry.data[CONF_CLOUDHOOK_URL] == NEW_CLOUDHOOK_URL
+    assert polling_config_entry.data[CONF_WEBHOOK_URL] == NEW_CLOUDHOOK_URL
+    assert monzo.user_account.delete_webhook.await_args_list == [
+        call("old-current"),
+        call("old-flex"),
+    ]
+    assert monzo.user_account.register_webhook.await_args_list == [
+        call("acc_curr", NEW_CLOUDHOOK_URL),
+        call("acc_flex", NEW_CLOUDHOOK_URL),
+    ]
+
+
+async def test_external_url_change_is_reconciled(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test changing the external URL replaces remote callbacks."""
+    await setup_integration(hass, polling_config_entry)
+    monzo.user_account.list_account_webhooks.side_effect = [
+        [Webhook("old-current", "acc_curr", WEBHOOK_URL)],
+        [Webhook("old-flex", "acc_flex", WEBHOOK_URL)],
+    ]
+    monzo.user_account.register_webhook.reset_mock()
+
+    with patch(
+        "homeassistant.components.monzo.webhook.webhook.async_generate_url",
+        return_value=NEW_WEBHOOK_URL,
+    ):
+        await hass.config.async_update(external_url="https://new.example.com")
+        await hass.async_block_till_done()
+
+    assert polling_config_entry.data[CONF_WEBHOOK_URL] == NEW_WEBHOOK_URL
+    assert monzo.user_account.delete_webhook.await_args_list == [
+        call("old-current"),
+        call("old-flex"),
+    ]
+    assert monzo.user_account.register_webhook.await_args_list == [
+        call("acc_curr", NEW_WEBHOOK_URL),
+        call("acc_flex", NEW_WEBHOOK_URL),
     ]
 
 
