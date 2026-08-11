@@ -22,7 +22,6 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
-    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -34,52 +33,27 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import (
+    ATTR_ALERT,
+    ATTR_EXTERNAL_ID,
+    ATTR_MAGNITUDE,
+    ATTR_PLACE,
+    ATTR_STATUS,
+    ATTR_TYPE,
+    ATTR_UPDATED,
+    CONF_FEED_TYPE,
+    CONF_MINIMUM_MAGNITUDE,
+    DEFAULT_MINIMUM_MAGNITUDE,
+    DEFAULT_RADIUS_IN_KM,
+    DEFAULT_UNIT_OF_MEASUREMENT,
+    SCAN_INTERVAL,
+    SIGNAL_DELETE_ENTITY,
+    SIGNAL_UPDATE_ENTITY,
+    SOURCE,
+    VALID_FEED_TYPES,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_ALERT = "alert"
-ATTR_EXTERNAL_ID = "external_id"
-ATTR_MAGNITUDE = "magnitude"
-ATTR_PLACE = "place"
-ATTR_STATUS = "status"
-ATTR_TYPE = "type"
-ATTR_UPDATED = "updated"
-
-CONF_FEED_TYPE = "feed_type"
-CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
-
-DEFAULT_MINIMUM_MAGNITUDE = 0.0
-DEFAULT_RADIUS_IN_KM = 50.0
-DEFAULT_UNIT_OF_MEASUREMENT = UnitOfLength.KILOMETERS
-
-SCAN_INTERVAL = timedelta(minutes=5)
-
-SIGNAL_DELETE_ENTITY = "usgs_earthquakes_feed_delete_{}"
-SIGNAL_UPDATE_ENTITY = "usgs_earthquakes_feed_update_{}"
-
-SOURCE = "usgs_earthquakes_feed"
-
-VALID_FEED_TYPES = [
-    "past_hour_significant_earthquakes",
-    "past_hour_m45_earthquakes",
-    "past_hour_m25_earthquakes",
-    "past_hour_m10_earthquakes",
-    "past_hour_all_earthquakes",
-    "past_day_significant_earthquakes",
-    "past_day_m45_earthquakes",
-    "past_day_m25_earthquakes",
-    "past_day_m10_earthquakes",
-    "past_day_all_earthquakes",
-    "past_week_significant_earthquakes",
-    "past_week_m45_earthquakes",
-    "past_week_m25_earthquakes",
-    "past_week_m10_earthquakes",
-    "past_week_all_earthquakes",
-    "past_month_significant_earthquakes",
-    "past_month_m45_earthquakes",
-    "past_month_m25_earthquakes",
-    "past_month_m10_earthquakes",
-    "past_month_all_earthquakes",
-]
 
 PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
     {
