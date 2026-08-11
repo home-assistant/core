@@ -42,6 +42,7 @@ TEST_POTS = [
         "balance": 134578,
         "currency": "USD",
         "type": "instant_access",
+        "current_account_id": "acc_curr",
     }
 ]
 TITLE = "jake"

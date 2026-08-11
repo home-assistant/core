@@ -145,7 +145,7 @@ def _async_resolve_transfer(
                 translation_key="invalid_transfer_account",
                 translation_placeholders={"device_name": _device_name(account_device)},
             )
-        if pot_id not in coordinator.data.pots:
+        if (pot := coordinator.data.pots.get(pot_id)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=(
@@ -154,6 +154,18 @@ def _async_resolve_transfer(
                     else "invalid_pot"
                 ),
                 translation_placeholders={"device_name": _device_name(pot_device)},
+            )
+        if pot["current_account_id"] != account_id:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="pot_account_mismatch",
+                translation_placeholders={
+                    "account_name": account["name"],
+                    "pot_name": pot["name"],
+                    "pot_account_name": coordinator.data.accounts[
+                        pot["current_account_id"]
+                    ]["name"],
+                },
             )
         return coordinator, account_id, pot_id
 

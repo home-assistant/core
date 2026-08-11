@@ -82,6 +82,9 @@
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
+    "pot_account_mismatch": {
+      "message": "{pot_name} belongs to {pot_account_name}, not {account_name}. Choose its associated Monzo account, or choose a pot belonging to {account_name}."
+    },
     "pot_selected_as_account": {
       "message": "{device_name} is a pot, not an account. Choose a Monzo account in the Account field."
     },

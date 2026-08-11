@@ -246,6 +246,45 @@ async def test_devices_from_different_entries(
         )
 
 
+async def test_pot_must_belong_to_selected_account(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    polling_config_entry: MockConfigEntry,
+    transfer_devices: TransferDevices,
+) -> None:
+    """Test a pot can only be transferred to or from its owning account."""
+    joint_account_id = "acc_joint"
+    polling_config_entry.runtime_data.data.accounts[joint_account_id] = {
+        "id": joint_account_id,
+        "name": "Joint Account",
+        "type": "uk_retail_joint",
+    }
+    joint_account = device_registry.async_get_or_create(
+        config_entry_id=polling_config_entry.entry_id,
+        identifiers={(DOMAIN, joint_account_id)},
+        name="Joint Account",
+    )
+
+    with pytest.raises(ServiceValidationError) as error:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DEPOSIT_INTO_POT,
+            {
+                ATTR_ACCOUNT: joint_account.id,
+                ATTR_POT: transfer_devices.pot_device_id,
+                ATTR_AMOUNT: 1,
+            },
+            blocking=True,
+        )
+
+    assert error.value.translation_key == "pot_account_mismatch"
+    assert error.value.translation_placeholders == {
+        "account_name": "Joint Account",
+        "pot_name": "Savings",
+        "pot_account_name": "Current Account",
+    }
+
+
 async def test_transfer_requires_admin(
     hass: HomeAssistant,
     hass_read_only_user: MockUser,
