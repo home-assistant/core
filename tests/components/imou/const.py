@@ -25,7 +25,6 @@ from homeassistant.components.imou.const import (
     PARAM_DEVICE_VOLUME,
     PARAM_HEADER_DETECT,
     PARAM_LIGHT,
-    PARAM_MODE,
     PARAM_MOTION_DETECT,
     PARAM_NIGHT_VISION_MODE,
     PARAM_PLUG_SWITCH,
@@ -56,10 +55,6 @@ DEFAULT_SELECTS = {
     PARAM_NIGHT_VISION_MODE: {
         PARAM_CURRENT_OPTION: "intelligent",
         PARAM_OPTIONS: ["intelligent", "fullcolor", "infrared", "off"],
-    },
-    PARAM_MODE: {
-        PARAM_CURRENT_OPTION: "home",
-        PARAM_OPTIONS: ["home", "away", "disarm"],
     },
     PARAM_DEVICE_VOLUME: {
         PARAM_CURRENT_OPTION: "medium",

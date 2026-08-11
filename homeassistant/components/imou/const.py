@@ -37,7 +37,6 @@ PARAM_AUDIO_ENCODE_CONTROL = "audio_encode_control"
 PARAM_LIGHT = "light"
 PARAM_PLUG_SWITCH = "switch"
 PARAM_NIGHT_VISION_MODE = "night_vision_mode"
-PARAM_MODE = "mode"
 PARAM_DEVICE_VOLUME = "device_volume"
 
 # How long each PTZ button press moves the camera, in milliseconds (Imou cloud API).
