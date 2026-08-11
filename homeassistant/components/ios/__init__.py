@@ -342,7 +342,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
 
         hass = request.app[KEY_HASS]
 
-        data[ATTR_LAST_SEEN_AT] = dt_util.now()
+        data[ATTR_LAST_SEEN_AT] = dt_util.now().isoformat()
 
         device_id = data[ATTR_DEVICE_ID]
 
