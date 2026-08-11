@@ -386,19 +386,22 @@ async def test_start_selected_program(
 
 
 @pytest.mark.parametrize(
-    ("get_active_program_side_effect", "get_selected_program_call_count"),
-    [(None, 0), (NoProgramActiveError("error.key"), 1)],
+    "get_active_program_side_effect", [None, NoProgramActiveError("error.key")]
 )
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 async def test_start_select_program_non_writtable_options_discarded(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
     get_active_program_side_effect: NoProgramActiveError | None,
-    get_selected_program_call_count: int,
 ) -> None:
     """Test that non-writable options are discarded when starting the selected program."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
     client.get_active_program = AsyncMock(
         return_value=Program(
             key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
@@ -442,12 +445,9 @@ async def test_start_select_program_non_writtable_options_discarded(
         )
     )
 
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "HA_ID")},
+        identifiers={(DOMAIN, appliance.ha_id)},
     )
 
     await hass.services.async_call(
@@ -457,6 +457,17 @@ async def test_start_select_program_non_writtable_options_discarded(
             "device_id": device_entry.id,
         },
         blocking=True,
+    )
+
+    client.start_program.assert_awaited_once_with(
+        appliance.ha_id,
+        program_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+        options=[
+            Option(
+                key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                value=True,
+            )
+        ],
     )
 
 
