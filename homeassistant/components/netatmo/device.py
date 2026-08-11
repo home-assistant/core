@@ -1,5 +1,6 @@
 """Device registry helpers for the Netatmo integration."""
 
+from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
 import pyatmo
@@ -14,6 +15,27 @@ if TYPE_CHECKING:
     from .coordinator import NetatmoConfigEntry
 
 
+def _bridged_children(home: pyatmo.Home) -> Iterator[tuple[str, str]]:
+    """Yield (module id, parent id) for every child a module lists as bridged."""
+    return (
+        (child_id, module.entity_id)
+        for module in home.modules.values()
+        for child_id in module.modules or ()
+        if child_id in home.modules and child_id != module.entity_id
+    )
+
+
+def _declared_bridges(home: pyatmo.Home) -> Iterator[tuple[str, str]]:
+    """Yield (module id, parent id) for every module that names its bridge."""
+    return (
+        (module.entity_id, bridge)
+        for module in home.modules.values()
+        if (bridge := module.bridge)
+        and bridge in home.modules
+        and bridge != module.entity_id
+    )
+
+
 def netatmo_module_parents(account: pyatmo.AsyncAccount) -> dict[str, str]:
     """Map each module id to the id of the module it reports through.
 
@@ -24,19 +46,9 @@ def netatmo_module_parents(account: pyatmo.AsyncAccount) -> dict[str, str]:
     """
     parents: dict[str, str] = {}
     for home in account.homes.values():
-        for module in home.modules.values():
-            for child_id in module.modules or ():
-                if child_id in home.modules and child_id != module.entity_id:
-                    parents.setdefault(child_id, module.entity_id)
-
-        for module in home.modules.values():
-            bridge = module.bridge
-            if (
-                bridge is not None
-                and bridge in home.modules
-                and bridge != module.entity_id
-            ):
-                parents[module.entity_id] = bridge
+        for child_id, parent_id in _bridged_children(home):
+            parents.setdefault(child_id, parent_id)
+        parents.update(_declared_bridges(home))
 
     return parents
 
