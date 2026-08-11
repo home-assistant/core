@@ -1,4 +1,73 @@
 # serializer version: 1
+# name: test_sensor_set_and_active_warning[sensor.schwechat_active_warning_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'yellow',
+        'orange',
+        'red',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.schwechat_active_warning_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active warning level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Active warning level',
+    'platform': 'geosphere_austria_warnings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_warning_level',
+    'unique_id': '30740-active_warning_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_set_and_active_warning[sensor.schwechat_active_warning_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GeoSphere Austria',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      'end': '2023-03-27T18:00:00+00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Schwechat Active warning level',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'none',
+        'yellow',
+        'orange',
+        'red',
+      ]),
+      'start': '2023-03-27T08:00:00+00:00',
+      'type': 'storm',
+      'warning_id': 4149,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.schwechat_active_warning_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'orange',
+  })
+# ---
 # name: test_sensor_set_and_active_warning[sensor.schwechat_active_warnings-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -176,74 +245,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
-  })
-# ---
-# name: test_sensor_set_and_active_warning[sensor.schwechat_warning_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'none',
-        'yellow',
-        'orange',
-        'red',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.schwechat_warning_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Warning level',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Warning level',
-    'platform': 'geosphere_austria_warnings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'warning_level',
-    'unique_id': '30740-warning_level',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_set_and_active_warning[sensor.schwechat_warning_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GeoSphere Austria',
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      'end': '2023-03-27T18:00:00+00:00',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Schwechat Warning level',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'none',
-        'yellow',
-        'orange',
-        'red',
-      ]),
-      'start': '2023-03-27T08:00:00+00:00',
-      'type': 'storm',
-      'warning_id': 4149,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.schwechat_warning_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'orange',
   })
 # ---
