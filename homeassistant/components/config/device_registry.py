@@ -201,7 +201,7 @@ async def _async_remove_device(
 
     if (
         expected_config_entry_id is not None
-        and expected_config_entry_id not in device_entry.config_entries
+        and expected_config_entry_id != device_entry.config_entry_id
     ):
         raise HomeAssistantError("Config entry not in device")
 

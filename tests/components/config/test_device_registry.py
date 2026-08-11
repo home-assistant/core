@@ -694,11 +694,15 @@ async def test_remove_device_if_integration_removes(
     }
 
 
+@pytest.mark.parametrize(("command", "deprecated"), _REMOVE_DEVICE_COMMANDS)
 @pytest.mark.parametrize("load_registries", [False])
 async def test_remove_device_composite(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    command: str,
+    deprecated: bool,
 ) -> None:
     """Test removing a pre-migration composite device id fails."""
     entry_1 = MockConfigEntry()
@@ -732,14 +736,14 @@ async def test_remove_device_composite(
     registry = dr.async_get(hass)
     assert registry.async_is_composite_device_id(composite_id) is True
 
-    await client.send_json_auto_id(
-        {"type": "config/device_registry/remove", "device_id": composite_id}
+    response = await _send_remove_device(
+        client, command, composite_id, entry_1.entry_id
     )
-    msg = await client.receive_json()
 
-    assert not msg["success"]
-    assert msg["error"]["code"] == "home_assistant_error"
-    assert msg["error"]["message"] == "Cannot remove a composite device"
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert response["error"]["message"] == "Cannot remove a composite device"
+    assert (_DEPRECATION_WARNING in caplog.text) is deprecated
 
 
 async def test_remove_config_entry_from_device_deprecated_config_entry_mismatch(
