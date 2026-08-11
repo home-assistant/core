@@ -1,5 +1,6 @@
 """The tests for the Template image platform."""
 
+from datetime import UTC, datetime
 from http import HTTPStatus
 from io import BytesIO
 from typing import Any
@@ -11,23 +12,52 @@ import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
+from homeassistant.components import image
 from homeassistant.components.input_text import (
     ATTR_VALUE as INPUT_TEXT_ATTR_VALUE,
     DOMAIN as INPUT_TEXT_DOMAIN,
     SERVICE_SET_VALUE as INPUT_TEXT_SERVICE_SET_VALUE,
 )
 from homeassistant.components.template import DOMAIN
-from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    CONF_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, assert_setup_component
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    assert_state_and_attributes,
+    async_trigger,
+    make_test_trigger,
+    setup_entity,
+)
+
+from tests.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+)
 from tests.typing import ClientSessionGenerator
 
 _DEFAULT = object()
 _TEST_IMAGE = "image.template_image"
 _URL_INPUT_TEXT = "input_text.url"
+
+TEST_STATE_ENTITY_ID = "sensor.test_state"
+
+TEST_IMAGE = TemplatePlatformSetup(
+    image.DOMAIN,
+    "test_template_image",
+    make_test_trigger(TEST_STATE_ENTITY_ID, _TEST_IMAGE, _URL_INPUT_TEXT),
+)
 
 
 @pytest.fixture
@@ -582,3 +612,266 @@ async def test_device_id(
     template_entity = entity_registry.async_get("image.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@respx.mock
+@pytest.mark.freeze_time("2026-07-13 00:00:00+00:00")
+async def test_restore_state(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    imgbytes_jpg: bytes,
+    imgbytes2_jpg: bytes,
+) -> None:
+    """Test restoring trigger template image."""
+
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+
+    saved_extra_data = {
+        "image_last_updated": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+        },
+        "image_url": "http://example2.com",
+    }
+
+    fake_state = State(
+        TEST_IMAGE.entity_id,
+        "2021-07-13T00:00:00+00:00",
+    )
+    mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes2_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+
+    await async_trigger(hass, "sensor.test_state", "http://example.com")
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2026-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+    assert respx.get("http://example.com").call_count == 1
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("saved_state", "initial_state"),
+    [
+        (STATE_UNAVAILABLE, STATE_UNKNOWN),
+        (STATE_UNKNOWN, STATE_UNKNOWN),
+    ],
+)
+@respx.mock
+@pytest.mark.freeze_time("2026-07-13 00:00:00+00:00")
+async def test_restore_bad_state_does_not_restore(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    saved_state: str,
+    initial_state: str,
+    imgbytes_jpg: bytes,
+    imgbytes2_jpg: bytes,
+) -> None:
+    """Test restore state does not restore."""
+
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+
+    saved_extra_data = {
+        "image_last_updated": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+        },
+        "image_url": "http://example2.com",
+    }
+
+    fake_state = State(TEST_IMAGE.entity_id, saved_state)
+    mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_IMAGE,
+        initial_state,
+    )
+
+    await async_trigger(hass, "sensor.test_state", "http://example.com")
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2026-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+    assert respx.get("http://example.com").call_count == 1
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@respx.mock
+@pytest.mark.freeze_time("2021-07-13 00:00:00+00:00")
+async def test_saving_state(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    imgbytes_jpg: bytes,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test restore saved state."""
+
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+
+    saved_extra_data = {
+        "image_last_updated": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+        },
+        "image_url": "http://example.com",
+    }
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "http://example.com")
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == TEST_IMAGE.entity_id
+
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == saved_extra_data
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("saved_extra_data"),
+    [
+        {
+            "image_last_update": {
+                "__type": "<class 'datetime.datetime'>",
+                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            "image_url": "http://example.com",
+        },
+        {
+            "image_last_updated": {
+                "__ty": "<class 'datetime.datetime'>",
+                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            "image_url": "http://example.com",
+        },
+        {
+            "image_last_updated": {
+                "__type": "<class 'datetime.datetime'>",
+                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            "image_ur": "http://example.com",
+        },
+    ],
+)
+@respx.mock
+@pytest.mark.freeze_time("2026-07-13 00:00:00+00:00")
+async def test_restore_bad_extra_data_does_not_restore(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    saved_extra_data: dict,
+    imgbytes_jpg: bytes,
+) -> None:
+    """Test restore state does not restore with bad extra data."""
+
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+
+    fake_state = State(TEST_IMAGE.entity_id, "2021-07-13T00:00:00+00:00")
+    mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_IMAGE,
+        STATE_UNKNOWN,
+    )
+
+    await async_trigger(hass, "sensor.test_state", "http://example.com")
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2026-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+    assert respx.get("http://example.com").call_count == 1
