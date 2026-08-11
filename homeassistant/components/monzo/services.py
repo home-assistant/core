@@ -11,7 +11,12 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, selector, service
 
-from .const import DEVICE_MODEL_ID_ACCOUNT, DEVICE_MODEL_ID_POT, DOMAIN
+from .const import (
+    DEVICE_MODEL_ID_ACCOUNT,
+    DEVICE_MODEL_ID_POT,
+    DOMAIN,
+    NON_TRANSFER_ACCOUNT_TYPES,
+)
 from .coordinator import MonzoConfigEntry, MonzoCoordinator
 
 ATTR_ACCOUNT: Final = "account"
@@ -113,7 +118,7 @@ def _async_resolve_transfer(
             service.async_get_config_entry(call.hass, DOMAIN, entry_id),
         )
         coordinator = entry.runtime_data
-        if account_id not in coordinator.data.accounts:
+        if (account := coordinator.data.accounts.get(account_id)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=(
@@ -121,6 +126,12 @@ def _async_resolve_transfer(
                     if account_id in coordinator.data.pots
                     else "invalid_account"
                 ),
+                translation_placeholders={"device_name": _device_name(account_device)},
+            )
+        if account["type"] in NON_TRANSFER_ACCOUNT_TYPES:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_transfer_account",
                 translation_placeholders={"device_name": _device_name(account_device)},
             )
         if pot_id not in coordinator.data.pots:

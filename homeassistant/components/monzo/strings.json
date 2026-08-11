@@ -76,6 +76,9 @@
     "invalid_pot": {
       "message": "The selected device ({device_name}) is not a pot belonging to this Monzo connection."
     },
+    "invalid_transfer_account": {
+      "message": "{device_name} does not support pot transfers. Choose a different Monzo account."
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },

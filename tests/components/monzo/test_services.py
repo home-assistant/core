@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.monzo.const import (
     DEVICE_MODEL_ID_ACCOUNT,
+    DEVICE_MODEL_ID_NON_TRANSFER_ACCOUNT,
     DEVICE_MODEL_ID_POT,
     DOMAIN,
 )
@@ -98,6 +99,34 @@ async def test_device_model_ids_support_selector_filtering(
     assert pot_device is not None
     assert account_device.model_id == DEVICE_MODEL_ID_ACCOUNT
     assert pot_device.model_id == DEVICE_MODEL_ID_POT
+
+
+async def test_non_transfer_account_is_rejected(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    polling_config_entry: MockConfigEntry,
+    transfer_devices: TransferDevices,
+) -> None:
+    """Test an account product which does not support pot transfers is rejected."""
+    flex_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, cast(str, TEST_ACCOUNTS[1]["id"])), polling_config_entry.entry_id
+    )
+    assert flex_device is not None
+    assert flex_device.model_id == DEVICE_MODEL_ID_NON_TRANSFER_ACCOUNT
+
+    with pytest.raises(ServiceValidationError) as error:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DEPOSIT_INTO_POT,
+            {
+                ATTR_ACCOUNT: flex_device.id,
+                ATTR_POT: transfer_devices.pot_device_id,
+                ATTR_AMOUNT: 1,
+            },
+            blocking=True,
+        )
+
+    assert error.value.translation_key == "invalid_transfer_account"
 
 
 @pytest.mark.parametrize(
