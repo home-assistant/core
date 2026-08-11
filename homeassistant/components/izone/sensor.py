@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from operator import attrgetter
 from typing import override
 
@@ -13,8 +14,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -35,6 +37,18 @@ class IZoneSensorEntityDescription[SourceT: IZoneSensorSource](SensorEntityDescr
     """Describes an iZone sensor; value_fn reads from a pizone source object."""
 
     value_fn: Callable[[SourceT], StateType]
+
+
+def _control_zone_entity_id(hass: HomeAssistant, controller: Controller) -> str | None:
+    """Return the climate entity ID that currently owns the unit setpoint."""
+    owner = controller.control_setpoint_owner
+    if owner is controller:
+        unique_id = controller.device_uid
+    elif isinstance(owner, Zone):
+        unique_id = f"{controller.device_uid}_z{owner.index + 1}"
+    else:
+        return None
+    return er.async_get(hass).async_get_entity_id(Platform.CLIMATE, DOMAIN, unique_id)
 
 
 CONTROLLER_SENSOR_DESCRIPTIONS: tuple[IZoneSensorEntityDescription[Controller], ...] = (
@@ -58,6 +72,16 @@ CONTROLLER_SENSOR_DESCRIPTIONS: tuple[IZoneSensorEntityDescription[Controller], 
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=attrgetter("temp_return"),
     ),
+    IZoneSensorEntityDescription[Controller](
+        key="control_zone_setpoint",
+        translation_key="control_zone_setpoint",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("control_setpoint"),
+    ),
 )
 
 
@@ -69,20 +93,30 @@ async def async_setup_entry(
     """Set up iZone sensor entities from the entry coordinator."""
     coordinator = entry.runtime_data
     controller = coordinator.controller
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, controller.device_uid)},
+        manufacturer="IZone",
+        model=controller.sys_type,
+        name=f"iZone Controller {controller.device_uid}",
+    )
+    descriptions: tuple[IZoneSensorEntityDescription[Controller], ...] = (
+        *CONTROLLER_SENSOR_DESCRIPTIONS,
+        IZoneSensorEntityDescription[Controller](
+            key="control_zone",
+            translation_key="control_zone",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            value_fn=partial(_control_zone_entity_id, hass),
+        ),
+    )
     async_add_entities(
         IZoneSensor(
             coordinator,
             description,
             controller,
             unique_id=f"{controller.device_uid}_{description.key}",
-            device_info=DeviceInfo(
-                identifiers={(DOMAIN, controller.device_uid)},
-                manufacturer="IZone",
-                model=controller.sys_type,
-                name=f"iZone Controller {controller.device_uid}",
-            ),
+            device_info=device_info,
         )
-        for description in CONTROLLER_SENSOR_DESCRIPTIONS
+        for description in descriptions
     )
 
 
