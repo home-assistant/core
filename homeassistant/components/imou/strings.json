@@ -24,6 +24,11 @@
       }
     }
   },
+  "exceptions": {
+    "select_option_failed": {
+      "message": "Error communicating with the Imou API"
+    }
+  },
   "entity": {
     "button": {
       "mute": {
@@ -58,14 +63,6 @@
           "low": "[%key:common::state::low%]",
           "medium": "[%key:common::state::medium%]",
           "mute": "Mute"
-        }
-      },
-      "mode": {
-        "name": "Mode",
-        "state": {
-          "away": "[%key:common::state::not_home%]",
-          "disarm": "Disarm",
-          "home": "[%key:common::state::home%]"
         }
       },
       "night_vision_mode": {

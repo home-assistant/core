@@ -18,18 +18,9 @@
       "device_volume": {
         "default": "mdi:volume-high",
         "state": {
-          "high": "mdi:volume-high",
           "low": "mdi:volume-low",
           "medium": "mdi:volume-medium",
           "mute": "mdi:volume-off"
-        }
-      },
-      "mode": {
-        "default": "mdi:auto-mode",
-        "state": {
-          "away": "mdi:exit-run",
-          "disarm": "mdi:shield-off",
-          "home": "mdi:home-account"
         }
       },
       "night_vision_mode": {
