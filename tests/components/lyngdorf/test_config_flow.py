@@ -260,7 +260,9 @@ async def test_ssdp_discovery_no_serial(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_determine_id"
 
 
-async def test_ssdp_discovery_unsupported_model(hass: HomeAssistant) -> None:
+async def test_ssdp_discovery_unsupported_model(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test SSDP discovery aborts when model is not supported."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -278,6 +280,7 @@ async def test_ssdp_discovery_unsupported_model(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_model"
+    assert "UNKNOWN-MODEL" in caplog.text
 
 
 async def test_ssdp_discovery_missing_model(hass: HomeAssistant) -> None:

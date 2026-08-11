@@ -52,6 +52,9 @@
       "hydration": {
         "name": "Water intake"
       },
+      "last_sync_time": {
+        "name": "Last sync time"
+      },
       "resting_heart_rate": {
         "name": "Resting heart rate"
       },

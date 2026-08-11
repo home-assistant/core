@@ -27,7 +27,7 @@ from .const import (
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .entity import KnxYamlEntity
+from .entity import KnxYamlEntity, build_yaml_unique_id
 from .knx_module import KNXModule
 from .schema import SelectSchema
 
@@ -67,7 +67,7 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
         self._device = _create_raw_value(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.remote_value.group_address),
+            unique_id=build_yaml_unique_id(self._device.remote_value.group_address),
             entity_config=config,
         )
         self._option_payloads: dict[str, int] = {

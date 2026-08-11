@@ -762,8 +762,8 @@ async def test_homekit_start(
 
     assert device_registry.async_get(bridge_with_wrong_mac.id) is None
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)
@@ -784,8 +784,8 @@ async def test_homekit_start(
 
     assert load_mock.called
     assert not persist_mock.called
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)
@@ -1101,8 +1101,8 @@ async def test_homekit_unpair(
         state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
 
         formatted_mac = dr.format_mac(state.mac)
-        hk_bridge_dev = device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
+        hk_bridge_dev = device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, formatted_mac), entry.entry_id
         )
 
         await hass.services.async_call(
@@ -2402,8 +2402,8 @@ async def test_homekit_start_in_accessory_mode(
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)

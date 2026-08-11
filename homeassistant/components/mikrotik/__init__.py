@@ -17,16 +17,19 @@ from .coordinator import (
 )
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.DEVICE_TRACKER,
+    Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.UPDATE,
 ]
 
 
 def _call_api(data: dict[str, Any]) -> Api:
     """Call the Mikrotik API."""
-    with mikrotik_config_entry_errors():
+    with mikrotik_config_entry_errors(during_setup=True):
         api: Api = get_api(data)
         return api
 
@@ -43,8 +46,6 @@ async def async_setup_entry(
 
     config_entry.runtime_data = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -54,6 +55,8 @@ async def async_setup_entry(
         name=coordinator.hostname,
         sw_version=coordinator.firmware,
     )
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
