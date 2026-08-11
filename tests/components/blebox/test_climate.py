@@ -55,6 +55,7 @@ def saunabox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My sauna")
     type(product).model = PropertyMock(return_value="saunaBox")
+    type(product).product = PropertyMock(return_value="saunaBox")
     return (feature, "climate.my_sauna")
 
 
@@ -78,6 +79,7 @@ def thermobox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My thermo")
     type(product).model = PropertyMock(return_value="thermoBox")
+    type(product).product = PropertyMock(return_value="thermoBox")
     return (feature, "climate.my_thermo")
 
 

@@ -36,10 +36,13 @@ async def setup_integration(
 @pytest.fixture
 def device_entry(
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     setup_integration: None,
 ) -> dr.DeviceEntry:
     """Get the device entry for testing."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), mock_config_entry.entry_id
+    )
     assert device is not None
     return device
 
@@ -47,11 +50,12 @@ def device_entry(
 @pytest.fixture
 def water_heater_device_entry(
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     setup_integration: None,
 ) -> dr.DeviceEntry:
     """Get the water heater sub-device entry for testing."""
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_MAC}-water-heater")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-water-heater"), mock_config_entry.entry_id
     )
     assert device is not None
     return device
@@ -466,7 +470,9 @@ async def test_sync_time_service(
     await hass.async_block_till_done()
 
     # Get the device
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), mock_config_entry.entry_id
+    )
     assert device is not None
 
     # Mock device time that differs from HA time
@@ -506,7 +512,9 @@ async def test_sync_time_service_no_update_when_same(
     await hass.async_block_till_done()
 
     # Get the device
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), mock_config_entry.entry_id
+    )
     assert device is not None
 
     # Mock device time that matches HA time
@@ -545,7 +553,9 @@ async def test_sync_time_service_error_handling(
     await hass.async_block_till_done()
 
     # Get the device
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), mock_config_entry.entry_id
+    )
     assert device is not None
 
     # Mock time() to raise an error
@@ -579,7 +589,9 @@ async def test_sync_time_service_set_time_error(
     await hass.async_block_till_done()
 
     # Get the device
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_MAC), mock_config_entry.entry_id
+    )
     assert device is not None
 
     # Mock device time that differs
