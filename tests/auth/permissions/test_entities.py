@@ -264,3 +264,58 @@ def test_entities_areas_area_inherited_from_parent(hass: HomeAssistant) -> None:
     assert compiled("light.kitchen", "control") is True
     assert compiled("light.kitchen", "edit") is False
     assert compiled("switch.kitchen", "read") is False
+
+
+def test_entities_areas_device_not_found(hass: HomeAssistant) -> None:
+    """Test area policy denies when the entity's device is missing from the registry."""
+    entity_registry = mock_registry(
+        hass,
+        {
+            "light.kitchen": RegistryEntryWithDefaults(
+                entity_id="light.kitchen",
+                unique_id="1234",
+                platform="test_platform",
+                device_id="mock-dev-id",
+            )
+        },
+    )
+    device_registry = mock_device_registry(hass, {})
+
+    policy = {"area_ids": {"mock-area-id": {"read": True, "control": True}}}
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(
+        policy, PermissionLookup(entity_registry, device_registry)
+    )
+    assert compiled("light.kitchen", "read") is False
+
+
+def test_entities_areas_device_without_effective_area(hass: HomeAssistant) -> None:
+    """Test area policy denies when the entity's device has no effective area."""
+    entity_registry = mock_registry(
+        hass,
+        {
+            "light.kitchen": RegistryEntryWithDefaults(
+                entity_id="light.kitchen",
+                unique_id="1234",
+                platform="test_platform",
+                device_id="mock-dev-id",
+            )
+        },
+    )
+    device_registry = mock_device_registry(
+        hass,
+        {
+            "mock-dev-id": DeviceEntry(
+                config_entry_id="mock-config-entry",
+                id="mock-dev-id",
+                area_id=None,
+            )
+        },
+    )
+
+    policy = {"area_ids": {"mock-area-id": {"read": True, "control": True}}}
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(
+        policy, PermissionLookup(entity_registry, device_registry)
+    )
+    assert compiled("light.kitchen", "read") is False
