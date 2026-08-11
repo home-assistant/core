@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
@@ -21,6 +21,7 @@ from homeassistant.components.monzo.webhook import WEBHOOK_RETRY_DELAY
 from homeassistant.components.webhook import async_generate_path
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
@@ -678,6 +679,37 @@ async def test_external_url_cleanup_auth_failure_starts_reauthentication(
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
+async def test_external_url_cleanup_oauth_failure_starts_reauthentication(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a rejected token refresh starts reauthentication during cleanup."""
+    await setup_integration(hass, polling_config_entry)
+    monzo.user_account.list_account_webhooks.reset_mock()
+    monzo.user_account.list_account_webhooks.side_effect = (
+        OAuth2TokenRequestReauthError(request_info=Mock(), domain="monzo")
+    )
+
+    with patch(
+        "homeassistant.components.monzo.webhook.webhook.async_generate_url",
+        side_effect=NoURLAvailableError,
+    ):
+        await hass.config.async_update(external_url=None)
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert polling_config_entry.data[CONF_WEBHOOK_URL] == WEBHOOK_URL
+    monzo.user_account.list_account_webhooks.assert_awaited_once()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
 async def test_external_url_cleanup_failure_is_retried_once(
     hass: HomeAssistant,
     monzo: AsyncMock,
@@ -770,6 +802,32 @@ async def test_registration_auth_failure_starts_reauthentication(
     await setup_integration(hass, polling_config_entry)
     await hass.async_block_till_done()
 
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_registration_oauth_failure_starts_reauthentication(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a rejected token refresh starts reauthentication during registration."""
+    monzo.user_account.list_account_webhooks.side_effect = [
+        [],
+        OAuth2TokenRequestReauthError(request_info=Mock(), domain="monzo"),
+    ]
+
+    await setup_integration(hass, polling_config_entry)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert monzo.user_account.list_account_webhooks.await_count == 2
+    monzo.user_account.delete_webhook.assert_awaited_once_with("webhook-acc_curr")
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH

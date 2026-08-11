@@ -18,6 +18,7 @@ from monzopy import (
 from homeassistant.components import cloud, webhook
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError
@@ -145,7 +146,7 @@ class MonzoWebhookManager:
                 await self._async_reconcile_remote_webhooks(
                     webhook_url, registered_webhook_ids
                 )
-            except AuthorisationExpiredError:
+            except AuthorisationExpiredError, OAuth2TokenRequestReauthError:
                 await self._async_rollback_remote_webhooks(registered_webhook_ids)
                 self.entry.async_start_reauth(self.hass)
                 return
@@ -223,7 +224,7 @@ class MonzoWebhookManager:
                 self.coordinator.data.accounts,
                 previous_url,
             )
-        except AuthorisationExpiredError:
+        except AuthorisationExpiredError, OAuth2TokenRequestReauthError:
             self.entry.async_start_reauth(self.hass)
             return
         except (ClientError, InvalidMonzoAPIResponseError, TimeoutError) as err:
