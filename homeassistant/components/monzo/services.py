@@ -8,7 +8,11 @@ from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestReauthError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import device_registry as dr, selector, service
 
 from .const import (
@@ -184,7 +188,7 @@ async def _async_transfer(
 
     try:
         await transfer_fn(coordinator)(account_id, pot_id, call.data[ATTR_AMOUNT])
-    except AuthorisationExpiredError as err:
+    except (AuthorisationExpiredError, OAuth2TokenRequestReauthError) as err:
         coordinator.config_entry.async_start_reauth(call.hass)
         raise HomeAssistantError(
             translation_domain=DOMAIN,

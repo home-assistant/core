@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from math import nan
 from typing import cast
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 import pytest
@@ -26,6 +26,7 @@ from homeassistant.components.monzo.services import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
+    OAuth2TokenRequestReauthError,
     ServiceValidationError,
     Unauthorized,
 )
@@ -350,14 +351,25 @@ async def test_api_rejection_details(
     }
 
 
+@pytest.mark.parametrize(
+    "api_error",
+    [
+        pytest.param(AuthorisationExpiredError, id="monzo-authorisation-expired"),
+        pytest.param(
+            OAuth2TokenRequestReauthError(request_info=Mock(), domain=DOMAIN),
+            id="oauth-refresh-rejected",
+        ),
+    ],
+)
 async def test_expired_authorisation_starts_reauthentication(
     hass: HomeAssistant,
     polling_config_entry: MockConfigEntry,
     monzo: AsyncMock,
     transfer_devices: TransferDevices,
+    api_error: Exception | type[Exception],
 ) -> None:
     """Test expired Monzo authorization starts reauthentication."""
-    monzo.user_account.pot_deposit.side_effect = AuthorisationExpiredError
+    monzo.user_account.pot_deposit.side_effect = api_error
 
     with (
         patch.object(polling_config_entry, "async_start_reauth") as start_reauth,
