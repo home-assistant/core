@@ -82,6 +82,9 @@
       },
       "deactivate_onetimecharge": {
         "name": "Deactivate one-time charge"
+      },
+      "reboot_gateway": {
+        "name": "Reboot gateway"
       }
     },
     "climate": {

@@ -99,6 +99,7 @@ class MockViCareService:
         self._test_data = load_json_object_fixture(fixture.data_file)
         self.fetch_all_features = Mock(return_value=self._test_data)
         self.setProperty = Mock()
+        self.reboot_gateway = Mock()
         self.roles = fixture.roles
         self.accessor = ViCareDeviceAccessor(installation_id, gateway_id, device_id)
 
