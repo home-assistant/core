@@ -324,6 +324,22 @@ async def test_api_error(
     assert monzo.user_account.pots.await_count == 1
 
 
+async def test_false_transfer_result_is_failure(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    transfer_devices: TransferDevices,
+) -> None:
+    """Test a false transfer result is exposed as a Home Assistant error."""
+    monzo.user_account.pot_deposit.return_value = False
+
+    with pytest.raises(HomeAssistantError) as error:
+        await _async_call_transfer(hass, transfer_devices, SERVICE_DEPOSIT_INTO_POT, 1)
+
+    assert error.value.translation_key == "transfer_failed"
+    assert monzo.user_account.accounts.await_count == 1
+    assert monzo.user_account.pots.await_count == 1
+
+
 async def test_api_rejection_details(
     hass: HomeAssistant,
     monzo: AsyncMock,

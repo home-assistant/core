@@ -187,7 +187,9 @@ async def _async_transfer(
     coordinator, account_id, pot_id = _async_resolve_transfer(call)
 
     try:
-        await transfer_fn(coordinator)(account_id, pot_id, call.data[ATTR_AMOUNT])
+        transfer_succeeded = await transfer_fn(coordinator)(
+            account_id, pot_id, call.data[ATTR_AMOUNT]
+        )
     except (AuthorisationExpiredError, OAuth2TokenRequestReauthError) as err:
         coordinator.config_entry.async_start_reauth(call.hass)
         raise HomeAssistantError(
@@ -210,6 +212,12 @@ async def _async_transfer(
             translation_domain=DOMAIN,
             translation_key="transfer_failed",
         ) from err
+
+    if not transfer_succeeded:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="transfer_failed",
+        )
 
     await coordinator.async_request_refresh()
 
