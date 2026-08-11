@@ -19,6 +19,13 @@
       }
     }
   },
+  "entity": {
+    "number": {
+      "target_temperature": {
+        "name": "Target temperature"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "An error occurred while communicating with the Hot Spring API."

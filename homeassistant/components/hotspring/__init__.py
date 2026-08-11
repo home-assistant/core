@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import HotSpringConfigEntry, HotSpringDataUpdateCoordinator
 
-PLATFORMS = [Platform.WATER_HEATER]
+PLATFORMS = [Platform.NUMBER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HotSpringConfigEntry) -> bool:

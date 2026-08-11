@@ -30,8 +30,8 @@ async def test_device_info(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test device registry entry creation with updated info."""
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "AA:BB:CC:DD:EE:FF")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "AA:BB:CC:DD:EE:FF"), init_integration.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Hot Spring"
