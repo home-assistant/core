@@ -86,7 +86,7 @@ async def test_get_triggers_child_device(
     module_device = get_device(hass, entry, (0, 7, False))
     # A single dash in the identifier makes the old code reach the device.model
     # access, which a child device does not have.
-    child_device = device_registry.async_get_or_create(
+    child_device = device_registry.async_get_or_create_child(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "child-1")},
         parent_device_id=module_device.id,

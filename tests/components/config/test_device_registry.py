@@ -904,7 +904,7 @@ def _create_parent_and_child(
         identifiers={(domain, "strip")},
         name="Power strip",
     )
-    child_device = device_registry.async_get_or_create(
+    child_device = device_registry.async_get_or_create_child(
         config_entry_id=entry.entry_id,
         identifiers={(domain, "strip_outlet_1")},
         parent_device_id=parent.id,

@@ -1382,7 +1382,7 @@ async def test_devices_payload_with_child_device(
         manufacturer="test-manufacturer",
         model_id="test-model-id",
     )
-    child = device_registry.async_get_or_create(
+    child = device_registry.async_get_or_create_child(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "child")},
         parent_device_id=parent.id,

@@ -1254,13 +1254,13 @@ async def test_search_label_on_child_device(
     )
     device_registry.async_update_device(parent_device.id, area_id=utility_area.id)
 
-    child_device = device_registry.async_get_or_create(
+    child_device = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip-outlet-1")},
         parent_device_id=parent_device.id,
         name="Outlet 1",
     )
-    device_registry.async_update_device(child_device.id, labels={label.label_id})
+    device_registry.async_update_child_device(child_device.id, labels={label.label_id})
 
     searcher = Searcher(hass, {})
     assert searcher.async_search(ItemType.LABEL, label.label_id) == {
@@ -1302,7 +1302,7 @@ async def test_search_child_devices(
     )
     device_registry.async_update_device(parent_device.id, area_id=utility_area.id)
 
-    child_device = device_registry.async_get_or_create(
+    child_device = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip-outlet-1")},
         parent_device_id=parent_device.id,

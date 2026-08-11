@@ -627,7 +627,7 @@ async def test_match_child_device_area(
         name="Power strip",
     )
     device_registry.async_update_device(parent_device.id, area_id=area_kitchen.id)
-    child_device = device_registry.async_get_or_create(
+    child_device = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip_outlet_1")},
         parent_device_id=parent_device.id,

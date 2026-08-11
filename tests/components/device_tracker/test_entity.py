@@ -1652,7 +1652,7 @@ async def test_register_mac_ignores_child_device_created(
         config_entry_id=config_entry.entry_id,
         identifiers={(TEST_DOMAIN, "parent")},
     )
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={(TEST_DOMAIN, "child")},
         parent_device_id=parent.id,

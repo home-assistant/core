@@ -2062,7 +2062,7 @@ async def test_acknowledge_child_device_inherits_area(
     )
     device_registry.async_update_device(parent_device.id, area_id=area_1.id)
 
-    satellite_device = device_registry.async_get_or_create(
+    satellite_device = device_registry.async_get_or_create_child(
         config_entry_id=entry.entry_id,
         identifiers={("demo", "satellite-child")},
         parent_device_id=parent_device.id,
@@ -2071,7 +2071,7 @@ async def test_acknowledge_child_device_inherits_area(
         "assist_satellite", "test", "1234", device_id=satellite_device.id
     )
 
-    light_device = device_registry.async_get_or_create(
+    light_device = device_registry.async_get_or_create_child(
         config_entry_id=entry.entry_id,
         identifiers={("demo", "light-child")},
         parent_device_id=parent_device.id,

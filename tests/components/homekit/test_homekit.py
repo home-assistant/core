@@ -909,7 +909,7 @@ async def test_homekit_start_with_a_child_device(
         config_entry_id=device_config_entry.entry_id,
         identifiers={("test", "parent")},
     )
-    child = device_registry.async_get_or_create(
+    child = device_registry.async_get_or_create_child(
         config_entry_id=device_config_entry.entry_id,
         identifiers={("test", "child")},
         parent_device_id=parent.id,
@@ -1223,7 +1223,7 @@ async def test_homekit_unpair_device_with_children(
         hk_bridge_dev = device_registry.async_get_device_by_connection(
             (dr.CONNECTION_NETWORK_MAC, formatted_mac), entry.entry_id
         )
-        child_device = device_registry.async_get_or_create(
+        child_device = device_registry.async_get_or_create_child(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, "child-outlet")},
             parent_device_id=hk_bridge_dev.id,

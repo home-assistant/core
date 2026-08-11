@@ -690,7 +690,7 @@ async def test_async_remove_helper_devices_fork_child_source(
         config_entry_id=source_config_entry.entry_id,
         identifiers={(SOURCE_DOMAIN, "parent")},
     )
-    source_child = device_registry.async_get_or_create(
+    source_child = device_registry.async_get_or_create_child(
         config_entry_id=source_config_entry.entry_id,
         parent_device_id=parent_device.id,
         identifiers={(SOURCE_DOMAIN, "child")},

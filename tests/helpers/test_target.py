@@ -1105,7 +1105,7 @@ async def test_target_trickle_down_to_splits(
         for d in device_registry.async_get_devices_for_composite_device_id(COMPOSITE_ID)
         if entry_a.entry_id in d.config_entries
     )
-    child = device_registry.async_get_or_create(
+    child = device_registry.async_get_or_create_child(
         config_entry_id=entry_a.entry_id,
         identifiers={("domain_a", "child")},
         parent_device_id=split_a.id,
@@ -1148,19 +1148,19 @@ def child_device_setup(
     device_registry.async_update_device(
         parent.id, area_id="garage", labels={"strip-label"}
     )
-    outlet_1 = device_registry.async_get_or_create(
+    outlet_1 = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip_outlet_1")},
         parent_device_id=parent.id,
         name="Outlet 1",
     )
-    outlet_2 = device_registry.async_get_or_create(
+    outlet_2 = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip_outlet_2")},
         parent_device_id=parent.id,
         name="Outlet 2",
     )
-    device_registry.async_update_device(
+    device_registry.async_update_child_device(
         outlet_2.id, area_id="garden", labels={"outlet-label"}
     )
 

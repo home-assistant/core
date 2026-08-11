@@ -2,7 +2,6 @@
 
 import asyncio
 from datetime import timedelta
-from typing import cast
 
 from async_upnp_client.exceptions import UpnpConnectionError
 
@@ -162,14 +161,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
             "Created device using UDN '%s', device_entry: %s", device.udn, device_entry
         )
     else:
-        # upnp registers only main devices, so the update returns a main device
-        # (async_update_device's return type is widened to include children).
-        device_entry = cast(
-            "dr.DeviceEntry | None",
-            dev_registry.async_update_device(
-                device_entry.id,
-                new_identifiers=set(identifiers),
-            ),
+        device_entry = dev_registry.async_update_device(
+            device_entry.id,
+            new_identifiers=set(identifiers),
         )
 
     assert device_entry

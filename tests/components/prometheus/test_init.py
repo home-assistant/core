@@ -3294,7 +3294,7 @@ async def test_area_inherited_from_parent_device(
         identifiers={("prometheus", "parent")},
     )
     device_registry.async_update_device(parent.id, area_id=area.id)
-    child = device_registry.async_get_or_create(
+    child = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("prometheus", "child")},
         parent_device_id=parent.id,
@@ -3342,7 +3342,7 @@ async def test_area_of_child_device_updated_when_parent_area_changes(
         identifiers={("prometheus", "parent")},
     )
     device_registry.async_update_device(parent.id, area_id=area_a.id)
-    child = device_registry.async_get_or_create(
+    child = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("prometheus", "child")},
         parent_device_id=parent.id,

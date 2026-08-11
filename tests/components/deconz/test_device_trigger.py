@@ -528,7 +528,7 @@ async def test_child_device_id_resolves_cleanly(
         identifiers={(DOMAIN, "parent_device")},
         name="Parent",
     )
-    child = device_registry.async_get_or_create(
+    child = device_registry.async_get_or_create_child(
         config_entry_id=config_entry_setup.entry_id,
         identifiers={(DOMAIN, "child_device")},
         parent_device_id=parent.id,

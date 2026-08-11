@@ -330,19 +330,19 @@ async def test_area_functions_with_child_devices(
         name="Power strip",
     )
     device_registry.async_update_device(parent.id, area_id=garage.id)
-    inheriting_child = device_registry.async_get_or_create(
+    inheriting_child = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip_outlet_1")},
         parent_device_id=parent.id,
         name="Outlet 1",
     )
-    overriding_child = device_registry.async_get_or_create(
+    overriding_child = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip_outlet_2")},
         parent_device_id=parent.id,
         name="Outlet 2",
     )
-    device_registry.async_update_device(overriding_child.id, area_id=garden.id)
+    device_registry.async_update_child_device(overriding_child.id, area_id=garden.id)
     entity_entry = entity_registry.async_get_or_create(
         "switch",
         "test",

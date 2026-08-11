@@ -3058,3 +3058,101 @@ async def test_device_info_child_device_invalid(
     assert not hass.states.async_entity_ids()
     assert not device_registry.child_devices
     assert "Not adding entity with invalid device info" in caplog.text
+
+
+async def test_device_info_parent_device_id_routing(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test parent_device_id in device info routes to a child or a main device.
+
+    A device info carrying a parent_device_id creates a child device, while one
+    without a parent_device_id creates a main device.
+    """
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(config_entry.domain, "strip")},
+        name="Power strip",
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="child",
+                    device_info={
+                        "identifiers": {(config_entry.domain, "child")},
+                        "name": "Child",
+                        "parent_device_id": parent.id,
+                    },
+                ),
+                MockEntity(
+                    unique_id="main",
+                    device_info={
+                        "identifiers": {(config_entry.domain, "main")},
+                        "name": "Main",
+                    },
+                ),
+                MockEntity(
+                    unique_id="main_explicit_none",
+                    device_info={
+                        "identifiers": {(config_entry.domain, "main_none")},
+                        "name": "Main explicit none",
+                        "parent_device_id": None,
+                    },
+                ),
+            ]
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    # A parent_device_id routes to a child device, not a main device
+    child_device = device_registry.async_get_child_device_by_identifier(
+        (config_entry.domain, "child"), config_entry.entry_id
+    )
+    assert isinstance(child_device, dr.ChildDeviceEntry)
+    assert child_device.parent_device_id == parent.id
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (config_entry.domain, "child"), config_entry.entry_id
+        )
+        is None
+    )
+
+    # A device info without a parent_device_id routes to a main device, not a child
+    main_device = device_registry.async_get_device_by_identifier(
+        (config_entry.domain, "main"), config_entry.entry_id
+    )
+    assert isinstance(main_device, dr.DeviceEntry)
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            (config_entry.domain, "main"), config_entry.entry_id
+        )
+        is None
+    )
+
+    # An explicit parent_device_id=None routes to a main device, not a child
+    main_none_device = device_registry.async_get_device_by_identifier(
+        (config_entry.domain, "main_none"), config_entry.entry_id
+    )
+    assert isinstance(main_none_device, dr.DeviceEntry)
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            (config_entry.domain, "main_none"), config_entry.entry_id
+        )
+        is None
+    )

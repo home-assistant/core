@@ -145,7 +145,7 @@ async def test_google_entity_sync_serialize_child_device(
         name="Power strip",
     )
     device_registry.async_update_device(parent.id, area_id=area.id)
-    child = device_registry.async_get_or_create(
+    child = device_registry.async_get_or_create_child(
         config_entry_id=entry.entry_id,
         identifiers={("test", "strip_outlet_1")},
         parent_device_id=parent.id,

@@ -6282,7 +6282,7 @@ async def test_async_get_effective_area_id(
         name="Power strip",
     )
     device_registry.async_update_device(parent.id, area_id="garage")
-    child_device = device_registry.async_get_or_create(
+    child_device = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip_outlet_1")},
         parent_device_id=parent.id,
@@ -6301,7 +6301,7 @@ async def test_async_get_effective_area_id(
     assert er.async_get_effective_area_id(hass, entry) == "garage"
 
     # An explicitly set child device area overrides the inherited one
-    device_registry.async_update_device(child_device.id, area_id="garden")
+    device_registry.async_update_child_device(child_device.id, area_id="garden")
     assert er.async_get_effective_area_id(hass, entry) == "garden"
 
     # An explicitly set entity area overrides the device area
@@ -6334,7 +6334,7 @@ async def test_disable_child_device_disables_entities(
         identifiers={("test", "strip")},
         name="Power strip",
     )
-    child_device = device_registry.async_get_or_create(
+    child_device = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip_outlet_1")},
         parent_device_id=parent.id,
@@ -6378,7 +6378,7 @@ async def test_remove_child_device_removes_entities(
         identifiers={("test", "strip")},
         name="Power strip",
     )
-    child_device = device_registry.async_get_or_create(
+    child_device = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip_outlet_1")},
         parent_device_id=parent.id,
@@ -6419,7 +6419,7 @@ async def test_remove_child_device_orphans_foreign_entry_entities(
         identifiers={("test", "strip")},
         name="Power strip",
     )
-    child_device = device_registry.async_get_or_create(
+    child_device = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip_outlet_1")},
         parent_device_id=parent.id,

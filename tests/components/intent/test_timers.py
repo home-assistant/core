@@ -235,7 +235,7 @@ async def test_start_timer_child_device_inherits_area(
         identifiers={("test", "parent")},
     )
     device_registry.async_update_device(parent.id, area_id=area.id)
-    child = device_registry.async_get_or_create(
+    child = device_registry.async_get_or_create_child(
         config_entry_id=entry.entry_id,
         identifiers={("test", "child")},
         parent_device_id=parent.id,

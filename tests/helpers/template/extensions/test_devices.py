@@ -339,7 +339,7 @@ async def test_device_functions_with_child_devices(
         identifiers={("test", "strip")},
         name="Power strip",
     )
-    child_device = device_registry.async_get_or_create(
+    child_device = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "strip_outlet_1")},
         parent_device_id=parent.id,

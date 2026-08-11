@@ -1,7 +1,7 @@
 """HTTP views to interact with the device registry."""
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -179,7 +179,12 @@ def websocket_update_device(
         # Convert labels to a set
         msg["labels"] = set(msg["labels"])
 
-    entry = cast(dr.AnyDeviceEntry, registry.async_update_device(**msg))
+    entry: dr.AnyDeviceEntry | None
+    if msg["device_id"] in registry.child_devices:
+        entry = registry.async_update_child_device(**msg)
+    else:
+        entry = registry.async_update_device(**msg)
+    assert entry is not None
 
     connection.send_message(websocket_api.result_message(msg_id, entry.dict_repr))
 

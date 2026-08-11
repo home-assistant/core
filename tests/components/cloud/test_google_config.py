@@ -363,7 +363,7 @@ async def test_google_device_registry_sync_child_device(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    child_entry = device_registry.async_get_or_create(
+    child_entry = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "child")},
         parent_device_id=parent_entry.id,
