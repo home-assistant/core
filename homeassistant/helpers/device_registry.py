@@ -2170,8 +2170,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         model_id: str | UndefinedType | None = UNDEFINED,
         modified_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
         name: str | UndefinedType | None = UNDEFINED,
-        # Registers a child device of the parent device with the given device id
-        parent_device_id: str | UndefinedType = UNDEFINED,
+        # Registers a child device of the parent device with the given device id.
+        # An explicit None means the device is not a child.
+        parent_device_id: str | UndefinedType | None = UNDEFINED,
         serial_number: str | UndefinedType | None = UNDEFINED,
         suggested_area: str | UndefinedType | None = UNDEFINED,
         sw_version: str | UndefinedType | None = UNDEFINED,
@@ -2245,6 +2246,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 config_entry.domain, translated_name, translation_placeholders or {}
             )
 
+        # An explicit parent_device_id=None means "not a child" (a main device); only
+        # a non-None parent_device_id registers a child device. Coerce it away so the
+        # None does not classify the device info as a child in _determine_device_info_type.
+        if parent_device_id is None:
+            parent_device_id = UNDEFINED
+
         # Reconstruct a DeviceInfo dict from the arguments.
         # When we upgrade to Python 3.12, we can change this method to instead
         # accept kwargs typed as a DeviceInfo dict (PEP 692)
@@ -2267,7 +2274,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if val is not UNDEFINED
         }
 
-        if parent_device_id is not UNDEFINED and parent_device_id is not None:
+        if parent_device_id is not UNDEFINED:
             # A child device carries none of a device's connectivity or hardware; reject
             # those fields with a clear error instead of the generic device-info type
             # mismatch from _determine_device_info_type below.
@@ -2338,6 +2345,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 identifiers=identifiers, config_entry_id=config_entry_id
             )
 
+        # Validate the child -> device conversion before the reconcile below, whose
+        # stale-duplicate strips would otherwise be left applied by a later raise.
+        if matched_child_device is not None and device_info_type == "primary":
+            self._async_validate_child_to_device_conversion(
+                matched_child_device, config_entry, device_info
+            )
+
         self._async_reconcile_collisions(
             device if device is not None else matched_child_device,
             config_entry,
@@ -2365,9 +2379,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # A "primary" device info re-registers a child device's identifiers as a
             # device: the integration stopped splitting the device (e.g. after a
             # rollback), so convert the child device back, preserving its id.
-            device = self._async_convert_child_to_device(
-                matched_child_device, config_entry, device_info
-            )
+            device = self._async_convert_child_to_device(matched_child_device)
 
         # Resolved after reconciliation so a removed stale duplicate can't be linked
         if via_device_id is not UNDEFINED and via_device_id is not None:
@@ -2624,6 +2636,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "supported, remove the child device first",
             )
 
+        # Validate the device -> child conversion before the reconcile below, whose
+        # stale-duplicate strips would otherwise be left applied by a later raise.
+        if matched_device is not None:
+            self._async_validate_device_to_child_conversion(
+                matched_device, parent, config_entry, device_info
+            )
+
         self._async_reconcile_collisions(
             child_device if child_device is not None else matched_device,
             config_entry,
@@ -2640,7 +2659,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # preserving its id.
             matched_device = self.devices[matched_device.id]
             child_device = self._async_convert_device_to_child(
-                matched_device, parent, identifiers, config_entry, device_info
+                matched_device, parent, identifiers
             )
 
         is_new = False
@@ -2708,18 +2727,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return updated_child_device
 
     @callback
-    def _async_convert_device_to_child(
+    def _async_validate_device_to_child_conversion(
         self,
         device: DeviceEntry,
         parent: DeviceEntry,
-        identifiers: set[tuple[str, str]],
         config_entry: ConfigEntry,
         device_info: DeviceInfo,
-    ) -> ChildDeviceEntry:
-        """Convert a device to a child device, preserving its id.
+    ) -> None:
+        """Validate converting a device to a child device.
 
-        Lets an integration that already splits its devices (linking them with
-        via_device) adopt child devices with no device id changes.
+        Run before any mutation so a rejected conversion leaves the registry
+        untouched.
         """
         if device.id == parent.id:
             raise DeviceInfoError(
@@ -2748,6 +2766,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "same config entry",
             )
 
+    @callback
+    def _async_convert_device_to_child(
+        self,
+        device: DeviceEntry,
+        parent: DeviceEntry,
+        identifiers: set[tuple[str, str]],
+    ) -> ChildDeviceEntry:
+        """Convert a device to a child device, preserving its id.
+
+        Lets an integration that already splits its devices (linking them with
+        via_device) adopt child devices with no device id changes. The caller must have
+        validated the conversion with _async_validate_device_to_child_conversion.
+        """
         self.hass.verify_event_loop_thread("device_registry.async_get_or_create")
 
         # The update event reports the old values of every conceptually changed
@@ -2820,16 +2851,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return child_device
 
     @callback
-    def _async_convert_child_to_device(
+    def _async_validate_child_to_device_conversion(
         self,
         child_device: ChildDeviceEntry,
         config_entry: ConfigEntry,
         device_info: DeviceInfo,
-    ) -> DeviceEntry:
-        """Convert a child device back to a device, preserving its id.
+    ) -> None:
+        """Validate converting a child device back to a device.
 
-        Lets an integration that stops splitting a device into child devices (e.g.
-        after a rollback) re-register the identifiers with no device id changes.
+        This check runs before any mutation so a rejected conversion leaves the
+        registry untouched.
         """
         if child_device.id in self._live_device_ids.get(
             child_device.config_entry_id, ()
@@ -2841,6 +2872,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "same config entry",
             )
 
+    @callback
+    def _async_convert_child_to_device(
+        self,
+        child_device: ChildDeviceEntry,
+    ) -> DeviceEntry:
+        """Convert a child device back to a device, preserving its id.
+
+        Lets an integration that stops splitting a device into child devices (e.g.
+        after a rollback) re-register the identifiers with no device id changes. The
+        caller must have validated the conversion with
+        _async_validate_child_to_device_conversion.
+        """
         self.hass.verify_event_loop_thread("device_registry.async_get_or_create")
 
         disabled_by = child_device.disabled_by
@@ -3144,6 +3187,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 target_config_entry_id = move_target.config_entry_id
                 target_config_subentry_id = move_target.config_subentry_id
                 pending_move = None
+                # A parent with child devices can't move (enforced again below); reject
+                # here before mutating the runtime-only sibling pending moves, so the
+                # rejected move leaves no partial state behind.
+                if self.child_devices.get_children_for_device_id(device_id):
+                    raise HomeAssistantError(
+                        f"Can't move device {device_id}: it has child devices"
+                    )
                 # A pre-migration composite's splits share identity, so once one split
                 # completes the move to the target entry the others must not also move
                 # there and collide; clear their pending moves.
@@ -3493,6 +3543,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 if is_new
                 else "on a child device belonging to"
             )
+            parent_context = (
+                "when creating a child device whose parent device is"
+                if is_new
+                else "on a child device whose parent device is"
+            )
             if owning_entry is not None:
                 if disabled_by is None and owning_entry.disabled_by:
                     report_usage(
@@ -3521,12 +3576,25 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                         disabled_by = None
             if disabled_by is DeviceEntryDisabler.DEVICE and not parent_device.disabled:
                 report_usage(
-                    f"sets disabled_by to DeviceEntryDisabler.DEVICE {context} "
-                    f"a child device whose parent device is enabled",
+                    f"sets disabled_by to DeviceEntryDisabler.DEVICE "
+                    f"{parent_context} enabled",
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2027.8",
                 )
                 disabled_by = UNDEFINED
+            # A CONFIG_ENTRY-disabled child cleared by the config-entry re-enable cascade
+            # while its parent stays disabled is core's own reconciliation, not external
+            # code, so the coercion below is applied without reporting.
+            if (
+                disabled_by is None
+                and parent_device.disabled
+                and old.disabled_by is not DeviceEntryDisabler.CONFIG_ENTRY
+            ):
+                report_usage(
+                    f"sets disabled_by to None {parent_context} disabled",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2027.8",
+                )
             if parent_device.disabled and (
                 disabled_by is None
                 or (is_new and disabled_by is UNDEFINED and old.disabled_by is None)
@@ -4643,8 +4711,8 @@ def async_cleanup(
                 device.id, remove_config_entry_id=device.config_entry_id
             )
 
-    # The remove cascade makes a child without its parent impossible; guard against
-    # store corruption anyway.
+    # A child device shares its parent's (valid) config entry, and the remove cascade
+    # makes a child without its parent impossible; guard against store corruption anyway.
     for child_device in list(dev_reg.child_devices.values()):
         if child_device.parent_device_id not in dev_reg.devices:
             _LOGGER.error(
@@ -4652,6 +4720,13 @@ def async_cleanup(
                 "device registry",
                 child_device.id,
                 child_device.parent_device_id,
+            )
+            dev_reg.async_remove_device(child_device.id)
+        elif child_device.config_entry_id not in config_entry_ids:
+            _LOGGER.error(
+                "Removing child device %s: its config entry %s no longer exists",
+                child_device.id,
+                child_device.config_entry_id,
             )
             dev_reg.async_remove_device(child_device.id)
 

@@ -9861,6 +9861,30 @@ async def test_child_device_create_with_suggested_area(
     assert child_device_2.area_id == garden.id
 
 
+@pytest.mark.usefixtures("hass")
+async def test_explicit_parent_device_id_none_is_main_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an explicit parent_device_id=None registers a main device, not a child.
+
+    A dynamically built device info can carry parent_device_id=None; it must be treated
+    the same as omitting it, not classified as a child device with a None parent.
+    """
+    device_info: dict[str, Any] = {
+        "config_entry_id": mock_config_entry.entry_id,
+        "identifiers": {("test", "device")},
+        "name": "Main device",
+        "parent_device_id": None,
+    }
+    device = device_registry.async_get_or_create(**device_info)
+
+    # DeviceEntry and ChildDeviceEntry are siblings, so this rules out a child device
+    assert isinstance(device, dr.DeviceEntry)
+    assert not device_registry.child_devices
+    assert device_registry.async_get(device.id) is device
+
+
 @pytest.mark.parametrize(
     ("identifiers", "parent_key", "error"),
     [
@@ -10307,6 +10331,7 @@ async def test_child_device_disabled_by_reconciled_with_parent(
     )
     updated = device_registry.async_update_device(child_device.id, disabled_by=None)
     assert updated.disabled_by is dr.DeviceEntryDisabler.DEVICE
+    assert "whose parent device is disabled" in caplog.text
 
     # A child device created under a disabled parent is born disabled
     new_child = device_registry.async_get_or_create(
@@ -10316,6 +10341,61 @@ async def test_child_device_disabled_by_reconciled_with_parent(
         name="Outlet 2",
     )
     assert new_child.disabled_by is dr.DeviceEntryDisabler.DEVICE
+
+
+async def test_config_entry_reenable_with_user_disabled_parent_no_warning(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test re-enabling a config entry with a user-disabled parent does not warn.
+
+    The config-entry re-enable cascade clears the child's CONFIG_ENTRY disable by passing
+    disabled_by=None; with the parent still user-disabled the child is coerced back to
+    DEVICE. This internal reconciliation must not emit the "sets disabled_by to None"
+    report, while a direct external enable of such a child must.
+    """
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    await hass.config_entries.async_set_disabled_by(
+        mock_config_entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    disabled_parent = device_registry.async_get(parent.id)
+    disabled_child = device_registry.async_get_child(child_device.id)
+    assert disabled_parent is not None
+    assert disabled_child is not None
+    assert disabled_parent.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+    assert disabled_child.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+
+    # User disables the parent while the config entry is disabled; the child keeps its
+    # CONFIG_ENTRY disable because it is already disabled
+    device_registry.async_update_device(
+        parent.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    child_after_parent_disable = device_registry.async_get_child(child_device.id)
+    assert child_after_parent_disable is not None
+    assert child_after_parent_disable.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+
+    caplog.clear()
+    await hass.config_entries.async_set_disabled_by(mock_config_entry.entry_id, None)
+    await hass.async_block_till_done()
+    updated_parent = device_registry.async_get(parent.id)
+    updated_child = device_registry.async_get_child(child_device.id)
+    assert updated_parent is not None
+    assert updated_child is not None
+    assert updated_parent.disabled_by is dr.DeviceEntryDisabler.USER
+    assert updated_child.disabled_by is dr.DeviceEntryDisabler.DEVICE
+    assert "Detected code that" not in caplog.text
+
+    # A direct external enable of the same child still warns, as it is not the cascade
+    caplog.clear()
+    updated = device_registry.async_update_device(child_device.id, disabled_by=None)
+    assert updated.disabled_by is dr.DeviceEntryDisabler.DEVICE
+    assert "whose parent device is disabled" in caplog.text
 
 
 async def test_config_entry_disable_with_children(
@@ -10501,6 +10581,11 @@ async def test_convert_device_to_child_device_errors(
             name="Nope",
         )
 
+    # The conversion guards run before any reconcile, so the rejection mutates nothing
+    assert len(device_registry.devices) == 2
+    assert len(device_registry.child_devices) == 1
+    assert device_registry.async_get(other.id) is other
+
 
 async def test_convert_child_device_to_device(
     hass: HomeAssistant,
@@ -10539,6 +10624,39 @@ async def test_convert_child_device_to_device(
         "device_id": child_device.id,
         "changes": {"parent_device_id": parent.id},
     }
+
+
+async def test_convert_child_device_to_device_explicit_parent_none(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An explicit parent_device_id=None still converts a child back to a main device.
+
+    parent_device_id=None (only reachable via a dynamically-built device info, since
+    ChildDeviceInfo requires a str and DeviceInfo has no such key) is coerced to
+    UNDEFINED and classifies the info as "not a child". Since the child -> device
+    conversion is driven by the primary device info type, not by parent_device_id, a
+    primary re-registration matching a child converts it back regardless.
+    """
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+    # A new setup session so the child is no longer live and can be re-registered.
+    device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        manufacturer="acme",
+        name="Outlet 1",
+        parent_device_id=None,
+    )
+    assert isinstance(device, dr.DeviceEntry)
+    assert device.id == child_device.id
+    assert device.manufacturer == "acme"
+    assert len(device_registry.devices) == 2
+    assert not device_registry.child_devices
 
 
 async def test_convert_child_device_to_device_with_connections(
@@ -10694,7 +10812,7 @@ async def test_convert_device_to_child_same_session_raises(
         identifiers={("test", "strip")},
         name="Power strip",
     )
-    device_registry.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("test", "strip_outlet_1")},
         name="Outlet 1",
@@ -10711,6 +10829,12 @@ async def test_convert_device_to_child_same_session_raises(
             name="Outlet 1",
         )
 
+    # The conversion guard runs before any reconcile, so the rejection leaves the
+    # device a main device and creates no child device
+    assert device_registry.async_get(device.id) is device
+    assert not device_registry.child_devices
+    assert len(device_registry.devices) == 2
+
 
 @pytest.mark.usefixtures("hass")
 async def test_convert_child_to_device_same_session_raises(
@@ -10718,7 +10842,9 @@ async def test_convert_child_to_device_same_session_raises(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test re-registering a live child's identifiers as a device raises."""
-    _create_parent_and_child(device_registry, mock_config_entry.entry_id)
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
 
     with pytest.raises(
         dr.DeviceInfoError,
@@ -10730,6 +10856,12 @@ async def test_convert_child_to_device_same_session_raises(
             manufacturer="acme",
             name="Outlet 1",
         )
+
+    # The conversion guard runs before any reconcile, so the rejection leaves the child
+    # device untouched and creates no main device for its identifiers
+    assert device_registry.async_get_child(child_device.id) is child_device
+    assert len(device_registry.child_devices) == 1
+    assert len(device_registry.devices) == 1
 
 
 @pytest.mark.usefixtures("hass")
@@ -11161,6 +11293,97 @@ async def test_async_cleanup_removes_child_device_with_missing_parent(
     # The removal scheduled a save, so the drop persists instead of leaving the store
     # dirty until an unrelated write
     await flush_store(device_registry._store)
+    assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == []
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_async_cleanup_removes_child_device_with_stale_config_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test cleanup removes a stored child device whose config entry no longer exists.
+
+    A child device shares its parent's config entry, but a corrupt store can pair a
+    valid parent with a child naming a config entry that no longer exists. Load only
+    guards against a missing parent, so the stale config entry is caught by cleanup.
+    """
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entry_id": mock_config_entry.entry_id,
+                    "config_subentry_id": None,
+                    "composite_device_id": None,
+                    "composite_primary_config_entry": None,
+                    "split_at": None,
+                    "has_composite_identifiers": False,
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "2024-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "parentdeviceid",
+                    "identifiers": [["test", "strip"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "modified_at": "2024-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "name": "Power strip",
+                    "primary_config_entry": mock_config_entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                }
+            ],
+            "child_devices": [
+                {
+                    "area_id": None,
+                    "config_entry_id": "stale-config-entry-id",
+                    "config_subentry_id": None,
+                    "created_at": "2024-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "id": "childdeviceid",
+                    "identifiers": [["test", "strip_outlet_1"]],
+                    "labels": [],
+                    "modified_at": "2024-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "name": "Outlet 1",
+                    "parent_device_id": "parentdeviceid",
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    # The child loads because its parent is present; the stale config entry is only
+    # caught by the cleanup sweep below
+    assert registry.async_get_child("childdeviceid") is not None
+
+    entity_registry = er.EntityRegistry(hass)
+    await entity_registry.async_load()
+    dr.async_cleanup(hass, registry, entity_registry)
+
+    assert registry.async_get_child("childdeviceid") is None
+    assert "its config entry stale-config-entry-id no longer exists" in caplog.text
+
+    # The parent, on a valid config entry, is left untouched
+    assert registry.async_get("parentdeviceid") is not None
+
+    # The removal scheduled a save, so the drop persists
+    await flush_store(registry._store)
     assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == []
 
 
