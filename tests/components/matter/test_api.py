@@ -198,10 +198,9 @@ async def test_node_diagnostics(
 ) -> None:
     """Test the node diagnostics command."""
     # get the device registry entry for the mocked node
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -267,10 +266,9 @@ async def test_ping_node(
 ) -> None:
     """Test the ping_node command."""
     # get the device registry entry for the mocked node
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -322,10 +320,9 @@ async def test_open_commissioning_window(
 ) -> None:
     """Test the open_commissioning_window command."""
     # get the device registry entry for the mocked node
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -383,10 +380,9 @@ async def test_remove_matter_fabric(
 ) -> None:
     """Test the remove_matter_fabric command."""
     # get the device registry entry for the mocked node
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -434,10 +430,9 @@ async def test_interview_node(
 ) -> None:
     """Test the interview_node command."""
     # get the device registry entry for the mocked node
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
     # issue command on the ws api

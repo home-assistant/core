@@ -51,13 +51,13 @@ async def test_auto_add_devices(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test new devices are auto-added to the device registry."""
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, str(controller.id))}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(controller.id)), mock_added_config_entry.entry_id
     )
     assert device is not None
     for zone in zones:
-        zone_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, str(zone.id))}
+        zone_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
         )
         assert zone_device is not None
     all_devices = dr.async_entries_for_config_entry(
@@ -90,13 +90,19 @@ async def test_auto_add_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    new_controller_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, str(controller2.id))}
+    new_controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(controller2.id)), mock_added_config_entry.entry_id
     )
     assert new_controller_device is not None
+
+    # The new controller's own entities must also be added, not just its device.
+    # Registering the controller device must not make _add_remove_zones treat the
+    # controller as already-known and skip the new-controller callbacks.
+    assert hass.states.get("binary_sensor.home_controller_2_connectivity") is not None
+
     for zone in zones2:
-        new_zone_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, str(zone.id))}
+        new_zone_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
         )
         assert new_zone_device is not None
 
@@ -123,11 +129,15 @@ async def test_auto_remove_devices(
 ) -> None:
     """Test old devices are auto-removed from the device registry."""
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, str(controller.id))})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(controller.id)), mock_added_config_entry.entry_id
+        )
         is not None
     )
     for zone in zones:
-        device = device_registry.async_get_device(identifiers={(DOMAIN, str(zone.id))})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
+        )
         assert device is not None
 
     user.controllers = []
@@ -137,11 +147,15 @@ async def test_auto_remove_devices(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, str(controller.id))})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(controller.id)), mock_added_config_entry.entry_id
+        )
         is None
     )
     for zone in zones:
-        device = device_registry.async_get_device(identifiers={(DOMAIN, str(zone.id))})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
+        )
         assert device is None
     all_devices = dr.async_entries_for_config_entry(
         device_registry, mock_added_config_entry.entry_id

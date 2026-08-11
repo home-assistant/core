@@ -3,7 +3,12 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from infrared_protocols.codes.generic.led import Generic13KeyCode, Generic24KeyCode
+from infrared_protocols.codes.generic.led import (
+    Generic13KeyCode,
+    Generic24KeyCode,
+    Generic40KeyCode,
+    Generic44KeyCode,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -34,6 +39,16 @@ def button_only() -> Generator[None]:
         yield
 
 
+@pytest.mark.parametrize(
+    "config_entry",
+    [
+        LEDIrDeviceType.GENERIC_13_KEY,
+        LEDIrDeviceType.GENERIC_24_KEY,
+        LEDIrDeviceType.GENERIC_40_KEY,
+        LEDIrDeviceType.GENERIC_44_KEY,
+    ],
+    indirect=True,
+)
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_setup(
     hass: HomeAssistant,
@@ -80,6 +95,116 @@ async def test_setup(
             "timer",
             [Generic13KeyCode.TIMER],
         ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "brightness_up",
+            [Generic40KeyCode.BRIGHTNESS_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "brightness_down",
+            [Generic40KeyCode.BRIGHTNESS_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_up",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_down",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_on",
+            [Generic40KeyCode.WHITE_ON],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_off",
+            [Generic40KeyCode.WHITE_OFF],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_25",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_25],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_50",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_50],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_75",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_75],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_100",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_100],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "quick",
+            [Generic40KeyCode.QUICK],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "slow",
+            [Generic40KeyCode.SLOW],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "brightness_up",
+            [Generic44KeyCode.BRIGHTNESS_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "brightness_down",
+            [Generic44KeyCode.BRIGHTNESS_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "red_up",
+            [Generic44KeyCode.RED_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "green_up",
+            [Generic44KeyCode.GREEN_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "blue_up",
+            [Generic44KeyCode.BLUE_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "red_down",
+            [Generic44KeyCode.RED_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "green_down",
+            [Generic44KeyCode.GREEN_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "blue_down",
+            [Generic44KeyCode.BLUE_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "quick",
+            [Generic44KeyCode.QUICK],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "slow",
+            [Generic44KeyCode.SLOW],
+        ),
     ],
 )
 @pytest.mark.usefixtures("infrared_codes")
@@ -89,7 +214,9 @@ async def test_button_press(
     entity_registry: er.EntityRegistry,
     device_type: LEDIrDeviceType,
     key: str,
-    expected_codes: list[Generic24KeyCode | Generic13KeyCode],
+    expected_codes: list[
+        Generic24KeyCode | Generic13KeyCode | Generic40KeyCode | Generic44KeyCode
+    ],
 ) -> None:
     """Test button press action."""
     config_entry = MockConfigEntry(

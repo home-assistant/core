@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
+from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +58,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, _process_llm_tools_platform
     )
     async_register_api(hass, AssistAPI(hass))
+    async_setup_ws_api(hass)
     return True
 
 

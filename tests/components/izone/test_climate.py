@@ -26,6 +26,7 @@ from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
@@ -63,6 +64,24 @@ async def test_climate_entities(
     # used by the rest of this module still resolve after setup.
     assert hass.states.get(CONTROLLER_ENTITY) is not None
     assert hass.states.get(ZONE_ENTITY) is not None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_zone_device_linked_to_controller(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The zone device is linked to the controller device via via_device_id."""
+    controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "000000001"), mock_config_entry.entry_id
+    )
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "000000001", 0),  # type:ignore[arg-type]
+        mock_config_entry.entry_id,
+    )
+    assert controller_device is not None
+    assert zone_device is not None
+    assert zone_device.via_device_id == controller_device.id
 
 
 @pytest.mark.parametrize(
