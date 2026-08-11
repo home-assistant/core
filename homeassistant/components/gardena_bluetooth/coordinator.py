@@ -30,6 +30,8 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=60)
+SEGMENTED_SCAN_INTERVAL = timedelta(minutes=30)
+SEGMENTED_SCAN_COUNT = int(SEGMENTED_SCAN_INTERVAL / SCAN_INTERVAL)
 LOGGER = logging.getLogger(__name__)
 
 type GardenaBluetoothConfigEntry = ConfigEntry[GardenaBluetoothCoordinator]
@@ -64,6 +66,7 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data = {}
         self.client = client
         self.characteristics: dict[str, Characteristic] = {}
+        self._update_count = 0
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, address)},
             connections={(dr.CONNECTION_BLUETOOTH, address)},
@@ -135,14 +138,22 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not unique_ids:
             return {}
 
+        # Segmented characteristics carry data that only changes when it is
+        # taught to the device again, so they are read every nth poll only.
+        skip_segmented = bool(self._update_count % SEGMENTED_SCAN_COUNT)
+        self._update_count += 1
+
         data: dict[str, Any] = {}
         for unique_id in unique_ids:
             char = self.characteristics[unique_id]
-            # Segmented characteristics are slow multi frame transfers carrying
-            # data that only changes when it is taught to the device again.
-            if isinstance(char, CharacteristicSegmented) and unique_id in self.data:
+            if (
+                isinstance(char, CharacteristicSegmented)
+                and skip_segmented
+                and unique_id in self.data
+            ):
                 data[unique_id] = self.data[unique_id]
                 continue
+
             try:
                 data[unique_id] = await self.client.read_char(char)
             except CharacteristicNoAccess as exception:

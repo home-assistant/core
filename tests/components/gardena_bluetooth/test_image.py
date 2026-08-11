@@ -16,6 +16,7 @@ from gardena_bluetooth.parse import CharacteristicContourPoints
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.gardena_bluetooth.coordinator import SEGMENTED_SCAN_COUNT
 from homeassistant.components.gardena_bluetooth.image import CONTOURS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -217,20 +218,25 @@ async def test_active_contour_idle_drops_spray(
 
 
 @pytest.mark.usefixtures("mock_contours")
-async def test_contour_read_once(
+async def test_contour_refresh(
     hass: HomeAssistant,
     mock_client: Mock,
     scan_step: Callable[[], Awaitable[None]],
 ) -> None:
-    """Test the slow segmented reads are not repeated on every poll."""
+    """Test the slow segmented reads run on their own slower cadence."""
     await setup_entry(
         hass, platforms=[Platform.IMAGE], service_info=AQUA_CONTOUR_SERVICE_INFO
     )
     assert _contour_reads(mock_client) == len(CONTOURS)
 
+    # In between they are carried over from the previous poll.
+    for _ in range(SEGMENTED_SCAN_COUNT - 1):
+        await scan_step()
+    assert _contour_reads(mock_client) == len(CONTOURS)
+
     await scan_step()
 
-    assert _contour_reads(mock_client) == len(CONTOURS)
+    assert _contour_reads(mock_client) == 2 * len(CONTOURS)
 
 
 async def test_contour_read_failure(
