@@ -103,6 +103,10 @@
         "max_pow": {
           "description": "Maximum power as a percentage of the unit's nominal power.",
           "name": "Maximum power"
+        },
+        "mode": {
+          "description": "Demand control mode: 0 for manual, 1 for scheduled, 2 for auto.",
+          "name": "Mode"
         }
       },
       "name": "Set demand control"

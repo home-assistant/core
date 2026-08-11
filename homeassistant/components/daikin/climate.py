@@ -5,7 +5,6 @@ import logging
 from typing import Any, override
 
 from pydaikin.daikin_base import Appliance
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -26,7 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ATTR_INSIDE_TEMPERATURE,
@@ -35,6 +33,8 @@ from .const import (
     ATTR_STATE_ON,
     ATTR_TARGET_TEMPERATURE,
     DOMAIN,
+    SERVICE_SET_DEMAND_CONTROL,
+    SET_DEMAND_CONTROL_SCHEMA,
     ZONE_NAME_UNCONFIGURED,
 )
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
@@ -91,15 +91,6 @@ HA_ATTR_TO_DAIKIN = {
 
 DAIKIN_ATTR_ADVANCED = "adv"
 ZONE_TEMPERATURE_WINDOW = 2
-
-SERVICE_SET_DEMAND_CONTROL = "set_demand_control"
-ATTR_EN_DEMAND = "en_demand"
-ATTR_MAX_POW = "max_pow"
-
-SET_DEMAND_CONTROL_SCHEMA: VolDictType = {
-    vol.Required(ATTR_EN_DEMAND): bool,
-    vol.Required(ATTR_MAX_POW): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
-}
 
 
 def _zone_error(
@@ -405,7 +396,9 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         )
         await self.coordinator.async_refresh()
 
-    async def async_set_demand_control(self, *, en_demand: bool, max_pow: int) -> None:
+    async def async_set_demand_control(
+        self, *, en_demand: bool, max_pow: int, mode: int = 0
+    ) -> None:
         """Set the demand control maximum power of the unit."""
         if not self.device.support_demand_control:
             raise HomeAssistantError(
@@ -415,6 +408,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         await self.device.set_demand_control(
             en_demand="on" if en_demand else "off",
             max_pow=max_pow,
+            mode=mode,
         )
         await self.coordinator.async_refresh()
 

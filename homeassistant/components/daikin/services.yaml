@@ -16,3 +16,14 @@ set_demand_control:
           max: 100
           step: 1
           unit_of_measurement: "%"
+    mode:
+      default: "0"
+      selector:
+        select:
+          options:
+            - value: "0"
+              label: Manual
+            - value: "1"
+              label: Scheduled
+            - value: "2"
+              label: Auto

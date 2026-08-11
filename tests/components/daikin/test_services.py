@@ -5,8 +5,13 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.components.daikin.const import (
+    ATTR_EN_DEMAND,
+    ATTR_MAX_POW,
+    DOMAIN,
+    KEY_MAC,
+)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -56,13 +61,48 @@ async def test_set_demand_control(
         "set_demand_control",
         {
             ATTR_ENTITY_ID: entity_id,
-            "en_demand": True,
-            "max_pow": 40,
+            ATTR_EN_DEMAND: True,
+            ATTR_MAX_POW: 40,
         },
         blocking=True,
     )
 
-    zone_device.set_demand_control.assert_called_once_with(en_demand="on", max_pow=40)
+    zone_device.set_demand_control.assert_called_once_with(
+        en_demand="on", max_pow=40, mode=0
+    )
+
+
+async def test_set_demand_control_with_mode(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zone_device: ZoneDevice,
+) -> None:
+    """Test the set_demand_control service with an explicit mode."""
+    zone_device.support_demand_control = True
+    zone_device.set_demand_control = AsyncMock()
+
+    await _async_setup_daikin(hass, zone_device)
+
+    entity_id = entity_registry.async_get_entity_id(
+        CLIMATE_DOMAIN, DOMAIN, zone_device.mac
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_demand_control",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_EN_DEMAND: True,
+            ATTR_MAX_POW: 40,
+            ATTR_MODE: 2,
+        },
+        blocking=True,
+    )
+
+    zone_device.set_demand_control.assert_called_once_with(
+        en_demand="on", max_pow=40, mode=2
+    )
 
 
 async def test_set_demand_control_disabled(
@@ -86,13 +126,15 @@ async def test_set_demand_control_disabled(
         "set_demand_control",
         {
             ATTR_ENTITY_ID: entity_id,
-            "en_demand": False,
-            "max_pow": 40,
+            ATTR_EN_DEMAND: False,
+            ATTR_MAX_POW: 40,
         },
         blocking=True,
     )
 
-    zone_device.set_demand_control.assert_called_once_with(en_demand="off", max_pow=40)
+    zone_device.set_demand_control.assert_called_once_with(
+        en_demand="off", max_pow=40, mode=0
+    )
 
 
 async def test_set_demand_control_unsupported(
@@ -116,8 +158,8 @@ async def test_set_demand_control_unsupported(
             "set_demand_control",
             {
                 ATTR_ENTITY_ID: entity_id,
-                "en_demand": True,
-                "max_pow": 40,
+                ATTR_EN_DEMAND: True,
+                ATTR_MAX_POW: 40,
             },
             blocking=True,
         )
