@@ -1613,7 +1613,7 @@ moehlenhoff-alpha2==1.4.0
 momonga==0.3.0
 
 # homeassistant.components.monarch_money
-monarchmoneycommunity==1.5.2
+monarchmoneycommunity==1.5.3
 
 # homeassistant.components.monzo
 monzopy==1.8.0
