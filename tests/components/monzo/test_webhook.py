@@ -515,6 +515,70 @@ async def test_uses_external_url_until_cloud_connects(
     ]
 
 
+async def test_temporary_cloud_disconnect_preserves_cloudhook(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test a temporary Cloud disconnect preserves its remote callback."""
+    with (
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch.object(
+            cloud,
+            "async_get_or_create_cloudhook",
+            return_value=CLOUDHOOK_URL,
+        ),
+    ):
+        await setup_integration(hass, polling_config_entry)
+        monzo.user_account.list_account_webhooks.reset_mock()
+
+        async_mock_cloud_connection_status(hass, False)
+        await hass.async_block_till_done()
+
+    assert polling_config_entry.data[CONF_WEBHOOK_URL] == CLOUDHOOK_URL
+    monzo.user_account.list_account_webhooks.assert_not_awaited()
+
+
+async def test_cloud_subscription_loss_falls_back_to_external_url(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test losing a Cloud subscription replaces its remote callback."""
+    with (
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch.object(
+            cloud,
+            "async_get_or_create_cloudhook",
+            return_value=CLOUDHOOK_URL,
+        ),
+    ):
+        await setup_integration(hass, polling_config_entry)
+        monzo.user_account.list_account_webhooks.side_effect = [
+            [Webhook("old-current", "acc_curr", CLOUDHOOK_URL)],
+            [Webhook("old-flex", "acc_flex", CLOUDHOOK_URL)],
+        ]
+        monzo.user_account.register_webhook.reset_mock()
+        monzo.user_account.delete_webhook.reset_mock()
+
+        with patch.object(cloud, "async_active_subscription", return_value=False):
+            async_mock_cloud_connection_status(hass, False)
+            await hass.async_block_till_done()
+
+    assert polling_config_entry.data[CONF_CLOUDHOOK_URL] == CLOUDHOOK_URL
+    assert polling_config_entry.data[CONF_WEBHOOK_URL] == WEBHOOK_URL
+    assert monzo.user_account.delete_webhook.await_args_list == [
+        call("old-current"),
+        call("old-flex"),
+    ]
+    assert monzo.user_account.register_webhook.await_args_list == [
+        call("acc_curr", WEBHOOK_URL),
+        call("acc_flex", WEBHOOK_URL),
+    ]
+
+
 async def test_cloudhook_change_is_persisted_and_reconciled(
     hass: HomeAssistant,
     monzo: AsyncMock,

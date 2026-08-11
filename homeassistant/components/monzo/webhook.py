@@ -291,13 +291,13 @@ class MonzoWebhookManager:
     def _async_cloud_connection_changed(
         self, state: cloud.CloudConnectionState
     ) -> None:
-        """Register remote webhooks when Home Assistant Cloud connects."""
-        if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
-            self.entry.async_create_task(
-                self.hass,
-                self.async_register_remote_webhooks(),
-                "register Monzo webhooks",
-            )
+        """Reconcile webhooks when Home Assistant Cloud availability changes."""
+        if (
+            state is cloud.CloudConnectionState.CLOUD_DISCONNECTED
+            and cloud.async_active_subscription(self.hass)
+        ):
+            return
+        self._async_schedule_registration("update Monzo webhooks")
 
     @callback
     def _async_cloudhook_changed(self, cloudhook: dict[str, Any] | None) -> None:
