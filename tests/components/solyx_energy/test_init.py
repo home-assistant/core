@@ -71,7 +71,9 @@ async def test_config_entry_not_ready(
 
 async def test_device_info(device_registry: DeviceRegistry, init_integration) -> None:
     """Setup registers the Nymo device in HA's device registry with the right info."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, NYMO_DEVICE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, NYMO_DEVICE_ID), init_integration.entry_id
+    )
     assert device is not None
     assert device.manufacturer == "Solyx Energy"
     assert device.model == "Nymo"
