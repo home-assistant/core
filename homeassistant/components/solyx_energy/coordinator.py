@@ -1,6 +1,6 @@
 """Coordinator file that handles data updates for Solyx Energy device entities."""
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, override
@@ -9,11 +9,9 @@ from solyx_energy_api.exceptions import (
     SolyxEnergyAuthError,
     SolyxEnergyDataError,
     SolyxEnergyTokenError,
-    SolyxEnergyWriteError,
 )
 
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.event import async_call_later
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -21,7 +19,6 @@ from .const import (
     ATTRIBUTE_ENERGY_BOILER,
     ATTRIBUTE_GRID_POWER,
     DATA_INTERVAL_SECONDS,
-    DATA_SETTLE_SECONDS,
     DOMAIN,
 )
 from .util import parse_float
@@ -83,35 +80,6 @@ class SolyxEnergyCoordinator(DataUpdateCoordinator[SolyxEnergyData]):
             boilerPower=parse_float(nymo_data, ATTRIBUTE_BOILER_POWER),
             energyBoiler=parse_float(nymo_data, ATTRIBUTE_ENERGY_BOILER),
             gridPower=parse_float(nymo_data, ATTRIBUTE_GRID_POWER),
-        )
-
-    async def async_set_attribute(self, attribute_name: str, value: object) -> None:
-        """Push data from device entities to the Solyx cloud platform with the SolyxEnergyApiClient class."""
-        try:
-            _LOGGER.debug(
-                "Updating entity %s in the Solyx cloud platform to %s",
-                attribute_name,
-                value,
-            )
-            await self.api_client.async_set_asset_attribute(
-                self.device_id, attribute_name, value
-            )
-        except SolyxEnergyAuthError as err:
-            if self.config_entry is not None:
-                self.config_entry.async_start_reauth_if_available(self.hass)
-            raise ConfigEntryAuthFailed from err
-        except (SolyxEnergyTokenError, SolyxEnergyWriteError) as err:
-            raise HomeAssistantError(f"API error: {err}") from err
-
-        # Assume data from the control is correct
-        if self.data is not None:
-            self.async_set_updated_data(replace(self.data, **{attribute_name: value}))  # type: ignore[arg-type]
-
-        # After X amount of seconds retrieve the actual data through the ApiClient
-        if self._settle_unsub is not None:
-            self._settle_unsub()
-        self._settle_unsub = async_call_later(
-            self.hass, DATA_SETTLE_SECONDS, self._async_settle_refresh
         )
 
     async def _async_settle_refresh(self, _now: datetime) -> None:
