@@ -227,8 +227,10 @@ aiomqtt>=2.5.0
 # https://github.com/mosquito/aiofile/pull/106
 aiofile>=3.10.1
 # caio 0.12.2 includes 'tests' package in wheel
-# https://github.com/mosquito/caio/pull/75
-caio>=0.12.3
+# Fixed upstream in https://github.com/mosquito/caio/pull/75
+# but not released yet. Pin here to prevent hassfest failure.
+# Update manually once next release is available.
+caio<0.12.3
 
 # auth0-python v5.0 is a major rewrite with breaking changes
 # used by sharkiq==1.5.0
