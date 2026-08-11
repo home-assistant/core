@@ -58,6 +58,9 @@
     }
   },
   "exceptions": {
+    "account_selected_as_pot": {
+      "message": "{device_name} is an account, not a pot. Choose a Monzo pot in the Pot field."
+    },
     "authentication_expired": {
       "message": "Authentication with Monzo has expired. Reauthentication has been started."
     },
@@ -65,16 +68,19 @@
       "message": "The selected account and pot must belong to the same Monzo connection."
     },
     "invalid_account": {
-      "message": "The selected device is not a Monzo account."
+      "message": "The selected device ({device_name}) is not an account belonging to this Monzo connection."
     },
     "invalid_device": {
       "message": "The selected Monzo device could not be found."
     },
     "invalid_pot": {
-      "message": "The selected device is not a Monzo pot."
+      "message": "The selected device ({device_name}) is not a pot belonging to this Monzo connection."
     },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "pot_selected_as_account": {
+      "message": "{device_name} is a pot, not an account. Choose a Monzo account in the Account field."
     },
     "transfer_failed": {
       "message": "The money could not be transferred. Try again later."
@@ -86,7 +92,7 @@
       "fields": {
         "account": {
           "description": "The account to move money from.",
-          "name": "Account"
+          "name": "From account"
         },
         "amount": {
           "description": "The amount of money to move.",
@@ -94,7 +100,7 @@
         },
         "pot": {
           "description": "The pot to move money into.",
-          "name": "Pot"
+          "name": "To pot"
         }
       },
       "name": "Deposit into pot"
@@ -104,7 +110,7 @@
       "fields": {
         "account": {
           "description": "The account to move money into.",
-          "name": "Account"
+          "name": "To account"
         },
         "amount": {
           "description": "The amount of money to move.",
@@ -112,7 +118,7 @@
         },
         "pot": {
           "description": "The pot to move money from.",
-          "name": "Pot"
+          "name": "From pot"
         }
       },
       "name": "Withdraw from pot"

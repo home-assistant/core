@@ -10,7 +10,11 @@ from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.monzo.const import DOMAIN
+from homeassistant.components.monzo.const import (
+    DEVICE_MODEL_ID_ACCOUNT,
+    DEVICE_MODEL_ID_POT,
+    DOMAIN,
+)
 from homeassistant.components.monzo.services import (
     ATTR_ACCOUNT,
     ATTR_AMOUNT,
@@ -83,6 +87,19 @@ async def _async_call_transfer(
     )
 
 
+async def test_device_model_ids_support_selector_filtering(
+    device_registry: dr.DeviceRegistry,
+    transfer_devices: TransferDevices,
+) -> None:
+    """Test account and pot devices can be filtered in action selectors."""
+    account_device = device_registry.async_get(transfer_devices.account_device_id)
+    pot_device = device_registry.async_get(transfer_devices.pot_device_id)
+    assert account_device is not None
+    assert pot_device is not None
+    assert account_device.model_id == DEVICE_MODEL_ID_ACCOUNT
+    assert pot_device.model_id == DEVICE_MODEL_ID_POT
+
+
 @pytest.mark.parametrize(
     ("service_name", "transfer_method"),
     [
@@ -126,17 +143,21 @@ async def test_invalid_amount(
 
 
 @pytest.mark.parametrize(
-    ("account_device", "pot_device"),
-    [("pot_device_id", "pot_device_id"), ("account_device_id", "account_device_id")],
+    ("account_device", "pot_device", "translation_key"),
+    [
+        ("pot_device_id", "pot_device_id", "pot_selected_as_account"),
+        ("account_device_id", "account_device_id", "account_selected_as_pot"),
+    ],
 )
 async def test_invalid_resource_type(
     hass: HomeAssistant,
     transfer_devices: TransferDevices,
     account_device: str,
     pot_device: str,
+    translation_key: str,
 ) -> None:
     """Test selected devices must represent an account and a pot."""
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DEPOSIT_INTO_POT,
@@ -147,6 +168,8 @@ async def test_invalid_resource_type(
             },
             blocking=True,
         )
+
+    assert error.value.translation_key == translation_key
 
 
 async def test_missing_device(

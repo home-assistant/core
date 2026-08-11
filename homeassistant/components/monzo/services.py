@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, selector, service
 
-from .const import DOMAIN
+from .const import DEVICE_MODEL_ID_ACCOUNT, DEVICE_MODEL_ID_POT, DOMAIN
 from .coordinator import MonzoConfigEntry, MonzoCoordinator
 
 ATTR_ACCOUNT: Final = "account"
@@ -44,8 +44,22 @@ def _amount_to_minor_units(value: Any) -> int:
 
 TRANSFER_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ACCOUNT): selector.DeviceSelector({"integration": DOMAIN}),
-        vol.Required(ATTR_POT): selector.DeviceSelector({"integration": DOMAIN}),
+        vol.Required(ATTR_ACCOUNT): selector.DeviceSelector(
+            {
+                "filter": {
+                    "integration": DOMAIN,
+                    "model_id": DEVICE_MODEL_ID_ACCOUNT,
+                }
+            }
+        ),
+        vol.Required(ATTR_POT): selector.DeviceSelector(
+            {
+                "filter": {
+                    "integration": DOMAIN,
+                    "model_id": DEVICE_MODEL_ID_POT,
+                }
+            }
+        ),
         vol.Required(ATTR_AMOUNT): _amount_to_minor_units,
     }
 )
@@ -74,6 +88,11 @@ def _async_get_resource_id(device: dr.DeviceEntry) -> str:
     )
 
 
+def _device_name(device: dr.DeviceEntry) -> str:
+    """Return the best available name for a device."""
+    return device.name_by_user or device.name or device.id
+
+
 @callback
 def _async_resolve_transfer(
     call: ServiceCall,
@@ -97,12 +116,22 @@ def _async_resolve_transfer(
         if account_id not in coordinator.data.accounts:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="invalid_account",
+                translation_key=(
+                    "pot_selected_as_account"
+                    if account_id in coordinator.data.pots
+                    else "invalid_account"
+                ),
+                translation_placeholders={"device_name": _device_name(account_device)},
             )
         if pot_id not in coordinator.data.pots:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="invalid_pot",
+                translation_key=(
+                    "account_selected_as_pot"
+                    if pot_id in coordinator.data.accounts
+                    else "invalid_pot"
+                ),
+                translation_placeholders={"device_name": _device_name(pot_device)},
             )
         return coordinator, account_id, pot_id
 

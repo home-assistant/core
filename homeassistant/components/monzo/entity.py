@@ -21,6 +21,7 @@ class MonzoBaseEntity(CoordinatorEntity[MonzoCoordinator]):
         coordinator: MonzoCoordinator,
         resource_id: str,
         device_model: str,
+        device_model_id: str,
         data_accessor: Callable[[MonzoData], dict[str, dict[str, Any]]],
     ) -> None:
         """Initialize sensor."""
@@ -33,6 +34,7 @@ class MonzoBaseEntity(CoordinatorEntity[MonzoCoordinator]):
             identifiers={(DOMAIN, str(self.data["id"]))},
             manufacturer="Monzo",
             model=device_model,
+            model_id=device_model_id,
             name=self.data["name"],
         )
 

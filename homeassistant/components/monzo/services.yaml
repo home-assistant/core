@@ -3,12 +3,16 @@
     required: true
     selector:
       device:
-        integration: monzo
+        filter:
+          integration: monzo
+          model_id: account
   pot:
     required: true
     selector:
       device:
-        integration: monzo
+        filter:
+          integration: monzo
+          model_id: pot
   amount:
     required: true
     selector:
