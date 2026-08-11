@@ -304,15 +304,24 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             if client.state in _PENDING_STATES:
                 return await self.async_step_pair()
             if client.state == AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
-                # Terminal: the approval window expired, so the key can no longer
-                # be verified without restarting setup.
-                return self.async_abort(reason="key_verification_timeout")
+                # The approval window expired; offer to request a new one
+                # in-place rather than sending the user back to setup.
+                return await self.async_step_retry()
             # The typed accessor preserves an unrecognized state verbatim. Such
             # a read is not usable, so treat it as a lookup failure rather than
             # resuming pairing on a state we cannot reason about.
             LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
             return self.async_abort(reason="cannot_connect")
 
+        return await self._register_authorized_client()
+
+    async def _register_authorized_client(self) -> SubentryFlowResult:
+        """Push our key to the gateway to open an approval window, then wait.
+
+        Shared by the initial registration and the retry step; re-registering
+        requests a fresh approval window and resumes the verification wait.
+        """
+        assert self._energy_site is not None
         try:
             # Not revoked on removal by design; see the class docstring.
             LOGGER.info("Powerwall key setup: id=%s", self._energy_site.energy_site_id)
@@ -329,6 +338,18 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="cannot_connect")
 
         return await self.async_step_pair()
+
+    async def async_step_retry(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Offer to request a new approval window after the previous one expired.
+
+        On submit, re-registers the key to open a fresh approval window and
+        resumes the verification wait, exactly as the first attempt does.
+        """
+        if user_input is None:
+            return self.async_show_form(step_id="retry")
+        return await self._register_authorized_client()
 
     async def async_step_pair(
         self, user_input: dict[str, Any] | None = None
@@ -363,9 +384,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if client.state == AuthorizedClientState.PENDING_VERIFICATION:
             return self.async_show_form(step_id="pair", errors={"base": "key_pending"})
         if client.state == AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
-            # Terminal: the approval window expired. Aborting lets the user
-            # restart setup instead of re-submitting the form forever.
-            return self.async_abort(reason="key_verification_timeout")
+            # The approval window expired; offer to request a new one in-place
+            # rather than re-submitting this form forever.
+            return await self.async_step_retry()
         # Only an explicit PENDING_VERIFICATION may claim the approval is still
         # awaiting the user; an unrecognized state is a failed read, and
         # reporting it as pending would trap the user in the form retrying forever.

@@ -56,7 +56,6 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
-        "key_verification_timeout": "The verification window expired before the client was approved. Please start the setup again to retry.",
         "not_supported": "Energy sites are added automatically from your Teslemetry account and cannot be added manually.",
         "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
@@ -85,6 +84,10 @@
         },
         "pair": {
           "description": "Flick the On/Off switch on your primary Powerwall off and back on to approve Home Assistant's access, then continue. This only needs to be done once. Removing this integration later does not revoke this access on your Powerwall or Backup Gateway.",
+          "title": "Approve the local access key"
+        },
+        "retry": {
+          "description": "The verification window expired before the client was approved. Continue to request a new approval and try again.",
           "title": "Approve the local access key"
         }
       }

@@ -961,10 +961,14 @@ async def test_energy_subentry_pair_submit_still_pending(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_energy_subentry_resume_verification_timeout_aborts(
+async def test_energy_subentry_resume_verification_timeout_offers_retry(
     hass: HomeAssistant,
 ) -> None:
-    """Resuming with a key whose approval window has expired aborts instead of pairing."""
+    """Resuming with an expired approval window offers an in-place retry.
+
+    Submitting the retry re-registers the key to open a fresh approval window
+    and resumes the verification wait rather than restarting setup.
+    """
     entry = await setup_platform(hass)
     subentry_id = _energy_subentry_id(entry)
 
@@ -990,17 +994,29 @@ async def test_energy_subentry_resume_verification_timeout_aborts(
         patch.object(TeslemetryEnergySite, "add_authorized_client", add_client),
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "retry"
+        assert not result["errors"]
+        add_client.assert_not_awaited()
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "key_verification_timeout"
-    add_client.assert_not_awaited()
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    add_client.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_energy_subentry_pair_submit_verification_timeout_aborts(
+async def test_energy_subentry_pair_submit_verification_timeout_offers_retry(
     hass: HomeAssistant,
 ) -> None:
-    """A key whose approval window expires while pairing aborts instead of hanging."""
+    """A key whose approval window expires while pairing offers an in-place retry.
+
+    Submitting the retry re-registers the key to open a fresh approval window
+    and resumes the verification wait rather than restarting setup.
+    """
     entry = await setup_platform(hass)
     subentry_id = _energy_subentry_id(entry)
 
@@ -1028,10 +1044,14 @@ async def test_energy_subentry_pair_submit_verification_timeout_aborts(
         ],
         raw=None,
     )
-    with patch.object(
-        TeslemetryEnergySite,
-        "find_authorized_clients",
-        AsyncMock(side_effect=[pending, timed_out]),
+    add_client = AsyncMock(return_value={})
+    with (
+        patch.object(
+            TeslemetryEnergySite,
+            "find_authorized_clients",
+            AsyncMock(side_effect=[pending, timed_out]),
+        ),
+        patch.object(TeslemetryEnergySite, "add_authorized_client", add_client),
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         assert result["type"] is FlowResultType.FORM
@@ -1040,9 +1060,17 @@ async def test_energy_subentry_pair_submit_verification_timeout_aborts(
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "retry"
+        add_client.assert_not_awaited()
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "key_verification_timeout"
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    add_client.assert_awaited_once()
 
 
 _UNKNOWN_CLIENT_STATES = [
