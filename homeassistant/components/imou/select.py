@@ -7,17 +7,18 @@ from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DOMAIN,
     PARAM_DEVICE_VOLUME,
-    PARAM_MODE,
     PARAM_NIGHT_VISION_MODE,
     imou_device_identifier,
 )
-from .coordinator import ImouConfigEntry
+from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
 PARALLEL_UPDATES = 0
@@ -25,17 +26,27 @@ PARALLEL_UPDATES = 0
 SELECT_TYPES: tuple[SelectEntityDescription, ...] = (
     SelectEntityDescription(
         key=PARAM_DEVICE_VOLUME,
+        entity_category=EntityCategory.CONFIG,
         translation_key=PARAM_DEVICE_VOLUME,
     ),
     SelectEntityDescription(
-        key=PARAM_MODE,
-        translation_key=PARAM_MODE,
-    ),
-    SelectEntityDescription(
         key=PARAM_NIGHT_VISION_MODE,
+        entity_category=EntityCategory.CONFIG,
         translation_key=PARAM_NIGHT_VISION_MODE,
     ),
 )
+
+
+def _iter_selects(
+    coordinator: ImouDataUpdateCoordinator,
+) -> list[tuple[SelectEntityDescription, ImouHaDevice]]:
+    """Return (description, device) pairs for supported selects."""
+    return [
+        (description, device)
+        for device in coordinator.devices
+        for description in SELECT_TYPES
+        if description.key in device.selects
+    ]
 
 
 async def async_setup_entry(
@@ -50,10 +61,8 @@ async def async_setup_entry(
         device_keys = {imou_device_identifier(device) for device in new_devices}
         async_add_entities(
             ImouSelect(coordinator, description, device)
-            for device in coordinator.devices
-            for description in SELECT_TYPES
-            if description.key in device.selects
-            and imou_device_identifier(device) in device_keys
+            for description, device in _iter_selects(coordinator)
+            if imou_device_identifier(device) in device_keys
         )
 
     entry.async_on_unload(coordinator.register_new_device_callback(_add_selects))
@@ -87,5 +96,8 @@ class ImouSelect(ImouEntity, SelectEntity):
                 option,
             )
         except ImouException as e:
-            raise HomeAssistantError(str(e)) from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="select_option_failed",
+            ) from e
         await self.coordinator.async_request_refresh()
