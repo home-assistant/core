@@ -16,10 +16,19 @@ WARNING = "Unable to parse data from Buienradar"
 @pytest.mark.parametrize(
     ("frozen_time", "expect_warning"),
     [
-        ("2026-01-01T05:30:00+00:00", True),
-        ("2026-01-01T06:30:00+00:00", False),
+        ("2026-01-14T23:00:00+00:00", False),
+        ("2026-01-14T23:59:59+00:00", False),
+        ("2026-01-15T00:00:00+00:00", True),
+        ("2026-07-14T22:30:00+00:00", False),
+        ("2026-01-15T06:30:00+00:00", True),
     ],
-    ids=["daytime", "midnight_hour"],
+    ids=[
+        "cet_0000_start_of_quiet_hour",
+        "cet_0059_end_of_quiet_hour",
+        "cet_0100_just_after",
+        "cest_0030_quiet_hour_in_dst",
+        "cet_0730_quiet_only_where_user_lives",
+    ],
 )
 async def test_unparsable_data_is_quiet_during_the_midnight_hour(
     hass: HomeAssistant,
@@ -30,10 +39,16 @@ async def test_unparsable_data_is_quiet_during_the_midnight_hour(
 ) -> None:
     """Test the parse failure warning is suppressed in the midnight hour.
 
-    Buienradar is known to serve no data around midnight, so the warning is
-    only interesting for the rest of the day. The configured time zone is what
-    decides that, which is why the times below are UTC but the hour that
-    matters is the one in America/Regina (UTC-6, no DST).
+    buienradar.nl serves no data while it updates its forecast between 00:00 and
+    01:00 CE(S)T, so the warning is only interesting outside that hour. The hour
+    that decides this belongs to the service, so the configured time zone here is
+    deliberately somewhere else: America/Regina is UTC-6 with no DST, which puts
+    every case below in a different hour locally than in Amsterdam.
+
+    The times are UTC. The first three pin the edges of the quiet hour in CET,
+    the fourth repeats it in CEST so the offset is not hardcoded, and the last
+    one is the quiet hour in America/Regina rather than in Amsterdam, so it must
+    still warn.
     """
     await hass.config.async_set_time_zone("America/Regina")
     freezer.move_to(frozen_time)
