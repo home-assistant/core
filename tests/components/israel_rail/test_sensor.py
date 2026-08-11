@@ -22,13 +22,14 @@ BEFORE_FIRST_TRAIN = "2021-10-10T10:00:00+00:00"
 
 EXPECTED_ENTITY_COUNT = DEPARTURES_COUNT * 5
 
-# TRAINS[0] (10:10) running 15 minutes late, so it only leaves at 10:25.
+# TRAINS[0] (10:10) running 8 minutes late, so it only leaves at 10:18. Routes keep
+# their order, so a delay stays shorter than the 10 minute gap to TRAINS[1].
 DELAYED_TRAINS = [
     get_train_route(
         train_number="1234",
         departure_time=get_time(10, 10),
         arrival_time=get_time(10, 30),
-        departure_delay=15,
+        departure_delay=8,
     ),
     *TRAINS[1:],
 ]
@@ -269,8 +270,8 @@ async def test_delayed_route_kept_past_scheduled_time(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """A route running late stays in the window until its delay has elapsed."""
-    # TRAINS[0] is scheduled for 10:10 but runs 15 minutes late, so it only
-    # leaves at 10:25 and is still boardable at 10:15.
+    # TRAINS[0] is scheduled for 10:10 but runs 8 minutes late, so it only
+    # leaves at 10:18 and is still boardable at 10:15.
     mock_israelrail.query.return_value = DELAYED_TRAINS
     freeze_before_first_train.move_to("2021-10-10T10:15:00+00:00")
 
@@ -281,7 +282,7 @@ async def test_delayed_route_kept_past_scheduled_time(
     assert hass.states.get("sensor.mock_title_departure_2").state == get_time(10, 30)
     assert hass.states.get("sensor.mock_title_train_number").state == "1234"
     # The displayed departure stays the scheduled time; the delay is its own sensor.
-    assert hass.states.get("sensor.mock_title_departure_delay").state == "15"
+    assert hass.states.get("sensor.mock_title_departure_delay").state == "8"
 
 
 async def test_delayed_route_dropped_once_delay_elapsed(
@@ -291,14 +292,14 @@ async def test_delayed_route_dropped_once_delay_elapsed(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """A route running late leaves the window once its delayed departure passes."""
-    # TRAINS[0] leaves at 10:25 (10:10 + 15) and TRAINS[1] at 10:20, so by 10:26
-    # the window starts at TRAINS[2].
+    # TRAINS[0] leaves at 10:18 (10:10 + 8), so by 10:19 the window starts at
+    # TRAINS[1], which is still upcoming at 10:20.
     mock_israelrail.query.return_value = DELAYED_TRAINS
-    freeze_before_first_train.move_to("2021-10-10T10:26:00+00:00")
+    freeze_before_first_train.move_to("2021-10-10T10:19:00+00:00")
 
     await init_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.mock_title_departure").state == get_time(10, 30)
-    assert hass.states.get("sensor.mock_title_departure_1").state == get_time(10, 40)
-    assert hass.states.get("sensor.mock_title_departure_2").state == get_time(10, 50)
-    assert hass.states.get("sensor.mock_title_train_number").state == "1236"
+    assert hass.states.get("sensor.mock_title_departure").state == get_time(10, 20)
+    assert hass.states.get("sensor.mock_title_departure_1").state == get_time(10, 30)
+    assert hass.states.get("sensor.mock_title_departure_2").state == get_time(10, 40)
+    assert hass.states.get("sensor.mock_title_train_number").state == "1235"
