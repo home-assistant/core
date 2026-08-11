@@ -1336,7 +1336,6 @@ class TextToSpeechView(HomeAssistantView):
                     await response.prepare(request)
 
                 await response.write(data)
-        # pylint: disable=broad-except
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error streaming tts: %s", err)
 
