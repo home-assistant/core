@@ -6308,6 +6308,18 @@ async def test_async_get_effective_area_id(
     entry = entity_registry.async_update_entity(entry.entity_id, area_id="attic")
     assert er.async_get_effective_area_id(hass, entry) == "attic"
 
+    # An entity without an area and without a device has no effective area
+    entry_without_device = entity_registry.async_get_or_create(
+        "switch", "test", "no_device"
+    )
+    assert er.async_get_effective_area_id(hass, entry_without_device) is None
+
+    # An entity whose device no longer exists has no effective area
+    entry_missing_device = attr.evolve(
+        entry, area_id=None, device_id="non_existent_device_id"
+    )
+    assert er.async_get_effective_area_id(hass, entry_missing_device) is None
+
 
 async def test_disable_child_device_disables_entities(
     hass: HomeAssistant,
