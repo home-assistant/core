@@ -160,9 +160,9 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
                 translation_domain=DOMAIN,
                 translation_key=FAIL_SET_TEMP,
                 translation_placeholders={
-                    "temperature": temperature,
-                    "max_temp": self._attr_max_temp,
-                    "min_temp": self._attr_min_temp,
+                    "temperature": str(temperature),
+                    "max_temp": str(self._attr_max_temp),
+                    "min_temp": str(self._attr_min_temp),
                 },
             )
 
