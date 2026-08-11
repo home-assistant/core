@@ -61,10 +61,12 @@ def _mock_lyric() -> MagicMock:
     room = LyricRoom(
         {
             "id": 1,
-            "roomName": "Living Room",
-            "roomAvgTemp": 21,
-            "roomAvgHumidity": 40,
-            "accessories": [{"id": 1, "type": "IndoorAirSensor", "temperature": 21}],
+            "name": "Living Room",
+            "avgTemperature": 21,
+            "avgHumidity": 40,
+            "accessories": [
+                {"id": 1, "sensorType": "IndoorAirSensor", "temperature": 21}
+            ],
         }
     )
 

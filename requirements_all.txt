@@ -339,7 +339,7 @@ aiolifx==1.2.2
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==2.1.1
+aiolyric==2.1.2
 
 # homeassistant.components.mealie
 aiomealie==2.0.0
@@ -1078,7 +1078,7 @@ gardena-bluetooth==2.8.1
 gassist-text==0.0.14
 
 # homeassistant.components.gatus
-gatus-api==1.1.0
+gatus-api==1.2.0
 
 # homeassistant.components.google
 gcal-sync==9.1.0
@@ -1293,7 +1293,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.0.5
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.13.4
+homematicip==2.14.1
 
 # homeassistant.components.homevolt
 homevolt==0.5.0
@@ -1601,7 +1601,7 @@ millheater==0.14.1
 minio==7.1.12
 
 # homeassistant.components.mitsubishi_comfort
-mitsubishi-comfort==0.5.1
+mitsubishi-comfort==0.5.2
 
 # homeassistant.components.moat
 moat-ble==0.1.1
@@ -1616,7 +1616,7 @@ momonga==0.3.0
 monarchmoneycommunity==1.5.1
 
 # homeassistant.components.monzo
-monzopy==1.6.0
+monzopy==1.8.0
 
 # homeassistant.components.mopeka
 mopeka-iot-ble==0.8.0
@@ -1872,7 +1872,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.14.4
+plugwise==1.14.5
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2050,7 +2050,7 @@ pyaqvify==0.0.12
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==9.6.0
+pyatmo==9.7.0
 
 # homeassistant.components.apple_tv
 pyatv==0.18.0
@@ -2354,7 +2354,7 @@ pyliebherrhomeapi==0.5.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.5.0
+pylitterbot==2025.6.4
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.29.0
@@ -3053,7 +3053,7 @@ skyboxremote==0.0.6
 slack_sdk==3.33.4
 
 # homeassistant.components.xmpp
-slixmpp==1.13.2
+slixmpp==1.17.0
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.5.5
@@ -3327,7 +3327,7 @@ vilfo-api-client==0.5.0
 visionpluspython==1.1.0
 
 # homeassistant.components.vizio
-vizaio==0.3.2
+vizaio==0.4.0
 
 # homeassistant.components.caldav
 vobject==0.9.9
@@ -3361,7 +3361,7 @@ watchdog==6.0.0
 waterfurnace==1.7.1
 
 # homeassistant.components.watergate
-watergate-local-api==2025.1.0
+watergate-local-api==2026.2.2
 
 # homeassistant.components.weatherflow_cloud
 weatherflow4py==1.5.8
@@ -3479,7 +3479,7 @@ zha-quirks==2.2.0
 zha==2.1.0
 
 # homeassistant.components.zhong_hong
-zhong-hong-hvac==1.0.17
+zhong-hong-hvac==1.0.18
 
 # homeassistant.components.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.1.0
