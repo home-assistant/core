@@ -20,6 +20,16 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "return_temperature": {
+        "name": "Return temperature"
+      },
+      "supply_temperature": {
+        "name": "Supply temperature"
+      }
+    }
+  },
   "exceptions": {
     "bridge_unpaired": {
       "message": "iZone bridge is not paired with an air conditioner"

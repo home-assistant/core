@@ -2065,6 +2065,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "fireavert": {
+      "name": "FireAvert",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "firefly_iii": {
       "name": "Firefly III",
       "integration_type": "service",
@@ -3057,6 +3063,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "hortimax": {
+      "name": "Ridder HortiMaX Pro",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "hp_ilo": {
       "name": "HP Integrated Lights-Out (ILO)",
@@ -4388,7 +4400,7 @@
       "supported_by": "energyzero"
     },
     "mikrotik": {
-      "name": "Mikrotik",
+      "name": "MikroTik",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"

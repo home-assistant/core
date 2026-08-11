@@ -29,6 +29,7 @@ from homeassistant.util.ssl import create_client_context
 
 from .const import (
     CONF_ENCRYPTION,
+    CONF_ENTRY,
     CONF_OLD_RECIPIENT,
     CONF_SENDER_NAME,
     CONF_SERVER,
@@ -65,12 +66,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmtpConfigEntry) -> bool
             Platform.NOTIFY,
             DOMAIN,
             {
-                **entry.data,
                 CONF_NAME: entry.title,
                 CONF_RECIPIENT: [
                     subentry.unique_id for subentry in entry.subentries.values()
                 ],
-                **entry.options,
+                CONF_ENTRY: entry,
             },
             {},
         )
