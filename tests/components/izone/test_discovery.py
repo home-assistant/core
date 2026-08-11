@@ -523,13 +523,15 @@ async def test_scan(
     hass: HomeAssistant,
     mock_pizone_create_discovery: tuple[AsyncMock, Mock],
 ) -> None:
-    """User Search broadcasts without reading dump_state."""
+    """User Search broadcasts on an already-running service, not discover_all."""
     _, mock_service = mock_pizone_create_discovery
-    mock_service.scan = AsyncMock()
+
+    await izone_discovery.async_ensure_discovery(hass)
+    mock_service.scan.reset_mock()
 
     await izone_discovery.async_scan(hass)
 
-    assert mock_service.scan.await_count >= 1
+    mock_service.scan.assert_awaited_once()
     mock_service.discover_all.assert_not_called()
 
 
