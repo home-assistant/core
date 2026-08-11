@@ -580,3 +580,10 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
             translation_domain=DOMAIN,
             translation_key="zone_hvac_read_only",
         )
+
+    async def async_set_demand_control(self, **kwargs: Any) -> None:
+        """Reject demand control calls on zone entities."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="demand_control_zone_unsupported",
+        )
