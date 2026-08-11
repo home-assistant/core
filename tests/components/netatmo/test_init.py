@@ -730,7 +730,7 @@ async def test_device_remove_devices(
         (DOMAIN, HOME_ID), config_entry.entry_id
     )
     assert home_device is not None
-    response = await client.remove_device(home_device.id, config_entry.entry_id)
+    response = await client.remove_device(home_device.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
