@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import Enum, StrEnum
+from itertools import chain
 
 import pytest
 
@@ -20,6 +21,8 @@ from tests.common import (
     mock_restore_cache_with_extra_data,
 )
 from tests.conftest import WebSocketGenerator
+
+_TEST_EXTRA_ATTRIBUTES_ENTITY_ID = "sensor.test_extra_attributes"
 
 
 class ConfigurationStyle(Enum):
@@ -44,7 +47,7 @@ def make_test_trigger(*entities: str) -> dict:
         "trigger": [
             {
                 "trigger": "state",
-                "entity_id": list(entities),
+                "entity_id": list(chain(entities, (_TEST_EXTRA_ATTRIBUTES_ENTITY_ID,))),
             },
             {"platform": "event", "event_type": "test_event"},
         ],
@@ -413,3 +416,80 @@ async def setup_restore_template_entity(
             **config,
         },
     )
+
+
+async def assert_extra_template_attributes(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    style: ConfigurationStyle,
+    config: ConfigType,
+) -> None:
+    """Test extra template attributes and attribute order."""
+
+    # Trigger attributes are resolved in order, Modern are not.
+    setup_attributes = {
+        ConfigurationStyle.MODERN: {},
+        ConfigurationStyle.TRIGGER: {
+            "base": "{{ state_attr('sensor.test_extra_attributes', 'base') or 0 }}",
+            "plus_one": "{{ base + 1 }}",
+        },
+    }
+
+    await setup_entity(
+        hass,
+        platform_setup,
+        style,
+        1,
+        {
+            **config,
+            "attributes": {
+                "static": "{{ 'static' }}",
+                "dynamic": "It {{ state_attr('sensor.test_extra_attributes', 'dynamic') }}.",
+                **setup_attributes[style],
+            },
+        },
+    )
+
+    await async_trigger(
+        hass,
+        _TEST_EXTRA_ATTRIBUTES_ENTITY_ID,
+        "anything",
+        {
+            "dynamic": "",
+            "base": 1,
+        },
+    )
+
+    state = hass.states.get(platform_setup.entity_id)
+    assert state.attributes["static"] == "static"
+    assert state.attributes["dynamic"] == "It ."
+
+    # Assert attribute order for trigger entities
+    for attr, value in (
+        ("base", 1),
+        ("plus_one", 2),
+    ):
+        assert (
+            attr not in state.attributes and style == ConfigurationStyle.MODERN
+        ) or state.attributes[attr] == value
+
+    await async_trigger(
+        hass,
+        _TEST_EXTRA_ATTRIBUTES_ENTITY_ID,
+        "anything",
+        {
+            "dynamic": "works",
+            "base": 2,
+        },
+    )
+
+    state = hass.states.get(platform_setup.entity_id)
+    assert state.attributes["static"] == "static"
+    assert state.attributes["dynamic"] == "It works."
+    for attr, value in (
+        ("base", 2),
+        ("plus_one", 3),
+    ):
+        assert (
+            attr not in state.attributes and style == ConfigurationStyle.MODERN
+        ) or state.attributes[attr] == value
