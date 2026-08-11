@@ -35,6 +35,11 @@ EXCLUDE_REPLY_TIMEOUT = 10
 INCLUDABLE_DEVICE_HEARTBEAT_TIMEOUT = 25
 INCLUSION_TIMEOUT = 30
 COMMAND_REPLY_TIMEOUT = 10
+# A device included outside our own inclusion flow (e.g. via the official
+# app while we're already connected) arrives as a burst of ordinary events
+# for a device_id we don't know yet. Debounce before re-running discovery so
+# one burst triggers one discovery, not one per event.
+UNKNOWN_DEVICE_DISCOVERY_DEBOUNCE = 3
 
 
 @dataclass
@@ -86,6 +91,7 @@ class GardenaSmartLocalCoordinator(DataUpdateCoordinator[DeviceMap]):
         self._includable_devices: dict[str, IncludableDeviceInfo] = {}
         self._includable_timeouts: dict[str, asyncio.TimerHandle] = {}
         self._first_connect_result: asyncio.Future[None] | None = None
+        self._unknown_device_discovery_handle: asyncio.TimerHandle | None = None
 
     @override
     async def _async_update_data(self) -> DeviceMap:
@@ -111,6 +117,9 @@ class GardenaSmartLocalCoordinator(DataUpdateCoordinator[DeviceMap]):
         for handle in self._includable_timeouts.values():
             handle.cancel()
         self._includable_timeouts.clear()
+        if self._unknown_device_discovery_handle is not None:
+            self._unknown_device_discovery_handle.cancel()
+            self._unknown_device_discovery_handle = None
         if self._task:
             self._task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
@@ -262,6 +271,25 @@ class GardenaSmartLocalCoordinator(DataUpdateCoordinator[DeviceMap]):
             self.async_set_updated_data(self._devices)
         _LOGGER.info("Discovery complete, found %d device(s)", len(self._devices))
 
+    def _schedule_unknown_device_discovery(self, device_id: str) -> None:
+        """Debounce a re-discovery run for a device we don't know yet."""
+        if self._unknown_device_discovery_handle is not None:
+            self._unknown_device_discovery_handle.cancel()
+        _LOGGER.debug("Event for unknown device %s, scheduling re-discovery", device_id)
+        self._unknown_device_discovery_handle = self.hass.loop.call_later(
+            UNKNOWN_DEVICE_DISCOVERY_DEBOUNCE,
+            lambda: self.hass.async_create_task(self._discover_unknown_devices()),
+        )
+
+    async def _discover_unknown_devices(self) -> None:
+        """Re-run discovery to pick up a device included outside our own flow."""
+        self._unknown_device_discovery_handle = None
+        _LOGGER.info("Re-running discovery to pick up newly included device(s)")
+        try:
+            await self._do_discovery()
+        except Exception as err:  # noqa: BLE001 - best-effort, don't crash the coordinator
+            _LOGGER.warning("Re-discovery for unknown device(s) failed: %s", err)
+
     async def _handle_messages(self, messages: IngressMessageList) -> None:
         """Apply incoming events to the device map."""
         try:
@@ -299,6 +327,12 @@ class GardenaSmartLocalCoordinator(DataUpdateCoordinator[DeviceMap]):
             return False
 
         if device_id not in self._devices:
+            if event.op != "delete":
+                # A device we don't know yet, e.g. included via the
+                # official app while we were already connected. Not a
+                # delete op, so it's not just a leftover event for an
+                # already-excluded device.
+                self._schedule_unknown_device_discovery(device_id)
             return False
 
         _LOGGER.debug("Updating device %s with event: %s", device_id, event)
