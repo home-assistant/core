@@ -84,9 +84,12 @@ async def test_webhook_prefers_internal_url(
     config_entry.add_to_hass(hass)
 
     lock_status = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+
     webhooks_fixture = json.loads(
         await async_load_fixture(hass, "get_all_webhooks.json", DOMAIN)
     )
+    webhooks_fixture[0]["url"] = f"{hass.config.internal_url}/api/webhook/Webhook_id"
+
     lock.getWebhooks = AsyncMock(side_effect=[[], webhooks_fixture])
 
     with (
