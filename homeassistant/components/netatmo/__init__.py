@@ -16,13 +16,17 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryDisabler
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_started
@@ -150,10 +154,24 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: NetatmoConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    # A disabled home is filtered out of the account, so its rooms and modules
-    # are absent from the inventory below while their devices are still live
-    if device_entry.disabled_by is DeviceEntryDisabler.INTEGRATION:
-        return False
+    account = config_entry.runtime_data.account
+    # A disabled home leaves the account, so everything below it looks stale to
+    # the inventory check. Its descendants keep their own disabler, hence a walk.
+    unpolled_home_ids = account.all_home_names.keys() - account.homes.keys()
+    device_registry = dr.async_get(hass)
+    device: DeviceEntry | None = device_entry
+    while device is not None:
+        if any(
+            identifier[1] in unpolled_home_ids
+            for identifier in device.identifiers
+            if identifier[0] == DOMAIN
+        ):
+            return False
+        device = (
+            device_registry.async_get(device.via_device_id)
+            if device.via_device_id
+            else None
+        )
 
     homes = config_entry.runtime_data.account.homes.values()
     valid_ids = {

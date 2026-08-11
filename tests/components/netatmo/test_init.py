@@ -1117,9 +1117,15 @@ async def test_disabled_home_keeps_its_descendants(
         )
         await hass.async_block_till_done()
 
-    # The home is no longer polled, so its rooms are absent from the account,
-    # but their devices are still live and must keep their customisations
+    # The room is absent from the account now, but its device is still live
     client = await hass_ws_client(hass)
+    response = await client.remove_device(livingroom.id, config_entry.entry_id)
+    assert not response["success"]
+
+    # A hand-disabled device keeps USER, so only the walk up to the home finds it
+    device_registry.async_update_device(
+        livingroom.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
     response = await client.remove_device(livingroom.id, config_entry.entry_id)
     assert not response["success"]
 
