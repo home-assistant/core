@@ -24,11 +24,6 @@
       }
     }
   },
-  "exceptions": {
-    "select_option_failed": {
-      "message": "Error communicating with the Imou API"
-    }
-  },
   "entity": {
     "button": {
       "mute": {
@@ -126,6 +121,11 @@
       "white_light": {
         "name": "White light"
       }
+    }
+  },
+  "exceptions": {
+    "select_option_failed": {
+      "message": "Error communicating with the Imou API"
     }
   },
   "selector": {
