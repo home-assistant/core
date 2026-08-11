@@ -30,8 +30,14 @@
   },
   "entity": {
     "binary_sensor": {
+      "arrears_outage": {
+        "name": "Arrears outage"
+      },
       "bag_full": {
         "name": "Bag full"
+      },
+      "battery_alarm": {
+        "name": "Battery"
       },
       "carbon_dioxide": {
         "name": "Carbon dioxide"
@@ -42,8 +48,14 @@
       "coil_freeze": {
         "name": "Coil freeze/defrost"
       },
+      "cover": {
+        "name": "Cover"
+      },
       "cover_off": {
         "name": "Cover off"
+      },
+      "credit": {
+        "name": "Credit"
       },
       "defrost": {
         "name": "Defrost"
@@ -69,14 +81,47 @@
       "low_temp": {
         "name": "Low temperature"
       },
+      "magnetic_interference": {
+        "name": "Magnetic interference"
+      },
+      "meter_hardware": {
+        "name": "Meter hardware"
+      },
       "methane": {
         "name": "Methane"
       },
       "motor_fault": {
         "name": "Motor fault"
       },
+      "no_balance": {
+        "name": "No balance"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overdraft": {
+        "name": "Overdraft"
+      },
+      "overdraft_unlimited": {
+        "name": "Unlimited overdraft"
+      },
+      "overpower": {
+        "name": "Overpower"
+      },
+      "overvoltage": {
+        "name": "Overvoltage"
+      },
+      "phase_loss": {
+        "name": "Phase loss"
+      },
       "pm25": {
         "name": "PM2.5"
+      },
+      "power_factor_abnormal": {
+        "name": "Abnormal power factor"
+      },
+      "power_outage": {
+        "name": "Power outage"
       },
       "pressure": {
         "name": "Pressure"
@@ -87,8 +132,17 @@
       "temp_error": {
         "name": "Temperature error"
       },
+      "terminal": {
+        "name": "Terminal"
+      },
       "tilt": {
         "name": "Tilt"
+      },
+      "unbalance": {
+        "name": "Unbalance"
+      },
+      "undervoltage": {
+        "name": "Undervoltage"
       },
       "valve": {
         "name": "Valve"
@@ -664,6 +718,9 @@
           "level_6": "Level 6"
         }
       },
+      "apparent_power": {
+        "name": "Apparent power"
+      },
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]"
       },
@@ -704,6 +761,9 @@
       },
       "coil_temperature": {
         "name": "Coil temperature"
+      },
+      "combined_active_energy": {
+        "name": "Combined active energy"
       },
       "compressor_strength": {
         "name": "Compressor strength"
@@ -749,6 +809,9 @@
       },
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
+      },
+      "forward_energy_phase": {
+        "name": "Phase {phase} forward energy"
       },
       "gas": {
         "name": "Gas"
@@ -869,32 +932,23 @@
       "oxydo_reduction_potential": {
         "name": "Oxydo reduction potential"
       },
-      "phase_a_current": {
-        "name": "Phase A current"
+      "phase_apparent_power": {
+        "name": "Phase {phase} apparent power"
       },
-      "phase_a_power": {
-        "name": "Phase A power"
+      "phase_current": {
+        "name": "Phase {phase} current"
       },
-      "phase_a_voltage": {
-        "name": "Phase A voltage"
+      "phase_power": {
+        "name": "Phase {phase} power"
       },
-      "phase_b_current": {
-        "name": "Phase B current"
+      "phase_power_factor": {
+        "name": "Phase {phase} power factor"
       },
-      "phase_b_power": {
-        "name": "Phase B power"
+      "phase_reactive_power": {
+        "name": "Phase {phase} reactive power"
       },
-      "phase_b_voltage": {
-        "name": "Phase B voltage"
-      },
-      "phase_c_current": {
-        "name": "Phase C current"
-      },
-      "phase_c_power": {
-        "name": "Phase C power"
-      },
-      "phase_c_voltage": {
-        "name": "Phase C voltage"
+      "phase_voltage": {
+        "name": "Phase {phase} voltage"
       },
       "pm1": {
         "name": "[%key:component::sensor::entity_component::pm1::name%]"
@@ -908,6 +962,9 @@
       "power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       },
+      "power_factor": {
+        "name": "Power factor"
+      },
       "precipitation_intensity": {
         "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
       },
@@ -920,8 +977,14 @@
       "pv_channel_power": {
         "name": "PV channel {index} power"
       },
+      "reactive_power": {
+        "name": "Reactive power"
+      },
       "remaining_time": {
         "name": "Remaining time"
+      },
+      "reverse_energy_phase": {
+        "name": "Phase {phase} reverse energy"
       },
       "rolling_brush_life": {
         "name": "Rolling brush lifetime"

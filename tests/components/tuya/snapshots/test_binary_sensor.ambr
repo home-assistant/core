@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[binary_sensor.aqi_safety-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.aqi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.aqi_safety',
+    'entity_id': 'binary_sensor.aqi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Safety',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Safety',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,14 +36,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.aqi_safety-state]
+# name: test_platform_setup_and_discovery[binary_sensor.aqi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AQI Safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AQI',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.aqi_safety',
+    'entity_id': 'binary_sensor.aqi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -101,7 +101,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.boite_aux_lettres_arriere_door-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.boite_aux_lettres_arriere-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -115,7 +115,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.boite_aux_lettres_arriere_door',
+    'entity_id': 'binary_sensor.boite_aux_lettres_arriere',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -123,12 +123,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Door',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -138,21 +138,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.boite_aux_lettres_arriere_door-state]
+# name: test_platform_setup_and_discovery[binary_sensor.boite_aux_lettres_arriere-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boîte aux lettres - arrière Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boîte aux lettres - arrière',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.boite_aux_lettres_arriere_door',
+    'entity_id': 'binary_sensor.boite_aux_lettres_arriere',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.c30_charging-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.c30-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -166,7 +166,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.c30_charging',
+    'entity_id': 'binary_sensor.c30',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -174,12 +174,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Charging',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
-    'original_name': 'Charging',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -189,14 +189,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.c30_charging-state]
+# name: test_platform_setup_and_discovery[binary_sensor.c30-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C30 Charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C30',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.c30_charging',
+    'entity_id': 'binary_sensor.c30',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -253,7 +253,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.cleverio_pf100_charging-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.cleverio_pf100-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -267,7 +267,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.cleverio_pf100_charging',
+    'entity_id': 'binary_sensor.cleverio_pf100',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -275,12 +275,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Charging',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
-    'original_name': 'Charging',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -290,14 +290,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.cleverio_pf100_charging-state]
+# name: test_platform_setup_and_discovery[binary_sensor.cleverio_pf100-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cleverio PF100 Charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cleverio PF100',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.cleverio_pf100_charging',
+    'entity_id': 'binary_sensor.cleverio_pf100',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1171,7 +1171,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.door_garage_door-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.door_garage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1185,7 +1185,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.door_garage_door',
+    'entity_id': 'binary_sensor.door_garage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1193,12 +1193,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Door',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1208,14 +1208,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.door_garage_door-state]
+# name: test_platform_setup_and_discovery[binary_sensor.door_garage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door Garage  Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door Garage ',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.door_garage_door',
+    'entity_id': 'binary_sensor.door_garage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1273,7 +1273,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine_door-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1287,7 +1287,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.fenetre_cuisine_door',
+    'entity_id': 'binary_sensor.fenetre_cuisine',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1295,12 +1295,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Door',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1310,14 +1310,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine_door-state]
+# name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fenêtre cuisine Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fenêtre cuisine',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.fenetre_cuisine_door',
+    'entity_id': 'binary_sensor.fenetre_cuisine',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1375,7 +1375,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.garage_contact_sensor_door-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.garage_contact_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1389,7 +1389,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.garage_contact_sensor_door',
+    'entity_id': 'binary_sensor.garage_contact_sensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1397,12 +1397,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Door',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1412,21 +1412,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.garage_contact_sensor_door-state]
+# name: test_platform_setup_and_discovery[binary_sensor.garage_contact_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Contact Sensor Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Contact Sensor',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.garage_contact_sensor_door',
+    'entity_id': 'binary_sensor.garage_contact_sensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.gas_sensor_gas-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.gas_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1440,7 +1440,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.gas_sensor_gas',
+    'entity_id': 'binary_sensor.gas_sensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1448,12 +1448,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Gas',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
-    'original_name': 'Gas',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1463,21 +1463,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.gas_sensor_gas-state]
+# name: test_platform_setup_and_discovery[binary_sensor.gas_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas sensor Gas',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas sensor',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gas_sensor_gas',
+    'entity_id': 'binary_sensor.gas_sensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.gateway_problem-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.gateway-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1491,7 +1491,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.gateway_problem',
+    'entity_id': 'binary_sensor.gateway',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1499,12 +1499,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1514,21 +1514,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.gateway_problem-state]
+# name: test_platform_setup_and_discovery[binary_sensor.gateway-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway Problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gateway_problem',
+    'entity_id': 'binary_sensor.gateway',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.home_gateway_problem-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.home_gateway-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1542,7 +1542,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.home_gateway_problem',
+    'entity_id': 'binary_sensor.home_gateway',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1550,12 +1550,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1565,21 +1565,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.home_gateway_problem-state]
+# name: test_platform_setup_and_discovery[binary_sensor.home_gateway-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Gateway Problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Gateway',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.home_gateway_problem',
+    'entity_id': 'binary_sensor.home_gateway',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.human_presence_office_occupancy-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.human_presence_office-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1593,7 +1593,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.human_presence_office_occupancy',
+    'entity_id': 'binary_sensor.human_presence_office',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1601,12 +1601,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Occupancy',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
-    'original_name': 'Occupancy',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1616,21 +1616,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.human_presence_office_occupancy-state]
+# name: test_platform_setup_and_discovery[binary_sensor.human_presence_office-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Human presence Office Occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Human presence Office',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.human_presence_office_occupancy',
+    'entity_id': 'binary_sensor.human_presence_office',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.inondation_moisture-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.inondation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1644,7 +1644,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.inondation_moisture',
+    'entity_id': 'binary_sensor.inondation',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1652,12 +1652,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Moisture',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
-    'original_name': 'Moisture',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1667,14 +1667,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.inondation_moisture-state]
+# name: test_platform_setup_and_discovery[binary_sensor.inondation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inondation Moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inondation',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.inondation_moisture',
+    'entity_id': 'binary_sensor.inondation',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1834,7 +1834,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.mesh_gateway_problem-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.mesh_gateway-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1848,7 +1848,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.mesh_gateway_problem',
+    'entity_id': 'binary_sensor.mesh_gateway',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1856,12 +1856,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1871,21 +1871,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.mesh_gateway_problem-state]
+# name: test_platform_setup_and_discovery[binary_sensor.mesh_gateway-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mesh-Gateway Problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mesh-Gateway',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mesh_gateway_problem',
+    'entity_id': 'binary_sensor.mesh_gateway',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_motion-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1899,7 +1899,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_motion',
+    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1907,12 +1907,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Motion',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': 'Motion',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1922,14 +1922,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_motion-state]
+# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion sensor lidl zigbee Motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion sensor lidl zigbee',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_motion',
+    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1987,7 +1987,925 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.pir_motion-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_abnormal_power_factor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_abnormal_power_factor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Abnormal power factor',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Abnormal power factor',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_factor_abnormal',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_pf_abnormal',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_abnormal_power_factor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Abnormal power factor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_abnormal_power_factor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_arrears_outage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_arrears_outage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Arrears outage',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Arrears outage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrears_outage',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_arrear_outage',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_arrears_outage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Arrears outage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_arrears_outage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_alarm',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_battery_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_cover-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_cover',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cover',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
+    'original_icon': None,
+    'original_name': 'Cover',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cover',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_cover_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_cover-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Cover',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_cover',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_credit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_credit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Credit',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Credit',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'credit',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_credit_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_credit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Credit',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_credit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_magnetic_interference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_magnetic_interference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Magnetic interference',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Magnetic interference',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'magnetic_interference',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_magnetism_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_magnetic_interference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Magnetic interference',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_magnetic_interference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_meter_hardware-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_meter_hardware',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Meter hardware',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Meter hardware',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_hardware',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_meter_hardware_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_meter_hardware-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Meter hardware',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_meter_hardware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_no_balance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_no_balance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'No balance',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'No balance',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'no_balance',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_no_balance_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_no_balance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter No balance',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_no_balance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_overcurrent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_overcurrent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Overcurrent',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Overcurrent',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'overcurrent',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_ov_cr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_overcurrent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Overcurrent',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_overcurrent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_overdraft-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_overdraft',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Overdraft',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Overdraft',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'overdraft',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_overdraft_use',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_overdraft-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Overdraft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_overdraft',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_overpower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_overpower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Overpower',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Overpower',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'overpower',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_ov_pwr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_overpower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Overpower',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_overpower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_overvoltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_overvoltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Overvoltage',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Overvoltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'overvoltage',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_ov_vol',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_overvoltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Overvoltage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_overvoltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_phase_loss-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_phase_loss',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase loss',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Phase loss',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_loss',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_miss_phase_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_phase_loss-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Phase loss',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_phase_loss',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_power_outage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_power_outage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power outage',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Power outage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_outage',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_outage_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_power_outage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Power outage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_power_outage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_terminal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_terminal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Terminal',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Terminal',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'terminal',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_terminal_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_terminal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Terminal',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_terminal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_unbalance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_unbalance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unbalance',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Unbalance',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'unbalance',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_unbalance_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_unbalance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Unbalance',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_unbalance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_undervoltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_undervoltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Undervoltage',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Undervoltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'undervoltage',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_undervoltage_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_undervoltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Undervoltage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_undervoltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_unlimited_overdraft-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_unlimited_overdraft',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unlimited overdraft',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Unlimited overdraft',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'overdraft_unlimited',
+    'unique_id': 'tuya.0tsetlennahcitlumdzbdnzfault_overdraft_unlim',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_smart_meter_unlimited_overdraft-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-circuit smart meter Unlimited overdraft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_smart_meter_unlimited_overdraft',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.pir-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2001,7 +2919,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.pir_motion',
+    'entity_id': 'binary_sensor.pir',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2009,12 +2927,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Motion',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': 'Motion',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2024,21 +2942,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.pir_motion-state]
+# name: test_platform_setup_and_discovery[binary_sensor.pir-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PIR Motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PIR',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.pir_motion',
+    'entity_id': 'binary_sensor.pir',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs_motion-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2052,7 +2970,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.pir_outside_stairs_motion',
+    'entity_id': 'binary_sensor.pir_outside_stairs',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2060,12 +2978,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Motion',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': 'Motion',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2075,21 +2993,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs_motion-state]
+# name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PIR outside stairs Motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PIR outside stairs',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.pir_outside_stairs_motion',
+    'entity_id': 'binary_sensor.pir_outside_stairs',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_motion-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2103,7 +3021,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.rat_trap_hedge_motion',
+    'entity_id': 'binary_sensor.rat_trap_hedge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2111,12 +3029,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Motion',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': 'Motion',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2126,14 +3044,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_motion-state]
+# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'rat trap hedge Motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'rat trap hedge',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.rat_trap_hedge_motion',
+    'entity_id': 'binary_sensor.rat_trap_hedge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2191,7 +3109,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_alexsandro_smoke-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_alexsandro-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2205,7 +3123,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.rauchmelder_alexsandro_smoke',
+    'entity_id': 'binary_sensor.rauchmelder_alexsandro',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2213,12 +3131,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Smoke',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': 'Smoke',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2228,21 +3146,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_alexsandro_smoke-state]
+# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_alexsandro-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rauchmelder Alexsandro  Smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rauchmelder Alexsandro ',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.rauchmelder_alexsandro_smoke',
+    'entity_id': 'binary_sensor.rauchmelder_alexsandro',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_drucker_smoke-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_drucker-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2256,7 +3174,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.rauchmelder_drucker_smoke',
+    'entity_id': 'binary_sensor.rauchmelder_drucker',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2264,12 +3182,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Smoke',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': 'Smoke',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2279,21 +3197,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_drucker_smoke-state]
+# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_drucker-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rauchmelder Drucker Smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rauchmelder Drucker',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.rauchmelder_drucker_smoke',
+    'entity_id': 'binary_sensor.rauchmelder_drucker',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.siren_charging-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.siren-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2307,7 +3225,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.siren_charging',
+    'entity_id': 'binary_sensor.siren',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2315,12 +3233,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Charging',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
-    'original_name': 'Charging',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2330,14 +3248,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.siren_charging-state]
+# name: test_platform_setup_and_discovery[binary_sensor.siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Siren Charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Siren',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.siren_charging',
+    'entity_id': 'binary_sensor.siren',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2445,7 +3363,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smogo_safety-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.smogo-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2459,7 +3377,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.smogo_safety',
+    'entity_id': 'binary_sensor.smogo',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2467,12 +3385,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Safety',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Safety',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2482,21 +3400,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smogo_safety-state]
+# name: test_platform_setup_and_discovery[binary_sensor.smogo-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smogo Safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smogo',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.smogo_safety',
+    'entity_id': 'binary_sensor.smogo',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smoke_alarm_smoke-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.smoke_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2510,7 +3428,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.smoke_alarm_smoke',
+    'entity_id': 'binary_sensor.smoke_alarm',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2518,12 +3436,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Smoke',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': 'Smoke',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2533,21 +3451,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smoke_alarm_smoke-state]
+# name: test_platform_setup_and_discovery[binary_sensor.smoke_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke Alarm Smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke Alarm',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.smoke_alarm_smoke',
+    'entity_id': 'binary_sensor.smoke_alarm',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs_smoke-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2561,7 +3479,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.smoke_detector_upstairs_smoke',
+    'entity_id': 'binary_sensor.smoke_detector_upstairs',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2569,12 +3487,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Smoke',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': 'Smoke',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2584,21 +3502,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs_smoke-state]
+# name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: ' Smoke detector upstairs  Smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: ' Smoke detector upstairs ',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.smoke_detector_upstairs_smoke',
+    'entity_id': 'binary_sensor.smoke_detector_upstairs',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.soil_moisture_sensor_1_occupancy-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.soil_moisture_sensor_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2612,7 +3530,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.soil_moisture_sensor_1_occupancy',
+    'entity_id': 'binary_sensor.soil_moisture_sensor_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2620,12 +3538,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Occupancy',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
-    'original_name': 'Occupancy',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2635,21 +3553,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.soil_moisture_sensor_1_occupancy-state]
+# name: test_platform_setup_and_discovery[binary_sensor.soil_moisture_sensor_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Soil moisture sensor #1 Occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Soil moisture sensor #1',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.soil_moisture_sensor_1_occupancy',
+    'entity_id': 'binary_sensor.soil_moisture_sensor_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.steel_cage_door_door-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.steel_cage_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2663,7 +3581,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.steel_cage_door_door',
+    'entity_id': 'binary_sensor.steel_cage_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2671,12 +3589,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Door',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2686,21 +3604,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.steel_cage_door_door-state]
+# name: test_platform_setup_and_discovery[binary_sensor.steel_cage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Steel cage door Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Steel cage door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.steel_cage_door_door',
+    'entity_id': 'binary_sensor.steel_cage_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.tournesol_moisture-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.tournesol-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2714,7 +3632,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.tournesol_moisture',
+    'entity_id': 'binary_sensor.tournesol',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2722,12 +3640,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Moisture',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
-    'original_name': 'Moisture',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2737,21 +3655,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.tournesol_moisture-state]
+# name: test_platform_setup_and_discovery[binary_sensor.tournesol-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tournesol Moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tournesol',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.tournesol_moisture',
+    'entity_id': 'binary_sensor.tournesol',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.wifi_smoke_alarm_smoke-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.wifi_smoke_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2765,7 +3683,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.wifi_smoke_alarm_smoke',
+    'entity_id': 'binary_sensor.wifi_smoke_alarm',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2773,12 +3691,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Smoke',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': 'Smoke',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2788,21 +3706,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.wifi_smoke_alarm_smoke-state]
+# name: test_platform_setup_and_discovery[binary_sensor.wifi_smoke_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WIFI Smoke alarm Smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WIFI Smoke alarm',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.wifi_smoke_alarm_smoke',
+    'entity_id': 'binary_sensor.wifi_smoke_alarm',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.window_downstairs_door-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.window_downstairs-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2816,7 +3734,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.window_downstairs_door',
+    'entity_id': 'binary_sensor.window_downstairs',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2824,12 +3742,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Door',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2839,21 +3757,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.window_downstairs_door-state]
+# name: test_platform_setup_and_discovery[binary_sensor.window_downstairs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window downstairs Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window downstairs',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.window_downstairs_door',
+    'entity_id': 'binary_sensor.window_downstairs',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway_problem-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2867,7 +3785,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.x5_zigbee_gateway_problem',
+    'entity_id': 'binary_sensor.x5_zigbee_gateway',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2875,12 +3793,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2890,14 +3808,932 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway_problem-state]
+# name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X5 Zigbee Gateway Problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X5 Zigbee Gateway',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.x5_zigbee_gateway_problem',
+    'entity_id': 'binary_sensor.x5_zigbee_gateway',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_abnormal_power_factor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_abnormal_power_factor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Abnormal power factor',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Abnormal power factor',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_factor_abnormal',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_pf_abnormal',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_abnormal_power_factor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Abnormal power factor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_abnormal_power_factor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_arrears_outage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_arrears_outage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Arrears outage',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Arrears outage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrears_outage',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_arrear_outage',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_arrears_outage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Arrears outage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_arrears_outage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_alarm',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_battery_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_cover-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_cover',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cover',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
+    'original_icon': None,
+    'original_name': 'Cover',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cover',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_cover_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_cover-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Cover',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_cover',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_credit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_credit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Credit',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Credit',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'credit',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_credit_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_credit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Credit',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_credit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_magnetic_interference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_magnetic_interference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Magnetic interference',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Magnetic interference',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'magnetic_interference',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_magnetism_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_magnetic_interference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Magnetic interference',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_magnetic_interference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_meter_hardware-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_meter_hardware',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Meter hardware',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Meter hardware',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_hardware',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_meter_hardware_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_meter_hardware-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Meter hardware',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_meter_hardware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_no_balance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_no_balance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'No balance',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'No balance',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'no_balance',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_no_balance_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_no_balance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 No balance',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_no_balance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overcurrent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overcurrent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Overcurrent',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Overcurrent',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'overcurrent',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_ov_cr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overcurrent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Overcurrent',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overcurrent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overdraft-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overdraft',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Overdraft',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Overdraft',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'overdraft',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_overdraft_use',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overdraft-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Overdraft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overdraft',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overpower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overpower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Overpower',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Overpower',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'overpower',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_ov_pwr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overpower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Overpower',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overpower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overvoltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overvoltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Overvoltage',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Overvoltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'overvoltage',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_ov_vol',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overvoltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Overvoltage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overvoltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_phase_loss-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_phase_loss',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase loss',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Phase loss',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_loss',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_miss_phase_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_phase_loss-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Phase loss',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_phase_loss',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_power_outage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_power_outage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power outage',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Power outage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_outage',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_outage_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_power_outage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Power outage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_power_outage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_terminal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_terminal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Terminal',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Terminal',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'terminal',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_terminal_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_terminal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Terminal',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_terminal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_unbalance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_unbalance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unbalance',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Unbalance',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'unbalance',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_unbalance_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_unbalance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Unbalance',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_unbalance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_undervoltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_undervoltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Undervoltage',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Undervoltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'undervoltage',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_undervoltage_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_undervoltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Undervoltage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_undervoltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_unlimited_overdraft-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_unlimited_overdraft',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unlimited overdraft',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Unlimited overdraft',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'overdraft_unlimited',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_overdraft_unlim',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_unlimited_overdraft-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Unlimited overdraft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_unlimited_overdraft',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

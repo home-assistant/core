@@ -13,10 +13,19 @@ from tuya_device_handlers.device_wrapper.common import (
 )
 from tuya_device_handlers.device_wrapper.sensor import (
     DeltaIntegerWrapper,
+    ElectricityApparentPowerHexStringWrapper,
+    ElectricityApparentPowerRawWrapper,
+    ElectricityCurrentHexStringWrapper,
     ElectricityCurrentJsonWrapper,
     ElectricityCurrentRawWrapper,
+    ElectricityPowerFactorHexStringWrapper,
+    ElectricityPowerFactorRawWrapper,
+    ElectricityPowerHexStringWrapper,
     ElectricityPowerJsonWrapper,
     ElectricityPowerRawWrapper,
+    ElectricityReactivePowerHexStringWrapper,
+    ElectricityReactivePowerRawWrapper,
+    ElectricityVoltageHexStringWrapper,
     ElectricityVoltageJsonWrapper,
     ElectricityVoltageRawWrapper,
     WindDirectionEnumWrapper,
@@ -59,6 +68,31 @@ from .util import get_device_temp_unit_convert
 CURRENT_WRAPPER = (ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper)
 POWER_WRAPPER = (ElectricityPowerRawWrapper, ElectricityPowerJsonWrapper)
 VOLTAGE_WRAPPER = (ElectricityVoltageRawWrapper, ElectricityVoltageJsonWrapper)
+REACTIVE_POWER_WRAPPER = (ElectricityReactivePowerRawWrapper,)
+APPARENT_POWER_WRAPPER = (ElectricityApparentPowerRawWrapper,)
+POWER_FACTOR_WRAPPER = (ElectricityPowerFactorRawWrapper,)
+CURRENT_HEX_WRAPPER = (ElectricityCurrentHexStringWrapper,)
+POWER_HEX_WRAPPER = (ElectricityPowerHexStringWrapper,)
+VOLTAGE_HEX_WRAPPER = (ElectricityVoltageHexStringWrapper,)
+REACTIVE_POWER_HEX_WRAPPER = (ElectricityReactivePowerHexStringWrapper,)
+APPARENT_POWER_HEX_WRAPPER = (ElectricityApparentPowerHexStringWrapper,)
+POWER_FACTOR_HEX_WRAPPER = (ElectricityPowerFactorHexStringWrapper,)
+_PHASE_RAW_WRAPPERS = (
+    CURRENT_WRAPPER,
+    POWER_WRAPPER,
+    VOLTAGE_WRAPPER,
+    REACTIVE_POWER_WRAPPER,
+    APPARENT_POWER_WRAPPER,
+    POWER_FACTOR_WRAPPER,
+)
+_PHASE_HEX_WRAPPERS = (
+    CURRENT_HEX_WRAPPER,
+    POWER_HEX_WRAPPER,
+    VOLTAGE_HEX_WRAPPER,
+    REACTIVE_POWER_HEX_WRAPPER,
+    APPARENT_POWER_HEX_WRAPPER,
+    POWER_FACTOR_HEX_WRAPPER,
+)
 
 
 @dataclass(frozen=True)
@@ -67,6 +101,89 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
 
     dpcode: DPCode | None = None
     wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None = None
+
+
+def _phase_sensors(
+    dpcode: DPCode,
+    phase: str,
+    wrappers: tuple[
+        tuple[type[DPCodeTypeInformationWrapper], ...], ...
+    ] = _PHASE_RAW_WRAPPERS,
+) -> tuple[TuyaSensorEntityDescription, ...]:
+    """Build the six per-phase measurement sensors for one meter phase dpcode."""
+    current_w, power_w, voltage_w, reactive_w, apparent_w, factor_w = wrappers
+    return (
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}electriccurrent",
+            dpcode=dpcode,
+            translation_key="phase_current",
+            translation_placeholders={"phase": phase},
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=current_w,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}power",
+            dpcode=dpcode,
+            translation_key="phase_power",
+            translation_placeholders={"phase": phase},
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=power_w,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}voltage",
+            dpcode=dpcode,
+            translation_key="phase_voltage",
+            translation_placeholders={"phase": phase},
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=voltage_w,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}reactivepower",
+            dpcode=dpcode,
+            translation_key="phase_reactive_power",
+            translation_placeholders={"phase": phase},
+            device_class=SensorDeviceClass.REACTIVE_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=reactive_w,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}apparentpower",
+            dpcode=dpcode,
+            translation_key="phase_apparent_power",
+            translation_placeholders={"phase": phase},
+            device_class=SensorDeviceClass.APPARENT_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=apparent_w,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}powerfactor",
+            dpcode=dpcode,
+            translation_key="phase_power_factor",
+            translation_placeholders={"phase": phase},
+            device_class=SensorDeviceClass.POWER_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=factor_w,
+        ),
+    )
+
+
+def _energy_sensors(
+    prefix: str, translation_key: str
+) -> tuple[TuyaSensorEntityDescription, ...]:
+    """Build the per-circuit (1..20) forward or reverse active energy sensors."""
+    return tuple(
+        TuyaSensorEntityDescription(
+            key=getattr(DPCode, f"{prefix}_{index}"),
+            translation_key=translation_key,
+            translation_placeholders={"phase": str(index)},
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        )
+        for index in range(1, 21)
+    )
 
 
 # Commonly used battery sensors, that are reused in the sensors down below.
@@ -538,78 +655,9 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}electriccurrent",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}power",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}voltage",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}electriccurrent",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}power",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}voltage",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}electriccurrent",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}power",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}voltage",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
-        ),
+        *_phase_sensors(DPCode.PHASE_A, "A"),
+        *_phase_sensors(DPCode.PHASE_B, "B"),
+        *_phase_sensors(DPCode.PHASE_C, "C"),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
             translation_key="current",
@@ -1654,78 +1702,75 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        *_phase_sensors(DPCode.PHASE_A, "A"),
+        *_phase_sensors(DPCode.PHASE_B, "B"),
+        *_phase_sensors(DPCode.PHASE_C, "C"),
+        *_phase_sensors(DPCode.PHASE_1, "1"),
+        *_phase_sensors(DPCode.PHASE_2, "2"),
+        *_phase_sensors(DPCode.PHASE_3, "3"),
+        *_phase_sensors(DPCode.PHASE_4, "4"),
+        *_phase_sensors(DPCode.PHASE_5, "5"),
+        *_phase_sensors(DPCode.PHASE_6, "6"),
+        *_phase_sensors(DPCode.PHASE_7, "7"),
+        *_phase_sensors(DPCode.PHASE_8, "8"),
+        *_phase_sensors(DPCode.PHASE_9, "9"),
+        *_phase_sensors(DPCode.PHASE_10, "10"),
+        *_phase_sensors(DPCode.PHASE_11, "11"),
+        *_phase_sensors(DPCode.PHASE_12, "12"),
+        *_phase_sensors(DPCode.PHASE_13, "13"),
+        *_phase_sensors(DPCode.PHASE_14, "14"),
+        *_phase_sensors(DPCode.PHASE_15, "15"),
+        *_phase_sensors(DPCode.PHASE_16, "16"),
+        *_phase_sensors(DPCode.PHASE_17, "17"),
+        *_phase_sensors(DPCode.PHASE_18, "18"),
+        *_phase_sensors(DPCode.PHASE_19, "19"),
+        *_phase_sensors(DPCode.PHASE_20, "20"),
+        *_phase_sensors(DPCode.PHASE_S_1, "1", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_2, "2", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_3, "3", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_4, "4", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_5, "5", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_6, "6", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_7, "7", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_8, "8", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_9, "9", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_10, "10", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_11, "11", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_12, "12", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_13, "13", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_14, "14", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_15, "15", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_16, "16", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_17, "17", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_18, "18", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_19, "19", _PHASE_HEX_WRAPPERS),
+        *_phase_sensors(DPCode.PHASE_S_20, "20", _PHASE_HEX_WRAPPERS),
         TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}electriccurrent",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_current",
-            device_class=SensorDeviceClass.CURRENT,
+            key=DPCode.POWER_APPARENT,
+            translation_key="apparent_power",
+            device_class=SensorDeviceClass.APPARENT_POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}power",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_power",
-            device_class=SensorDeviceClass.POWER,
+            key=DPCode.REACTIVE_POWER,
+            translation_key="reactive_power",
+            device_class=SensorDeviceClass.REACTIVE_POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}voltage",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
+            key=DPCode.POWER_FACTOR,
+            translation_key="power_factor",
+            device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}electriccurrent",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
+            key=DPCode.ACTIVE_ENERGY_TOTAL,
+            translation_key="combined_active_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}power",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}voltage",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}electriccurrent",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}power",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}voltage",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
-        ),
+        *_energy_sensors("FORWARD_ENERGY", "forward_energy_phase"),
+        *_energy_sensors("REVERSE_ENERGY", "reverse_energy_phase"),
     ),
     DeviceCategory.ZNJDQ: (
         TuyaSensorEntityDescription(
