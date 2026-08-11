@@ -155,7 +155,7 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
         """Set new target temperature."""
         temperature = cast(float, kwargs[ATTR_TEMPERATURE])
 
-        if self._attr_max_temp > temperature > self._attr_min_temp:
+        if temperature < self._attr_min_temp or temperature > self._attr_max_temp:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key=FAIL_SET_TEMP,
