@@ -22,7 +22,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryDisabler
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_started
@@ -150,9 +150,15 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: NetatmoConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
+    # A disabled home is filtered out of the account, so its rooms and modules
+    # are absent from the inventory below while their devices are still live
+    if device_entry.disabled_by is DeviceEntryDisabler.INTEGRATION:
+        return False
+
     homes = config_entry.runtime_data.account.homes.values()
     valid_ids = {
         *config_entry.runtime_data.account.all_home_names,
+        *config_entry.runtime_data.account.modules,
         *(module for home in homes for module in home.modules),
         *(room for home in homes for room in home.rooms),
     }

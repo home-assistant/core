@@ -1051,7 +1051,8 @@ async def test_device_remove_devices(
 
     assert await async_setup_component(hass, "config", {})
 
-    with selected_platforms([Platform.CLIMATE]):
+    # The sensor platform is what gives account-owned air care modules a device
+    with selected_platforms([Platform.CLIMATE, Platform.SENSOR]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -1071,12 +1072,56 @@ async def test_device_remove_devices(
     response = await client.remove_device(home_device.id)
     assert not response["success"]
 
+    # Air care modules belong to the account rather than to a home
+    air_care_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:25:cf:a8"), config_entry.entry_id
+    )
+    assert air_care_device is not None
+    response = await client.remove_device(air_care_device.id, config_entry.entry_id)
+    assert not response["success"]
+
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
     )
     response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
+
+
+async def test_disabled_home_keeps_its_descendants(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a disabled home's rooms and modules cannot be removed."""
+    assert await async_setup_component(hass, "config", {})
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        livingroom = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "2746182631"), config_entry.entry_id
+        )
+        assert livingroom is not None
+
+        home_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, HOME_ID), config_entry.entry_id
+        )
+        assert home_device is not None
+        device_registry.async_update_device(
+            home_device.id, disabled_by=dr.DeviceEntryDisabler.USER
+        )
+        await hass.async_block_till_done()
+
+    # The home is no longer polled, so its rooms are absent from the account,
+    # but their devices are still live and must keep their customisations
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(livingroom.id, config_entry.entry_id)
+    assert not response["success"]
 
 
 async def test_oauth_implementation_not_available(
