@@ -117,7 +117,7 @@ class OAuth2FlowHandler(
     def __init__(self) -> None:
         """Initialize the flow."""
         super().__init__()
-        self._flow_impl: HisenseOAuth2Implementation | None = None
+        self.flow_impl: HisenseOAuth2Implementation | None = None
 
     @property
     def logger(self) -> logging.Logger:
