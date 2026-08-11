@@ -1,6 +1,7 @@
 """The tests for Netatmo component."""
 
 from collections.abc import Callable, Coroutine, Iterator
+from contextlib import contextmanager
 from datetime import timedelta
 from functools import partial
 from itertools import pairwise
@@ -17,10 +18,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, webhook
 from homeassistant.components.netatmo import DOMAIN, coordinator
-from homeassistant.components.netatmo.device import (
-    async_register_parent_devices,
-    netatmo_module_parents,
-)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
@@ -664,26 +661,33 @@ async def test_home_devices_registered(
     assert empty_home_device.name == "Unknown"
 
 
-async def test_module_parents(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    netatmo_auth: AsyncMock,
-) -> None:
-    """Test each module is mapped to the module it reports through."""
-    with selected_platforms([Platform.CLIMATE]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+@contextmanager
+def modified_homesdata(
+    hass: HomeAssistant, modify: Callable[[dict[str, Any]], None]
+) -> Iterator[None]:
+    """Patch the API so /homesdata reports a modified topology.
 
-        await hass.async_block_till_done()
+    `modify` is handed MYHOME's modules keyed by id.
+    """
 
-    parents = netatmo_module_parents(config_entry.runtime_data.account)
+    def modifier(payload: dict[str, Any]) -> None:
+        body = payload.get("body")
+        if not isinstance(body, dict):
+            return
+        for home in body.get("homes", []):
+            if home["id"] == HOME_ID:
+                modify({module["id"]: module for module in home["modules"]})
 
-    # A valve reports through the relay that lists it as a bridged module
-    assert parents["12:34:56:03:a5:54"] == "12:34:56:00:fa:d0"
-    # "Garden" names its station as its bridge, but the station does not list
-    # it, so a parent-side-only walk would orphan it
-    assert parents["12:34:56:03:1b:e4"] == "12:34:56:80:bb:26"
-    # A gateway itself reports through nothing
-    assert "12:34:56:00:fa:d0" not in parents
+    async def fake_post(*args: Any, **kwargs: Any):
+        return await fake_post_request(hass, *args, msg_callback=modifier, **kwargs)
+
+    with patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+    ) as mock_auth:
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        yield
 
 
 async def test_bridge_devices_registered(
@@ -767,20 +771,19 @@ async def test_nested_bridges(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
-    netatmo_auth: AsyncMock,
 ) -> None:
     """Test a gateway that itself reports through another gateway."""
-    with selected_platforms([Platform.CLIMATE]):
+
+    def bridge_the_relay(modules: dict[str, Any]) -> None:
+        modules["12:34:56:00:fa:d0"]["bridge"] = "12:34:56:80:60:40"
+
+    with (
+        modified_homesdata(hass, bridge_the_relay),
+        selected_platforms([Platform.CLIMATE]),
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
-
-    account = config_entry.runtime_data.account
-    account.homes[HOME_ID].modules["12:34:56:00:fa:d0"].bridge = "12:34:56:80:60:40"
-
-    parent_device_ids = async_register_parent_devices(
-        hass, config_entry, account, netatmo_module_parents(account)
-    )
 
     relay = device_registry.async_get_device_by_identifier(
         (DOMAIN, "12:34:56:00:fa:d0"), config_entry.entry_id
@@ -792,51 +795,69 @@ async def test_nested_bridges(
     assert gateway is not None
 
     assert relay.via_device_id == gateway.id
-    assert parent_device_ids["12:34:56:00:fa:d0"] == relay.id
 
 
 async def test_conflicting_claims_resolve_to_the_bridge(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
-    netatmo_auth: AsyncMock,
 ) -> None:
     """Test a child claimed by two parents keeps the one its bridge names."""
-    with selected_platforms([Platform.CLIMATE]):
+
+    def claim_the_blinds(modules: dict[str, Any]) -> None:
+        camera = modules["12:34:56:00:f1:62"]
+        camera["modules_bridged"] = [*camera["modules_bridged"], "0009999992"]
+
+    with (
+        modified_homesdata(hass, claim_the_blinds),
+        selected_platforms([Platform.COVER]),
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
-    account = config_entry.runtime_data.account
-    camera = account.homes[HOME_ID].modules["12:34:56:00:f1:62"]
-    camera.modules = [*camera.modules, "12:34:56:03:a5:54"]
-
-    parents = netatmo_module_parents(account)
-
-    # Valve1 names the relay as its bridge, so the camera's claim loses
-    assert parents["12:34:56:03:a5:54"] == "12:34:56:00:fa:d0"
+    blinds = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "0009999992"), config_entry.entry_id
+    )
+    assert blinds is not None
+    # The blinds name the iDiamant gateway as their bridge, so the camera loses
+    gateway = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:30:d5:d4"), config_entry.entry_id
+    )
+    assert gateway is not None
+    assert blinds.via_device_id == gateway.id
 
 
 async def test_conflicting_claims_without_a_bridge(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
-    netatmo_auth: AsyncMock,
 ) -> None:
     """Test a child that names no bridge stays with its first claimant."""
-    with selected_platforms([Platform.CLIMATE]):
+
+    def claim_the_bridgeless_blinds(modules: dict[str, Any]) -> None:
+        del modules["0009999992"]["bridge"]
+        camera = modules["12:34:56:00:f1:62"]
+        camera["modules_bridged"] = [*camera["modules_bridged"], "0009999992"]
+
+    with (
+        modified_homesdata(hass, claim_the_bridgeless_blinds),
+        selected_platforms([Platform.COVER]),
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
-    account = config_entry.runtime_data.account
-    home = account.homes[HOME_ID]
-    home.modules["12:34:56:03:a5:54"].bridge = None
-    camera = home.modules["12:34:56:00:f1:62"]
-    camera.modules = [*camera.modules, "12:34:56:03:a5:54"]
-
-    parents = netatmo_module_parents(account)
-
-    # The relay is listed before the camera in the API response
-    assert parents["12:34:56:03:a5:54"] == "12:34:56:00:fa:d0"
+    blinds = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "0009999992"), config_entry.entry_id
+    )
+    assert blinds is not None
+    # The camera is listed before the iDiamant gateway in the API response
+    camera = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:00:f1:62"), config_entry.entry_id
+    )
+    assert camera is not None
+    assert blinds.via_device_id == camera.id
 
 
 async def test_device_hierarchy(
