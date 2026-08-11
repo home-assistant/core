@@ -156,7 +156,18 @@ async def test_transfer_and_refresh(
     assert monzo.user_account.pots.await_count == 2
 
 
-@pytest.mark.parametrize("amount", [0, -1, 0.001, "invalid", nan])
+@pytest.mark.parametrize(
+    "amount",
+    [
+        pytest.param(0, id="zero"),
+        pytest.param(-1, id="negative"),
+        pytest.param(0.001, id="too-many-decimal-places"),
+        pytest.param("invalid", id="not-a-number"),
+        pytest.param(nan, id="non-finite"),
+        pytest.param("1e999999", id="decimal-overflow"),
+        pytest.param("1e-10000000", id="minor-units-underflow"),
+    ],
+)
 async def test_invalid_amount(
     hass: HomeAssistant,
     transfer_devices: TransferDevices,

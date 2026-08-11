@@ -1,7 +1,7 @@
 """Actions for the Monzo integration."""
 
 from collections.abc import Awaitable, Callable
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, DecimalException
 from typing import Any, Final, cast
 
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
@@ -37,13 +37,14 @@ def _amount_to_minor_units(value: Any) -> int:
     """Validate an amount and convert it to minor currency units."""
     try:
         amount = Decimal(str(value))
-    except (InvalidOperation, ValueError) as err:
+        minor_units = amount * 100
+    except (DecimalException, ValueError) as err:
         raise vol.Invalid("Amount must be a number") from err
 
-    minor_units = amount * 100
     if (
         not amount.is_finite()
         or amount <= 0
+        or minor_units <= 0
         or minor_units != minor_units.to_integral_value()
     ):
         raise vol.Invalid("Amount must be positive with no more than 2 decimal places")
