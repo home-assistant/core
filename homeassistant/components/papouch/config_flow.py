@@ -7,7 +7,7 @@ import re
 from typing import override
 
 import aiohttp
-from aiopapouch import PapouchHTTPClient, create_device
+from aiopapouch import PapouchHTTPClient, create_device, is_device_supported
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -34,7 +34,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_ips: dict[str, str] | None = None
 
     async def _test_connection(
-        self, ip_address: str
+        self, ip_address: str, password: str = ""
     ) -> tuple[dict[str, str], int | None]:
         """Test the connection and return any errors and the device mode."""
 
@@ -42,7 +42,11 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"ip_address": "invalid_ip_format"}, None
 
         session = async_get_clientsession(self.hass)
-        client = PapouchHTTPClient(ip_address, session)
+
+        if password is None:
+            password = ""
+
+        client = PapouchHTTPClient(ip_address, session, password=password)
 
         try:
             await client.fetch_info()
@@ -62,7 +66,10 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             if entry.data.get("ip_address") == user_input["ip_address"]:
                 return {}, self.async_abort(reason="already_configured")
 
-        errors, mode_device = await self._test_connection(user_input["ip_address"])
+        password = str(user_input.get("password", ""))
+        errors, mode_device = await self._test_connection(
+            user_input["ip_address"], password
+        )
 
         if not errors:
             self._saved_input = user_input
@@ -103,16 +110,17 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await asyncio.sleep(DHCP_TIMEOUT)
-            device = await create_device(client)
-            if device:
-                self.discovered_name = (
-                    f"{device.name} ({device.location}) - {self.discovered_ip}"
-                )
-            else:
-                return self.async_abort(reason="unsupported_device")
+            device_name, device_location = await client.get_device_info()
         except aiohttp.ClientError as err:
             _LOGGER.error("Failed to fetch device info after DHCP: %s", err)
             return self.async_abort(reason="cannot_connect")
+
+        if not is_device_supported(device_name):
+            return self.async_abort(reason="unsupported_device")
+
+        self.discovered_name = (
+            f"{device_name} ({device_location}) - {self.discovered_ip}"
+        )
 
         self.context.update({"title_placeholders": {"name": self.discovered_name}})
 
@@ -133,6 +141,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required("refresh_rate", default=DEFAULT_SCAN_INTERVAL): vol.All(
                     int, vol.Range(min=1, max=3600)
                 ),
+                vol.Optional("password"): str,
             }
         )
 
@@ -201,6 +210,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required("refresh_rate", default=default_interval): vol.All(
                     int, vol.Range(min=1, max=3600)
                 ),
+                vol.Optional("password"): str,
             }
         )
 
@@ -231,6 +241,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required("refresh_rate", default=default_interval): vol.All(
                     int, vol.Range(min=1, max=3600)
                 ),
+                vol.Optional("password"): str,
             }
         )
 
@@ -248,7 +259,15 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._saved_input is not None
 
         session = async_get_clientsession(self.hass)
-        client = PapouchHTTPClient(self._saved_input["ip_address"], session)
+
+        password = self._saved_input.get("password")
+
+        if password is None:
+            password = ""
+
+        client = PapouchHTTPClient(
+            self._saved_input["ip_address"], session, password=password
+        )
 
         try:
             device = await create_device(client)

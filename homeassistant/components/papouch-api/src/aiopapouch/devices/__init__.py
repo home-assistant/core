@@ -1,7 +1,5 @@
 """This file is used as a hub for imports."""
 
-import logging
-
 from ..client import PapouchTransport
 from .base import PapouchDevice
 from .papago import async_setup_papago
@@ -9,30 +7,40 @@ from .quido import async_setup_quido
 from .th2e import async_setup_th2e
 from .tme import async_setup_tme
 
-_LOGGER = logging.getLogger(__name__)
+DEVICE_SETUP_HANDLERS = {
+    "Quido": async_setup_quido,
+    "TH2E": async_setup_th2e,
+    "TME": async_setup_tme,
+    "Papago": async_setup_papago,
+}
+
+
+def is_device_supported(device_name: str | None) -> bool:
+    """Check if the extracted device name matches any supported prefix."""
+    if not device_name:
+        return False
+
+    return any(prefix in device_name for prefix in DEVICE_SETUP_HANDLERS)
 
 
 async def create_device(api_client: PapouchTransport) -> PapouchDevice | None:
-    """Function that creates proper device instance.
+    """Create a proper device instance dynamically based on the fetched info.
 
-    Returns "None" if the device is not supported.
+    Returns None if the device is not supported.
     """
 
-    device_name = await api_client.get_device_name()
+    device_name, _ = await api_client.get_device_info()
 
-    if device_name is None:
+    if not is_device_supported(device_name):
         return None
 
-    if "Quido" in device_name:
-        return await async_setup_quido(api_client)
-    if "TH2E" in device_name:
-        return await async_setup_th2e(api_client)
-    if "TME" in device_name:
-        return await async_setup_tme(api_client)
-    if "Papago" in device_name:
-        return await async_setup_papago(api_client)
+    assert device_name is not None
+
+    for prefix, setup_func in DEVICE_SETUP_HANDLERS.items():
+        if prefix in device_name:
+            return await setup_func(api_client)
 
     return None
 
 
-__all__ = ["PapouchDevice", "create_device"]
+__all__ = ["PapouchDevice", "create_device", "is_device_supported"]

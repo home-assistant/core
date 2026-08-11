@@ -19,6 +19,7 @@
     "step": {
       "discovery_confirm": {
         "data": {
+          "password": "Password (optional)",
           "refresh_rate": "Scan Interval (seconds)"
         },
         "description": "Do you want to add {name} to Home Assistant?",
@@ -27,6 +28,7 @@
       "manual": {
         "data": {
           "ip_address": "IPv4 address",
+          "password": "Password (optional)",
           "refresh_rate": "Scan interval (seconds)"
         },
         "title": "Manual Setup"
@@ -34,6 +36,7 @@
       "user": {
         "data": {
           "ip_address": "IPv4 address",
+          "password": "Password (optional)",
           "refresh_rate": "Scan interval (seconds)"
         },
         "title": "Add a new device"

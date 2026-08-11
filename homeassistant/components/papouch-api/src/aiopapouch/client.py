@@ -60,8 +60,8 @@ class PapouchTransport(ABC):
         """
 
     @abstractmethod
-    async def get_device_name(self) -> str | None:
-        """Return name of the device."""
+    async def get_device_info(self) -> tuple[str | None, str | None]:
+        """Return name and location of the device."""
 
     @property
     @abstractmethod
@@ -82,8 +82,8 @@ class PapouchHTTPClient(PapouchTransport):
 
         if password != "":
             self._auth = aiohttp.BasicAuth("admin", password)
-
-        self._auth = aiohttp.BasicAuth("", "")
+        else:
+            self._auth = aiohttp.BasicAuth("", "")
 
     @property
     @override
@@ -114,13 +114,13 @@ class PapouchHTTPClient(PapouchTransport):
         return await self._fetch(SETTINGS_URL)
 
     @override
-    async def get_device_name(self) -> str | None:
+    async def get_device_info(self) -> tuple[str | None, str | None]:
         info = await self.fetch_info()
 
         try:
             root = defused_ET.fromstring(info)
         except defused_ET.ParseError:
-            return None
+            return (None, None)
 
         heartbeat = None
         for element in root.iter():
@@ -129,13 +129,12 @@ class PapouchHTTPClient(PapouchTransport):
                 break
 
         if heartbeat is None:
-            return None
+            return (None, None)
 
-        device = heartbeat.attrib.get("device")
-        if not device:
-            return None
+        device_name = heartbeat.attrib.get("device")
+        device_location = heartbeat.attrib.get("location")
 
-        return str(device)
+        return (device_name, device_location)
 
     async def _send_request(
         self, method: str, endpoint: str, context: str, **kwargs: Any
@@ -145,7 +144,11 @@ class PapouchHTTPClient(PapouchTransport):
 
         try:
             async with self.session.request(
-                method, self.base_url + endpoint, timeout=timeout, **kwargs
+                method,
+                self.base_url + endpoint,
+                timeout=timeout,
+                auth=self._auth,
+                **kwargs,
             ) as response:
                 if response.status != 200:
                     raise DeviceConnectionError(

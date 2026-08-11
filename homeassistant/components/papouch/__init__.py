@@ -6,7 +6,7 @@ from aiopapouch import PapouchHTTPClient, create_device
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -37,13 +37,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
     """Set up Papouch device from a config entry."""
 
     session = async_get_clientsession(hass)
-    api_client = PapouchHTTPClient(entry.data["ip_address"], session)
+    password = entry.data.get("password", "")
+    api_client = PapouchHTTPClient(entry.data["ip_address"], session, password=password)
 
     try:
         device = await create_device(api_client)
+    except aiohttp.ClientResponseError as err:
+        if err.status == 401:
+            raise ConfigEntryAuthFailed(
+                f"Invalid authentication for Papouch device at {api_client.ip_address}, error: {err}"
+            ) from err
+
+        raise ConfigEntryNotReady(
+            f"Failed to connect to Papouch device at {api_client.ip_address}, error: {err}"
+        ) from err
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady(
-            f"Failed to connect to Papouch device: {err}"
+            f"Failed to connect to Papouch device at {api_client.ip_address}, error: {err}"
         ) from err
 
     if device is None:

@@ -4,7 +4,7 @@ import asyncio
 from typing import cast, override
 
 import aiohttp
-from aiopapouch import PapouchHTTPClient, create_device
+from aiopapouch import PapouchHTTPClient, is_device_supported
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -38,7 +38,7 @@ class PapouchDiscoveryProtocol(asyncio.DatagramProtocol):
         self.discovered_ips.add(ip_address)
 
 
-async def _is_supported_device(
+async def _get_device_info(
     hass: HomeAssistant, ip_address: str
 ) -> tuple[str, str] | None:
     """Return tuple (location, name) of the device.
@@ -50,17 +50,17 @@ async def _is_supported_device(
     client = PapouchHTTPClient(ip_address, session)
 
     try:
-        await client.fetch_info()
-        device = await create_device(client)
-
-        if device is None:
-            return None
-
-        location = device.location
-        name = device.name
-        return (location, name)  # noqa: TRY300
+        device_name, device_location = await client.get_device_info()
     except aiohttp.ClientError:
         return None
+    else:
+        if not is_device_supported(device_name):
+            return None
+
+        if device_name is None or device_location is None:
+            return None
+
+        return (device_location, device_name)
 
 
 async def async_discover_papouch_devices(
@@ -92,7 +92,7 @@ async def async_discover_papouch_devices(
         async with semaphore:
             try:
                 async with asyncio.timeout(ACTIVE_DISCOVERY_TIMEOUT):
-                    data = await _is_supported_device(hass, ip)
+                    data = await _get_device_info(hass, ip)
                     return (ip, data)
             except TimeoutError:
                 return (ip, None)
