@@ -196,6 +196,11 @@ class NetatmoDataHandler:
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
 
+        # Parents must exist before a platform links a child to one
+        self.parent_device_ids = async_register_parent_devices(
+            self.hass, self.config_entry, self.account
+        )
+
         await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS
         )
@@ -348,10 +353,6 @@ class NetatmoDataHandler:
 
     async def async_dispatch(self) -> None:
         """Dispatch the creation of entities."""
-        self.parent_device_ids = async_register_parent_devices(
-            self.hass, self.config_entry, self.account
-        )
-
         await self.subscribe(WEATHER, WEATHER, None)
         await self.subscribe(AIR_CARE, AIR_CARE, None)
 

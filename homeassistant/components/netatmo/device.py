@@ -1,17 +1,21 @@
 """Device registry helpers for the Netatmo integration."""
 
+from typing import TYPE_CHECKING
+
 import pyatmo
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_URL_CONTROL, DOMAIN, MANUFACTURER
 
+if TYPE_CHECKING:
+    from .coordinator import NetatmoConfigEntry
+
 
 @callback
 def async_register_parent_devices(
-    hass: HomeAssistant, entry: ConfigEntry, account: pyatmo.AsyncAccount
+    hass: HomeAssistant, entry: NetatmoConfigEntry, account: pyatmo.AsyncAccount
 ) -> dict[str, str]:
     """Register a device per home and map Netatmo ids to device registry ids."""
     device_registry = dr.async_get(hass)
