@@ -87,6 +87,9 @@
     },
     "transfer_failed": {
       "message": "The money could not be transferred. Try again later."
+    },
+    "transfer_rejected": {
+      "message": "Monzo rejected the transfer for {account_name} (account type: {account_type}): {reason}. If the reason does not explain why this account cannot be used for pot transfers, report an issue with the Monzo integration and include these details."
     }
   },
   "services": {

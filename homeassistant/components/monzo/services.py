@@ -47,6 +47,17 @@ def _amount_to_minor_units(value: Any) -> int:
     return int(minor_units)
 
 
+def _transfer_rejection_reason(error: InvalidMonzoAPIResponseError) -> str | None:
+    """Return the rejection details supplied by Monzo."""
+    if not error.response or not isinstance(
+        message := error.response.get("message"), str
+    ):
+        return None
+    if isinstance(code := error.response.get("code"), str):
+        return f"{code}: {message}"
+    return message
+
+
 TRANSFER_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ACCOUNT): selector.DeviceSelector(
@@ -168,6 +179,17 @@ async def _async_transfer(
             translation_key="authentication_expired",
         ) from err
     except InvalidMonzoAPIResponseError as err:
+        if reason := _transfer_rejection_reason(err):
+            account = coordinator.data.accounts[account_id]
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="transfer_rejected",
+                translation_placeholders={
+                    "account_name": account["name"],
+                    "account_type": account["type"],
+                    "reason": reason,
+                },
+            ) from err
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="transfer_failed",

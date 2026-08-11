@@ -284,6 +284,33 @@ async def test_api_error(
     assert monzo.user_account.pots.await_count == 1
 
 
+async def test_api_rejection_details(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    transfer_devices: TransferDevices,
+) -> None:
+    """Test rejection details supplied by Monzo are exposed to the user."""
+    monzo.user_account.pot_deposit.side_effect = InvalidMonzoAPIResponseError(
+        {
+            "code": "bad_request.unsupported_account",
+            "message": "This account does not support pot transfers",
+        }
+    )
+
+    with pytest.raises(HomeAssistantError) as error:
+        await _async_call_transfer(hass, transfer_devices, SERVICE_DEPOSIT_INTO_POT, 1)
+
+    assert error.value.translation_key == "transfer_rejected"
+    assert error.value.translation_placeholders == {
+        "account_name": "Current Account",
+        "account_type": "uk_retail",
+        "reason": (
+            "bad_request.unsupported_account: "
+            "This account does not support pot transfers"
+        ),
+    }
+
+
 async def test_expired_authorisation_starts_reauthentication(
     hass: HomeAssistant,
     polling_config_entry: MockConfigEntry,
