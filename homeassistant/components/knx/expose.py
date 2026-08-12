@@ -26,7 +26,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
-    CoreState
+    CoreState,
     Event,
     EventStateChangedData,
     HomeAssistant,
