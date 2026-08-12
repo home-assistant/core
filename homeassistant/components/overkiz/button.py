@@ -201,6 +201,7 @@ class OverkizAliasButton(OverkizEntity, ButtonEntity):
                 device_url,
             )
             self._attr_name = f"{alias_type.capitalize()} position"
+            self._attr_icon = "mdi:star"
 
     @override
     async def async_press(self) -> None:

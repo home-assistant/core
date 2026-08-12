@@ -10,7 +10,13 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -198,3 +204,21 @@ async def test_no_button_without_supported_aliases_attribute(
     # The Roof Window device in this fixture has a goToAlias command but no
     # core:SupportedAliases attribute, so it should not get an alias button.
     assert hass.states.get("button.roof_window_my_position") is None
+
+
+async def test_button_alias_without_translation(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an alias type we don't translate yet still gets a named button."""
+    with patch(
+        "homeassistant.components.overkiz.button.ALIAS_TYPES_WITH_TRANSLATION", set()
+    ):
+        await setup_overkiz_integration(fixture=VELUX_WINDOW.fixture)
+
+    state = hass.states.get(VELUX_WINDOW.entity_id)
+    assert state
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Loft Window Ventilation position"
+    assert state.attributes[ATTR_ICON] == "mdi:star"
+    assert "Unsupported goToAlias type ventilation (55299)" in caplog.text
