@@ -39,26 +39,39 @@ def _expect_message(node: nodes.Call) -> MessageTest:
 
 
 @pytest.mark.parametrize(
-    "source",
+    "context",
     [
-        "SOURCE_USER",
-        "config_entries.SOURCE_USER",
-        '"user"',
+        '{"source": SOURCE_USER}',
+        '{"source": config_entries.SOURCE_USER}',
+        '{"source": "user"}',
+        "ConfigFlowContext(source=SOURCE_USER)",
+        "config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER)",
     ],
-    ids=["const", "attribute", "literal"],
+    ids=[
+        "dict_const",
+        "dict_attribute",
+        "dict_literal",
+        "context_call",
+        "context_attr",
+    ],
+)
+@pytest.mark.parametrize(
+    "manager",
+    ["flow", "subentries"],
 )
 def test_user_flow_with_data_flagged(
     linter: UnittestLinter,
     user_flow_no_data_checker: UserFlowNoDataChecker,
-    source: str,
+    context: str,
+    manager: str,
 ) -> None:
     """A user flow init with a data argument is flagged."""
     root_node = astroid.parse(
         f"""
 async def test_something(hass) -> None:
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.{manager}.async_init(
         DOMAIN,
-        context={{"source": {source}}},
+        context={context},
         data={{"host": "127.0.0.1"}},
     )
 """,
@@ -95,6 +108,30 @@ async def test_something(hass) -> None:
 """,
             "tests.components.test_integration.test_config_flow",
             id="zeroconf_flow_with_data",
+        ),
+        pytest.param(
+            """
+async def test_something(client) -> None:
+    result = await client.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={"host": "127.0.0.1"},
+    )
+""",
+            "tests.components.test_integration.test_config_flow",
+            id="unrelated_async_init_receiver",
+        ),
+        pytest.param(
+            """
+async def test_something(hass) -> None:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context=Other(source=SOURCE_USER),
+        data={"host": "127.0.0.1"},
+    )
+""",
+            "tests.components.test_integration.test_config_flow",
+            id="non_config_flow_context_call",
         ),
         pytest.param(
             """

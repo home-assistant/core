@@ -15,7 +15,10 @@ This checker flags calls of the form::
 
 where the ``context`` source is the user source (``SOURCE_USER``,
 ``config_entries.SOURCE_USER`` or the literal ``"user"``) and a ``data``
-keyword argument is supplied.
+keyword argument is supplied. Both the config-entry flow manager
+(``config_entries.flow``) and the subentry flow manager
+(``config_entries.subentries``) are covered, and the ``context`` may be a
+dict literal or a ``ConfigFlowContext(source=...)`` call.
 """
 
 from astroid import nodes
@@ -26,22 +29,48 @@ from pylint_home_assistant.helpers.module_info import is_test_module
 
 _SOURCE_USER = "SOURCE_USER"
 _USER = "user"
+_FLOW_MANAGERS = frozenset({"flow", "subentries"})
+_CONFIG_FLOW_CONTEXT = "ConfigFlowContext"
+
+
+def _source_value_is_user(value: nodes.NodeNG) -> bool:
+    """Return True when a ``source`` value refers to the user source."""
+    if isinstance(value, nodes.Const):
+        return bool(value.value == _USER)
+    if isinstance(value, nodes.Name):
+        return bool(value.name == _SOURCE_USER)
+    if isinstance(value, nodes.Attribute):
+        return bool(value.attrname == _SOURCE_USER)
+    return False
 
 
 def _context_source_is_user(context: nodes.NodeNG) -> bool:
-    """Return True when the context dict's source is the user source."""
-    if not isinstance(context, nodes.Dict):
+    """Return True when the context's source is the user source.
+
+    Handles both a dict literal (``{"source": SOURCE_USER}``) and a
+    ``ConfigFlowContext(source=SOURCE_USER)`` call.
+    """
+    if isinstance(context, nodes.Dict):
+        for key, value in context.items:
+            if isinstance(key, nodes.Const) and key.value == "source":
+                return _source_value_is_user(value)
         return False
-    for key, value in context.items:
-        if not (isinstance(key, nodes.Const) and key.value == "source"):
-            continue
-        if isinstance(value, nodes.Const):
-            return bool(value.value == _USER)
-        if isinstance(value, nodes.Name):
-            return bool(value.name == _SOURCE_USER)
-        if isinstance(value, nodes.Attribute):
-            return bool(value.attrname == _SOURCE_USER)
-        return False
+
+    if isinstance(context, nodes.Call):
+        func = context.func
+        name = (
+            func.attrname
+            if isinstance(func, nodes.Attribute)
+            else func.name
+            if isinstance(func, nodes.Name)
+            else None
+        )
+        if name != _CONFIG_FLOW_CONTEXT:
+            return False
+        for keyword in context.keywords or ():
+            if keyword.arg == "source":
+                return _source_value_is_user(keyword.value)
+
     return False
 
 
@@ -55,9 +84,10 @@ class UserFlowNoDataChecker(BaseChecker):
             "Do not pass `data` when initializing a user config flow; the "
             "user flow is always started without data in reality",
             "home-assistant-tests-user-flow-no-data",
-            "Used when a test calls ``flow.async_init`` with a user source "
-            "context and a ``data`` keyword argument. User flows never "
-            "receive data in production — only discovery flows do.",
+            "Used when a test calls ``flow.async_init`` or "
+            "``subentries.async_init`` with a user source context and a "
+            "``data`` keyword argument. User flows never receive data in "
+            "production — only discovery flows do.",
         ),
     }
     options = ()
@@ -75,6 +105,15 @@ class UserFlowNoDataChecker(BaseChecker):
 
         func = node.func
         if not (isinstance(func, nodes.Attribute) and func.attrname == "async_init"):
+            return
+
+        # Only the config-entry flow managers, i.e. ``*.flow.async_init`` and
+        # ``*.subentries.async_init``. This avoids flagging unrelated
+        # ``async_init`` methods that happen to take ``context``/``data``.
+        manager = func.expr
+        if not (
+            isinstance(manager, nodes.Attribute) and manager.attrname in _FLOW_MANAGERS
+        ):
             return
 
         context: nodes.NodeNG | None = None

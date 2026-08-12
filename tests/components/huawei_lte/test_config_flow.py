@@ -60,7 +60,7 @@ FIXTURE_USER_INPUT_OPTIONS = {
 
 async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
         data=None,
@@ -77,7 +77,7 @@ async def test_urlize_plain_host(
     requests_mock.request(ANY, ANY, exc=ConnectionError())
     host = "192.168.100.1"
     user_input = {**FIXTURE_USER_INPUT, CONF_URL: host}
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
         data=user_input,
@@ -110,7 +110,7 @@ async def test_already_configured(
         text=f"<response><SerialNumber>{FIXTURE_UNIQUE_ID}</SerialNumber></response>",
     )
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
         data=FIXTURE_USER_INPUT,
@@ -253,7 +253,7 @@ async def test_login_error(
         f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
         **request_outcome,
     )
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
         data={**FIXTURE_USER_INPUT, **fixture_override},
@@ -283,7 +283,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
         patch("homeassistant.components.huawei_lte.async_setup"),
         patch("homeassistant.components.huawei_lte.async_setup_entry"),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
             data=user_input,

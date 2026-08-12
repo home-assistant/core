@@ -786,10 +786,12 @@ reality.
 
 ### `R7405`: `home-assistant-tests-user-flow-no-data`
 
-A `hass.config_entries.flow.async_init(...)` call passes a `data` keyword
-argument while its `context` sets the source to the user source. The user
-source is recognized as `SOURCE_USER`, `config_entries.SOURCE_USER`, or the
-literal `"user"`:
+A `hass.config_entries.flow.async_init(...)` or
+`hass.config_entries.subentries.async_init(...)` call passes a `data`
+keyword argument while its `context` sets the source to the user source.
+The user source is recognized as `SOURCE_USER`, `config_entries.SOURCE_USER`,
+or the literal `"user"`, and the `context` may be a dict literal or a
+`ConfigFlowContext(source=...)` call:
 
 ```python
 result = await hass.config_entries.flow.async_init(
@@ -799,8 +801,11 @@ result = await hass.config_entries.flow.async_init(
 )
 ```
 
-Discovery flows (e.g. `SOURCE_ZEROCONF`, `SOURCE_DHCP`), dynamic source
-values (a variable rather than a known user source), and user flows without
+Only the config-entry flow managers (`config_entries.flow` and
+`config_entries.subentries`) are checked, so unrelated `async_init` methods
+are not flagged. Discovery flows (e.g. `SOURCE_ZEROCONF`, `SOURCE_DHCP`),
+dynamic source values (a variable rather than a known user source), and user
+flows without
 `data` are not flagged. The checker is scoped to test modules.
 
 
