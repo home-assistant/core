@@ -5,12 +5,36 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower
+from homeassistant.const import (
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTime,
+)
 
-from .const import ATTRIBUTE_BOILER_POWER, ATTRIBUTE_ENERGY_BOILER, ATTRIBUTE_GRID_POWER
+from .const import (
+    ATTRIBUTE_BOILER_CURRENT,
+    ATTRIBUTE_BOILER_POWER,
+    ATTRIBUTE_BOILER_VOLTAGE,
+    ATTRIBUTE_DAYS_SINCE_MAX_TEMPERATURE,
+    ATTRIBUTE_GRID_POWER,
+    ATTRIBUTE_LEGIONELLA_DAYS,
+    ATTRIBUTE_SAVED_THIS_MONTH,
+    ATTRIBUTE_SAVED_THIS_WEEK,
+    ATTRIBUTE_SAVED_TODAY,
+)
 from .util import camel_to_snake
 
 SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTRIBUTE_BOILER_CURRENT,
+        translation_key=camel_to_snake(ATTRIBUTE_BOILER_CURRENT),
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    ),
     SensorEntityDescription(
         key=ATTRIBUTE_BOILER_POWER,
         translation_key=camel_to_snake(ATTRIBUTE_BOILER_POWER),
@@ -20,12 +44,19 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
     SensorEntityDescription(
-        key=ATTRIBUTE_ENERGY_BOILER,
-        translation_key=camel_to_snake(ATTRIBUTE_ENERGY_BOILER),
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        key=ATTRIBUTE_BOILER_VOLTAGE,
+        translation_key=camel_to_snake(ATTRIBUTE_BOILER_VOLTAGE),
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+    ),
+    SensorEntityDescription(
+        key=ATTRIBUTE_DAYS_SINCE_MAX_TEMPERATURE,
+        translation_key=camel_to_snake(ATTRIBUTE_DAYS_SINCE_MAX_TEMPERATURE),
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.DAYS,
     ),
     SensorEntityDescription(
         key=ATTRIBUTE_GRID_POWER,
@@ -34,5 +65,36 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    SensorEntityDescription(
+        key=ATTRIBUTE_LEGIONELLA_DAYS,
+        translation_key=camel_to_snake(ATTRIBUTE_LEGIONELLA_DAYS),
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+    ),
+    SensorEntityDescription(
+        key=ATTRIBUTE_SAVED_THIS_MONTH,
+        translation_key=camel_to_snake(ATTRIBUTE_SAVED_THIS_MONTH),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    SensorEntityDescription(
+        key=ATTRIBUTE_SAVED_THIS_WEEK,
+        translation_key=camel_to_snake(ATTRIBUTE_SAVED_THIS_WEEK),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    SensorEntityDescription(
+        key=ATTRIBUTE_SAVED_TODAY,
+        translation_key=camel_to_snake(ATTRIBUTE_SAVED_TODAY),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     ),
 )

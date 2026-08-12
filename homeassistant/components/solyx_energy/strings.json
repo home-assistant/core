@@ -38,14 +38,32 @@
   },
   "entity": {
     "sensor": {
+      "boiler_current": {
+        "name": "Boiler current"
+      },
       "boiler_power": {
         "name": "Power boiler"
       },
-      "energy_boiler": {
-        "name": "Energy to boiler"
+      "boiler_voltage": {
+        "name": "Boiler voltage"
+      },
+      "days_since_max_temperature": {
+        "name": "Days since maximum temperature"
       },
       "grid_power": {
         "name": "Grid power"
+      },
+      "legionella_days": {
+        "name": "Legionella days"
+      },
+      "saved_this_month": {
+        "name": "Saved this month"
+      },
+      "saved_this_week": {
+        "name": "Saved this week"
+      },
+      "saved_today": {
+        "name": "Saved today"
       }
     }
   }
