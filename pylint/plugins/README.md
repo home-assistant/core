@@ -763,7 +763,9 @@ registry helper modules. Request the corresponding registry fixture as a
 test/fixture argument instead:
 
 ```python
-async def test_entities(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
+async def test_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     entry = entity_registry.async_get(entity_id)
 ```
 
