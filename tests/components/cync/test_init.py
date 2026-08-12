@@ -19,12 +19,12 @@ async def test_migrate_unique_ids(
 
     old_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1101"), ("another_domain", "external-id")},
+        identifiers={(DOMAIN, "10000-1101"), ("another_domain", "external-id")},
     )
     old_light_entry = entity_registry.async_get_or_create(
         Platform.LIGHT,
         "cync",
-        "1000-1101",
+        "10000-1101",
         config_entry=mock_config_entry,
     )
     original_entity_id = old_light_entry.entity_id
@@ -35,12 +35,12 @@ async def test_migrate_unique_ids(
     migrated_entity = entity_registry.async_get(original_entity_id)
     assert migrated_entity is not None
     assert migrated_entity.entity_id == original_entity_id
-    assert migrated_entity.unique_id == "1000-1"
+    assert migrated_entity.unique_id == "10000-1"
     migrated_device = device_registry.async_get(old_device_entry.id)
     assert migrated_device is not None
     assert migrated_device.id == original_device_id
-    assert (DOMAIN, "1000-1") in migrated_device.identifiers
-    assert (DOMAIN, "1000-1101") not in migrated_device.identifiers
+    assert (DOMAIN, "10000-1") in migrated_device.identifiers
+    assert (DOMAIN, "10000-1101") not in migrated_device.identifiers
     assert ("another_domain", "external-id") in migrated_device.identifiers
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)

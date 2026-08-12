@@ -67,7 +67,7 @@ async def test_turn_on(
     entity_id_parameter = {"entity_id": "light.office_lamp_bulb_1"}
     action_parameters = entity_id_parameter | input_parameters
 
-    test_device = mock_config_entry.runtime_data.data.get("1000-2")
+    test_device = mock_config_entry.runtime_data.data.get("10000-2")
     test_device.set_combo = AsyncMock(name="set_combo")
 
     # now call the HA turn_on service

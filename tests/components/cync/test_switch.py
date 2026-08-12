@@ -13,7 +13,7 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-PLUG_UNIQUE_ID = "1000-4"
+PLUG_UNIQUE_ID = "10000-4"
 PLUG_ENTITY_ID = "switch.bedroom_bedroom_plug"
 DUAL_OUTLET_DEVICE_ID = 1401
 DUAL_OUTLET_LEFT_UNIQUE_ID = "10000-1006"
@@ -112,6 +112,34 @@ async def test_dual_outlet_control_targets_selected_outlet(
 
     left_device.turn_off.assert_awaited_once_with()
     right_device.turn_off.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "expected_mesh_id", "expected_mesh_group_id"),
+    [
+        (DUAL_OUTLET_LEFT_UNIQUE_ID, 6, 1),
+        (DUAL_OUTLET_RIGHT_UNIQUE_ID, 6, 2),
+    ],
+)
+async def test_dual_outlet_pycync_command_routing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    unique_id: str,
+    expected_mesh_id: int,
+    expected_mesh_group_id: int,
+) -> None:
+    """Test pycync routes each outlet through its mesh group ID."""
+    await setup_integration(hass, mock_config_entry)
+
+    device = mock_config_entry.runtime_data.data[unique_id]
+    command_client = AsyncMock()
+    device._command_client = command_client
+
+    await device.turn_off()
+
+    assert device.mesh_reference_id == expected_mesh_id
+    assert device.mesh_group_id == expected_mesh_group_id
+    command_client.set_power_state.assert_awaited_once_with(device, False)
 
 
 async def test_initial_state_is_unknown_until_device_update(

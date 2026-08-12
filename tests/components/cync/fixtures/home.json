@@ -1,11 +1,11 @@
 {
   "name": "My Home",
-  "home_id": 1000,
+  "home_id": 10000,
   "rooms": [
     {
       "name": "Bedroom",
       "room_id": 1100,
-      "home_id": 1000,
+      "home_id": 10000,
       "groups": [],
       "devices": [
         {
@@ -14,7 +14,7 @@
           "wifi_connected": true,
           "device_id": 1201,
           "mesh_device_id": 10004,
-          "home_id": 1000,
+          "home_id": 10000,
           "device_type_id": 64,
           "device_type": "PLUG",
           "mac_address": "AABBCC112233",
@@ -28,7 +28,7 @@
           "wifi_connected": true,
           "device_id": 1101,
           "mesh_device_id": 10001,
-          "home_id": 1000,
+          "home_id": 10000,
           "device_type_id": 137,
           "device_type": "LIGHT",
           "mac_address": "ABCDEF123456",
@@ -43,12 +43,12 @@
     {
       "name": "Office",
       "room_id": 1200,
-      "home_id": 1000,
+      "home_id": 10000,
       "groups": [
         {
           "name": "Office Lamp",
           "group_id": 1110,
-          "home_id": 1000,
+          "home_id": 10000,
           "devices": [
             {
               "name": "Lamp Bulb 1",
@@ -56,7 +56,7 @@
               "wifi_connected": false,
               "device_id": 1111,
               "mesh_device_id": 10002,
-              "home_id": 1000,
+              "home_id": 10000,
               "device_type_id": 137,
               "device_type": "LIGHT",
               "mac_address": "654321ABCDEF",
@@ -73,7 +73,7 @@
               "wifi_connected": false,
               "device_id": 1112,
               "mesh_device_id": 10003,
-              "home_id": 1000,
+              "home_id": 10000,
               "device_type_id": 137,
               "device_type": "LIGHT",
               "mac_address": "FEDCBA654321",
@@ -93,7 +93,7 @@
       "wifi_connected": true,
       "device_id": 1301,
       "mesh_device_id": 10005,
-      "home_id": 1000,
+      "home_id": 10000,
       "device_type_id": 64,
       "device_type": "PLUG",
       "mac_address": "AABBCC334455",
