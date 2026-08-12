@@ -3,7 +3,7 @@
 from collections import deque
 from collections.abc import Collection
 from functools import cache
-from importlib.metadata import files, metadata
+from importlib.metadata import PackageMetadata, files, metadata
 import json
 import os
 import re
@@ -525,7 +525,7 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
 
 
 @cache
-def metadata_cache(package: str) -> dict:
+def metadata_cache(package: str) -> PackageMetadata:
     """Return package metadata, cached."""
     return metadata(package)
 
@@ -578,7 +578,9 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         # Check for restrictive version limits on Python
-        if (requires_python := metadata_cache(package)["Requires-Python"]) and not all(
+        if (
+            requires_python := metadata_cache(package).get("Requires-Python")
+        ) and not all(
             _is_dependency_version_range_valid(version_part, "SemVer")
             for version_part in requires_python.split(",")
         ):
