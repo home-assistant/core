@@ -14,12 +14,14 @@ from homeassistant.components.mikrotik.const import (
     ROUTERBOARD,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import MockConfigEntryFactory
+from .const import MOCK_DATA
 
 from tests.common import async_fire_time_changed
 
@@ -48,6 +50,19 @@ async def test_successful_config_entry(
     entry = mock_config_entry()
     await setup_integration(hass, entry, command_responses={})
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_hub_connect_uses_ssl_when_verify_ssl_enabled(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntryFactory
+) -> None:
+    """Test setup wraps the hub connection in an SSL context when verify_ssl is set."""
+    entry = mock_config_entry(data={**MOCK_DATA, CONF_VERIFY_SSL: True})
+
+    with patch("librouteros.connect", return_value=MagicMock()) as mock_connect:
+        await setup_integration(hass, entry, command_responses={})
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert "ssl_wrapper" in mock_connect.call_args.kwargs
 
 
 @pytest.mark.parametrize(

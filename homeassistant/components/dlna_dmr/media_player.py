@@ -115,7 +115,7 @@ async def async_setup_entry(
         # the correct device.
         dev_reg.async_update_device(
             device_id,
-            merge_connections={(dr.CONNECTION_UPNP, udn)},
+            new_connections=device_entry.connections | {(dr.CONNECTION_UPNP, udn)},
         )
 
     # Create our own device-wrapping entity

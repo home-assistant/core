@@ -1470,7 +1470,7 @@ async def test_device_info_called(
                         "hw_version": "test-hw",
                         "suggested_area": "Heliport",
                         "entry_type": dr.DeviceEntryType.SERVICE,
-                        "via_device": ("hue", "via-id"),
+                        "via_device_id": via.id,
                     },
                 ),
             ]
@@ -1491,7 +1491,7 @@ async def test_device_info_called(
                         "hw_version": "test-hw",
                         "suggested_area": "Heliport",
                         "entry_type": dr.DeviceEntryType.SERVICE,
-                        "via_device": ("hue", "via-id"),
+                        "via_device_id": via.id,
                     },
                 ),
             ],

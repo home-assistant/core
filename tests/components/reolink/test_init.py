@@ -251,7 +251,7 @@ async def test_removing_disconnected_cams(
     expected_success = TEST_CAM_MODEL not in expected_models
     for device in device_entries:
         if device.model == TEST_CAM_MODEL:
-            response = await client.remove_device(device.id, config_entry.entry_id)
+            response = await client.remove_device(device.id)
             assert response["success"] == expected_success
 
     device_entries = dr.async_entries_for_config_entry(
@@ -328,7 +328,7 @@ async def test_removing_chime(
     expected_success = CHIME_MODEL not in expected_models
     for device in device_entries:
         if device.model == CHIME_MODEL:
-            response = await client.remove_device(device.id, config_entry.entry_id)
+            response = await client.remove_device(device.id)
             assert response["success"] == expected_success
             assert reolink_chime.remove.call_count == expected_remove_call_count
 
@@ -1286,7 +1286,7 @@ async def test_camera_wake_callback(
     with (
         patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]),
         patch(
-            "homeassistant.components.reolink.host.time",
+            "homeassistant.components.reolink.host.time_now",
             return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL,
         ),
     ):
@@ -1306,13 +1306,13 @@ async def test_camera_wake_callback(
     assert callback_mock.callback_func is not None
     with (
         patch(
-            "homeassistant.components.reolink.host.time",
+            "homeassistant.components.reolink.host.time_now",
             return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL
             + BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
             + 5,
         ),
         patch(
-            "homeassistant.components.reolink.time",
+            "homeassistant.components.reolink.time_now",
             return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL
             + BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
             + 5,
