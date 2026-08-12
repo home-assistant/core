@@ -51,6 +51,7 @@ from .const import (
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
 )
+from .device import async_register_parent_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,6 +174,7 @@ class NetatmoDataHandler:
         self.device_ids: dict[str, str] = {}
         self.cameras: dict[str, str] = {}
         self.events: dict[str, dict] = {}
+        self.parent_device_ids: dict[str, str] = {}
 
     async def async_setup(self) -> None:
         """Set up the Netatmo data handler."""
@@ -193,6 +195,11 @@ class NetatmoDataHandler:
         self.account = pyatmo.AsyncAccount(self.auth)
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
+
+        # Parents must exist before a platform links a child to one
+        self.parent_device_ids = async_register_parent_devices(
+            self.hass, self.config_entry, self.account
+        )
 
         await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS

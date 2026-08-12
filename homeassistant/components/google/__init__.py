@@ -1,8 +1,9 @@
 """Support for Google - Calendar Event Devices."""
 
 from collections.abc import Mapping
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
+import time
 from typing import Any
 
 import aiohttp
@@ -109,10 +110,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
     # Force a token refresh to fix a bug where tokens were persisted with
     # expires_in (relative time delta) and expires_at (absolute time) swapped.
     # A google session token typically only lasts a few days between refresh.
-    now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
-    if session.token["expires_at"] >= (now + timedelta(days=365)).timestamp():
+    now = time.time()
+    if session.token["expires_at"] >= now + timedelta(days=365).total_seconds():
         session.token["expires_in"] = 0
-        session.token["expires_at"] = now.timestamp()
+        session.token["expires_at"] = now
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
