@@ -345,6 +345,9 @@ async def async_update_device(
         hw_version=details.get(ADAPTER_HW_VERSION),
     )
     if via_device_id and (via_device_entry := device_registry.async_get(via_device_id)):
+        # The bluetooth scanner may be child device; link to its parent.
+        if isinstance(via_device_entry, dr.ChildDeviceEntry):
+            via_device_id = via_device_entry.parent_device_id
         kwargs: dict[str, Any] = {"via_device_id": via_device_id}
         # The source device may be an area-inheriting child, so use its effective area.
         via_area_id = dr.async_get_effective_area_id(hass, via_device_entry)
