@@ -286,13 +286,13 @@ class KnxExposeEntity:
         """Handle entity change for all options."""
         new_state = event.data["new_state"]
 
-        if (
-            event.data["old_state"] is None
-            and self.hass.state in (CoreState.not_running, CoreState.starting)
+        if event.data["old_state"] is None and self.hass.state in (
+            CoreState.not_running,
+            CoreState.starting,
         ):
             self._set_expose_state(new_state)
             return
-        
+
         async with TaskGroup() as tg:
             for option, xknx_expose in self._exposures:
                 expose_value = self._get_expose_value(new_state, option)
