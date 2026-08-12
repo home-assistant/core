@@ -7,9 +7,11 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import (
+    AutoDoorControl,
     Device,
     DeviceState,
     DeviceType,
+    DoorState,
     IceMakerControl,
     IceMakerMode,
     TemperatureControl,
@@ -127,6 +129,52 @@ async def test_start_stream_is_idempotent(
     coordinator.async_start_stream()
 
     assert coordinator._stream_task is stream_task
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_stream_delta_preserves_same_control_in_other_zone(
+    mock_liebherr_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    sse_helper: SSEStreamHelper,
+) -> None:
+    """Test a zoned control delta preserves same-name controls in other zones."""
+    coordinator = mock_config_entry.runtime_data.coordinators[MOCK_DEVICE.device_id]
+    zone_1 = AutoDoorControl(
+        name="autodoor",
+        type="AutoDoorControl",
+        zone_id=1,
+        zone_position=ZonePosition.TOP,
+        value=DoorState.CLOSED,
+    )
+    zone_2 = AutoDoorControl(
+        name="autodoor",
+        type="AutoDoorControl",
+        zone_id=2,
+        zone_position=ZonePosition.BOTTOM,
+        value=DoorState.CLOSED,
+    )
+    coordinator.async_set_updated_data(
+        DeviceState(device=MOCK_DEVICE, controls=[zone_1, zone_2])
+    )
+    updated_zone_1 = AutoDoorControl(
+        name="autodoor",
+        type="AutoDoorControl",
+        zone_id=1,
+        zone_position=ZonePosition.TOP,
+        value=DoorState.OPEN,
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *args, **kwargs: (
+        DeviceState(device=MOCK_DEVICE, controls=[updated_zone_1])
+    )
+
+    await sse_helper.async_push()
+
+    assert coordinator.data is not None
+    assert [
+        control
+        for control in coordinator.data.controls
+        if isinstance(control, AutoDoorControl)
+    ] == [updated_zone_1, zone_2]
 
 
 @pytest.mark.usefixtures("init_integration")

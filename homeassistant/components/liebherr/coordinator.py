@@ -134,6 +134,7 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
             ):
                 self._apply_controls(controls)
         except LiebherrAuthenticationError:
+            self._mark_unavailable()
             _LOGGER.debug("SSE stream auth failed for %s; starting reauth", self.name)
             self.config_entry.async_start_reauth(self.hass)
         except (LiebherrNotFoundError, LiebherrPreconditionFailedError) as err:
@@ -155,9 +156,17 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
             self._replace_next_event = False
             new_state = replace(self.data, controls=list(controls))
         else:
-            merged: dict[str, DeviceControl] = {c.name: c for c in self.data.controls}
+            merged: dict[tuple[type[DeviceControl], str, int | None], DeviceControl] = {
+                (
+                    type(control),
+                    control.name,
+                    getattr(control, "zone_id", None),
+                ): control
+                for control in self.data.controls
+            }
             for control in controls:
-                merged[control.name] = control
+                key = (type(control), control.name, getattr(control, "zone_id", None))
+                merged[key] = control
             new_state = replace(self.data, controls=list(merged.values()))
         self.async_set_updated_data(new_state)
 

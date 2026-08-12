@@ -207,6 +207,10 @@ async def test_sensor_update_auth_failure_triggers_reauth(
 
     await sse_helper.async_push()
 
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
     # Config entry should be in reauth state
     assert mock_config_entry.state is ConfigEntryState.LOADED
     flows = hass.config_entries.flow.async_progress()
