@@ -95,6 +95,10 @@ class DummyDevice:
         """Record set mode call."""
         self.calls.append(("set_mode", zone, mode))
 
+    def start_work(self) -> None:
+        """Record start_work call."""
+        self.calls.append(("start_work",))
+
     def connect(self, check_protocol: bool = False) -> bool:
         """Record connect call and mirror midealocal's availability handling."""
         self.calls.append(("connect", check_protocol))
