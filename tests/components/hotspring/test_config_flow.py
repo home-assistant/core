@@ -47,11 +47,12 @@ async def test_user_device_exists_abort(
         context={"source": SOURCE_USER},
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "192.168.1.100"}
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.200"}
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
 
 
 @pytest.mark.parametrize(

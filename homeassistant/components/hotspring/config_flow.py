@@ -47,7 +47,9 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(spa.info.mac_address)
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: user_input[CONF_HOST]}
+                )
                 return self.async_create_entry(
                     title=spa.info.hostname or "Hot Spring Spa",
                     data={
