@@ -84,12 +84,11 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         icon="mdi:sync",
     ),
     # DimmerOnOffLight (rts:DimmableLightRTSComponent)
-    # RTS is one-way, thus this light can only be dimmed relatively. Parameters
-    # are the step (0..127) and cancel timeout in seconds, as sent by the Somfy app.
     OverkizButtonDescription(
         key=OverkizCommand.STEP_POSITIVE,
         name="Brightness up",
         icon="mdi:brightness-7",
+        # step (0-127), execution duration (0-15, optional)
         press_args=[5, 0],
     ),
     OverkizButtonDescription(
