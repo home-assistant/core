@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -53,12 +54,23 @@ GATE = FixtureDevice(
     "io://1234-5678-1516/4204152",
     "button.elixo_3s_io_pedestrian_position",
 )
+STEP_POSITIVE = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16752757",
+    "button.palm_court_led_strip_brightness_up",
+)
+STEP_NEGATIVE = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16752757",
+    "button.palm_court_led_strip_brightness_down",
+)
 
 SNAPSHOT_FIXTURES = [
     MY_POSITION,
     CHECK_EVENT_TRIGGER,
     VELUX_WINDOW,
     GATE,
+    STEP_POSITIVE,
 ]
 
 
@@ -111,22 +123,25 @@ async def test_button_press(
 
 
 @pytest.mark.parametrize(
-    ("device", "alias_id"),
+    ("device", "command_name", "parameters"),
     [
-        pytest.param(VELUX_WINDOW, "55299", id="ventilation"),
-        pytest.param(STUDIO_WINDOW, "1", id="favorite1"),
-        pytest.param(GARAGE_DOOR, "55305", id="partial"),
-        pytest.param(GATE, "55303", id="pedestrian"),
+        pytest.param(STEP_POSITIVE, "stepPositive", [5], id="step_positive"),
+        pytest.param(STEP_NEGATIVE, "stepNegative", [5], id="step_negative"),
+        pytest.param(VELUX_WINDOW, "goToAlias", ["55299"], id="alias_ventilation"),
+        pytest.param(STUDIO_WINDOW, "goToAlias", ["1"], id="alias_favorite1"),
+        pytest.param(GARAGE_DOOR, "goToAlias", ["55305"], id="alias_partial"),
+        pytest.param(GATE, "goToAlias", ["55303"], id="alias_pedestrian"),
     ],
 )
-async def test_button_press_alias(
+async def test_button_press_with_args(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     device: FixtureDevice,
-    alias_id: str,
+    command_name: str,
+    parameters: list[Any],
 ) -> None:
-    """Test pressing an alias button sends goToAlias with the matching id."""
+    """Test pressing a button with arguments sends the correct command."""
     await setup_overkiz_integration(fixture=device.fixture)
 
     await hass.services.async_call(
@@ -139,8 +154,8 @@ async def test_button_press_alias(
     assert_command_call(
         mock_client,
         device_url=device.device_url,
-        command_name="goToAlias",
-        parameters=[alias_id],
+        command_name=command_name,
+        parameters=parameters,
     )
 
 
