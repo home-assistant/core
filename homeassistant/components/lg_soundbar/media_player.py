@@ -26,6 +26,14 @@ EQUIVALENT_FUNCTIONS = (
 )
 
 
+def _offered_equivalent(function: str, offered: list[int]) -> str | None:
+    """Return an offered function from the same group as the given one."""
+    group = next((names for names in EQUIVALENT_FUNCTIONS if function in names), ())
+    return next(
+        (name for name in group if temescal.functions.index(name) in offered), None
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -248,15 +256,10 @@ class LGDevice(MediaPlayerEntity):
         """Return the current input source."""
         if self._function == -1 or self._function >= len(temescal.functions):
             return None
-        if self._function not in self._functions:
-            name = temescal.functions[self._function]
-            for equivalents in EQUIVALENT_FUNCTIONS:
-                if name not in equivalents:
-                    continue
-                for candidate in equivalents:
-                    if temescal.functions.index(candidate) in self._functions:
-                        return candidate
-        return temescal.functions[self._function]
+        function = temescal.functions[self._function]
+        if self._function in self._functions:
+            return function
+        return _offered_equivalent(function, self._functions) or function
 
     @property
     @override
