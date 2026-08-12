@@ -1652,7 +1652,7 @@ mvg==1.4.0
 myuplink==0.7.0
 
 # homeassistant.components.nad
-nad-receiver==0.3.0
+nad-receiver==0.4.0
 
 # homeassistant.components.keenetic_ndms2
 ndms2-client==0.1.2
