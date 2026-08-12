@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 from math import floor
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 
@@ -26,6 +26,12 @@ from .models import MatterDiscoverySchema
 
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11
+
+# Cover state is derived from both the operational status and the current
+# position, which some devices report as separate attribute updates shortly
+# after each other (e.g. stopped before the final position). Debounce state
+# writes to avoid writing intermittent states.
+STATE_WRITE_DEBOUNCE_COOLDOWN = 0.1
 
 # map Matter window cover types to HA device class
 TYPE_MAP = {
@@ -69,9 +75,11 @@ class MatterCoverEntityDescription(CoverEntityDescription, MatterEntityDescripti
 class MatterCover(MatterEntity, CoverEntity):
     """Representation of a Matter Cover."""
 
+    _write_state_debounce_cooldown = STATE_WRITE_DEBOUNCE_COOLDOWN
     entity_description: MatterCoverEntityDescription
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed, None if no position."""
         if not self._entity_info.endpoint.has_attribute(
@@ -85,18 +93,22 @@ class MatterCover(MatterEntity, CoverEntity):
             else None
         )
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover movement."""
         await self.send_device_command(clusters.WindowCovering.Commands.StopMotion())
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_device_command(clusters.WindowCovering.Commands.UpOrOpen())
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.send_device_command(clusters.WindowCovering.Commands.DownOrClose())
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
@@ -105,6 +117,7 @@ class MatterCover(MatterEntity, CoverEntity):
             clusters.WindowCovering.Commands.GoToLiftPercentage((100 - position) * 100)
         )
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set the cover tilt to a specific position."""
         position = kwargs[ATTR_TILT_POSITION]
@@ -114,6 +127,7 @@ class MatterCover(MatterEntity, CoverEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         operational_status = self.get_matter_attribute_value(

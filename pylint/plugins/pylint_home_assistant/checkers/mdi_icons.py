@@ -9,6 +9,7 @@ Material Design Icons set.
 """
 
 import re
+from typing import override
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
@@ -51,6 +52,7 @@ class MdiIconsChecker(BaseChecker):
     _in_integration: bool
     _checked_icons_json: set[str]
 
+    @override
     def open(self) -> None:
         """Initialize per-run state."""
         self._checked_icons_json = set()

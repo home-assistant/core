@@ -1,7 +1,7 @@
 """Config flow for Times of the Day integration."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -43,6 +43,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"])

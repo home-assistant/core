@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
@@ -132,6 +133,14 @@ ACCESSORY_SENSORS: list[LyricSensorAccessoryEntityDescription] = [
         value_fn=lambda room, _: room.room_avg_humidity,
         suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
     ),
+    LyricSensorAccessoryEntityDescription(
+        key="room_average_temperature",
+        translation_key="room_average_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda room, _: room.room_avg_temp,
+        suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
+    ),
 ]
 
 
@@ -216,6 +225,7 @@ class LyricSensor(LyricDeviceEntity, SensorEntity):
                 self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.device)
@@ -252,6 +262,7 @@ class LyricAccessorySensor(LyricAccessoryEntity, SensorEntity):
                 self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.room, self.accessory)

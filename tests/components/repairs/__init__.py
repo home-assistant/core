@@ -6,9 +6,6 @@ from typing import Any
 from aiohttp.test_utils import TestClient
 
 from homeassistant.components.repairs import DOMAIN
-from homeassistant.components.repairs.issue_handler import (  # noqa: F401
-    async_process_repairs_platforms,
-)
 from homeassistant.components.repairs.websocket_api import (
     RepairsFlowIndexView,
     RepairsFlowResourceView,

@@ -3,16 +3,18 @@ rules:
   action-setup: done
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: exempt
-    comment: The integration does not use common patterns.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -48,20 +50,12 @@ rules:
   dynamic-devices:
     status: exempt
     comment: The integration connects to a single device.
-  entity-category:
-    status: exempt
-    comment: The integration only registers one entity.
+  entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: The integration only registers one entity.
-  entity-translations:
-    status: exempt
-    comment: There are no entities to translate.
+  entity-disabled-by-default: done
+  entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: The only entity can use the device class.
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt

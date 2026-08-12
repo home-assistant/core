@@ -115,9 +115,9 @@ async def test_ctl_set_hvac_mode(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("HeatingOff", until=None)
+            mock_fcn.assert_awaited_once_with("heating_off", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("Off", until=None)
+            mock_fcn.assert_awaited_once_with("off", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -134,9 +134,9 @@ async def test_ctl_set_hvac_mode(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("Auto", until=None)
+            mock_fcn.assert_awaited_once_with("auto", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("Heat", until=None)
+            mock_fcn.assert_awaited_once_with("heat", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -185,9 +185,9 @@ async def test_ctl_turn_off(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("HeatingOff", until=None)
+            mock_fcn.assert_awaited_once_with("heating_off", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("Off", until=None)
+            mock_fcn.assert_awaited_once_with("off", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -242,9 +242,9 @@ async def test_ctl_turn_on(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("Auto", until=None)
+            mock_fcn.assert_awaited_once_with("auto", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("Heat", until=None)
+            mock_fcn.assert_awaited_once_with("heat", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -270,7 +270,7 @@ async def test_ctl_preset_reset_deprecated(
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with("AutoWithReset", until=None)
+        mock_fcn.assert_awaited_once_with("auto_with_reset", until=None)
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_preset_reset")
     assert issue is not None

@@ -1,5 +1,7 @@
 """The select platform for the A. O. Smith integration."""
 
+from typing import override
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,6 +46,7 @@ class AOSmithHotWaterPlusSelectEntity(AOSmithStatusEntity, SelectEntity):
         self._attr_unique_id = f"hot_water_plus_level_{junction_id}"
 
     @property
+    @override
     def suggested_object_id(self) -> str | None:
         """Override the suggested object id.
 
@@ -52,6 +55,7 @@ class AOSmithHotWaterPlusSelectEntity(AOSmithStatusEntity, SelectEntity):
         return "hot_water_plus_level"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current Hot Water+ mode."""
         hot_water_plus_level = self.device.status.hot_water_plus_level
@@ -61,6 +65,7 @@ class AOSmithHotWaterPlusSelectEntity(AOSmithStatusEntity, SelectEntity):
             else HWP_LEVEL_AOSMITH_TO_HA.get(hot_water_plus_level)
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the Hot Water+ mode."""
         aosmith_hwp_level = HWP_LEVEL_HA_TO_AOSMITH[option]

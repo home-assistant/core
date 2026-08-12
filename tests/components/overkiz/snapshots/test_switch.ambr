@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.hot_water_tank_undefinedtype_singleton-entry]
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.hot_water_tank-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.hot_water_tank_undefinedtype_singleton',
+    'entity_id': 'switch.hot_water_tank',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Hot Water Tank UndefinedType._singleton',
+    'object_id_base': 'Hot Water Tank',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:water-boiler',
-    'original_name': 'Hot Water Tank UndefinedType._singleton',
+    'original_name': 'Hot Water Tank',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,14 +36,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.hot_water_tank_undefinedtype_singleton-state]
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.hot_water_tank-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hot Water Tank UndefinedType._singleton',
-      'icon': 'mdi:water-boiler',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hot Water Tank',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water-boiler',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.hot_water_tank_undefinedtype_singleton',
+    'entity_id': 'switch.hot_water_tank',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -90,8 +90,8 @@
 # name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.indoor_camera_camera_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Indoor Camera Camera shutter',
-      'icon': 'mdi:camera-lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Indoor Camera Camera shutter',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:camera-lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.indoor_camera_camera_shutter',
@@ -141,8 +141,8 @@
 # name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.outdoor_camera_camera_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Outdoor Camera Camera shutter',
-      'icon': 'mdi:camera-lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outdoor Camera Camera shutter',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:camera-lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.outdoor_camera_camera_shutter',
@@ -192,8 +192,8 @@
 # name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.home_library_garden_light_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Garden Light Switch',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Light Switch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.home_library_garden_light_switch',
@@ -243,8 +243,8 @@
 # name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.main_bedroom_patio_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Patio Light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Light',
     }),
     'context': <ANY>,
     'entity_id': 'switch.main_bedroom_patio_light',
@@ -294,8 +294,8 @@
 # name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.music_room_pool_pump_on_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Pool Pump On&Off',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Pump On&Off',
     }),
     'context': <ANY>,
     'entity_id': 'switch.music_room_pool_pump_on_off',
@@ -345,8 +345,8 @@
 # name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.pool_house-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool House',
-      'icon': 'mdi:pool',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool House',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:pool',
     }),
     'context': <ANY>,
     'entity_id': 'switch.pool_house',
@@ -396,9 +396,9 @@
 # name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.willow_house_external_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'friendly_name': 'External Siren',
-      'icon': 'mdi:bell',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'External Siren',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bell',
     }),
     'context': <ANY>,
     'entity_id': 'switch.willow_house_external_siren',

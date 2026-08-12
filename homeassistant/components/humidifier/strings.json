@@ -211,7 +211,7 @@
   "title": "Humidifier",
   "triggers": {
     "mode_changed": {
-      "description": "Triggers after the operation mode of one or more humidifiers changes.",
+      "description": "Triggers when the operation mode of one or more humidifiers changes.",
       "fields": {
         "behavior": {
           "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
@@ -227,7 +227,7 @@
       "name": "Humidifier mode changed"
     },
     "started_drying": {
-      "description": "Triggers after one or more humidifiers start drying.",
+      "description": "Triggers when one or more humidifiers start drying.",
       "fields": {
         "behavior": {
           "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
@@ -239,7 +239,7 @@
       "name": "Humidifier started drying"
     },
     "started_humidifying": {
-      "description": "Triggers after one or more humidifiers start humidifying.",
+      "description": "Triggers when one or more humidifiers start humidifying.",
       "fields": {
         "behavior": {
           "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
@@ -251,7 +251,7 @@
       "name": "Humidifier started humidifying"
     },
     "turned_off": {
-      "description": "Triggers after one or more humidifiers turn off.",
+      "description": "Triggers when one or more humidifiers turn off.",
       "fields": {
         "behavior": {
           "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
@@ -263,7 +263,7 @@
       "name": "Humidifier turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more humidifiers turn on.",
+      "description": "Triggers when one or more humidifiers turn on.",
       "fields": {
         "behavior": {
           "name": "[%key:component::humidifier::common::trigger_behavior_name%]"

@@ -1,6 +1,7 @@
 """Event platform for the UniFi Access integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from unifi_access_api import Door
 
@@ -89,6 +90,7 @@ class UnifiAccessEventEntity(UnifiAccessEntity, EventEntity):
         super().__init__(coordinator, door, description.key)
         self.entity_description = description
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to door events when added to hass."""
         await super().async_added_to_hass()

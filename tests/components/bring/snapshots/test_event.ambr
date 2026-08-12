@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'list_items_changed',
         'list_items_added',
         'list_items_removed',
@@ -45,14 +45,14 @@
 # name: test_setup[event.baumarkt_activities-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://api.getbring.com/rest/v2/bringusers/profilepictures/9a21fdfc-63a4-441a-afc1-ef3030605a9d',
-      'event_type': 'list_items_changed',
-      'event_types': list([
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://api.getbring.com/rest/v2/bringusers/profilepictures/9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'list_items_changed',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'list_items_changed',
         'list_items_added',
         'list_items_removed',
       ]),
-      'friendly_name': 'Baumarkt Activities',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baumarkt Activities',
       'items': list([
       ]),
       'last_activity_by': 'Bring',
@@ -93,7 +93,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'list_items_changed',
         'list_items_added',
         'list_items_removed',
@@ -132,14 +132,14 @@
 # name: test_setup[event.einkauf_activities-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://api.getbring.com/rest/v2/bringusers/profilepictures/9a21fdfc-63a4-441a-afc1-ef3030605a9d',
-      'event_type': 'list_items_changed',
-      'event_types': list([
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://api.getbring.com/rest/v2/bringusers/profilepictures/9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'list_items_changed',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'list_items_changed',
         'list_items_added',
         'list_items_removed',
       ]),
-      'friendly_name': 'Einkauf Activities',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Einkauf Activities',
       'items': list([
       ]),
       'last_activity_by': 'Bring',

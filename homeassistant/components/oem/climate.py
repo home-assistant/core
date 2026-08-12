@@ -1,6 +1,6 @@
 """OpenEnergyMonitor Thermostat Support."""
 
-from typing import Any
+from typing import Any, override
 
 from oemthermostat import Thermostat
 import requests
@@ -82,6 +82,7 @@ class ThermostatDevice(ClimateEntity):
         self._mode = None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
@@ -94,6 +95,7 @@ class ThermostatDevice(ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return current hvac i.e. heat, cool, idle."""
         if not self._mode:
@@ -102,6 +104,7 @@ class ThermostatDevice(ClimateEntity):
             return HVACAction.HEATING
         return HVACAction.IDLE
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.AUTO:
@@ -111,6 +114,7 @@ class ThermostatDevice(ClimateEntity):
         elif hvac_mode == HVACMode.OFF:
             self.thermostat.mode = 0
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)

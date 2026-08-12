@@ -1,7 +1,7 @@
 """Support for the Switchbot Bot as a Button."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import (
     Commands as SwitchBotCloudBaseCommands,
@@ -93,6 +93,7 @@ class SwitchBotCloudBot(SwitchBotCloudEntity, ButtonEntity):
             self._attr_unique_id = f"{device.device_id}-{description.key}"
         self._device_id = device.device_id
 
+    @override
     async def async_press(self, **kwargs: Any) -> None:
         """Button press command."""
         await self._api.send_command(

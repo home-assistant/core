@@ -1,7 +1,7 @@
 """Config flow for sky_remote."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from skyboxremote import RemoteControl, SkyBoxConnectionError
 import voluptuous as vol
@@ -41,6 +41,7 @@ class SkyRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

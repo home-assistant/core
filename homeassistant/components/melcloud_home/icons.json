@@ -4,8 +4,43 @@
       "forced_hot_water": {
         "default": "mdi:water-boiler"
       },
+      "frost_protection": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "holiday_mode": {
+        "default": "mdi:beach",
+        "state": {
+          "off": "mdi:home"
+        }
+      },
+      "overheat_protection": {
+        "default": "mdi:fire",
+        "state": {
+          "off": "mdi:fire-off"
+        }
+      },
       "standby": {
-        "default": "mdi:power-sleep"
+        "default": "mdi:power-sleep",
+        "state": {
+          "off": "mdi:power"
+        }
+      }
+    },
+    "number": {
+      "frost_protection_max_temp": {
+        "default": "mdi:thermometer"
+      },
+      "frost_protection_min_temp": {
+        "default": "mdi:thermometer-low"
+      },
+      "overheat_protection_max_temp": {
+        "default": "mdi:thermometer-high"
+      },
+      "overheat_protection_min_temp": {
+        "default": "mdi:thermometer"
       }
     },
     "sensor": {
@@ -20,6 +55,20 @@
       },
       "tank_water_temperature": {
         "default": "mdi:water-thermometer"
+      }
+    },
+    "switch": {
+      "frost_protection": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "overheat_protection": {
+        "default": "mdi:fire",
+        "state": {
+          "off": "mdi:fire-off"
+        }
       }
     }
   }

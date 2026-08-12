@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 
@@ -38,6 +38,7 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.ista = ista
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the ista EcoTrend coordinator."""
 
@@ -57,6 +58,7 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 },
             ) from e
 
+    @override
     async def _async_update_data(self):
         """Fetch ista EcoTrend data."""
 

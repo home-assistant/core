@@ -3,7 +3,7 @@
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
@@ -76,6 +76,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -175,6 +176,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_SERVER_LIST): vol.In(_options)}),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -296,6 +298,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_integration_discovery(
         self, _discovery_info: dict[str, Any]
     ) -> ConfigFlowResult:
@@ -317,6 +320,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self.chosen_server = _discovery_info
         return await self.async_step_edit_integration_discovered()
 
+    @override
     async def async_step_dhcp(
         self, _discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

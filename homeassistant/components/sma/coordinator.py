@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pysma import (
     SmaAuthenticationException,
@@ -59,6 +60,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
         self._sma_device_info = DeviceInfo()
         self._sensors = Sensors()
 
+    @override
     async def _async_setup(self) -> None:
         """Setup the SMA Data Update Coordinator."""
         try:
@@ -79,6 +81,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
                 translation_key="invalid_auth",
             ) from err
 
+    @override
     async def _async_update_data(self) -> SMACoordinatorData:
         """Update the used SMA sensors."""
         try:

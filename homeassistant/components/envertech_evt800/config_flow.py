@@ -1,6 +1,6 @@
 """Config flow for the ENVERTECH EVT800 integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pyenvertechevt800 import EnvertechEVT800
 import voluptuous as vol
@@ -25,6 +25,7 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

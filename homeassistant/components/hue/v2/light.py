@@ -1,7 +1,7 @@
 """Support for Hue lights."""
 
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from aiohue import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -123,6 +123,7 @@ class HueLight(HueBaseEntity, LightEntity):
             self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if dimming := self.resource.dimming:
@@ -131,11 +132,13 @@ class HueLight(HueBaseEntity, LightEntity):
         return None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on (brightness above 0)."""
         return self.resource.on.on
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
@@ -161,6 +164,7 @@ class HueLight(HueBaseEntity, LightEntity):
         return self._color_temp_active
 
     @property
+    @override
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color."""
         if color := self.resource.color:
@@ -168,6 +172,7 @@ class HueLight(HueBaseEntity, LightEntity):
         return None
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         if color_temp := self.resource.color_temperature:
@@ -196,16 +201,19 @@ class HueLight(HueBaseEntity, LightEntity):
         return FALLBACK_MIN_MIREDS
 
     @property
+    @override
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
         return color_util.color_temperature_mired_to_kelvin(self.min_color_temp_mireds)
 
     @property
+    @override
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
         return color_util.color_temperature_mired_to_kelvin(self.max_color_temp_mireds)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the optional state attributes."""
         return {
@@ -214,6 +222,7 @@ class HueLight(HueBaseEntity, LightEntity):
         }
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect."""
         if effects := self.resource.effects:
@@ -224,6 +233,7 @@ class HueLight(HueBaseEntity, LightEntity):
                 return timed_effects.status.value
         return EFFECT_OFF
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
@@ -303,6 +313,7 @@ class HueLight(HueBaseEntity, LightEntity):
             effect=effect,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))

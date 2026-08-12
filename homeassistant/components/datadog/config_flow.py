@@ -1,6 +1,6 @@
 """Config flow for Datadog."""
 
-from typing import Any
+from typing import Any, override
 
 from datadog import DogStatsd
 import voluptuous as vol
@@ -29,6 +29,7 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -72,6 +73,7 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow handler."""
         return DatadogOptionsFlowHandler()

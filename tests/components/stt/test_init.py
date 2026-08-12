@@ -268,11 +268,11 @@ async def test_stream_audio_uses_enum_values(
     assert isinstance(metadata.codec, AudioCodecs)
     assert metadata.codec == AudioCodecs.PCM
     assert isinstance(metadata.bit_rate, AudioBitRates)
-    assert metadata.bit_rate is AudioBitRates.BITRATE_16
+    assert metadata.bit_rate == AudioBitRates.BITRATE_16
     assert isinstance(metadata.sample_rate, AudioSampleRates)
-    assert metadata.sample_rate is AudioSampleRates.SAMPLERATE_16000
+    assert metadata.sample_rate == AudioSampleRates.SAMPLERATE_16000
     assert isinstance(metadata.channel, AudioChannels)
-    assert metadata.channel is AudioChannels.CHANNEL_MONO
+    assert metadata.channel == AudioChannels.CHANNEL_MONO
 
 
 @pytest.mark.parametrize(

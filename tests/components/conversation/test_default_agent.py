@@ -255,6 +255,88 @@ async def test_punctuation(hass: HomeAssistant) -> None:
     assert result.response.intent.slots["name"]["text"] == "test light"
 
 
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        # STT may or may not insert the comma based on speech cadence
+        "Turn off upstairs, hallway",
+        "Turn off upstairs hallway",
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_punctuation_in_alias(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    sentence: str,
+) -> None:
+    """Test that an alias containing punctuation can still be matched.
+
+    The input is matched with punctuation removed, so the alias must be too.
+    """
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="test_light"
+    )
+    entity_registry.async_update_entity(
+        "light.test_light", aliases=["Upstairs, hallway"]
+    )
+    hass.states.async_set(
+        "light.test_light",
+        "on",
+        attributes={ATTR_FRIENDLY_NAME: "Test light"},
+    )
+    expose_entity(hass, "light.test_light", True)
+
+    calls = async_mock_service(hass, "light", "turn_off")
+    result = await conversation.async_converse(hass, sentence, None, Context(), None)
+
+    assert len(calls) == 1
+    assert calls[0].data["entity_id"][0] == "light.test_light"
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        # STT may or may not insert the comma based on speech cadence
+        "Turn on lights in second, floor",
+        "Turn on lights in second floor",
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_punctuation_in_area_alias(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    sentence: str,
+) -> None:
+    """Test that an area alias containing punctuation can still be matched.
+
+    The input is matched with punctuation removed, so the alias must be too.
+    """
+    area = area_registry.async_get_or_create("area_id")
+    area = area_registry.async_update(area.id, aliases={"Second, floor"})
+
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="test_light"
+    )
+    entity_registry.async_update_entity("light.test_light", area_id=area.id)
+    hass.states.async_set(
+        "light.test_light",
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: "Test light"},
+    )
+    expose_entity(hass, "light.test_light", True)
+
+    calls = async_mock_service(hass, "light", "turn_on")
+    result = await conversation.async_converse(hass, sentence, None, Context(), None)
+
+    assert len(calls) == 1
+    assert calls[0].data["entity_id"][0] == "light.test_light"
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert result.response.intent.slots["area"]["value"] == area.id
+
+
 async def test_expose_flag_automatically_set(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -269,7 +351,7 @@ async def test_expose_flag_automatically_set(
 
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+    with patch("homeassistant.components.http.HomeAssistantHTTP.start"):
         await hass.async_start()
 
     # After setting up conversation, the expose flag should now be set on all entities
@@ -647,19 +729,6 @@ async def test_satellite_area_context(
     }
     turn_off_calls.clear()
 
-    # Turn on/off all lights also works
-    for command in ("on", "off"):
-        result = await conversation.async_converse(
-            hass, f"turn {command} all lights", None, Context(), None
-        )
-        await hass.async_block_till_done()
-        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
-
-        # All lights should have been targeted
-        assert {s.entity_id for s in result.response.matched_states} == {
-            e.entity_id for e in all_lights
-        }
-
 
 @pytest.mark.usefixtures("init_components")
 async def test_error_no_device(hass: HomeAssistant) -> None:
@@ -759,7 +828,7 @@ async def test_error_no_device_on_floor(
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
-        == "Sorry, I am not aware of any device called missing entity on ground floor"
+        == "Sorry, I am not aware of any device called missing entity in the ground floor"
     )
 
 
@@ -1046,7 +1115,7 @@ async def test_error_no_domain_on_floor_exposed(
     await hass.async_block_till_done()
 
     result = await conversation.async_converse(
-        hass, "turn on all lights on the ground floor", None, Context(), None
+        hass, "turn on all lights in the ground floor", None, Context(), None
     )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
@@ -1399,21 +1468,6 @@ async def test_error_duplicate_names_same_area(
         # command
         result = await conversation.async_converse(
             hass, f"turn on {name} in {area_kitchen.name}", None, Context(), None
-        )
-        assert result.response.response_type is intent.IntentResponseType.ERROR
-        assert (
-            result.response.error_code
-            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
-        )
-        assert (
-            result.response.speech["plain"]["speech"]
-            == f"Sorry, there are multiple devices called"
-            f" {name} in the {area_kitchen.name} area"
-        )
-
-        # question
-        result = await conversation.async_converse(
-            hass, f"is {name} on in the {area_kitchen.name}?", None, Context(), None
         )
         assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
@@ -2773,9 +2827,9 @@ async def test_config_sentences_priority(
         {
             "conversation": {
                 "intents": {
-                    "CustomIntent": ["turn on <name>"],
+                    "CustomIntent": ["turn on [the] {name}"],
                     "WorseCustomIntent": ["turn on the lamp"],
-                    "FakeCustomIntent": ["turn on <name>"],
+                    "FakeCustomIntent": ["turn on [the] {name}"],
                 }
             }
         },

@@ -3,7 +3,7 @@
 from contextlib import contextmanager, nullcontext
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 import warnings
 
 from qnapstats import QNAPStats
@@ -85,6 +85,7 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 "bandwidth": self._api.get_bandwidth(),
             }
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from the Qnap API."""
         return await self.hass.async_add_executor_job(self._sync_update)

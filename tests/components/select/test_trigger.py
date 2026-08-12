@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant
 from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_target_entities,
     set_or_remove_state,
@@ -30,15 +29,6 @@ async def target_input_selects(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "input_select")
 
 
-@pytest.mark.parametrize("trigger_key", ["select.selection_changed"])
-async def test_select_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the select triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -112,7 +102,6 @@ STATE_SEQUENCE = [
 ]
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("select"),
@@ -139,7 +128,6 @@ async def test_select_state_trigger(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("input_select"),
@@ -206,7 +194,6 @@ async def _assert_select_trigger_fires(
 # --- Cross-domain test ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_select_trigger_fires_for_both_domains(
     hass: HomeAssistant,
 ) -> None:

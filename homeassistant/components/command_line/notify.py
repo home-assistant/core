@@ -2,7 +2,7 @@
 
 import logging
 import subprocess
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
@@ -45,6 +45,7 @@ class CommandLineNotificationService(BaseNotificationService):
         self.command = command
         self._timeout = timeout
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a command line."""
         if not (command := render_template_args(self.hass, self.command)):

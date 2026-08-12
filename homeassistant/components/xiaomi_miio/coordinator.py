@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from miio.gateway.devices import SubDevice
 from miio.gateway.gateway import GatewayException
@@ -39,6 +40,7 @@ class GatewayDeviceCoordinator(DataUpdateCoordinator[None]):
         # Mark as unavailable until the first update is successful
         self.last_update_success = False
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from the subdevice."""
         try:

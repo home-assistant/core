@@ -22,6 +22,29 @@ BEFORE_FIRST_TRAIN = "2021-10-10T10:00:00+00:00"
 
 EXPECTED_ENTITY_COUNT = DEPARTURES_COUNT * 5
 
+# TRAINS[0] (10:10) running 8 minutes late, so it only leaves at 10:18. Routes keep
+# their order, so a delay stays shorter than the 10 minute gap to TRAINS[1].
+DELAYED_TRAINS = [
+    get_train_route(
+        train_number="1234",
+        departure_time=get_time(10, 10),
+        arrival_time=get_time(10, 30),
+        departure_delay=8,
+    ),
+    *TRAINS[1:],
+]
+
+# A departure in the "%d/%m/%Y %H:%M:%S" format israelrailapi's own parser expects,
+# which is not ISO 8601 and so cannot be parsed by the coordinator.
+UNPARSABLE_TRAINS = [
+    get_train_route(
+        train_number="1234",
+        departure_time="10/10/2021 10:10:00",
+        arrival_time=get_time(10, 30),
+    ),
+    *TRAINS[1:],
+]
+
 
 @pytest.fixture(autouse=True)
 def freeze_before_first_train(freezer: FrozenDateTimeFactory) -> FrozenDateTimeFactory:
@@ -148,9 +171,9 @@ async def test_departure_delay(
         *TRAINS[1:],
     ]
 
-    # Refresh while still before TRAINS[0] departs, so the delay-bearing
-    # first route is treated as upcoming and not skipped.
-    freeze_before_first_train.move_to("2021-10-10T10:05:00+00:00")
+    # Refresh past the scheduled 10:10 departure: the 7 minute delay puts the
+    # first route at 10:17, so it is still upcoming and not skipped.
+    freeze_before_first_train.move_to("2021-10-10T10:15:00+00:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -248,4 +271,83 @@ async def test_all_routes_in_past(
 
     assert hass.states.get("sensor.mock_title_departure").state == STATE_UNKNOWN
     assert hass.states.get("sensor.mock_title_departure_1").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.mock_title_departure_2").state == STATE_UNKNOWN
+
+
+async def test_delayed_route_kept_past_scheduled_time(
+    hass: HomeAssistant,
+    freeze_before_first_train: FrozenDateTimeFactory,
+    mock_israelrail: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A route running late stays in the window until its delay has elapsed."""
+    # TRAINS[0] is scheduled for 10:10 but runs 8 minutes late, so it only
+    # leaves at 10:18 and is still boardable at 10:15.
+    mock_israelrail.query.return_value = DELAYED_TRAINS
+    freeze_before_first_train.move_to("2021-10-10T10:15:00+00:00")
+
+    await init_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.mock_title_departure").state == get_time(10, 10)
+    assert hass.states.get("sensor.mock_title_departure_1").state == get_time(10, 20)
+    assert hass.states.get("sensor.mock_title_departure_2").state == get_time(10, 30)
+    assert hass.states.get("sensor.mock_title_train_number").state == "1234"
+    # The displayed departure stays the scheduled time; the delay is its own sensor.
+    assert hass.states.get("sensor.mock_title_departure_delay").state == "8"
+
+
+async def test_delayed_route_dropped_once_delay_elapsed(
+    hass: HomeAssistant,
+    freeze_before_first_train: FrozenDateTimeFactory,
+    mock_israelrail: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A route running late leaves the window once its delayed departure passes."""
+    # TRAINS[0] leaves at 10:18 (10:10 + 8), so by 10:19 the window starts at
+    # TRAINS[1], which is still upcoming at 10:20.
+    mock_israelrail.query.return_value = DELAYED_TRAINS
+    freeze_before_first_train.move_to("2021-10-10T10:19:00+00:00")
+
+    await init_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.mock_title_departure").state == get_time(10, 20)
+    assert hass.states.get("sensor.mock_title_departure_1").state == get_time(10, 30)
+    assert hass.states.get("sensor.mock_title_departure_2").state == get_time(10, 40)
+    assert hass.states.get("sensor.mock_title_train_number").state == "1235"
+
+
+async def test_route_with_unparsable_departure_is_kept(
+    hass: HomeAssistant,
+    freeze_before_first_train: FrozenDateTimeFactory,
+    mock_israelrail: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A route whose departure cannot be parsed is kept rather than skipped."""
+    # "now" is past the scheduled 10:10, so treating an unparsable departure as
+    # departed would shift the window on to TRAINS[1].
+    mock_israelrail.query.return_value = UNPARSABLE_TRAINS
+    freeze_before_first_train.move_to("2021-10-10T10:15:00+00:00")
+
+    await init_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.mock_title_departure").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.mock_title_train_number").state == "1234"
+    assert hass.states.get("sensor.mock_title_departure_1").state == get_time(10, 20)
+    assert hass.states.get("sensor.mock_title_departure_2").state == get_time(10, 30)
+
+
+async def test_none_route_ends_the_scan(
+    hass: HomeAssistant,
+    mock_israelrail: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A None route ends the scan and is dropped from the window."""
+    mock_israelrail.query.return_value = [None, *TRAINS[:3]]
+
+    await init_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.mock_title_departure").state == get_time(10, 10)
+    assert hass.states.get("sensor.mock_title_train_number").state == "1234"
+    assert hass.states.get("sensor.mock_title_departure_1").state == get_time(10, 20)
+    # The None entry takes up a slot in the window, leaving only two routes.
     assert hass.states.get("sensor.mock_title_departure_2").state == STATE_UNKNOWN

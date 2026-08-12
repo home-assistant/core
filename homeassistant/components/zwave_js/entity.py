@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.driver import Driver
@@ -139,6 +139,7 @@ class ZWaveBaseEntity(Entity):
             self.entity_id,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         # Add value_changed callbacks.
@@ -238,6 +239,7 @@ class ZWaveBaseEntity(Entity):
         return name.strip()
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         return (
@@ -470,6 +472,7 @@ class ZWaveNodeBaseEntity(Entity):
             self.entity_id,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         self.async_on_remove(

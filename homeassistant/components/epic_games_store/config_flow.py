@@ -1,7 +1,7 @@
 """Config flow for Epic Games Store integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from epicstore_api import EpicGamesStoreAPI
 import voluptuous as vol
@@ -56,6 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

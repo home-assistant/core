@@ -1,7 +1,7 @@
 """Config flow for Rainforest RAVEn devices."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from aioraven.data import MeterType
 from aioraven.device import RAVEnConnectionError
@@ -59,7 +59,7 @@ class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
                     meter_info = await raven_device.get_meter_info(meter=meter)
                     if meter_info and (
                         meter_info.meter_type is None
-                        or meter_info.meter_type is MeterType.ELECTRIC
+                        or meter_info.meter_type == MeterType.ELECTRIC
                     ):
                         self._meter_macs.add(meter.hex())
         self._dev_path = dev_path
@@ -98,6 +98,7 @@ class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="meters", data_schema=schema, errors=errors)
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         dev_path = discovery_info.device
@@ -111,6 +112,7 @@ class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         return await self.async_step_meters()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -42,7 +42,7 @@ async def test_unauthorized_triggers_reauth(
         await async_check_for_repair_issues(hass, mock_entry)
 
     mock_reauth.assert_called_once_with(hass)
-    assert len(ir.async_get(hass).issues) == 0
+    assert len(ir.async_get(hass).issues) == 0  # pylint: disable=home-assistant-tests-registry-fixtures
 
 
 @pytest.mark.parametrize(
@@ -65,7 +65,7 @@ async def test_repair_issue_creation(
         await async_check_for_repair_issues(hass, mock_entry)
 
     mock_reauth.assert_not_called()
-    assert len(ir.async_get(hass).issues) == expected_issues
+    assert len(ir.async_get(hass).issues) == expected_issues  # pylint: disable=home-assistant-tests-registry-fixtures
 
 
 async def test_async_create_fix_flow(hass: HomeAssistant) -> None:

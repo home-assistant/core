@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 import logging
+from typing import override
 
 from hdate import HDateInfo, Zmanim
 from hdate.parasha import Parasha
@@ -208,6 +209,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         )
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         # Get today's events first
@@ -222,6 +224,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
                 return _event
         return None
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -287,6 +290,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
 
         return sorted(events, key=self._event_sort_key)
 
+    @override
     def _update_times(self, zmanim: Zmanim) -> list[datetime | None]:
         """Return a list of times to update the calendar."""
         # Calendar entities do not require periodic updates besides the retrieval of events.
