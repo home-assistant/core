@@ -145,6 +145,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Curtain3": SwitchbotCloudDeviceConfig(
         False, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
     ),
+    "Curtain4": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+    ),
     "Roller Shade": SwitchbotCloudDeviceConfig(
         False, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
     ),
