@@ -3,11 +3,7 @@
 import logging
 from typing import Any, override
 
-from bitvis_protobuf.utils import (
-    async_verify_udp_port_bindable,
-    get_mac_address_for_host,
-    normalize_host,
-)
+from bitvis_protobuf.utils import async_verify_udp_port_bindable, normalize_host
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -21,6 +17,8 @@ from .coordinator import async_get_listener_registry
 
 _LOGGER = logging.getLogger(__name__)
 
+_SINGLE_INSTANCE_UNIQUE_ID = DOMAIN
+
 
 async def _async_test_port(hass: HomeAssistant, port: int) -> None:
     """Verify the UDP port can be bound."""
@@ -29,11 +27,6 @@ async def _async_test_port(hass: HomeAssistant, port: int) -> None:
         return
 
     await async_verify_udp_port_bindable(port)
-
-
-async def _async_get_device_unique_id(hass: HomeAssistant, host: str) -> str:
-    """Resolve *host* and look up a MAC address for the config entry unique ID."""
-    return await hass.async_add_executor_job(get_mac_address_for_host, host)
 
 
 class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -59,30 +52,27 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = normalize_host(user_input[CONF_HOST])
-            port = user_input[CONF_PORT]
+
+            await self.async_set_unique_id(_SINGLE_INSTANCE_UNIQUE_ID)
+            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match({CONF_HOST: host})
 
             try:
-                await _async_test_port(self.hass, port)
+                await _async_test_port(self.hass, DEFAULT_PORT)
             except OSError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(
-                    await _async_get_device_unique_id(self.hass, host)
-                )
-                self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(
                     title=MODEL_NAME,
                     data={
                         CONF_HOST: host,
-                        CONF_PORT: port,
+                        CONF_PORT: DEFAULT_PORT,
                     },
                 )
 
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             }
         )
 
@@ -101,10 +91,9 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
 
         host = discovery_info.host
 
-        await self.async_set_unique_id(
-            await _async_get_device_unique_id(self.hass, host)
-        )
+        await self.async_set_unique_id(_SINGLE_INSTANCE_UNIQUE_ID)
         self._abort_if_unique_id_configured()
+        self._async_abort_entries_match({CONF_HOST: host})
 
         self._discovery_info = discovery_info
 
@@ -123,10 +112,9 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             assert self._discovery_info is not None
             host = self._discovery_info.host
-            port = self._discovery_info.port or DEFAULT_PORT
 
             try:
-                await _async_test_port(self.hass, port)
+                await _async_test_port(self.hass, DEFAULT_PORT)
             except OSError:
                 return self.async_abort(reason="cannot_connect")
 
@@ -134,7 +122,7 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self._get_friendly_name(self._discovery_info.name),
                 data={
                     CONF_HOST: host,
-                    CONF_PORT: port,
+                    CONF_PORT: DEFAULT_PORT,
                 },
             )
 

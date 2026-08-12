@@ -19,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .conftest import TEST_DEVICE_MAC
-
 from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
@@ -32,16 +30,6 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     properties={},
     type="_powerhub._udp.local.",
 )
-
-
-@pytest.fixture(autouse=True)
-def mock_get_mac_address_for_host() -> None:
-    """Mock MAC address lookup for config flow tests."""
-    with patch(
-        "homeassistant.components.bitvis.config_flow.get_mac_address_for_host",
-        return_value=TEST_DEVICE_MAC,
-    ):
-        yield
 
 
 async def test_user_form(hass: HomeAssistant) -> None:
@@ -73,7 +61,6 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOST: "192.168.1.100",
-                CONF_PORT: 5000,
             },
         )
 
@@ -81,9 +68,9 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
     assert result["title"] == MODEL_NAME
     assert result["data"] == {
         CONF_HOST: "192.168.1.100",
-        CONF_PORT: 5000,
+        CONF_PORT: DEFAULT_PORT,
     }
-    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == TEST_DEVICE_MAC
+    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == DOMAIN
 
 
 @pytest.mark.parametrize("recover", [False, True])
@@ -101,7 +88,6 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, recover: bool) -> N
             result["flow_id"],
             {
                 CONF_HOST: "192.168.1.100",
-                CONF_PORT: 5000,
             },
         )
 
@@ -123,7 +109,6 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, recover: bool) -> N
                 result["flow_id"],
                 {
                     CONF_HOST: "192.168.1.100",
-                    CONF_PORT: 5000,
                 },
             )
 
@@ -131,7 +116,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, recover: bool) -> N
         assert result["title"] == MODEL_NAME
         assert result["data"] == {
             CONF_HOST: "192.168.1.100",
-            CONF_PORT: 5000,
+            CONF_PORT: DEFAULT_PORT,
         }
 
 
@@ -141,9 +126,8 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.100",
-            CONF_PORT: 5000,
+            CONF_PORT: DEFAULT_PORT,
         },
-        unique_id=TEST_DEVICE_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -159,7 +143,6 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOST: "192.168.1.100",
-                CONF_PORT: 5000,
             },
         )
 
@@ -196,6 +179,7 @@ async def test_zeroconf_confirm_creates_entry(hass: HomeAssistant) -> None:
         CONF_HOST: "192.168.1.200",
         CONF_PORT: DEFAULT_PORT,
     }
+    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == DOMAIN
 
 
 @pytest.mark.parametrize("recover", [False, True])
@@ -253,7 +237,6 @@ async def test_zeroconf_duplicate(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.200", CONF_PORT: DEFAULT_PORT},
-        unique_id=TEST_DEVICE_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -323,7 +306,6 @@ async def test_user_form_create_entry_ipv6_host(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOST: "2001:db8::10",
-                CONF_PORT: 5000,
             },
         )
 
@@ -331,21 +313,20 @@ async def test_user_form_create_entry_ipv6_host(hass: HomeAssistant) -> None:
     assert result["title"] == MODEL_NAME
     assert result["data"] == {
         CONF_HOST: "2001:db8::10",
-        CONF_PORT: 5000,
+        CONF_PORT: DEFAULT_PORT,
     }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == TEST_DEVICE_MAC
+    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == DOMAIN
 
 
-async def test_user_form_duplicate_mac(hass: HomeAssistant) -> None:
-    """Test duplicate detection uses the device MAC address."""
+async def test_user_form_duplicate_host(hass: HomeAssistant) -> None:
+    """Test duplicate detection uses the configured host."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: "2001:db8::10",
-            CONF_PORT: 5000,
+            CONF_PORT: DEFAULT_PORT,
         },
-        unique_id=TEST_DEVICE_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -361,7 +342,6 @@ async def test_user_form_duplicate_mac(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOST: "2001:db8::10",
-                CONF_PORT: 5001,
             },
         )
 
@@ -369,10 +349,10 @@ async def test_user_form_duplicate_mac(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_user_form_resolve_host_failure_uses_host_for_mac_lookup(
+async def test_user_form_keeps_hostname(
     hass: HomeAssistant,
 ) -> None:
-    """Test that user flow falls back to raw host when DNS resolution fails."""
+    """Test that user flow keeps the configured hostname."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -391,14 +371,12 @@ async def test_user_form_resolve_host_failure_uses_host_for_mac_lookup(
             result["flow_id"],
             {
                 CONF_HOST: "my-powerhub.local",
-                CONF_PORT: 5000,
             },
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == MODEL_NAME
     assert result["data"][CONF_HOST] == "my-powerhub.local"
-    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == TEST_DEVICE_MAC
 
 
 async def test_user_form_normalize_bracketed_ipv6(
@@ -423,7 +401,6 @@ async def test_user_form_normalize_bracketed_ipv6(
             result["flow_id"],
             {
                 CONF_HOST: "[2001:db8::10]",
-                CONF_PORT: 5000,
             },
         )
 

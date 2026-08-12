@@ -36,7 +36,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'energy_active_delivered_by_client',
+    'translation_key': 'energy_active',
     'unique_id': 'aa:bb:cc:dd:ee:ff_energy_active_delivered_by_client',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -94,7 +94,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'energy_active_delivered_to_client',
+    'translation_key': 'energy_active',
     'unique_id': 'aa:bb:cc:dd:ee:ff_energy_active_delivered_to_client',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -152,7 +152,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_active_delivered_by_client',
+    'translation_key': 'power_active',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_delivered_by_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
@@ -210,7 +210,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_active_l1_delivered_by_client',
+    'translation_key': 'power_active_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l1_delivered_by_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
@@ -268,7 +268,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_active_l2_delivered_by_client',
+    'translation_key': 'power_active_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l2_delivered_by_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
@@ -326,7 +326,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_active_l3_delivered_by_client',
+    'translation_key': 'power_active_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l3_delivered_by_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
@@ -384,7 +384,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_active_delivered_to_client',
+    'translation_key': 'power_active',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_delivered_to_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
@@ -442,7 +442,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_active_l1_delivered_to_client',
+    'translation_key': 'power_active_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l1_delivered_to_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
@@ -500,7 +500,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_active_l2_delivered_to_client',
+    'translation_key': 'power_active_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l2_delivered_to_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
@@ -558,7 +558,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_active_l3_delivered_to_client',
+    'translation_key': 'power_active_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l3_delivered_to_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
@@ -616,7 +616,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'phase_current_l1',
+    'translation_key': 'phase_current',
     'unique_id': 'aa:bb:cc:dd:ee:ff_phase_current_l1',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -674,7 +674,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'phase_current_l2',
+    'translation_key': 'phase_current',
     'unique_id': 'aa:bb:cc:dd:ee:ff_phase_current_l2',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -732,7 +732,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'phase_current_l3',
+    'translation_key': 'phase_current',
     'unique_id': 'aa:bb:cc:dd:ee:ff_phase_current_l3',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -896,7 +896,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'energy_reactive_delivered_by_client',
+    'translation_key': 'energy_reactive',
     'unique_id': 'aa:bb:cc:dd:ee:ff_energy_reactive_delivered_by_client',
     'unit_of_measurement': <UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 'kvarh'>,
   })
@@ -954,7 +954,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'energy_reactive_delivered_to_client',
+    'translation_key': 'energy_reactive',
     'unique_id': 'aa:bb:cc:dd:ee:ff_energy_reactive_delivered_to_client',
     'unit_of_measurement': <UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 'kvarh'>,
   })
@@ -1012,7 +1012,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_reactive_delivered_by_client',
+    'translation_key': 'power_reactive',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_delivered_by_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
@@ -1070,7 +1070,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_reactive_l1_delivered_by_client',
+    'translation_key': 'power_reactive_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l1_delivered_by_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
@@ -1128,7 +1128,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_reactive_l2_delivered_by_client',
+    'translation_key': 'power_reactive_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l2_delivered_by_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
@@ -1186,7 +1186,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_reactive_l3_delivered_by_client',
+    'translation_key': 'power_reactive_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l3_delivered_by_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
@@ -1244,7 +1244,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_reactive_delivered_to_client',
+    'translation_key': 'power_reactive',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_delivered_to_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
@@ -1302,7 +1302,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_reactive_l1_delivered_to_client',
+    'translation_key': 'power_reactive_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l1_delivered_to_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
@@ -1360,7 +1360,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_reactive_l2_delivered_to_client',
+    'translation_key': 'power_reactive_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l2_delivered_to_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
@@ -1418,7 +1418,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_reactive_l3_delivered_to_client',
+    'translation_key': 'power_reactive_phase',
     'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l3_delivered_to_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
@@ -1471,7 +1471,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'uptime',
+    'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_uptime',
     'unit_of_measurement': None,
   })
@@ -1527,7 +1527,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'phase_voltage_l1',
+    'translation_key': 'phase_voltage',
     'unique_id': 'aa:bb:cc:dd:ee:ff_phase_voltage_l1',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -1585,7 +1585,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'phase_voltage_l2',
+    'translation_key': 'phase_voltage',
     'unique_id': 'aa:bb:cc:dd:ee:ff_phase_voltage_l2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -1643,7 +1643,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'phase_voltage_l3',
+    'translation_key': 'phase_voltage',
     'unique_id': 'aa:bb:cc:dd:ee:ff_phase_voltage_l3',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
