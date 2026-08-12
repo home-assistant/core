@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from types import MappingProxyType
 from typing import Any, Final, cast
 
 from aiohttp import ClientError
@@ -25,7 +24,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -50,7 +49,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CLIENT_ID,
-    CONF_SITE_ID,
     DOMAIN,
     LOGGER,
     POWERWALL_KEY_FILE,
@@ -259,34 +257,22 @@ def _setup_vehicle_repairs(
     )
 
 
-def _ensure_subentry(
-    hass: HomeAssistant,
-    entry: TeslemetryConfigEntry,
-    subentry_type: str,
-    unique_id: str,
-    title: str,
-    data: dict[str, Any],
-) -> str:
-    """Return the subentry id for unique_id, creating or updating it as needed."""
-    for subentry in entry.subentries.values():
-        if subentry.subentry_type == subentry_type and subentry.unique_id == unique_id:
-            # Merge over the existing data so keys added by a pairing flow (the
-            # energy gateway host/password) are preserved across reloads.
-            merged = {**subentry.data, **data}
-            if subentry.title != title or dict(subentry.data) != merged:
-                hass.config_entries.async_update_subentry(
-                    entry, subentry, title=title, data=merged
-                )
-            return subentry.subentry_id
+def _find_energy_subentry_id(entry: TeslemetryConfigEntry, site_id: int) -> str | None:
+    """Return the user-added local-control subentry id bound to site_id, if any.
 
-    subentry = ConfigSubentry(
-        data=MappingProxyType(data),
-        subentry_type=subentry_type,
-        title=title,
-        unique_id=unique_id,
+    Local-control subentries are opt-in: the user adds one per site through the
+    "Add local energy site" flow. Setup never creates one; it only resolves an
+    existing subentry so the site's platforms route through the local gateway.
+    """
+    return next(
+        (
+            subentry.subentry_id
+            for subentry in entry.subentries.values()
+            if subentry.subentry_type == SUBENTRY_TYPE_ENERGY_SITE
+            and subentry.unique_id == str(site_id)
+        ),
+        None,
     )
-    hass.config_entries.async_add_subentry(entry, subentry)
-    return subentry.subentry_id
 
 
 def _remove_stale_subentries(
@@ -362,6 +348,31 @@ async def _async_get_rsa_key_pem(hass: HomeAssistant) -> bytes:
         pem = await hass.async_add_executor_job(Path(path).read_bytes)
         hass.data[RSA_PARENT_KEY] = pem
     return pem
+
+
+async def _async_resolve_local_control(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    battery: bool,
+    site_id: int,
+    cloud_energy_site: EnergySite,
+) -> tuple[bool, str | None, EnergySite | EnergySiteRouter]:
+    """Resolve opt-in local control for an energy site.
+
+    Only a battery/Powerwall gateway can pair for local (TEDAPI) command control;
+    solar-only and wall-connector-only sites cannot. Returns whether the site can
+    do local control, its user-added subentry id (or None when not opted in), and
+    the API its platforms should call - a router when paired, else the cloud site.
+    """
+    if not battery:
+        return False, None, cloud_energy_site
+    subentry_id = _find_energy_subentry_id(entry, site_id)
+    if subentry_id is None:
+        return True, None, cloud_energy_site
+    api = await _async_resolve_energy_site_api(
+        hass, entry, subentry_id, cloud_energy_site
+    )
+    return True, subentry_id, api
 
 
 async def _async_resolve_energy_site_api(
@@ -595,23 +606,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     translation_key="not_ready_api_error",
                 ) from e
 
-            # Only a battery/Powerwall gateway can pair for local (TEDAPI)
-            # command control; solar-only and wall-connector-only sites get no
-            # local-control subentry or routing.
-            subentry_id: str | None = None
-            energy_site_api: EnergySite | EnergySiteRouter = energy_site
-            if battery:
-                subentry_id = _ensure_subentry(
-                    hass,
-                    entry,
-                    SUBENTRY_TYPE_ENERGY_SITE,
-                    str(site_id),
-                    product.get("site_name", "Energy Site"),
-                    {CONF_SITE_ID: site_id},
-                )
-                energy_site_api = await _async_resolve_energy_site_api(
-                    hass, entry, subentry_id, energy_site
-                )
+            # Local control is opt-in: a subentry only exists once the user adds
+            # one for this site through the "Add local energy site" flow, and its
+            # presence is what enables Powerwall-first routing.
+            (
+                can_local_control,
+                subentry_id,
+                energy_site_api,
+            ) = await _async_resolve_local_control(
+                hass, entry, bool(battery), site_id, energy_site
+            )
 
             energysites.append(
                 TeslemetryEnergyData(
@@ -633,6 +637,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     ),
                     id=site_id,
                     device=device,
+                    can_local_control=can_local_control,
                     subentry_id=subentry_id,
                     gateway_id=product.get("gateway_id"),
                 )
@@ -688,6 +693,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Reload when a local-energy-site subentry is added or reconfigured so the
+    # affected site starts (or stops) routing through its local gateway.
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     _setup_dynamic_discovery(
         hass,
         entry,
@@ -709,6 +718,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: TeslemetryConfigEntry
+) -> None:
+    """Reload the entry when its subentries change."""
+    hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:

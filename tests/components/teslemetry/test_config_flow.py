@@ -31,16 +31,21 @@ from homeassistant.components.teslemetry.config_flow import _is_gateway_unreacha
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
+    CONF_SITE_ID,
     DOMAIN,
     SUBENTRY_TYPE_ENERGY_SITE,
     TOKEN_URL,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from . import setup_platform
+from . import mock_config_entry, setup_platform
 from .const import CONFIG_V1, UNIQUE_ID
 
 from tests.common import MockConfigEntry
@@ -48,6 +53,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 REDIRECT = "https://example.com/auth/external/callback"
+
+# The single battery-capable energy site in the products fixture.
+ENERGY_SITE_ID = 123456
 
 # A small key generated once keeps the pairing-flow tests off the slow
 # RSA-4096 keygen path; the flow only reads its public bytes, never its size.
@@ -95,13 +103,37 @@ def mock_rsa_key() -> Generator[None]:
         yield
 
 
-def _energy_subentry_id(entry: MockConfigEntry) -> str:
-    """Return the energy-site subentry id created during setup."""
-    return next(
-        subentry_id
-        for subentry_id, subentry in entry.subentries.items()
-        if subentry.subentry_type == SUBENTRY_TYPE_ENERGY_SITE
+async def _setup_reconfigurable_energy_site(
+    hass: HomeAssistant,
+) -> tuple[MockConfigEntry, str]:
+    """Set up an entry with an unpaired energy-site subentry ready to reconfigure.
+
+    Local control is opt-in, so a subentry only exists once the user adds one.
+    These pairing tests exercise the shared key-pairing steps, which reconfigure
+    reaches through an already-added (but not yet paired) site.
+    """
+    base = mock_config_entry()
+    entry = MockConfigEntry(
+        domain=base.domain,
+        version=base.version,
+        minor_version=base.minor_version,
+        unique_id=base.unique_id,
+        data=dict(base.data),
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_ENERGY_SITE,
+                unique_id=str(ENERGY_SITE_ID),
+                title="Energy Site",
+                data={CONF_SITE_ID: ENERGY_SITE_ID},
+            )
+        ],
     )
+    entry.add_to_hass(hass)
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+    return entry, subentry_id
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -623,8 +655,7 @@ async def test_energy_subentry_verify_powerwall_unreachable(
     error: Exception,
 ) -> None:
     """A 502 while checking the key aborts with the retryable message."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     with patch.object(
         TeslemetryEnergySite,
@@ -644,8 +675,7 @@ async def test_energy_subentry_add_client_powerwall_unreachable(
     error: Exception,
 ) -> None:
     """A 502 while registering the key aborts with the retryable message."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     with (
         patch.object(
@@ -678,8 +708,7 @@ async def test_energy_subentry_add_client_generic_error(
     error: Exception,
 ) -> None:
     """A non-502 error while registering the key aborts cleanly, never crashes."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     with (
         patch.object(
@@ -706,8 +735,7 @@ async def test_energy_subentry_pair_check_powerwall_unreachable(
     error: Exception,
 ) -> None:
     """A 502 while checking approval on submit re-shows the pair form as retryable."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
     empty = AuthorizedClients(clients=[], raw=None)
 
     with (
@@ -749,8 +777,7 @@ async def test_energy_subentry_pair_check_generic_error(
     error: Exception,
 ) -> None:
     """A non-502 error while checking approval on submit re-shows the pair form as retryable."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
     empty = AuthorizedClients(clients=[], raw=None)
 
     with (
@@ -784,8 +811,7 @@ async def test_energy_subentry_empty_client_list_proceeds(
     hass: HomeAssistant,
 ) -> None:
     """An empty (200) authorized-client list is valid and advances to pairing."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     with (
         patch.object(
@@ -824,8 +850,7 @@ async def test_energy_subentry_verify_generic_error_aborts(
     the failure for an absent key and re-register (which would reset an already
     pending or verified key); it aborts with cannot_connect instead.
     """
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     add_client = AsyncMock(return_value={})
     with (
@@ -848,8 +873,7 @@ async def test_energy_subentry_resume_pending_key_not_reregistered(
     hass: HomeAssistant,
 ) -> None:
     """Resuming with an already-pending key advances to pairing without re-adding it."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     pending = AuthorizedClients(
         clients=[
@@ -885,8 +909,7 @@ async def test_energy_subentry_verified_key_advances_to_credentials(
     hass: HomeAssistant,
 ) -> None:
     """An already-verified key skips registration and asks for local credentials."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     verified = AuthorizedClients(
         clients=[
@@ -921,8 +944,7 @@ async def test_energy_subentry_pair_submit_still_pending(
     hass: HomeAssistant,
 ) -> None:
     """Submitting the pair form while the key is still awaiting approval re-shows it with an error."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     pending = AuthorizedClients(
         clients=[
@@ -969,8 +991,7 @@ async def test_energy_subentry_resume_verification_timeout_offers_retry(
     Submitting the retry re-registers the key to open a fresh approval window
     and resumes the verification wait rather than restarting setup.
     """
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     timed_out = AuthorizedClients(
         clients=[
@@ -1017,8 +1038,7 @@ async def test_energy_subentry_pair_submit_verification_timeout_offers_retry(
     Submitting the retry re-registers the key to open a fresh approval window
     and resumes the verification wait rather than restarting setup.
     """
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     pending = AuthorizedClients(
         clients=[
@@ -1092,8 +1112,7 @@ async def test_energy_subentry_unknown_state_aborts_as_lookup_failure(
     key in such a state cannot be reasoned about; resuming approval on it would
     leave the user working an unusable read.
     """
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     unknown = AuthorizedClients(
         clients=[
@@ -1134,8 +1153,7 @@ async def test_energy_subentry_pair_submit_unknown_state(
     Reporting it as pending verification would tell the user to keep waiting for
     an approval that no longer has a readable state.
     """
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     pending = AuthorizedClients(
         clients=[
@@ -1185,8 +1203,7 @@ async def test_energy_subentry_pair_submit_verified_advances_to_credentials(
     hass: HomeAssistant,
 ) -> None:
     """Submitting the pair form once the key has become verified advances to credentials."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
 
     pending = AuthorizedClients(
         clients=[
@@ -1235,8 +1252,7 @@ async def test_energy_subentry_pair_submit_key_not_registered(
     hass: HomeAssistant,
 ) -> None:
     """If the key is no longer registered on the gateway, submitting the pair form errors clearly."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
     empty = AuthorizedClients(clients=[], raw=None)
 
     with (
@@ -1270,8 +1286,7 @@ async def test_energy_subentry_pair_recovers_after_error(
     hass: HomeAssistant,
 ) -> None:
     """After a lookup error on submit, a later submit can still succeed once verified."""
-    entry = await setup_platform(hass)
-    subentry_id = _energy_subentry_id(entry)
+    entry, subentry_id = await _setup_reconfigurable_energy_site(hass)
     empty = AuthorizedClients(clients=[], raw=None)
     verified = AuthorizedClients(
         clients=[

@@ -49,11 +49,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import TeslemetryConfigEntry
 from .const import (
     CLIENT_ID,
+    CONF_SITE_ID,
     DOMAIN,
     LOGGER,
     POWERWALL_KEY_FILE,
     SUBENTRY_TYPE_ENERGY_SITE,
 )
+from .models import TeslemetryEnergyData
 
 
 class PowerwallUnreachableError(Exception):
@@ -85,6 +87,21 @@ class PowerwallKeyRejectedError(Exception):
 
 
 _PENDING_STATES = (AuthorizedClientState.PENDING_VERIFICATION,)
+
+
+def _cloud_energy_site(energy_data: TeslemetryEnergyData) -> TeslemetryEnergySite:
+    """Return the cloud energy-site API for pairing.
+
+    Pairing always talks to the Teslemetry cloud to register the key; when a site
+    is already paired its api is an EnergySiteRouter, so unwrap the cloud
+    secondary rather than the local Powerwall primary.
+    """
+    return cast(
+        TeslemetryEnergySite,
+        energy_data.api.secondary
+        if isinstance(energy_data.api, EnergySiteRouter)
+        else energy_data.api,
+    )
 
 
 def _is_gateway_unreachable(err: TeslaFleetError | ClientError) -> bool:
@@ -154,16 +171,15 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="oauth_error")
 
         await self.async_set_unique_id(self.uid)
+        # The entry carries a subentry-change update listener, so the new token
+        # data is applied by the listener's reload; use the non-reloading variant
+        # to avoid reloading twice (and the paired-reload deprecation warning).
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
-            )
+            return self.async_update_and_abort(self._get_reauth_entry(), data=data)
         if self.source == SOURCE_RECONFIGURE:
             self._abort_if_unique_id_mismatch(reason="reconfigure_account_mismatch")
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(), data=data
-            )
+            return self.async_update_and_abort(self._get_reconfigure_entry(), data=data)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
@@ -240,12 +256,58 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self._public_key_der: bytes = b""
         self._public_key_b64: str = ""
         self._discovered_host: str = ""
+        self._site_id: int | None = None
+        self._site_name: str = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Reject manual creation; energy sites come from the Teslemetry account."""
-        return self.async_abort(reason="not_supported")
+        """Let the user opt an account energy site into local Powerwall control.
+
+        Only battery-capable sites that have not already been added are offered;
+        selecting one starts the same key-pairing flow reconfigure uses, ending
+        in a new subentry bound to that site.
+        """
+        entry = cast(TeslemetryConfigEntry, self._get_entry())
+        # runtime_data (the resolved energy sites) only exists while the entry is
+        # loaded; core clears it on unload, so bail out cleanly if it is not.
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        added_site_ids = {
+            subentry.unique_id
+            for subentry in entry.subentries.values()
+            if subentry.subentry_type == SUBENTRY_TYPE_ENERGY_SITE
+        }
+        available = {
+            str(energy_data.id): energy_data
+            for energy_data in entry.runtime_data.energysites
+            if energy_data.can_local_control
+            and str(energy_data.id) not in added_site_ids
+        }
+        if not available:
+            return self.async_abort(reason="no_energy_sites")
+
+        if user_input is not None:
+            energy_data = available[user_input[CONF_SITE_ID]]
+            self._site_id = energy_data.id
+            self._site_name = energy_data.device.get("name") or "Energy Site"
+            await self._prepare_energy_site(_cloud_energy_site(energy_data))
+            return await self._async_begin_pairing()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_SITE_ID): vol.In(
+                        {
+                            site_id: energy_data.device.get("name") or site_id
+                            for site_id, energy_data in available.items()
+                        }
+                    )
+                }
+            ),
+        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -267,15 +329,15 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         )
         if energy_data is None:
             return self.async_abort(reason="cannot_connect")
-        self._energy_site = cast(
-            TeslemetryEnergySite,
-            energy_data.api.secondary
-            if isinstance(energy_data.api, EnergySiteRouter)
-            else energy_data.api,
-        )
+        await self._prepare_energy_site(_cloud_energy_site(energy_data))
+        return await self._async_begin_pairing()
+
+    async def _prepare_energy_site(self, energy_site: TeslemetryEnergySite) -> None:
+        """Discover the gateway address and load the integration's RSA key."""
+        self._energy_site = energy_site
 
         try:
-            self._discovered_host = await self._energy_site.find_gateway_address() or ""
+            self._discovered_host = await energy_site.find_gateway_address() or ""
         except (ClientError, TeslaFleetError) as err:
             LOGGER.debug("Gateway address discovery failed: %s", err)
             self._discovered_host = ""
@@ -289,6 +351,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self._public_key_der = keyholder.rsa_public_der_pkcs1
         self._public_key_b64 = keyholder.rsa_public_der_pkcs1_b64
 
+    async def _async_begin_pairing(self) -> SubentryFlowResult:
+        """Resume or begin key pairing based on the key's state on the gateway."""
         try:
             client = await self._find_authorized_client()
         except PowerwallUnreachableError:
@@ -469,11 +533,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 LOGGER.debug("Local Powerwall verify failed: %s", err)
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_update_reload_and_abort(
-                    self._get_entry(),
-                    self._get_reconfigure_subentry(),
-                    data_updates={CONF_HOST: host, CONF_PASSWORD: password},
-                )
+                return self._async_save_credentials(host, password)
 
         return self.async_show_form(
             step_id="credentials",
@@ -487,4 +547,36 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 }
             ),
             errors=errors,
+        )
+
+    @callback
+    def _async_save_credentials(self, host: str, password: str) -> SubentryFlowResult:
+        """Persist the verified gateway credentials to the subentry.
+
+        Creates a new subentry bound to the selected site during the add flow, or
+        updates the existing one during reconfigure. Either way the parent entry
+        reloads (via its update listener) so the site starts routing locally.
+        """
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_entry()
+            subentry = self._get_reconfigure_subentry()
+            if (
+                self._async_update(
+                    entry,
+                    subentry,
+                    data_updates={CONF_HOST: host, CONF_PASSWORD: password},
+                )
+                and not entry.update_listeners
+            ):
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(reason="reconfigure_successful")
+
+        return self.async_create_entry(
+            title=self._site_name,
+            data={
+                CONF_SITE_ID: self._site_id,
+                CONF_HOST: host,
+                CONF_PASSWORD: password,
+            },
+            unique_id=str(self._site_id),
         )

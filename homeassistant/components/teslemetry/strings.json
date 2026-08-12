@@ -56,7 +56,7 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
-        "not_supported": "Energy sites are added automatically from your Teslemetry account and cannot be added manually.",
+        "no_energy_sites": "Every energy site with a Powerwall on your Teslemetry account has already been added for local control.",
         "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
@@ -71,7 +71,7 @@
       },
       "initiate_flow": {
         "reconfigure": "Reconfigure energy site",
-        "user": "Add energy site"
+        "user": "Add local energy site"
       },
       "step": {
         "credentials": {
@@ -89,6 +89,13 @@
         "retry": {
           "description": "The verification window expired before the client was approved. Continue to request a new approval and try again.",
           "title": "Approve the local access key"
+        },
+        "user": {
+          "data": {
+            "site_id": "Energy site"
+          },
+          "description": "Choose the Teslemetry energy site whose Powerwall you want to control over your local network.",
+          "title": "Add local energy site"
         }
       }
     }
