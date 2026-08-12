@@ -61,16 +61,31 @@ def _async_migrate_unique_ids(
         )
 
 
-async def _async_connect(
-    hass: HomeAssistant, hub: ZhongHongGateway
-) -> dict[DeviceAddress, ZhongHongHVAC]:
+def _connect(hub: ZhongHongGateway) -> dict[DeviceAddress, ZhongHongHVAC]:
     """Ask the gateway what is on its bus, then start listening to it.
 
     Discovery has to finish before the listener thread starts, because the two
-    read from the same socket.
+    read from the same socket. Both block, so this runs as one executor job
+    rather than hopping back to the event loop in between.
     """
+    addresses = hub.discovery_ac()
+    if not addresses:
+        return {}
+
+    # Creating the device registers it with the hub, which is what routes the
+    # gateway's pushes to it.
+    devices = {address: ZhongHongHVAC(hub, *address) for address in addresses}
+
+    hub.start_listen()
+    return devices
+
+
+async def _async_connect(
+    hass: HomeAssistant, hub: ZhongHongGateway
+) -> dict[DeviceAddress, ZhongHongHVAC]:
+    """Connect to the gateway, or say why the entry is not ready."""
     try:
-        addresses = await hass.async_add_executor_job(hub.discovery_ac)
+        devices = await hass.async_add_executor_job(_connect, hub)
     except OSError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -78,18 +93,13 @@ async def _async_connect(
             translation_placeholders={"host": hub.ip_addr},
         ) from err
 
-    if not addresses:
+    if not devices:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="no_devices_found",
             translation_placeholders={"host": hub.ip_addr},
         )
 
-    # Creating the device registers it with the hub, which is what routes the
-    # gateway's pushes to it.
-    devices = {address: ZhongHongHVAC(hub, *address) for address in addresses}
-
-    await hass.async_add_executor_job(hub.start_listen)
     return devices
 
 
