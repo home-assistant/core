@@ -93,17 +93,13 @@ async def test_remove_device(
     hass_client = await hass_ws_client(hass)
 
     # Do not allow to delete a connected device
-    response = await hass_client.remove_device(
-        device_entry.id, mock_config_entry.entry_id
-    )
+    response = await hass_client.remove_device(device_entry.id)
     assert not response["success"]
 
     eheimdigital_hub_mock.return_value.devices = {}
 
     # Allow to delete a not connected device
-    response = await hass_client.remove_device(
-        device_entry.id, mock_config_entry.entry_id
-    )
+    response = await hass_client.remove_device(device_entry.id)
     assert response["success"]
 
 
@@ -117,3 +113,32 @@ async def test_entry_setup_error(
     eheimdigital_hub_mock.return_value.connect.side_effect = EheimDigitalClientError()
     await init_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_child_device_via_device(
+    hass: HomeAssistant,
+    eheimdigital_hub_mock: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that child devices are linked to the main device."""
+    await init_integration(hass, mock_config_entry)
+
+    for device_address in eheimdigital_hub_mock.return_value.devices:
+        await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
+            device_address,
+            eheimdigital_hub_mock.return_value.devices[device_address].device_type,
+        )
+    await hass.async_block_till_done()
+
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:01"), mock_config_entry.entry_id
+    )
+    assert main_device is not None
+    assert main_device.via_device_id is None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:02"), mock_config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == main_device.id

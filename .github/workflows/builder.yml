@@ -16,6 +16,10 @@ env:
   # Base image version from https://github.com/home-assistant/docker
   BASE_IMAGE_VERSION: "2026.07.0"
   ARCHITECTURES: '["amd64", "aarch64"]'
+  MACHINES: >-
+    ["generic-x86-64", "khadas-vim3", "odroid-c2", "odroid-c4", "odroid-m1",
+    "odroid-n2", "qemuarm-64", "qemux86-64", "raspberrypi3-64",
+    "raspberrypi4-64", "raspberrypi5-64", "yellow", "green"]
 
 permissions: {}
 
@@ -35,6 +39,7 @@ jobs:
       channel: ${{ steps.version.outputs.channel }}
       publish: ${{ steps.version.outputs.publish }}
       architectures: ${{ env.ARCHITECTURES }}
+      machines: ${{ env.MACHINES }}
       base_image_version: ${{ env.BASE_IMAGE_VERSION }}
     steps:
       - name: Checkout the repository
@@ -218,20 +223,7 @@ jobs:
       id-token: write # For cosign signing
     strategy:
       matrix:
-        machine:
-          - generic-x86-64
-          - khadas-vim3
-          - odroid-c2
-          - odroid-c4
-          - odroid-m1
-          - odroid-n2
-          - qemuarm-64
-          - qemux86-64
-          - raspberrypi3-64
-          - raspberrypi4-64
-          - raspberrypi5-64
-          - yellow
-          - green
+        machine: ${{ fromJson(needs.init.outputs.machines) }}
         include:
           # Default: aarch64 on native ARM runner
           - arch: aarch64
@@ -282,11 +274,29 @@ jobs:
           push: true
           version: ${{ needs.init.outputs.version }}
 
+  run_e2e_tests_base:
+    name: Run E2E tests on base images
+    if: github.repository_owner == 'home-assistant'
+    needs: ["init", "build_base"]
+    uses: ./.github/workflows/e2e-tests.yml
+    with:
+      version: ${{ needs.init.outputs.version }}
+      image_prefixes: ${{ needs.init.outputs.architectures }}
+
+  run_e2e_tests_machine:
+    name: Run E2E tests on machine images
+    if: github.repository_owner == 'home-assistant'
+    needs: ["init", "build_machine"]
+    uses: ./.github/workflows/e2e-tests.yml
+    with:
+      version: ${{ needs.init.outputs.version }}
+      image_prefixes: ${{ needs.init.outputs.machines }}
+
   publish_ha:
     name: Publish version files
     environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
-    needs: ["init", "build_machine"]
+    needs: ["init", "build_machine", "run_e2e_tests_machine"]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -326,7 +336,7 @@ jobs:
     name: Publish to ${{ matrix.registry }}
     environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
-    needs: ["init", "build_base"]
+    needs: ["init", "build_base", "run_e2e_tests_base"]
     runs-on: ubuntu-latest
     permissions:
       contents: read # To check out the repository
@@ -342,13 +352,13 @@ jobs:
 
       - name: Login to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
-        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -461,7 +471,7 @@ jobs:
   build_python:
     name: Build PyPi package
     environment: ${{ needs.init.outputs.channel }}
-    needs: ["init", "build_base"]
+    needs: ["init", "build_base", "run_e2e_tests_base"]
     runs-on: ubuntu-latest
     permissions:
       contents: read # To check out the repository
@@ -497,7 +507,7 @@ jobs:
           python -m build
 
       - name: Upload package to PyPI
-        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # v1.14.1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           skip-existing: true
 
@@ -521,7 +531,7 @@ jobs:
           persist-credentials: false
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -550,7 +560,7 @@ jobs:
 
       - name: Generate artifact attestation
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
-        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}

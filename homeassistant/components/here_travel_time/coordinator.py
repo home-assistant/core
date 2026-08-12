@@ -388,7 +388,8 @@ def build_hass_attribution(sections: list[dict[str, Any]]) -> str | None:
 
 def next_datetime(simple_time: time) -> datetime:
     """Take a time like 08:00:00 and combine it with the current date."""
-    combined = datetime.combine(dt_util.start_of_local_day(), simple_time)
-    if combined < datetime.now():  # pylint: disable=home-assistant-enforce-naive-now
+    start_of_day = dt_util.start_of_local_day()
+    combined = datetime.combine(start_of_day, simple_time, start_of_day.tzinfo)
+    if combined < dt_util.now():
         combined = combined + timedelta(days=1)
     return combined

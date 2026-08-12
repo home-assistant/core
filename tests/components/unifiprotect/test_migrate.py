@@ -250,7 +250,9 @@ async def test_migrate_remove_aiport_device(
 
     assert entity_registry.async_get(entity.entity_id) is None
     assert (
-        device_registry.async_get_device(connections={(dr.CONNECTION_NETWORK_MAC, mac)})
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), ufp.entry.entry_id
+        )
         is None
     )
 

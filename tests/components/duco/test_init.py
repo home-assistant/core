@@ -20,12 +20,13 @@ from duco_connectivity import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.duco.const import SCAN_INTERVAL
+from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import setup_platform_integration
 from .conftest import (
     TEST_HOST,
     TEST_MAC,
@@ -36,9 +37,13 @@ from .conftest import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-def _get_duco_node_device(device_registry: dr.DeviceRegistry) -> dr.DeviceEntry:
+def _get_duco_node_device(
+    device_registry: dr.DeviceRegistry, config_entry_id: str
+) -> dr.DeviceEntry:
     """Return the primary Duco node device used in setup tests."""
-    device = device_registry.async_get_device(identifiers={("duco", f"{TEST_MAC}_1")})
+    device = device_registry.async_get_device_by_identifier(
+        ("duco", f"{TEST_MAC}_1"), config_entry_id
+    )
     assert device is not None
     return device
 
@@ -137,6 +142,36 @@ async def test_setup_entry_success(
     assert init_integration.state is ConfigEntryState.LOADED
 
 
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a sub-node added before the box still links to it via via_device_id."""
+    # Force the child-before-parent race: return a sub-node ahead of the box node
+    # and set up only the sensor platform (the fan platform would otherwise create
+    # the box first). This only resolves because the box is pre-registered in
+    # async_setup_entry before the platforms build their entities.
+    box_node = next(node for node in mock_nodes if node.node_id == BOX_NODE_ID)
+    child_node = next(node for node in mock_nodes if node.node_id != BOX_NODE_ID)
+    mock_duco_client.async_get_nodes.return_value = [child_node, box_node]
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    box_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_MAC}_{BOX_NODE_ID}"), mock_config_entry.entry_id
+    )
+    assert box_device is not None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_MAC}_{child_node.node_id}"), mock_config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == box_device.id
+
+
 @pytest.mark.parametrize(
     "exception",
     [
@@ -212,7 +247,7 @@ async def test_setup_entry_ignores_node_name_config_failures(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == mock_nodes[0].general.name
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
@@ -353,7 +388,7 @@ async def test_setup_entry_uses_configured_node_name(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Kitchen"
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
@@ -376,7 +411,7 @@ async def test_node_name_refresh_updates_device_registry_name(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Kitchen"
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
@@ -384,13 +419,13 @@ async def test_node_name_refresh_updates_device_registry_name(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Kitchen"
     assert mock_duco_client.async_get_node_configs.call_count == 1
 
     assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = _get_duco_node_device(device_registry)
+    device = _get_duco_node_device(device_registry, mock_config_entry.entry_id)
     assert device.name == "Living Room"
     assert mock_duco_client.async_get_node_configs.call_count == 2

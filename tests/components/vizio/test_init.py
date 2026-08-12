@@ -1,21 +1,30 @@
 """Tests for Vizio init."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from vizaio import VizioConnectionError
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerDeviceClass,
 )
 from homeassistant.components.vizio import DATA_APPS
-from homeassistant.components.vizio.const import DOMAIN
+from homeassistant.components.vizio.const import (
+    CONF_ADDITIONAL_CONFIGS,
+    CONF_APPS,
+    CONF_VOLUME_STEP,
+    DOMAIN,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
     CONF_HOST,
+    CONF_INCLUDE,
     CONF_NAME,
     STATE_UNAVAILABLE,
 )
@@ -23,7 +32,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import setup_integration
-from .const import APP_RECORDS, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
+from .const import (
+    ADDITIONAL_APP_CONFIG,
+    APP_RECORDS,
+    CURRENT_APP,
+    HOST,
+    HOST2,
+    MOCK_USER_VALID_TV_CONFIG,
+    MODEL,
+    NAME2,
+    PORTLESS_HOST,
+    UNIQUE_ID,
+    VERSION,
+    VOLUME_STEP,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -147,7 +169,9 @@ async def test_device_registry_model_and_version(
     """Test that coordinator populates device registry with model and version."""
     await setup_integration(hass, mock_tv_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIQUE_ID), mock_tv_config_entry.entry_id
+    )
     assert device is not None
     assert device.model == MODEL
     assert device.sw_version == VERSION
@@ -163,8 +187,126 @@ async def test_device_registry_without_model_or_version(
     """Test device registry when model and version are unavailable."""
     await setup_integration(hass, mock_tv_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIQUE_ID), mock_tv_config_entry.entry_id
+    )
     assert device is not None
     assert device.model is None
     assert device.sw_version is None
     assert device.manufacturer == "VIZIO"
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_portless_host_is_resolved_and_persisted(hass: HomeAssistant) -> None:
+    """Test a config entry storing a host without a port is repaired on setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_USER_VALID_TV_CONFIG, CONF_HOST: PORTLESS_HOST},
+        unique_id=UNIQUE_ID,
+    )
+    with patch(
+        "homeassistant.components.vizio.async_resolve_host",
+        AsyncMock(return_value=HOST),
+    ) as mock_resolve:
+        await setup_integration(hass, entry)
+
+    assert mock_resolve.call_args[0][0] == PORTLESS_HOST
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_portless_host_resolve_failure_retries(hass: HomeAssistant) -> None:
+    """Test setup is retried when the port cannot be determined."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_USER_VALID_TV_CONFIG, CONF_HOST: PORTLESS_HOST},
+        unique_id=UNIQUE_ID,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.vizio.async_resolve_host",
+        AsyncMock(side_effect=VizioConnectionError("no SmartCast API")),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.data[CONF_HOST] == PORTLESS_HOST
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_host_with_port_is_left_alone(
+    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+) -> None:
+    """Test a host that already has a port is not rewritten.
+
+    async_resolve_host is idempotent, so it is called unconditionally and
+    returns the host untouched without any probing of its own.
+    """
+    await setup_integration(hass, mock_tv_config_entry)
+
+    assert mock_tv_config_entry.data[CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+@pytest.mark.parametrize(
+    ("data", "options", "expected_data", "expected_options"),
+    [
+        pytest.param(
+            {
+                **MOCK_USER_VALID_TV_CONFIG,
+                CONF_VOLUME_STEP: VOLUME_STEP,
+                CONF_APPS: {
+                    CONF_INCLUDE: [CURRENT_APP],
+                    CONF_ADDITIONAL_CONFIGS: [ADDITIONAL_APP_CONFIG],
+                },
+            },
+            {},
+            {
+                **MOCK_USER_VALID_TV_CONFIG,
+                CONF_APPS: {CONF_ADDITIONAL_CONFIGS: [ADDITIONAL_APP_CONFIG]},
+            },
+            {
+                CONF_VOLUME_STEP: VOLUME_STEP,
+                CONF_APPS: {CONF_INCLUDE: [CURRENT_APP]},
+            },
+            id="moves_settings_to_options",
+        ),
+        pytest.param(
+            {**MOCK_USER_VALID_TV_CONFIG, CONF_VOLUME_STEP: VOLUME_STEP},
+            {CONF_VOLUME_STEP: VOLUME_STEP + 1},
+            MOCK_USER_VALID_TV_CONFIG,
+            {CONF_VOLUME_STEP: VOLUME_STEP + 1},
+            id="existing_options_win",
+        ),
+        pytest.param(
+            MOCK_USER_VALID_TV_CONFIG,
+            {},
+            MOCK_USER_VALID_TV_CONFIG,
+            {},
+            id="nothing_to_migrate",
+        ),
+    ],
+)
+async def test_migrate_entry_to_minor_version_2(
+    hass: HomeAssistant,
+    data: dict[str, Any],
+    options: dict[str, Any],
+    expected_data: dict[str, Any],
+    expected_options: dict[str, Any],
+) -> None:
+    """Test migrating a 1.1 entry moves settings from data to options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        options=options,
+        unique_id=UNIQUE_ID,
+        minor_version=1,
+    )
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
+    assert dict(config_entry.data) == expected_data
+    assert dict(config_entry.options) == expected_options
