@@ -3,6 +3,7 @@
 from typing import Any, override
 
 import voluptuous as vol
+from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -131,9 +132,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ZhongHong climate entities from a config entry."""
-    coordinator = entry.runtime_data
+    data = entry.runtime_data
     async_add_entities(
-        ZhongHongClimate(coordinator, address) for address in coordinator.devices
+        ZhongHongClimate(data.coordinator, entry, address, device)
+        for address, device in data.devices.items()
     )
 
 
@@ -162,13 +164,17 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
-        self, coordinator: ZhongHongCoordinator, address: DeviceAddress
+        self,
+        coordinator: ZhongHongCoordinator,
+        entry: ZhongHongConfigEntry,
+        address: DeviceAddress,
+        device: ZhongHongHVAC,
     ) -> None:
         """Set up a ZhongHong climate device."""
         super().__init__(coordinator)
-        self._device = coordinator.devices[address]
+        self._device = device
         addr_out, addr_in = address
-        self._attr_unique_id = device_unique_id(coordinator.config_entry, address)
+        self._attr_unique_id = device_unique_id(entry, address)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="ZhongHong",

@@ -16,6 +16,7 @@ from .coordinator import (
     DeviceAddress,
     ZhongHongConfigEntry,
     ZhongHongCoordinator,
+    ZhongHongData,
     device_unique_id,
     legacy_device_unique_id,
 )
@@ -113,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZhongHongConfigEntry) ->
     coordinator = ZhongHongCoordinator(hass, entry, hub, devices)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    entry.runtime_data = ZhongHongData(hub, devices, coordinator)
     _async_migrate_unique_ids(hass, entry, devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

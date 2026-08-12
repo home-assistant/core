@@ -1,5 +1,6 @@
 """Coordinator for the ZhongHong integration."""
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
@@ -14,9 +15,25 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER, READBACK_DELAY, SCAN_INTERVAL
 
-type ZhongHongConfigEntry = ConfigEntry[ZhongHongCoordinator]
-
 type DeviceAddress = tuple[int, int]
+
+
+@dataclass
+class ZhongHongData:
+    """What a loaded config entry holds.
+
+    The air conditioners are found once, when the entry is set up: discovery
+    needs the listener thread stopped, so the gateway cannot be asked again
+    while the entry is running. They belong to the entry that found them
+    rather than to whatever happens to be updating them.
+    """
+
+    hub: ZhongHongGateway
+    devices: dict[DeviceAddress, ZhongHongHVAC]
+    coordinator: ZhongHongCoordinator
+
+
+type ZhongHongConfigEntry = ConfigEntry[ZhongHongData]
 
 
 def device_unique_id(entry: ZhongHongConfigEntry, address: DeviceAddress) -> str:
@@ -35,16 +52,17 @@ def legacy_device_unique_id(address: DeviceAddress) -> str:
     return f"zhong_hong_hvac_{address[0]}_{address[1]}"
 
 
-class ZhongHongCoordinator(DataUpdateCoordinator[dict[DeviceAddress, ZhongHongHVAC]]):
-    """Fan the gateway's pushes out to the entities.
+class ZhongHongCoordinator(DataUpdateCoordinator[None]):
+    """Tell the entities when to look at their air conditioner again.
 
-    The gateway pushes state on its own socket, so this coordinator is mostly a
-    dispatch point: the library calls back on its listener thread and we hand
-    the devices to the entities from the event loop. Polling remains as a
-    fallback for pushes missed while the connection was down.
+    There is no data to hand out. The gateway pushes state on its own socket
+    and the library writes it into the device objects in place, so all this
+    has to carry is that something changed; the entities read the device they
+    were given. Polling remains as a fallback for pushes missed while the
+    connection was down, and is what decides availability.
 
-    The connection itself belongs to the config entry, which hands it over
-    already listening.
+    The connection and the devices belong to the config entry, which hands
+    them over already listening.
     """
 
     config_entry: ZhongHongConfigEntry
@@ -65,7 +83,6 @@ class ZhongHongCoordinator(DataUpdateCoordinator[dict[DeviceAddress, ZhongHongHV
             update_interval=SCAN_INTERVAL,
         )
         self.hub = hub
-        self.devices = devices
         self._readback_cancel: CALLBACK_TYPE | None = None
 
         for device in devices.values():
@@ -100,18 +117,16 @@ class ZhongHongCoordinator(DataUpdateCoordinator[dict[DeviceAddress, ZhongHongHV
         Called on the library's listener thread, so the update has to be handed
         back to the event loop before touching any coordinator state.
         """
-        self.hass.loop.call_soon_threadsafe(self.async_set_updated_data, self.devices)
+        self.hass.loop.call_soon_threadsafe(self.async_set_updated_data, None)
 
     @override
-    async def _async_update_data(self) -> dict[DeviceAddress, ZhongHongHVAC]:
+    async def _async_update_data(self) -> None:
         """Ask the gateway to re-send the state of every device."""
         if not self.hub.connected:
             raise UpdateFailed(f"Lost connection to the gateway at {self.hub.ip_addr}")
 
         if not await self.hass.async_add_executor_job(self.hub.query_all_status):
             raise UpdateFailed(f"Failed to query the gateway at {self.hub.ip_addr}")
-
-        return self.devices
 
     @override
     async def async_shutdown(self) -> None:
