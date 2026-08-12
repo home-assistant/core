@@ -113,6 +113,7 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
         """Start the SSE stream background task."""
         if self._stream_task is not None:
             return
+        self._mark_unavailable()
         self._stream_task = self.config_entry.async_create_background_task(
             self.hass,
             self._async_run_stream(),
