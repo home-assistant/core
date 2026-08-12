@@ -767,6 +767,26 @@ class DeletedDeviceEntry:
             return {}
         return {self.config_entry_id: {self.config_subentry_id}}
 
+    def _reconcile_config_entry_disabled_by(
+        self,
+        config_entry: ConfigEntry,
+        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+    ) -> DeviceEntryDisabler | None:
+        """Reconcile a restored device's disabled_by against its config entry."""
+        if self.disabled_by is UNDEFINED:
+            return disabled_by if disabled_by is not UNDEFINED else None
+        disabled_by = self.disabled_by
+        if disabled_by == DeviceEntryDisabler.DEVICE:
+            # self.disabled_by is DEVICE only for a former child device, clear it
+            # (to_child_device_entry re-derives it from the new parent device).
+            disabled_by = None
+        if config_entry.disabled_by:
+            if disabled_by is None:
+                disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
+        elif disabled_by == DeviceEntryDisabler.CONFIG_ENTRY:
+            disabled_by = None
+        return disabled_by
+
     def to_device_entry(
         self,
         config_entry: ConfigEntry,
@@ -776,19 +796,9 @@ class DeletedDeviceEntry:
         disabled_by: DeviceEntryDisabler | UndefinedType | None,
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
-        # Adjust disabled_by based on config entry state
-        if self.disabled_by is not UNDEFINED:
-            disabled_by = self.disabled_by
-            if disabled_by == DeviceEntryDisabler.DEVICE:
-                # A parent-device disable is only meaningful for a child device
-                disabled_by = None
-            if config_entry.disabled_by:
-                if disabled_by is None:
-                    disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
-            elif disabled_by == DeviceEntryDisabler.CONFIG_ENTRY:
-                disabled_by = None
-        else:
-            disabled_by = disabled_by if disabled_by is not UNDEFINED else None
+        disabled_by = self._reconcile_config_entry_disabled_by(
+            config_entry, disabled_by
+        )
         return DeviceEntry(
             area_id=self.area_id,
             config_entry_id=config_entry.entry_id,
@@ -812,21 +822,17 @@ class DeletedDeviceEntry:
         parent_device: DeviceEntry,
     ) -> ChildDeviceEntry:
         """Create ChildDeviceEntry from DeletedDeviceEntry."""
-        # Adjust disabled_by based on the config entry and parent device state
-        if self.disabled_by is not UNDEFINED:
-            disabled_by = self.disabled_by
-            if disabled_by == DeviceEntryDisabler.DEVICE:
-                # Re-derived from the (possibly different) parent device below
-                disabled_by = None
-            if config_entry.disabled_by:
-                if disabled_by is None:
-                    disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
-            elif disabled_by == DeviceEntryDisabler.CONFIG_ENTRY:
-                disabled_by = None
-            if disabled_by is None and parent_device.disabled:
-                disabled_by = DeviceEntryDisabler.DEVICE
-        else:
-            disabled_by = disabled_by if disabled_by is not UNDEFINED else None
+        disabled_by = self._reconcile_config_entry_disabled_by(
+            config_entry, disabled_by
+        )
+        # Re-derive parent-device disable from the (possibly different)
+        # parent device.
+        if (
+            self.disabled_by is not UNDEFINED
+            and disabled_by is None
+            and parent_device.disabled
+        ):
+            disabled_by = DeviceEntryDisabler.DEVICE
         return ChildDeviceEntry(
             area_id=self.area_id,
             config_entry_id=config_entry.entry_id,
@@ -2205,11 +2211,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             config_entry_id=config_entry_id,
         )
         matched_child_device: ChildDeviceEntry | None = None
+
         # A child device carries no connections. Connection-bearing device info still
         # resolves to a child only when a "primary" device info re-registers the child's
-        # identifiers as a full device (a rollback): matching the child routes it to
-        # conversion, preserving its id, instead of a remove + recreate via collision
-        # reconciliation of its stale identifiers.
+        # identifiers as a full device - i.e. the integration no longer splits this
+        # into a child device.
+        #
+        # Matching the child converts it to a main device, preserving its id, instead of a
+        # remove + recreate via collision reconciliation of its stale identifiers.
         if device is None and (not connections or device_info_type == "primary"):
             matched_child_device = self.child_devices.get_entry(
                 identifiers=identifiers, config_entry_id=config_entry_id
@@ -2248,8 +2257,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # Reconciliation can update the matched child device
             matched_child_device = self.child_devices[matched_child_device.id]
             # A "primary" device info re-registers a child device's identifiers as a
-            # device: the integration stopped splitting the device (e.g. after a
-            # rollback), so convert the child device back, preserving its id.
+            # full device: the integration no longer splits this into a child device,
+            # so convert the child back to a main device.
             device = self._async_convert_child_to_device(matched_child_device)
 
         # Resolved after reconciliation so a removed stale duplicate can't be linked
@@ -2258,10 +2267,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 via_device_id, config_entry_id
             )
             if resolved_via_device_id is None:
-                message = f"via_device_id {via_device_id} is not a registered device id"
                 if via_device_id in self._child_device_data:
-                    message += "; it is a child device, which can't be a via device"
-                raise DeviceInfoError(config_entry.domain, device_info, message)
+                    raise DeviceInfoError(
+                        config_entry.domain,
+                        device_info,
+                        f"via_device_id {via_device_id} is a child device, which "
+                        "can't be a via device",
+                    )
+                raise DeviceInfoError(
+                    config_entry.domain,
+                    device_info,
+                    f"via_device_id {via_device_id} is not a registered device id",
+                )
             via_device_id = resolved_via_device_id
 
         is_new = False
@@ -2704,8 +2721,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Convert a device to a child device, preserving its id.
 
         Lets an integration that already splits its devices (linking them with
-        via_device) adopt child devices with no device id changes. The caller must have
-        validated the conversion with _async_validate_device_to_child_conversion.
+        via_device) adopt child devices with no device id changes.
+
+        The caller must have validated the conversion with
+        _async_validate_device_to_child_conversion.
         """
         self.hass.verify_event_loop_thread("device_registry.async_get_or_create")
 
@@ -2744,8 +2763,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         # A ChildDeviceEntry carries no composite_device_id, so a device split from a
         # pre-migration composite loses that membership here: an action targeting the
-        # old composite id no longer reaches this split. Edge case that decays with the
-        # composite-device removal in HA Core 2027.8.
+        # old composite id no longer reaches this split. Edge case that no longer
+        # applies after the composite-device removal in HA Core 2027.8.
         child_device = ChildDeviceEntry(
             area_id=device.area_id,
             config_entry_id=device.config_entry_id,
@@ -2805,11 +2824,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         child_device: ChildDeviceEntry,
     ) -> DeviceEntry:
-        """Convert a child device back to a device, preserving its id.
+        """Convert a child device back to a main device, preserving its id.
 
-        Lets an integration that stops splitting a device into child devices (e.g.
-        after a rollback) re-register the identifiers with no device id changes. The
-        caller must have validated the conversion with
+        Conversion re-keys an existing entry between the child and device collections
+        in place, keeping its id (and hence its entities' links) rather than removing
+        and recreating it.
+
+        The reconstructed DeviceEntry carries only the fields shared with
+        the child; async_get_or_create repopulates the device-only fields (connections,
+        hardware, naming) from the re-registering device info afterwards. The caller
+        must have validated the conversion with
         _async_validate_child_to_device_conversion.
         """
         self.hass.verify_event_loop_thread("device_registry.async_get_or_create")
@@ -2978,10 +3002,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             and via_device_id not in self.devices
             and not self.devices.get_devices_for_composite_device_id(via_device_id)
         ):
-            message = f"Can't link device to unknown via device {via_device_id}"
             if via_device_id in self._child_device_data:
-                message += "; it is a child device, which can't be a via device"
-            raise HomeAssistantError(message)
+                raise HomeAssistantError(
+                    f"via_device_id {via_device_id} is a child device, which "
+                    "can't be a via device"
+                )
+            raise HomeAssistantError(
+                f"Can't link device to unknown via device {via_device_id}"
+            )
 
         if via_device_id == device_id:
             raise HomeAssistantError("A device can not be its own via device")
@@ -3401,7 +3429,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values["identifiers"] = old_identifiers | merge_identifiers
                 old_values["identifiers"] = old_identifiers
 
-        if new_identifiers is not UNDEFINED:
+        elif new_identifiers is not UNDEFINED:
             added_identifiers = new_values["identifiers"] = (
                 self._validate_child_identifiers(
                     child_device_id,
@@ -3463,9 +3491,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     breaks_in_ha_version="2027.8",
                 )
                 disabled_by = UNDEFINED
-            # A CONFIG_ENTRY-disabled child cleared by the config-entry re-enable cascade
-            # while its parent stays disabled is core's own reconciliation, not external
-            # code, so the coercion below is applied without reporting.
+            # Report an external attempt to enable a child whose parent stays disabled,
+            # except core's own reconciliation: a CONFIG_ENTRY-disabled child re-enabled
+            # by the config-entry cascade (old.disabled_by is CONFIG_ENTRY) is guarded out.
             if (
                 disabled_by is None
                 and parent_device.disabled
@@ -3476,6 +3504,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2027.8",
                 )
+            # Coerce the child back to a parent-derived DEVICE disable, keeping it
+            # consistent with its disabled parent; this core reconciliation is not reported.
             if parent_device.disabled and (
                 disabled_by is None
                 or (is_new and disabled_by is UNDEFINED and old.disabled_by is None)
