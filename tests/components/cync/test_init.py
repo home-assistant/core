@@ -27,8 +27,20 @@ async def test_migrate_unique_ids(
         "10000-1101",
         config_entry=mock_config_entry,
     )
+    offline_device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "10000-1112")},
+    )
+    offline_light_entry = entity_registry.async_get_or_create(
+        Platform.LIGHT,
+        "cync",
+        "10000-1112",
+        config_entry=mock_config_entry,
+    )
     original_entity_id = old_light_entry.entity_id
     original_device_id = old_device_entry.id
+    offline_entity_id = offline_light_entry.entity_id
+    offline_device_id = offline_device_entry.id
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -42,6 +54,14 @@ async def test_migrate_unique_ids(
     assert (DOMAIN, "10000-1") in migrated_device.identifiers
     assert (DOMAIN, "10000-1101") not in migrated_device.identifiers
     assert ("another_domain", "external-id") in migrated_device.identifiers
+
+    migrated_offline_entity = entity_registry.async_get(offline_entity_id)
+    assert migrated_offline_entity is not None
+    assert migrated_offline_entity.unique_id == "10000-3"
+    migrated_offline_device = device_registry.async_get(offline_device_id)
+    assert migrated_offline_device is not None
+    assert (DOMAIN, "10000-3") in migrated_offline_device.identifiers
+    assert (DOMAIN, "10000-1112") not in migrated_offline_device.identifiers
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

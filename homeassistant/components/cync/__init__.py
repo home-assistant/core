@@ -30,12 +30,10 @@ def _migrate_unique_ids(
     pycync 0.6.0 changed the unique ID format; migrate existing registry entries
     so automations and history are preserved after upgrading.
     """
-    if coordinator.data is None:
-        return
-
     id_map = {
         f"{device.parent_home_id}-{device.device_id}": device.unique_id
-        for device in coordinator.data.values()
+        for home in coordinator.cync.get_homes()
+        for device in home.get_flattened_device_list()
         if isinstance(device, CyncLight)
         and f"{device.parent_home_id}-{device.device_id}" != device.unique_id
     }
