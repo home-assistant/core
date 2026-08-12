@@ -26,19 +26,11 @@ from homeassistant.components.number import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.unit_conversion import (
-    TemperatureConverter,
-    TemperatureDeltaConverter,
-)
 
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
-from .util import (
-    convert_between_units_none_safe,
-    convert_to_snake_case,
-    round_to_valid_step,
-)
+from .util import convert_to_snake_case, round_to_multiple_of_step
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -309,43 +301,39 @@ class ElectroluxTemperatureNumber[T: OVAppliance](ElectroluxBaseNumber[T]):
     ) -> None:
         """Initialize the number box."""
         super().__init__(appliance_data, coordinator, description.key)
-        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-        self._attr_device_class = NumberDeviceClass.TEMPERATURE
+        self._attr_native_unit_of_measurement = self._get_temperature_unit()
         self.entity_description = description
 
     @override
+    def _update_attr_state(self) -> bool:
+        state_updated = super()._update_attr_state()
+
+        new_unit = self._get_temperature_unit()
+        if self._attr_native_unit_of_measurement != new_unit:
+            self._attr_native_unit_of_measurement = new_unit
+            state_updated = True
+
+        return state_updated
+
+    @override
     def _get_min(self) -> float:
-        temp_unit = self._get_temperature_unit()
-        minimum = self.entity_description.min_fn(self._appliance_data)
-        return TemperatureConverter.convert(
-            minimum, temp_unit, UnitOfTemperature.CELSIUS
-        )
+        min_value = self.entity_description.min_fn(self._appliance_data)
+        return round_to_multiple_of_step(min_value, self._get_step())
 
     @override
     def _get_max(self) -> float:
-        temp_unit = self._get_temperature_unit()
-        maximum = self.entity_description.max_fn(self._appliance_data)
-        return TemperatureConverter.convert(
-            maximum, temp_unit, UnitOfTemperature.CELSIUS
-        )
+        max_value = self.entity_description.max_fn(self._appliance_data)
+        return round_to_multiple_of_step(max_value, self._get_step())
 
     @override
     def _get_step(self) -> float:
-        temp_unit = self._get_temperature_unit()
-        step = self.entity_description.step_fn(self._appliance_data)
-        return TemperatureDeltaConverter.convert(
-            step, temp_unit, UnitOfTemperature.CELSIUS
-        )
+        return self.entity_description.step_fn(self._appliance_data)
 
     @override
     def _get_command_payload(self, value: float) -> dict[str, Any]:
         temp_unit = self._get_temperature_unit()
-        converted_value = TemperatureConverter.convert(
-            value, UnitOfTemperature.CELSIUS, temp_unit
-        )
-        rounded_value = round_to_valid_step(
-            converted_value,
-            self.entity_description.min_fn(self._appliance_data),
+        rounded_value = round_to_multiple_of_step(
+            value,
             self.entity_description.step_fn(self._appliance_data),
         )
         return self.entity_description.command_payload_fn(
@@ -355,10 +343,7 @@ class ElectroluxTemperatureNumber[T: OVAppliance](ElectroluxBaseNumber[T]):
     @override
     def _get_value(self) -> float | None:
         temp_unit = self._get_temperature_unit()
-        temp_value = self.entity_description.value_fn(self._appliance_data, temp_unit)
-        return convert_between_units_none_safe(
-            temp_value, temp_unit, UnitOfTemperature.CELSIUS
-        )
+        return self.entity_description.value_fn(self._appliance_data, temp_unit)
 
     def _get_temperature_unit(self) -> UnitOfTemperature:
         temp_unit = self._appliance_data.get_current_temperature_unit()
@@ -388,8 +373,7 @@ class ElectroluxSubmoduleTemperatureNumber[T: CRAppliance | SOAppliance](
         """Initialize the number box."""
         entity_key = f"{convert_to_snake_case(submodule)}_{description.key}"
         super().__init__(appliance_data, coordinator, entity_key)
-        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-        self._attr_device_class = NumberDeviceClass.TEMPERATURE
+        self._attr_native_unit_of_measurement = self._get_temperature_unit()
         self.entity_description = description
         self._submodule = submodule
         self._attr_translation_key = (
@@ -397,38 +381,39 @@ class ElectroluxSubmoduleTemperatureNumber[T: CRAppliance | SOAppliance](
         )
 
     @override
+    def _update_attr_state(self) -> bool:
+        state_updated = super()._update_attr_state()
+
+        new_unit = self._get_temperature_unit()
+        if self._attr_native_unit_of_measurement != new_unit:
+            self._attr_native_unit_of_measurement = new_unit
+            state_updated = True
+
+        return state_updated
+
+    @override
     def _get_min(self) -> float:
-        temp_unit = self._get_temperature_unit()
-        minimum = self.entity_description.min_fn(self._appliance_data, self._submodule)
-        return TemperatureConverter.convert(
-            minimum, temp_unit, UnitOfTemperature.CELSIUS
+        min_value = self.entity_description.min_fn(
+            self._appliance_data, self._submodule
         )
+        return round_to_multiple_of_step(min_value, self._get_step())
 
     @override
     def _get_max(self) -> float:
-        temp_unit = self._get_temperature_unit()
-        maximum = self.entity_description.max_fn(self._appliance_data, self._submodule)
-        return TemperatureConverter.convert(
-            maximum, temp_unit, UnitOfTemperature.CELSIUS
+        max_value = self.entity_description.max_fn(
+            self._appliance_data, self._submodule
         )
+        return round_to_multiple_of_step(max_value, self._get_step())
 
     @override
     def _get_step(self) -> float:
-        temp_unit = self._get_temperature_unit()
-        step = self.entity_description.step_fn(self._appliance_data, self._submodule)
-        return TemperatureDeltaConverter.convert(
-            step, temp_unit, UnitOfTemperature.CELSIUS
-        )
+        return self.entity_description.step_fn(self._appliance_data, self._submodule)
 
     @override
     def _get_command_payload(self, value: float) -> dict[str, Any]:
         temp_unit = self._get_temperature_unit()
-        converted_value = TemperatureConverter.convert(
-            value, UnitOfTemperature.CELSIUS, temp_unit
-        )
-        rounded_value = round_to_valid_step(
-            converted_value,
-            self.entity_description.min_fn(self._appliance_data, self._submodule),
+        rounded_value = round_to_multiple_of_step(
+            value,
             self.entity_description.step_fn(self._appliance_data, self._submodule),
         )
         return self.entity_description.command_payload_fn(
@@ -438,11 +423,8 @@ class ElectroluxSubmoduleTemperatureNumber[T: CRAppliance | SOAppliance](
     @override
     def _get_value(self) -> float | None:
         temp_unit = self._get_temperature_unit()
-        temp_value = self.entity_description.value_fn(
+        return self.entity_description.value_fn(
             self._appliance_data, self._submodule, temp_unit
-        )
-        return convert_between_units_none_safe(
-            temp_value, temp_unit, UnitOfTemperature.CELSIUS
         )
 
     def _get_temperature_unit(self) -> UnitOfTemperature:

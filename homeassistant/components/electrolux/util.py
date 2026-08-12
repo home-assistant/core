@@ -1,21 +1,9 @@
 """Utility functions used by the Electrolux integration."""
 
-from homeassistant.const import UnitOfTemperature
-from homeassistant.util.unit_conversion import TemperatureConverter
 
-
-def round_to_valid_step(value: float, minimum: float, step: float) -> float:
+def round_to_multiple_of_step(value: float, step: float) -> float:
     """Utility function for rounding a value to the closest multiple of a step."""
-    return round((value - minimum) / step) * step + minimum
-
-
-def convert_between_units_none_safe(
-    value: float | None, from_unit: UnitOfTemperature, to_unit: UnitOfTemperature
-) -> float | None:
-    """Convert a value between different units."""
-    if value is None:
-        return None
-    return TemperatureConverter.convert(value, from_unit, to_unit)
+    return round(value / step) * step
 
 
 def round_to_valid_step_int(value: float, minimum: int, step: int) -> int:

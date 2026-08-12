@@ -75,15 +75,15 @@ async def test_number(
             "supex_structured_oven",
             "FAHRENHEIT",
             "number.supex_oven_upper_cavity_target_temperature",
-            91.0,
-            {"upperOven": {"targetTemperatureF": 197.0}},
+            91.0,  # Value in Home Assistant is always Celsius, even if native value of number entity is Fahrenheit
+            {"upperOven": {"targetTemperatureF": 195.0}},
         ),
         (
             "supex_structured_oven",
             "FAHRENHEIT",
             "number.supex_oven_upper_cavity_target_temperature",
-            92.0,
-            {"upperOven": {"targetTemperatureF": 197.0}},
+            92.0,  # Value in Home Assistant is always Celsius, even if native value of number entity is Fahrenheit
+            {"upperOven": {"targetTemperatureF": 200.0}},
         ),
         (
             "ayran_fridge",
