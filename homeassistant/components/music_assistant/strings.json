@@ -262,6 +262,9 @@
   "exceptions": {
     "invalid_username": {
       "message": "The username {username} does not exist. Available usernames are {available_usernames}."
+    },
+    "tts_engine_not_available": {
+      "message": "No text-to-speech engine is available to speak the message."
     }
   },
   "issues": {

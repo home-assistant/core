@@ -36,6 +36,7 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
     async_process_play_media_url,
 )
+from homeassistant.components.tts import DOMAIN as TTS_DOMAIN
 from homeassistant.const import ATTR_NAME, STATE_OFF, Platform
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -557,6 +558,15 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     ) -> None:
         """Send the play_announcement command to the media player."""
         if message is not None:
+            # tts is an after_dependency, so it may not be set up at all
+            if (
+                TTS_DOMAIN not in self.hass.config.components
+                or tts.async_default_engine(self.hass) is None
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="tts_engine_not_available",
+                )
             # let Home Assistant render the message with its own text-to-speech
             # setup, so the announcement follows the user's TTS configuration
             sourced_media = await media_source.async_resolve_media(

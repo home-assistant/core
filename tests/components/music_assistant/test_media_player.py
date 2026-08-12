@@ -1050,8 +1050,6 @@ async def test_media_player_play_announcement_action_with_message(
     )
     assert music_assistant_client.send_command.call_count == 1
     announcement_url = music_assistant_client.send_command.call_args.kwargs["url"]
-    # the message is rendered by the Home Assistant TTS engine and handed over
-    # to Music Assistant as an absolute URL it can fetch
     assert announcement_url.startswith("http://example.local:8123/api/tts_proxy/")
     stream = hass.data[DATA_TTS_MANAGER].token_to_stream[
         announcement_url.rsplit("/", 1)[-1]
@@ -1092,6 +1090,25 @@ async def test_media_player_play_announcement_action_invalid_input(
             {
                 ATTR_ENTITY_ID: "media_player.test_player_1",
                 **announcement_data,
+            },
+            blocking=True,
+        )
+    assert music_assistant_client.send_command.call_count == 0
+
+
+async def test_media_player_play_announcement_action_without_tts(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test play_announcement action reports a message it cannot speak."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_ANNOUNCEMENT,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player_1",
+                ATTR_MESSAGE: "Dinner is ready!",
             },
             blocking=True,
         )
