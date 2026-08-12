@@ -455,22 +455,14 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         uid: str,
         host: str,
     ) -> None:
-        """Await a shelf confirm flow for manual host (do not drain all background tasks)."""
-        context: config_entries.ConfigFlowContext = {
-            "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
-            "unique_id": uid,
-        }
-        data = {CONF_HOST: host}
-        # Same dedupe gate as discovery_flow._async_init_flow.
-        if (
-            self.hass.config_entries.flow.async_has_matching_discovery_flow(
-                DOMAIN, context, data
-            )
-            or self.hass.is_stopping
-        ):
-            return
+        """Await a shelf confirm flow for manual host."""
         await self.hass.config_entries.flow.async_init(
-            DOMAIN, context=context, data=data
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
+                "unique_id": uid,
+            },
+            data={CONF_HOST: host},
         )
 
     @staticmethod
