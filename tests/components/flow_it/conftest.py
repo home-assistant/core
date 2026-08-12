@@ -44,8 +44,8 @@ def mock_flow_it() -> Generator[AsyncMock]:
             new=mock,
         ),
     ):
-        mock_vmc = mock.return_value
-        yield mock_vmc
+        mock.return_value = mock_vmc
+        yield mock
 
 
 @pytest.fixture
