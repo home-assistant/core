@@ -18,6 +18,10 @@ from google_health_api.model import (
     DailyRestingHeartRate,
     DistanceRollupValue,
     FloorsRollupValue,
+    HydrationLogRollupValue,
+    NutritionLogRollupValue,
+    PairedDevice,
+    Sleep,
     StepsRollupValue,
     TotalCaloriesRollupValue,
     Weight,
@@ -36,6 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 
 POLLING_INTERVAL = timedelta(minutes=15)
 BODY_POLLING_INTERVAL = timedelta(hours=1)
+DEVICE_POLLING_INTERVAL = timedelta(hours=1)
 DEFAULT_PAGE_SIZE = 1
 
 
@@ -210,4 +215,115 @@ class GoogleHealthBodyCoordinator(
             weight=weight,
             resting_heart_rate=resting_heart_rate,
             body_fat=body_fat,
+        )
+
+
+class GoogleHealthDeviceCoordinator(
+    GoogleHealthDataUpdateCoordinator[dict[str, PairedDevice]]
+):
+    """Coordinator to fetch paired devices from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_devices",
+            update_interval=DEVICE_POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> dict[str, PairedDevice]:
+        """Fetch paired devices."""
+        devices: dict[str, PairedDevice] = {}
+        result = await self.api.paired_devices.list()
+        async for page in result:
+            for device in page.paired_devices:
+                devices[device.device_id] = device
+        return devices
+
+
+@dataclass
+class GoogleHealthSleepData:
+    """Class to hold sleep data."""
+
+    sleep: Sleep | None = None
+
+
+class GoogleHealthSleepCoordinator(
+    GoogleHealthDataUpdateCoordinator[GoogleHealthSleepData]
+):
+    """Coordinator to fetch sleep data from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_sleep",
+            update_interval=BODY_POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> GoogleHealthSleepData:
+        """Fetch latest sleep session."""
+        sleep_result = await self.api.sleep.list(page_size=DEFAULT_PAGE_SIZE)
+        sleep = sleep_result.data_points[0].data if sleep_result.data_points else None
+        return GoogleHealthSleepData(sleep=sleep)
+
+
+@dataclass
+class GoogleHealthNutritionData:
+    """Class to hold hydration and nutrition data."""
+
+    hydration: HydrationLogRollupValue | None = None
+    nutrition: NutritionLogRollupValue | None = None
+
+
+class GoogleHealthNutritionCoordinator(
+    GoogleHealthDataUpdateCoordinator[GoogleHealthNutritionData]
+):
+    """Coordinator to fetch nutrition data from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_nutrition",
+            update_interval=POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> GoogleHealthNutritionData:
+        """Fetch hydration and nutrition rollups for today."""
+        hydration_rollup, nutrition_rollup = await asyncio.gather(
+            self.api.hydration_log.today(self.hass.config.time_zone),
+            self.api.nutrition_log.today(self.hass.config.time_zone),
+        )
+
+        return GoogleHealthNutritionData(
+            hydration=hydration_rollup.data if hydration_rollup else None,
+            nutrition=nutrition_rollup.data if nutrition_rollup else None,
         )

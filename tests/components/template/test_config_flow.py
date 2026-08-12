@@ -655,7 +655,9 @@ async def test_config_flow_device(
             "event",
             {"event_type": "{{ states('event.one') }}"},
             {"event_type": "{{ states('event.two') }}"},
-            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.000+00:00"],
+            # The reloaded entity restores the first timestamp, so the second
+            # event is bumped by 1ms to stay a distinct state change.
+            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.001+00:00"],
             {"one": "single", "two": "double"},
             {"event_types": "{{ ['single', 'double'] }}"},
             {"event_types": "{{ ['single', 'double'] }}"},

@@ -56,8 +56,8 @@
       'game': 'The Witcher: Enhanced Edition',
       'game_icon': 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/20900/746d1cd48fb2e57d579b05b6e9eccba95859e549.jpg',
       'game_id': '20900',
-      'game_image_header': 'https://steamcdn-a.akamaihd.net/steam/apps/20900/header.jpg',
-      'game_image_main': 'https://steamcdn-a.akamaihd.net/steam/apps/20900/capsule_616x353.jpg',
+      'game_image_header': 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/20900/header.jpg',
+      'game_image_main': 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/20900/capsule_616x353.jpg',
       'last_online': datetime.datetime(2026, 4, 5, 17, 18, 7, tzinfo=datetime.timezone.utc),
       'level': 10,
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
