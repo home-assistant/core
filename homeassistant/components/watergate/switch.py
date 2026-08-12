@@ -38,11 +38,9 @@ class SonicAutoShutOffSwitch(WatergateEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool | None:
-        """Return whether auto shut-off is enabled, or None if the device omits it."""
-        if (auto_shut_off := self.coordinator.data.auto_shut_off) is None:
-            return None
-        return auto_shut_off.enabled
+    def is_on(self) -> bool:
+        """Return whether auto shut-off is enabled."""
+        return self.coordinator.data.auto_shut_off.enabled
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -51,8 +49,7 @@ class SonicAutoShutOffSwitch(WatergateEntity, SwitchEntity):
             await self._api_client.async_update_auto_shut_off(enabled=True)
         except WatergateApiException as exc:
             raise HomeAssistantError("Failed to update auto shut-off") from exc
-        if (auto_shut_off := self.coordinator.data.auto_shut_off) is not None:
-            auto_shut_off.enabled = True
+        self.coordinator.data.auto_shut_off.enabled = True
         self.async_write_ha_state()
 
     @override
@@ -62,6 +59,5 @@ class SonicAutoShutOffSwitch(WatergateEntity, SwitchEntity):
             await self._api_client.async_update_auto_shut_off(enabled=False)
         except WatergateApiException as exc:
             raise HomeAssistantError("Failed to update auto shut-off") from exc
-        if (auto_shut_off := self.coordinator.data.auto_shut_off) is not None:
-            auto_shut_off.enabled = False
+        self.coordinator.data.auto_shut_off.enabled = False
         self.async_write_ha_state()

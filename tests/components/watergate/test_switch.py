@@ -11,13 +11,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -80,21 +74,6 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_entry.entry_id)
 
 
-async def test_switch_unknown_when_no_data(
-    hass: HomeAssistant,
-    mock_watergate_client: Generator[AsyncMock],
-    mock_entry: MockConfigEntry,
-) -> None:
-    """Switch state is unknown when the device omits auto-shut-off data."""
-    mock_watergate_client.async_get_auto_shut_off.return_value = None
-
-    await init_integration(hass, mock_entry)
-
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.state == STATE_UNKNOWN
-
-
 async def test_switch_no_rollback_on_unrelated_update(
     hass: HomeAssistant,
     mock_watergate_client: Generator[AsyncMock],
@@ -118,12 +97,14 @@ async def test_switch_no_rollback_on_unrelated_update(
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
-async def test_switch_turn_off_raises_on_client_failure(
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+async def test_switch_raises_on_client_failure(
     hass: HomeAssistant,
     mock_watergate_client: Generator[AsyncMock],
     mock_entry: MockConfigEntry,
+    service: str,
 ) -> None:
-    """Client failure while turning off surfaces as a HomeAssistantError."""
+    """Client failure while toggling surfaces as a HomeAssistantError."""
     await init_integration(hass, mock_entry)
 
     mock_watergate_client.async_update_auto_shut_off.side_effect = (
@@ -133,7 +114,7 @@ async def test_switch_turn_off_raises_on_client_failure(
     with pytest.raises(HomeAssistantError, match="Failed to update auto shut-off"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            service,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )

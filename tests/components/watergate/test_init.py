@@ -91,3 +91,16 @@ async def test_coordinator_fetches_auto_shut_off(
 
     mock_watergate_client.async_get_auto_shut_off.assert_called_once()
     assert mock_entry.runtime_data.data.auto_shut_off.enabled is True
+
+
+async def test_setup_retry_without_auto_shut_off(
+    hass: HomeAssistant,
+    mock_watergate_client: Generator[AsyncMock],
+    mock_entry: MockConfigEntry,
+) -> None:
+    """Setup is retried when the device does not report auto-shut-off state."""
+    mock_watergate_client.async_get_auto_shut_off.return_value = None
+
+    await init_integration(hass, mock_entry)
+
+    assert mock_entry.state is ConfigEntryState.SETUP_RETRY

@@ -29,7 +29,7 @@ class WatergateAgregatedRequests:
     state: DeviceState
     telemetry: TelemetryData
     networking: NetworkingData
-    auto_shut_off: AutoShutOffState | None
+    auto_shut_off: AutoShutOffState
 
 
 type WatergateConfigEntry = ConfigEntry[WatergateDataCoordinator]
@@ -65,6 +65,8 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
             auto_shut_off = await self.api.async_get_auto_shut_off()
         except WatergateApiException as exc:
             raise UpdateFailed(f"Sonic device is unavailable: {exc}") from exc
+        if auto_shut_off is None:
+            raise UpdateFailed("Sonic device did not report auto shut-off state")
         return WatergateAgregatedRequests(state, telemetry, networking, auto_shut_off)
 
     @override
