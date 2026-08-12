@@ -21,6 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DOMAIN
 from .coordinator import (
     RoborockConfigEntry,
     RoborockCoordinatorType,
@@ -198,13 +199,21 @@ async def async_setup_entry(
                 for description in BINARY_SENSOR_DESCRIPTIONS
                 if description.support_fn(coordinator.properties_api)
             )
-            if deprecate_entity(
+            mop_drying_unique_id = (
+                f"{MOP_DRYING_BINARY_SENSOR_DESCRIPTION.key}_{coordinator.duid_slug}"
+            )
+            if not coordinator.properties_api.device_features.dock_features.is_dryable:
+                # The sensor was created for every device reporting the drying
+                # status data point, so a dock that cannot dry always read off.
+                if entity_id := entity_registry.async_get_entity_id(
+                    Platform.BINARY_SENSOR, DOMAIN, mop_drying_unique_id
+                ):
+                    entity_registry.async_remove(entity_id)
+            elif deprecate_entity(
                 hass,
                 entity_registry,
                 platform_domain=Platform.BINARY_SENSOR,
-                entity_unique_id=(
-                    f"{MOP_DRYING_BINARY_SENSOR_DESCRIPTION.key}_{coordinator.duid_slug}"
-                ),
+                entity_unique_id=mop_drying_unique_id,
                 issue_id=f"deprecated_mop_drying_{coordinator.duid_slug}",
                 translation_key="deprecated_mop_drying",
             ):

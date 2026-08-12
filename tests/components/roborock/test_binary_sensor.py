@@ -232,6 +232,32 @@ async def test_mop_drying_sensor_deprecated(
     assert (DOMAIN, MOP_DRYING_ISSUE_ID) in issue_registry.issues
 
 
+@pytest.mark.parametrize(
+    "dock_type", [RoborockDockTypeCode.o1_dock], indirect=True, ids=["collect-only"]
+)
+@pytest.mark.usefixtures("dock_type")
+async def test_mop_drying_sensor_removed_for_dock_without_drying(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_roborock_entry: MockConfigEntry,
+) -> None:
+    """Test the sensor is removed without a repair issue when the dock cannot dry."""
+    register_mop_drying_sensor(entity_registry, mock_roborock_entry)
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MOP_DRYING_ENTITY_ID) is None
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR, DOMAIN, MOP_DRYING_UNIQUE_ID
+        )
+        is None
+    )
+    assert (DOMAIN, MOP_DRYING_ISSUE_ID) not in issue_registry.issues
+
+
 async def test_mop_drying_sensor_removed_when_disabled(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
