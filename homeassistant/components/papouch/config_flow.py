@@ -4,16 +4,18 @@ import asyncio
 import ipaddress
 import logging
 import re
-from typing import override
+from typing import Any, override
 
 import aiohttp
 from aiopapouch import PapouchHTTPClient, create_device, is_device_supported
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import PapouchConfigEntry
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .discovery import async_discover_papouch_devices
 
@@ -42,10 +44,6 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"ip_address": "invalid_ip_format"}, None
 
         session = async_get_clientsession(self.hass)
-
-        if password is None:
-            password = ""
-
         client = PapouchHTTPClient(ip_address, session, password=password)
 
         try:
@@ -58,7 +56,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             return {}, mode_device
 
     async def _async_process_user_input(
-        self, user_input: dict
+        self, user_input: dict[str, Any]
     ) -> tuple[dict[str, str], ConfigFlowResult | None]:
         """Process user input, test connection, and determine the next routing step."""
 
@@ -78,8 +76,18 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             if mode_device != WEB_MODE_INDEX:
                 return {}, await self.async_step_web_mode()
 
+            data = {
+                "ip_address": user_input["ip_address"],
+                "password": user_input.get("password", ""),
+            }
+            options = {
+                "refresh_rate": user_input.get("refresh_rate", DEFAULT_SCAN_INTERVAL)
+            }
+
             return {}, self.async_create_entry(
-                title=f"Papouch ({user_input['ip_address']})", data=user_input
+                title=f"Papouch ({user_input['ip_address']})",
+                data=data,
+                options=options,
             )
 
         return errors, None
@@ -126,7 +134,9 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
-    async def async_step_discovery_confirm(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Step after adding the device via DHCP."""
         errors: dict[str, str] = {}
 
@@ -155,7 +165,9 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @override
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step featuring active UDP discovery."""
         errors: dict[str, str] = {}
 
@@ -216,7 +228,9 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_manual(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle manual IP entry when discovery fails or is bypassed."""
         errors: dict[str, str] = {}
 
@@ -247,23 +261,23 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="manual", data_schema=schema, errors=errors)
 
-    async def async_step_web_mode(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_web_mode(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Step where the user can switch the device into WEB mode via buttons."""
         return self.async_show_menu(
             step_id="web_mode", menu_options=["execute_switch", "abort_switch"]
         )
 
-    async def async_step_execute_switch(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_execute_switch(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Action when user clicks the switch button."""
 
         assert self._saved_input is not None
 
         session = async_get_clientsession(self.hass)
-
-        password = self._saved_input.get("password")
-
-        if password is None:
-            password = ""
+        password = self._saved_input.get("password", "")
 
         client = PapouchHTTPClient(
             self._saved_input["ip_address"], session, password=password
@@ -277,14 +291,59 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
             await device.switch_to_web_mode()
 
+            data = {
+                "ip_address": self._saved_input["ip_address"],
+                "password": self._saved_input.get("password", ""),
+            }
+            options = {
+                "refresh_rate": self._saved_input.get(
+                    "refresh_rate", DEFAULT_SCAN_INTERVAL
+                )
+            }
+
             return self.async_create_entry(
                 title=f"Papouch ({self._saved_input['ip_address']})",
-                data=self._saved_input,
+                data=data,
+                options=options,
                 description="web_mode_success",
             )
         except aiohttp.ClientError:
             return self.async_abort(reason="cannot_connect")
 
-    async def async_step_abort_switch(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_abort_switch(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Action when user clicks cancel."""
         return self.async_abort(reason="web_mode_required")
+
+    @override
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: PapouchConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return PapouchOptionsFlowHandler()
+
+
+class PapouchOptionsFlowHandler(OptionsFlow):
+    """Handle Papouch options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        current_refresh = self.config_entry.options.get(
+            "refresh_rate", DEFAULT_SCAN_INTERVAL
+        )
+
+        schema = vol.Schema(
+            {
+                vol.Required("refresh_rate", default=current_refresh): vol.All(
+                    int, vol.Range(min=1, max=3600)
+                ),
+            }
+        )
+
+        return self.async_show_form(step_id="init", data_schema=schema)

@@ -27,7 +27,7 @@ class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
         device: PapouchDevice,
     ) -> None:
         """Initialize the coordinator."""
-        interval = entry.data.get("refresh_rate", DEFAULT_SCAN_INTERVAL)
+        interval = entry.options.get("refresh_rate", DEFAULT_SCAN_INTERVAL)
         super().__init__(
             hass,
             _LOGGER,

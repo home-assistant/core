@@ -22,3 +22,6 @@ Source = "https://github.com/tvoje-jmeno/papouch-api"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aiopapouch"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/aiopapouch/py.typed" = "aiopapouch/py.typed"

@@ -1,6 +1,6 @@
 """Sensor platform for the Papouch integration."""
 
-from typing import Any, override
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
@@ -10,6 +10,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import PapouchConfigEntry
 from .coordinator import PapouchDataUpdateCoordinator
 from .entity import PapouchEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -61,7 +63,8 @@ class PapouchSensor(PapouchEntity, SensorEntity):
     @property
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
-        return self.coordinator.data.get(self.data_key, {}).get(self.item_id)
+        value = self.coordinator.data.get(self.data_key, {}).get(self.item_id)
+        return cast(float | int | None, value)
 
     @override
     @callback

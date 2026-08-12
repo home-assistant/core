@@ -11,6 +11,8 @@ from . import PapouchConfigEntry
 from .coordinator import PapouchDataUpdateCoordinator
 from .entity import PapouchEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -57,4 +59,4 @@ class PapouchBinarySensor(PapouchEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
-        return self.coordinator.data.get(self.data_key, {}).get(self.item_id) == 1
+        return bool(self.coordinator.data.get(self.data_key, {}).get(self.item_id) == 1)

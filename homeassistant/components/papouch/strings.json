@@ -22,6 +22,10 @@
           "password": "Password (optional)",
           "refresh_rate": "Scan Interval (seconds)"
         },
+        "data_description": {
+          "password": "Leave blank if your device does not require authentication.",
+          "refresh_rate": "How often Home Assistant should poll the device for new data."
+        },
         "description": "Do you want to add {name} to Home Assistant?",
         "title": "Add {name}"
       },
@@ -31,6 +35,11 @@
           "password": "Password (optional)",
           "refresh_rate": "Scan interval (seconds)"
         },
+        "data_description": {
+          "ip_address": "Enter the IP address of your Papouch device.",
+          "password": "Leave blank if your device does not require authentication.",
+          "refresh_rate": "How often Home Assistant should poll the device for new data."
+        },
         "title": "Manual Setup"
       },
       "user": {
@@ -38,6 +47,11 @@
           "ip_address": "IPv4 address",
           "password": "Password (optional)",
           "refresh_rate": "Scan interval (seconds)"
+        },
+        "data_description": {
+          "ip_address": "Select a discovered device or choose manual entry.",
+          "password": "Leave blank if your device does not require authentication.",
+          "refresh_rate": "How often Home Assistant should poll the device for new data."
         },
         "title": "Add a new device"
       },
@@ -48,6 +62,18 @@
           "execute_switch": "Change mode to WEB"
         },
         "title": "Enable Web Mode"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "refresh_rate": "Scan interval (seconds)"
+        },
+        "data_description": {
+          "refresh_rate": "How often Home Assistant should poll the device for new data."
+        }
       }
     }
   }

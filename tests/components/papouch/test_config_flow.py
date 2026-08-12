@@ -7,7 +7,11 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.papouch.config_flow import PapouchConfigFlow
-from homeassistant.components.papouch.const import DOMAIN, WEB_MODE_INDEX
+from homeassistant.components.papouch.const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    WEB_MODE_INDEX,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -54,8 +58,12 @@ def mock_api_client():
             "homeassistant.components.papouch.config_flow.PapouchHTTPClient.get_device_mode",
             return_value=WEB_MODE_INDEX,
         ) as mock_mode,
+        patch(
+            "homeassistant.components.papouch.config_flow.PapouchHTTPClient.get_device_info",
+            return_value=("Quido", "Lab"),
+        ) as mock_info,
     ):
-        yield mock_fetch, mock_mode
+        yield mock_fetch, mock_mode, mock_info
 
 
 @pytest.fixture
@@ -108,7 +116,7 @@ async def test_manual_connection_error(
     hass: HomeAssistant, mock_discover_none, mock_api_client
 ) -> None:
     """Test handling of connection errors during manual IP entry."""
-    mock_fetch, _ = mock_api_client
+    mock_fetch, _, _ = mock_api_client
     mock_fetch.side_effect = aiohttp.ClientError
 
     result = await hass.config_entries.flow.async_init(
@@ -140,7 +148,9 @@ async def test_dhcp_discovery_success(
 async def test_dhcp_already_configured(hass: HomeAssistant, dhcp_info) -> None:
     """Test DHCP discovery aborts if the IP is already configured."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"ip_address": "192.168.1.100", "refresh_rate": 60}
+        domain=DOMAIN,
+        data={"ip_address": "192.168.1.100"},
+        options={"refresh_rate": 60},
     )
     entry.add_to_hass(hass)
 
@@ -160,7 +170,7 @@ async def test_web_mode_switch(
     mock_setup_entry,
 ) -> None:
     """Test the config flow when the device requires switching to WEB mode."""
-    _, mock_mode = mock_api_client
+    _, mock_mode, _ = mock_api_client
     mock_mode.return_value = 2
 
     result = await hass.config_entries.flow.async_init(
@@ -204,7 +214,8 @@ async def test_dhcp_unsupported_device(
     hass: HomeAssistant, dhcp_info, mock_api_client, mock_create_device
 ) -> None:
     """Test DHCP discovery aborts when an unsupported device is detected."""
-    mock_create_device.return_value = None
+    _, _, mock_info = mock_api_client
+    mock_info.return_value = ("UnknownDeviceName123", "Lab")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "dhcp"}, data=dhcp_info
@@ -249,7 +260,7 @@ async def test_user_udp_discovery_and_manual_choice(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "manual", "refresh_rate": 120, "password": "dhcp_password"},
+        {"ip_address": "manual", "refresh_rate": 120, "password": "password"},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
@@ -260,7 +271,7 @@ async def test_mode_missing_abort(
     hass: HomeAssistant, mock_discover_none, mock_api_client
 ) -> None:
     """Test config flow aborts when the device mode is missing."""
-    _, mock_mode = mock_api_client
+    _, mock_mode, _ = mock_api_client
     mock_mode.return_value = -1
 
     result = await hass.config_entries.flow.async_init(
@@ -269,7 +280,7 @@ async def test_mode_missing_abort(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "dhcp_password"},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "password"},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
@@ -280,7 +291,7 @@ async def test_web_mode_abort_switch(
     hass: HomeAssistant, mock_discover_none, mock_api_client
 ) -> None:
     """Test aborting the config flow from the web mode menu."""
-    _, mock_mode = mock_api_client
+    _, mock_mode, _ = mock_api_client
     mock_mode.return_value = 2
 
     result = await hass.config_entries.flow.async_init(
@@ -289,7 +300,7 @@ async def test_web_mode_abort_switch(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "dhcp_password"},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "password"},
     )
 
     result_cancel = await hass.config_entries.flow.async_configure(
@@ -304,7 +315,7 @@ async def test_web_mode_unsupported_device(
     hass: HomeAssistant, mock_discover_none, mock_api_client, mock_create_device
 ) -> None:
     """Test config flow aborts when switching to web mode on an unsupported device."""
-    _, mock_mode = mock_api_client
+    _, mock_mode, _ = mock_api_client
     mock_mode.return_value = 2
 
     result = await hass.config_entries.flow.async_init(
@@ -313,7 +324,7 @@ async def test_web_mode_unsupported_device(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "dhcp_password"},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "password"},
     )
 
     mock_create_device.return_value = None
@@ -329,7 +340,7 @@ async def test_web_mode_client_error(
     hass: HomeAssistant, mock_discover_none, mock_api_client, mock_create_device
 ) -> None:
     """Test config flow aborts on client error during web mode switch execution."""
-    _, mock_mode = mock_api_client
+    _, mock_mode, _ = mock_api_client
     mock_mode.return_value = 2
 
     result = await hass.config_entries.flow.async_init(
@@ -338,7 +349,7 @@ async def test_web_mode_client_error(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "dhcp_password"},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "password"},
     )
 
     mock_create_device.side_effect = aiohttp.ClientError
@@ -354,7 +365,8 @@ async def test_dhcp_client_error(
     hass: HomeAssistant, dhcp_info, mock_api_client, mock_create_device
 ) -> None:
     """Test DHCP discovery aborts on client error when fetching device info."""
-    mock_create_device.side_effect = aiohttp.ClientError
+    _, _, mock_info = mock_api_client
+    mock_info.side_effect = aiohttp.ClientError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "dhcp"}, data=dhcp_info
@@ -372,12 +384,12 @@ async def test_discovery_confirm_mode_missing(
         DOMAIN, context={"source": "dhcp"}, data=dhcp_info
     )
 
-    _, mock_mode = mock_api_client
+    _, mock_mode, _ = mock_api_client
     mock_mode.return_value = -1
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"refresh_rate": 60, "password": "dhcp_password"},
+        {"refresh_rate": 60, "password": "password"},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
@@ -392,12 +404,12 @@ async def test_discovery_confirm_web_mode_redirect(
         DOMAIN, context={"source": "dhcp"}, data=dhcp_info
     )
 
-    _, mock_mode = mock_api_client
+    _, mock_mode, _ = mock_api_client
     mock_mode.return_value = 2
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"refresh_rate": 60, "password": "dhcp_password"},
+        {"refresh_rate": 60, "password": "password"},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.MENU
@@ -437,7 +449,7 @@ async def test_manual_fallback_defaults_from_saved_input(
         {
             "ip_address": "999.invalid.ip",
             "refresh_rate": 123,
-            "password": "dhcp_password",
+            "password": "password",
         },
     )
 
@@ -481,7 +493,7 @@ async def test_user_step_mode_missing(
     hass: HomeAssistant, mock_discover_found, mock_api_client
 ) -> None:
     """Test the mode_is_missing abort directly from the user step."""
-    _, mock_mode = mock_api_client
+    _, mock_mode, _ = mock_api_client
     mock_mode.return_value = -1
 
     result = await hass.config_entries.flow.async_init(
@@ -501,7 +513,7 @@ async def test_user_step_web_mode_redirect(
     hass: HomeAssistant, mock_discover_found, mock_api_client
 ) -> None:
     """Test redirect to web mode directly from the user step."""
-    _, mock_mode = mock_api_client
+    _, mock_mode, _ = mock_api_client
     mock_mode.return_value = 2
 
     result = await hass.config_entries.flow.async_init(
@@ -522,7 +534,9 @@ async def test_udp_discovery_all_configured_routes_to_manual(
 ) -> None:
     """Test that if all discovered devices are already configured, it routes to manual."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"ip_address": "192.168.1.50", "refresh_rate": 60}
+        domain=DOMAIN,
+        data={"ip_address": "192.168.1.50"},
+        options={"refresh_rate": 60},
     )
     entry.add_to_hass(hass)
 
@@ -539,7 +553,9 @@ async def test_manual_already_configured(
 ) -> None:
     """Test that manual IP entry aborts if the IP is already configured."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"ip_address": "192.168.1.50", "refresh_rate": 60}
+        domain=DOMAIN,
+        data={"ip_address": "192.168.1.50"},
+        options={"refresh_rate": 60},
     )
     entry.add_to_hass(hass)
 
@@ -556,3 +572,32 @@ async def test_manual_already_configured(
 
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test updating options via the options flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Papouch (192.168.1.100)",
+        data={"ip_address": "192.168.1.100", "password": ""},
+        options={"refresh_rate": DEFAULT_SCAN_INTERVAL},
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.papouch.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(entry.entry_id)
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "refresh_rate": 30,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert entry.options == {"refresh_rate": 30}
