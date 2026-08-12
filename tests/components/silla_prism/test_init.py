@@ -24,7 +24,9 @@ async def test_setup_and_unload(
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, BASE_TOPIC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BASE_TOPIC), mock_config_entry.entry_id
+    )
     assert device is not None
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -61,7 +63,9 @@ async def test_hello_updates_device_info(
     async_fire_mqtt_message(hass, HELLO_TOPIC, HELLO_PAYLOAD)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, BASE_TOPIC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BASE_TOPIC), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.serial_number == SERIAL
     assert device.sw_version == "3.2.77"

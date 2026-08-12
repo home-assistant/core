@@ -73,8 +73,8 @@ class PrismCoordinator(DataUpdateCoordinator[PrismStatus]):
     def _on_hello(self, info: HelloInfo) -> None:
         """Enrich the device registry when Prism announces itself."""
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, self.base_topic)}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, self.base_topic), self.config_entry.entry_id
         )
         if device is not None:
             device_registry.async_update_device(
