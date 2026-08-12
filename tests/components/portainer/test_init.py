@@ -150,7 +150,7 @@ async def test_migration_v3_to_v5(
     container_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, original_container_identifier)},
-        via_device=(DOMAIN, f"{entry.entry_id}_endpoint_1"),
+        via_device_id=endpoint_device.id,
         name="Test Container",
     )
 
