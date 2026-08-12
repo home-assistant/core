@@ -39,9 +39,30 @@ class PrismSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[PrismStatus], StateType]
 
 
+# The Home Assistant state vocabulary differs from the protocol naming.
+PORT_STATE_OPTIONS = {
+    PortState.IDLE: "idle",
+    PortState.WAITING: "waiting",
+    PortState.CHARGING: "charging",
+    PortState.PAUSE: "paused",
+}
+
+
+# The MQTT protocol only documents 0 as "no error". The fault codes are not
+# specified, so they are reported as unknown rather than guessed.
+ERROR_OPTIONS = {
+    0: "none",
+}
+
+
 def _port_state(status: PrismStatus) -> str | None:
     state = status.port(PORT).state
-    return state.name.lower() if state is not None else None
+    return PORT_STATE_OPTIONS.get(state) if state is not None else None
+
+
+def _port_error(status: PrismStatus) -> str | None:
+    error = status.port(PORT).error
+    return ERROR_OPTIONS.get(error) if error is not None else None
 
 
 SENSORS: tuple[PrismSensorEntityDescription, ...] = (
@@ -49,7 +70,7 @@ SENSORS: tuple[PrismSensorEntityDescription, ...] = (
         key="status",
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
-        options=[state.name.lower() for state in PortState],
+        options=list(PORT_STATE_OPTIONS.values()),
         value_fn=_port_state,
     ),
     PrismSensorEntityDescription(
@@ -62,12 +83,10 @@ SENSORS: tuple[PrismSensorEntityDescription, ...] = (
     PrismSensorEntityDescription(
         key="current",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
-        # Prism reports the delivered current in milliamps.
-        value_fn=lambda status: (
-            None if (amp := status.port(PORT).current) is None else amp / 1000
-        ),
+        value_fn=lambda status: status.port(PORT).current,
     ),
     PrismSensorEntityDescription(
         key="voltage",
@@ -113,8 +132,10 @@ SENSORS: tuple[PrismSensorEntityDescription, ...] = (
     PrismSensorEntityDescription(
         key="error",
         translation_key="error",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(ERROR_OPTIONS.values()),
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda status: status.port(PORT).error,
+        value_fn=_port_error,
     ),
     PrismSensorEntityDescription(
         key="temperature",

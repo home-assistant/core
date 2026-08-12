@@ -30,7 +30,10 @@
   "entity": {
     "sensor": {
       "error": {
-        "name": "Error code"
+        "name": "Error",
+        "state": {
+          "none": "None"
+        }
       },
       "grid_power": {
         "name": "Grid power"
@@ -47,9 +50,9 @@
       "status": {
         "name": "Status",
         "state": {
-          "charging": "Charging",
-          "idle": "Idle",
-          "pause": "Paused",
+          "charging": "[%key:common::state::charging%]",
+          "idle": "[%key:common::state::idle%]",
+          "paused": "[%key:common::state::paused%]",
           "waiting": "Waiting"
         }
       },

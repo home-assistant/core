@@ -6,8 +6,7 @@ HELLO_TOPIC = "prism/hello"
 HELLO_PAYLOAD = "Prism-A00006 3.2.77 (evsemd v1.1.1)"
 SERIAL = "Prism-A00006"
 
-# Retained status burst captured from a real Prism Solar (firmware 3.x), with a
-# non-zero current so the milliamp-to-amp conversion is exercised.
+# Retained status burst captured from a real Prism Solar (firmware 3.x).
 RETAINED_BURST: list[tuple[str, str]] = [
     ("prism/1/state", "1"),
     ("prism/1/amp", "8000"),
