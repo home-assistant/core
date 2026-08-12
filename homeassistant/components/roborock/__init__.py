@@ -16,14 +16,10 @@ from roborock.devices.device_manager import UserParams, create_device_manager
 from roborock.map.map_parser import MapParserConfig
 from roborock.mqtt.session import MqttSessionUnauthorized
 
-from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -211,18 +207,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -
             version=1,
             minor_version=2,
         )
-
-    # 2->3: The mop drying binary sensor was replaced by a switch
-    if entry.minor_version == 2:
-        entity_registry = er.async_get(hass)
-        for entity in er.async_entries_for_config_entry(
-            entity_registry, entry.entry_id
-        ):
-            if entity.domain == Platform.BINARY_SENSOR and entity.unique_id.startswith(
-                "dry_status_"
-            ):
-                entity_registry.async_remove(entity.entity_id)
-        hass.config_entries.async_update_entry(entry, version=1, minor_version=3)
 
     return True
 

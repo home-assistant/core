@@ -13,6 +13,9 @@
       "mop_attached": {
         "default": "mdi:square-rounded"
       },
+      "mop_drying_status": {
+        "default": "mdi:heat-wave"
+      },
       "water_box_attached": {
         "default": "mdi:water"
       },
