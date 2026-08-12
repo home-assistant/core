@@ -10,7 +10,7 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -75,7 +75,7 @@ def repair_issue_cleanup(hass: HomeAssistant, avm_wrapper: AvmWrapper) -> None:
     if (
         (
             entity_button := entity_registry.async_get_entity_id(
-                "button", DOMAIN, f"{avm_wrapper.unique_id}-cleanup"
+                Platform.BUTTON, DOMAIN, f"{avm_wrapper.unique_id}-cleanup"
             )
         )
         and (entity_entry := entity_registry.async_get(entity_button))
@@ -102,7 +102,7 @@ def repair_issue_firmware_update(hass: HomeAssistant, avm_wrapper: AvmWrapper) -
     if (
         (
             entity_button := entity_registry.async_get_entity_id(
-                "button", DOMAIN, f"{avm_wrapper.unique_id}-firmware_update"
+                Platform.BUTTON, DOMAIN, f"{avm_wrapper.unique_id}-firmware_update"
             )
         )
         and (entity_entry := entity_registry.async_get(entity_button))

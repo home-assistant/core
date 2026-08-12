@@ -185,6 +185,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="status_led",
         cmd_key="GetPowerLed",
+        cmd_id=208,
         translation_key="doorbell_led",
         entity_category=EntityCategory.CONFIG,
         get_options=lambda api, ch: api.doorbell_led_list(ch),
@@ -232,6 +233,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="main_frame_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="main_frame_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -244,6 +246,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="sub_frame_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="sub_frame_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -256,6 +259,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="main_bit_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="main_bit_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -268,6 +272,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="sub_bit_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="sub_bit_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -280,6 +285,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="main_encoding",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="main_encoding",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -291,6 +297,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="sub_encoding",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="sub_encoding",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -316,6 +323,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="post_rec_time",
         cmd_key="GetRec",
+        cmd_id=54,
         translation_key="post_rec_time",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -340,6 +348,7 @@ HOST_SELECT_ENTITIES = (
     ReolinkHostSelectEntityDescription(
         key="packing_time",
         cmd_key="GetRec",
+        cmd_id=54,
         translation_key="packing_time",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,

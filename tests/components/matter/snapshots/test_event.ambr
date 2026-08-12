@@ -46,7 +46,7 @@
 # name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -54,7 +54,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Climate Sensor W100 Button (3)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Button (3)',
     }),
     'context': <ANY>,
     'entity_id': 'event.climate_sensor_w100_button_3',
@@ -111,7 +111,7 @@
 # name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -119,7 +119,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Climate Sensor W100 Button (4)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Button (4)',
     }),
     'context': <ANY>,
     'entity_id': 'event.climate_sensor_w100_button_4',
@@ -176,7 +176,7 @@
 # name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -184,7 +184,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Climate Sensor W100 Button (5)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Button (5)',
     }),
     'context': <ANY>,
     'entity_id': 'event.climate_sensor_w100_button_5',
@@ -241,7 +241,7 @@
 # name: test_events[haojai_switch][event.hjmt_6b_button_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -249,7 +249,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HJMT-6B Button (1)',
     }),
     'context': <ANY>,
     'entity_id': 'event.hjmt_6b_button_1',
@@ -306,7 +306,7 @@
 # name: test_events[haojai_switch][event.hjmt_6b_button_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -314,7 +314,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (2)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HJMT-6B Button (2)',
     }),
     'context': <ANY>,
     'entity_id': 'event.hjmt_6b_button_2',
@@ -371,7 +371,7 @@
 # name: test_events[haojai_switch][event.hjmt_6b_button_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -379,7 +379,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (3)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HJMT-6B Button (3)',
     }),
     'context': <ANY>,
     'entity_id': 'event.hjmt_6b_button_3',
@@ -436,7 +436,7 @@
 # name: test_events[haojai_switch][event.hjmt_6b_button_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -444,7 +444,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (4)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HJMT-6B Button (4)',
     }),
     'context': <ANY>,
     'entity_id': 'event.hjmt_6b_button_4',
@@ -501,7 +501,7 @@
 # name: test_events[haojai_switch][event.hjmt_6b_button_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -509,7 +509,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (5)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HJMT-6B Button (5)',
     }),
     'context': <ANY>,
     'entity_id': 'event.hjmt_6b_button_5',
@@ -566,7 +566,7 @@
 # name: test_events[haojai_switch][event.hjmt_6b_button_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -574,7 +574,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (6)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HJMT-6B Button (6)',
     }),
     'context': <ANY>,
     'entity_id': 'event.hjmt_6b_button_6',
@@ -631,7 +631,7 @@
 # name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -639,7 +639,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'BILRESA dual button Button (1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA dual button Button (1)',
     }),
     'context': <ANY>,
     'entity_id': 'event.bilresa_dual_button_button_1',
@@ -696,7 +696,7 @@
 # name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -704,7 +704,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'BILRESA dual button Button (2)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA dual button Button (2)',
     }),
     'context': <ANY>,
     'entity_id': 'event.bilresa_dual_button_button_2',
@@ -765,7 +765,7 @@
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -777,7 +777,7 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Button (1)',
     }),
     'context': <ANY>,
     'entity_id': 'event.bilresa_scroll_wheel_button_1',
@@ -838,7 +838,7 @@
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -850,7 +850,7 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (2)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Button (2)',
     }),
     'context': <ANY>,
     'entity_id': 'event.bilresa_scroll_wheel_button_2',
@@ -908,7 +908,7 @@
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -917,7 +917,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (3)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Button (3)',
     }),
     'context': <ANY>,
     'entity_id': 'event.bilresa_scroll_wheel_button_3',
@@ -978,7 +978,7 @@
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -990,7 +990,7 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (4)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Button (4)',
     }),
     'context': <ANY>,
     'entity_id': 'event.bilresa_scroll_wheel_button_4',
@@ -1051,7 +1051,7 @@
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1063,7 +1063,7 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (5)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Button (5)',
     }),
     'context': <ANY>,
     'entity_id': 'event.bilresa_scroll_wheel_button_5',
@@ -1121,7 +1121,7 @@
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1130,7 +1130,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (6)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Button (6)',
     }),
     'context': <ANY>,
     'entity_id': 'event.bilresa_scroll_wheel_button_6',
@@ -1191,7 +1191,7 @@
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1203,7 +1203,7 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (7)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Button (7)',
     }),
     'context': <ANY>,
     'entity_id': 'event.bilresa_scroll_wheel_button_7',
@@ -1264,7 +1264,7 @@
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1276,7 +1276,7 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (8)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Button (8)',
     }),
     'context': <ANY>,
     'entity_id': 'event.bilresa_scroll_wheel_button_8',
@@ -1334,7 +1334,7 @@
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1343,7 +1343,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (9)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Button (9)',
     }),
     'context': <ANY>,
     'entity_id': 'event.bilresa_scroll_wheel_button_9',
@@ -1403,7 +1403,7 @@
 # name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_config-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1414,7 +1414,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'White Series OnOff Switch Button (Config)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Button (Config)',
     }),
     'context': <ANY>,
     'entity_id': 'event.white_series_onoff_switch_button_config',
@@ -1474,7 +1474,7 @@
 # name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1485,7 +1485,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'White Series OnOff Switch Button (Down)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Button (Down)',
     }),
     'context': <ANY>,
     'entity_id': 'event.white_series_onoff_switch_button_down',
@@ -1545,7 +1545,7 @@
 # name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1556,7 +1556,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'White Series OnOff Switch Button (Up)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Button (Up)',
     }),
     'context': <ANY>,
     'entity_id': 'event.white_series_onoff_switch_button_up',
@@ -1616,7 +1616,7 @@
 # name: test_events[inovelli_vtm31][event.inovelli_button_config-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1627,7 +1627,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Inovelli Button (Config)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Button (Config)',
     }),
     'context': <ANY>,
     'entity_id': 'event.inovelli_button_config',
@@ -1687,7 +1687,7 @@
 # name: test_events[inovelli_vtm31][event.inovelli_button_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1698,7 +1698,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Inovelli Button (Down)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Button (Down)',
     }),
     'context': <ANY>,
     'entity_id': 'event.inovelli_button_down',
@@ -1758,7 +1758,7 @@
 # name: test_events[inovelli_vtm31][event.inovelli_button_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1769,10 +1769,75 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Inovelli Button (Up)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Button (Up)',
     }),
     'context': <ANY>,
     'entity_id': 'event.inovelli_button_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[mock_doorbell][event.mock_doorbell_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'initial_press',
+        'short_release',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mock_doorbell_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-000000000000003F-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[mock_doorbell][event.mock_doorbell_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'initial_press',
+        'short_release',
+        'long_press',
+        'long_release',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Doorbell Button',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mock_doorbell_button',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1826,7 +1891,7 @@
 # name: test_events[mock_generic_switch][event.mock_generic_switch_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'initial_press',
@@ -1834,7 +1899,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Mock Generic Switch Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Generic Switch Button',
     }),
     'context': <ANY>,
     'entity_id': 'event.mock_generic_switch_button',
@@ -1891,7 +1956,7 @@
 # name: test_events[mock_generic_switch_multi][event.mock_generic_switch_button_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1899,7 +1964,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Mock Generic Switch Button (1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Generic Switch Button (1)',
     }),
     'context': <ANY>,
     'entity_id': 'event.mock_generic_switch_button_1',
@@ -1958,7 +2023,7 @@
 # name: test_events[mock_generic_switch_multi][event.mock_generic_switch_button_fancy_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
@@ -1968,7 +2033,7 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Mock Generic Switch Button (Fancy Button)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Generic Switch Button (Fancy Button)',
     }),
     'context': <ANY>,
     'entity_id': 'event.mock_generic_switch_button_fancy_button',
@@ -2023,13 +2088,13 @@
 # name: test_events[silabs_light_switch][event.light_switch_example_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'initial_press',
         'short_release',
       ]),
-      'friendly_name': 'Light switch example Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Light switch example Button',
     }),
     'context': <ANY>,
     'entity_id': 'event.light_switch_example_button',

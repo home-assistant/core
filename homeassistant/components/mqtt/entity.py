@@ -557,6 +557,7 @@ class MqttAttributesMixin(Entity):
         self._attributes_sub_state = async_unsubscribe_topics(
             self.hass, self._attributes_sub_state
         )
+        await super().async_will_remove_from_hass()
 
     @callback
     def _attributes_message_received(self, msg: ReceiveMessage) -> None:
@@ -708,6 +709,7 @@ class MqttAvailabilityMixin(Entity):
         self._availability_sub_state = async_unsubscribe_topics(
             self.hass, self._availability_sub_state
         )
+        await super().async_will_remove_from_hass()
 
     @property
     @override
@@ -1253,6 +1255,7 @@ class MqttDiscoveryUpdateMixin(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
         self._cleanup_discovery_on_remove()
+        await super().async_will_remove_from_hass()
 
     def _cleanup_discovery_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
@@ -1575,9 +1578,7 @@ class MqttEntity(
         self._sub_state = subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
-        await MqttAttributesMixin.async_will_remove_from_hass(self)
-        await MqttAvailabilityMixin.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdateMixin.async_will_remove_from_hass(self)
+        await super().async_will_remove_from_hass()
         debug_info.remove_entity_data(self.hass, self.entity_id)
 
     async def async_publish_with_config(

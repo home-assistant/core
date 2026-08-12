@@ -24,7 +24,7 @@
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'on',
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.0,
-      'friendly_name': 'Domestic Hot Water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Domestic Hot Water',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 43.3,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
@@ -52,7 +52,7 @@
           'temperature': 23.0,
         }),
       }),
-      'supported_features': <WaterHeaterEntityFeature: 14>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 14>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: None,
@@ -70,7 +70,7 @@
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'on',
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.0,
-      'friendly_name': 'Domestic Hot Water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Domestic Hot Water',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 43.3,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
@@ -98,7 +98,7 @@
           'temperature': 23.0,
         }),
       }),
-      'supported_features': <WaterHeaterEntityFeature: 14>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 14>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: None,

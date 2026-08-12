@@ -37,6 +37,28 @@ ORALB_IO_SERIES_4_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+ORALB_IO_SIX_SECTORS_SECTOR_5_SERVICE_INFO = BluetoothServiceInfo(
+    name="Oral-B Toothbrush",
+    address="78:DB:2F:C2:48:BE",
+    rssi=-63,
+    # running, 6 sectors, currently in sector 5
+    manufacturer_data={220: b"\x062\x0c\x03\x00\x00\x1e\x00\x05\x0a\x06"},
+    service_uuids=[],
+    service_data={},
+    source="local",
+)
+
+ORALB_IO_SIX_SECTORS_LAST_SECTOR_SERVICE_INFO = BluetoothServiceInfo(
+    name="Oral-B Toothbrush",
+    address="78:DB:2F:C2:48:BE",
+    rssi=-63,
+    # running, 6 sectors, "last sector" sentinel (7) resolves to sector 6
+    manufacturer_data={220: b"\x062\x0c\x03\x00\x00\x28\x00\x07\x0a\x06"},
+    service_uuids=[],
+    service_data={},
+    source="local",
+)
+
 ORALB_IO_SERIES_6_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Oral-B Toothbrush",
     address="B0:D2:78:20:1D:CF",

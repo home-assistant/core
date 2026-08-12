@@ -41,9 +41,9 @@
 # name: test_all_entities[sensor.drnykterstein_antichess_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Antichess games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Antichess games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_antichess_games',
@@ -95,7 +95,7 @@
 # name: test_all_entities[sensor.drnykterstein_antichess_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Antichess rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Antichess rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -148,9 +148,9 @@
 # name: test_all_entities[sensor.drnykterstein_atomic_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Atomic games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Atomic games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_atomic_games',
@@ -202,7 +202,7 @@
 # name: test_all_entities[sensor.drnykterstein_atomic_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Atomic rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Atomic rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -255,9 +255,9 @@
 # name: test_all_entities[sensor.drnykterstein_blitz_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Blitz games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Blitz games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_blitz_games',
@@ -309,7 +309,7 @@
 # name: test_all_entities[sensor.drnykterstein_blitz_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Blitz rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Blitz rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -362,9 +362,9 @@
 # name: test_all_entities[sensor.drnykterstein_bullet_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Bullet games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Bullet games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_bullet_games',
@@ -416,7 +416,7 @@
 # name: test_all_entities[sensor.drnykterstein_bullet_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Bullet rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Bullet rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -469,9 +469,9 @@
 # name: test_all_entities[sensor.drnykterstein_chess960_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Chess960 games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Chess960 games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_chess960_games',
@@ -523,7 +523,7 @@
 # name: test_all_entities[sensor.drnykterstein_chess960_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Chess960 rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Chess960 rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -576,9 +576,9 @@
 # name: test_all_entities[sensor.drnykterstein_classical_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Classical games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Classical games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_classical_games',
@@ -630,7 +630,7 @@
 # name: test_all_entities[sensor.drnykterstein_classical_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Classical rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Classical rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -683,9 +683,9 @@
 # name: test_all_entities[sensor.drnykterstein_correspondence_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Correspondence games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Correspondence games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_correspondence_games',
@@ -737,7 +737,7 @@
 # name: test_all_entities[sensor.drnykterstein_correspondence_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Correspondence rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Correspondence rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -790,9 +790,9 @@
 # name: test_all_entities[sensor.drnykterstein_crazyhouse_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Crazyhouse games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Crazyhouse games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_crazyhouse_games',
@@ -844,7 +844,7 @@
 # name: test_all_entities[sensor.drnykterstein_crazyhouse_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Crazyhouse rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Crazyhouse rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -897,9 +897,9 @@
 # name: test_all_entities[sensor.drnykterstein_horde_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Horde games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Horde games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_horde_games',
@@ -951,7 +951,7 @@
 # name: test_all_entities[sensor.drnykterstein_horde_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Horde rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Horde rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1004,9 +1004,9 @@
 # name: test_all_entities[sensor.drnykterstein_king_of_the_hill_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein King of the Hill games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein King of the Hill games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_king_of_the_hill_games',
@@ -1058,7 +1058,7 @@
 # name: test_all_entities[sensor.drnykterstein_king_of_the_hill_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein King of the Hill rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein King of the Hill rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1111,9 +1111,9 @@
 # name: test_all_entities[sensor.drnykterstein_puzzle_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Puzzle games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Puzzle games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_puzzle_games',
@@ -1165,7 +1165,7 @@
 # name: test_all_entities[sensor.drnykterstein_puzzle_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Puzzle rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Puzzle rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1218,9 +1218,9 @@
 # name: test_all_entities[sensor.drnykterstein_racing_kings_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Racing Kings games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Racing Kings games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_racing_kings_games',
@@ -1272,7 +1272,7 @@
 # name: test_all_entities[sensor.drnykterstein_racing_kings_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Racing Kings rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Racing Kings rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1325,9 +1325,9 @@
 # name: test_all_entities[sensor.drnykterstein_rapid_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Rapid games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Rapid games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_rapid_games',
@@ -1379,7 +1379,7 @@
 # name: test_all_entities[sensor.drnykterstein_rapid_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Rapid rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Rapid rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1432,9 +1432,9 @@
 # name: test_all_entities[sensor.drnykterstein_three_check_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Three-check games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Three-check games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_three_check_games',
@@ -1486,7 +1486,7 @@
 # name: test_all_entities[sensor.drnykterstein_three_check_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Three-check rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Three-check rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1539,9 +1539,9 @@
 # name: test_all_entities[sensor.drnykterstein_ultrabullet_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein UltraBullet games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein UltraBullet games',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_ultrabullet_games',
@@ -1593,7 +1593,7 @@
 # name: test_all_entities[sensor.drnykterstein_ultrabullet_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein UltraBullet rating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein UltraBullet rating',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,

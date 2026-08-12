@@ -3,20 +3,19 @@
 from typing import override
 
 from homeassistant.components.climate import (
-    ATTR_CURRENT_TEMPERATURE as CLIMATE_ATTR_CURRENT_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityStateAttribute,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.components.water_heater import (
-    ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
     DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterStateAttribute,
 )
 from homeassistant.components.weather import (
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_TEMPERATURE_UNIT,
     DOMAIN as WEATHER_DOMAIN,
+    WeatherEntityStateAttribute,
 )
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
+from homeassistant.const import EntityStateAttribute, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
@@ -29,14 +28,16 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 
 TEMPERATURE_DOMAIN_SPECS: dict[str, DomainSpec] = {
     CLIMATE_DOMAIN: DomainSpec(
-        value_source=CLIMATE_ATTR_CURRENT_TEMPERATURE,
+        value_source=ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
     ),
     SENSOR_DOMAIN: DomainSpec(
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    WATER_HEATER_DOMAIN: DomainSpec(value_source=WATER_HEATER_ATTR_CURRENT_TEMPERATURE),
+    WATER_HEATER_DOMAIN: DomainSpec(
+        value_source=WaterHeaterStateAttribute.CURRENT_TEMPERATURE
+    ),
     WEATHER_DOMAIN: DomainSpec(
-        value_source=ATTR_WEATHER_TEMPERATURE,
+        value_source=WeatherEntityStateAttribute.TEMPERATURE,
     ),
 }
 
@@ -70,9 +71,9 @@ class _TemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of an entity from its state."""
         if state.domain == SENSOR_DOMAIN:
-            return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            return state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         if state.domain == WEATHER_DOMAIN:
-            return state.attributes.get(ATTR_WEATHER_TEMPERATURE_UNIT)
+            return state.attributes.get(WeatherEntityStateAttribute.TEMPERATURE_UNIT)
         # Climate and water_heater: show_temp converts to system unit
         return self._hass.config.units.temperature_unit
 

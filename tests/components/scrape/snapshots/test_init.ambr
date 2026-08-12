@@ -78,7 +78,7 @@
     'entry_id': <ANY>,
     'minor_version': 1,
     'options': dict({
-      'advanced': dict({
+      'additional': dict({
         'encoding': 'UTF-8',
         'timeout': 10.0,
         'verify_ssl': True,
@@ -96,7 +96,7 @@
     'subentries': list([
       dict({
         'data': dict({
-          'advanced': dict({
+          'additional': dict({
             'value_template': '{{ value }}',
           }),
           'index': 0,
@@ -110,7 +110,7 @@
     ]),
     'title': 'Mock Title',
     'unique_id': None,
-    'version': 2,
+    'version': 3,
   })
 # ---
 # name: test_migrate_from_version_1_to_2[pre_migration_config_entry]

@@ -79,7 +79,7 @@
 # name: test_states[number.my_device_clean_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Clean count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Clean count',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
@@ -138,7 +138,7 @@
 # name: test_states[number.my_device_pan_degrees-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Pan degrees',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Pan degrees',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -197,7 +197,7 @@
 # name: test_states[number.my_device_power_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Power protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Power protection',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
@@ -256,7 +256,7 @@
 # name: test_states[number.my_device_smooth_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Smooth off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Smooth off',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -315,7 +315,7 @@
 # name: test_states[number.my_device_smooth_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Smooth on',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Smooth on',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -374,8 +374,8 @@
 # name: test_states[number.my_device_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature_delta',
-      'friendly_name': 'my_device Temperature offset',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Temperature offset',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -434,7 +434,7 @@
 # name: test_states[number.my_device_tilt_degrees-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Tilt degrees',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Tilt degrees',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -493,7 +493,7 @@
 # name: test_states[number.my_device_turn_off_in-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Turn off in',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Turn off in',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,

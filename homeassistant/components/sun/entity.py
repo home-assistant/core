@@ -24,6 +24,10 @@ from homeassistant.helpers.sun import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ELEVATION_ASTRONOMICAL,
+    ELEVATION_CIVIL,
+    ELEVATION_HORIZON,
+    ELEVATION_NAUTICAL,
     SIGNAL_EVENTS_CHANGED,
     SIGNAL_POSITION_CHANGED,
     STATE_ABOVE_HORIZON,
@@ -67,12 +71,8 @@ PHASE_SMALL_DAY = "small_day"
 # > 10° above horizon
 PHASE_DAY = "day"
 
-# Depression angle (degrees below the horizon) of the sun at each dawn/dusk
-# phase boundary. A negative value means the sun is above the horizon.
-DEPRESSION_ASTRONOMICAL = 18.0
-DEPRESSION_NAUTICAL = 12.0
-DEPRESSION_CIVIL = 6.0
-DEPRESSION_SMALL_DAY = -10.0
+# Sun elevation (degrees above the horizon) at the start of the "small day" phase.
+_ELEVATION_SMALL_DAY = 10.0
 
 # 4 mins is one degree of arc change of the sun on its circle.
 # During the night and the middle of the day we don't update
@@ -162,8 +162,7 @@ class Sun(Entity):
     @override
     def state(self) -> str:
         """Return the state of the sun."""
-        # 0.8333 is the same value as astral uses
-        if self.solar_elevation > -0.833:
+        if self.solar_elevation > ELEVATION_HORIZON:
             return STATE_ABOVE_HORIZON
 
         return STATE_BELOW_HORIZON
@@ -189,8 +188,11 @@ class Sun(Entity):
         utc_point_in_time: datetime,
         sun_event: str,
         before: str | None,
-        depression: float | None = None,
+        elevation: float | None = None,
     ) -> datetime:
+        # astral takes a depression (degrees below the horizon), i.e. the
+        # negated elevation.
+        depression = None if elevation is None else -elevation
         next_utc = get_observer_astral_event_next(
             self.observer, sun_event, utc_point_in_time, depression=depression
         )
@@ -209,36 +211,36 @@ class Sun(Entity):
         # Work our way around the solar cycle, figure out the next
         # phase. Some of these are stored.
         self._check_event(
-            utc_point_in_time, "dawn", PHASE_NIGHT, DEPRESSION_ASTRONOMICAL
+            utc_point_in_time, "dawn", PHASE_NIGHT, ELEVATION_ASTRONOMICAL
         )
         self._check_event(
-            utc_point_in_time, "dawn", PHASE_ASTRONOMICAL_TWILIGHT, DEPRESSION_NAUTICAL
+            utc_point_in_time, "dawn", PHASE_ASTRONOMICAL_TWILIGHT, ELEVATION_NAUTICAL
         )
         self.next_dawn = self._check_event(
-            utc_point_in_time, "dawn", PHASE_NAUTICAL_TWILIGHT, DEPRESSION_CIVIL
+            utc_point_in_time, "dawn", PHASE_NAUTICAL_TWILIGHT, ELEVATION_CIVIL
         )
         self.next_rising = self._check_event(
             utc_point_in_time, SUN_EVENT_SUNRISE, PHASE_TWILIGHT
         )
         self._check_event(
-            utc_point_in_time, "dawn", PHASE_SMALL_DAY, DEPRESSION_SMALL_DAY
+            utc_point_in_time, "dawn", PHASE_SMALL_DAY, _ELEVATION_SMALL_DAY
         )
         self.next_noon = self._check_event(utc_point_in_time, "noon", None)
-        self._check_event(utc_point_in_time, "dusk", PHASE_DAY, DEPRESSION_SMALL_DAY)
+        self._check_event(utc_point_in_time, "dusk", PHASE_DAY, _ELEVATION_SMALL_DAY)
         self.next_setting = self._check_event(
             utc_point_in_time, SUN_EVENT_SUNSET, PHASE_SMALL_DAY
         )
         self.next_dusk = self._check_event(
-            utc_point_in_time, "dusk", PHASE_TWILIGHT, DEPRESSION_CIVIL
+            utc_point_in_time, "dusk", PHASE_TWILIGHT, ELEVATION_CIVIL
         )
         self._check_event(
-            utc_point_in_time, "dusk", PHASE_NAUTICAL_TWILIGHT, DEPRESSION_NAUTICAL
+            utc_point_in_time, "dusk", PHASE_NAUTICAL_TWILIGHT, ELEVATION_NAUTICAL
         )
         self._check_event(
             utc_point_in_time,
             "dusk",
             PHASE_ASTRONOMICAL_TWILIGHT,
-            DEPRESSION_ASTRONOMICAL,
+            ELEVATION_ASTRONOMICAL,
         )
         self.next_midnight = self._check_event(utc_point_in_time, "midnight", None)
 
@@ -252,11 +254,11 @@ class Sun(Entity):
                 self.phase = PHASE_DAY
             elif elevation >= 0:
                 self.phase = PHASE_SMALL_DAY
-            elif elevation >= -6:
+            elif elevation >= ELEVATION_CIVIL:
                 self.phase = PHASE_TWILIGHT
-            elif elevation >= -12:
+            elif elevation >= ELEVATION_NAUTICAL:
                 self.phase = PHASE_NAUTICAL_TWILIGHT
-            elif elevation >= -18:
+            elif elevation >= ELEVATION_ASTRONOMICAL:
                 self.phase = PHASE_ASTRONOMICAL_TWILIGHT
             else:
                 self.phase = PHASE_NIGHT

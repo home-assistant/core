@@ -46,7 +46,7 @@
 # name: test_state[select.pinecil_animation_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Animation speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Animation speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'slow',
@@ -112,7 +112,7 @@
 # name: test_state[select.pinecil_boot_logo_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Boot logo duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Boot logo duration',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'seconds_1',
@@ -177,7 +177,7 @@
 # name: test_state[select.pinecil_button_locking_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Button locking mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Button locking mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'boost_only',
@@ -238,7 +238,7 @@
 # name: test_state[select.pinecil_display_orientation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Display orientation mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Display orientation mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'right_handed',
         'left_handed',
@@ -299,7 +299,7 @@
 # name: test_state[select.pinecil_power_delivery_3_1_epr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Power Delivery 3.1 EPR',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Power Delivery 3.1 EPR',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
@@ -362,7 +362,7 @@
 # name: test_state[select.pinecil_power_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Power source',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Power source',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_battery',
         'battery_3s',
@@ -424,7 +424,7 @@
 # name: test_state[select.pinecil_scrolling_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Scrolling speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Scrolling speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'fast',
@@ -485,7 +485,7 @@
 # name: test_state[select.pinecil_soldering_tip_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Soldering tip type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Soldering tip type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'ts100_long',
@@ -548,7 +548,7 @@
 # name: test_state[select.pinecil_start_up_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Start-up behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Start-up behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'soldering',
@@ -609,7 +609,7 @@
 # name: test_state[select.pinecil_temperature_display_unit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Temperature display unit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Temperature display unit',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'celsius',
         'fahrenheit',

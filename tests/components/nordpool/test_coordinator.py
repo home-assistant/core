@@ -29,7 +29,7 @@ from . import ENTRY_CONFIG
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-@pytest.mark.freeze_time("2025-10-01T10:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T10:00:00+02:00")
 async def test_coordinator(
     hass: HomeAssistant,
     get_client: NordPoolClient,
@@ -48,11 +48,12 @@ async def test_coordinator(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.nord_pool_se3_current_price")
-    assert state.state == "0.67405"
+    assert state.state == "1.03744"
 
-    assert "Next data update at 2025-10-01 11:00:00+00:00" in caplog.text
-    assert "Next listener update at 2025-10-01 10:15:00+00:00" in caplog.text
+    assert "Next data update at 2025-10-01 11:00:00+02:00" in caplog.text
+    assert "Next listener update at 2025-10-01 10:15:00+02:00" in caplog.text
 
+    caplog.clear()
     with (
         patch(
             "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
@@ -64,10 +65,10 @@ async def test_coordinator(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_data.call_count == 0
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == "0.63858"
+        assert state.state == "0.95013"
 
-    assert "Next data update at 2025-10-01 11:00:00+00:00" in caplog.text
-    assert "Next listener update at 2025-10-01 10:30:00+00:00" in caplog.text
+    assert "Next data update at 2025-10-01 11:00:00+02:00" not in caplog.text
+    assert "Next listener update at 2025-10-01 10:30:00+02:00" in caplog.text
 
     with (
         patch(
@@ -80,7 +81,7 @@ async def test_coordinator(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == "0.66068"
+        assert state.state == "0.72279"
 
     with (
         patch(
@@ -94,9 +95,10 @@ async def test_coordinator(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == "0.68544"
+        assert state.state == "0.63858"
         assert "Authentication error" in caplog.text
 
+    caplog.clear()
     with (
         patch(
             "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
@@ -110,7 +112,7 @@ async def test_coordinator(
         # Empty responses does not raise
         assert mock_data.call_count == 3
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == "0.72953"
+        assert state.state == "0.66068"
         assert "Empty response" in caplog.text
 
     with (
@@ -125,7 +127,7 @@ async def test_coordinator(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == "0.90294"
+        assert state.state == "0.68544"
         assert "error" in caplog.text
 
     with (
@@ -140,7 +142,7 @@ async def test_coordinator(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == "1.16266"
+        assert state.state == "0.72953"
         assert "error" in caplog.text
 
     with (
@@ -155,14 +157,14 @@ async def test_coordinator(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == "1.90004"
+        assert state.state == "0.90294"
         assert "Response error" in caplog.text
 
     freezer.tick(timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.nord_pool_se3_current_price")
-    assert state.state == "3.42983"
+    assert state.state == "1.16266"
 
     # Test manual polling
     hass.config_entries.async_update_entry(
@@ -173,14 +175,14 @@ async def test_coordinator(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.nord_pool_se3_current_price")
-    assert state.state == "1.42403"
+    assert state.state == "1.90004"
 
     # Prices should update without any polling made (read from cache)
     freezer.tick(timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.nord_pool_se3_current_price")
-    assert state.state == "1.1358"
+    assert state.state == "3.42983"
 
     # Test manually updating the data
     with (
@@ -201,7 +203,7 @@ async def test_coordinator(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.nord_pool_se3_current_price")
-    assert state.state == "0.933"
+    assert state.state == "1.42403"
 
     hass.config_entries.async_update_entry(
         entry=config_entry, pref_disable_polling=False

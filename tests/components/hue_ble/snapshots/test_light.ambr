@@ -49,7 +49,7 @@
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 100,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 4000,
-      'friendly_name': 'Hue Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hue Light',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         26.812,
         34.87,
@@ -65,7 +65,7 @@
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.XY: 'xy'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.42,
         0.365,

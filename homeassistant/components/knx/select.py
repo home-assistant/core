@@ -83,9 +83,7 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if not self._device.remote_value.readable and (
-            last_state := await self.async_get_last_state()
-        ):
+        if last_state := await self.async_get_last_state():
             if (
                 last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
                 and (option := self._option_payloads.get(last_state.state)) is not None

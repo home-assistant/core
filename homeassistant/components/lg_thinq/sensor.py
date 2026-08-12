@@ -18,9 +18,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
+    UnitOfDensity,
     UnitOfEnergy,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -37,25 +37,25 @@ AIR_QUALITY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.PM1: SensorEntityDescription(
         key=ThinQProperty.PM1,
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ThinQProperty.PM2: SensorEntityDescription(
         key=ThinQProperty.PM2,
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ThinQProperty.PM10: SensorEntityDescription(
         key=ThinQProperty.PM10,
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ThinQProperty.HUMIDITY: SensorEntityDescription(
         key=ThinQProperty.HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ThinQProperty.MONITORING_ENABLED: SensorEntityDescription(
@@ -106,12 +106,12 @@ FILTER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ),
     ThinQProperty.FILTER_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.FILTER_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.FILTER_LIFETIME,
     ),
     ThinQProperty.TOP_FILTER_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.TOP_FILTER_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.TOP_FILTER_REMAIN_PERCENT,
     ),
 }
@@ -119,7 +119,7 @@ HUMIDITY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.CURRENT_HUMIDITY: SensorEntityDescription(
         key=ThinQProperty.CURRENT_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     )
 }
@@ -215,7 +215,7 @@ RECIPE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ),
     ThinQProperty.BEER_REMAIN: SensorEntityDescription(
         key=ThinQProperty.BEER_REMAIN,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.BEER_REMAIN,
     ),
 }
@@ -227,7 +227,7 @@ REFRIGERATION_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ),
     ThinQProperty.FRESH_AIR_FILTER_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.FRESH_AIR_FILTER_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.FRESH_AIR_FILTER,
     ),
 }
@@ -318,17 +318,17 @@ WATER_FILTER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ),
     ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT,
     ),
     ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT,
     ),
     ThinQProperty.WATER_FILTER_3_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.WATER_FILTER_3_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.WATER_FILTER_3_REMAIN_PERCENT,
     ),
 }

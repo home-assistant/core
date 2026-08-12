@@ -1,4 +1,4 @@
-"""Constants for the HomematicIP Cloud component."""
+"""Constants for the HomematicIP Cloud integration."""
 
 import logging
 

@@ -2,7 +2,7 @@
 # name: test_setup_config_entry[config_entry_extra_options0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My template',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My template',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_template',
@@ -15,10 +15,10 @@
 # name: test_setup_config_entry[config_entry_extra_options1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'My template',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My template',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_template',

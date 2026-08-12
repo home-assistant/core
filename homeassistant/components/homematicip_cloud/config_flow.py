@@ -1,4 +1,4 @@
-"""Config flow to configure the HomematicIP Cloud component."""
+"""Config flow to configure the HomematicIP Cloud integration."""
 
 from collections.abc import Mapping
 from typing import Any, override
@@ -12,7 +12,7 @@ from .hap import HomematicipAuth
 
 
 class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Config flow for the HomematicIP Cloud component."""
+    """Config flow for the HomematicIP Cloud integration."""
 
     VERSION = 2
 

@@ -39,10 +39,10 @@
 # name: test_setup_lcn_cover[cover.testmodule_cover_outputs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'friendly_name': 'TestModule Cover_Outputs',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Cover_Outputs',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.testmodule_cover_outputs',
@@ -92,10 +92,10 @@
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'friendly_name': 'TestModule Cover_Relays',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Cover_Relays',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.testmodule_cover_relays',
@@ -145,10 +145,10 @@
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays_bs4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'friendly_name': 'TestModule Cover_Relays_BS4',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Cover_Relays_BS4',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.testmodule_cover_relays_bs4',
@@ -198,10 +198,10 @@
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'friendly_name': 'TestModule Cover_Relays_Module',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Cover_Relays_Module',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.testmodule_cover_relays_module',

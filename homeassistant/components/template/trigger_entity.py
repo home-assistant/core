@@ -54,7 +54,12 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
         if self.coordinator.data is not None:
+            # The trigger already produced data; rendering it must win over
+            # restored state, so skip restore entirely to avoid clobbering the
+            # freshly rendered attributes.
             self._process_data()
+        else:
+            await self.async_restore_last_state()
 
     @override
     def _set_unique_id(self, unique_id: str | None) -> None:
@@ -151,6 +156,18 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
 
         return super().available
 
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        # Override TriggerBaseEntity's extra_state_attributes property to restore Entity's extra state attributes behavior.
+        return self._attr_extra_state_attributes
+
+    @override
+    def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
+        """Restore an attribute from the last value."""
+        self._rendered[conf_attr] = restored_value
+
     @callback
     @override
     def _render_script_variables(self) -> dict:
@@ -209,7 +226,20 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         self._render_single_templates(
             rendered, variables, [state_option] if state_option else []
         )
-        self._render_attributes(rendered, variables)
+
+        if self._attribute_templates:
+            attributes = {}
+            for attribute, template in self._attribute_templates.items():
+                try:
+                    value = template_render_complex(template, variables)
+                    attributes[attribute] = value
+                    variables.update({attribute: value})
+                except TemplateError as err:
+                    log_triggered_template_error(
+                        self.entity_id, err, attribute=attribute
+                    )
+            self._attr_extra_state_attributes = attributes
+
         self._rendered = rendered
 
     def _handle_rendered_results(self) -> bool:

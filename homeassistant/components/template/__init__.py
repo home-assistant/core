@@ -29,7 +29,14 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN, PLATFORMS
+from .const import (
+    CONF_ADDITIONAL_OPTIONS,
+    CONF_MAX,
+    CONF_MIN,
+    CONF_STEP,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import TriggerUpdateCoordinator
 from .helpers import async_get_blueprints
 
@@ -140,6 +147,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             hass.config_entries.async_update_entry(
                 config_entry, version=1, minor_version=2
             )
+
+        options = {**config_entry.options}
+        # The "advanced_options" section was renamed to "additional_options"
+        if (additional := options.pop("advanced_options", None)) is not None:
+            options[CONF_ADDITIONAL_OPTIONS] = additional
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, version=2, minor_version=1
+        )
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",

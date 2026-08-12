@@ -41,9 +41,9 @@
     'attributes': ReadOnlyDict({
       <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
       <CameraEntityStateAttribute.BRAND: 'brand'>: 'VIVOTEK',
-      'entity_picture': '/api/camera_proxy/camera.vivotek_camera?token=1caab5c3b3',
-      'friendly_name': 'Vivotek Camera',
-      'supported_features': <CameraEntityFeature: 2>,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.vivotek_camera?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vivotek Camera',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'camera.vivotek_camera',

@@ -39,8 +39,8 @@
 # name: test_setup[binary_sensor.freeze_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'cold',
-      'friendly_name': 'Freeze Protection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'cold',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freeze Protection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freeze_protection',
@@ -98,7 +98,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 26.7,
-      'friendly_name': 'Pool Set Point',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Set Point',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
@@ -106,7 +106,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 1.1,
-      'supported_features': <ClimateEntityFeature: 385>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 28.9,
     }),
     'context': <ANY>,
@@ -162,11 +162,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
-      'friendly_name': 'Pool Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.pool_light',
@@ -216,7 +216,7 @@
 # name: test_setup[sensor.ph-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ph',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ph',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ph',
@@ -266,7 +266,7 @@
 # name: test_setup[switch.aux_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aux 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aux 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.aux_1',

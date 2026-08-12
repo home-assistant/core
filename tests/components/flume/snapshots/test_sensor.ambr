@@ -44,11 +44,11 @@
 # name: test_sensors[sensor.flume_sensor_sensor_location_24_hours-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Flume API',
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Flume Sensor Sensor Location 24 hours',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Flume API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flume Sensor Sensor Location 24 hours',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_DAY: 'gal/d'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.GALLONS_PER_DAY: 'gal/d'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flume_sensor_sensor_location_24_hours',
@@ -103,10 +103,10 @@
 # name: test_sensors[sensor.flume_sensor_sensor_location_30_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Flume API',
-      'friendly_name': 'Flume Sensor Sensor Location 30 days',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Flume API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flume Sensor Sensor Location 30 days',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gal/mo',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'gal/mo',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flume_sensor_sensor_location_30_days',
@@ -161,11 +161,11 @@
 # name: test_sensors[sensor.flume_sensor_sensor_location_60_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Flume API',
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Flume Sensor Sensor Location 60 minutes',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Flume API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flume Sensor Sensor Location 60 minutes',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 'gal/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 'gal/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flume_sensor_sensor_location_60_minutes',
@@ -220,11 +220,11 @@
 # name: test_sensors[sensor.flume_sensor_sensor_location_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Flume API',
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Flume Sensor Sensor Location Current',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Flume API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flume Sensor Sensor Location Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flume_sensor_sensor_location_current',
@@ -279,11 +279,11 @@
 # name: test_sensors[sensor.flume_sensor_sensor_location_current_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Flume API',
-      'device_class': 'water',
-      'friendly_name': 'Flume Sensor Sensor Location Current day',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Flume API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flume Sensor Sensor Location Current day',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.GALLONS: 'gal'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flume_sensor_sensor_location_current_day',
@@ -338,11 +338,11 @@
 # name: test_sensors[sensor.flume_sensor_sensor_location_current_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Flume API',
-      'device_class': 'water',
-      'friendly_name': 'Flume Sensor Sensor Location Current month',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Flume API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flume Sensor Sensor Location Current month',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.GALLONS: 'gal'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flume_sensor_sensor_location_current_month',
@@ -397,11 +397,11 @@
 # name: test_sensors[sensor.flume_sensor_sensor_location_current_week-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Flume API',
-      'device_class': 'water',
-      'friendly_name': 'Flume Sensor Sensor Location Current week',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Flume API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flume Sensor Sensor Location Current week',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.GALLONS: 'gal'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flume_sensor_sensor_location_current_week',

@@ -57,6 +57,9 @@ WIDGET_TO_CLIMATE_ENTITY = {
     UIWidget.EVO_HOME_CONTROLLER: EvoHomeController,
     UIWidget.SOMFY_HEATING_TEMPERATURE_INTERFACE: SomfyHeatingTemperatureInterface,
     UIWidget.SOMFY_THERMOSTAT: SomfyThermostat,
+    UIWidget.THERMOSTAT_HEATING_TEMPERATURE_INTERFACE: (
+        ValveHeatingTemperatureInterface
+    ),
     UIWidget.VALVE_HEATING_TEMPERATURE_INTERFACE: ValveHeatingTemperatureInterface,
     UIWidget.ATLANTIC_PASS_APC_HEAT_PUMP: AtlanticPassAPCHeatPumpMainComponent,
 }

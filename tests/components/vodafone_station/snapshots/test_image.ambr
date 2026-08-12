@@ -40,8 +40,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
-      'entity_picture': '/api/image_proxy/image.vodafone_station_m123456789_guest_5ghz_network?token=1',
-      'friendly_name': 'Vodafone Station (m123456789) Guest 5GHz network',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.vodafone_station_m123456789_guest_5ghz_network?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vodafone Station (m123456789) Guest 5GHz network',
     }),
     'context': <ANY>,
     'entity_id': 'image.vodafone_station_m123456789_guest_5ghz_network',
@@ -92,8 +92,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
-      'entity_picture': '/api/image_proxy/image.vodafone_station_m123456789_guest_network?token=1',
-      'friendly_name': 'Vodafone Station (m123456789) Guest network',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.vodafone_station_m123456789_guest_network?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vodafone Station (m123456789) Guest network',
     }),
     'context': <ANY>,
     'entity_id': 'image.vodafone_station_m123456789_guest_network',

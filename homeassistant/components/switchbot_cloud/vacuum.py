@@ -75,8 +75,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
     # "Robot Vacuum Cleaner S1 Plus"
 
     _attr_supported_features: VacuumEntityFeature = (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.FAN_SPEED
+        VacuumEntityFeature.FAN_SPEED
         | VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.START
@@ -123,7 +122,6 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         if self.coordinator.data is None:
             return
 
-        self._attr_battery_level = self.coordinator.data.get("battery")
         self._attr_available = self.coordinator.data.get("onlineStatus") == "online"
 
         switchbot_state = str(self.coordinator.data.get("workingStatus"))

@@ -2,6 +2,7 @@
 
 from typing import override
 
+from homematicip.base.functionalChannels import AccessAuthorizationChannel
 from homematicip.device import WallMountedGarageDoorController
 
 from homeassistant.components.button import ButtonEntity
@@ -12,11 +13,17 @@ from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 
-def _is_full_flush_lock_controller(device: object) -> bool:
-    """Return whether the device is an HmIP-FLC."""
-    return getattr(device, "modelType", None) == "HmIP-FLC" and hasattr(
-        device, "send_start_impulse_async"
-    )
+def _door_opener_authorization_channel(
+    device: object,
+) -> AccessAuthorizationChannel | None:
+    """Return the AccessAuthorizationChannel routed to the door opener."""
+    for channel in getattr(device, "functionalChannels", []):
+        if (
+            isinstance(channel, AccessAuthorizationChannel)
+            and getattr(channel, "channelRole", None) == "DOOR_OPENER_ACTUATOR"
+        ):
+            return channel
+    return None
 
 
 async def async_setup_entry(
@@ -33,9 +40,10 @@ async def async_setup_entry(
         if isinstance(device, WallMountedGarageDoorController)
     ]
     entities.extend(
-        HomematicipFullFlushLockControllerButton(hap, device)
+        HomematicipFullFlushLockControllerButton(hap, device, auth_channel)
         for device in hap.home.devices
-        if _is_full_flush_lock_controller(device)
+        if getattr(device, "modelType", None) == "HmIP-FLC"
+        and (auth_channel := _door_opener_authorization_channel(device)) is not None
     )
     async_add_entities(entities)
 
@@ -57,14 +65,24 @@ class HomematicipGarageDoorControllerButton(HomematicipGenericEntity, ButtonEnti
 class HomematicipFullFlushLockControllerButton(HomematicipGenericEntity, ButtonEntity):
     """Representation of the HomematicIP full flush lock controller opener."""
 
-    def __init__(self, hap: HomematicipHAP, device) -> None:
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device,
+        auth_channel: AccessAuthorizationChannel,
+    ) -> None:
         """Initialize the full flush lock controller opener button."""
         super().__init__(
             hap, device, post="Door opener", feature_id="lock_opener_button"
         )
         self._attr_icon = "mdi:door-open"
+        self._auth_channel = auth_channel
 
     @override
     async def async_press(self) -> None:
-        """Handle the button press."""
-        await self._device.send_start_impulse_async()
+        """Pull the latch via the access-authorization channel.
+
+        This is the only path non-admin clients may use; the door-switch
+        channel rejects them with CLIENT_ACCESS_DENIED.
+        """
+        await self._auth_channel.async_pull_latch()

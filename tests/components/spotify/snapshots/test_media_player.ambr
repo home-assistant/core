@@ -43,8 +43,8 @@
 # name: test_entities[media_player.spotify_spotify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=7bb89748322acb6c',
-      'friendly_name': 'Spotify spotify_1',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=7bb89748322acb6c',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Spotify spotify_1',
       <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: 'Permanent Waves',
       <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Rush',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: 'spotify:track:4e9hUiLsN4mx61ARosFi7p',
@@ -61,7 +61,7 @@
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'DESKTOP-BKC5SIK',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 444983>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 444983>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.25,
     }),
     'context': <ANY>,
@@ -116,8 +116,8 @@
 # name: test_podcast[media_player.spotify_spotify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=cf1e6e1e830f08d3',
-      'friendly_name': 'Spotify spotify_1',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=cf1e6e1e830f08d3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Spotify spotify_1',
       <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Safety Third',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: 'spotify:episode:3o0RYoo5iOMKSmEbunsbvW',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.PODCAST: 'podcast'>,
@@ -131,7 +131,7 @@
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'DESKTOP-BKC5SIK',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2048>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2048>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.46,
     }),
     'context': <ANY>,

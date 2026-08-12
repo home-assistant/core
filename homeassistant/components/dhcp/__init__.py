@@ -61,7 +61,12 @@ from homeassistant.loader import DHCPMatcher, async_get_dhcp
 
 from . import websocket_api
 from .const import DOMAIN, HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from .helpers import async_discovered_service_info
 from .models import DATA_DHCP, DHCPAddressData, DHCPData, DhcpMatchers
+
+__all__ = [
+    "async_discovered_service_info",
+]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

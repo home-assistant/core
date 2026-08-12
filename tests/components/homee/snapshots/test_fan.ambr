@@ -45,7 +45,7 @@
 # name: test_fan_snapshot[fan.test_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Fan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 37,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 12.5,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'manual',
@@ -54,7 +54,7 @@
         'auto',
         'summer',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.test_fan',

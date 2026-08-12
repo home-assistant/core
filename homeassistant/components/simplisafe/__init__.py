@@ -1,7 +1,6 @@
 """Support for SimpliSafe alarm systems."""
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from typing import Any
 
 from simplipy import API
@@ -13,18 +12,6 @@ from simplipy.errors import (
     WebsocketError,
 )
 from simplipy.system import SystemNotification
-from simplipy.system.v3 import (
-    MAX_ALARM_DURATION,
-    MAX_ENTRY_DELAY_AWAY,
-    MAX_ENTRY_DELAY_HOME,
-    MAX_EXIT_DELAY_AWAY,
-    MAX_EXIT_DELAY_HOME,
-    MIN_ALARM_DURATION,
-    MIN_ENTRY_DELAY_AWAY,
-    MIN_EXIT_DELAY_AWAY,
-    SystemV3,
-    Volume,
-)
 from simplipy.websocket import (
     EVENT_AUTOMATIC_TEST,
     EVENT_CAMERA_MOTION_DETECTED,
@@ -35,55 +22,38 @@ from simplipy.websocket import (
     EVENT_USER_INITIATED_TEST,
     WebsocketEvent,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
-    ATTR_DEVICE_ID,
     CONF_CODE,
     CONF_TOKEN,
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.service import (
-    async_register_admin_service,
-    verify_domain_control,
-)
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
-    ATTR_ALARM_DURATION,
-    ATTR_ALARM_VOLUME,
-    ATTR_CHIME_VOLUME,
-    ATTR_ENTRY_DELAY_AWAY,
-    ATTR_ENTRY_DELAY_HOME,
-    ATTR_EXIT_DELAY_AWAY,
-    ATTR_EXIT_DELAY_HOME,
     ATTR_LAST_EVENT_INFO,
     ATTR_LAST_EVENT_SENSOR_NAME,
     ATTR_LAST_EVENT_SENSOR_TYPE,
     ATTR_LAST_EVENT_TIMESTAMP,
-    ATTR_LIGHT,
     ATTR_SYSTEM_ID,
-    ATTR_VOICE_PROMPT_VOLUME,
     DISPATCHER_TOPIC_WEBSOCKET_EVENT,
     DOMAIN,
     LOGGER,
 )
 from .coordinator import SimpliSafeDataUpdateCoordinator
+from .services import async_setup_services
 from .typing import SystemType
 
 type SimpliSafeConfigEntry = ConfigEntry[SimpliSafe]
@@ -94,9 +64,6 @@ ATTR_LAST_EVENT_SENSOR_SERIAL = "last_event_sensor_serial"
 ATTR_LAST_EVENT_TYPE = "last_event_type"
 ATTR_LAST_EVENT_TYPE = "last_event_type"
 ATTR_MESSAGE = "message"
-ATTR_PIN_LABEL = "label"
-ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
-ATTR_PIN_VALUE = "pin"
 ATTR_TIMESTAMP = "timestamp"
 
 WEBSOCKET_RECONNECT_RETRIES = 3
@@ -114,74 +81,6 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 
-VOLUME_MAP = {
-    "high": Volume.HIGH,
-    "low": Volume.LOW,
-    "medium": Volume.MEDIUM,
-    "off": Volume.OFF,
-}
-
-SERVICE_NAME_REMOVE_PIN = "remove_pin"
-SERVICE_NAME_SET_PIN = "set_pin"
-SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
-
-SERVICES = (
-    SERVICE_NAME_REMOVE_PIN,
-    SERVICE_NAME_SET_PIN,
-    SERVICE_NAME_SET_SYSTEM_PROPERTIES,
-)
-
-SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
-    }
-)
-
-SERVICE_SET_PIN_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_PIN_LABEL): cv.string,
-        vol.Required(ATTR_PIN_VALUE): cv.string,
-    },
-)
-
-SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Optional(ATTR_ALARM_DURATION): vol.All(
-            cv.time_period,
-            lambda value: value.total_seconds(),
-            vol.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
-        ),
-        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
-        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
-        vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
-            cv.time_period,
-            lambda value: value.total_seconds(),
-            vol.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
-        ),
-        vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
-            cv.time_period,
-            lambda value: value.total_seconds(),
-            vol.Range(max=MAX_ENTRY_DELAY_HOME),
-        ),
-        vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
-            cv.time_period,
-            lambda value: value.total_seconds(),
-            vol.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
-        ),
-        vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
-            cv.time_period,
-            lambda value: value.total_seconds(),
-            vol.Range(max=MAX_EXIT_DELAY_HOME),
-        ),
-        vol.Optional(ATTR_LIGHT): cv.boolean,
-        vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-            vol.In(VOLUME_MAP), VOLUME_MAP.get
-        ),
-    }
-)
 
 WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_AUTOMATIC_TEST,
@@ -193,47 +92,13 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_USER_INITIATED_TEST,
 ]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-@callback
-def _async_get_system_for_service_call(
-    hass: HomeAssistant, call: ServiceCall
-) -> SystemType:
-    """Get the SimpliSafe system related to a service call (by device ID)."""
-    device_id = call.data[ATTR_DEVICE_ID]
-    device_registry = dr.async_get(hass)
 
-    if (
-        alarm_control_panel_device_entry := device_registry.async_get(device_id)
-    ) is None:
-        raise vol.Invalid("Invalid device ID specified")
-
-    assert alarm_control_panel_device_entry.via_device_id
-
-    if (
-        base_station_device_entry := device_registry.async_get(
-            alarm_control_panel_device_entry.via_device_id
-        )
-    ) is None:
-        raise ValueError("No base station registered for alarm control panel")
-
-    [system_id_str] = [
-        identity[1]
-        for identity in base_station_device_entry.identifiers
-        if identity[0] == DOMAIN
-    ]
-    system_id = int(system_id_str)
-
-    entry: SimpliSafeConfigEntry | None
-    for entry_id in base_station_device_entry.config_entries:
-        if (
-            (entry := hass.config_entries.async_get_entry(entry_id)) is None
-            or entry.domain != DOMAIN
-            or entry.state is not ConfigEntryState.LOADED
-        ):
-            continue
-        return entry.runtime_data.systems[system_id]
-
-    raise ValueError(f"No system for device ID: {device_id}")
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the integration."""
+    async_setup_services(hass)
+    return True
 
 
 @callback
@@ -295,7 +160,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
-    _verify_domain_control = verify_domain_control(DOMAIN)
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -318,64 +182,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
     entry.runtime_data = simplisafe
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    @callback
-    def extract_system(
-        func: Callable[[ServiceCall, SystemType], Coroutine[Any, Any, None]],
-    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
-        """Define a decorator to get the correct system for a service call."""
-
-        async def wrapper(call: ServiceCall) -> None:
-            """Wrap the service function."""
-            system = _async_get_system_for_service_call(hass, call)
-
-            try:
-                await func(call, system)
-            except SimplipyError as err:
-                raise HomeAssistantError(
-                    f'Error while executing "{call.service}": {err}'
-                ) from err
-
-        return wrapper
-
-    @_verify_domain_control
-    @extract_system
-    async def async_remove_pin(call: ServiceCall, system: SystemType) -> None:
-        """Remove a PIN."""
-        await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
-
-    @_verify_domain_control
-    @extract_system
-    async def async_set_pin(call: ServiceCall, system: SystemType) -> None:
-        """Set a PIN."""
-        await system.async_set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
-
-    @_verify_domain_control
-    @extract_system
-    async def async_set_system_properties(
-        call: ServiceCall, system: SystemType
-    ) -> None:
-        """Set one or more system parameters."""
-        if not isinstance(system, SystemV3):
-            raise HomeAssistantError("Can only set system properties on V3 systems")
-
-        await system.async_set_properties(
-            {prop: value for prop, value in call.data.items() if prop != ATTR_DEVICE_ID}
-        )
-
-    for service, method, schema in (
-        (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
-        (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
-        (
-            SERVICE_NAME_SET_SYSTEM_PROPERTIES,
-            async_set_system_properties,
-            SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
-        ),
-    ):
-        if hass.services.has_service(DOMAIN, service):
-            continue
-        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-        async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
     current_options = {**entry.options}
 
@@ -403,15 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
     """Unload a SimpliSafe config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        # If this is the last loaded instance of SimpliSafe, deregister any services
-        # defined during integration setup:
-        for service_name in SERVICES:
-            hass.services.async_remove(DOMAIN, service_name)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class SimpliSafe:

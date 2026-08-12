@@ -49,6 +49,32 @@
       "camera_sd": {
         "name": "Live view SD"
       }
+    },
+    "switch": {
+      "ab_alarm_sound": {
+        "name": "Abnormal sound alarm"
+      },
+      "audio_encode_control": {
+        "name": "Audio recording"
+      },
+      "close_camera": {
+        "name": "Privacy mode"
+      },
+      "header_detect": {
+        "name": "Human detection"
+      },
+      "light": {
+        "name": "Indicator light"
+      },
+      "motion_detect": {
+        "name": "Motion detection"
+      },
+      "switch": {
+        "name": "Plug switch"
+      },
+      "white_light": {
+        "name": "White light"
+      }
     }
   },
   "selector": {

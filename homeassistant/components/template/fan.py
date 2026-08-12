@@ -1,8 +1,9 @@
 """Support for Template fans."""
 
+from dataclasses import asdict, dataclass
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Self, override
 
 import voluptuous as vol
 
@@ -22,6 +23,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as template_validators
@@ -155,12 +157,56 @@ def async_create_preview_fan(
     )
 
 
-class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
+@dataclass(kw_only=True)
+class FanExtraStoredData(ExtraStoredData):
+    """Fan extra stored data."""
+
+    is_on: bool | None
+    percentage: int | None
+    preset_mode: str | None
+    oscillating: bool | None
+    direction: str | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the fan data."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored fan data from a dict."""
+        is_on = restored.get("is_on")
+        percentage = restored.get("percentage")
+        preset_mode = restored.get("preset_mode")
+        oscillating = restored.get("oscillating")
+        direction = restored.get("direction")
+        if is_on is not None and not isinstance(is_on, bool):
+            return None
+        if percentage is not None and not isinstance(percentage, int):
+            return None
+        if preset_mode is not None and not isinstance(preset_mode, str):
+            return None
+        if oscillating is not None and not isinstance(oscillating, bool):
+            return None
+        if direction is not None and not isinstance(direction, str):
+            return None
+        return cls(
+            is_on=is_on,
+            percentage=percentage,
+            preset_mode=preset_mode,
+            oscillating=oscillating,
+            direction=direction,
+        )
+
+
+class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     """Representation of a template fan features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
+    _restore_state_extra_data = FanExtraStoredData
+    _restore_state_properties = ("_attr_is_on",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -343,6 +389,27 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 self.entity_id,
                 ", ".join(_VALID_DIRECTIONS),
             )
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> FanExtraStoredData:
+        """Return extra state data to be restored."""
+        return FanExtraStoredData(
+            is_on=self._attr_is_on,
+            percentage=self._attr_percentage,
+            preset_mode=self._attr_preset_mode,
+            oscillating=self._attr_oscillating,
+            direction=self._attr_current_direction,
+        )
+
+    @override
+    def restore_extra_data(self, extra_data: FanExtraStoredData) -> None:
+        """Restore extra state data."""
+        self._attr_is_on = extra_data.is_on
+        self._attr_percentage = extra_data.percentage
+        self._attr_preset_mode = extra_data.preset_mode
+        self._attr_oscillating = extra_data.oscillating
+        self._attr_current_direction = extra_data.direction
 
 
 class StateFanEntity(TemplateEntity, AbstractTemplateFan):

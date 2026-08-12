@@ -45,7 +45,7 @@
 # name: test_all_entities[select.backyard_backyard_party_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Backyard Party mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backyard Party mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
@@ -106,7 +106,7 @@
 # name: test_all_entities[select.bedroom_bedroom_party_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Party mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Party mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
@@ -167,7 +167,7 @@
 # name: test_all_entities[select.kitchen_party_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Party mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Party mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
@@ -228,7 +228,7 @@
 # name: test_all_entities[select.living_room_living_room_party_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Party mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Party mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',

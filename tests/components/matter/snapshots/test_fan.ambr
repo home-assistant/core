@@ -46,7 +46,7 @@
 # name: test_fans[longan_link_thermostat][fan.longan_link_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link HVAC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link HVAC',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -56,7 +56,7 @@
         'high',
         'auto',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.longan_link_hvac',
@@ -116,7 +116,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <FanEntityStateAttribute.DIRECTION: 'direction'>: 'forward',
-      'friendly_name': 'Mock Air Purifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Air Purifier',
       <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: False,
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 10.0,
@@ -129,7 +129,7 @@
         'natural_wind',
         'sleep_wind',
       ]),
-      'supported_features': <FanEntityFeature: 63>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 63>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.mock_air_purifier',
@@ -185,7 +185,7 @@
 # name: test_fans[mock_extractor_hood][fan.mock_extractor_hood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extractor hood',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Extractor hood',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -194,7 +194,7 @@
         'medium',
         'high',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.mock_extractor_hood',
@@ -253,7 +253,7 @@
 # name: test_fans[mock_fan][fan.mocked_fan_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mocked Fan Switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mocked Fan Switch',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -265,7 +265,7 @@
         'natural_wind',
         'sleep_wind',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.mocked_fan_switch',
@@ -323,7 +323,7 @@
 # name: test_fans[mock_room_airconditioner][fan.room_airconditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Room AirConditioner',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room AirConditioner',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -334,7 +334,7 @@
         'auto',
         'sleep_wind',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.room_airconditioner',
@@ -394,7 +394,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <FanEntityStateAttribute.DIRECTION: 'direction'>: 'forward',
-      'friendly_name': 'SL_Fan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SL_Fan',
       <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: False,
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 30,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 10.0,
@@ -407,7 +407,7 @@
         'natural_wind',
         'sleep_wind',
       ]),
-      'supported_features': <FanEntityFeature: 63>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 63>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.sl_fan',
@@ -463,7 +463,7 @@
 # name: test_fans[silabs_range_hood][fan.sl_rangehood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SL-RangeHood',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SL-RangeHood',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -472,7 +472,7 @@
         'medium',
         'high',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.sl_rangehood',

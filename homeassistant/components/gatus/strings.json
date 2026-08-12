@@ -1,0 +1,28 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "Please enter a valid absolute URL (e.g., http://192.168.1.50:8080)",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The full base URL of your Gatus status page instance including protocol and port."
+        },
+        "description": "Enter the network details for your Gatus status page instance. Make sure to include the protocol (e.g., `http://` or `https://`) and the port number if you are not using a standard port."
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error communicating with Gatus API"
+    }
+  }
+}

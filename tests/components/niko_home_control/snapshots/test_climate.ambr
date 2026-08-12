@@ -56,7 +56,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 180,
-      'friendly_name': 'thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'thermostat',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
@@ -73,7 +73,7 @@
         'prog2',
         'prog3',
       ]),
-      'supported_features': <ClimateEntityFeature: 145>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 145>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 200,
     }),
     'context': <ANY>,

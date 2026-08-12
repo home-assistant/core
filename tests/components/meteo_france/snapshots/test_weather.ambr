@@ -39,13 +39,13 @@
 # name: test_weather[weather.meteo_france_forecast_for_city_la_clusaz_la_clusaz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz',
       <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 75,
       <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 988.7,
       <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
-      'supported_features': <WeatherEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 3>,
       <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 9.1,
       <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
       <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,

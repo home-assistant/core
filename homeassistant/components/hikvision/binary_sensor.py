@@ -252,17 +252,29 @@ async def async_setup_entry(
                 sensor_type,
             )
 
-    async_add_entities(
-        HikvisionBinarySensor(
-            entry=entry,
-            description=BINARY_SENSOR_DESCRIPTIONS[sensor_type],
-            sensor_type=sensor_type,
-            channel=channel_info[1],
-        )
-        for sensor_type, channel_list in sensors.items()
-        if sensor_type in BINARY_SENSOR_DESCRIPTIONS
-        for channel_info in channel_list
-    )
+    entities: list[HikvisionBinarySensor] = []
+    for sensor_type, channel_list in sensors.items():
+        if sensor_type not in BINARY_SENSOR_DESCRIPTIONS:
+            continue
+        # pyhik can report the same channel more than once for a sensor type
+        # (e.g. when a channel has several notification methods enabled), so
+        # deduplicate on the channel to avoid colliding unique IDs.
+        seen_channels: set[int] = set()
+        for channel_info in channel_list:
+            channel = channel_info[1]
+            if channel in seen_channels:
+                continue
+            seen_channels.add(channel)
+            entities.append(
+                HikvisionBinarySensor(
+                    entry=entry,
+                    description=BINARY_SENSOR_DESCRIPTIONS[sensor_type],
+                    sensor_type=sensor_type,
+                    channel=channel,
+                )
+            )
+
+    async_add_entities(entities)
 
 
 class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):

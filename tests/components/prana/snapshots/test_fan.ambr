@@ -44,7 +44,7 @@
 # name: test_fans[fan.prana_recuperator_extract_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Extract fan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Extract fan',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 10,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 10.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -52,7 +52,7 @@
         'night',
         'boost',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.prana_recuperator_extract_fan',
@@ -107,7 +107,7 @@
 # name: test_fans[fan.prana_recuperator_supply_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Supply fan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Supply fan',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 10,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 10.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -115,7 +115,7 @@
         'night',
         'boost',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.prana_recuperator_supply_fan',

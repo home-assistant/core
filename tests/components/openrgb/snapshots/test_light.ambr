@@ -66,12 +66,12 @@
         'chase',
         'random_flicker',
       ]),
-      'friendly_name': 'ENE DRAM',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ENE DRAM',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         0.0,
         100.0,
       ),
-      'icon': 'mdi:memory',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:memory',
       <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         0,
@@ -80,7 +80,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': <LightEntityFeature: 4>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.701,
         0.299,

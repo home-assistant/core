@@ -2,12 +2,12 @@
 # name: test_number_entities
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Tailwind iQ3 Status LED brightness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tailwind iQ3 Status LED brightness',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.tailwind_iq3_status_led_brightness',

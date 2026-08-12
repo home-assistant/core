@@ -80,6 +80,7 @@ class NetgearRouterEntity(Entity):
             manufacturer="Netgear",
             name=router.device_name,
             model=router.model,
+            serial_number=router.serial_number,
             sw_version=router.firmware_version,
             hw_version=router.hardware_version,
             configuration_url=configuration_url,

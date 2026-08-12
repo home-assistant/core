@@ -39,8 +39,8 @@
 # name: test_sensors[sensor.buro_heat_control_1_valve_opening-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Büro heat control 1 valve opening',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Büro heat control 1 valve opening',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.buro_heat_control_1_valve_opening',

@@ -52,7 +52,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'model0 Heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Heating',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
@@ -65,7 +65,7 @@
         'home',
         'sleep',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
       'vicare_programs': list([
@@ -139,7 +139,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'model0 Heating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Heating',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       ]),
@@ -152,7 +152,7 @@
         'home',
         'sleep',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
       'vicare_programs': list([

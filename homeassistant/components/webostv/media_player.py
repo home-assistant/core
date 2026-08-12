@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -155,7 +155,8 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         ):
             self._supported_features = (
                 state.attributes.get(
-                    ATTR_SUPPORTED_FEATURES, MediaPlayerEntityFeature(0)
+                    EntityStateAttribute.SUPPORTED_FEATURES,
+                    MediaPlayerEntityFeature(0),
                 )
                 & ~MediaPlayerEntityFeature.TURN_ON
             )

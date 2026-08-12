@@ -11,6 +11,10 @@ from homeassistant.components.imou.const import (
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
+    PARAM_HEADER_DETECT,
+    PARAM_LIGHT,
+    PARAM_MOTION_DETECT,
+    PARAM_PLUG_SWITCH,
     PARAM_STATE,
     PARAM_STATUS,
 )
@@ -32,6 +36,14 @@ CONFIG_ENTRY_DATA = {
 }
 
 UNKNOWN_BUTTON_KEY = "legacy_unknown_button"
+UNKNOWN_SWITCH_KEY = "legacy_unknown_switch"
+
+DEFAULT_SWITCHES = {
+    PARAM_MOTION_DETECT: {PARAM_STATE: False},
+    PARAM_HEADER_DETECT: {PARAM_STATE: True},
+    PARAM_LIGHT: {PARAM_STATE: False},
+    PARAM_PLUG_SWITCH: {PARAM_STATE: True},
+}
 
 
 def create_online_device(

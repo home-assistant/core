@@ -44,11 +44,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      'friendly_name': 'Bedroom kid 1 LED ButtonOn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom kid 1 LED ButtonOn',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 8>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 8>,
     }),
     'context': <ANY>,
     'entity_id': 'light.bedroom_kid_1_led_buttonon',
@@ -104,11 +104,11 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      'friendly_name': 'Dimmer full name Dimmer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer full name Dimmer',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
     'entity_id': 'light.dimmer_full_name_dimmer',

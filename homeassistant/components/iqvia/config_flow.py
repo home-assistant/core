@@ -1,4 +1,4 @@
-"""Config flow to configure the IQVIA component."""
+"""Config flow to configure the IQVIA integration."""
 
 from typing import Any, override
 

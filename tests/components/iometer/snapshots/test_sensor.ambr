@@ -41,10 +41,10 @@
 # name: test_all_sensors[sensor.iometer_1isk0000000000_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'IOmeter-1ISK0000000000 Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.iometer_1isk0000000000_battery_level',
@@ -99,10 +99,10 @@
 # name: test_all_sensors[sensor.iometer_1isk0000000000_consumption_tariff_t1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'IOmeter-1ISK0000000000 Consumption Tariff T1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Consumption Tariff T1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.iometer_1isk0000000000_consumption_tariff_t1',
@@ -157,10 +157,10 @@
 # name: test_all_sensors[sensor.iometer_1isk0000000000_consumption_tariff_t2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'IOmeter-1ISK0000000000 Consumption Tariff T2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Consumption Tariff T2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.iometer_1isk0000000000_consumption_tariff_t2',
@@ -210,8 +210,8 @@
 # name: test_all_sensors[sensor.iometer_1isk0000000000_meter_number-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'IOmeter-1ISK0000000000 Meter number',
-      'icon': 'mdi:meter-electric',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Meter number',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:meter-electric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.iometer_1isk0000000000_meter_number',
@@ -268,8 +268,8 @@
 # name: test_all_sensors[sensor.iometer_1isk0000000000_pin_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'IOmeter-1ISK0000000000 PIN status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 PIN status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'entered',
         'pending',
@@ -330,10 +330,10 @@
 # name: test_all_sensors[sensor.iometer_1isk0000000000_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'IOmeter-1ISK0000000000 Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.iometer_1isk0000000000_power',
@@ -389,8 +389,8 @@
 # name: test_all_sensors[sensor.iometer_1isk0000000000_power_supply-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'IOmeter-1ISK0000000000 Power supply',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Power supply',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'battery',
         'wired',
@@ -447,10 +447,10 @@
 # name: test_all_sensors[sensor.iometer_1isk0000000000_signal_strength_core_bridge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'IOmeter-1ISK0000000000 Signal strength Core/Bridge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Signal strength Core/Bridge',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.iometer_1isk0000000000_signal_strength_core_bridge',
@@ -502,10 +502,10 @@
 # name: test_all_sensors[sensor.iometer_1isk0000000000_signal_strength_wi_fi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'IOmeter-1ISK0000000000 Signal strength Wi-Fi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Signal strength Wi-Fi',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.iometer_1isk0000000000_signal_strength_wi_fi',
@@ -560,10 +560,10 @@
 # name: test_all_sensors[sensor.iometer_1isk0000000000_total_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'IOmeter-1ISK0000000000 Total consumption',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Total consumption',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.iometer_1isk0000000000_total_consumption',
@@ -618,10 +618,10 @@
 # name: test_all_sensors[sensor.iometer_1isk0000000000_total_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'IOmeter-1ISK0000000000 Total production',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IOmeter-1ISK0000000000 Total production',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.iometer_1isk0000000000_total_production',

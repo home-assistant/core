@@ -1,9 +1,13 @@
 """Tests for the Duco integration setup."""
 
+from datetime import timedelta
 from unittest.mock import ANY, AsyncMock, patch
 
 from duco_connectivity import (
     BoardInfo,
+    ConfigNode,
+    ConfigNodeOverview,
+    ConfigValueString,
     DiagComponent,
     DucoConnectionError,
     DucoError,
@@ -12,16 +16,42 @@ from duco_connectivity import (
     Node,
     NodeListActionItemList,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import TEST_HOST, TEST_MAC, UNSUPPORTED_BOARD_INFOS
+from .conftest import (
+    TEST_HOST,
+    TEST_MAC,
+    UNSUPPORTED_BOARD_INFOS,
+    node_configs_from_nodes,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+def _get_duco_node_device(device_registry: dr.DeviceRegistry) -> dr.DeviceEntry:
+    """Return the primary Duco node device used in setup tests."""
+    device = device_registry.async_get_device(identifiers={("duco", f"{TEST_MAC}_1")})
+    assert device is not None
+    return device
+
+
+def _node_configs_with_primary_name(
+    mock_nodes: list[Node],
+    primary_name: str,
+) -> ConfigNodeOverview:
+    """Return node configs with a custom name for the primary Duco node."""
+    return ConfigNodeOverview(
+        nodes=[
+            ConfigNode(node_id=1, name=ConfigValueString(primary_name)),
+            *node_configs_from_nodes(mock_nodes[1:]).nodes,
+        ]
+    )
 
 
 @pytest.mark.parametrize(
@@ -126,6 +156,27 @@ async def test_setup_entry_ignores_lan_info_failures(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_entry_ignores_node_name_config_failures(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setup falls back to API node names when node config fetch fails."""
+    mock_duco_client.async_get_node_configs.side_effect = DucoError("node config error")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    device = _get_duco_node_device(device_registry)
+    assert device.name == mock_nodes[0].general.name
+    assert mock_duco_client.async_get_node_configs.call_count == 1
 
 
 @pytest.mark.parametrize("unsupported_board_info", UNSUPPORTED_BOARD_INFOS)
@@ -243,3 +294,62 @@ async def test_setup_entry_creates_http_client(
         session=ANY,
         host=TEST_HOST,
     )
+
+
+async def test_setup_entry_uses_configured_node_name(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setup uses the configurable Duco node name."""
+    mock_duco_client.async_get_node_configs.return_value = (
+        _node_configs_with_primary_name(mock_nodes, "Kitchen")
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = _get_duco_node_device(device_registry)
+    assert device.name == "Kitchen"
+    assert mock_duco_client.async_get_node_configs.call_count == 1
+
+
+async def test_node_name_refresh_updates_device_registry_name(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test Duco node names update on reload, not during periodic polling."""
+    mock_duco_client.async_get_node_configs.side_effect = [
+        _node_configs_with_primary_name(mock_nodes, "Kitchen"),
+        _node_configs_with_primary_name(mock_nodes, "Living Room"),
+    ]
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = _get_duco_node_device(device_registry)
+    assert device.name == "Kitchen"
+    assert mock_duco_client.async_get_node_configs.call_count == 1
+
+    freezer.tick(timedelta(days=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = _get_duco_node_device(device_registry)
+    assert device.name == "Kitchen"
+    assert mock_duco_client.async_get_node_configs.call_count == 1
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = _get_duco_node_device(device_registry)
+    assert device.name == "Living Room"
+    assert mock_duco_client.async_get_node_configs.call_count == 2

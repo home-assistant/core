@@ -1,0 +1,7 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'device_type': 'generic_24_key',
+    'infrared_entity_id': 'infrared.test_ir_emitter',
+  })
+# ---

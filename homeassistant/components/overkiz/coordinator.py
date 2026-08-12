@@ -76,7 +76,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
-        self.executions: dict[str, dict[str, str]] = {}
+        self.executions: dict[str, list[dict[str, str]]] = {}
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
 
@@ -228,7 +228,7 @@ async def on_execution_registered(
 ) -> None:
     """Handle execution registered event."""
     if event.exec_id not in coordinator.executions:
-        coordinator.executions[event.exec_id] = {}
+        coordinator.executions[event.exec_id] = []
 
     if not coordinator.is_stateless:
         coordinator.update_interval = timedelta(seconds=1)

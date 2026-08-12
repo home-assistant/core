@@ -41,11 +41,11 @@
 # name: test_sensors[sensor.raven_device_energy_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'RAVEn Device Energy price',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RAVEn Device Energy price',
       'rate_label': 'Set by user',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'tier': 3,
-      'unit_of_measurement': 'USD/kWh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.raven_device_energy_price',
@@ -100,10 +100,10 @@
 # name: test_sensors[sensor.raven_device_power_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'RAVEn Device Power demand',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RAVEn Device Power demand',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.raven_device_power_demand',
@@ -156,9 +156,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'channel': 13,
-      'friendly_name': 'RAVEn Device Signal strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RAVEn Device Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.raven_device_signal_strength',
@@ -213,10 +213,10 @@
 # name: test_sensors[sensor.raven_device_total_energy_delivered-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'RAVEn Device Total energy delivered',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RAVEn Device Total energy delivered',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.raven_device_total_energy_delivered',
@@ -271,10 +271,10 @@
 # name: test_sensors[sensor.raven_device_total_energy_received-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'RAVEn Device Total energy received',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RAVEn Device Total energy received',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.raven_device_total_energy_received',

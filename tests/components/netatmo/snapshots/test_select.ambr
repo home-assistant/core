@@ -44,8 +44,8 @@
 # name: test_entity[select.myhome-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'MYHOME',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MYHOME',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
         'Winter',

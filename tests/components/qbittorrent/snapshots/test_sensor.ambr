@@ -39,8 +39,8 @@
 # name: test_entities[sensor.mock_title_active_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Active torrents',
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Active torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_active_torrents',
@@ -98,10 +98,10 @@
 # name: test_entities[sensor.mock_title_all_time_download-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Mock Title All-time download',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title All-time download',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.TEBIBYTES: 'TiB'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.TEBIBYTES: 'TiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_all_time_download',
@@ -159,10 +159,10 @@
 # name: test_entities[sensor.mock_title_all_time_upload-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Mock Title All-time upload',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title All-time upload',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'TiB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'TiB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_all_time_upload',
@@ -212,8 +212,8 @@
 # name: test_entities[sensor.mock_title_all_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title All torrents',
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title All torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_all_torrents',
@@ -269,8 +269,8 @@
 # name: test_entities[sensor.mock_title_connection_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Title Connection status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Connection status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'connected',
         'firewalled',
@@ -333,10 +333,10 @@
 # name: test_entities[sensor.mock_title_download_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Mock Title Download speed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Download speed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_download_speed',
@@ -394,10 +394,10 @@
 # name: test_entities[sensor.mock_title_download_speed_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Mock Title Download speed limit',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Download speed limit',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_download_speed_limit',
@@ -447,8 +447,8 @@
 # name: test_entities[sensor.mock_title_errored_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Errored torrents',
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Errored torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_errored_torrents',
@@ -500,7 +500,7 @@
 # name: test_entities[sensor.mock_title_global_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Global ratio',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Global ratio',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -551,8 +551,8 @@
 # name: test_entities[sensor.mock_title_inactive_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Inactive torrents',
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Inactive torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_inactive_torrents',
@@ -602,8 +602,8 @@
 # name: test_entities[sensor.mock_title_paused_torrents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Paused torrents',
-      'unit_of_measurement': 'torrents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Paused torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_paused_torrents',
@@ -660,8 +660,8 @@
 # name: test_entities[sensor.mock_title_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Title Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
         'up_down',
@@ -725,10 +725,10 @@
 # name: test_entities[sensor.mock_title_upload_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Mock Title Upload speed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Upload speed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_upload_speed',
@@ -786,10 +786,10 @@
 # name: test_entities[sensor.mock_title_upload_speed_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Mock Title Upload speed limit',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Upload speed limit',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_upload_speed_limit',

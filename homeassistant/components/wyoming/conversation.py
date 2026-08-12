@@ -93,7 +93,7 @@ class WyomingConversationEntity(
                 )
 
         self._supported_languages = list(model_languages)
-        self._attr_unique_id = f"{config_entry.entry_id}-conversation"
+        self._attr_unique_id = f"{config_entry.entry_id}-conversation"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     @override

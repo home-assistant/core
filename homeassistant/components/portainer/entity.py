@@ -19,6 +19,7 @@ from .coordinator import (
     PortainerStackData,
     PortainerVolumeData,
 )
+from .util import sanitize_container_name
 
 
 class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
@@ -95,7 +96,7 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         # According to Docker's API docs, the first name is unique
         names = self._device_info.container.names
         assert names, "Container names list unexpectedly empty"
-        self.device_name = names[0].replace("/", " ").strip()
+        self.device_name = sanitize_container_name(names[0])
 
         self._attr_device_info = DeviceInfo(
             identifiers={

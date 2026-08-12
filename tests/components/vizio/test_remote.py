@@ -110,6 +110,12 @@ async def test_turn_on_off(
         ("BACK", "BACK"),
         ("ch_up", "CH_UP"),
         ("SMARTCAST", "SMARTCAST"),
+        # Aliases
+        ("closed_captions", "CC_TOGGLE"),
+        ("channel_up", "CH_UP"),
+        ("enter", "OK"),
+        ("volume_down", "VOL_DOWN"),
+        ("VoLuMe_DoWn", "VOL_DOWN"),
     ],
 )
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -160,9 +166,13 @@ async def test_send_command_tv_invalid(
 @pytest.mark.parametrize(
     ("command", "expected_key"),
     [
+        # Native keys (one lowercase variant tested)
         ("MUTE_TOGGLE", "MUTE_TOGGLE"),
         ("pause", "PAUSE"),
         ("VOL_UP", "VOL_UP"),
+        # Aliases (only those whose target is a speaker key)
+        ("mute", "MUTE_TOGGLE"),
+        ("volume_down", "VOL_DOWN"),
     ],
 )
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -189,7 +199,17 @@ async def test_send_command_speaker_valid(
         mock_remote.assert_called_once_with(expected_key, log_api_exception=False)
 
 
-@pytest.mark.parametrize("command", ["MENU", "CH_UP", "INVALID_KEY"])
+@pytest.mark.parametrize(
+    "command",
+    [
+        "MENU",
+        "CH_UP",
+        # TV-only alias
+        "channel_up",
+        # Completely invalid
+        "INVALID_KEY",
+    ],
+)
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
 async def test_send_command_speaker_invalid(
     hass: HomeAssistant,

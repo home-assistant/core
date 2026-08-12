@@ -57,6 +57,7 @@ FIXTURES = [
     "mock_dimmable_plugin_unit",
     "mock_door_lock",
     "mock_door_lock_with_unbolt",
+    "mock_doorbell",
     "mock_extractor_hood",
     "mock_fan",
     "mock_flow_sensor",

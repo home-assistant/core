@@ -51,7 +51,7 @@
         'failed',
         'in_progress',
       ]),
-      'friendly_name': 'Backup Automatic backup',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backup Automatic backup',
     }),
     'context': <ANY>,
     'entity_id': 'event.backup_automatic_backup',

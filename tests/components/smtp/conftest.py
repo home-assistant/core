@@ -51,11 +51,13 @@ def mock_smtp() -> Generator[MagicMock]:
 
     with (
         patch(
-            "homeassistant.components.smtp.helpers.smtplib.SMTP", autospec=True
+            "homeassistant.components.smtp.config_flow.SMTP_SSL", autospec=True
         ) as mock_client,
+        patch("homeassistant.components.smtp.helpers.smtplib.SMTP", new=mock_client),
         patch("homeassistant.components.smtp.config_flow.SMTP", new=mock_client),
     ):
         client = mock_client.return_value
+        client.cls = mock_client
         yield client
 
 
@@ -70,17 +72,6 @@ def mock_make_msgid() -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="smtp_ssl")
-def mock_smtp_ssl() -> Generator[MagicMock]:
-    """Mock SMTP."""
-
-    with patch(
-        "homeassistant.components.smtp.config_flow.SMTP_SSL", autospec=True
-    ) as mock_client:
-        client = mock_client.return_value
-        yield client
-
-
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
     """Mock smtp configuration entry."""
@@ -89,7 +80,7 @@ def mock_config_entry() -> MockConfigEntry:
         title="Home Assistant",
         data=USER_INPUT,
         options={
-            CONF_TIMEOUT: 5,
+            CONF_TIMEOUT: 1312,
         },
         entry_id="123456789",
         subentries_data=[

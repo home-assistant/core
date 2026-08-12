@@ -60,7 +60,9 @@
           "sector_2": "Sector 2",
           "sector_3": "Sector 3",
           "sector_4": "Sector 4",
-          "success": "Success"
+          "sector_5": "Sector 5",
+          "sector_6": "Sector 6",
+          "sector_7": "Sector 7"
         }
       },
       "sector_timer": {

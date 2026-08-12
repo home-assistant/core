@@ -3,6 +3,19 @@
     "sensor": {
       "account": {
         "default": "mdi:steam"
+      },
+      "last_online": {
+        "default": "mdi:account-clock"
+      },
+      "level": {
+        "default": "mdi:trophy-award"
+      },
+      "now_playing": {
+        "default": "mdi:controller",
+        "state": {
+          "unavailable": "mdi:controller-off",
+          "unknown": "mdi:controller-off"
+        }
       }
     }
   }

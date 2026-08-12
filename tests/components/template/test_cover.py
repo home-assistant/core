@@ -35,6 +35,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_action,
@@ -42,6 +43,8 @@ from .conftest import (
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import MockConfigEntry
@@ -49,6 +52,7 @@ from tests.typing import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_POSITION_ENTITY_ID = "sensor.test_position"
+TEST_TILT_POSITION_ENTITY_ID = "sensor.test_tilt_position"
 TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_COVER = TemplatePlatformSetup(
@@ -57,6 +61,7 @@ TEST_COVER = TemplatePlatformSetup(
     make_test_trigger(
         TEST_STATE_ENTITY_ID,
         TEST_POSITION_ENTITY_ID,
+        TEST_TILT_POSITION_ENTITY_ID,
         TEST_AVAILABILITY_ENTITY,
     ),
 )
@@ -1102,3 +1107,167 @@ async def test_flow_preview(
     )
 
     assert state["state"] == CoverState.OPEN
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "position": "{{ states('sensor.test_position') | float(None) }}",
+            "set_cover_position": [],
+            "tilt": "{{ states('sensor.test_tilt_position') | float(None) }}",
+            "set_cover_tilt_position": [],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+        "final_state",
+    ),
+    [
+        (
+            CoverState.OPEN,
+            {
+                "current_cover_position": 10,
+                "current_cover_tilt_position": 10,
+                "is_opening": False,
+                "is_closing": False,
+            },
+            CoverState.OPEN,
+            {
+                "current_position": 10,
+                "current_tilt_position": 10,
+            },
+            CoverState.OPEN,
+        ),
+        (
+            CoverState.OPEN,
+            {
+                "current_cover_position": 10,
+                "current_cover_tilt_position": 10,
+                "is_opening": True,
+                "is_closing": False,
+            },
+            CoverState.OPENING,
+            {
+                "current_position": 10,
+                "current_tilt_position": 10,
+            },
+            CoverState.OPENING,
+        ),
+        (
+            CoverState.OPEN,
+            {
+                "current_cover_position": 10,
+                "current_cover_tilt_position": 10,
+                "is_opening": False,
+                "is_closing": True,
+            },
+            CoverState.CLOSING,
+            {
+                "current_position": 10,
+                "current_tilt_position": 10,
+            },
+            CoverState.CLOSING,
+        ),
+        (
+            CoverState.OPEN,
+            {
+                "current_cover_position": 0,
+                "current_cover_tilt_position": 10,
+                "is_opening": False,
+                "is_closing": False,
+            },
+            CoverState.CLOSED,
+            {
+                "current_position": 0,
+                "current_tilt_position": 10,
+            },
+            CoverState.OPEN,
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "current_cover_position": 0,
+                "current_cover_tilt_position": 10,
+                "is_opening": False,
+                "is_closing": False,
+            },
+            STATE_UNKNOWN,
+            {
+                "current_position": None,
+                "current_tilt_position": None,
+            },
+            CoverState.OPEN,
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "current_cover_position": 0,
+                "current_cover_tilt_position": 10,
+                "is_opening": False,
+                "is_closing": False,
+            },
+            STATE_UNKNOWN,
+            {
+                "current_position": None,
+                "current_tilt_position": None,
+            },
+            CoverState.OPEN,
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    config: ConfigType,
+    style: ConfigurationStyle,
+    saved_state: CoverState | str,
+    saved_extra_data: dict | None,
+    initial_state: CoverState | str,
+    initial_attributes: ConfigType,
+    final_state: CoverState | str,
+) -> None:
+    """Test restoring trigger template weather."""
+
+    restored_attributes = {  # These should be ignored
+        "current_position": 5,
+        "current_tilt_position": 5,
+    }
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_COVER,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+        saved_attributes=restored_attributes,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_COVER,
+        style,
+        config,
+        "states('sensor.test_position') | float(0) > 50",
+    )
+
+    state = assert_state_and_attributes(
+        hass,
+        TEST_COVER,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(hass, "sensor.test_position", "75")
+    await async_trigger(hass, "sensor.test_tilt_position", "75")
+
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.state == final_state
+    assert state.attributes["current_position"] == 75
+    assert state.attributes["current_tilt_position"] == 75

@@ -44,7 +44,7 @@
 # name: test_numbers[number][number.clou_duo_fan_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Clou Duo Fan speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Clou Duo Fan speed',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -103,7 +103,7 @@
 # name: test_numbers[number][number.clou_duo_power_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Clou Duo Power level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Clou Duo Power level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,

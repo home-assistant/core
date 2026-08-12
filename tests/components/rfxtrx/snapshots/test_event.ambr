@@ -17,7 +17,7 @@
 # name: test_control_event[1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'off',
@@ -29,7 +29,7 @@
         'chime',
         'illegal_command',
       ]),
-      'friendly_name': 'ARC C1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ARC C1',
     }),
     'context': <ANY>,
     'entity_id': 'event.arc_c1',
@@ -42,7 +42,7 @@
 # name: test_control_event[2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'off',
@@ -54,7 +54,7 @@
         'chime',
         'illegal_command',
       ]),
-      'friendly_name': 'ARC D1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ARC D1',
     }),
     'context': <ANY>,
     'entity_id': 'event.arc_d1',
@@ -80,7 +80,7 @@
 # name: test_status_event[1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'normal',
@@ -112,7 +112,7 @@
         'motion_tamper',
         'no_motion_tamper',
       ]),
-      'friendly_name': 'X10 Security d3dc54:32',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X10 Security d3dc54:32',
     }),
     'context': <ANY>,
     'entity_id': 'event.x10_security_d3dc54_32',

@@ -11,7 +11,7 @@ from typing import Any, TypedDict, cast, override
 from xml.etree.ElementTree import ParseError
 
 from fritzconnection import FritzConnection
-from fritzconnection.core.exceptions import FritzActionError
+from fritzconnection.core.exceptions import FritzActionError, FritzConnectionException
 from fritzconnection.lib.fritzcall import FritzCall
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -215,6 +215,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             use_tls=self.use_tls,
             timeout=60.0,
             pool_maxsize=30,
+            redact_debug_log=True,
         )
 
         if not self.connection:
@@ -245,7 +246,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             {
                 **vars(info),
                 "NewDeviceLog": "***omitted***",
+                "device_log": "***omitted***",
                 "NewSerialNumber": "***omitted***",
+                "serial_number": "***omitted***",
             },
         )
 
@@ -267,9 +270,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         ) = self._update_device_info()
 
         if self.fritz_status.has_wan_support:
-            self.device_conn_type = (
-                self.fritz_status.get_default_connection_service().connection_service
-            )
+            self.device_conn_type = self.fritz_status.connection_service
             self.device_is_router = self.fritz_status.has_wan_enabled
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
@@ -682,7 +683,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     async def async_trigger_reconnect(self) -> None:
         """Trigger device reconnect."""
-        await self.hass.async_add_executor_job(self.connection.reconnect)
+        try:
+            await self.hass.async_add_executor_job(
+                self.connection.call_action,
+                f"{self.device_conn_type}1",
+                "ForceTermination",
+            )
+        except FritzConnectionException as ex:
+            # ignore UPnPError:
+            # errorCode: 707
+            # errorDescription: DisconnectInProgress
+            if "disconnectinprogress" not in str(ex).lower():
+                raise
 
     async def async_trigger_set_guest_password(
         self, password: str | None, length: int

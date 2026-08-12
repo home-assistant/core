@@ -188,7 +188,9 @@ class StateVacuumEntity(
 
     entity_description: StateVacuumEntityDescription
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_FAN_SPEED_LIST})
+    _entity_component_unrecorded_attributes = frozenset(
+        {VacuumEntityCapabilityAttribute.FAN_SPEED_LIST}
+    )
 
     _attr_battery_icon: str
     _attr_battery_level: int | None = None

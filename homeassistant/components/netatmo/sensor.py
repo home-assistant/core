@@ -17,15 +17,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    PERCENTAGE,
     EntityCategory,
+    EntityStateAttribute,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -54,7 +52,7 @@ from .const import (
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
 )
-from .data_handler import (
+from .coordinator import (
     HOME,
     PUBLIC,
     NetatmoConfigEntry,
@@ -71,6 +69,9 @@ from .entity import (
 from .helper import NetatmoArea
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
+
 
 DIRECTION_OPTIONS = [
     "n",
@@ -163,7 +164,7 @@ NETATMO_WEATHER_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]]
     NetatmoSensorEntityDescription(
         key="co2",
         netatmo_name="co2",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CO2,
     ),
@@ -190,7 +191,7 @@ NETATMO_WEATHER_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]]
     NetatmoSensorEntityDescription(
         key="humidity",
         netatmo_name="humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
@@ -221,7 +222,7 @@ NETATMO_WEATHER_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]]
         key="battery_percent",
         netatmo_name="battery",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
     ),
@@ -336,7 +337,7 @@ PUBLIC_WEATHER_STATION_TYPES: tuple[
     ),
     NetatmoPublicWeatherSensorEntityDescription(
         key="humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
         value_fn=lambda area: area.get_latest_humidities(),
@@ -408,7 +409,7 @@ NETATMO_CLIMATE_BATTERY_SENSOR_DESCRIPTIONS: Final[
         key="battery",
         netatmo_name="battery",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
     )
@@ -419,7 +420,7 @@ NETATMO_OPENING_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]]
         key="battery",
         netatmo_name="battery",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         is_sticky=True,
@@ -937,8 +938,8 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
 
         self._attr_extra_state_attributes.update(
             {
-                ATTR_LATITUDE: (area.lat_ne + area.lat_sw) / 2,
-                ATTR_LONGITUDE: (area.lon_ne + area.lon_sw) / 2,
+                EntityStateAttribute.LATITUDE: (area.lat_ne + area.lat_sw) / 2,
+                EntityStateAttribute.LONGITUDE: (area.lon_ne + area.lon_sw) / 2,
             }
         )
         self._attr_device_info = DeviceInfo(

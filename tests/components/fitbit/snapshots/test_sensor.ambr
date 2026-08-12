@@ -3,11 +3,11 @@
   tuple(
     '99',
     ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Water',
-      'icon': 'mdi:cup-water',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Water',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cup-water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.MILLILITERS: 'mL'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.MILLILITERS: 'mL'>,
     }),
   )
 # ---
@@ -15,11 +15,11 @@
   tuple(
     '1600',
     ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Calories in',
-      'icon': 'mdi:food-apple',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Calories in',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:food-apple',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'cal',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cal',
     }),
   )
 # ---
@@ -27,11 +27,11 @@
   tuple(
     '99',
     ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Water',
-      'icon': 'mdi:cup-water',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Water',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cup-water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.FLUID_OUNCES: 'fl. oz.'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.FLUID_OUNCES: 'fl. oz.'>,
     }),
   )
 # ---
@@ -39,11 +39,11 @@
   tuple(
     '1600',
     ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Calories in',
-      'icon': 'mdi:food-apple',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Calories in',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:food-apple',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'cal',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cal',
     }),
   )
 # ---
@@ -89,11 +89,11 @@
 # name: test_sensors[sensor.first_l_activity_calories-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Activity calories',
-      'icon': 'mdi:fire',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Activity calories',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'cal',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cal',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_activity_calories',
@@ -145,11 +145,11 @@
 # name: test_sensors[sensor.first_l_awakenings_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Awakenings count',
-      'icon': 'mdi:sleep',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Awakenings count',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sleep',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'times awaken',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'times awaken',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_awakenings_count',
@@ -201,11 +201,11 @@
 # name: test_sensors[sensor.first_l_bmi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. BMI',
-      'icon': 'mdi:human',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. BMI',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'BMI',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BMI',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_bmi',
@@ -257,11 +257,11 @@
 # name: test_sensors[sensor.first_l_body_fat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Body fat',
-      'icon': 'mdi:human',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Body fat',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_body_fat',
@@ -313,11 +313,11 @@
 # name: test_sensors[sensor.first_l_calories-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Calories',
-      'icon': 'mdi:fire',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Calories',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'cal',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cal',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_calories',
@@ -369,11 +369,11 @@
 # name: test_sensors[sensor.first_l_calories_bmr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Calories BMR',
-      'icon': 'mdi:fire',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Calories BMR',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'cal',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cal',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_calories_bmr',
@@ -425,11 +425,11 @@
 # name: test_sensors[sensor.first_l_calories_in-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Calories in',
-      'icon': 'mdi:food-apple',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Calories in',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:food-apple',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'cal',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cal',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_calories_in',
@@ -484,12 +484,12 @@
 # name: test_sensors[sensor.first_l_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'distance',
-      'friendly_name': 'First L. Distance',
-      'icon': 'mdi:map-marker',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Distance',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:map-marker',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_distance',
@@ -544,12 +544,12 @@
 # name: test_sensors[sensor.first_l_elevation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'distance',
-      'friendly_name': 'First L. Elevation',
-      'icon': 'mdi:walk',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Elevation',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:walk',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.METERS: 'm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_elevation',
@@ -601,11 +601,11 @@
 # name: test_sensors[sensor.first_l_floors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Floors',
-      'icon': 'mdi:walk',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Floors',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:walk',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'floors',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'floors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_floors',
@@ -660,12 +660,12 @@
 # name: test_sensors[sensor.first_l_minutes_after_wakeup-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Minutes after wakeup',
-      'icon': 'mdi:sleep',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Minutes after wakeup',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sleep',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_minutes_after_wakeup',
@@ -720,12 +720,12 @@
 # name: test_sensors[sensor.first_l_minutes_fairly_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Minutes fairly active',
-      'icon': 'mdi:walk',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Minutes fairly active',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:walk',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_minutes_fairly_active',
@@ -780,12 +780,12 @@
 # name: test_sensors[sensor.first_l_minutes_lightly_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Minutes lightly active',
-      'icon': 'mdi:walk',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Minutes lightly active',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:walk',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_minutes_lightly_active',
@@ -840,12 +840,12 @@
 # name: test_sensors[sensor.first_l_minutes_sedentary-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Minutes sedentary',
-      'icon': 'mdi:seat-recline-normal',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Minutes sedentary',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:seat-recline-normal',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_minutes_sedentary',
@@ -900,12 +900,12 @@
 # name: test_sensors[sensor.first_l_minutes_very_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Minutes very active',
-      'icon': 'mdi:run',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Minutes very active',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:run',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_minutes_very_active',
@@ -957,11 +957,11 @@
 # name: test_sensors[sensor.first_l_resting_heart_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Resting heart rate',
-      'icon': 'mdi:heart-pulse',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Resting heart rate',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:heart-pulse',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'bpm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bpm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_resting_heart_rate',
@@ -1013,11 +1013,11 @@
 # name: test_sensors[sensor.first_l_sleep_efficiency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Sleep efficiency',
-      'icon': 'mdi:sleep',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Sleep efficiency',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sleep',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_sleep_efficiency',
@@ -1072,12 +1072,12 @@
 # name: test_sensors[sensor.first_l_sleep_minutes_asleep-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Sleep minutes asleep',
-      'icon': 'mdi:sleep',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Sleep minutes asleep',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sleep',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_sleep_minutes_asleep',
@@ -1132,12 +1132,12 @@
 # name: test_sensors[sensor.first_l_sleep_minutes_awake-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Sleep minutes awake',
-      'icon': 'mdi:sleep',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Sleep minutes awake',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sleep',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_sleep_minutes_awake',
@@ -1192,12 +1192,12 @@
 # name: test_sensors[sensor.first_l_sleep_minutes_to_fall_asleep-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Sleep minutes to fall asleep',
-      'icon': 'mdi:sleep',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Sleep minutes to fall asleep',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sleep',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_sleep_minutes_to_fall_asleep',
@@ -1247,9 +1247,9 @@
 # name: test_sensors[sensor.first_l_sleep_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Sleep start time',
-      'icon': 'mdi:clock',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Sleep start time',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:clock',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_sleep_start_time',
@@ -1304,12 +1304,12 @@
 # name: test_sensors[sensor.first_l_sleep_time_in_bed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Sleep time in bed',
-      'icon': 'mdi:bed',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Sleep time in bed',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_sleep_time_in_bed',
@@ -1361,11 +1361,11 @@
 # name: test_sensors[sensor.first_l_steps-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Steps',
-      'icon': 'mdi:walk',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Steps',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:walk',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'steps',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'steps',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_steps',
@@ -1417,11 +1417,11 @@
 # name: test_sensors[sensor.first_l_tracker_activity_calories-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. tracker Activity calories',
-      'icon': 'mdi:fire',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. tracker Activity calories',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'cal',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cal',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_tracker_activity_calories',
@@ -1473,11 +1473,11 @@
 # name: test_sensors[sensor.first_l_tracker_calories-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. tracker Calories',
-      'icon': 'mdi:fire',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. tracker Calories',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'cal',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cal',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_tracker_calories',
@@ -1532,12 +1532,12 @@
 # name: test_sensors[sensor.first_l_tracker_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'distance',
-      'friendly_name': 'First L. tracker Distance',
-      'icon': 'mdi:map-marker',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. tracker Distance',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:map-marker',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_tracker_distance',
@@ -1592,12 +1592,12 @@
 # name: test_sensors[sensor.first_l_tracker_elevation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'distance',
-      'friendly_name': 'First L. tracker Elevation',
-      'icon': 'mdi:walk',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. tracker Elevation',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:walk',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.METERS: 'm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_tracker_elevation',
@@ -1649,11 +1649,11 @@
 # name: test_sensors[sensor.first_l_tracker_floors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. tracker Floors',
-      'icon': 'mdi:walk',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. tracker Floors',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:walk',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'floors',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'floors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_tracker_floors',
@@ -1708,12 +1708,12 @@
 # name: test_sensors[sensor.first_l_tracker_minutes_fairly_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. tracker Minutes fairly active',
-      'icon': 'mdi:walk',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. tracker Minutes fairly active',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:walk',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_tracker_minutes_fairly_active',
@@ -1768,12 +1768,12 @@
 # name: test_sensors[sensor.first_l_tracker_minutes_lightly_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. tracker Minutes lightly active',
-      'icon': 'mdi:walk',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. tracker Minutes lightly active',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:walk',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_tracker_minutes_lightly_active',
@@ -1828,12 +1828,12 @@
 # name: test_sensors[sensor.first_l_tracker_minutes_sedentary-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. tracker Minutes sedentary',
-      'icon': 'mdi:seat-recline-normal',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. tracker Minutes sedentary',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:seat-recline-normal',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_tracker_minutes_sedentary',
@@ -1888,12 +1888,12 @@
 # name: test_sensors[sensor.first_l_tracker_minutes_very_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. tracker Minutes very active',
-      'icon': 'mdi:run',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. tracker Minutes very active',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:run',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_tracker_minutes_very_active',
@@ -1945,11 +1945,11 @@
 # name: test_sensors[sensor.first_l_tracker_steps-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. tracker Steps',
-      'icon': 'mdi:walk',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. tracker Steps',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:walk',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'steps',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'steps',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_tracker_steps',
@@ -2001,11 +2001,11 @@
 # name: test_sensors[sensor.first_l_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Water',
-      'icon': 'mdi:cup-water',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Water',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cup-water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.MILLILITERS: 'mL'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.MILLILITERS: 'mL'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_water',
@@ -2060,12 +2060,12 @@
 # name: test_sensors[sensor.first_l_weight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'weight',
-      'friendly_name': 'First L. Weight',
-      'icon': 'mdi:human',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Fitbit.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'weight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First L. Weight',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfMass.KILOGRAMS: 'kg'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.first_l_weight',

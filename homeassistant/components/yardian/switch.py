@@ -79,6 +79,6 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.controller.stop_irrigation()
+        await self.coordinator.controller.stop_zone(self._zone_id)
         await asyncio.sleep(SWITCH_REFRESH_DELAY)
         await self.coordinator.async_request_refresh()

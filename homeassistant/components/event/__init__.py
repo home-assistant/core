@@ -52,7 +52,9 @@ __all__ = [
     "DoorbellEventType",
     "EventDeviceClass",
     "EventEntity",
+    "EventEntityCapabilityAttribute",
     "EventEntityDescription",
+    "EventEntityStateAttribute",
 ]
 
 # mypy: disallow-any-generics

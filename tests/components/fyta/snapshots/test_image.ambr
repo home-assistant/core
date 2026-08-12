@@ -40,8 +40,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
-      'entity_picture': '/api/image_proxy/image.gummibaum_plant_image?token=1',
-      'friendly_name': 'Gummibaum Plant image',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gummibaum_plant_image?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Plant image',
     }),
     'context': <ANY>,
     'entity_id': 'image.gummibaum_plant_image',
@@ -92,8 +92,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
-      'entity_picture': '/api/image_proxy/image.gummibaum_user_image?token=1',
-      'friendly_name': 'Gummibaum User image',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gummibaum_user_image?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum User image',
     }),
     'context': <ANY>,
     'entity_id': 'image.gummibaum_user_image',
@@ -144,8 +144,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
-      'entity_picture': '/api/image_proxy/image.kakaobaum_plant_image?token=1',
-      'friendly_name': 'Kakaobaum Plant image',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.kakaobaum_plant_image?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Plant image',
     }),
     'context': <ANY>,
     'entity_id': 'image.kakaobaum_plant_image',
@@ -196,8 +196,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
-      'entity_picture': '/api/image_proxy/image.kakaobaum_user_image?token=1',
-      'friendly_name': 'Kakaobaum User image',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.kakaobaum_user_image?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum User image',
     }),
     'context': <ANY>,
     'entity_id': 'image.kakaobaum_user_image',

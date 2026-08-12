@@ -24,6 +24,7 @@ from .coordinator import LiebherrConfigEntry, LiebherrCoordinator, LiebherrData
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
+    Platform.COVER,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
@@ -44,11 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
     try:
         devices = await client.get_devices()
     except LiebherrAuthenticationError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryAuthFailed("Invalid API key") from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_api_key",
+        ) from err
     except LiebherrConnectionError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryNotReady(f"Failed to connect to Liebherr API: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     # Create a coordinator for each device (may be empty if no devices)
     data = LiebherrData(client=client)

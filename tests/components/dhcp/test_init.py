@@ -616,6 +616,46 @@ async def test_setup_and_stop(hass: HomeAssistant) -> None:
     resolve_iface_call.assert_called_once()
 
 
+async def test_discovered_service_info(hass: HomeAssistant) -> None:
+    """Test getting the discovered DHCP devices from the cache."""
+    saved_callback: Callable[[aiodhcpwatcher.DHCPRequest], None] | None = None
+
+    async def mock_start(
+        callback: Callable[[aiodhcpwatcher.DHCPRequest], None],
+        if_indexes: list[int] | None = None,
+    ) -> None:
+        """Mock start."""
+        nonlocal saved_callback
+        saved_callback = callback
+
+    with (
+        patch("homeassistant.components.dhcp.aiodhcpwatcher.async_start", mock_start),
+        patch("homeassistant.components.dhcp.DiscoverHosts"),
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert dhcp.async_discovered_service_info(hass) == []
+
+    saved_callback(aiodhcpwatcher.DHCPRequest("4.3.2.2", "happy", "44:44:33:11:23:12"))
+    saved_callback(aiodhcpwatcher.DHCPRequest("4.3.2.1", "Sad", "44:44:33:11:23:13"))
+
+    assert dhcp.async_discovered_service_info(hass) == [
+        DhcpServiceInfo(
+            ip="4.3.2.2",
+            hostname="happy",
+            macaddress="444433112312",
+        ),
+        DhcpServiceInfo(
+            ip="4.3.2.1",
+            hostname="sad",
+            macaddress="444433112313",
+        ),
+    ]
+
+
 async def test_setup_fails_as_root(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

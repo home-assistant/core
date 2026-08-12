@@ -219,6 +219,10 @@
           "description": "A unique key for this post. If specified then subsequent posts with the same key will be ignored by your Mastodon instance. Mastodon holds keys for up to one hour (default: no idempotency key, which allows duplication).",
           "name": "Idempotency key"
         },
+        "in_reply_to": {
+          "description": "The ID of the status to reply to. Setting this makes the new post a reply, allowing you to create or continue a thread.",
+          "name": "In reply to"
+        },
         "language": {
           "description": "The language of the post (default: Mastodon account preference).",
           "name": "Language"
@@ -238,6 +242,10 @@
         "quote_approval_policy": {
           "description": "Who can quote this post (default: account setting).\nIgnored if visibility is private or direct.",
           "name": "Who can quote"
+        },
+        "quoted_status": {
+          "description": "The ID of the status to quote in this post.",
+          "name": "Quote"
         },
         "status": {
           "description": "The status to post.",

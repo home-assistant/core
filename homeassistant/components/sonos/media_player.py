@@ -17,6 +17,7 @@ from soco.core import (
 from soco.data_structures import DidlFavorite, DidlMusicTrack
 from soco.exceptions import SoCoException
 from soco.ms_data_structures import MusicServiceItem
+from sonos_websocket import CLIP_ID_KEY
 from sonos_websocket.exception import SonosWebsocketError
 
 from homeassistant.components import media_source, spotify
@@ -528,8 +529,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 )
             _LOGGER.debug("Playing %s using websocket audioclip", media_id)
             try:
+                self.speaker.last_announce_id = None
                 assert self.speaker.websocket
-                response, _ = await self.speaker.websocket.play_clip(
+                response, data = await self.speaker.websocket.play_clip(
                     async_process_play_media_url(self.hass, media_id),
                     volume=volume,
                 )
@@ -538,6 +540,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     f"Error when calling Sonos websocket: {exc}"
                 ) from exc
             if response.get("success"):
+                if data:
+                    self.speaker.last_announce_id = data.get(CLIP_ID_KEY)
                 return
             if response.get("type") in ANNOUNCE_NOT_SUPPORTED_ERRORS:
                 # If the speaker does not support announce do not raise and

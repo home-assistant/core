@@ -538,6 +538,53 @@ async def test_cover_service_actions(
     )
 
 
+async def test_merged_action_groups_keep_per_device_tracking(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that covers sharing a merged execution each keep their movement state.
+
+    The action queue can merge concurrent action groups into one execution and
+    return the same exec_id to every caller. Both covers must therefore report
+    OPENING, and both must clear once that execution completes.
+    """
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    # Both action groups merge into one execution sharing a single exec_id.
+    mock_client.execute_action_group.side_effect = None
+    mock_client.execute_action_group.return_value = "merged-exec"
+
+    for device in (SHUTTER, GARAGE):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: device.entity_id},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.OPENING
+    assert hass.states.get(GARAGE.entity_id).state == CoverState.OPENING
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="merged-exec",
+                new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
+            )
+        ],
+    )
+
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
+    assert hass.states.get(GARAGE.entity_id).state == CoverState.CLOSED
+
+
 @pytest.mark.parametrize(
     "exception",
     [

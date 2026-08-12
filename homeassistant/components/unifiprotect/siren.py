@@ -4,7 +4,7 @@ from datetime import datetime
 import logging
 from typing import Any, override
 
-from uiprotect.data import Siren, SirenDuration
+from uiprotect.data import PublicDeviceModel, Siren, SirenDuration
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
@@ -67,7 +67,7 @@ class ProtectSiren(SirenEntity):
         """Initialise the siren entity."""
         self.data = data
         self._siren_id = siren.id
-        self._attr_unique_id = f"{siren.mac}_siren"
+        self._attr_unique_id = f"{siren.mac}_siren"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         nvr = data.api.bootstrap.nvr
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, siren.mac)},
@@ -95,45 +95,46 @@ class ProtectSiren(SirenEntity):
         self._attr_is_on = siren.is_active
 
     @callback
-    def _async_updated(self, siren: Siren) -> None:
-        """Handle a public devices WS update for this siren."""
+    def _async_updated(self, _obj: PublicDeviceModel | None) -> None:
+        """Handle a public devices WS update for this siren.
+
+        The state is always re-read from the public bootstrap: the library
+        merges WS updates into it before dispatching, and ``None`` carries no
+        object to read.
+        """
         # Cancel any previous auto-off timer before scheduling a new one.
         self._cancel_off_timer()
 
         prev_state = (self._attr_available, self._attr_is_on)
 
-        # If the siren is no longer in the public bootstrap (delete event),
-        # mark it unavailable and off, then bail out.
-        if self._siren is None:
+        if (siren := self._siren) is None:
+            # Gone from the bootstrap (delete event): mark unavailable and off.
             self._attr_available = False
             self._attr_is_on = False
-            if (self._attr_available, self._attr_is_on) != prev_state:
-                self.async_write_ha_state()
-            return
+        else:
+            self._update_from_siren(siren)
 
-        self._update_from_siren(siren)
-
-        # The server never emits a WS message when a timed run expires, so we
-        # must schedule our own callback.  Both activated_at and duration are
-        # in milliseconds in the WS payload.
-        status = siren.siren_status
-        if (
-            status.is_active
-            and status.activated_at is not None
-            and status.duration is not None
-        ):
-            delay = (
-                status.activated_at + status.duration
-            ) / 1000 - dt_util.utcnow().timestamp()
-            if delay <= 0:
-                # Already expired (e.g. stale bootstrap after a reconnect):
-                # override the is_active=True from the payload immediately so
-                # we never briefly write ON into the state machine.
-                self._attr_is_on = False
-            else:
-                self._cancel_scheduled_off = async_call_later(
-                    self.hass, delay, self._async_scheduled_off
-                )
+            # The server never emits a WS message when a timed run expires, so
+            # we must schedule our own callback.  Both activated_at and
+            # duration are in milliseconds in the WS payload.
+            status = siren.siren_status
+            if (
+                status.is_active
+                and status.activated_at is not None
+                and status.duration is not None
+            ):
+                delay = (
+                    status.activated_at + status.duration
+                ) / 1000 - dt_util.utcnow().timestamp()
+                if delay <= 0:
+                    # Already expired (e.g. stale bootstrap after a reconnect):
+                    # override the is_active=True from the payload immediately
+                    # so we never briefly write ON into the state machine.
+                    self._attr_is_on = False
+                else:
+                    self._cancel_scheduled_off = async_call_later(
+                        self.hass, delay, self._async_scheduled_off
+                    )
 
         if (self._attr_available, self._attr_is_on) != prev_state:
             self.async_write_ha_state()
@@ -150,13 +151,14 @@ class ProtectSiren(SirenEntity):
         """Subscribe to public WS updates dispatched by ProtectData."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.data.async_subscribe_siren(self._siren_mac, self._async_updated)
+            self.data.async_subscribe_public(self._siren_mac, self._async_updated)
         )
         self.async_on_remove(self._cancel_off_timer)
-        # Schedule the auto-off timer for any already-active timed run so
+        # Refresh from the bootstrap: a WS update or delete that landed between
+        # entity construction and this subscription would otherwise be missed,
+        # and an already-active timed run needs its auto-off timer scheduled so
         # a siren that was running when HA started does not remain stuck ON.
-        if (siren := self._siren) is not None:
-            self._async_updated(siren)
+        self._async_updated(None)
 
     @callback
     def _cancel_off_timer(self) -> None:

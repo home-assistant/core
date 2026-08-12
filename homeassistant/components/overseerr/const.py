@@ -9,9 +9,14 @@ LOGGER = logging.getLogger(__package__)
 
 REQUESTS = "requests"
 
+ATTR_MEDIA_TYPE = "media_type"
+ATTR_QUERY = "query"
+ATTR_REQUESTED_BY = "requested_by"
+ATTR_SEASONS = "seasons"
 ATTR_STATUS = "status"
 ATTR_SORT_ORDER = "sort_order"
-ATTR_REQUESTED_BY = "requested_by"
+ATTR_MEDIA_ID = "media_id"
+
 
 EVENT_KEY = f"{DOMAIN}_event"
 
