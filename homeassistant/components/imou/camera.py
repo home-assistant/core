@@ -12,11 +12,11 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import PARAM_HEADER_DETECT, imou_device_identifier
+from .const import DOMAIN, PARAM_HEADER_DETECT, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
@@ -68,14 +68,7 @@ async def async_setup_entry(
             for description in CAMERA_TYPES
         )
 
-    coordinator.new_device_callbacks.append(_add_cameras)
-
-    @callback
-    def _remove_new_device_callback() -> None:
-        if _add_cameras in coordinator.new_device_callbacks:
-            coordinator.new_device_callbacks.remove(_add_cameras)
-
-    entry.async_on_unload(_remove_new_device_callback)
+    entry.async_on_unload(coordinator.register_new_device_callback(_add_cameras))
     _add_cameras(coordinator.devices)
 
 
@@ -105,7 +98,11 @@ class ImouCamera(ImouEntity, Camera):
                 PYIMOUAPI_LIVE_PROTOCOL,
             )
         except ImouException as err:
-            raise HomeAssistantError(str(err)) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="get_stream_failed",
+                translation_placeholders={"error": err.message},
+            ) from err
 
     @override
     async def async_camera_image(
@@ -118,7 +115,11 @@ class ImouCamera(ImouEntity, Camera):
                 PYIMOUAPI_SNAPSHOT_WAIT_SECONDS,
             )
         except ImouException as err:
-            raise HomeAssistantError(str(err)) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="get_image_failed",
+                translation_placeholders={"error": err.message},
+            ) from err
 
     @property
     @override

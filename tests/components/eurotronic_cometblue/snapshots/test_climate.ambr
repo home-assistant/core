@@ -74,7 +74,7 @@
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 20.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.comet_blue_aa_bb_cc_dd_ee_ff',

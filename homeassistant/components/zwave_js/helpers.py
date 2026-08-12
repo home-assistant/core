@@ -326,6 +326,19 @@ def async_get_node_from_device_id(
     return driver.controller.nodes[node_id]
 
 
+@callback
+def async_get_config_entry_from_node(
+    hass: HomeAssistant, node: ZwaveNode
+) -> ZwaveJSConfigEntry:
+    """Get the config entry from a Z-Wave JS node."""
+    return next(
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state is ConfigEntryState.LOADED
+        and entry.runtime_data.client is node.client
+    )
+
+
 async def async_get_provisioning_entry_from_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ProvisioningEntry | None:
