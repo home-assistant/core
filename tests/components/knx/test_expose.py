@@ -53,9 +53,14 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", False)
 
-
+@pytest.mark.parametrize(
+    "core_state",
+    [CoreState.not_running, CoreState.starting],
+)
 async def test_binary_expose_does_not_send_initial_state_during_startup(
-    hass: HomeAssistant, knx: KNXTestKit
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    core_state: CoreState,
 ) -> None:
     """Test an initial state during startup is not exposed to KNX."""
     entity_id = "binary_sensor.fake"
@@ -69,7 +74,7 @@ async def test_binary_expose_does_not_send_initial_state_during_startup(
         },
     )
 
-    hass.set_state(CoreState.starting)
+    hass.set_state(core_state)
 
     # Restored/initial state during startup initializes the expose value only.
     hass.states.async_set(entity_id, "on", {})
