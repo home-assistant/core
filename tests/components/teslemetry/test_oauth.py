@@ -1,5 +1,11 @@
 """Test the Teslemetry OAuth client registration helper."""
 
+import asyncio
+from typing import Any
+
+from aiohttp import ClientConnectionError
+import pytest
+
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
@@ -10,7 +16,10 @@ from homeassistant.components.teslemetry.const import (
     SOFTWARE_ID,
     TOKEN_URL,
 )
-from homeassistant.components.teslemetry.oauth import async_ensure_client_credential
+from homeassistant.components.teslemetry.oauth import (
+    TeslemetryRegistrationError,
+    async_ensure_client_credential,
+)
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -63,6 +72,50 @@ async def test_reuses_existing_client(
         call for call in aioclient_mock.mock_calls if str(call[1]) == REGISTER_URL
     ]
     assert not register_calls
+
+
+async def test_concurrent_registration_registers_single_client(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test two concurrent recoveries register exactly one client."""
+    assert await async_setup_component(hass, "application_credentials", {})
+
+    await asyncio.gather(
+        async_ensure_client_credential(hass),
+        async_ensure_client_credential(hass),
+    )
+
+    register_calls = [
+        call for call in aioclient_mock.mock_calls if str(call[1]) == REGISTER_URL
+    ]
+    assert len(register_calls) == 1
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    assert implementations[DOMAIN].client_id == DCR_CLIENT_ID
+
+
+@pytest.mark.parametrize(
+    "register_kwargs",
+    [
+        pytest.param({"exc": ClientConnectionError()}, id="connection_error"),
+        pytest.param({"exc": TimeoutError()}, id="timeout"),
+        pytest.param({"json": {}}, id="missing_client_id"),
+        pytest.param({"text": "not-json"}, id="malformed_response"),
+    ],
+)
+async def test_registration_failure_raises_typed_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    register_kwargs: dict[str, Any],
+) -> None:
+    """Test transport, timeout, and malformed responses raise a typed error."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(REGISTER_URL, **register_kwargs)
+
+    with pytest.raises(TeslemetryRegistrationError):
+        await async_ensure_client_credential(hass)
 
 
 async def test_refresh_token_sends_software_metadata(

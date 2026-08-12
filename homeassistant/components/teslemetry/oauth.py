@@ -1,6 +1,9 @@
 """Provide oauth implementations for the Teslemetry integration."""
 
-from typing import Any, override
+import asyncio
+from typing import Any, Final, override
+
+from aiohttp import ClientError
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -12,6 +15,17 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import AUTHORIZE_URL, DOMAIN, REGISTER_URL, SOFTWARE_ID, TOKEN_URL
+
+REGISTRATION_LOCK: Final = f"{DOMAIN}_registration_lock"
+
+
+class TeslemetryRegistrationError(Exception):
+    """Raised when dynamic client registration cannot be completed.
+
+    Internal control-flow signal: always caught and converted into a deferred
+    startup retry or an in-place ``cannot_connect`` config-flow step, so it is
+    never surfaced to the user directly.
+    """
 
 
 class TeslemetryImplementation(
@@ -86,27 +100,48 @@ async def async_ensure_client_credential(hass: HomeAssistant) -> None:
     imported as the application credential used for every future
     authorization, including reauthentication, so the server can recognize
     repeat authorizations as the same client instead of minting a new one.
+
+    Registration is serialized with a per-installation lock and re-checked
+    inside it so two concurrent flows recovering from a setup-time failure
+    cannot register and persist different clients under the same auth key.
     """
-    implementations = await config_entry_oauth2_flow.async_get_implementations(
-        hass, DOMAIN
-    )
-    if DOMAIN in implementations:
-        return
+    lock: asyncio.Lock = hass.data.setdefault(REGISTRATION_LOCK, asyncio.Lock())
+    async with lock:
+        implementations = await config_entry_oauth2_flow.async_get_implementations(
+            hass, DOMAIN
+        )
+        if DOMAIN in implementations:
+            return
 
-    session = async_get_clientsession(hass)
-    response = await session.post(
-        REGISTER_URL,
-        json={
-            "client_name": "Home Assistant",
-            "software_id": SOFTWARE_ID,
-            "software_version": __version__,
-        },
-    )
-    response.raise_for_status()
-    registration = await response.json()
+        session = async_get_clientsession(hass)
+        try:
+            response = await session.post(
+                REGISTER_URL,
+                json={
+                    "client_name": "Home Assistant",
+                    "software_id": SOFTWARE_ID,
+                    "software_version": __version__,
+                },
+            )
+            response.raise_for_status()
+            registration = await response.json()
+        except (ClientError, TimeoutError) as err:
+            raise TeslemetryRegistrationError(
+                "Could not reach Teslemetry to register a client"
+            ) from err
+        except ValueError as err:
+            raise TeslemetryRegistrationError(
+                "Teslemetry returned a malformed registration response"
+            ) from err
 
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(registration["client_id"], "", name="Teslemetry"),
-    )
+        client_id = registration.get("client_id") if registration else None
+        if not client_id or not isinstance(client_id, str):
+            raise TeslemetryRegistrationError(
+                "Teslemetry registration response did not contain a client_id"
+            )
+
+        await async_import_client_credential(
+            hass,
+            DOMAIN,
+            ClientCredential(client_id, "", name="Teslemetry"),
+        )

@@ -54,7 +54,7 @@ from .coordinator import (
 )
 from .helpers import async_update_device_sw_version, flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
-from .oauth import async_ensure_client_credential
+from .oauth import TeslemetryRegistrationError, async_ensure_client_credential
 from .services import async_setup_services
 
 PLATFORMS: Final = [
@@ -88,7 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ):
         try:
             await async_ensure_client_credential(hass)
-        except ClientError as err:
+        except TeslemetryRegistrationError as err:
             # Registration is retried when the user starts the config flow, so a
             # transient failure here must not block integration setup.
             LOGGER.debug("Deferring Teslemetry client registration: %s", err)
@@ -567,12 +567,6 @@ async def async_migrate_entry(
         access_token = config_entry.data[CONF_ACCESS_TOKEN]
         session = async_get_clientsession(hass)
 
-        # The migrate grant only accepts the legacy static client_id, so that
-        # client must back auth_implementation, not a dynamically registered one.
-        await async_import_client_credential(
-            hass, DOMAIN, ClientCredential(CLIENT_ID, "", name="Teslemetry")
-        )
-
         # Convert legacy access token to OAuth tokens using migrate endpoint
         try:
             data = await Teslemetry(session, access_token).migrate_to_oauth(
@@ -583,6 +577,14 @@ async def async_migrate_entry(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed_migration",
             ) from e
+
+        # The migrate grant only accepts the legacy static client_id, so that
+        # client must back auth_implementation, not a dynamically registered
+        # one. Import it only after migration succeeds, otherwise a failed
+        # migration would leave a stale credential that permanently skips DCR.
+        await async_import_client_credential(
+            hass, DOMAIN, ClientCredential(CLIENT_ID, "", name="Teslemetry")
+        )
 
         # Add auth_implementation for OAuth2 flow compatibility
         data["auth_implementation"] = DOMAIN

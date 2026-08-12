@@ -108,11 +108,39 @@ async def test_oauth_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_registration_failure_aborts(
+@pytest.mark.parametrize(
+    "register_kwargs",
+    [
+        pytest.param({"exc": ClientConnectionError()}, id="connection_error"),
+        pytest.param({"exc": TimeoutError()}, id="timeout"),
+        pytest.param({"json": {}}, id="missing_client_id"),
+        pytest.param({"text": "not-json"}, id="malformed_response"),
+    ],
+)
+async def test_registration_failure_shows_retry_form(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    register_kwargs: dict[str, Any],
+) -> None:
+    """Test transport, timeout, and malformed responses show a retryable form."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(REGISTER_URL, **register_kwargs)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_registration_failure_recovers(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test the flow aborts gracefully when dynamic client registration fails."""
+    """Test the flow recovers when registration succeeds on retry."""
     aioclient_mock.clear_requests()
     aioclient_mock.post(REGISTER_URL, exc=ClientConnectionError())
 
@@ -120,8 +148,20 @@ async def test_registration_failure_aborts(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "oauth_error"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(REGISTER_URL, json={"client_id": DCR_CLIENT_ID})
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    assert implementations[DOMAIN].client_id == DCR_CLIENT_ID
 
 
 @pytest.mark.usefixtures("current_request_with_host")

@@ -32,7 +32,10 @@ from homeassistant.components.teslemetry.coordinator import (
     VEHICLE_INTERVAL,
 )
 from homeassistant.components.teslemetry.models import TeslemetryData
-from homeassistant.components.teslemetry.oauth import TeslemetryImplementation
+from homeassistant.components.teslemetry.oauth import (
+    TeslemetryImplementation,
+    async_ensure_client_credential,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     STATE_OFF,
@@ -55,6 +58,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from . import mock_config_entry, setup_platform
 from .const import (
     CONFIG_V1,
+    DCR_CLIENT_ID,
     ENERGY_HISTORY,
     LIVE_STATUS,
     METADATA,
@@ -464,6 +468,48 @@ async def test_migrate_from_version_1_token_endpoint_error(hass: HomeAssistant) 
     assert entry is not None
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.version == 1  # Version should remain unchanged on migration failure
+
+
+async def test_failed_migration_then_fresh_flow_registers_client(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """A failed migration must not leave a stale credential that skips DCR."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id=UNIQUE_ID,
+        data=CONFIG_V1,
+    )
+
+    with patch(
+        "homeassistant.components.teslemetry.Teslemetry.migrate_to_oauth",
+        new_callable=AsyncMock,
+    ) as mock_migrate:
+        mock_migrate.side_effect = ClientResponseError(
+            request_info=MagicMock(), history=(), status=400
+        )
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # The failed migration must not have imported the legacy credential.
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    assert DOMAIN not in implementations
+
+    # Removing the failed entry and starting fresh must perform DCR.
+    await hass.config_entries.async_remove(mock_entry.entry_id)
+    await async_ensure_client_credential(hass)
+
+    register_calls = [
+        call for call in aioclient_mock.mock_calls if str(call[1]) == REGISTER_URL
+    ]
+    assert len(register_calls) == 1
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    assert implementations[DOMAIN].client_id == DCR_CLIENT_ID
 
 
 async def test_migrate_version_2_no_migration_needed(hass: HomeAssistant) -> None:
