@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 ATTR_CURRENT_VERSION = "current_version"
 ATTR_LAST_RESTART = "last_restart"
 ATTR_LOCAL_IP = "local_ip"
