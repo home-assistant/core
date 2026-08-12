@@ -104,7 +104,7 @@ async def test_abort_if_exists(
 ) -> None:
     """Test aborting the flow if the entry already exists."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -121,7 +121,7 @@ async def test_dont_abort_if_exists_when_vias_differs(
 ) -> None:
     """Test aborting the flow if the entry already exists."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={

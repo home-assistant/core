@@ -64,7 +64,7 @@ async def test_options_flow_disabled_not_setup(
 @pytest.mark.usefixtures("macos_adapter")
 async def test_async_step_user_macos(hass: HomeAssistant) -> None:
     """Test setting up manually with one adapter on MacOS."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={},
@@ -89,7 +89,7 @@ async def test_async_step_user_macos(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("one_adapter")
 async def test_async_step_user_linux_one_adapter(hass: HomeAssistant) -> None:
     """Test setting up manually with one adapter on Linux."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={},
@@ -120,7 +120,7 @@ async def test_async_step_user_linux_crashed_adapter(
     hass: HomeAssistant, crashed_adapter: None
 ) -> None:
     """Test setting up manually with one crashed adapter on Linux."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={},
@@ -132,7 +132,7 @@ async def test_async_step_user_linux_crashed_adapter(
 @pytest.mark.usefixtures("two_adapters")
 async def test_async_step_user_linux_two_adapters(hass: HomeAssistant) -> None:
     """Test setting up manually with two adapters on Linux."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={},
@@ -163,7 +163,7 @@ async def test_async_step_user_only_allows_one(hass: HomeAssistant) -> None:
     """Test setting up manually with an existing entry."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=DEFAULT_ADDRESS)
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={},
@@ -556,7 +556,7 @@ async def test_async_step_user_linux_adapter_replace_ignored(
         source=config_entries.SOURCE_IGNORE,
     )
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={},

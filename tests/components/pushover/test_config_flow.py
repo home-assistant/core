@@ -101,7 +101,7 @@ async def test_flow_invalid_user_key(
     """Test user initialized flow with wrong user key."""
 
     mock_pushover.side_effect = BadAPIRequestError("400: user key is invalid")
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,
@@ -117,7 +117,7 @@ async def test_flow_invalid_api_key(
     """Test user initialized flow with wrong api key."""
 
     mock_pushover.side_effect = BadAPIRequestError("400: application token is invalid")
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,
@@ -131,7 +131,7 @@ async def test_flow_conn_err(hass: HomeAssistant, mock_pushover: MagicMock) -> N
     """Test user initialized flow with conn error."""
 
     mock_pushover.side_effect = BadAPIRequestError
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,

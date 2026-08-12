@@ -71,7 +71,7 @@ def zeroconf_discovery_info_different_mac() -> ZeroconfServiceInfo:
 
 async def _init_user_flow(hass: HomeAssistant, user_input: dict | None = None):
     """Initialize a user config flow."""
-    return await hass.config_entries.flow.async_init(
+    return await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=user_input,
@@ -284,7 +284,7 @@ async def test_authentication_error(
         CONF_PASSWORD: "wrongpassword",
     }
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=user_input,

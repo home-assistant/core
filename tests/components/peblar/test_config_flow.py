@@ -65,7 +65,7 @@ async def test_user_flow_errors(
     """Test we show user form on a connection error."""
     mock_peblar.login.side_effect = side_effect
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -104,7 +104,7 @@ async def test_user_flow_already_configured(
     """Test configuration flow aborts when the device is already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={

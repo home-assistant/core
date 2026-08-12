@@ -112,7 +112,7 @@ async def test_connection_error(
     """Test we show user form on Twente Milieu connection error."""
     mock_twentemilieu.unique_id.side_effect = TwenteMilieuConnectionError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -158,7 +158,7 @@ async def test_address_already_set_up(
 ) -> None:
     """Test we abort if address has already been set up."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={

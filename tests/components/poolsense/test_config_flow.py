@@ -46,7 +46,7 @@ async def test_invalid_credentials(
 ) -> None:
     """Test we handle invalid credentials."""
     mock_poolsense_client.test_poolsense_credentials.return_value = False
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "test"},
@@ -72,7 +72,7 @@ async def test_duplicate_entry(
 ) -> None:
     """Test we can't add the same entry twice."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "test"},

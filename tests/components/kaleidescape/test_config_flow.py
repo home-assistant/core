@@ -39,7 +39,7 @@ async def test_user_config_flow_bad_connect_errors(
     """Test errors when connection error occurs."""
     mock_device.connect.side_effect = ConnectionError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
     )
 
@@ -54,7 +54,7 @@ async def test_user_config_flow_unsupported_device_errors(
     """Test errors when connecting to unsupported device."""
     mock_device.is_server_only = True
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
     )
 
@@ -66,7 +66,7 @@ async def test_user_config_flow_unsupported_device_errors(
 @pytest.mark.usefixtures("mock_device", "mock_integration")
 async def test_user_config_flow_device_exists_abort(hass: HomeAssistant) -> None:
     """Test flow aborts when device already configured."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
     )
     assert result["type"] is FlowResultType.ABORT

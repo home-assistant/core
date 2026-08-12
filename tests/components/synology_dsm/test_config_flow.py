@@ -196,7 +196,7 @@ async def test_user(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test user config."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=None
     )
     assert result["type"] is FlowResultType.FORM
@@ -207,7 +207,7 @@ async def test_user(
         return_value=service,
     ):
         # test with all provided
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={
@@ -230,7 +230,7 @@ async def test_user(
         return_value=service,
     ):
         # test without port + False SSL
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={
@@ -256,7 +256,7 @@ async def test_user_2sa(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
         return_value=service_2sa,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
@@ -300,7 +300,7 @@ async def test_user_vdsm(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
         return_value=service_vdsm,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=None
         )
     assert result["type"] is FlowResultType.FORM
@@ -311,7 +311,7 @@ async def test_user_vdsm(
         return_value=service_vdsm,
     ):
         # test with all provided
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={
@@ -340,7 +340,7 @@ async def test_user_with_filestation(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
         return_value=service_with_filestation,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=None
         )
     assert result["type"] is FlowResultType.FORM
@@ -351,7 +351,7 @@ async def test_user_with_filestation(
         return_value=service_with_filestation,
     ):
         # test with all provided
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={
@@ -434,7 +434,7 @@ async def test_reconfig_user(hass: HomeAssistant, service: MagicMock) -> None:
             return_value=service,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
@@ -450,7 +450,7 @@ async def test_login_failed(hass: HomeAssistant, service: MagicMock) -> None:
         side_effect=(SynologyDSMLoginInvalidException(USERNAME))
     )
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
@@ -466,7 +466,7 @@ async def test_connection_failed(hass: HomeAssistant, service: MagicMock) -> Non
         side_effect=SynologyDSMRequestException(OSError("arg"))
     )
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
@@ -481,7 +481,7 @@ async def test_unknown_failed(hass: HomeAssistant, service: MagicMock) -> None:
     """Test when we have an unknown error."""
     service.return_value.login = Mock(side_effect=SynologyDSMException(None, None))
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
@@ -500,7 +500,7 @@ async def test_missing_data_after_login(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
         return_value=service_failed,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},

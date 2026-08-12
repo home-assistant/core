@@ -87,7 +87,7 @@ async def test_form_errors(
     """Test we handle cannot connect error."""
     mock_login.side_effect = error
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={"username": "test-email@test-domain.com", "password": "test-password"},
@@ -112,7 +112,7 @@ async def test_form_response_errors(
     """Test we handle response errors."""
     mock_login.side_effect = ClientResponseError(mock_request_info(), (), status=error)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={"username": "test-email@test-domain.com", "password": "test-password"},
@@ -134,7 +134,7 @@ async def test_token_refresh(hass: HomeAssistant, mock_login, mock_get_devices) 
     with patch(
         "homeassistant.components.melcloud.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={

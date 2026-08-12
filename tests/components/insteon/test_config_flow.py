@@ -117,7 +117,7 @@ async def test_fail_on_existing(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
         context={"source": config_entries.SOURCE_USER},

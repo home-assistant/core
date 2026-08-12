@@ -55,7 +55,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     ):
         # step: user
 
-        result_user = await hass.config_entries.flow.async_init(
+        result_user = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={
@@ -119,7 +119,7 @@ async def test_user_flow_no_results(hass: HomeAssistant) -> None:
     ):
         # step: user
 
-        result_user = await hass.config_entries.flow.async_init(
+        result_user = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={
@@ -149,7 +149,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
         side_effect=GTIUnauthorizedError(),
     ):
         # step: user
-        result_user = await hass.config_entries.flow.async_init(
+        result_user = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={
@@ -171,7 +171,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         side_effect=ClientConnectorError(MagicMock(), MagicMock()),
     ):
         # step: user
-        result_user = await hass.config_entries.flow.async_init(
+        result_user = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={
@@ -200,7 +200,7 @@ async def test_user_flow_station(hass: HomeAssistant) -> None:
     ):
         # step: user
 
-        result_user = await hass.config_entries.flow.async_init(
+        result_user = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={
@@ -234,7 +234,7 @@ async def test_user_flow_station_select(hass: HomeAssistant) -> None:
             return_value=CNResponse.model_validate(FIXTURE_CHECK_NAME),
         ),
     ):
-        result_user = await hass.config_entries.flow.async_init(
+        result_user = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={

@@ -55,7 +55,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         domain=DOMAIN, data=MOCK_CONF, unique_id=MOCK_CONF[CONF_USERNAME]
     )
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
     )
     assert result["type"] is FlowResultType.ABORT
@@ -69,7 +69,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         "homeassistant.components.fireservicerota.coordinator.FireServiceRota.request_tokens",
         side_effect=InvalidAuthError,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
         )
         assert result["errors"] == {"base": "invalid_auth"}
@@ -90,7 +90,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
         mock_fireservicerota = mock_fsr.return_value
         mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
         )
 

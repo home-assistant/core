@@ -170,7 +170,7 @@ async def test_modbus_abort_if_already_setup(
     """Test we abort if Iskra is already setup."""
 
     MockConfigEntry(domain=DOMAIN, unique_id=SERIAL).add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, CONF_PROTOCOL: "modbus_tcp"},
@@ -196,7 +196,7 @@ async def test_rest_api_abort_if_already_setup(
     """Test we abort if Iskra is already setup."""
 
     MockConfigEntry(domain=DOMAIN, unique_id=SERIAL).add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, CONF_PROTOCOL: "rest_api"},
@@ -224,7 +224,7 @@ async def test_modbus_device_error(
     """Test device error with Modbus TCP protocol."""
     mock_pyiskra_modbus.side_effect = s_effect
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, CONF_PROTOCOL: "modbus_tcp"},
@@ -286,7 +286,7 @@ async def test_rest_device_error(
     """Test device error with Modbus TCP protocol."""
     mock_pyiskra_rest.side_effect = s_effect
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, CONF_PROTOCOL: "rest_api"},

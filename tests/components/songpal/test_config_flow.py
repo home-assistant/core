@@ -194,7 +194,7 @@ async def test_user_exist(hass: HomeAssistant) -> None:
     _create_mock_config_entry(hass)
 
     with _patch_config_flow_device(mocked_device):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
         assert result["type"] is FlowResultType.ABORT
@@ -226,7 +226,7 @@ async def test_user_invalid(hass: HomeAssistant) -> None:
     _create_mock_config_entry(hass)
 
     with _patch_config_flow_device(mocked_device):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
         assert result["type"] is FlowResultType.FORM

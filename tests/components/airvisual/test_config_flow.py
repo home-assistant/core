@@ -86,7 +86,7 @@ async def test_create_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data={"type": integration_type}
     )
     assert result["type"] is FlowResultType.FORM
@@ -117,7 +117,7 @@ async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={"type": INTEGRATION_TYPE_GEOGRAPHY_COORDS},

@@ -54,7 +54,7 @@ async def test_form(
     data_config: dict[str, str],
 ) -> None:
     """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
     assert result["type"] is FlowResultType.FORM
@@ -132,7 +132,7 @@ async def test_connection_error_sas(
     error_message: str,
 ) -> None:
     """Test we handle connection errors."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=BASE_CONFIG_SAS.copy(),
@@ -161,7 +161,7 @@ async def test_connection_error_cs(
     error_message: str,
 ) -> None:
     """Test we handle connection errors."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=BASE_CONFIG_CS.copy(),

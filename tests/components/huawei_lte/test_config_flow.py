@@ -141,7 +141,7 @@ async def test_connection_errors(
 ) -> None:
     """Test we show user form on various errors."""
     requests_mock.request(ANY, ANY, exc=exception)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=FIXTURE_USER_INPUT | data_patch,

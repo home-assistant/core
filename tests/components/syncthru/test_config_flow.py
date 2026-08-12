@@ -61,7 +61,7 @@ async def test_already_configured_by_url(
         unique_id=udn,
     ).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=FIXTURE_USER_INPUT,
@@ -78,7 +78,7 @@ async def test_syncthru_not_supported(
 ) -> None:
     """Test we show user form on unsupported device."""
     mock_syncthru.update.side_effect = SyncThruAPINotSupported
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=FIXTURE_USER_INPUT,

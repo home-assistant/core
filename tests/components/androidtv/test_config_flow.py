@@ -162,7 +162,7 @@ async def test_user_adbkey(hass: HomeAssistant) -> None:
         PATCH_ACCESS,
         PATCH_SETUP_ENTRY as mock_setup_entry,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=flow_input,
@@ -188,7 +188,7 @@ async def test_error_both_key_server(hass: HomeAssistant) -> None:
             CONF_ADBKEY: ADBKEY,
         },
     }
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=flow_input,
@@ -220,7 +220,7 @@ async def test_error_invalid_key(hass: HomeAssistant) -> None:
         **CONFIG_PYTHON_ADB,
         CONF_MORE_OPTIONS: {CONF_ADBKEY: ADBKEY},
     }
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=flow_input,
@@ -268,7 +268,7 @@ async def test_invalid_mac(
         CONNECT_METHOD,
         return_value=(MockConfigDevice(eth_mac, wifi_mac), None),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=flow_input,
@@ -286,7 +286,7 @@ async def test_abort_if_host_exist(hass: HomeAssistant) -> None:
 
     config_data = CONFIG_PYTHON_ADB
     # Should fail, same HOST
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=config_data,
@@ -309,7 +309,7 @@ async def test_abort_if_unique_exist(hass: HomeAssistant) -> None:
         CONNECT_METHOD,
         return_value=(MockConfigDevice(), None),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=CONFIG_ADB_SERVER,

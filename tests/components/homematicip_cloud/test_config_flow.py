@@ -33,7 +33,7 @@ async def test_flow_works(hass: HomeAssistant, simple_mock_home) -> None:
             return_value=True,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=DEFAULT_CONFIG,
@@ -83,7 +83,7 @@ async def test_flow_init_connection_error(hass: HomeAssistant) -> None:
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_setup",
         return_value=False,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=DEFAULT_CONFIG,
@@ -109,7 +109,7 @@ async def test_flow_link_connection_error(hass: HomeAssistant) -> None:
             return_value=False,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=DEFAULT_CONFIG,
@@ -131,7 +131,7 @@ async def test_flow_link_press_button(hass: HomeAssistant) -> None:
             return_value=True,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=DEFAULT_CONFIG,
@@ -159,7 +159,7 @@ async def test_init_already_configured(hass: HomeAssistant) -> None:
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
         return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=DEFAULT_CONFIG,

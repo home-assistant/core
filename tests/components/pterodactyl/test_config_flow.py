@@ -101,7 +101,7 @@ async def test_service_already_configured(
     """Test config flow abort if the Pterodactyl server is already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=TEST_USER_INPUT
     )
 

@@ -53,7 +53,7 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
 
 async def test_show_config_form_device_type_airlock(hass: HomeAssistant) -> None:
     """Test show configuration form."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
@@ -70,7 +70,7 @@ async def test_show_config_form_device_type_airlock(hass: HomeAssistant) -> None
 
 async def test_show_config_form_device_type_keg(hass: HomeAssistant) -> None:
     """Test show configuration form."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_DEVICE_TYPE: PlaatoDeviceType.Keg, CONF_DEVICE_NAME: "device_name"},

@@ -22,7 +22,7 @@ async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
 
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=conf
     )
     assert result["errors"] == {"base": "already_configured"}
@@ -30,7 +30,7 @@ async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=None
     )
 
@@ -86,7 +86,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
             "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY

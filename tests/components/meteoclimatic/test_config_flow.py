@@ -48,7 +48,7 @@ async def test_user(hass: HomeAssistant, client) -> None:
     assert result["step_id"] == "user"
 
     # test with all provided
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_STATION_CODE: TEST_STATION_CODE},
@@ -65,7 +65,7 @@ async def test_not_found(hass: HomeAssistant) -> None:
         "homeassistant.components.meteoclimatic.config_flow.MeteoclimaticClient.weather_at_station",
         side_effect=StationNotFound(TEST_STATION_CODE),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_STATION_CODE: TEST_STATION_CODE},
@@ -81,7 +81,7 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
         "homeassistant.components.meteoclimatic.config_flow.MeteoclimaticClient.weather_at_station",
         side_effect=MeteoclimaticError,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_STATION_CODE: TEST_STATION_CODE},

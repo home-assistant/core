@@ -116,7 +116,7 @@ async def test_create_travel_time_subentry(
     assert result["step_id"] == "user"
 
     # User data; the user made a choice and hit submit
-    result = await hass.config_entries.subentries.async_init(
+    result = await hass.config_entries.subentries.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         (init_integration.entry_id, SUBENTRY_TRAVEL_TIMES),
         context={"source": SOURCE_USER},
         data=VALID_USER_TRAVEL_TIME_CONFIG,

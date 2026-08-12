@@ -76,7 +76,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     mocked_tv = await _create_mocked_tv(True)
     with _patch_config_flow_tv(mocked_tv) as tvmock:
         tvmock.side_effect = ConnectError
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=CONF_CONFIG_FLOW,
@@ -91,7 +91,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     mocked_tv = await _create_mocked_tv(True)
     with _patch_config_flow_tv(mocked_tv) as tvmock:
         tvmock.side_effect = Exception
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=CONF_CONFIG_FLOW,

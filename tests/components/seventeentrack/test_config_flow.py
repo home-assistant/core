@@ -81,7 +81,7 @@ async def test_flow_fails(
     """Test that the user step fails."""
     mock_seventeentrack.return_value.profile.login.return_value = return_value
     mock_seventeentrack.return_value.profile.login.side_effect = side_effect
-    failed_result = await hass.config_entries.flow.async_init(
+    failed_result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=VALID_CONFIG,

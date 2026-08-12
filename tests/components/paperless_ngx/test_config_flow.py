@@ -118,7 +118,7 @@ async def test_config_flow_error_handling(
     """Test user step shows correct error for various client initialization issues."""
     mock_paperless.initialize.side_effect = side_effect
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=USER_INPUT_ONE,
@@ -221,7 +221,7 @@ async def test_config_already_exists(
     """Test we only allow a single config flow."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         data=USER_INPUT_ONE,
         context={"source": config_entries.SOURCE_USER},

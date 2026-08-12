@@ -27,7 +27,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.usefixtures("config_entry", "setup_guardian")
 async def test_duplicate_error(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that errors are shown when duplicate entries are added."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=config
     )
     assert result["type"] is FlowResultType.ABORT
@@ -40,7 +40,7 @@ async def test_connect_error(hass: HomeAssistant, config: dict[str, Any]) -> Non
         "aioguardian.client.Client.connect",
         side_effect=GuardianError,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=config
         )
         assert result["type"] is FlowResultType.FORM
@@ -68,7 +68,7 @@ async def test_step_user(hass: HomeAssistant, config: dict[str, Any]) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=config
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY

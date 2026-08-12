@@ -27,7 +27,7 @@ async def test_full_flow(
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -63,7 +63,7 @@ async def test_errors(
     """Test we handle any error."""
     mock_dio_chacon_client.get_user_id.side_effect = exception
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={

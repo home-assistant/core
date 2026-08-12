@@ -118,7 +118,7 @@ async def test_user(hass: HomeAssistant, client_single) -> None:
     assert result["step_id"] == "user"
 
     # test with all provided with search returning only 1 place
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_CITY: CITY_1_POSTAL},
@@ -134,7 +134,7 @@ async def test_user_list(hass: HomeAssistant, client_multiple) -> None:
     """Test user config."""
 
     # test with all provided with search returning more than 1 place
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_CITY: CITY_2_NAME},
@@ -155,7 +155,7 @@ async def test_user_list(hass: HomeAssistant, client_multiple) -> None:
 
 async def test_search_failed(hass: HomeAssistant, client_empty) -> None:
     """Test error displayed if no result in search."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_CITY: CITY_1_POSTAL},
@@ -174,7 +174,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant, client_single) -> Non
     ).add_to_hass(hass)
 
     # Should fail, same CITY same postal code (flow)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_CITY: CITY_1_POSTAL},

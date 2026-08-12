@@ -23,7 +23,7 @@ async def test_full_flow(hass: HomeAssistant, mock_flipr_client: AsyncMock) -> N
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -60,7 +60,7 @@ async def test_errors(
     """Test we handle any error."""
     mock_flipr_client.search_all_ids.side_effect = exception
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -99,7 +99,7 @@ async def test_no_flipr_found(
 
     mock_flipr_client.search_all_ids.return_value = {"flipr": [], "hub": []}
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -114,7 +114,7 @@ async def test_no_flipr_found(
     # Test of recover in normal state after correction of the 1st error
     mock_flipr_client.search_all_ids.return_value = {"flipr": ["myfliprid"], "hub": []}
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={

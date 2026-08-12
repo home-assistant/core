@@ -37,7 +37,7 @@ async def test_invalid_access_token(hass: HomeAssistant) -> None:
     """Test that errors are shown when the access token is invalid."""
 
     with patch("python_awair.AwairClient.query", side_effect=AuthError()):
-        menu_step = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CLOUD_CONFIG
         )
 
@@ -58,7 +58,7 @@ async def test_unexpected_api_error(hass: HomeAssistant) -> None:
     """Test that we abort on generic errors."""
 
     with patch("python_awair.AwairClient.query", side_effect=AwairError()):
-        menu_step = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CLOUD_CONFIG
         )
 
@@ -87,7 +87,7 @@ async def test_duplicate_error(hass: HomeAssistant, user, cloud_devices) -> None
             domain=DOMAIN, unique_id=CLOUD_UNIQUE_ID, data=CLOUD_CONFIG
         ).add_to_hass(hass)
 
-        menu_step = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CLOUD_CONFIG
         )
 
@@ -109,7 +109,7 @@ async def test_no_devices_error(hass: HomeAssistant, user, no_devices) -> None:
     """Test that errors are shown when the API returns no devices."""
 
     with patch("python_awair.AwairClient.query", side_effect=[user, no_devices]):
-        menu_step = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CLOUD_CONFIG
         )
 
@@ -209,7 +209,7 @@ async def test_create_cloud_entry(hass: HomeAssistant, user, cloud_devices) -> N
             return_value=True,
         ),
     ):
-        menu_step = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CLOUD_CONFIG
         )
 
@@ -239,7 +239,7 @@ async def test_create_local_entry(hass: HomeAssistant, local_devices) -> None:
             return_value=True,
         ),
     ):
-        menu_step = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=LOCAL_CONFIG
         )
 
@@ -270,7 +270,7 @@ async def test_create_local_entry_from_discovery(
 ) -> None:
     """Test local API when device discovered after instructions shown."""
 
-    menu_step = await hass.config_entries.flow.async_init(
+    menu_step = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=LOCAL_CONFIG
     )
 
@@ -318,7 +318,7 @@ async def test_create_local_entry_awair_error(hass: HomeAssistant) -> None:
         "python_awair.AwairClient.query",
         side_effect=AwairError(),
     ):
-        menu_step = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=LOCAL_CONFIG
         )
 

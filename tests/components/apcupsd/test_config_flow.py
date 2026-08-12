@@ -28,7 +28,7 @@ async def test_config_flow_cannot_connect(
     """Test config flow setup with a connection error."""
     mock_request_status.side_effect = exception
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
     assert result["type"] is FlowResultType.FORM
@@ -47,7 +47,7 @@ async def test_config_flow_duplicate_host_port(
     # Assign the same host and port, which we should reject since
     # the entry already exists.
     mock_request_status.return_value = MOCK_STATUS
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
     assert result["type"] is FlowResultType.ABORT
@@ -59,7 +59,7 @@ async def test_config_flow_duplicate_host_port(
     mock_request_status.return_value = MOCK_STATUS | {
         "SERIALNO": MOCK_STATUS["SERIALNO"] + "ZZZ"
     }
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=another_host,
@@ -82,7 +82,7 @@ async def test_config_flow_duplicate_serial_number(
     # existing entry.
     mock_request_status.return_value = MOCK_STATUS
     another_host = CONF_DATA | {CONF_HOST: "another_host"}
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=another_host,
@@ -94,7 +94,7 @@ async def test_config_flow_duplicate_serial_number(
     mock_request_status.return_value = MOCK_STATUS | {
         "SERIALNO": MOCK_STATUS["SERIALNO"] + "ZZZ"
     }
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=another_host
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY

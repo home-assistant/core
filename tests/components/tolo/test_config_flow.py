@@ -59,7 +59,7 @@ async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -
     """Test a user initiated config flow with provided host which times out."""
     toloclient().get_status.side_effect = ToloCommunicationError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: "127.0.0.1"},

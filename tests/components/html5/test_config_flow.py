@@ -24,7 +24,7 @@ async def test_step_user_success(hass: HomeAssistant) -> None:
         "homeassistant.components.html5.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=MOCK_CONF.copy(),
@@ -51,7 +51,7 @@ async def test_step_user_success_generate(hass: HomeAssistant) -> None:
         return_value=True,
     ) as mock_setup_entry:
         conf = {ATTR_VAPID_EMAIL: MOCK_CONF[ATTR_VAPID_EMAIL]}
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
         )
 
@@ -70,7 +70,7 @@ async def test_step_user_new_form(hass: HomeAssistant) -> None:
         "homeassistant.components.html5.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
         )
 
@@ -104,7 +104,7 @@ async def test_step_user_form_invalid_key(
         bad_conf = MOCK_CONF.copy()
         bad_conf[key] = value
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=bad_conf
         )
 

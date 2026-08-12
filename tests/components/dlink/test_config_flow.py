@@ -44,7 +44,7 @@ async def test_flow_user_already_configured(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test user initialized flow with duplicate server."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
 
@@ -59,7 +59,7 @@ async def test_flow_user_cannot_connect(
 ) -> None:
     """Test user initialized flow with unreachable server."""
     with patch_config_flow(mocked_plug_legacy_no_auth):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
     assert result["type"] is FlowResultType.FORM
@@ -82,7 +82,7 @@ async def test_flow_user_unknown_error(
     """Test user initialized flow with unreachable server."""
     with patch_config_flow(mocked_plug) as mock:
         mock.side_effect = Exception
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
     assert result["type"] is FlowResultType.FORM

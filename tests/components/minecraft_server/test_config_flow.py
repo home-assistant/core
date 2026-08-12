@@ -50,7 +50,7 @@ async def test_full_flow_java(hass: HomeAssistant) -> None:
             return_value=TEST_JAVA_STATUS_RESPONSE,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
@@ -79,7 +79,7 @@ async def test_full_flow_bedrock(hass: HomeAssistant) -> None:
             return_value=TEST_BEDROCK_STATUS_RESPONSE,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
@@ -116,7 +116,7 @@ async def test_full_flow_legacy_java(hass: HomeAssistant) -> None:
             return_value=TEST_LEGACY_JAVA_STATUS_RESPONSE,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
@@ -146,7 +146,7 @@ async def test_service_already_configured_java(
             return_value=TEST_JAVA_STATUS_RESPONSE,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
         assert result["type"] is FlowResultType.ABORT
@@ -169,7 +169,7 @@ async def test_service_already_configured_bedrock(
             return_value=TEST_BEDROCK_STATUS_RESPONSE,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
         assert result["type"] is FlowResultType.ABORT
@@ -200,7 +200,7 @@ async def test_service_already_configured_legacy_java(
             return_value=TEST_LEGACY_JAVA_STATUS_RESPONSE,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
         assert result["type"] is FlowResultType.ABORT
@@ -227,7 +227,7 @@ async def test_recovery_java(hass: HomeAssistant) -> None:
             side_effect=ValueError,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
         assert result["type"] is FlowResultType.FORM
@@ -276,7 +276,7 @@ async def test_recovery_bedrock(hass: HomeAssistant) -> None:
             side_effect=ValueError,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
         assert result["type"] is FlowResultType.FORM
@@ -321,7 +321,7 @@ async def test_recovery_legacy_java(hass: HomeAssistant) -> None:
             side_effect=OSError,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
         assert result["type"] is FlowResultType.FORM

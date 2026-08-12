@@ -109,7 +109,7 @@ async def test_flow_entry_already_exists(
         CONF_LATITUDE: 0,
     }
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=test_data
     )
     await hass.async_block_till_done()

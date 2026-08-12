@@ -99,7 +99,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
         "homeassistant.components.qnap_qsw.QnapQswApi.validate",
         return_value=system_board,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
@@ -117,7 +117,7 @@ async def test_form_unique_id_error(hass: HomeAssistant) -> None:
         "homeassistant.components.qnap_qsw.QnapQswApi.validate",
         return_value=system_board,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
@@ -132,7 +132,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         "homeassistant.components.qnap_qsw.QnapQswApi.validate",
         side_effect=QswError,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
@@ -146,7 +146,7 @@ async def test_login_error(hass: HomeAssistant) -> None:
         "homeassistant.components.qnap_qsw.QnapQswApi.validate",
         side_effect=LoginError,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 

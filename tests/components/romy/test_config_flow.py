@@ -63,7 +63,7 @@ async def test_show_user_form_robot_is_offline_and_locked(hass: HomeAssistant) -
         "homeassistant.components.romy.config_flow.romy.create_romy",
         return_value=_create_mocked_romy(False, False),
     ):
-        result1 = await hass.config_entries.flow.async_init(
+        result1 = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=INPUT_CONFIG_HOST,
@@ -105,7 +105,7 @@ async def test_show_user_form_robot_unlock_with_password(hass: HomeAssistant) ->
         "homeassistant.components.romy.config_flow.romy.create_romy",
         return_value=_create_mocked_romy(True, False),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=INPUT_CONFIG_HOST,
@@ -155,7 +155,7 @@ async def test_show_user_form_robot_reachable_again(hass: HomeAssistant) -> None
         "homeassistant.components.romy.config_flow.romy.create_romy",
         return_value=_create_mocked_romy(False, False),
     ):
-        result1 = await hass.config_entries.flow.async_init(
+        result1 = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=INPUT_CONFIG_HOST,

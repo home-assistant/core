@@ -43,7 +43,7 @@ async def test_invalid_api_key(
         ),
     )
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
@@ -63,7 +63,7 @@ async def test_invalid_location(
         exc=AirlyError(HTTPStatus.NOT_FOUND, {"message": "Installation was not found"}),
     )
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
@@ -84,7 +84,7 @@ async def test_invalid_location_for_point_and_nearest(
     )
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
@@ -101,7 +101,7 @@ async def test_duplicate_error(
     )
     MockConfigEntry(domain=DOMAIN, unique_id="123-456", data=CONFIG).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
@@ -118,7 +118,7 @@ async def test_create_entry(
     )
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
@@ -145,7 +145,7 @@ async def test_create_entry_with_nearest_method(
     )
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 

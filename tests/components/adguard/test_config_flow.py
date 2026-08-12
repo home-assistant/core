@@ -54,7 +54,7 @@ async def test_connection_error(
         exc=aiohttp.ClientError,
     )
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=FIXTURE_USER_INPUT
     )
 
@@ -112,7 +112,7 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={"host": "mock-adguard", "port": "3000"}
     ).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         data={"host": "mock-adguard", "port": "3000"},
         context={"source": config_entries.SOURCE_USER},

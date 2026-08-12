@@ -49,7 +49,7 @@ async def test_auth_error(hass: HomeAssistant, sabnzbd: AsyncMock) -> None:
     """Test when the user step fails and if we can recover."""
     sabnzbd.check_available.side_effect = SabnzbdApiException("Some error")
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=VALID_CONFIG,

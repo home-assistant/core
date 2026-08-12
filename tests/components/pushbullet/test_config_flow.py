@@ -96,7 +96,7 @@ async def test_flow_invalid_key(hass: HomeAssistant) -> None:
         "homeassistant.components.pushbullet.config_flow.PushBullet",
         side_effect=InvalidKeyError,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=MOCK_CONFIG,
@@ -113,7 +113,7 @@ async def test_flow_conn_error(hass: HomeAssistant) -> None:
         "homeassistant.components.pushbullet.config_flow.PushBullet",
         side_effect=PushbulletError,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=MOCK_CONFIG,

@@ -37,7 +37,7 @@ async def test_user_step_errors(
     mock_redgtech_api.login.side_effect = side_effect
     mock_redgtech_api.login.return_value = None
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=user_input
     )
 
@@ -56,7 +56,7 @@ async def test_user_step_creates_entry(
     mock_redgtech_api.login.return_value = FAKE_TOKEN
     mock_redgtech_api.login.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=user_input
     )
 
@@ -81,7 +81,7 @@ async def test_user_step_duplicate_entry(
 
     user_input = {CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD}
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=user_input
     )
 
@@ -114,7 +114,7 @@ async def test_user_step_error_recovery(
 
     # First attempt fails with error
     mock_redgtech_api.login.side_effect = side_effect
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=user_input
     )
 

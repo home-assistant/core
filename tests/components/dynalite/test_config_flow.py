@@ -36,7 +36,7 @@ async def test_flow(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         side_effect=[first_con, second_con],
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             dynalite.DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: host},
@@ -57,7 +57,7 @@ async def test_existing(hass: HomeAssistant) -> None:
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             dynalite.DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: host},
@@ -84,7 +84,7 @@ async def test_existing_abort_update(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         mock_dyn_dev().configure.assert_called_once()
         assert mock_dyn_dev().configure.mock_calls[0][1][0]["port"] == port1
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             dynalite.DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: host, CONF_PORT: port2},
@@ -105,7 +105,7 @@ async def test_two_entries(hass: HomeAssistant) -> None:
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             dynalite.DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: host2},

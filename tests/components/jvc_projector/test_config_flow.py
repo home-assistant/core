@@ -64,7 +64,7 @@ async def test_user_config_flow_bad_connect_errors(
     """Test errors when connection error occurs."""
     mock_device.connect.side_effect = JvcProjectorTimeoutError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
@@ -78,7 +78,7 @@ async def test_user_config_flow_bad_connect_errors(
 
     mock_device.connect.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
@@ -96,7 +96,7 @@ async def test_user_config_flow_device_exists_abort(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:
     """Test flow aborts when device already configured."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
@@ -110,7 +110,7 @@ async def test_user_config_flow_bad_host_errors(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
     """Test errors when bad host error occurs."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: "", CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
@@ -122,7 +122,7 @@ async def test_user_config_flow_bad_host_errors(
 
     # Finish flow with success
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
@@ -142,7 +142,7 @@ async def test_user_config_flow_bad_auth_errors(
     """Test errors when bad auth error occurs."""
     mock_device.connect.side_effect = JvcProjectorAuthError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
@@ -156,7 +156,7 @@ async def test_user_config_flow_bad_auth_errors(
 
     mock_device.connect.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},

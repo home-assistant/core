@@ -99,7 +99,7 @@ async def test_flow_works(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
@@ -130,7 +130,7 @@ async def test_flow_with_connection_failure(
             side_effect=blebox_uniapi.error.ConnectionError
         )
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
@@ -145,7 +145,7 @@ async def test_flow_with_api_failure(hass: HomeAssistant, product_class_mock) ->
             side_effect=blebox_uniapi.error.Error
         )
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
@@ -159,7 +159,7 @@ async def test_flow_with_unknown_failure(
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(side_effect=RuntimeError)
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
@@ -176,7 +176,7 @@ async def test_flow_with_unsupported_version(
             side_effect=blebox_uniapi.error.UnsupportedBoxVersion
         )
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
@@ -191,7 +191,7 @@ async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -
             side_effect=blebox_uniapi.error.UnauthorizedRequest
         )
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
@@ -214,7 +214,7 @@ async def test_already_configured(hass: HomeAssistant, valid_feature_mock) -> No
     await hass.config_entries.async_setup(config.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},

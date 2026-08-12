@@ -38,7 +38,7 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
             "code": -201,
         },
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=VALID_CONFIG,
@@ -56,7 +56,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             "code": -200,
         },
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=VALID_CONFIG,
@@ -74,7 +74,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
             "devices": DEVICES,
         },
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=VALID_CONFIG,

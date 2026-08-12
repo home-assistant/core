@@ -279,7 +279,7 @@ async def test_user_unsupported_device_abort_auth(
     """Test we abort user flow if unsupported device (with auth)."""
     mock_smlight_client.check_auth_needed.return_value = True
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -313,7 +313,7 @@ async def test_user_device_exists_abort(
     """Test we abort user flow if device already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -387,7 +387,7 @@ async def test_user_invalid_auth(
     mock_smlight_client.check_auth_needed.return_value = True
     mock_smlight_client.authenticate.side_effect = SmlightAuthError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={

@@ -40,7 +40,7 @@ async def test_auth_errors(
         "homeassistant.components.watttime.config_flow.Client.async_login",
         side_effect=exc,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_auth
         )
         assert result["type"] is FlowResultType.FORM
@@ -69,7 +69,7 @@ async def test_coordinate_errors(
     setup_watttime,
 ) -> None:
     """Test that issues with coordinates show the correct error."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_auth
     )
     result = await hass.config_entries.flow.async_configure(
@@ -89,7 +89,7 @@ async def test_duplicate_error(
     hass: HomeAssistant, config_auth, config_entry, config_location_type, setup_watttime
 ) -> None:
     """Test that errors are shown when duplicate entries are added."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_auth
     )
     result = await hass.config_entries.flow.async_configure(
@@ -174,7 +174,7 @@ async def test_step_user_coordinates(
     setup_watttime,
 ) -> None:
     """Test a full login flow (inputting custom coordinates)."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_auth
     )
     result = await hass.config_entries.flow.async_configure(
@@ -202,7 +202,7 @@ async def test_step_user_home(
     hass: HomeAssistant, config_auth, config_location_type, setup_watttime
 ) -> None:
     """Test a full login flow (selecting the home location)."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_auth
     )
     result = await hass.config_entries.flow.async_configure(

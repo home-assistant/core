@@ -170,7 +170,7 @@ async def test_parse_npsso_token_failures(
 ) -> None:
     """Test parse_npsso_token raises the correct exceptions during config flow."""
     mock_psnawp_npsso.side_effect = PSNAWPInvalidTokenError("error msg")
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_NPSSO: NPSSO_TOKEN_INVALID_JSON},

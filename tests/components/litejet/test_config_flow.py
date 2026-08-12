@@ -27,7 +27,7 @@ async def test_create_entry(hass: HomeAssistant, mock_litejet) -> None:
     """Test create entry from user input."""
     test_data = {CONF_PORT: "/dev/test"}
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
@@ -46,7 +46,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
 
     test_data = {CONF_PORT: "/dev/test"}
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
@@ -61,7 +61,7 @@ async def test_flow_open_failed(hass: HomeAssistant) -> None:
     with patch("pylitejet.LiteJet") as mock_pylitejet:
         mock_pylitejet.side_effect = SerialException
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 

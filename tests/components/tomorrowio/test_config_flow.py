@@ -103,7 +103,7 @@ async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
         version=2,
     ).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=user_input,
@@ -119,7 +119,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
         side_effect=CantConnectException,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
@@ -135,7 +135,7 @@ async def test_user_flow_invalid_api(hass: HomeAssistant) -> None:
         "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
         side_effect=InvalidAPIKeyException,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
@@ -151,7 +151,7 @@ async def test_user_flow_rate_limited(hass: HomeAssistant) -> None:
         "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
         side_effect=RateLimitedException,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
@@ -167,7 +167,7 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
         "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
         side_effect=UnknownException,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
