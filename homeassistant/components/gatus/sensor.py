@@ -68,9 +68,9 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda endpoint: (
-            dt_util.utcnow()
+            dt_util.utcnow().replace(microsecond=0, second=0)
             + timedelta(
-                seconds=endpoint.results[-1].certificate_expiration / 1_000_000_000
+                seconds=int(endpoint.results[-1].certificate_expiration / 1_000_000_000)
             )
             if endpoint.results
             and endpoint.results[-1].certificate_expiration is not None
