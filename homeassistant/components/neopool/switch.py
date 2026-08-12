@@ -61,11 +61,7 @@ class NeoPoolSwitchEntityDescription(SwitchEntityDescription):
     supported_fn: Callable[[dict[str, Any]], bool] | None = None
     write_fn: _WriteFn | None = None
     is_on_fn: _IsOnFn | None = None
-
-
-# ---------------------------------------------------------------------------
-# Write paths (per switch flavor)
-# ---------------------------------------------------------------------------
+    translation_placeholders: dict[str, str] | None = None
 
 
 async def _write_manual_filtration(
@@ -164,11 +160,6 @@ def _make_write_bitmask_flag(flag: BitmaskConfigFlag) -> _WriteFn:
     return _write
 
 
-# ---------------------------------------------------------------------------
-# is_on readers
-# ---------------------------------------------------------------------------
-
-
 def _make_is_on_from_key(data_key: str) -> _IsOnFn:
     """Read a truthy value from a specific coordinator-data key."""
     return lambda data: bool(data.get(data_key))
@@ -182,11 +173,6 @@ def _make_is_on_int_flag(data_key: str) -> _IsOnFn:
 def _make_is_on_bitmask(data_key: str, mask: int) -> _IsOnFn:
     """Read a single bit from a packed coordinator-data register."""
     return lambda data: bool(int(data.get(data_key, 0) or 0) & mask)
-
-
-# ---------------------------------------------------------------------------
-# Entity descriptions
-# ---------------------------------------------------------------------------
 
 
 SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
@@ -255,25 +241,29 @@ SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
     ),
     "aux1": NeoPoolSwitchEntityDescription(
         key="aux1",
-        translation_key="aux1",
+        translation_key="aux",
+        translation_placeholders={"number": "1"},
         write_fn=_make_write_relay_state(RelayKind.AUX1),
         is_on_fn=_make_is_on_from_key("AUX1"),
     ),
     "aux2": NeoPoolSwitchEntityDescription(
         key="aux2",
-        translation_key="aux2",
+        translation_key="aux",
+        translation_placeholders={"number": "2"},
         write_fn=_make_write_relay_state(RelayKind.AUX2),
         is_on_fn=_make_is_on_from_key("AUX2"),
     ),
     "aux3": NeoPoolSwitchEntityDescription(
         key="aux3",
-        translation_key="aux3",
+        translation_key="aux",
+        translation_placeholders={"number": "3"},
         write_fn=_make_write_relay_state(RelayKind.AUX3),
         is_on_fn=_make_is_on_from_key("AUX3"),
     ),
     "aux4": NeoPoolSwitchEntityDescription(
         key="aux4",
-        translation_key="aux4",
+        translation_key="aux",
+        translation_placeholders={"number": "4"},
         write_fn=_make_write_relay_state(RelayKind.AUX4),
         is_on_fn=_make_is_on_from_key("AUX4"),
     ),
@@ -300,7 +290,7 @@ async def async_setup_entry(
     options = entry.options
 
     async_add_entities(
-        NeoPoolSwitch(coordinator, key, desc)
+        NeoPoolSwitch(coordinator, desc)
         for key, desc in SWITCH_DESCRIPTIONS.items()
         if (
             (option_key := _ENTITY_OPTION_KEY.get(key)) is None
@@ -329,15 +319,15 @@ class NeoPoolSwitch(NeoPoolEntity, SwitchEntity):
     def __init__(
         self,
         coordinator: NeoPoolCoordinator,
-        key: str,
         description: NeoPoolSwitchEntityDescription,
     ) -> None:
         """Initialize the NeoPool switch entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.key = key
+        if description.translation_placeholders is not None:
+            self._attr_translation_placeholders = description.translation_placeholders
         self._attr_unique_id = (
-            f"{self.coordinator.config_entry.unique_id}_{key.lower()}"
+            f"{self.coordinator.config_entry.unique_id}_{description.key.lower()}"
         )
 
     @override

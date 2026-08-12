@@ -141,17 +141,8 @@
       }
     },
     "switch": {
-      "aux1": {
-        "name": "Relay Aux1"
-      },
-      "aux2": {
-        "name": "Relay Aux2"
-      },
-      "aux3": {
-        "name": "Relay Aux3"
-      },
-      "aux4": {
-        "name": "Relay Aux4"
+      "aux": {
+        "name": "Auxiliary relay {number}"
       },
       "backwash": {
         "name": "Backwash"
