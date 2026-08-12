@@ -47,7 +47,7 @@
       "boiler_voltage": {
         "name": "Boiler voltage"
       },
-      "days_since_max_temperature": {
+      "days_since_maximum_temperature": {
         "name": "Days since maximum temperature"
       },
       "grid_power": {
