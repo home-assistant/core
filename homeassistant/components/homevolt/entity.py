@@ -50,14 +50,12 @@ def homevolt_exception_handler[_HomevoltEntityT: HomevoltEntity, **_P](
                 translation_key="auth_failed",
             ) from error
         except HomevoltConnectionError as error:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
                 translation_placeholders={"error": str(error)},
             ) from error
         except HomevoltError as error:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unknown_error",

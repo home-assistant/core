@@ -1,5 +1,7 @@
 """Creates HomeWizard Number entities."""
 
+from typing import override
+
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -40,17 +42,20 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
         )
 
     @homewizard_exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         await self.coordinator.api.system(status_led_brightness_pct=int(value))
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.data.system is not None
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         if (

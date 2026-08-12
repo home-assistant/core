@@ -1,7 +1,7 @@
 """Config flow for Elvia integration."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from elvia import Elvia, error as ElviaError
 import voluptuous as vol
@@ -21,6 +21,7 @@ class ElviaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._api_token: str | None = None
         self._metering_point_ids: list[str] | None = None
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,

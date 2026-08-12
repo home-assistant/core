@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
@@ -111,6 +111,7 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
 
     entity_description: MatterSelectEntityDescription
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
         value_convert = self.entity_description.ha_to_device
@@ -121,6 +122,7 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value: Nullable | int | None
@@ -137,6 +139,7 @@ class MatterMapSelectEntity(MatterAttributeSelectEntity):
     entity_description: MatterMapSelectEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # the options can dynamically change based on the state of the device
@@ -158,6 +161,7 @@ class MatterMapSelectEntity(MatterAttributeSelectEntity):
 class MatterModeSelectEntity(MatterAttributeSelectEntity):
     """Representation of a select entity from Matter (Mode) Cluster attribute(s)."""
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
         cluster: SelectCluster = self._endpoint.get_cluster(
@@ -173,6 +177,7 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
             break
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # NOTE: cluster can be ModeSelect or a variant of that,
@@ -188,6 +193,31 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
             self._attr_name = desc
 
 
+class MatterChimeSelectEntity(MatterAttributeSelectEntity):
+    """Representation of a select entity for the Chime cluster's SelectedChime attribute."""
+
+    @override
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected chime sound."""
+        cluster: clusters.Chime = self._endpoint.get_cluster(clusters.Chime)
+        for sound in cluster.installedChimeSounds:
+            if sound.name != option:
+                continue
+            await self.write_attribute(value=sound.chimeID)
+            break
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        cluster: clusters.Chime = self._endpoint.get_cluster(clusters.Chime)
+        chime_sounds = {
+            sound.chimeID: sound.name for sound in cluster.installedChimeSounds
+        }
+        self._attr_options = list(chime_sounds.values())
+        self._attr_current_option = chime_sounds.get(cluster.selectedChime)
+
+
 class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
     """Representation of a Door Lock Operating Mode select entity.
 
@@ -201,6 +231,7 @@ class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
     entity_description: MatterMapSelectEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # Get the bitmap of supported operating modes
@@ -235,6 +266,7 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
 
     entity_description: MatterListSelectEntityDescription
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         option_id = self._attr_options.index(option)
@@ -254,6 +286,7 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         list_values_raw = self.get_matter_attribute_value(
@@ -564,6 +597,21 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.PumpConfigurationAndControl.Attributes.OperationMode,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="ChimeSelectedChime",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="selected_chime",
+        ),
+        entity_class=MatterChimeSelectEntity,
+        required_attributes=(
+            clusters.Chime.Attributes.SelectedChime,
+            clusters.Chime.Attributes.InstalledChimeSounds,
+        ),
+        # don't discover this entry if the installed chime sounds list is empty
+        secondary_value_is_not=[],
     ),
     # Keep the legacy vendor-specific select entities until HA 2026.11.0,
     # so existing users can migrate before we remove them in favor of the

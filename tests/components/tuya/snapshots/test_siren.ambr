@@ -39,8 +39,8 @@
 # name: test_platform_setup_and_discovery[siren.aqi_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AQI Siren',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AQI Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.aqi_siren',
@@ -90,8 +90,8 @@
 # name: test_platform_setup_and_discovery[siren.burocam_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bürocam Siren',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bürocam Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.burocam_siren',
@@ -141,8 +141,8 @@
 # name: test_platform_setup_and_discovery[siren.c9_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'C9 Siren',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C9 Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.c9_siren',
@@ -192,8 +192,8 @@
 # name: test_platform_setup_and_discovery[siren.security_camera_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Security Camera Siren',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Security Camera Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.security_camera_siren',
@@ -243,8 +243,8 @@
 # name: test_platform_setup_and_discovery[siren.siren_veranda-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Siren veranda ',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Siren veranda ',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.siren_veranda',

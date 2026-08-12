@@ -2,7 +2,7 @@
 
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
 import wakeonlan
 
@@ -67,6 +67,7 @@ class WolButton(ButtonEntity):
             default_name=name,
         )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         service_kwargs: dict[str, Any] = {}

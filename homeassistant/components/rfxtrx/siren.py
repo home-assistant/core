@@ -1,7 +1,7 @@
 """Support for RFXtrx sirens."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 import RFXtrx as rfxtrxmod
 
@@ -114,6 +114,7 @@ class RfxtrxOffDelayMixin(Entity):  # pylint: disable=home-assistant-enforce-cla
             self._timeout()
             self._timeout = None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         self._cancel_timeout()
@@ -140,10 +141,12 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
         self._off_delay = off_delay
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._timeout is not None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._cancel_timeout()
@@ -159,6 +162,7 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
 
         self.async_write_ha_state()
 
+    @override
     def _apply_event(self, event: rfxtrxmod.ControlEvent) -> None:
         """Apply a received event."""
         super()._apply_event(event)
@@ -169,6 +173,7 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
             self._setup_timeout()
 
     @callback
+    @override
     def _handle_event(
         self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
     ) -> None:
@@ -199,10 +204,12 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
         self._off_delay = off_delay
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._timeout is not None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._cancel_timeout()
@@ -213,6 +220,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._cancel_timeout()
@@ -221,6 +229,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
 
         self.async_write_ha_state()
 
+    @override
     def _apply_event(self, event: rfxtrxmod.SensorEvent) -> None:
         """Apply a received event."""
         super()._apply_event(event)
@@ -234,6 +243,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
             self._cancel_timeout()
 
     @callback
+    @override
     def _handle_event(
         self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
     ) -> None:

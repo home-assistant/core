@@ -8,7 +8,7 @@ from email.header import decode_header, make_header
 from email.message import Message
 from email.utils import parseaddr, parsedate_to_datetime
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
 
@@ -437,6 +437,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         )
         super().__init__(hass, imap_client, entry, timedelta(seconds=10))
 
+    @override
     async def _async_update_data(self) -> int | None:
         """Update the number of unread emails."""
         try:
@@ -483,11 +484,13 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
         self._push_wait_task: asyncio.Task[None] | None = None
         self.number_of_messages: int | None = None
 
+    @override
     async def _async_update_data(self) -> int | None:
         """Update the number of unread emails."""
         await self.async_start()
         return self.number_of_messages
 
+    @override
     async def async_start(self) -> None:
         """Start coordinator."""
         self._push_wait_task = self.hass.async_create_background_task(
@@ -565,6 +568,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                     except AioImapException:
                         pass
 
+    @override
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""
         if self._push_wait_task:

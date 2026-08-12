@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from bluecurrent_api.client import Client
 
@@ -82,6 +82,7 @@ class ChargePointButton(ChargepointEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{description.key}_{evse_id}"
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.function(self.connector.client, self.evse_id)

@@ -3,7 +3,7 @@
 from collections import Counter
 from datetime import timedelta
 from ssl import SSLError
-from typing import Any
+from typing import Any, override
 
 from deluge_client.client import DelugeRPCClient, FailedToReconnectException
 
@@ -82,6 +82,7 @@ class DelugeDataUpdateCoordinator(
 
         return data
 
+    @override
     async def _async_update_data(self) -> dict[Platform, dict[str, Any]]:
         """Get the latest data from Deluge and updates the state."""
 

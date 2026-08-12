@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from propcache.api import cached_property
 from sqlalchemy.engine.row import Row
@@ -57,6 +57,7 @@ class LazyState(State):
         self.context = EMPTY_CONTEXT
 
     @cached_property
+    @override
     def attributes(self) -> dict[str, Any]:  # type: ignore[override]
         """State attributes."""
         return decode_attributes_from_source(
@@ -69,6 +70,7 @@ class LazyState(State):
         return getattr(self._row, "last_changed_ts", None)
 
     @cached_property
+    @override
     def last_changed(self) -> datetime:  # type: ignore[override]
         """Last changed datetime."""
         return dt_util.utc_from_timestamp(
@@ -81,6 +83,7 @@ class LazyState(State):
         return getattr(self._row, "last_reported_ts", None)
 
     @cached_property
+    @override
     def last_reported(self) -> datetime:  # type: ignore[override]
         """Last reported datetime."""
         return dt_util.utc_from_timestamp(
@@ -88,6 +91,7 @@ class LazyState(State):
         )
 
     @cached_property
+    @override
     def last_updated(self) -> datetime:  # type: ignore[override]
         """Last updated datetime."""
         if TYPE_CHECKING:
@@ -95,6 +99,7 @@ class LazyState(State):
         return dt_util.utc_from_timestamp(self._last_updated_ts)
 
     @cached_property
+    @override
     def last_updated_timestamp(self) -> float:  # type: ignore[override]
         """Last updated timestamp."""
         if TYPE_CHECKING:
@@ -102,6 +107,7 @@ class LazyState(State):
         return self._last_updated_ts
 
     @cached_property
+    @override
     def last_changed_timestamp(self) -> float:
         """Last changed timestamp."""
         ts = self._last_changed_ts or self._last_updated_ts
@@ -110,6 +116,7 @@ class LazyState(State):
         return ts
 
     @cached_property
+    @override
     def last_reported_timestamp(self) -> float:
         """Last reported timestamp."""
         ts = self._last_reported_ts or self._last_updated_ts
@@ -117,6 +124,7 @@ class LazyState(State):
             assert ts is not None
         return ts
 
+    @override
     def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
         """Return a dict representation of the LazyState.
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from pprint import pformat
-from typing import Any
+from typing import Any, override
 
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 
@@ -25,8 +25,8 @@ type MonzoConfigEntry = ConfigEntry[MonzoCoordinator]
 class MonzoData:
     """A dataclass for holding sensor data returned by the DataUpdateCoordinator."""
 
-    accounts: list[dict[str, Any]]
-    pots: list[dict[str, Any]]
+    accounts: dict[str, dict[str, Any]]
+    pots: dict[str, dict[str, Any]]
 
 
 class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
@@ -50,6 +50,7 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> MonzoData:
         """Fetch data from Monzo API."""
         try:
@@ -69,4 +70,7 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
                 message += " Enabling debug logging for details."
             raise UpdateFailed(message) from err
 
-        return MonzoData(accounts, pots)
+        return MonzoData(
+            accounts={account["id"]: account for account in accounts},
+            pots={pot["id"]: pot for pot in pots},
+        )

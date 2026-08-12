@@ -80,6 +80,7 @@ class ViCareDevice:
 
     config: PyViCareDeviceConfig
     api: PyViCareDevice
+    serial: str | None
 
 
 @dataclass(frozen=True)

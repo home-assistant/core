@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 import socket
-from typing import Any
+from typing import Any, override
 
 from telnetlib import Telnet  # pylint: disable=deprecated-module
 import voluptuous as vol
@@ -81,6 +81,7 @@ class HddTempSensor(SensorEntity):
         self._details = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self._details is not None:

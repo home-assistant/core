@@ -50,14 +50,14 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STARTED,
-    PERCENTAGE,
     SERVICE_RELOAD,
     STATE_ON,
     EntityCategory,
+    UnitOfDensity,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
@@ -762,8 +762,8 @@ async def test_homekit_start(
 
     assert device_registry.async_get(bridge_with_wrong_mac.id) is None
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)
@@ -784,8 +784,8 @@ async def test_homekit_start(
 
     assert load_mock.called
     assert not persist_mock.called
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)
@@ -1101,8 +1101,8 @@ async def test_homekit_unpair(
         state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
 
         formatted_mac = dr.format_mac(state.mac)
-        hk_bridge_dev = device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
+        hk_bridge_dev = device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, formatted_mac), entry.entry_id
         )
 
         await hass.services.async_call(
@@ -1721,7 +1721,7 @@ async def test_yaml_updates_update_config_entry_for_name(hass: HomeAssistant) ->
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
         assert await async_setup_component(
-            hass, "homekit", {"homekit": {CONF_NAME: BRIDGE_NAME, CONF_PORT: 12345}}
+            hass, DOMAIN, {"homekit": {CONF_NAME: BRIDGE_NAME, CONF_PORT: 12345}}
         )
         await hass.async_block_till_done()
 
@@ -1770,7 +1770,7 @@ async def test_yaml_can_link_with_default_name(hass: HomeAssistant) -> None:
         type(homekit).async_start = AsyncMock()
         assert await async_setup_component(
             hass,
-            "homekit",
+            DOMAIN,
             {"homekit": {"entity_config": {"camera.back_camera": {"stream_count": 3}}}},
         )
         await hass.async_block_till_done()
@@ -1816,7 +1816,7 @@ async def test_yaml_can_link_with_port(hass: HomeAssistant) -> None:
         type(homekit).async_start = AsyncMock()
         assert await async_setup_component(
             hass,
-            "homekit",
+            DOMAIN,
             {
                 "homekit": {
                     "port": 12345,
@@ -2146,7 +2146,7 @@ async def test_homekit_finds_linked_humidity_sensors(
         "42",
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PERCENTAGE,
         },
     )
     hass.states.async_set(humidifier.entity_id, STATE_ON)
@@ -2233,7 +2233,7 @@ async def test_homekit_finds_linked_air_purifier_sensors(
         "42",
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PERCENTAGE,
         },
     )
     hass.states.async_set(
@@ -2241,7 +2241,7 @@ async def test_homekit_finds_linked_air_purifier_sensors(
         8,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.PM25,
-            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         },
     )
     hass.states.async_set(
@@ -2304,7 +2304,7 @@ async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> No
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
         assert await async_setup_component(
-            hass, "homekit", {"homekit": {CONF_NAME: "reloadable", CONF_PORT: 12345}}
+            hass, DOMAIN, {"homekit": {CONF_NAME: "reloadable", CONF_PORT: 12345}}
         )
         await hass.async_block_till_done()
 
@@ -2402,8 +2402,8 @@ async def test_homekit_start_in_accessory_mode(
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)

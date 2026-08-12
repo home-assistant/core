@@ -1,6 +1,6 @@
 """Demo platform that offers a fake water heater device."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -89,30 +89,36 @@ class DemoWaterHeater(WaterHeaterEntity):
         ]
         self._attr_target_temperature_step = target_temperature_step
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
         self.schedule_update_ha_state()
 
+    @override
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self._attr_current_operation = operation_mode
         self.schedule_update_ha_state()
 
+    @override
     def turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         self._attr_is_away_mode_on = True
         self.schedule_update_ha_state()
 
+    @override
     def turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         self._attr_is_away_mode_on = False
         self.schedule_update_ha_state()
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on water heater."""
         self.set_operation_mode("eco")
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off water heater."""
         self.set_operation_mode("off")

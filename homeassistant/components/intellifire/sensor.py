@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -172,6 +173,7 @@ class IntelliFireSensor(IntellifireEntity, SensorEntity):
     entity_description: IntellifireSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | str | datetime | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator)

@@ -6,7 +6,8 @@ from matter_server.common.models import EventType
 import pytest
 
 from homeassistant.components.matter.adapter import get_clean_name
-from homeassistant.components.matter.const import DOMAIN
+from homeassistant.components.matter.const import DOMAIN, ID_TYPE_DEVICE_ID
+from homeassistant.components.matter.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -31,10 +32,9 @@ async def test_device_registry_single_node_device(
     name: str,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, f"deviceid_00000000000004D2-{unique_id}-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"deviceid_00000000000004D2-{unique_id}-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -57,10 +57,9 @@ async def test_device_registry_single_node_device_alt(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test additional device with different attribute values."""
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-000000000000001A-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001A-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -81,8 +80,8 @@ async def test_device_registry_bridge(
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
     # Validate bridge
-    bridge_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "mock-hub-id")}
+    bridge_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "mock-hub-id"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
     )
     assert bridge_entry is not None
 
@@ -93,8 +92,9 @@ async def test_device_registry_bridge(
     assert bridge_entry.sw_version == "123.4.5"
 
     # Device 1
-    device1_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "mock-id-kitchen-ceiling")}
+    device1_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "mock-id-kitchen-ceiling"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert device1_entry is not None
 
@@ -106,8 +106,9 @@ async def test_device_registry_bridge(
     assert device1_entry.sw_version == "67.8.9"
 
     # Device 2
-    device2_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "mock-id-living-room-ceiling")}
+    device2_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "mock-id-living-room-ceiling"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert device2_entry is not None
 
@@ -142,6 +143,99 @@ async def test_node_added_subscription(
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
+
+
+async def test_endpoint_added_sets_up_bridge_before_child(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a bridged child endpoint resolves via_device_id set up out of order.
+
+    The bridge device (endpoint 0) must be registered before a bridged child
+    endpoint, even if the child's ENDPOINT_ADDED event is the only one that
+    arrives (the bridge itself was never separately set up).
+    """
+    node = create_node_from_fixture("atios_knx_bridge")
+    matter_client.get_node.return_value = node
+
+    def identifier_for(endpoint_id: int) -> tuple[str, str]:
+        endpoint = node.endpoints[endpoint_id]
+        device_id = get_device_id(matter_client.server_info, endpoint)
+        return (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{device_id}")
+
+    endpoint_added_callback = next(
+        call.kwargs["callback"]
+        for call in matter_client.subscribe_events.call_args_list
+        if call.kwargs["event_filter"] == EventType.ENDPOINT_ADDED
+    )
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            identifier_for(0), integration.entry_id
+        )
+        is None
+    )
+
+    endpoint_added_callback(
+        EventType.ENDPOINT_ADDED, {"node_id": node.node_id, "endpoint_id": 29}
+    )
+    await hass.async_block_till_done()
+
+    bridge_entry = device_registry.async_get_device_by_identifier(
+        identifier_for(0), integration.entry_id
+    )
+    assert bridge_entry is not None
+
+    child_entry = device_registry.async_get_device_by_identifier(
+        identifier_for(29), integration.entry_id
+    )
+    assert child_entry is not None
+    assert child_entry.via_device_id == bridge_entry.id
+
+
+async def test_setup_node_sorts_bridge_before_child(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test initial node setup registers the bridge before a bridged child.
+
+    Endpoints must be processed in endpoint-id order on the startup path
+    (`_setup_node`), even when the bridged child endpoint precedes endpoint 0
+    in the node's raw endpoint order, otherwise resolving the child's
+    via_device_id would raise.
+    """
+    node = create_node_from_fixture("atios_knx_bridge")
+    node.endpoints = {
+        endpoint_id: node.endpoints[endpoint_id] for endpoint_id in (29, 1, 0)
+    }
+
+    def identifier_for(endpoint_id: int) -> tuple[str, str]:
+        endpoint = node.endpoints[endpoint_id]
+        device_id = get_device_id(matter_client.server_info, endpoint)
+        return (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{device_id}")
+
+    matter_client.get_nodes.return_value = [node]
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    bridge_entry = device_registry.async_get_device_by_identifier(
+        identifier_for(0), config_entry.entry_id
+    )
+    assert bridge_entry is not None
+
+    child_entry = device_registry.async_get_device_by_identifier(
+        identifier_for(29), config_entry.entry_id
+    )
+    assert child_entry is not None
+    assert child_entry.via_device_id == bridge_entry.id
 
 
 @pytest.mark.usefixtures("matter_node")
@@ -179,7 +273,7 @@ async def test_bad_node_not_crash_integration(
     del bad_node.endpoints[0].node
     matter_client.get_nodes.return_value = [good_node, bad_node]
     config_entry = MockConfigEntry(
-        domain="matter", data={"url": "http://mock-matter-server-url"}
+        domain=DOMAIN, data={"url": "http://mock-matter-server-url"}
     )
     config_entry.add_to_hass(hass)
 

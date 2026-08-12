@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -11,6 +11,8 @@ from homeassistant.components.event import (
     ENTITY_ID_FORMAT,
     EventDeviceClass,
     EventEntity,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
@@ -42,8 +44,8 @@ CONF_EVENT_TYPES = "event_types"
 
 MQTT_EVENT_ATTRIBUTES_BLOCKED = frozenset(
     {
-        event.ATTR_EVENT_TYPE,
-        event.ATTR_EVENT_TYPES,
+        EventEntityStateAttribute.EVENT_TYPE,
+        EventEntityCapabilityAttribute.EVENT_TYPES,
     }
 )
 
@@ -94,10 +96,12 @@ class MqttEvent(MqttEntity, EventEntity):
     _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
@@ -181,10 +185,12 @@ class MqttEvent(MqttEntity, EventEntity):
         mqtt_data.state_write_requests.write_state_request(self)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._event_received, None)
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)

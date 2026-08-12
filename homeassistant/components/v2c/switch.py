@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from pytrydan import Trydan, TrydanData
 from pytrydan.models.trydan import (
@@ -105,15 +105,18 @@ class V2CSwitchEntity(V2CBaseEntity, SwitchEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the EVSE switch."""
         return self.entity_description.value_fn(self.data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the EVSE switch."""
         await self.entity_description.turn_on_fn(self.coordinator.evse)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the EVSE switch."""
         await self.entity_description.turn_off_fn(self.coordinator.evse)

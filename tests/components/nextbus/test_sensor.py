@@ -135,7 +135,7 @@ async def test_verify_throttle(
     # Set rate limit past threshold, should be ignored for first request
     mock_client = mock_nextbus.return_value
     mock_client.rate_limit_percent = 99.0
-    mock_client.rate_limit_reset = datetime.now() + timedelta(seconds=30)
+    mock_client.rate_limit_reset = datetime.now() + timedelta(seconds=30)  # pylint: disable=home-assistant-enforce-naive-now
 
     # Do a request with the initial config and get predictions
     await assert_setup_sensor(hass, CONFIG_BASIC)

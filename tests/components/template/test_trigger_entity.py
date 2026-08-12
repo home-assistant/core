@@ -267,7 +267,7 @@ async def test_shutdown_stops_script_and_keeps_triggers_subscribed(
     """Test HA shutdown stops coordinator scripts without unsubscribing."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": {
                 "trigger": {"platform": "event", "event_type": "test_event"},
@@ -320,7 +320,7 @@ async def test_reload_stops_script_and_unsubscribes_triggers(
     """Test that reloading stops coordinator scripts and unsubscribes old triggers."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": {
                 "trigger": {"platform": "event", "event_type": "test_event"},
@@ -360,7 +360,7 @@ async def test_reload_stops_script_and_unsubscribes_triggers(
         autospec=True,
         return_value={"template": []},
     ):
-        await hass.services.async_call("template", SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     # Script should be stopped and unloaded

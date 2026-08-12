@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,9 +41,9 @@
 # name: test_setup[sensor.pyload_active_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Active downloads',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'downloads',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Active downloads',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_active_downloads',
@@ -60,7 +60,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -95,9 +95,9 @@
 # name: test_setup[sensor.pyload_downloads_in_queue-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Downloads in queue',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'downloads',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Downloads in queue',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_downloads_in_queue',
@@ -153,9 +153,9 @@
 # name: test_setup[sensor.pyload_free_space-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'pyLoad Free space',
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Free space',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_free_space',
@@ -211,9 +211,9 @@
 # name: test_setup[sensor.pyload_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'pyLoad Speed',
-      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Speed',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_speed',
@@ -230,7 +230,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -265,9 +265,9 @@
 # name: test_setup[sensor.pyload_total_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Total downloads',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'downloads',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Total downloads',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_total_downloads',

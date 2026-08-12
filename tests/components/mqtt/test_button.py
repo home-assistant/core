@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import button, mqtt
+from homeassistant.components import button
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -42,7 +43,7 @@ from .common import (
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {button.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {button.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
@@ -51,7 +52,7 @@ DEFAULT_CONFIG = {
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 button.DOMAIN: {
                     "command_topic": "command-topic",
                     "name": "test",
@@ -93,7 +94,7 @@ async def test_sending_mqtt_commands(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 button.DOMAIN: {
                     "command_topic": "command-topic",
                     "name": "test",
@@ -110,7 +111,7 @@ async def test_sending_mqtt_commands(
             }
         },
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 button.DOMAIN: {
                     "command_topic": "command-topic",
                     "name": "test",
@@ -152,7 +153,7 @@ async def test_sending_mqtt_commands_with_message_expiry_interval(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 button.DOMAIN: {
                     "command_topic": "command-topic",
                     "command_template": '{ "{{ value }}": "{{ entity_id }}" }',
@@ -215,7 +216,7 @@ async def test_default_availability_payload(
 ) -> None:
     """Test availability by default payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             button.DOMAIN: {
                 "name": "test",
                 "command_topic": "command-topic",
@@ -233,7 +234,7 @@ async def test_custom_availability_payload(
 ) -> None:
     """Test availability by custom payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             button.DOMAIN: {
                 "name": "test",
                 "command_topic": "command-topic",
@@ -309,7 +310,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 button.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -345,8 +346,8 @@ async def test_discovery_update_button(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered button."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][button.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][button.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][button.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][button.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
 
@@ -446,7 +447,7 @@ async def test_entity_debug_info_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 button.DOMAIN: {
                     "name": "test",
                     "command_topic": "test-topic",
@@ -470,7 +471,7 @@ async def test_invalid_device_class(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 button.DOMAIN: [
                     {
                         "name": "Test 1",

@@ -1,7 +1,7 @@
 """Config flow for Indevolt integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from indevolt_api import IndevoltAPI
@@ -22,6 +22,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     """Configuration flow for Indevolt integration."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -29,6 +30,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_host: str | None = None
         self._discovered_device_data: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -91,6 +93,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -113,6 +116,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_zeroconf_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

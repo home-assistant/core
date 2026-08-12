@@ -3,6 +3,7 @@
 from html.parser import HTMLParser
 from ipaddress import ip_address
 import logging
+from typing import override
 from urllib.parse import ParseResult, urljoin, urlparse
 
 import aiohttp
@@ -64,6 +65,7 @@ class LinkTagParser(HTMLParser):
         self.rel = rel
         self.found: list[str | None] = []
 
+    @override
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         """Handle finding a start tag."""
         if tag != "link":

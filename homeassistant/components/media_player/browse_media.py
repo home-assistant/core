@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import quote
 
 import yarl
@@ -110,6 +110,7 @@ class BrowseMedia:
         thumbnail: str | None = None,
         not_shown: int = 0,
         can_search: bool = False,
+        search_media_classes: list[MediaClass] | None = None,
     ) -> None:
         """Initialize browse media item."""
         self.media_class = media_class
@@ -123,6 +124,7 @@ class BrowseMedia:
         self.thumbnail = thumbnail
         self.not_shown = not_shown
         self.can_search = can_search
+        self.search_media_classes = search_media_classes
 
     def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
         """Convert Media class to browse media dictionary."""
@@ -138,6 +140,7 @@ class BrowseMedia:
             "can_play": self.can_play,
             "can_expand": self.can_expand,
             "can_search": self.can_search,
+            "search_media_classes": self.search_media_classes,
             "thumbnail": self.thumbnail,
         }
 
@@ -163,6 +166,7 @@ class BrowseMedia:
         if all(child.media_class == proposed_class for child in self.children):
             self.children_media_class = proposed_class
 
+    @override
     def __repr__(self) -> str:
         """Return representation of browse media."""
         return f"<BrowseMedia {self.title} ({self.media_class})>"
@@ -173,7 +177,7 @@ class SearchMedia:
     """Represent search results."""
 
     version: int = field(default=1)
-    result: list[BrowseMedia]
+    result: Sequence[BrowseMedia]
 
     def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
         """Convert SearchMedia class to browse media dictionary."""

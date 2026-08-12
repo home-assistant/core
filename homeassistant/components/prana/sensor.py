@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,13 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
-    UnitOfPressure,
-    UnitOfTemperature,
-)
+from homeassistant.const import UnitOfPressure, UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -53,13 +48,13 @@ ENTITIES: tuple[PranaSensorEntityDescription, ...] = (
     PranaSensorEntityDescription(
         key=PranaSensorType.HUMIDITY,
         value_fn=lambda coord: coord.data.humidity,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     PranaSensorEntityDescription(
         key=PranaSensorType.VOC,
         value_fn=lambda coord: coord.data.voc,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
     ),
     PranaSensorEntityDescription(
@@ -71,7 +66,7 @@ ENTITIES: tuple[PranaSensorEntityDescription, ...] = (
     PranaSensorEntityDescription(
         key=PranaSensorType.CO2,
         value_fn=lambda coord: coord.data.co2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
     ),
     PranaSensorEntityDescription(
@@ -124,6 +119,7 @@ class PranaSensor(PranaBaseEntity, SensorEntity):
     entity_description: PranaSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator)

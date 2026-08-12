@@ -14,7 +14,12 @@ from uiprotect.data import (
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
-from homeassistant.components.siren import ATTR_DURATION, ATTR_VOLUME_LEVEL
+from homeassistant.components.siren import (
+    ATTR_DURATION,
+    ATTR_VOLUME_LEVEL,
+    DOMAIN as SIREN_DOMAIN,
+)
+from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -26,7 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .utils import MockUFPFixture, assert_entity_counts, init_entry
@@ -109,6 +114,19 @@ async def test_siren_not_created_without_public_bootstrap(
     assert_entity_counts(hass, Platform.SIREN, 0, 0)
 
 
+async def test_siren_ws_update_without_subscription_is_ignored(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """A public siren WS update for an unsubscribed siren is a no-op."""
+    await init_entry(hass, ufp, [])
+    assert ufp.devices_ws_subscription is not None
+
+    ufp.devices_ws_subscription(_make_ws_msg(_make_siren()))
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.SIREN, 0, 0)
+
+
 async def test_siren_created_off(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -141,6 +159,27 @@ async def test_siren_created_on(
     assert state.state == STATE_ON
 
 
+async def test_siren_device_links_to_nvr_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_with_siren: MockUFPFixture,
+) -> None:
+    """Siren device's via_device_id points at the NVR device."""
+    await init_entry(hass, ufp_with_siren, [])
+
+    nvr = ufp_with_siren.api.bootstrap.nvr
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, nvr.mac), ufp_with_siren.entry.entry_id
+    )
+    assert nvr_device is not None
+
+    siren_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SIREN_MAC), ufp_with_siren.entry.entry_id
+    )
+    assert siren_device is not None
+    assert siren_device.via_device_id == nvr_device.id
+
+
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
@@ -155,7 +194,7 @@ async def test_siren_turn_on(
     await init_entry(hass, ufp_with_siren, [])
 
     await hass.services.async_call(
-        Platform.SIREN,
+        SIREN_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
         blocking=True,
@@ -183,7 +222,7 @@ async def test_siren_turn_on_with_duration(
     await init_entry(hass, ufp_with_siren, [])
 
     await hass.services.async_call(
-        Platform.SIREN,
+        SIREN_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: SIREN_ENTITY_ID, ATTR_DURATION: seconds},
         blocking=True,
@@ -201,7 +240,7 @@ async def test_siren_turn_on_invalid_duration(
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            Platform.SIREN,
+            SIREN_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: SIREN_ENTITY_ID, ATTR_DURATION: 15},
             blocking=True,
@@ -223,7 +262,7 @@ async def test_siren_turn_on_invalid_duration_does_not_set_volume(
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            Platform.SIREN,
+            SIREN_DOMAIN,
             SERVICE_TURN_ON,
             {
                 ATTR_ENTITY_ID: SIREN_ENTITY_ID,
@@ -245,7 +284,7 @@ async def test_siren_turn_on_with_volume(
     await init_entry(hass, ufp_with_siren, [])
 
     await hass.services.async_call(
-        Platform.SIREN,
+        SIREN_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: SIREN_ENTITY_ID, ATTR_VOLUME_LEVEL: 0.75},
         blocking=True,
@@ -268,7 +307,7 @@ async def test_siren_turn_off(
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        Platform.SIREN,
+        SIREN_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
         blocking=True,
@@ -301,7 +340,7 @@ async def test_siren_turn_on_api_error(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SIREN,
+            SIREN_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
             blocking=True,
@@ -319,7 +358,7 @@ async def test_siren_turn_on_when_siren_gone(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SIREN,
+            SIREN_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
             blocking=True,
@@ -337,7 +376,7 @@ async def test_siren_turn_off_when_bootstrap_unavailable(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.SIREN,
+            SIREN_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
             blocking=True,
@@ -407,15 +446,15 @@ async def test_siren_availability_follows_websocket_state(
     assert state is not None
     assert state.state == STATE_OFF
 
-    assert ufp_with_siren.ws_state_subscription is not None
-    ufp_with_siren.ws_state_subscription(WebsocketState.DISCONNECTED)
+    assert ufp_with_siren.devices_ws_state_subscription is not None
+    ufp_with_siren.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(SIREN_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    ufp_with_siren.ws_state_subscription(WebsocketState.CONNECTED)
+    ufp_with_siren.devices_ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(SIREN_ENTITY_ID)
@@ -506,7 +545,7 @@ async def test_siren_turn_off_cancels_scheduled_timer(
 
     # Manually turn off — must cancel the scheduled timer.
     await hass.services.async_call(
-        Platform.SIREN,
+        SIREN_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
         blocking=True,
@@ -573,10 +612,10 @@ async def test_siren_unavailable_on_delete_event(
 ) -> None:
     """Entity becomes UNAVAILABLE when the siren is removed via a WS delete event.
 
-    When the public bootstrap sends new_obj=None (device deleted), data.py
-    dispatches the last-known Siren object (old_obj) to subscriptions.
-    The entity then checks self._siren; if it is no longer in the bootstrap
-    it must override _attr_available to False.
+    On a delete event (new_obj=None) data.py dispatches None to the public
+    subscriptions for the old object's mac. The entity re-reads self._siren;
+    since it is no longer in the bootstrap it must override _attr_available
+    to False.
     """
     await init_entry(hass, ufp_with_siren, [])
 

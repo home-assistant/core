@@ -1,7 +1,7 @@
 """Simplepush notification service."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from simplepush import BadRequest, UnknownError, send
 
@@ -41,6 +41,7 @@ class SimplePushNotificationService(BaseNotificationService):
         self._password: str | None = config.get(CONF_PASSWORD)
         self._salt: str | None = config.get(CONF_SALT)
 
+    @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a Simplepush user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)

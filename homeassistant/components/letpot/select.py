@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.models import (
@@ -171,11 +171,13 @@ class LetPotSelectEntity[_DataT: LetPotDeviceStatus](
         )
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option."""
         return self.entity_description.value_fn(self.coordinator)
 
     @exception_handler
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         return await self.entity_description.set_value_fn(

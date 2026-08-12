@@ -71,7 +71,6 @@ from .const import (
     DEFAULT_QOS,
     DEFAULT_TRANSPORT,
     DEFAULT_WILL,
-    DEFAULT_WS_HEADERS,
     DEFAULT_WS_PATH,
     DOMAIN,
     MQTT_CONNECTION_STATE,
@@ -159,7 +158,6 @@ async def async_publish(
 ) -> None:
     """Publish message to a MQTT topic."""
     if not mqtt_config_entry_enabled(hass):
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
             translation_key="mqtt_not_setup_cannot_publish",
             translation_domain=DOMAIN,
@@ -284,7 +282,6 @@ def async_subscribe_internal(
     try:
         mqtt_data = hass.data[DATA_MQTT]
     except KeyError as exc:
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
             translation_key="mqtt_not_setup_cannot_subscribe",
             translation_domain=DOMAIN,
@@ -292,7 +289,6 @@ def async_subscribe_internal(
         ) from exc
     client = mqtt_data.client
     if not mqtt_config_entry_enabled(hass):
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
             translation_key="mqtt_not_enabled_cannot_subscribe",
             translation_domain=DOMAIN,
@@ -417,7 +413,7 @@ class MqttClientSetup:
         tls_insecure = config.get(CONF_TLS_INSECURE)
         if transport == TRANSPORT_WEBSOCKETS:
             ws_path: str = config.get(CONF_WS_PATH, DEFAULT_WS_PATH)
-            ws_headers: dict[str, str] = config.get(CONF_WS_HEADERS, DEFAULT_WS_HEADERS)
+            ws_headers: dict[str, str] = config.get(CONF_WS_HEADERS, {})
             self._client.ws_set_options(ws_path, ws_headers)
         if certificate is not None:
             self._client.tls_set(
@@ -798,7 +794,7 @@ class MQTT:
             keepalive=self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
             # See:
             # https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
-            # `clean_start` (bool) – (MQTT v5.0 only) `True`, `False` or
+            # `clean_start` (bool) - (MQTT v5.0 only) `True`, `False` or
             # `MQTT_CLEAN_START_FIRST_ONLY`. Sets the MQTT v5.0 clean_start flag
             #  always, never or on the first successful connect only,
             # respectively. MQTT session data (such as outstanding messages and
@@ -1335,14 +1331,17 @@ class MQTT:
                 msg.payload[0:8192],
             )
             return
-        _LOGGER.debug(
-            "Received%s message on %s (qos=%s) IDs=%s: %s",
-            " retained" if msg.retain else "",
-            topic,
-            msg.qos,
-            identifiers,
-            msg.payload[0:8192],
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            # Guard the debug log so the payload is not sliced (copied) on
+            # every received message when debug logging is disabled.
+            _LOGGER.debug(
+                "Received%s message on %s (qos=%s) IDs=%s: %s",
+                " retained" if msg.retain else "",
+                topic,
+                msg.qos,
+                identifiers,
+                msg.payload[0:8192],
+            )
         msg_cache_by_subscription_topic: dict[str, ReceiveMessage] = {}
 
         for subscription in self._matching_subscriptions(topic, identifiers):

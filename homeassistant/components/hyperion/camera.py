@@ -6,7 +6,7 @@ import binascii
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import functools
-from typing import Any
+from typing import Any, override
 
 from aiohttp import web
 from hyperion import client
@@ -141,11 +141,13 @@ class HyperionCamera(Camera):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the camera is on."""
         return self.available
 
     @property
+    @override
     def available(self) -> bool:
         """Return server availability."""
         return bool(self._client.has_loaded_state)
@@ -204,6 +206,7 @@ class HyperionCamera(Camera):
         finally:
             await self._stop_image_streaming_for_client()
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -213,6 +216,7 @@ class HyperionCamera(Camera):
                 return await self._async_wait_for_camera_image()
         return None
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse | None:
@@ -227,6 +231,7 @@ class HyperionCamera(Camera):
                 )
         return None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""
         self.async_on_remove(
@@ -239,6 +244,7 @@ class HyperionCamera(Camera):
 
         self._client.add_callbacks(self._client_callbacks)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup prior to hass removal."""
         self._client.remove_callbacks(self._client_callbacks)

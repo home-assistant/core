@@ -1,6 +1,6 @@
 """Support for LightwaveRF TRVs."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
@@ -89,6 +89,7 @@ class LightwaveTrv(ClimateEntity):
                 self._attr_hvac_action = HVACAction.OFF
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Target room temperature."""
         if self._inhibit > 0:
@@ -99,6 +100,7 @@ class LightwaveTrv(ClimateEntity):
             self._attr_target_temperature = self._inhibit
         return self._attr_target_temperature
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set TRV target temperature."""
         if ATTR_TEMPERATURE in kwargs:
@@ -108,5 +110,6 @@ class LightwaveTrv(ClimateEntity):
             self._device_id, self._attr_target_temperature, self._attr_name
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC Mode for TRV."""

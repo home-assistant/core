@@ -1,3 +1,11 @@
+get_alerts:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: environment_canada
+
 get_forecasts:
   target:
     entity:

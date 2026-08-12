@@ -1,6 +1,5 @@
 """Test the SmartTub binary sensor platform."""
 
-from datetime import datetime
 from unittest.mock import create_autospec
 
 import pytest
@@ -8,6 +7,7 @@ import smarttub
 
 from homeassistant.components.binary_sensor import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 
 async def test_binary_sensors(spa, setup_entry, hass: HomeAssistant) -> None:
@@ -43,8 +43,8 @@ def mock_error(spa):
     error.title = "Flow Switch Stuck Open"
     error.description = None
     error.active = True
-    error.created_at = datetime.now()
-    error.updated_at = datetime.now()
+    error.created_at = dt_util.utcnow()
+    error.updated_at = dt_util.utcnow()
     error.error_type = "TUB_ERROR"
     return error
 

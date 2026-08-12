@@ -1,7 +1,7 @@
 """Switch platform for the Orvibo integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from orvibo.s20 import S20, S20Exception
 import voluptuous as vol
@@ -155,6 +155,7 @@ class S20Switch(SwitchEntity):
             connections={(CONNECTION_NETWORK_MAC, self._mac)},
         )
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         try:
@@ -166,6 +167,7 @@ class S20Switch(SwitchEntity):
                 translation_placeholders={"name": self._name},
             ) from err
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         try:

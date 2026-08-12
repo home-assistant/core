@@ -1,6 +1,6 @@
 """Support for MotionMount sensors."""
 
-from typing import Final
+from typing import Final, override
 
 import motionmount
 from motionmount import MotionMountSystemError
@@ -59,6 +59,7 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
         self._attr_unique_id = f"{self._base_unique_id}-error-status"
 
     @property
+    @override
     def native_value(self) -> str:
         """Return error status."""
         status = self.mm.system_status

@@ -2,6 +2,7 @@
 
 import contextlib
 from datetime import timedelta
+from typing import override
 
 from aiohttp import ClientConnectorError
 from mozart_api.exceptions import ApiException
@@ -72,6 +73,7 @@ class BeoSensorBatteryLevel(BeoSensor):
 
         self._attr_unique_id = f"{self._unique_id}_battery_level"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         self.async_on_remove(
@@ -118,6 +120,7 @@ class BeoSensorRemoteBatteryLevel(BeoSensor):
         self._attr_native_value = remote.battery_level
         self._remote = remote
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         self.async_on_remove(

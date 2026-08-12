@@ -1,6 +1,7 @@
 """Common opentherm_gw entity properties."""
 
 import logging
+from typing import override
 
 import pyotgw.vars as gw_vars
 
@@ -56,6 +57,7 @@ class OpenThermEntity(Entity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return connection status of the hub to indicate availability."""
         return self._gateway.connected
@@ -66,6 +68,7 @@ class OpenThermStatusEntity(OpenThermEntity):
 
     _attr_should_poll = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates from the component."""
         self.async_on_remove(

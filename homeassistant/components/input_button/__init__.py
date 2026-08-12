@@ -1,7 +1,7 @@
 """Support to keep track of user controlled buttons which can be used in automations."""
 
 import logging
-from typing import Self, cast
+from typing import Self, cast, override
 
 import voluptuous as vol
 
@@ -55,15 +55,18 @@ class InputButtonStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
+    @override
     async def _process_create_data(self, data: dict) -> dict[str, str]:
         """Validate the config is valid."""
         return self.CREATE_UPDATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return cast(str, info[CONF_NAME])
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
@@ -138,6 +141,7 @@ class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         button = cls(config)
@@ -145,6 +149,7 @@ class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
         return button
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         button = cls(config)
@@ -153,20 +158,24 @@ class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
         return button
 
     @property
+    @override
     def name(self) -> str | None:
         """Return name of the button."""
         return self._config.get(CONF_NAME)
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the state attributes of the entity."""
         return {ATTR_EDITABLE: self.editable}
 
+    @override
     async def async_press(self) -> None:
         """Press the button.
 
@@ -174,6 +183,7 @@ class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
         The input button itself doesn't trigger anything.
         """
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config

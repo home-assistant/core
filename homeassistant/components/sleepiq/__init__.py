@@ -16,7 +16,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, PRESSURE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
     email = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
-    client_session = async_get_clientsession(hass)
+    client_session = async_create_clientsession(hass)
 
     gateway = AsyncSleepIQ(client_session=client_session)
 

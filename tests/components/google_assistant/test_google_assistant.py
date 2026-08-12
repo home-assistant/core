@@ -15,6 +15,7 @@ from homeassistant.components import (
     light,
     media_player,
 )
+from homeassistant.components.google_assistant import DOMAIN
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -44,7 +45,7 @@ async def assistant_client(
     """Create web client for the Google Assistant API."""
     await setup.async_setup_component(
         hass,
-        "google_assistant",
+        DOMAIN,
         {
             "google_assistant": {
                 "project_id": PROJECT_ID,

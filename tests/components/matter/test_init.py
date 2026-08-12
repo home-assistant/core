@@ -5,7 +5,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import PartialBackupOptions
+from aiohasupervisor.models import InterfaceMethod, PartialBackupOptions
 from matter_server.client.exceptions import (
     CannotConnect,
     NotConnected,
@@ -111,7 +111,7 @@ async def test_entry_setup_unload(
     node = create_node_from_fixture("mock_onoff_light")
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node
-    entry = MockConfigEntry(domain="matter", data={"url": "ws://localhost:5580/ws"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -325,6 +325,7 @@ async def test_raise_addon_task_in_progress(
     await asyncio.sleep(0.05)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_ready"
     assert install_addon.call_count == 1
     assert start_addon.call_count == 0
 
@@ -357,6 +358,7 @@ async def test_start_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_running"
     assert addon_info.call_count == 1
     assert install_addon.call_count == 0
     assert start_addon.call_count == 1
@@ -384,6 +386,7 @@ async def test_install_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_installed"
     assert addon_store_info.call_count == 2
     assert install_addon.call_count == 1
     assert install_addon.call_args == call("core_matter_server")
@@ -545,6 +548,197 @@ async def test_issue_registry_invalid_version(
 
     assert entry.state is ConfigEntryState.LOADED
     assert not issue_registry.async_get_issue(DOMAIN, issue_raised)
+
+
+def _mock_network_interface(
+    *, enabled: bool, connected: bool, ipv6_method: InterfaceMethod | None
+) -> MagicMock:
+    """Build a mock Supervisor network interface."""
+    interface = MagicMock()
+    interface.enabled = enabled
+    interface.connected = connected
+    interface.ipv6 = None if ipv6_method is None else MagicMock(method=ipv6_method)
+    return interface
+
+
+@pytest.mark.parametrize(
+    ("interfaces", "issue_expected"),
+    [
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ],
+            True,
+            id="ipv6_disabled",
+        ),
+        pytest.param(
+            [_mock_network_interface(enabled=True, connected=True, ipv6_method=None)],
+            True,
+            id="no_ipv6_config",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.AUTO
+                )
+            ],
+            False,
+            id="ipv6_auto",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.STATIC
+                )
+            ],
+            False,
+            id="ipv6_static",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                ),
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.AUTO
+                ),
+            ],
+            False,
+            id="ipv6_enabled_on_secondary_interface",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=False, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ],
+            False,
+            id="no_connected_interface",
+        ),
+    ],
+)
+async def test_ipv6_disabled_repair(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    interfaces: list[MagicMock],
+    issue_expected: bool,
+) -> None:
+    """Test repair issue when IPv6 is disabled in Supervisor network settings."""
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(
+        return_value=MagicMock(interfaces=interfaces)
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+    assert (issue is not None) is issue_expected
+
+
+async def test_ipv6_repair_not_raised_without_supervisor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the IPv6 repair is skipped when not running on Supervisor."""
+    with patch(
+        "homeassistant.components.matter.get_supervisor_client"
+    ) as get_supervisor_client:
+        entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    get_supervisor_client.assert_not_called()
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+
+async def test_ipv6_repair_supervisor_error(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the IPv6 repair handles Supervisor errors gracefully."""
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(side_effect=SupervisorError("boom"))
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+
+async def test_ipv6_repair_resolves_on_reload(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the IPv6 repair is removed once IPv6 is enabled again."""
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(
+        return_value=MagicMock(
+            interfaces=[
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ]
+        )
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+        supervisor_client.network.info.return_value = MagicMock(
+            interfaces=[
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.AUTO
+                )
+            ]
+        )
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
 
 
 @pytest.mark.parametrize(

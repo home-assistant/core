@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import ANY, MockConfigEntry
@@ -41,7 +41,10 @@ def mock_dsm_with_filestation():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],

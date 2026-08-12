@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyezvizapi import EzvizClient
 from pyezvizapi.constants import SupportExt
@@ -101,6 +101,7 @@ class EzvizButtonEntity(EzvizEntity, ButtonEntity):
         self._attr_unique_id = f"{serial}_{description.key}"
         self.entity_description = description
 
+    @override
     def press(self) -> None:
         """Execute the button action."""
         try:

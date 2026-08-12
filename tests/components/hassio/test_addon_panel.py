@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from aiohasupervisor.models import IngressPanel
 import pytest
 
+from homeassistant.components.hassio import DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -38,7 +39,7 @@ async def test_hassio_addon_panel_startup(
         "homeassistant.components.hassio.addon_panel._register_panel",
     ) as mock_panel:
         with patch.dict(os.environ, MOCK_ENVIRON):
-            await async_setup_component(hass, "hassio", {})
+            await async_setup_component(hass, DOMAIN, {})
             await hass.async_block_till_done()
 
         ingress_panels.assert_not_called()
@@ -71,7 +72,7 @@ async def test_hassio_addon_panel_api(
     }
 
     with patch.dict(os.environ, MOCK_ENVIRON):
-        await async_setup_component(hass, "hassio", {})
+        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     with patch(
@@ -119,7 +120,7 @@ async def test_hassio_addon_panel_api_non_admin(
     }
 
     with patch.dict(os.environ, MOCK_ENVIRON):
-        await async_setup_component(hass, "hassio", {})
+        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     with patch(
@@ -160,7 +161,7 @@ async def test_hassio_addon_panel_registration(
     }
 
     with patch.dict(os.environ, MOCK_ENVIRON):
-        await async_setup_component(hass, "hassio", {})
+        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     with patch(
@@ -193,7 +194,7 @@ async def test_hassio_addon_panel_api_delete(
         "test1": IngressPanel(enable=True, title="Test", icon="mdi:test", admin=False),
     }
     with patch.dict(os.environ, MOCK_ENVIRON):
-        await async_setup_component(hass, "hassio", {})
+        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     hass_client = await hass_client()
@@ -218,7 +219,7 @@ async def test_hassio_addon_panel_api_delete_non_admin(
         "test1": IngressPanel(enable=True, title="Test", icon="mdi:test", admin=False),
     }
     with patch.dict(os.environ, MOCK_ENVIRON):
-        await async_setup_component(hass, "hassio", {})
+        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     hass_admin_user.groups = []
