@@ -36,14 +36,42 @@ class WatercrystSensorEntityDescription[DataT](SensorEntityDescription):
     value_fn: Callable[[DataT | None], StateType]
 
 
+MODES = {
+    "ER": "error_mode",
+    "FS": "fail_safe",
+    "LS": "leakage_protection",
+    "MC": "manual_control",
+    "RS": "rinse",
+    "ST": "self_test",
+    "TD": "thermal_disinfection",
+    "UD": "update",
+    "WO": "water_off",
+    "WT": "water_treatment",
+}
+
+ML_STATES = {
+    "cancelled": "cancelled",
+    "failure-pressure-drop": "failure_pressure_drop",
+    "failure-start-pressure": "failure_start_pressure",
+    "failure-unknown": "failure_unknown",
+    "failure-water-tap": "failure_water_tap",
+    "idle": "idle",
+    "leakage": "leakage",
+    "running": "running",
+    "success": "success",
+}
+
+
 STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
     WatercrystSensorEntityDescription[StateResponse](
         key="mode.id",
         translation_key="mode_id",
         icon="mdi:circle-double",
         device_class=SensorDeviceClass.ENUM,
-        options=[],
-        value_fn=lambda data: data.mode.id if data and data.mode else None,
+        options=list(MODES.values()),
+        value_fn=lambda data: (
+            MODES[data.mode.id] if data and data.mode and data.mode.id else None
+        ),
     ),
     WatercrystSensorEntityDescription[StateResponse](
         key="event.event_id",
@@ -56,7 +84,7 @@ STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
         translation_key="event_category",
         icon="mdi:alert-circle-outline",
         device_class=SensorDeviceClass.ENUM,
-        options=[],
+        options=["error", "warning", "info"],
         value_fn=lambda data: data.event.category if data and data.event else None,
     ),
     WatercrystSensorEntityDescription[StateResponse](
@@ -76,9 +104,11 @@ STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
         translation_key="ml_state",
         icon="mdi:pipe-leak",
         device_class=SensorDeviceClass.ENUM,
-        options=[],
+        options=list(ML_STATES.values()),
         available_fn=lambda data: data.has_leakage_protection_system,
-        value_fn=lambda data: data.ml_state if data else None,
+        value_fn=lambda data: (
+            ML_STATES[data.ml_state] if data and data.ml_state else None
+        ),
     ),
 ]
 

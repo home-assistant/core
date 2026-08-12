@@ -3,7 +3,7 @@
 from asyncio import CancelledError, timeout
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from httpx import HTTPStatusError, RequestError
 from pyocat import (
@@ -18,8 +18,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import WatercrystConfigEntry
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import WatercrystConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
