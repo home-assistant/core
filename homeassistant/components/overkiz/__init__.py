@@ -277,8 +277,7 @@ async def _async_migrate_go_to_alias_button_unique_ids(
         ):
             return None
 
-        device_url = entry.unique_id.removesuffix(legacy_suffix)
-        device = coordinator.data.get(device_url)
+        device = coordinator.data.get(entry.unique_id.removesuffix(legacy_suffix))
         aliases = (
             device.attributes.get(OverkizAttribute.CORE_SUPPORTED_ALIASES)
             if device

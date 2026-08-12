@@ -1,5 +1,19 @@
 {
   "entity": {
+    "button": {
+      "go_to_alias_favorite1": {
+        "default": "mdi:star"
+      },
+      "go_to_alias_partial": {
+        "default": "mdi:star"
+      },
+      "go_to_alias_pedestrian": {
+        "default": "mdi:star"
+      },
+      "go_to_alias_ventilation": {
+        "default": "mdi:star"
+      }
+    },
     "climate": {
       "overkiz": {
         "state_attributes": {

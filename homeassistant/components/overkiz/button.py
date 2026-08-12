@@ -134,21 +134,21 @@ async def async_setup_entry(
             continue
 
         for command in device.definition.commands:
-            # Dynamically generate buttons for goToAlias commands based on the supported aliases of the device
-            if command == OverkizCommand.GO_TO_ALIAS:
-                if attribute := device.attributes.get(
+            # goToAlias takes an alias id, so create one button per supported alias
+            if command == OverkizCommand.GO_TO_ALIAS and (
+                attribute := device.attributes.get(
                     OverkizAttribute.CORE_SUPPORTED_ALIASES
-                ):
-                    entities.extend(
-                        OverkizAliasButton(
-                            device.device_url,
-                            data.coordinator,
-                            alias_id=str(alias["id"]),
-                            alias_type=alias["type"],
-                        )
-                        for alias in cast(list, attribute.value)
+                )
+            ):
+                entities.extend(
+                    OverkizAliasButton(
+                        device.device_url,
+                        data.coordinator,
+                        alias_id=str(alias["id"]),
+                        alias_type=alias["type"],
                     )
-            # Create buttons for supported commands based on the predefined BUTTON_DESCRIPTIONS
+                    for alias in cast(list, attribute.value)
+                )
             elif description := SUPPORTED_COMMANDS.get(command):
                 entities.append(
                     OverkizButton(device.device_url, data.coordinator, description)
@@ -176,8 +176,6 @@ class OverkizButton(OverkizDescriptiveEntity, ButtonEntity):
 
 class OverkizAliasButton(OverkizEntity, ButtonEntity):
     """Representation of an Overkiz goToAlias button."""
-
-    _attr_icon = "mdi:star"
 
     def __init__(
         self,

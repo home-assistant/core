@@ -2753,7 +2753,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:star',
+    'original_icon': None,
     'original_name': 'Ventilation position',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -2768,7 +2768,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Loft Window Ventilation position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.loft_loft_window_ventilation_position',
@@ -2856,7 +2855,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:star',
+    'original_icon': None,
     'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -2871,7 +2870,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Window My position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.loft_studio_window_my_position',
@@ -6751,7 +6749,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:star',
+    'original_icon': None,
     'original_name': 'Partial position',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -6766,7 +6764,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Door Partial position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_garage_door_partial_position',
@@ -7982,7 +7979,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:star',
+    'original_icon': None,
     'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -7997,7 +7994,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position',
@@ -8033,7 +8029,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:star',
+    'original_icon': None,
     'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -8048,7 +8044,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_2',
@@ -8084,7 +8079,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:star',
+    'original_icon': None,
     'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -8099,7 +8094,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_3',
@@ -8135,7 +8129,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:star',
+    'original_icon': None,
     'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -8150,7 +8144,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_4',
@@ -8186,7 +8179,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:star',
+    'original_icon': None,
     'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -8201,7 +8194,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_5',
@@ -8237,7 +8229,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:star',
+    'original_icon': None,
     'original_name': 'My position',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -8252,7 +8244,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position_6',
@@ -9778,7 +9769,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:star',
+    'original_icon': None,
     'original_name': 'Pedestrian position',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -9793,7 +9784,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Elixo 3S+ IO Pedestrian position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.elixo_3s_io_pedestrian_position',
