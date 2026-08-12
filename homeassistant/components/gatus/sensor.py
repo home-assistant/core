@@ -68,12 +68,11 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda endpoint: (
-            dt_util.utcnow()
+            dt_util.utcnow().replace(microsecond=0, second=0)
             + timedelta(
-                seconds=endpoint.results[-1].domain_expiration / 1_000_000_000
+                seconds=int(endpoint.results[-1].domain_expiration / 1_000_000_000)
             )
-            if endpoint.results
-            and endpoint.results[-1].domain_expiration is not None
+            if endpoint.results and endpoint.results[-1].domain_expiration is not None
             else None
         ),
     ),
@@ -93,10 +92,7 @@ async def async_setup_entry(
         for endpoint_key, endpoint in coordinator.data.items()
         for description in SENSOR_TYPES
         if description.key != "domain_expiration"
-        or (
-            endpoint.results
-            and endpoint.results[-1].domain_expiration is not None
-        )
+        or (endpoint.results and endpoint.results[-1].domain_expiration is not None)
     )
 
 
