@@ -29,6 +29,16 @@ class GatusSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Result], float | int | str | None]
 
 
+DNS_RCODE_MAP = {
+    "NOERROR": "no_error",
+    "FORMERR": "format_error",
+    "SERVFAIL": "server_failure",
+    "NXDOMAIN": "non_existent_domain",
+    "NOTIMP": "not_implemented",
+    "REFUSED": "refused",
+}
+
+
 SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
     GatusSensorEntityDescription(
         key="response_time",
@@ -53,7 +63,9 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         translation_key="dns_rcode",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda result: (
-            result.dns_rcode.lower() if result.dns_rcode is not None else None
+            DNS_RCODE_MAP.get(result.dns_rcode, result.dns_rcode.lower())
+            if result.dns_rcode is not None
+            else None
         ),
     ),
 )
@@ -89,6 +101,7 @@ class GatusEndpointSensor(GatusEndpointEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entry, endpoint_key)
         self.entity_description = description
+        self._attr_translation_key = description.translation_key
         self._attr_unique_id = f"{entry.entry_id}_{endpoint_key}_{description.key}"
 
     @property

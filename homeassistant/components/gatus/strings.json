@@ -34,12 +34,12 @@
       "dns_rcode": {
         "name": "DNS response code",
         "state": {
-          "formerr": "Format error",
-          "noerror": "No error",
-          "notimp": "Not implemented",
-          "nxdomain": "Non-existent domain",
+          "format_error": "Format error",
+          "no_error": "No error",
+          "non_existent_domain": "Non-existent domain",
+          "not_implemented": "Not implemented",
           "refused": "Refused",
-          "servfail": "Server failure"
+          "server_failure": "Server failure"
         }
       },
       "response_time": {
