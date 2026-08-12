@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from decimal import Decimal, DecimalException
 from typing import Any, Final, cast
 
+from aiohttp import ClientError
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 import voluptuous as vol
 
@@ -209,6 +210,11 @@ async def _async_transfer(
                     "reason": reason,
                 },
             ) from err
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="transfer_failed",
+        ) from err
+    except (ClientError, TimeoutError) as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="transfer_failed",

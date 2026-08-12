@@ -6,6 +6,7 @@ from math import nan
 from typing import cast
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp import ClientError
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 import pytest
 import voluptuous as vol
@@ -331,6 +332,30 @@ async def test_api_error(
     with pytest.raises(HomeAssistantError):
         await _async_call_transfer(hass, transfer_devices, SERVICE_DEPOSIT_INTO_POT, 1)
 
+    assert monzo.user_account.accounts.await_count == 1
+    assert monzo.user_account.pots.await_count == 1
+
+
+@pytest.mark.parametrize(
+    "api_error",
+    [
+        pytest.param(ClientError(), id="client-error"),
+        pytest.param(TimeoutError(), id="timeout"),
+    ],
+)
+async def test_transport_error(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    transfer_devices: TransferDevices,
+    api_error: Exception,
+) -> None:
+    """Test a transport error is exposed as a Home Assistant error."""
+    monzo.user_account.pot_deposit.side_effect = api_error
+
+    with pytest.raises(HomeAssistantError) as error:
+        await _async_call_transfer(hass, transfer_devices, SERVICE_DEPOSIT_INTO_POT, 1)
+
+    assert error.value.translation_key == "transfer_failed"
     assert monzo.user_account.accounts.await_count == 1
     assert monzo.user_account.pots.await_count == 1
 
