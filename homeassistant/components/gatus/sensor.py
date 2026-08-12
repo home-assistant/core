@@ -2,9 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import override
 
-from gatus_api import Result
+from gatus_api import EndpointStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,7 +26,7 @@ PARALLEL_UPDATES = 0
 class GatusSensorEntityDescription(SensorEntityDescription):
     """Class describing Gatus sensor entities."""
 
-    value_fn: Callable[[Result], float | int | str | None]
+    value_fn: Callable[[EndpointStatus], float | int | str | None]
 
 
 DNS_RCODE_MAP = {
@@ -46,9 +46,9 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda result: (
-            round(result.duration / 1_000_000, 2)
-            if result.duration is not None
+        value_fn=lambda endpoint: (
+            round(endpoint.results[-1].duration / 1_000_000, 2)
+            if endpoint.results and endpoint.results[-1].duration is not None
             else None
         ),
     ),
@@ -56,15 +56,30 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         key="status_code",
         translation_key="status_code",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda result: result.status,
+        value_fn=lambda endpoint: (
+            endpoint.results[-1].status if endpoint.results else None
+        ),
+    ),
+    GatusSensorEntityDescription(
+        key="last_event",
+        translation_key="last_event",
+        device_class=SensorDeviceClass.ENUM,
+        options=["start", "healthy", "unhealthy", "resolved"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda endpoint: (
+            endpoint.events[-1].type.lower() if endpoint.events else None
+        ),
     ),
     GatusSensorEntityDescription(
         key="dns_rcode",
         translation_key="dns_rcode",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda result: (
-            DNS_RCODE_MAP.get(result.dns_rcode, result.dns_rcode.lower())
-            if result.dns_rcode is not None
+        value_fn=lambda endpoint: (
+            DNS_RCODE_MAP.get(
+                endpoint.results[-1].dns_rcode,
+                endpoint.results[-1].dns_rcode.lower(),
+            )
+            if endpoint.results and endpoint.results[-1].dns_rcode is not None
             else None
         ),
     ),
@@ -108,7 +123,4 @@ class GatusEndpointSensor(GatusEndpointEntity, SensorEntity):
     @override
     def native_value(self) -> float | int | str | None:
         """Return the state of the sensor."""
-        if TYPE_CHECKING:
-            assert self.latest_result is not None
-
-        return self.entity_description.value_fn(self.latest_result)
+        return self.entity_description.value_fn(self.endpoint_data)

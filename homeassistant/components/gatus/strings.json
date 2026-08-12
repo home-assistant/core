@@ -42,6 +42,15 @@
           "server_failure": "Server failure"
         }
       },
+      "last_event": {
+        "name": "Last event",
+        "state": {
+          "healthy": "Healthy",
+          "resolved": "Resolved",
+          "start": "Started",
+          "unhealthy": "Unhealthy"
+        }
+      },
       "response_time": {
         "name": "Response time"
       },
