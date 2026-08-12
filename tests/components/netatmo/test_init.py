@@ -630,6 +630,77 @@ async def test_devices(
         assert device_entry == snapshot(name=f"{identifier[0]}-{identifier[1]}")
 
 
+async def test_home_devices_registered(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a device is registered for every home, without the select platform."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HOME_ID), config_entry.entry_id
+    )
+    assert home_device is not None
+    assert home_device.name == "MYHOME"
+    assert home_device.manufacturer == "Netatmo"
+    assert home_device.model == "Home"
+    assert home_device.configuration_url == "https://home.netatmo.com/control"
+    assert config_entry.runtime_data.parent_device_ids[HOME_ID] == home_device.id
+
+    # A home with no rooms and no modules still gets a device
+    empty_home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "91763b24c43d3e344f424e8c"), config_entry.entry_id
+    )
+    assert empty_home_device is not None
+    assert empty_home_device.name == "Unknown"
+
+
+async def test_device_hierarchy(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test rooms and modules are linked to their home."""
+    with selected_platforms([Platform.CLIMATE, Platform.COVER, Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HOME_ID), config_entry.entry_id
+    )
+    assert home_device is not None
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    linked = {
+        device.name
+        for device in device_entries
+        if device.via_device_id == home_device.id
+    }
+
+    # Rooms link to the home
+    assert "Livingroom" in linked
+    # Modules link to the home
+    assert "Entrance Blinds" in linked
+    # The home links to nothing
+    assert home_device.via_device_id is None
+
+    # Air care modules belong to the account rather than a home, so stay unlinked
+    air_care_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12:34:56:25:cf:a8"), config_entry.entry_id
+    )
+    assert air_care_device is not None
+    assert air_care_device.via_device_id is None
+
+
 async def test_device_remove_devices(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -652,14 +723,21 @@ async def test_device_remove_devices(
 
     device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
+    assert not response["success"]
+
+    home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HOME_ID), config_entry.entry_id
+    )
+    assert home_device is not None
+    response = await client.remove_device(home_device.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
     )
-    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 
