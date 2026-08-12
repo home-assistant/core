@@ -341,8 +341,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     frontend.async_register_built_in_panel(hass, "app")
 
     if entry is None:
-        discovery_flow.async_create_flow(
-            hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
+        # Create the config entry directly instead of via the discovery flow
+        # helper, which defers flow creation until Home Assistant has started.
+        # All Supervisor data is fetched by the entry's coordinators, so on
+        # first boot deferring would leave system info unavailable during
+        # onboarding and race listeners of the started event.
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
+            ),
+            "hassio system config entry flow",
         )
     return True
 
