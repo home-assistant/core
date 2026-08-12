@@ -115,7 +115,7 @@ async def test_remove_device_valid(
     assert device_entry.serial_number == mock_serial_number
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
 
@@ -148,7 +148,7 @@ async def test_remove_device_stale(
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     # Verify that device entry is removed
