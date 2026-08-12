@@ -173,4 +173,3 @@ async def test_emptying_dust_bin_requires_collectable_dock(
     """Test the emptying sensor only exists for a dock that can empty."""
     entity_id = "binary_sensor.roborock_s7_maxv_dock_emptying_dust_bin"
     assert (hass.states.get(entity_id) is not None) == expected
-
