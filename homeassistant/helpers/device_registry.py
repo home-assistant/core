@@ -2672,7 +2672,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "`new_identifiers` instead",
                 core_behavior=ReportBehavior.ERROR,
                 core_integration_behavior=ReportBehavior.ERROR,
-                breaks_in_ha_version="2027.8.0",
+                breaks_in_ha_version="2027.9.0",
             )
 
         validated_fields = _validate_device_info_fields(
