@@ -237,10 +237,10 @@ async def test_select_controller_rerender_hands_off_when_one_left(
     assert result["next_flow"] is not None
 
 
-async def test_select_controller_rerender_aborts_when_shelf_empty(
+async def test_select_controller_rerender_nudges_manual_host_when_shelf_empty(
     hass: HomeAssistant,
 ) -> None:
-    """Re-show after every shelf flow is gone aborts no_devices_found."""
+    """Re-show after every shelf flow is gone opens Enter host with an error."""
     first_controller = create_mock_controller("000000001", "192.0.2.1")
     second_controller = create_mock_controller("000000002", "192.0.2.2")
 
@@ -260,8 +260,9 @@ async def test_select_controller_rerender_aborts_when_shelf_empty(
 
     result = await hass.config_entries.flow.async_configure(user_flow_id)
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_host"
+    assert result["errors"] == {"base": "no_devices_found"}
 
 
 @pytest.mark.usefixtures("mock_entry_setup")
@@ -381,10 +382,10 @@ async def test_select_controller_aborts_already_configured_when_uid_left_shelf(
     assert result["reason"] == "already_configured"
 
 
-async def test_broadcast_aborts_when_all_discovered_are_configured(
+async def test_broadcast_nudges_manual_host_when_all_discovered_are_configured(
     hass: HomeAssistant,
 ) -> None:
-    """Search aborts when every noted controller is already configured."""
+    """Search opens Enter host when every noted controller is already configured."""
     configured_controller = create_mock_controller("000000001", "192.0.2.1")
     MockConfigEntry(
         domain=DOMAIN,
@@ -399,14 +400,15 @@ async def test_broadcast_aborts_when_all_discovered_are_configured(
         )
         result = await async_finish_user_discover(hass, result)
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_host"
+    assert result["errors"] == {"base": "no_devices_found"}
 
 
-async def test_user_flow_aborts_when_all_discovered_are_ignored(
+async def test_user_flow_nudges_manual_host_when_all_discovered_are_ignored(
     hass: HomeAssistant,
 ) -> None:
-    """Search aborts when every noted controller is ignored (no shelf flow)."""
+    """Search opens Enter host when every noted controller is ignored (no shelf)."""
     ignored_controller = create_mock_controller("000000001", "192.0.2.1")
     MockConfigEntry(
         domain=DOMAIN,
@@ -421,8 +423,9 @@ async def test_user_flow_aborts_when_all_discovered_are_ignored(
         )
         result = await async_finish_user_discover(hass, result)
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_host"
+    assert result["errors"] == {"base": "no_devices_found"}
 
 
 async def test_import_aborts_when_another_izone_flow_in_progress(
@@ -526,8 +529,9 @@ async def test_user_discover_reshows_progress_while_scan_running(
         await hass.async_block_till_done(wait_background_tasks=True)
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_host"
+    assert result["errors"] == {"base": "no_devices_found"}
 
 
 async def test_user_search_skips_peer_user_flow_when_building_candidates(
@@ -904,16 +908,17 @@ async def test_homekit_aborts_when_discovery_bind_fails(hass: HomeAssistant) -> 
     assert result["reason"] == "discovery_failed"
 
 
-async def test_user_flow_aborts_when_no_controllers_found(hass: HomeAssistant) -> None:
-    """User flow aborts when broadcast discovery returns no controllers."""
+async def test_user_search_empty_nudges_manual_host(hass: HomeAssistant) -> None:
+    """Empty Search shows Enter host with no_devices_found instead of aborting."""
     with patch_discovered_controllers([]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await async_finish_user_discover(hass, result)
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_host"
+    assert result["errors"] == {"base": "no_devices_found"}
 
 
 async def test_homekit_without_model_aborts(
@@ -1631,3 +1636,85 @@ async def test_user_manual_host_claimed_stays_on_form(hass: HomeAssistant) -> No
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
     assert result["errors"] == {"base": "already_configured"}
+
+
+async def test_user_manual_host_discovery_bind_fails(hass: HomeAssistant) -> None:
+    """UDP bind failure during Enter host probe aborts discovery_failed."""
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+        new=AsyncMock(side_effect=OSError("bind failed")),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await async_choose_manual_host(hass, result)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.0.2.55"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_failed"
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_user_manual_host_handoff_by_uid_when_typed_host_differs(
+    hass: HomeAssistant,
+) -> None:
+    """Typed alias that probes to the shelf host hands off without replacing the card."""
+    controller = create_mock_controller("000000001", "192.0.2.55")
+    endpoint = endpoint_from_controller(controller)
+    with (
+        patch_discovered_controllers(controller),
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_by_host",
+            new=AsyncMock(return_value=endpoint),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await async_finish_user_discover(hass, result)
+        result = await async_follow_user_handoff(hass, result)
+        shelf_flow_id = result["flow_id"]
+
+        menu = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        host_form = await async_choose_manual_host(hass, menu)
+        result = await hass.config_entries.flow.async_configure(
+            host_form["flow_id"], {CONF_HOST: "izone.example"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "continue_setup"
+    assert result["next_flow"] == (config_entries.FlowType.CONFIG_FLOW, shelf_flow_id)
+    assert shelf_flow_id in hass.config_entries.flow._progress
+
+
+async def test_user_manual_host_shelve_miss_stays_on_form(
+    hass: HomeAssistant,
+) -> None:
+    """If shelving does not produce a shelf card, stay on Enter host."""
+    endpoint = endpoint_from_controller(
+        create_mock_controller("000000001", "192.0.2.55")
+    )
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_by_host",
+            new=AsyncMock(return_value=endpoint),
+        ),
+        patch(
+            "homeassistant.components.izone.config_flow.discovery_flow.async_create_flow",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await async_choose_manual_host(hass, result)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.0.2.55"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_host"
+    assert result["errors"] == {"base": "no_devices_found"}

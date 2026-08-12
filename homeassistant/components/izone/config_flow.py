@@ -153,14 +153,16 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_discovery_done(
         self, _user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """After Search scan: abort, hand off the sole shelf flow, or choose."""
+        """After Search scan: nudge to Enter host, hand off, or choose."""
         if self._user_discovery_failed:
             return self.async_abort(reason="discovery_failed")
 
         candidates = self._async_user_candidates()
         if not candidates:
             _LOGGER.debug("No controllers found on the Discovered shelf")
-            return self.async_abort(reason="no_devices_found")
+            return self._async_show_manual_host_form(
+                errors={"base": "no_devices_found"}
+            )
         if len(candidates) == 1:
             return self.async_abort(
                 reason="continue_setup",
