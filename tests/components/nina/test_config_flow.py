@@ -95,7 +95,7 @@ async def test_step_user_no_selection(
     hass: HomeAssistant, mock_nina_class: AsyncMock
 ) -> None:
     """Test starting a flow by user with no selection."""
-    result: dict[str, Any] = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )

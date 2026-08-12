@@ -94,7 +94,7 @@ async def test_tracking_home(hass: HomeAssistant, mock_weather) -> None:
 async def test_not_tracking_home(hass: HomeAssistant, mock_weather) -> None:
     """Test when we not track home."""
 
-    await hass.config_entries.flow.async_init(
+    await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={"name": "Somewhere", "latitude": 10, "longitude": 20, "elevation": 0},
@@ -132,7 +132,7 @@ async def test_remove_hourly_entity(
         "weather.forecast_somewhere_hourly"
     ]
 
-    await hass.config_entries.flow.async_init(
+    await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={"name": "Somewhere", "latitude": 10, "longitude": 20, "elevation": 0},
