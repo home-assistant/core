@@ -9,5 +9,3 @@ DOMAIN: Final = "beatbot"
 PLATFORMS: Final = [Platform.SENSOR]
 
 NETWORK_REFRESH_INTERVAL: Final = 10 * 60
-
-EVENT_DEDUP_CACHE_SIZE: Final = 1024

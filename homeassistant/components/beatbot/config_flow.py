@@ -75,14 +75,11 @@ class BeatbotConfigFlow(
         self, data: dict[str, Any]
     ) -> ConfigFlowResult | None:
         """Verify the token can access the regional device API."""
-        token = data["token"]["access_token"]
-        session = async_get_clientsession(self.hass)
-
-        async def _request(method: str, url: str, **kwargs: Any):
-            headers = {**kwargs.pop("headers", {}), "Authorization": f"Bearer {token}"}
-            return await session.request(method, url, headers=headers, **kwargs)
-
-        client = BeatbotClient(data["region"], _request)
+        client = BeatbotClient(
+            data["region"],
+            async_get_clientsession(self.hass),
+            data["token"]["access_token"],
+        )
         try:
             await client.get_devices()
         except BeatbotAuthenticationError:

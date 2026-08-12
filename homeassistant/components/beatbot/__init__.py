@@ -1,14 +1,17 @@
 """The Beatbot integration."""
 
 from dataclasses import dataclass
-from typing import Any
 
 from beatbot_cloud import BeatbotAuthenticationError, BeatbotClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import OAuth2TokenRequestReauthError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import PLATFORMS
 from .coordinator import BeatbotCoordinator
@@ -38,13 +41,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeatbotConfigEntry) -> b
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    async def _async_request(method: str, url: str, **kwargs: Any) -> Any:
+    async def _async_access_token() -> str:
+        """Return a valid OAuth access token for the client library."""
         try:
-            return await session.async_request(method, url, **kwargs)
-        except OAuth2TokenRequestReauthError as err:
+            await session.async_ensure_token_valid()
+        except (ConfigEntryAuthFailed, OAuth2TokenRequestReauthError) as err:
             raise BeatbotAuthenticationError from err
+        access_token = session.token.get("access_token")
+        if not isinstance(access_token, str) or not access_token:
+            raise BeatbotAuthenticationError
+        return access_token
 
-    api = BeatbotClient(entry.data["region"], _async_request)
+    api = BeatbotClient(
+        entry.data["region"], async_get_clientsession(hass), _async_access_token
+    )
     coordinator = BeatbotCoordinator(hass, api, entry)
 
     await coordinator.async_config_entry_first_refresh()

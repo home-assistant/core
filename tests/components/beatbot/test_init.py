@@ -141,40 +141,45 @@ async def test_async_setup_entry_loads_sensor_platform(
     assert hass.states.get(error_entity_id) is not None
 
 
-async def test_request_adapter_translates_oauth_refresh_rejection(
-    hass: HomeAssistant,
+@pytest.mark.parametrize(
+    "refresh_error",
+    [
+        ConfigEntryAuthFailed(),
+        OAuth2TokenRequestReauthError(
+            request_info=SimpleNamespace(real_url="https://oauth.beatbot.com/token"),
+            status=400,
+            domain=DOMAIN,
+        ),
+    ],
+)
+async def test_access_token_provider_translates_oauth_refresh_rejection(
+    hass: HomeAssistant, refresh_error: Exception
 ) -> None:
-    """Translate terminal OAuth refresh errors for the Beatbot client."""
+    """Translate terminal OAuth refresh errors for the client library."""
     entry = _entry()
     entry.add_to_hass(hass)
     hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
-    response = object()
     session = SimpleNamespace(
-        async_request=AsyncMock(
+        token={"access_token": "access-token"},
+        async_ensure_token_valid=AsyncMock(
             side_effect=[
-                response,
-                OAuth2TokenRequestReauthError(
-                    request_info=SimpleNamespace(
-                        real_url="https://oauth.beatbot.com/token"
-                    ),
-                    status=400,
-                    domain=DOMAIN,
-                ),
+                None,
+                refresh_error,
             ]
-        )
+        ),
     )
-    request_adapter = None
+    access_token_provider = None
 
-    def _client(_region: str, request):
-        nonlocal request_adapter
-        request_adapter = request
+    def _client(_region: str, _session, access_token):
+        nonlocal access_token_provider
+        access_token_provider = access_token
         return Mock()
 
     async def _first_refresh() -> None:
-        assert request_adapter is not None
-        assert await request_adapter("GET", "https://api.example/devices") is response
+        assert access_token_provider is not None
+        assert await access_token_provider() == "access-token"
         with pytest.raises(BeatbotAuthenticationError):
-            await request_adapter("GET", "https://api.example/devices")
+            await access_token_provider()
 
     coordinator = Mock()
     coordinator.async_config_entry_first_refresh = AsyncMock(side_effect=_first_refresh)
@@ -197,7 +202,7 @@ async def test_request_adapter_translates_oauth_refresh_rejection(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert session.async_request.await_count == 2
+    assert session.async_ensure_token_valid.await_count == 2
 
 
 async def test_async_unload_entry_stops_events_and_unloads_platforms(

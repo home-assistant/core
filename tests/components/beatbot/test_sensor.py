@@ -5,9 +5,9 @@ from types import SimpleNamespace
 from beatbot_cloud import BeatbotDeviceData
 
 from homeassistant.components.beatbot.sensor import (
-    BeatbotBatterySensor,
-    BeatbotErrorSensor,
-    BeatbotStatusSensor,
+    SENSOR_DESCRIPTIONS,
+    BeatbotSensor,
+    BeatbotSensorEntityDescription,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE
@@ -31,9 +31,21 @@ def _coordinator() -> SimpleNamespace:
     return SimpleNamespace(data={DEVICE_ID: device}, last_update_success=True)
 
 
+def _description(key: str) -> BeatbotSensorEntityDescription:
+    """Return a sensor description by key."""
+    return next(
+        description for description in SENSOR_DESCRIPTIONS if description.key == key
+    )
+
+
+def _sensor(key: str, coordinator: SimpleNamespace | None = None) -> BeatbotSensor:
+    """Return a Beatbot sensor for a description key."""
+    return BeatbotSensor(coordinator or _coordinator(), DEVICE_ID, _description(key))
+
+
 def test_status_sensor() -> None:
     """Expose the library-decoded work status."""
-    sensor = BeatbotStatusSensor(_coordinator(), DEVICE_ID)
+    sensor = _sensor("status")
 
     assert sensor.unique_id == f"{DEVICE_ID}_status"
     assert sensor.device_class is SensorDeviceClass.ENUM
@@ -46,12 +58,12 @@ def test_unknown_status() -> None:
     coordinator = _coordinator()
     coordinator.data[DEVICE_ID].work_status = 999
 
-    assert BeatbotStatusSensor(coordinator, DEVICE_ID).native_value is None
+    assert _sensor("status", coordinator).native_value is None
 
 
 def test_battery_sensor() -> None:
     """Expose battery percentage with measurement metadata."""
-    sensor = BeatbotBatterySensor(_coordinator(), DEVICE_ID)
+    sensor = _sensor("battery")
 
     assert sensor.unique_id == f"{DEVICE_ID}_battery"
     assert sensor.device_class is SensorDeviceClass.BATTERY
@@ -61,8 +73,8 @@ def test_battery_sensor() -> None:
 
 
 def test_error_sensor() -> None:
-    """Expose the first active error from a multi-bit error value."""
-    sensor = BeatbotErrorSensor(_coordinator(), DEVICE_ID)
+    """Expose the first library-decoded active error."""
+    sensor = _sensor("error")
 
     assert sensor.unique_id == f"{DEVICE_ID}_error"
     assert sensor.device_class is SensorDeviceClass.ENUM
@@ -75,16 +87,19 @@ def test_no_error() -> None:
     coordinator = _coordinator()
     coordinator.data[DEVICE_ID].error_code = 0
 
-    assert BeatbotErrorSensor(coordinator, DEVICE_ID).native_value == "none"
+    assert _sensor("error", coordinator).native_value == "none"
 
 
 def test_sensor_availability() -> None:
-    """Require the device to be online and coordinator update to succeed."""
+    """Require current online device data and a successful coordinator update."""
     coordinator = _coordinator()
-    sensor = BeatbotStatusSensor(coordinator, DEVICE_ID)
+    sensor = _sensor("status", coordinator)
     assert sensor.available
 
     coordinator.data[DEVICE_ID].is_online = False
+    assert not sensor.available
+
+    coordinator.data.pop(DEVICE_ID)
     assert not sensor.available
 
 
@@ -94,7 +109,7 @@ def test_sensor_device_info() -> None:
     coordinator.data[DEVICE_ID].name = "AquaSense"
     coordinator.data[DEVICE_ID].model = "AquaSense 2"
 
-    device_info = BeatbotStatusSensor(coordinator, DEVICE_ID).device_info
+    device_info = _sensor("status", coordinator).device_info
 
     assert device_info["identifiers"] == {("beatbot", DEVICE_ID)}
     assert device_info["name"] == "AquaSense"

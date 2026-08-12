@@ -1,19 +1,16 @@
-"""Tests for the Beatbot cloud WebSocket event contract."""
+"""Tests for the Beatbot cloud event bridge."""
 
 from __future__ import annotations
 
-import asyncio
 from types import SimpleNamespace
 from typing import Protocol
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
-from beatbot_cloud import BeatbotEvent
+from beatbot_cloud import BeatbotAuthenticationError, BeatbotEvent
 import pytest
 
-from homeassistant.components.beatbot.event_stream import (
-    BeatbotEventClient,
-    _RefreshToken,
-)
+from homeassistant.components.beatbot import event_stream as event_stream_module
+from homeassistant.components.beatbot.event_stream import BeatbotEventClient
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestReauthError
 
@@ -31,6 +28,16 @@ class EventFactory(Protocol):
         """Create one Beatbot event."""
 
 
+@pytest.fixture(autouse=True)
+def mock_client_session(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Mock the shared aiohttp session."""
+    monkeypatch.setattr(
+        event_stream_module,
+        "async_get_clientsession",
+        Mock(return_value=SimpleNamespace()),
+    )
+
+
 @pytest.fixture
 def event_client(hass: HomeAssistant) -> tuple[BeatbotEventClient, Mock]:
     """Return an event client and its coordinator."""
@@ -39,7 +46,10 @@ def event_client(hass: HomeAssistant) -> tuple[BeatbotEventClient, Mock]:
         hass,
         SimpleNamespace(entry_id="entry"),
         SimpleNamespace(),
-        SimpleNamespace(event_stream_url="ws://example/events"),
+        SimpleNamespace(
+            event_stream_url="ws://example/events",
+            async_get_access_token=AsyncMock(return_value="token"),
+        ),
         coordinator,
     )
     return client, coordinator
@@ -61,7 +71,7 @@ def event_factory() -> EventFactory:
 
 
 def test_start_registers_entry_background_task(hass: HomeAssistant) -> None:
-    """The lifetime WebSocket supervisor must not block HA startup."""
+    """The lifetime event client must not block Home Assistant startup."""
     task = Mock()
     entry = SimpleNamespace(
         entry_id="entry",
@@ -71,7 +81,10 @@ def test_start_registers_entry_background_task(hass: HomeAssistant) -> None:
         hass,
         entry,
         SimpleNamespace(),
-        SimpleNamespace(event_stream_url="ws://example/events"),
+        SimpleNamespace(
+            event_stream_url="ws://example/events",
+            async_get_access_token=AsyncMock(return_value="token"),
+        ),
         Mock(),
     )
 
@@ -88,55 +101,19 @@ def test_start_registers_entry_background_task(hass: HomeAssistant) -> None:
     assert client._task is task
 
 
-def test_property_event_routes_incremental_state(
-    event_client: tuple[BeatbotEventClient, Mock], event_factory: EventFactory
+@pytest.mark.parametrize("event_type", ["properties_changed", "status"])
+def test_state_event_routes_incremental_state(
+    event_client: tuple[BeatbotEventClient, Mock],
+    event_factory: EventFactory,
+    event_type: str,
 ) -> None:
-    """Route a property event to the coordinator."""
+    """Route state-bearing events to the coordinator."""
     client, coordinator = event_client
+    event = event_factory("event-1", event_type, {"online": False})
 
-    client._handle_event(
-        event_factory(
-            "event-1",
-            "properties_changed",
-            {"interfaceInfo": "vacuum.battery", "value": 76},
-        )
-    )
+    client._handle_event(event)
 
-    coordinator.async_apply_device_event.assert_called_once()
-    event = coordinator.async_apply_device_event.call_args.args[0]
-    assert event.device_id == "dev-1"
-    assert event.payload == {"interfaceInfo": "vacuum.battery", "value": 76}
-
-
-def test_status_event_routes_online_state(
-    event_client: tuple[BeatbotEventClient, Mock], event_factory: EventFactory
-) -> None:
-    """Route a status event to the coordinator."""
-    client, coordinator = event_client
-
-    client._handle_event(event_factory("event-2", "status", {"online": False}))
-
-    coordinator.async_apply_device_event.assert_called_once()
-    event = coordinator.async_apply_device_event.call_args.args[0]
-    assert event.device_id == "dev-1"
-    assert event.payload == {"online": False}
-
-
-def test_duplicate_event_is_applied_once(
-    event_client: tuple[BeatbotEventClient, Mock], event_factory: EventFactory
-) -> None:
-    """Apply duplicate event identifiers only once."""
-    client, coordinator = event_client
-    message = event_factory(
-        "event-3",
-        "properties_changed",
-        {"interfaceInfo": "sensor.error", "value": 4},
-    )
-
-    client._handle_event(message)
-    client._handle_event(message)
-
-    coordinator.async_apply_device_event.assert_called_once()
+    coordinator.async_apply_device_event.assert_called_once_with(event)
 
 
 def test_unknown_event_does_not_route(
@@ -145,70 +122,38 @@ def test_unknown_event_does_not_route(
     """Ignore unsupported events returned by the library."""
     client, coordinator = event_client
 
-    client._handle_event(event_factory("event-5", "future_type", {}))
+    client._handle_event(event_factory("event-2", "future_type", {}))
 
     coordinator.async_apply_device_event.assert_not_called()
 
 
-async def test_terminal_refresh_error_starts_reauth(
+async def test_library_authentication_error_starts_reauth(
     hass: HomeAssistant, event_client: tuple[BeatbotEventClient, Mock]
 ) -> None:
-    """A terminal OAuth refresh failure must not enter the reconnect loop."""
+    """Start reauthentication when the library reports terminal auth failure."""
     client, _ = event_client
-    client._connect_and_receive = AsyncMock(
-        side_effect=_RefreshToken("rejected", handshake=True)
-    )
-    client._oauth_session.token = {"access_token": "rejected"}
-    client._oauth_session.async_ensure_token_valid = AsyncMock(
-        side_effect=OAuth2TokenRequestReauthError(
-            request_info=SimpleNamespace(real_url="https://oauth.beatbot.com/token"),
-            status=400,
-            domain="beatbot",
-        )
-    )
-    client._entry.data = {"token": client._oauth_session.token}
+    client._client.async_run = AsyncMock(side_effect=BeatbotAuthenticationError)
     client._entry.async_start_reauth = Mock()
-    hass.config_entries.async_update_entry = Mock()
 
     await client._run()
 
     client._entry.async_start_reauth.assert_called_once_with(hass)
 
 
-async def test_device_added_reloads_entry(
+@pytest.mark.parametrize("event_type", ["device_added", "device_removed"])
+def test_topology_event_reloads_entry(
     hass: HomeAssistant,
     event_client: tuple[BeatbotEventClient, Mock],
     event_factory: EventFactory,
+    event_type: str,
 ) -> None:
-    """Reload the entry after a device-added event."""
+    """Reload the entry after a device topology event."""
     client, coordinator = event_client
     hass.config_entries.async_schedule_reload = Mock()
+    payload = None if event_type == "device_removed" else {"deviceId": "dev-1"}
 
-    client._handle_event(
-        event_factory(
-            "event-added",
-            "device_added",
-            {
-                "deviceId": "dev-1",
-                "productId": "product-1",
-                "productCategory": "pool_clean_bot",
-            },
-        )
-    )
-    hass.config_entries.async_schedule_reload.assert_called_once_with("entry")
-    coordinator.async_apply_device_event.assert_not_called()
+    client._handle_event(event_factory("event-3", event_type, payload))
 
-
-async def test_device_removed_with_null_payload_reloads_entry(
-    hass: HomeAssistant,
-    event_client: tuple[BeatbotEventClient, Mock],
-    event_factory: EventFactory,
-) -> None:
-    """Reload the entry after a device-removed event."""
-    client, coordinator = event_client
-    hass.config_entries.async_schedule_reload = Mock()
-
-    client._handle_event(event_factory("event-removed", "device_removed", None))
     hass.config_entries.async_schedule_reload.assert_called_once_with("entry")
     coordinator.async_apply_device_event.assert_not_called()
 
@@ -218,101 +163,73 @@ async def test_stop_is_idempotent(
 ) -> None:
     """Allow the event client to be stopped repeatedly."""
     client, _ = event_client
+    client._client.async_close = AsyncMock()
 
     await client.async_stop()
     await client.async_stop()
+
+    assert client._client.async_close.await_count == 2
 
 
 async def test_rejected_token_is_refreshed_only_once(hass: HomeAssistant) -> None:
-    """Refresh a rejected access token only once."""
+    """Refresh a rejected access token only if it is still current."""
     entry = SimpleNamespace(
         entry_id="entry",
         data={"token": {"access_token": "old", "refresh_token": "refresh"}},
     )
-    implementation = SimpleNamespace(
-        async_refresh_token=AsyncMock(
-            return_value={"access_token": "new", "refresh_token": "refresh"}
-        )
-    )
     oauth_session = SimpleNamespace(token=entry.data["token"])
 
     async def _ensure_token_valid() -> None:
-        new_token = await implementation.async_refresh_token(oauth_session.token)
-        entry.data = {"token": new_token}
-        oauth_session.token = new_token
+        oauth_session.token = {
+            "access_token": "new",
+            "refresh_token": "refresh",
+        }
 
     oauth_session.async_ensure_token_valid = AsyncMock(side_effect=_ensure_token_valid)
     client = BeatbotEventClient(
         hass,
         entry,
         oauth_session,
-        SimpleNamespace(event_stream_url="ws://example/events"),
+        SimpleNamespace(
+            event_stream_url="ws://example/events",
+            async_get_access_token=AsyncMock(return_value="token"),
+        ),
         Mock(),
     )
-    hass.config_entries.async_update_entry = Mock(
-        side_effect=lambda config_entry, data: setattr(config_entry, "data", data)
-    )
+    hass.config_entries.async_update_entry = Mock()
 
-    await client._async_refresh_token_once("old")
-    oauth_session.token = entry.data["token"]
-    await client._async_refresh_token_once("old")
+    assert await client._async_refresh_token("old") == "new"
+    assert await client._async_refresh_token("old") == "new"
 
-    implementation.async_refresh_token.assert_awaited_once()
+    oauth_session.async_ensure_token_valid.assert_awaited_once()
 
 
-async def test_repeated_handshake_401_starts_reauth(
+async def test_terminal_refresh_error_is_translated(
     hass: HomeAssistant, event_client: tuple[BeatbotEventClient, Mock]
 ) -> None:
-    """Start reauthentication after a repeated handshake rejection."""
+    """Translate a terminal OAuth refresh failure for the client library."""
     client, _ = event_client
-    client._token_refresh_attempted = True
-    client._connect_and_receive = AsyncMock(
-        side_effect=_RefreshToken("rejected-again", handshake=True)
+    client._oauth_session.token = {"access_token": "old"}
+    client._oauth_session.async_ensure_token_valid = AsyncMock(
+        side_effect=OAuth2TokenRequestReauthError(
+            request_info=SimpleNamespace(real_url="https://oauth.beatbot.com/token"),
+            status=400,
+            domain="beatbot",
+        )
     )
-    client._entry.async_start_reauth = Mock()
+    client._entry.data = {"token": client._oauth_session.token}
+    hass.config_entries.async_update_entry = Mock()
 
-    await client._run()
+    with pytest.raises(BeatbotAuthenticationError):
+        await client._async_refresh_token("old")
 
-    client._entry.async_start_reauth.assert_called_once_with(hass)
 
-
-async def test_reconnect_requests_full_refresh(
+def test_library_callbacks_are_registered(
     event_client: tuple[BeatbotEventClient, Mock],
 ) -> None:
-    """Request a full refresh after reconnecting the event stream."""
+    """Register Home Assistant callbacks with the client library."""
     client, coordinator = event_client
-    coordinator.async_request_refresh = AsyncMock()
-    client._has_connected = True
-    client._token_refresh_attempted = True
 
-    class _WebSocket:
-        closed = False
-
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, *args):
-            self.closed = True
-
-        async def receive(self, *, timeout):
-            raise asyncio.CancelledError
-
-        async def close(self):
-            self.closed = True
-
-    client._oauth_session.async_ensure_token_valid = AsyncMock()
-    client._oauth_session.token = {"access_token": "token"}
-    websocket = _WebSocket()
-    session = SimpleNamespace(ws_connect=AsyncMock(return_value=websocket))
-
-    with (
-        patch(
-            "homeassistant.components.beatbot.event_stream.async_get_clientsession",
-            return_value=session,
-        ),
-        pytest.raises(asyncio.CancelledError),
-    ):
-        await client._connect_and_receive()
-
-    coordinator.async_request_refresh.assert_awaited_once()
-    assert client._token_refresh_attempted is False
+    assert client._client._event_callback == client._handle_event
+    assert client._client._reconnect_callback == coordinator.async_request_refresh
+    assert client._client._token_refresh_callback == client._async_refresh_token

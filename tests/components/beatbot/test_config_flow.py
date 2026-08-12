@@ -208,24 +208,17 @@ async def test_user_flow_tests_resource_api_before_create(
     assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_resource_api_request_adds_access_token(
+async def test_resource_api_client_receives_access_token(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Pass the OAuth access token to the resource API request adapter."""
-    session = SimpleNamespace(request=AsyncMock())
+    """Pass the OAuth access token directly to the client library."""
+    session = SimpleNamespace()
 
-    def _client(region: str, request):
-        async def _get_devices() -> list:
-            await request(
-                "GET",
-                "https://api.example/devices",
-                headers={"X-Test": "value"},
-                timeout=10,
-            )
-            return []
-
+    def _client(region: str, client_session, access_token: str):
         assert region == "cn"
-        return SimpleNamespace(get_devices=_get_devices)
+        assert client_session is session
+        assert access_token == "access-token"
+        return SimpleNamespace(get_devices=AsyncMock(return_value=[]))
 
     monkeypatch.setattr(
         config_flow_module, "async_get_clientsession", Mock(return_value=session)
@@ -239,12 +232,6 @@ async def test_resource_api_request_adds_access_token(
     )
 
     assert result is None
-    session.request.assert_awaited_once_with(
-        "GET",
-        "https://api.example/devices",
-        headers={"X-Test": "value", "Authorization": "Bearer access-token"},
-        timeout=10,
-    )
 
 
 @pytest.mark.parametrize("sub", ["", 123, None])

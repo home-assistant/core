@@ -1,22 +1,28 @@
 """Sensors for the Beatbot integration."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import override
 
 from beatbot_cloud import (
     ERROR_BITS_BY_CATEGORY,
     STATUS_BY_CATEGORY,
+    BeatbotDeviceData,
     ProductCategory,
+    error_for,
     status_for,
 )
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import BeatbotConfigEntry
 from .coordinator import BeatbotCoordinator
@@ -26,83 +32,59 @@ _CATEGORY = ProductCategory.POOL_CLEAN_BOT
 _STATUS_OPTIONS = list(
     dict.fromkeys(status.value for status in STATUS_BY_CATEGORY[_CATEGORY].values())
 )
-_ERROR_BITS = ERROR_BITS_BY_CATEGORY[_CATEGORY]
-_ERROR_OPTIONS = [error.value for error, _ in _ERROR_BITS] + ["none"]
+_ERROR_OPTIONS = [error.value for error, _ in ERROR_BITS_BY_CATEGORY[_CATEGORY]] + [
+    "none"
+]
 
 
-class BeatbotSensorEntity(BeatbotEntity, SensorEntity):
-    """Base class for Beatbot sensors."""
-
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return whether the device data is available."""
-        return self.data.is_online and self.coordinator.last_update_success
+def _status_value(data: BeatbotDeviceData) -> str | None:
+    """Return the category-specific work status."""
+    if status := status_for(ProductCategory(data.product_category), data.work_status):
+        return status.value
+    return None
 
 
-class BeatbotStatusSensor(BeatbotSensorEntity):
-    """Represent the pool cleaner status."""
-
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = _STATUS_OPTIONS
-    _attr_translation_key = "work_status"
-
-    def __init__(self, coordinator: BeatbotCoordinator, device_id: str) -> None:
-        """Initialize the status sensor."""
-        super().__init__(coordinator, device_id)
-        self._attr_unique_id = f"{device_id}_status"
-
-    @property
-    @override
-    def native_value(self) -> str | None:
-        """Return the decoded work status."""
-        if status := status_for(_CATEGORY, self.data.work_status):
-            return status.value
-        return None
+def _error_value(data: BeatbotDeviceData) -> str:
+    """Return the first active category-specific error."""
+    if error := error_for(ProductCategory(data.product_category), data.error_code):
+        return error.value
+    return "none"
 
 
-class BeatbotBatterySensor(BeatbotSensorEntity):
-    """Represent the pool cleaner battery level."""
+@dataclass(frozen=True, kw_only=True)
+class BeatbotSensorEntityDescription(SensorEntityDescription):
+    """Describe a Beatbot sensor entity."""
 
-    _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "battery"
-
-    def __init__(self, coordinator: BeatbotCoordinator, device_id: str) -> None:
-        """Initialize the battery sensor."""
-        super().__init__(coordinator, device_id)
-        self._attr_unique_id = f"{device_id}_battery"
-
-    @property
-    @override
-    def native_value(self) -> int:
-        """Return the battery percentage."""
-        return self.data.battery_level
+    value_fn: Callable[[BeatbotDeviceData], StateType]
 
 
-class BeatbotErrorSensor(BeatbotSensorEntity):
-    """Represent the primary active pool cleaner error."""
-
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = _ERROR_OPTIONS
-    _attr_translation_key = "error"
-
-    def __init__(self, coordinator: BeatbotCoordinator, device_id: str) -> None:
-        """Initialize the error sensor."""
-        super().__init__(coordinator, device_id)
-        self._attr_unique_id = f"{device_id}_error"
-
-    @property
-    @override
-    def native_value(self) -> str:
-        """Return the first active error."""
-        for error, bit in _ERROR_BITS:
-            if self.data.error_code & bit:
-                return error.value
-        return "none"
+SENSOR_DESCRIPTIONS: tuple[BeatbotSensorEntityDescription, ...] = (
+    BeatbotSensorEntityDescription(
+        key="status",
+        translation_key="work_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=_STATUS_OPTIONS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_status_value,
+    ),
+    BeatbotSensorEntityDescription(
+        key="battery",
+        translation_key="battery",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.battery_level,
+    ),
+    BeatbotSensorEntityDescription(
+        key="error",
+        translation_key="error",
+        device_class=SensorDeviceClass.ENUM,
+        options=_ERROR_OPTIONS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_error_value,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -113,11 +95,30 @@ async def async_setup_entry(
     """Set up Beatbot sensors."""
     coordinator = entry.runtime_data.coordinator
     async_add_entities(
-        entity
+        BeatbotSensor(coordinator, device_id, description)
         for device_id in coordinator.data
-        for entity in (
-            BeatbotStatusSensor(coordinator, device_id),
-            BeatbotBatterySensor(coordinator, device_id),
-            BeatbotErrorSensor(coordinator, device_id),
-        )
+        for description in SENSOR_DESCRIPTIONS
     )
+
+
+class BeatbotSensor(BeatbotEntity, SensorEntity):
+    """Represent a Beatbot sensor."""
+
+    entity_description: BeatbotSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: BeatbotCoordinator,
+        device_id: str,
+        description: BeatbotSensorEntityDescription,
+    ) -> None:
+        """Initialize a Beatbot sensor."""
+        super().__init__(coordinator, device_id)
+        self.entity_description = description
+        self._attr_unique_id = f"{device_id}_{description.key}"
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(self.data)

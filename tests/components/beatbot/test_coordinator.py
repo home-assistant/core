@@ -122,10 +122,10 @@ async def test_coordinator_state_auth_failure_requests_reauth(
         await coordinator._async_update_data()
 
 
-async def test_coordinator_state_connection_failure_keeps_device(
+async def test_coordinator_state_connection_failure_is_retryable(
     hass: HomeAssistant,
 ) -> None:
-    """Keep new discovery data unavailable until runtime state is fetched."""
+    """Fail the update when current runtime state cannot be fetched."""
     device = _device("dev-1", SUPPORTED_PRODUCT)
     api = SimpleNamespace(
         get_devices=AsyncMock(return_value=[device]),
@@ -133,10 +133,8 @@ async def test_coordinator_state_connection_failure_keeps_device(
     )
     coordinator = BeatbotCoordinator(hass, api, _entry())
 
-    data = await coordinator._async_update_data()
-
-    assert data == {"dev-1": device}
-    assert data["dev-1"].is_online is False
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
 
 
 async def test_coordinator_applies_batch_device_state(

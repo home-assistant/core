@@ -9,5 +9,5 @@
   "iot_class": "cloud_push",
   "loggers": ["beatbot_cloud"],
   "quality_scale": "bronze",
-  "requirements": ["beatbot-cloud==0.3.0"]
+  "requirements": ["beatbot-cloud==0.4.1"]
 }

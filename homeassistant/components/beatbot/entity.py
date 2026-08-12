@@ -1,5 +1,7 @@
 """Shared base entity for the Beatbot integration."""
 
+from typing import override
+
 from beatbot_cloud import BeatbotDeviceData
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,6 +29,16 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
             model=data.model or None,
             model_id=data.product_id,
             sw_version=version,
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the device data is available."""
+        return (
+            super().available
+            and self._device_id in self.coordinator.data
+            and self.data.is_online
         )
 
     @property

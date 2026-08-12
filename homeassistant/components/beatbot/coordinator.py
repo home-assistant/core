@@ -77,24 +77,20 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                 continue
             result[d.device_id] = d
 
-        # Runtime state is best-effort: a connection failure must not wipe the
-        # entities — keep discovery identity data and last-known values. An auth
-        # failure still escalates to reauth, since the token is invalid for both
-        # endpoints.
         try:
             states = await self.api.get_device_states()
         except BeatbotAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except BeatbotConnectionError as err:
-            _LOGGER.warning(
-                "Device state fetch failed, using discovery-only data: %s", err
-            )
-            states = {}
-        else:
-            _LOGGER.debug(
-                "Beatbot state pull completed (source=batch, deviceCount=%s)",
-                len(states),
-            )
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        _LOGGER.debug(
+            "Beatbot state pull completed (source=batch, deviceCount=%s)",
+            len(states),
+        )
 
         previous_data = self.data if isinstance(self.data, dict) else {}
         for device_id, device in result.items():
