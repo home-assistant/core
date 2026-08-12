@@ -2212,23 +2212,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
         matched_child_device: ChildDeviceEntry | None = None
 
-        # A child device carries no connections. Connection-bearing device info still
-        # resolves to a child only when a "primary" device info re-registers the child's
-        # identifiers as a full device - i.e. the integration no longer splits this
-        # into a child device.
+        # A child device carries no connections. A connectionless device info whose
+        # identifiers belong to a child is matched here so it can be rejected below: a
+        # child device is referenced explicitly via parent_device_id, never attached to
+        # by a bare device info.
         #
-        # Matching the child converts it to a main device, preserving its id, instead of a
-        # remove + recreate via collision reconciliation of its stale identifiers.
-        if device is None and (not connections or device_info_type == "primary"):
+        if device is None and not connections:
             matched_child_device = self.child_devices.get_entry(
                 identifiers=identifiers, config_entry_id=config_entry_id
-            )
-
-        # Validate the child -> device conversion before the reconcile below, whose
-        # stale-duplicate strips would otherwise be left applied by a later raise.
-        if matched_child_device is not None and device_info_type == "primary":
-            self._async_validate_child_to_device_conversion(
-                matched_child_device, config_entry, device_info
             )
 
         self._async_reconcile_collisions(
@@ -2242,24 +2233,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # Reconciliation can update the matched device (e.g. detach its via link)
             device = self.devices[device.id]
         elif matched_child_device is not None:
-            if device_info_type != "primary":
-                # A bare-identifier device info whose identifiers belong to a child device
-                # is ambiguous: a child device is referenced explicitly via
-                # parent_device_id, not attached to by bare identifier. Raise rather than
-                # silently return the child.
-                raise DeviceInfoError(
-                    config_entry.domain,
-                    device_info,
-                    f"identifiers {sorted(identifiers)} belong to child device "
-                    f"{matched_child_device.id}; declare it with parent_device_id "
-                    "to reference it",
-                )
-            # Reconciliation can update the matched child device
-            matched_child_device = self.child_devices[matched_child_device.id]
-            # A "primary" device info re-registers a child device's identifiers as a
-            # full device: the integration no longer splits this into a child device,
-            # so convert the child back to a main device.
-            device = self._async_convert_child_to_device(matched_child_device)
+            # A device info whose identifiers belong to a child device is ambiguous: a
+            # child device is referenced explicitly via parent_device_id, not attached
+            # to by a device info. Raise rather than silently return or adopt the child.
+            raise DeviceInfoError(
+                config_entry.domain,
+                device_info,
+                f"identifiers {sorted(identifiers)} belong to child device "
+                f"{matched_child_device.id}; declare it with parent_device_id "
+                "to reference it",
+            )
 
         # Resolved after reconciliation so a removed stale duplicate can't be linked
         if via_device_id is not UNDEFINED and via_device_id is not None:
@@ -2796,86 +2779,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ),
         )
         return child_device
-
-    @callback
-    def _async_validate_child_to_device_conversion(
-        self,
-        child_device: ChildDeviceEntry,
-        config_entry: ConfigEntry,
-        device_info: DeviceInfo,
-    ) -> None:
-        """Validate converting a child device back to a device.
-
-        This check runs before any mutation so a rejected conversion leaves the
-        registry untouched.
-        """
-        if child_device.id in self._live_device_ids.get(
-            child_device.config_entry_id, ()
-        ):
-            raise DeviceInfoError(
-                config_entry.domain,
-                device_info,
-                "identifiers registered as a device and as a child device by the "
-                "same config entry",
-            )
-
-    @callback
-    def _async_convert_child_to_device(
-        self,
-        child_device: ChildDeviceEntry,
-    ) -> DeviceEntry:
-        """Convert a child device back to a main device, preserving its id.
-
-        Conversion re-keys an existing entry between the child and device collections
-        in place, keeping its id (and hence its entities' links) rather than removing
-        and recreating it.
-
-        The reconstructed DeviceEntry carries only the fields shared with
-        the child; async_get_or_create repopulates the device-only fields (connections,
-        hardware, naming) from the re-registering device info afterwards. The caller
-        must have validated the conversion with
-        _async_validate_child_to_device_conversion.
-        """
-        self.hass.verify_event_loop_thread("device_registry.async_get_or_create")
-
-        disabled_by = child_device.disabled_by
-        if disabled_by is DeviceEntryDisabler.DEVICE:
-            # A parent-device disable is only meaningful for a child device
-            owning_entry = self.hass.config_entries.async_get_entry(
-                child_device.config_entry_id
-            )
-            disabled_by = (
-                DeviceEntryDisabler.CONFIG_ENTRY
-                if owning_entry is not None and owning_entry.disabled_by
-                else None
-            )
-        changes: dict[str, Any] = {"parent_device_id": child_device.parent_device_id}
-        if disabled_by != child_device.disabled_by:
-            changes["disabled_by"] = child_device.disabled_by
-
-        device = DeviceEntry(
-            area_id=child_device.area_id,
-            config_entry_id=child_device.config_entry_id,
-            config_subentry_id=child_device.config_subentry_id,
-            created_at=child_device.created_at,
-            disabled_by=disabled_by,
-            id=child_device.id,
-            identifiers=child_device.identifiers,  # type: ignore[arg-type]
-            labels=child_device.labels,  # type: ignore[arg-type]
-            name=child_device.name,
-            name_by_user=child_device.name_by_user,
-        )
-        del self.child_devices[child_device.id]
-        self.devices[device.id] = device
-
-        self.async_schedule_save()
-        self.hass.bus.async_fire_internal(
-            EVENT_DEVICE_REGISTRY_UPDATED,
-            _EventDeviceRegistryUpdatedData_Update(
-                action="update", device_id=device.id, changes=changes
-            ),
-        )
-        return device
 
     @callback
     def _async_update_device(  # noqa: C901

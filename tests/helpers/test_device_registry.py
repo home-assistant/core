@@ -10459,122 +10459,6 @@ async def test_convert_device_to_child_device_errors(
     assert device_registry.async_get(other.id) is other
 
 
-async def test_convert_child_device_to_device(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a primary device info converts a child device back, keeping its id."""
-    parent, child_device = _create_parent_and_child(
-        device_registry, mock_config_entry.entry_id
-    )
-    device_registry.async_update_child_device(child_device.id, area_id="garden")
-    # A new setup session: the child device is no longer live, so the integration
-    # can re-register its identifiers as a full device (e.g. after a rollback).
-    device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
-    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
-
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={("test", "strip_outlet_1")},
-        manufacturer="acme",
-        name="Outlet 1",
-    )
-    assert isinstance(device, dr.DeviceEntry)
-    assert device.id == child_device.id
-    assert device.manufacturer == "acme"
-    assert device.area_id == "garden"
-    assert len(device_registry.devices) == 2
-    assert not device_registry.child_devices
-
-    await hass.async_block_till_done()
-    # A single in-place conversion, never a remove + create: converting back must
-    # preserve the id, which a remove + create would not
-    assert all(event.data["action"] == "update" for event in update_events)
-    assert update_events[0].data == {
-        "action": "update",
-        "device_id": child_device.id,
-        "changes": {"parent_device_id": parent.id},
-    }
-
-
-async def test_convert_child_device_to_device_without_connections(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a primary device info without connections converts a child back in place.
-
-    Re-registering a child's identifiers as a full (primary) device info that carries no
-    connections converts the child back to a main device in place, preserving its id,
-    area and name.
-    """
-    _, child_device = _create_parent_and_child(
-        device_registry, mock_config_entry.entry_id
-    )
-    # A new setup session so the child is no longer live and can be re-registered.
-    device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
-
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={("test", "strip_outlet_1")},
-        manufacturer="acme",
-        name="Outlet 1",
-    )
-    assert isinstance(device, dr.DeviceEntry)
-    assert device.id == child_device.id
-    assert device.manufacturer == "acme"
-    assert len(device_registry.devices) == 2
-    assert not device_registry.child_devices
-
-
-async def test_convert_child_device_to_device_with_connections(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a primary device info with connections converts a child back in place.
-
-    Re-registering the child's identifiers as a full device carrying connections must
-    convert the child in place (a single update preserving its id), not remove and
-    recreate it.
-    """
-    parent, child_device = _create_parent_and_child(
-        device_registry, mock_config_entry.entry_id
-    )
-    device_registry.async_update_child_device(child_device.id, area_id="garden")
-    # A new setup session: the child device is no longer live, so the integration
-    # can re-register its identifiers as a full device (e.g. after a rollback).
-    device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
-    events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
-
-    connection = (dr.CONNECTION_NETWORK_MAC, "12:34:56:78:9a:bc")
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        connections={connection},
-        identifiers={("test", "strip_outlet_1")},
-        manufacturer="acme",
-        name="Outlet 1",
-    )
-    assert isinstance(device, dr.DeviceEntry)
-    assert device.id == child_device.id
-    assert device.connections == {connection}
-    assert device.manufacturer == "acme"
-    assert device.area_id == "garden"
-    assert len(device_registry.devices) == 2
-    assert not device_registry.child_devices
-
-    await hass.async_block_till_done()
-    # A single in-place conversion, never a remove + create; the connections and
-    # manufacturer follow as ordinary updates.
-    assert all(event.data["action"] == "update" for event in events)
-    assert events[0].data == {
-        "action": "update",
-        "device_id": child_device.id,
-        "changes": {"parent_device_id": parent.id},
-    }
-
-
 @pytest.mark.parametrize(
     "identifiers",
     [
@@ -10696,19 +10580,16 @@ async def test_convert_device_to_child_same_session_raises(
 
 
 @pytest.mark.usefixtures("hass")
-async def test_convert_child_to_device_same_session_raises(
+async def test_primary_device_info_matching_child_raises(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test re-registering a live child's identifiers as a device raises."""
+    """Test a primary device info whose identifiers belong to a child raises."""
     _, child_device = _create_parent_and_child(
         device_registry, mock_config_entry.entry_id
     )
 
-    with pytest.raises(
-        dr.DeviceInfoError,
-        match="registered as a device and as a child device",
-    ):
+    with pytest.raises(dr.DeviceInfoError, match="belong to child device"):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             identifiers={("test", "strip_outlet_1")},
@@ -10716,8 +10597,8 @@ async def test_convert_child_to_device_same_session_raises(
             name="Outlet 1",
         )
 
-    # The conversion guard runs before any reconcile, so the rejection leaves the child
-    # device untouched and creates no main device for its identifiers
+    # The rejection leaves the child device untouched and creates no main device for
+    # its identifiers
     assert (
         device_registry.async_get(child_device.id, include_main_devices=False)
         is child_device
@@ -11761,51 +11642,6 @@ async def test_convert_device_to_child_of_disabled_parent(
 
     await hass.async_block_till_done()
     assert update_events[0].data["changes"]["disabled_by"] is None
-
-
-async def test_convert_disabled_child_device_to_device(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test converting a device-disabled child back to a device clears the disable.
-
-    A child disabled by its parent becomes an enabled device on conversion: a full
-    device is not tied to the parent's disabled state.
-    """
-    parent, child_device = _create_parent_and_child(
-        device_registry, mock_config_entry.entry_id
-    )
-    device_registry.async_update_device(
-        parent.id, disabled_by=dr.DeviceEntryDisabler.USER
-    )
-    disabled_child = device_registry.async_get(
-        child_device.id, include_main_devices=False
-    )
-    assert disabled_child is not None
-    assert disabled_child.disabled_by is dr.DeviceEntryDisabler.DEVICE
-    device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
-    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
-
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={("test", "strip_outlet_1")},
-        manufacturer="acme",
-        name="Outlet 1",
-    )
-    assert isinstance(device, dr.DeviceEntry)
-    assert device.id == child_device.id
-    assert device.disabled_by is None
-
-    await hass.async_block_till_done()
-    assert update_events[0].data == {
-        "action": "update",
-        "device_id": child_device.id,
-        "changes": {
-            "disabled_by": dr.DeviceEntryDisabler.DEVICE,
-            "parent_device_id": parent.id,
-        },
-    }
 
 
 async def test_move_parent_with_pending_move_and_children_rejected(
