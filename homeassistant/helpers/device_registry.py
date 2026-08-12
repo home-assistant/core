@@ -767,12 +767,12 @@ class DeletedDeviceEntry:
             return {}
         return {self.config_entry_id: {self.config_subentry_id}}
 
-    def _reconcile_config_entry_disabled_by(
+    def _calculate_disable_by(
         self,
         config_entry: ConfigEntry,
         disabled_by: DeviceEntryDisabler | UndefinedType | None,
     ) -> DeviceEntryDisabler | None:
-        """Reconcile a restored device's disabled_by against its config entry."""
+        """Calculate disabled_by when restoring a deleted device."""
         if self.disabled_by is UNDEFINED:
             return disabled_by if disabled_by is not UNDEFINED else None
         disabled_by = self.disabled_by
@@ -796,9 +796,7 @@ class DeletedDeviceEntry:
         disabled_by: DeviceEntryDisabler | UndefinedType | None,
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
-        disabled_by = self._reconcile_config_entry_disabled_by(
-            config_entry, disabled_by
-        )
+        disabled_by = self._calculate_disable_by(config_entry, disabled_by)
         return DeviceEntry(
             area_id=self.area_id,
             config_entry_id=config_entry.entry_id,
@@ -822,9 +820,7 @@ class DeletedDeviceEntry:
         parent_device: DeviceEntry,
     ) -> ChildDeviceEntry:
         """Create ChildDeviceEntry from DeletedDeviceEntry."""
-        disabled_by = self._reconcile_config_entry_disabled_by(
-            config_entry, disabled_by
-        )
+        disabled_by = self._calculate_disable_by(config_entry, disabled_by)
         # Re-derive parent-device disable from the (possibly different)
         # parent device.
         if (
@@ -1211,7 +1207,8 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
 
     Registry bugs used to allow duplicate keys within a config entry, so old stores
     can hold them. Only the last indexed device occupies the slot (matching historic
-    lookup behavior); the others are recorded as shadowed until reconciled:
+    lookup behavior); the others are recorded as shadowed until collisions are
+    reconciled:
     - (config_entry_id, (connection_type, connection identifier)) -> {device_id}
     - (config_entry_id, (DOMAIN, identifier)) -> {device_id}
     """
@@ -2122,7 +2119,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         via_device: tuple[str, str] | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry:
-        """Get device. Create if it doesn't exist."""
+        """Get device. Create if it doesn't exist.
+
+        To create or update a child device, use async_get_or_create_child.
+
+        If identifiers overlap with a child device, the method raises.
+        """
         default_manufacturer = _validate_str(
             "default_manufacturer", default_manufacturer
         )
@@ -2212,11 +2214,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
         matched_child_device: ChildDeviceEntry | None = None
 
-        # A child device carries no connections. A connectionless device info whose
-        # identifiers belong to a child is matched here so it can be rejected below: a
-        # child device is referenced explicitly via parent_device_id, never attached to
-        # by a bare device info.
+        # We do not allow registering a device without parent_device_id if the
+        # identifiers match an existing child.
         #
+        # Reject registering a device whose identifiers belong to an existing child
+        # device: a child is referenced via parent_device_id, not adopted by a plain
+        # device info. The matched child is rejected below.
+        #
+        # Only look for a child when no connections were passed. A child device has no
+        # connections, so a device info that carries connections describes a different
+        # (main) device; an identifier overlap with a child is handle by the collision
+        # reconciliation below, not a child reference to reject.
         if device is None and not connections:
             matched_child_device = self.child_devices.get_entry(
                 identifiers=identifiers, config_entry_id=config_entry_id
@@ -2230,7 +2238,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             connections,
         )
         if device is not None:
-            # Reconciliation can update the matched device (e.g. detach its via link)
+            # Collision reconciliation can update the matched device (e.g. detach
+            # its via link)
             device = self.devices[device.id]
         elif matched_child_device is not None:
             # A device info whose identifiers belong to a child device is ambiguous: a
@@ -2244,7 +2253,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "to reference it",
             )
 
-        # Resolved after reconciliation so a removed stale duplicate can't be linked
+        # Resolved after collision reconciliation so a removed stale duplicate can't be
+        # linked
         if via_device_id is not UNDEFINED and via_device_id is not None:
             resolved_via_device_id = self._resolve_via_device_id(
                 via_device_id, config_entry_id
@@ -2471,7 +2481,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         translation_key: str | None = None,
         translation_placeholders: Mapping[str, str] | None = None,
     ) -> ChildDeviceEntry:
-        """Get child device. Create if it doesn't exist."""
+        """Get child device. Create if it doesn't exist.
+
+        If identifiers match those of an existing device, that device is converted to
+        a child device, preserving its id.
+        """
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if config_entry is None:
             raise HomeAssistantError(
@@ -2568,8 +2582,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 identifiers=identifiers, config_entry_id=config_entry_id
             )
 
-        # Validate the device -> child conversion before the reconcile below, whose
-        # stale-duplicate strips would otherwise be left applied by a later raise.
+        # Validate the device -> child conversion before the collision reconciliation
+        # below, whose stale-duplicate strips would otherwise be left applied by a later
+        # raise.
         if matched_device is not None:
             self._async_validate_device_to_child_conversion(
                 matched_device, parent, config_entry, device_info
@@ -2583,7 +2598,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             set(),
         )
         if child_device is not None:
-            # Reconciliation can update the matched child device
+            # Collision reconciliation can update the matched child device
             child_device = self.child_devices[child_device.id]
         elif matched_device is not None:
             # The identifiers are registered by a full device of the config entry:
@@ -3155,8 +3170,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # a deleted device does) unless a consistent disabled_by was passed explicitly:
         # disable an enabled device moved onto a disabled entry, and clear a
         # CONFIG_ENTRY disable when moved onto an enabled entry. A USER disable is
-        # preserved. A new device is reconciled the same way, so a create can't
-        # leave the device's disabled state contradicting the owning entry's.
+        # preserved. Disable_by of a new device is handled the same way, so a create
+        # can't leave the device's disabled state contradicting the owning entry's.
         if (disabled_by is not UNDEFINED or is_move or is_new) and (
             owning_entry := self.hass.config_entries.async_get_entry(
                 effective_config_entry_id
@@ -3398,9 +3413,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     breaks_in_ha_version="2027.8",
                 )
                 disabled_by = UNDEFINED
-            # Report an external attempt to enable a child whose parent stays disabled,
-            # except core's own reconciliation: a CONFIG_ENTRY-disabled child re-enabled
-            # by the config-entry cascade (old.disabled_by is CONFIG_ENTRY) is guarded out.
+            # Report an external attempt to enable a child whose parent stays disabled.
             if (
                 disabled_by is None
                 and parent_device.disabled
@@ -3412,7 +3425,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     breaks_in_ha_version="2027.8",
                 )
             # Coerce the child back to a parent-derived DEVICE disable, keeping it
-            # consistent with its disabled parent; this core reconciliation is not reported.
+            # consistent with its disabled parent.
             if parent_device.disabled and (
                 disabled_by is None
                 or (is_new and disabled_by is UNDEFINED and old.disabled_by is None)
