@@ -105,9 +105,80 @@
       "climate_zone2": {
         "name": "Zone 2 thermostat"
       }
+    },
+    "switch": {
+      "anion": {
+        "name": "Anion"
+      },
+      "aux_heating": {
+        "name": "Auxiliary heating"
+      },
+      "breezeless": {
+        "name": "Breezeless"
+      },
+      "dhw_power": {
+        "name": "DHW power"
+      },
+      "disinfect": {
+        "name": "Disinfect"
+      },
+      "dry": {
+        "name": "Dry"
+      },
+      "eco_mode": {
+        "name": "ECO mode"
+      },
+      "fast_dhw": {
+        "name": "Fast DHW"
+      },
+      "indirect_wind": {
+        "name": "Indirect wind"
+      },
+      "natural_wind": {
+        "name": "Natural wind"
+      },
+      "night_light": {
+        "name": "Night light"
+      },
+      "out_silent": {
+        "name": "Outdoor silent mode"
+      },
+      "prompt_tone": {
+        "name": "Prompt tone"
+      },
+      "screen_display": {
+        "name": "Screen display"
+      },
+      "screen_display_alternate": {
+        "name": "Screen display alternate"
+      },
+      "self_clean": {
+        "name": "Self clean"
+      },
+      "silent_mode": {
+        "name": "Silent mode"
+      },
+      "smart_eye": {
+        "name": "Smart eye"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "tbh": {
+        "name": "TBH"
+      },
+      "zone1_curve": {
+        "name": "Zone 1 curve"
+      },
+      "zone2_curve": {
+        "name": "Zone 2 curve"
+      }
     }
   },
   "exceptions": {
+    "device_communication_error": {
+      "message": "Error communicating with the device: {error}"
+    },
     "unsupported_hvac_mode": {
       "message": "HVAC mode {hvac_mode} is not supported by this device."
     }

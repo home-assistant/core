@@ -1,0 +1,175 @@
+"""Switch for Midea."""
+
+from dataclasses import dataclass
+from typing import Any, cast, override
+
+from midealocal.const import DeviceType
+
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .entity import MideaConfigEntry, MideaEntity, midea_api_call
+
+PARALLEL_UPDATES = 0
+
+
+@dataclass(kw_only=True, frozen=True)
+class MideaSwitchEntityDescription(SwitchEntityDescription):
+    """Description for a Midea switch entity."""
+
+    models: list[DeviceType]
+
+
+SWITCHES: list[MideaSwitchEntityDescription] = [
+    MideaSwitchEntityDescription(
+        key="aux_heating",
+        translation_key="aux_heating",
+        models=[DeviceType.AC, DeviceType.CC, DeviceType.CF],
+    ),
+    MideaSwitchEntityDescription(
+        key="breezeless",
+        translation_key="breezeless",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="dry",
+        translation_key="dry",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="indirect_wind",
+        translation_key="indirect_wind",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="natural_wind",
+        translation_key="natural_wind",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="prompt_tone",
+        translation_key="prompt_tone",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="screen_display",
+        translation_key="screen_display",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="screen_display_alternate",
+        translation_key="screen_display_alternate",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="out_silent",
+        translation_key="out_silent",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="smart_eye",
+        translation_key="smart_eye",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="anion",
+        translation_key="anion",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="sound",
+        translation_key="sound",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="self_clean",
+        translation_key="self_clean",
+        models=[DeviceType.AC],
+    ),
+    MideaSwitchEntityDescription(
+        key="disinfect",
+        translation_key="disinfect",
+        models=[DeviceType.C3],
+    ),
+    MideaSwitchEntityDescription(
+        key="dhw_power",
+        translation_key="dhw_power",
+        models=[DeviceType.C3],
+    ),
+    MideaSwitchEntityDescription(
+        key="eco_mode",
+        translation_key="eco_mode",
+        models=[DeviceType.C3],
+    ),
+    MideaSwitchEntityDescription(
+        key="fast_dhw",
+        translation_key="fast_dhw",
+        models=[DeviceType.C3],
+    ),
+    MideaSwitchEntityDescription(
+        key="silent_mode",
+        translation_key="silent_mode",
+        models=[DeviceType.C3],
+    ),
+    MideaSwitchEntityDescription(
+        key="tbh",
+        translation_key="tbh",
+        models=[DeviceType.C3],
+    ),
+    MideaSwitchEntityDescription(
+        key="zone1_curve",
+        translation_key="zone1_curve",
+        models=[DeviceType.C3],
+    ),
+    MideaSwitchEntityDescription(
+        key="zone2_curve",
+        translation_key="zone2_curve",
+        models=[DeviceType.C3],
+    ),
+    MideaSwitchEntityDescription(
+        key="night_light",
+        translation_key="night_light",
+        models=[DeviceType.CC],
+    ),
+]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: MideaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up switches for device."""
+    device = config_entry.runtime_data
+
+    async_add_entities(
+        MideaSwitch(device, description)
+        for description in SWITCHES
+        if device.device_type in description.models
+        and device.attributes.get(description.key) is not None
+    )
+
+
+class MideaSwitch(MideaEntity, SwitchEntity):
+    """Represent a Midea switch."""
+
+    entity_description: MideaSwitchEntityDescription
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if switch is on."""
+        return cast("bool", self._device.get_attribute(self.entity_description.key))
+
+    @override
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn on switch."""
+        with midea_api_call():
+            self._device.set_attribute(attr=self.entity_description.key, value=True)
+
+    @override
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn off switch."""
+        with midea_api_call():
+            self._device.set_attribute(attr=self.entity_description.key, value=False)
