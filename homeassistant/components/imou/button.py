@@ -2,6 +2,7 @@
 
 from typing import override
 
+from pyimouapi.const import PARAM_RESTART_DEVICE
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
@@ -19,8 +20,7 @@ from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
 PARALLEL_UPDATES = 1
-# Button types
-PARAM_RESTART_DEVICE = "restart_device"
+# Button types not yet exported by pyimouapi (keep module-local).
 PARAM_MUTE = "mute"
 PARAM_PTZ_UP = "ptz_up"
 PARAM_PTZ_DOWN = "ptz_down"

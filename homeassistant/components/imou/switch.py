@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
@@ -21,9 +22,7 @@ from .const import (
     PARAM_CLOSE_CAMERA,
     PARAM_HEADER_DETECT,
     PARAM_LIGHT,
-    PARAM_MOTION_DETECT,
     PARAM_PLUG_SWITCH,
-    PARAM_STATE,
     PARAM_WHITE_LIGHT,
     imou_device_identifier,
 )
