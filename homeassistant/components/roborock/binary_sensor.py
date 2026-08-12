@@ -14,14 +14,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory, Platform
+from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
 from .coordinator import (
     RoborockConfigEntry,
     RoborockCoordinatorType,
@@ -31,7 +29,6 @@ from .coordinator import (
 )
 from .entity import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
 from .models import DeviceState
-from .util import deprecate_entity
 
 PARALLEL_UPDATES = 0
 
@@ -59,6 +56,17 @@ class RoborockBinarySensorDescriptionA01(BinarySensorEntityDescription):
 
 
 BINARY_SENSOR_DESCRIPTIONS = [
+    RoborockBinarySensorDescription(
+        key="dry_status",
+        translation_key="mop_drying_status",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.dry_status,
+        is_dock_entity=True,
+        support_fn=lambda api: api.device_features.is_field_supported(
+            StatusV2, StatusField.DRY_STATUS
+        ),
+    ),
     RoborockBinarySensorDescription(
         key="dust_collection_status",
         translation_key="dust_collection_status",
@@ -148,16 +156,6 @@ BINARY_SENSOR_DESCRIPTIONS = [
 ]
 
 
-MOP_DRYING_BINARY_SENSOR_DESCRIPTION = RoborockBinarySensorDescription(
-    key="dry_status",
-    translation_key="mop_drying_status",
-    device_class=BinarySensorDeviceClass.RUNNING,
-    entity_category=EntityCategory.DIAGNOSTIC,
-    value_fn=lambda data: data.status.dry_status,
-    is_dock_entity=True,
-)
-
-
 ZEO_BINARY_SENSOR_DESCRIPTIONS: list[RoborockBinarySensorDescriptionA01] = [
     RoborockBinarySensorDescriptionA01(
         key="detergent_empty",
@@ -185,7 +183,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roborock vacuum binary sensors."""
     coordinators = config_entry.runtime_data
-    entity_registry = er.async_get(hass)
 
     @callback
     def async_add_coordinator_entities(
@@ -199,29 +196,6 @@ async def async_setup_entry(
                 for description in BINARY_SENSOR_DESCRIPTIONS
                 if description.support_fn(coordinator.properties_api)
             )
-            mop_drying_unique_id = (
-                f"{MOP_DRYING_BINARY_SENSOR_DESCRIPTION.key}_{coordinator.duid_slug}"
-            )
-            if not coordinator.properties_api.device_features.dock_features.is_dryable:
-                # The sensor was created for every device reporting the drying
-                # status data point, so a dock that cannot dry always read off.
-                if entity_id := entity_registry.async_get_entity_id(
-                    Platform.BINARY_SENSOR, DOMAIN, mop_drying_unique_id
-                ):
-                    entity_registry.async_remove(entity_id)
-            elif deprecate_entity(
-                hass,
-                entity_registry,
-                platform_domain=Platform.BINARY_SENSOR,
-                entity_unique_id=mop_drying_unique_id,
-                issue_id=f"deprecated_mop_drying_{coordinator.duid_slug}",
-                translation_key="deprecated_mop_drying",
-            ):
-                entities.append(
-                    RoborockBinarySensorEntity(
-                        coordinator, MOP_DRYING_BINARY_SENSOR_DESCRIPTION
-                    )
-                )
         elif isinstance(coordinator, RoborockWashingMachineUpdateCoordinator):
             entities.extend(
                 RoborockBinarySensorEntityA01(coordinator, description)
