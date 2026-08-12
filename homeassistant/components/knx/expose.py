@@ -288,7 +288,7 @@ class KnxExposeEntity:
 
         if (
             event.data["old_state"] is None
-            and self.hass.state is CoreState.starting
+            and self.hass.state in (CoreState.not_running, CoreState.starting)
         ):
             self._set_expose_state(new_state)
             return
