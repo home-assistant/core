@@ -9,6 +9,11 @@ from pyportainer.exceptions import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.portainer.update import (
+    _format_version,
+    _release_url,
+    _short_digest,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -136,3 +141,95 @@ async def test_update_using_cache(
     )
 
     mock_portainer_client.get_image.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("digest", "expected"),
+    [
+        pytest.param(None, None, id="none"),
+        pytest.param(
+            "sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb",
+            "sha256:afcc7f1ac1b4",
+            id="full_digest",
+        ),
+        pytest.param(
+            "example@sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb",
+            "sha256:afcc7f1ac1b4",
+            id="repo_prefix",
+        ),
+    ],
+)
+def test_short_digest(digest: str | None, expected: str | None) -> None:
+    """Test _short_digest produces a 12-character Docker-style short form."""
+    assert _short_digest(digest) == expected
+
+
+@pytest.mark.parametrize(
+    ("digest", "repo_tags", "expected"),
+    [
+        pytest.param(None, None, None, id="no_digest"),
+        pytest.param(
+            "sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb",
+            None,
+            "sha256:afcc7f1ac1b4",
+            id="no_repo_tags",
+        ),
+        pytest.param(
+            "sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb",
+            ["app:latest", "app:1.0"],
+            "app:latest (sha256:afcc7f1ac1b4)",
+            id="with_repo_tags",
+        ),
+    ],
+)
+def test_format_version(
+    digest: str | None, repo_tags: list[str] | None, expected: str | None
+) -> None:
+    """Test _format_version combines tag and short digest."""
+    assert _format_version(digest, repo_tags) == expected
+
+
+@pytest.mark.parametrize(
+    ("image", "expected"),
+    [
+        pytest.param(None, None, id="none"),
+        pytest.param(
+            "ubuntu:latest",
+            "https://hub.docker.com/r/ubuntu/tags?name=latest",
+            id="docker_hub_bare_name",
+        ),
+        pytest.param(
+            "ubuntu",
+            "https://hub.docker.com/r/ubuntu/tags?name=latest",
+            id="docker_hub_bare_no_tag",
+        ),
+        pytest.param(
+            "docker.io/library/ubuntu:latest",
+            "https://hub.docker.com/_/ubuntu/tags?name=latest",
+            id="docker_io_library",
+        ),
+        pytest.param(
+            "docker.io/lissy93/dashy:latest",
+            "https://hub.docker.com/r/lissy93/dashy/tags?name=latest",
+            id="docker_io_user",
+        ),
+        pytest.param(
+            "ghcr.io/owner/myapp:v1.0",
+            "https://github.com/owner/myapp/pkgs/container/myapp",
+            id="ghcr_io",
+        ),
+        pytest.param(
+            "ghcr.io/org/sub/app:latest",
+            None,
+            id="ghcr_io_nested",
+        ),
+        pytest.param(
+            "quay.io/prometheus/prometheus:latest",
+            None,
+            id="unknown_registry",
+        ),
+    ],
+)
+def test_release_url(image: str | None, expected: str | None) -> None:
+    """Test _release_url returns tag page links for known registries only."""
+    assert _release_url(image) == expected

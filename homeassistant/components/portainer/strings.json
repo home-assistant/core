@@ -204,7 +204,15 @@
     },
     "update": {
       "container_image_update": {
-        "name": "Image update available"
+        "name": "Image update available",
+        "state_attributes": {
+          "image_created": {
+            "name": "Image created"
+          },
+          "image_size": {
+            "name": "Image size"
+          }
+        }
       }
     }
   },
