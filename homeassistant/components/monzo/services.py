@@ -217,7 +217,7 @@ async def _async_transfer(
     except (ClientError, TimeoutError) as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="transfer_failed",
+            translation_key="transfer_status_unknown",
         ) from err
 
     if not transfer_succeeded:

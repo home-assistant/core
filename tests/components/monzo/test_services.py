@@ -355,7 +355,7 @@ async def test_transport_error(
     with pytest.raises(HomeAssistantError) as error:
         await _async_call_transfer(hass, transfer_devices, SERVICE_DEPOSIT_INTO_POT, 1)
 
-    assert error.value.translation_key == "transfer_failed"
+    assert error.value.translation_key == "transfer_status_unknown"
     assert monzo.user_account.accounts.await_count == 1
     assert monzo.user_account.pots.await_count == 1
 
