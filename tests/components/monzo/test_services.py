@@ -266,7 +266,7 @@ async def test_pot_must_belong_to_selected_account(
 ) -> None:
     """Test a pot can only be transferred to or from its owning account."""
     joint_account_id = "acc_joint"
-    polling_config_entry.runtime_data.data.accounts[joint_account_id] = {
+    polling_config_entry.runtime_data.coordinator.data.accounts[joint_account_id] = {
         "id": joint_account_id,
         "name": "Joint Account",
         "type": "uk_retail_joint",

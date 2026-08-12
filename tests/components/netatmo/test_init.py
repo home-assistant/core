@@ -723,21 +723,21 @@ async def test_device_remove_devices(
 
     device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     home_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, HOME_ID), config_entry.entry_id
     )
     assert home_device is not None
-    response = await client.remove_device(home_device.id, config_entry.entry_id)
+    response = await client.remove_device(home_device.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
     )
-    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 

@@ -133,7 +133,7 @@ def _async_resolve_transfer(
             MonzoConfigEntry,
             service.async_get_config_entry(call.hass, DOMAIN, entry_id),
         )
-        coordinator = entry.runtime_data
+        coordinator = entry.runtime_data.coordinator
         if (account := coordinator.data.accounts.get(account_id)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
