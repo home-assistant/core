@@ -129,7 +129,9 @@ async def test_press_button_service_propagates_api_error(
 
     entity_id = hass.states.async_all("button")[0].entity_id
 
-    with pytest.raises(HomeAssistantError, match="cloud failure"):
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the button press: cloud failure"
+    ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,

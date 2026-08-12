@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import PTZ_MOVE_DURATION_MS, imou_device_identifier
+from .const import DOMAIN, PTZ_MOVE_DURATION_MS, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
@@ -110,4 +110,8 @@ class ImouButton(ImouEntity, ButtonEntity):
                 duration,
             )
         except ImouException as e:
-            raise HomeAssistantError(str(e)) from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="press_button_failed",
+                translation_placeholders={"error": e.message},
+            ) from e
