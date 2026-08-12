@@ -9,6 +9,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_determine_port": "Could not determine the SmartCast API port for this device. Check that the hostname or IP address is correct and the device is powered on, or enter the address as host:port if you know the port.",
       "complete_pairing_failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
       "existing_config_entry_found": "An existing VIZIO SmartCast device config entry with the same serial number has already been configured. You must delete the existing entry in order to configure this one."
     },
@@ -45,7 +46,7 @@
         },
         "data_description": {
           "access_token": "The access token used to authenticate with your TV. Leave empty to start a pairing process that will provide one.",
-          "host": "Hostname or IP address of your VIZIO SmartCast device.",
+          "host": "Hostname or IP address of your VIZIO SmartCast device. Optionally include the port as host:port; otherwise the standard SmartCast ports are tried.",
           "name": "The name used for the device and its entities in Home Assistant."
         },
         "description": "An access token is only needed for TVs. If you are configuring a TV and do not have an access token yet, leave it blank to go through a pairing process."
@@ -53,6 +54,9 @@
     }
   },
   "exceptions": {
+    "cannot_determine_port": {
+      "message": "Could not determine the SmartCast API port for {host}. If the device is reachable, reconfigure it using host:port."
+    },
     "command_error": {
       "message": "Failed to send command to the device: {error}"
     },
@@ -88,6 +92,16 @@
     }
   },
   "services": {
+    "send_text": {
+      "description": "Types text into the focused on-screen field, such as a search box or PIN entry. Only ASCII characters are supported.",
+      "fields": {
+        "text": {
+          "description": "The text to type.",
+          "name": "Text"
+        }
+      },
+      "name": "Send text"
+    },
     "update_setting": {
       "description": "Updates the value of a setting on a Vizio media player device.",
       "fields": {

@@ -5,7 +5,14 @@ import copy
 import logging
 from typing import Any, override
 
-from vizaio import AppRecord, PairChallenge, Vizio, VizioError, async_is_tv
+from vizaio import (
+    AppRecord,
+    PairChallenge,
+    Vizio,
+    VizioError,
+    async_is_tv,
+    async_resolve_host,
+)
 from vizaio.apps import APP_HOME, BUNDLED_APPS
 import voluptuous as vol
 
@@ -266,16 +273,29 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_validate_and_continue(self) -> ConfigFlowResult:
         """Validate the device and continue to saving or pairing.
 
-        Shared by the user, reauth, and reconfigure flows: detect the device
-        class, verify the device identity via its serial number, then save
-        directly (speaker, or TV with a working access token) or start PIN
-        pairing (TV without a working token).
+        Shared by the user, reauth, and reconfigure flows: resolve the API
+        port, detect the device class, verify the device identity via its
+        serial number, then save directly (speaker, or TV with a working
+        access token) or start PIN pairing (TV without a working token).
         """
         assert self._data
-        host = self._data[CONF_HOST]
-        self._data[CONF_DEVICE_CLASS] = device_class = await _async_detect_device_class(
-            self.hass, host
-        )
+        # A host entered without a port would target 443; probe for the
+        # API port. No-op for a host that already carries one.
+        try:
+            host = self._data[CONF_HOST] = await async_resolve_host(
+                self._data[CONF_HOST],
+                session=async_get_clientsession(self.hass, False),
+            )
+        except VizioError:
+            return self._async_show_source_form({CONF_HOST: "cannot_determine_port"})
+
+        # Zeroconf discovery and existing entries already carry a device
+        # class; detect it only when the flow has none yet.
+        if CONF_DEVICE_CLASS not in self._data:
+            self._data[CONF_DEVICE_CLASS] = await _async_detect_device_class(
+                self.hass, host
+            )
+        device_class = self._data[CONF_DEVICE_CLASS]
 
         unique_id = await _async_get_unique_id(self.hass, host, device_class)
         if not unique_id:
@@ -329,8 +349,16 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         host = discovery_info.host
         # If host already has port, no need to add it again
-        if ":" not in host:
+        if ":" not in host and discovery_info.port:
             host = f"{host}:{discovery_info.port}"
+        # Discovery doesn't always advertise a port; probe for the API port so
+        # we don't build a host that targets 443. No-op if one was appended.
+        try:
+            host = await async_resolve_host(
+                host, session=async_get_clientsession(self.hass, False)
+            )
+        except VizioError:
+            return self.async_abort(reason="cannot_connect")
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`
