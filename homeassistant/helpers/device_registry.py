@@ -2588,6 +2588,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             can't be disabled by CONFIG_ENTRY when the owning config entry is enabled.
             An inconsistent disabled_by is deprecated and ignored; this will raise in
             HA Core 2027.8.
+        :param merge_connections: Deprecated. Adds connections to the device, keeping the
+            ones it already has. Pass the full set of connections as new_connections
+            instead.
+        :param merge_identifiers: Deprecated. Adds identifiers to the device, keeping the
+            ones it already has. Pass the full set of identifiers as new_identifiers
+            instead.
         :param new_config_entry_id: Move the device to this config entry. Unless a
             disabled_by consistent with the new config entry's disabled state is
             passed explicitly, the device's disabled state is updated to reflect the
@@ -2657,6 +2663,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "passes a suggested_area to device_registry.async_update device",
                 core_behavior=ReportBehavior.LOG,
                 breaks_in_ha_version="2026.9.0",
+            )
+        if merge_connections is not UNDEFINED or merge_identifiers is not UNDEFINED:
+            report_usage(
+                "calls `device_registry.async_update_device` with `merge_connections` "
+                "or `merge_identifiers`; these only add to the device's existing "
+                "connections or identifiers. Pass the full set as `new_connections` or "
+                "`new_identifiers` instead",
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                breaks_in_ha_version="2027.8.0",
             )
 
         validated_fields = _validate_device_info_fields(
