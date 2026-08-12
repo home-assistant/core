@@ -50,6 +50,47 @@ async def test_get_config(
 
         assert result["name"] == "Device 11.11.11"
         assert result["address"] == "11.11.11"
+        assert result["cat"] == 0x02
+        assert result["subcat"] == 0x00
+        assert result["model"] == "1"
+        assert result["description"] == "Device 11.11.11"
+        assert result["engine_version"] == "unknown"
+        assert result["firmware"] == 0x00
+        assert result["buttons"] == {"1": "on_off_switch"}
+
+
+async def test_get_device_with_buttons(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test getting a multi-button Insteon device."""
+
+    ws_client, devices, _, device_registry = await async_mock_setup(
+        hass, hass_ws_client
+    )
+    ha_device = device_registry.async_get_or_create(
+        config_entry_id="abcde12345",
+        identifiers={(DOMAIN, "33.33.33")},
+        name="Device 33.33.33",
+    )
+    with patch.object(insteon.api.device, "devices", devices):
+        await ws_client.send_json(
+            {ID: 2, TYPE: "insteon/device/get", DEVICE_ID: ha_device.id}
+        )
+        msg = await ws_client.receive_json()
+        result = msg["result"]
+
+        assert result["address"] == "33.33.33"
+        assert result["buttons"] == {
+            "1": "dimmable_light_main",
+            "2": "on_off_switch_b",
+            "3": "on_off_switch_c",
+            "4": "on_off_switch_d",
+            "5": "on_off_switch_e",
+            "6": "on_off_switch_f",
+            "7": "on_off_switch_g",
+            "8": "on_off_switch_h",
+        }
 
 
 async def test_no_ha_device(
