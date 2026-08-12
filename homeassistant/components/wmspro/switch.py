@@ -28,7 +28,7 @@ async def async_setup_entry(
     hub = config_entry.runtime_data
 
     async_add_entities(
-        WebControlProSwitch(config_entry.entry_id, dest)
+        WebControlProSwitch(hass, config_entry.entry_id, dest)
         for dest in hub.dests.values()
         if dest.hasAction(ACTION_DESC.LoadSwitch)
     )

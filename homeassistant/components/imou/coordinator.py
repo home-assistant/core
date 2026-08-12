@@ -152,10 +152,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 if device := device_registry.async_get_device_by_identifier(
                     (DOMAIN, device_key), self.config_entry.entry_id
                 ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
 
         if new_keys := current_keys - known_keys:
             _LOGGER.debug("New Imou device(s) found: %s", ", ".join(new_keys))

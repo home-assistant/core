@@ -184,6 +184,12 @@ async def test_receiving_command_success_using_value_template(
             False,
         ),
         (
+            '""',
+            "Ignoring payload for infrared.test on topic test-topic, with template None",
+            logging.DEBUG,
+            False,
+        ),
+        (
             "None",
             "Ignoring payload for infrared.test on topic test-topic, with template None",
             logging.DEBUG,
