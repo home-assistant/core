@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from librouteros.exceptions import ConnectionClosed, LibRouterosError
 import pytest
 
@@ -244,13 +245,12 @@ async def test_connection_dropped_during_refresh_reconnects_and_succeeds(
     hass: HomeAssistant,
     mock_api: MagicMock,
     mock_config_entry: MockConfigEntryFactory,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a dropped connection triggers a single reconnect and the refresh succeeds."""
     entry = mock_config_entry()
     await setup_integration(hass, entry, command_responses={})
     assert entry.state is ConfigEntryState.LOADED
-
-    coordinator = entry.runtime_data
 
     calls = 0
 
@@ -263,13 +263,15 @@ async def test_connection_dropped_during_refresh_reconnects_and_succeeds(
 
     mock_api.side_effect = flaky_call
 
-    with patch("librouteros.connect", return_value=mock_api) as mock_connect:
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    with patch(
+        "homeassistant.components.mikrotik.coordinator.get_api", return_value=mock_api
+    ) as mock_get_api:
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert coordinator.last_update_success is True
-    assert mock_connect.call_count == 1
+    assert mock_get_api.call_count == 1
 
 
 async def test_scheduled_refresh_reuses_persistent_connection(

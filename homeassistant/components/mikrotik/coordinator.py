@@ -339,7 +339,7 @@ class MikrotikData:
                     return list(self.api(cmd, **params))
                 return list(self.api(cmd))
             except CONNECTION_ERRORS as err:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Mikrotik %s - connection dropped (%s), reconnecting",
                     self._host,
                     err,
