@@ -16,6 +16,7 @@ from aiohasupervisor.models import (
     HomeAssistantInfo,
     HomeAssistantStats,
     HostInfo,
+    IngressPanel,
     InstalledAddon,
     InstalledAddonComplete,
     Issue as SupervisorIssue,
@@ -764,6 +765,7 @@ class HassioMainData:
     host: HostInfo
     mounts: dict[str, CIFSMountResponse | NFSMountResponse]
     os: OSInfo | None
+    panels: dict[str, IngressPanel]
 
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the data."""
@@ -773,6 +775,7 @@ class HassioMainData:
             "host": self.host.to_dict(),
             "mounts": {name: mount.to_dict() for name, mount in self.mounts.items()},
             "os": self.os.to_dict() if self.os is not None else None,
+            "panels": {slug: panel.to_dict() for slug, panel in self.panels.items()},
         }
 
 
@@ -1510,6 +1513,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                 host_info,
                 store_info,
                 network_info,
+                panels_info,
             ) = cast(
                 tuple[
                     RootInfo,
@@ -1519,6 +1523,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                     HostInfo,
                     StoreInfo,
                     NetworkInfo,
+                    dict[str, IngressPanel],
                 ],
                 await asyncio.gather(
                     client.info(),
@@ -1528,6 +1533,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                     client.host.info(),
                     client.store.info(),
                     client.network.info(),
+                    client.ingress.panels(),
                 ),
             )
             mounts_info = await client.mounts.info()
@@ -1542,6 +1548,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
             host=host_info,
             mounts={mount.name: mount for mount in mounts_info.mounts},
             os=os_info if self.is_hass_os else None,
+            panels=panels_info,
         )
 
         # Update hass.data for legacy accessor functions

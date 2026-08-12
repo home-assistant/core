@@ -1,5 +1,6 @@
 """Implement the Ingress Panel feature for Hass.io Add-ons."""
 
+from dataclasses import replace
 from http import HTTPStatus
 import logging
 
@@ -9,33 +10,51 @@ from aiohttp import web
 
 from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView, require_admin
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
+from .const import MAIN_COORDINATOR
+from .coordinator import HassioMainDataUpdateCoordinator
 from .handler import get_supervisor_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def async_setup_addon_panel(hass: HomeAssistant) -> None:
-    """Add-on Ingress Panel setup."""
-    hassio_addon_panel = HassIOAddonPanel(hass)
-    hass.http.register_view(hassio_addon_panel)
+    """Register the add-on panel push API view."""
+    hass.http.register_view(HassIOAddonPanel(hass))
 
-    # Handle existing panels on startup
-    async def _async_panel_start_handler(event: Event) -> None:
-        """Process all existing panels on startup."""
-        # Check if there are panels to register
-        if not (panels := await hassio_addon_panel.get_panels()):
-            return
 
-        # Register available panels
-        for addon, data in panels.items():
-            if not data.enable:
-                continue
-            _register_panel(hass, addon, data)
+@callback
+def async_setup_addon_panel_coordinator(
+    hass: HomeAssistant, coordinator: HassioMainDataUpdateCoordinator
+) -> CALLBACK_TYPE:
+    """Reconcile add-on panels registered with the frontend against coordinator data.
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_panel_start_handler)
+    Registers the panels present after the coordinator's first refresh, then keeps
+    the frontend in sync with coordinator.data.panels on every following update:
+    periodic refreshes, a refresh triggered by a Supervisor restart, and a post/
+    delete pushed by Supervisor and cached via coordinator.async_set_updated_data.
+
+    Returns a function that unsubscribes from the coordinator.
+    """
+    registered: set[str] = set()
+
+    @callback
+    def _async_reconcile_panels() -> None:
+        """Register or remove panels to match the coordinator's cached data."""
+        panels = coordinator.data.panels
+        wanted = {addon for addon, panel in panels.items() if panel.enable}
+
+        for addon in wanted - registered:
+            _register_panel(hass, addon, panels[addon])
+        for addon in registered - wanted:
+            frontend.async_remove_panel(hass, addon, warn_if_unknown=False)
+
+        registered.clear()
+        registered.update(wanted)
+
+    _async_reconcile_panels()
+    return coordinator.async_add_listener(_async_reconcile_panels)
 
 
 class HassIOAddonPanel(HomeAssistantView):
@@ -59,18 +78,49 @@ class HassIOAddonPanel(HomeAssistantView):
             _LOGGER.error("Panel is not enabled for %s", addon)
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        # Register panel
-        _register_panel(self.hass, addon, panels[addon])
+        if (coordinator := self.hass.data.get(MAIN_COORDINATOR)) is not None:
+            # Update the cache; the coordinator listener registers it with the frontend.
+            coordinator.async_set_updated_data(
+                replace(
+                    coordinator.data,
+                    panels={**coordinator.data.panels, addon: panels[addon]},
+                )
+            )
+        else:
+            _register_panel(self.hass, addon, panels[addon])
         return web.Response()
 
     @require_admin
     async def delete(self, request: web.Request, addon: str) -> web.Response:
         """Handle remove add-on panel requests."""
-        frontend.async_remove_panel(self.hass, addon)
+        if (coordinator := self.hass.data.get(MAIN_COORDINATOR)) is not None:
+            if addon in coordinator.data.panels:
+                # Update the cache; the coordinator listener removes it from the frontend.
+                coordinator.async_set_updated_data(
+                    replace(
+                        coordinator.data,
+                        panels={
+                            slug: panel
+                            for slug, panel in coordinator.data.panels.items()
+                            if slug != addon
+                        },
+                    )
+                )
+        else:
+            frontend.async_remove_panel(self.hass, addon, warn_if_unknown=False)
         return web.Response()
 
     async def get_panels(self) -> dict[str, IngressPanel]:
-        """Return panels add-on info data."""
+        """Return panel info, preferring the main coordinator's cache.
+
+        The coordinator is not available yet very early during Home Assistant
+        startup. Other callers besides Supervisor rely on this API working at
+        that point too, so fall back to a fresh Supervisor call instead of
+        failing outright.
+        """
+        if (coordinator := self.hass.data.get(MAIN_COORDINATOR)) is not None:
+            return coordinator.data.panels
+
         try:
             return await self.client.ingress.panels()
         except SupervisorError as err:
@@ -78,7 +128,7 @@ class HassIOAddonPanel(HomeAssistantView):
         return {}
 
 
-def _register_panel(hass: HomeAssistant, addon: str, data: IngressPanel):
+def _register_panel(hass: HomeAssistant, addon: str, data: IngressPanel) -> None:
     """Helper to register the panel."""
     frontend.async_register_built_in_panel(
         hass,
