@@ -460,6 +460,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         enqueue: MediaPlayerEnqueue | QueueOption | None = None,
         radio_mode: bool | None = None,
         media_type: str | None = None,
+        chapter: int | None = None,
         username: str | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
@@ -543,6 +544,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             media=media_uris,
             option=self._convert_queueoption_to_media_player_enqueue(enqueue),
             radio_mode=radio_mode or False,
+            start_item=str(chapter) if chapter is not None else None,
             username=username,
         )
 

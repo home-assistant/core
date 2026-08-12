@@ -413,6 +413,10 @@
           "description": "When specifying a track or album by name in the Media ID field, you can optionally restrict results by this artist name.",
           "name": "Artist name"
         },
+        "chapter": {
+          "description": "For an audiobook, jump to (or start playback at) this chapter number instead of the beginning.",
+          "name": "Chapter"
+        },
         "enqueue": {
           "description": "If the content should be played now or added to the queue.",
           "name": "Enqueue"
