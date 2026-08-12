@@ -22,7 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -32,6 +31,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ALL_FAN_MODES,
+    BREAKS_IN_HA_VERSION,
     CONF_GATEWAY_ADDRESS,
     DEFAULT_GATEWAY_ADDRESS,
     DEFAULT_PORT,
@@ -51,8 +51,6 @@ from .coordinator import (
 # The gateway serializes everything onto a single socket, so there is nothing
 # to gain from issuing commands in parallel.
 PARALLEL_UPDATES = 1
-
-BREAKS_IN_HA_VERSION = "2027.3.0"
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
@@ -142,10 +140,6 @@ async def async_setup_entry(
 class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
     """Representation of an air conditioner behind a ZhongHong gateway."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
-    # Only for the two fan speeds climate has no name of its own for.
-    _attr_translation_key = "air_conditioner"
     _attr_fan_modes = ALL_FAN_MODES
     _attr_hvac_modes = [
         HVACMode.COOL,
@@ -174,12 +168,8 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
         super().__init__(coordinator)
         self._device = device
         addr_out, addr_in = address
+        self._attr_name = f"AC {addr_out}-{addr_in}"
         self._attr_unique_id = device_unique_id(entry, address)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            manufacturer="ZhongHong",
-            name=f"AC {addr_out}-{addr_in}",
-        )
 
     @property
     @override

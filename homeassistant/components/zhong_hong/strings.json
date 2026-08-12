@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices_found": "[%key:component::zhong_hong::config::error::no_devices_found%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -22,20 +24,6 @@
       }
     }
   },
-  "entity": {
-    "climate": {
-      "air_conditioner": {
-        "state_attributes": {
-          "fan_mode": {
-            "state": {
-              "medium_high": "Medium high",
-              "medium_low": "Medium low"
-            }
-          }
-        }
-      }
-    }
-  },
   "exceptions": {
     "cannot_connect": {
       "message": "Failed to connect to the ZhongHong gateway at {host}."
@@ -45,6 +33,16 @@
     },
     "send_command_failed": {
       "message": "Failed to send {command} command to the ZhongHong gateway."
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed, but the gateway at {host} could not be reached, so the configuration could not be imported.\n\nCheck that the gateway is switched on and reachable at that address, then restart Home Assistant. If it is gone for good, remove the {domain} YAML configuration from your configuration.yaml file.",
+      "title": "The {integration_title} YAML configuration could not be imported"
+    },
+    "deprecated_yaml_import_issue_no_devices_found": {
+      "description": "Configuring {integration_title} using YAML is being removed, but the gateway at {host} did not report any air conditioners, so the configuration could not be imported.\n\nCheck that the air conditioners are switched on and addressed on the gateway, then restart Home Assistant.",
+      "title": "[%key:component::zhong_hong::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
     }
   }
 }

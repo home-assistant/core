@@ -32,7 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import DEVICE_ADDRESS, ENTITY_ID, FakeGateway, build_status
@@ -51,7 +51,6 @@ async def test_entity_registration(
     mock_gateway: FakeGateway,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the entity keeps the identifier the YAML platform gave it."""
     await setup_integration(hass, mock_config_entry)
@@ -65,11 +64,6 @@ async def test_entity_registration(
     # The address on the bus is not unique on its own: another gateway can
     # have an air conditioner at the same one.
     assert entity_entry.unique_id == f"{mock_config_entry.entry_id}_1_1"
-
-    device_entry = device_registry.async_get(entity_entry.device_id)
-    assert device_entry is not None
-    assert device_entry.name == "AC 1-1"
-    assert device_entry.manufacturer == "ZhongHong"
 
 
 async def test_push_updates_the_entity(
