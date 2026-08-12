@@ -43,7 +43,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -101,9 +101,7 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
 
 VACUUM_YAML_SCHEMA = vol.All(
     VACUUM_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
-        make_template_entity_common_modern_attributes_schema(
-            VACUUM_DOMAIN, DEFAULT_NAME
-        ).schema
+        make_template_entity_common_schema(VACUUM_DOMAIN, DEFAULT_NAME).schema
     ),
     cv.key_dependency(CONF_SEGMENTS, CONF_UNIQUE_ID),
     cv.key_dependency(CONF_CLEAN_SEGMENTS, CONF_UNIQUE_ID),
