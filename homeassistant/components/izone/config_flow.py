@@ -34,6 +34,8 @@ SELECTED_CONTROLLER_UID = "selected_controller_uid"
 # Wait after IASD for ASPort replies (matches pizone discover_all wait).
 USER_SCAN_WAIT_SECONDS = SCAN_TIMEOUT
 
+STEP_MANUAL_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+
 
 @dataclass(frozen=True, slots=True)
 class _ShelfCandidate:
@@ -57,7 +59,8 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    _discovered_controller_ip: str | None = None
+    _discovered_controller_host: str | None = None
+    _discovered_controller_uid: str | None = None
     _user_discovery_task: asyncio.Task[None] | None = None
     _user_discovery_failed: bool = False
 
@@ -103,8 +106,11 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, _user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """User-started flow: search the LAN, then offer discovered controllers."""
-        return await self.async_step_discover()
+        """User-started flow: search the LAN or enter a controller host."""
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["discover", "manual_host"],
+        )
 
     async def _async_run_user_discovery(self) -> None:
         """Scan and wait for the progress step (no unique_id work here)."""
@@ -208,6 +214,21 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
         return self.async_abort(reason="no_devices_found")
 
+    async def async_step_manual_host(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Enter a controller IP or hostname, then hand off or confirm."""
+        if user_input is None:
+            return self._async_show_manual_host_form()
+
+        host = user_input[CONF_HOST].strip()
+        if not host:
+            return self._async_show_manual_host_form(
+                errors={CONF_HOST: "required"},
+                suggested_values=user_input,
+            )
+        return await self._async_manual_host_submit(host)
+
     @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
@@ -244,7 +265,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")
 
-        self._discovered_controller_ip = endpoint.host
+        self._discovered_controller_host = endpoint.host
 
         # Re-check after awaiting discovery to catch mid-flight configuration.
         self._abort_if_unique_id_configured()
@@ -269,15 +290,15 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(uid)
         self._abort_if_unique_id_configured()
         # Persist through confirm into entry data as CONF_HOST.
-        self._discovered_controller_ip = host
+        self._discovered_controller_host = host
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm adding a controller found via HomeKit or discovery."""
-        controller_uid = self.unique_id
-        host = self._discovered_controller_ip
+        """Confirm adding a controller found via HomeKit, discovery, or Ignore replace."""
+        controller_uid = self.unique_id or self._discovered_controller_uid
+        host = self._discovered_controller_host
         assert isinstance(controller_uid, str)
         assert controller_uid
         assert host is not None
@@ -325,6 +346,109 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 _ShelfCandidate(uid=uid, host=host, flow_id=flow["flow_id"])
             )
         return sorted(candidates, key=lambda candidate: (candidate.uid, candidate.host))
+
+    @callback
+    def _async_shelf_candidate_for_host(self, host: str) -> _ShelfCandidate | None:
+        """Return the shelf candidate whose host matches *host*, if any."""
+        for candidate in self._async_user_candidates():
+            if candidate.host == host:
+                return candidate
+        return None
+
+    @callback
+    def _async_shelf_candidate_for_uid(self, uid: str) -> _ShelfCandidate | None:
+        """Return the shelf candidate whose UID matches *uid*, if any."""
+        for candidate in self._async_user_candidates():
+            if candidate.uid == uid:
+                return candidate
+        return None
+
+    @callback
+    def _async_handoff_to_shelf(self, candidate: _ShelfCandidate) -> ConfigFlowResult:
+        """Abort the user flow into the shelf confirm for *candidate*."""
+        return self.async_abort(
+            reason="continue_setup",
+            next_flow=(FlowType.CONFIG_FLOW, candidate.flow_id),
+        )
+
+    @callback
+    def _async_show_manual_host_form(
+        self,
+        *,
+        errors: dict[str, str] | None = None,
+        suggested_values: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Show the Enter host form."""
+        return self.async_show_form(
+            step_id="manual_host",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_MANUAL_HOST_SCHEMA, suggested_values
+            ),
+            errors=errors,
+        )
+
+    async def _async_manual_host_submit(self, host: str) -> ConfigFlowResult:
+        """Handoff a shelf hit, else probe and shelve or Ignore-replace."""
+        # Placeholder host is good enough to skip a probe; after probe, match UID.
+        if (candidate := self._async_shelf_candidate_for_host(host)) is not None:
+            return self._async_handoff_to_shelf(candidate)
+
+        try:
+            endpoint = await izone_discovery.async_discover_by_host(self.hass, host)
+        except OSError:
+            _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
+            return self.async_abort(reason="discovery_failed")
+        except pizone.UnpairedBridgeError:
+            return self._async_show_manual_host_form(
+                errors={"base": "unpaired_bridge"},
+                suggested_values={CONF_HOST: host},
+            )
+        except pizone.ControllerAlreadyClaimedError:
+            return self._async_show_manual_host_form(
+                errors={"base": "already_configured"},
+                suggested_values={CONF_HOST: host},
+            )
+
+        if endpoint is None:
+            return self._async_show_manual_host_form(
+                errors={"base": "cannot_connect"},
+                suggested_values={CONF_HOST: host},
+            )
+
+        existing = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, endpoint.uid
+        )
+        if existing is not None:
+            if existing.source == config_entries.SOURCE_IGNORE:
+                self._discovered_controller_uid = endpoint.uid
+                self._discovered_controller_host = endpoint.host
+                return await self.async_step_confirm()
+            return self._async_show_manual_host_form(
+                errors={"base": "already_configured"},
+                suggested_values={CONF_HOST: host},
+            )
+
+        if endpoint.uid in izone_discovery.yaml_excluded_uids(self.hass):
+            return self._async_show_manual_host_form(
+                errors={"base": "no_devices_found"},
+                suggested_values={CONF_HOST: host},
+            )
+
+        if (candidate := self._async_shelf_candidate_for_uid(endpoint.uid)) is not None:
+            if candidate.host != endpoint.host:
+                # Shelf still shows an older discovery address; replace that card.
+                self.hass.config_entries.flow.async_abort(candidate.flow_id)
+            else:
+                return self._async_handoff_to_shelf(candidate)
+
+        self._async_schedule_integration_discovery_flow(endpoint.uid, endpoint.host)
+        await self.hass.async_block_till_done()
+        if (candidate := self._async_shelf_candidate_for_uid(endpoint.uid)) is not None:
+            return self._async_handoff_to_shelf(candidate)
+        return self._async_show_manual_host_form(
+            errors={"base": "no_devices_found"},
+            suggested_values={CONF_HOST: host},
+        )
 
     @callback
     def _async_schedule_integration_discovery_flow(
