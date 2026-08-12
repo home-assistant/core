@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -532,6 +532,7 @@ async def test_export_rule_restore(
 async def test_export_rule_update_attrs_logic(
     hass: HomeAssistant,
     mock_site_info: AsyncMock,
+    mock_energy_info_stream: MagicMock,
     previous_data: dict,
     new_data: str | None,
     expected_state: str,
@@ -543,14 +544,14 @@ async def test_export_rule_update_attrs_logic(
     mock_site_info.side_effect = lambda: test_site_info
 
     # Set up platform
-    entry = await setup_platform(hass, [Platform.SELECT])
+    await setup_platform(hass, [Platform.SELECT])
 
-    # Change the state via the recovery/manual REST refresh path
-    test_site_info = deepcopy(SITE_INFO)
-    test_site_info["response"]["components"].update(new_data)
-    mock_site_info.side_effect = lambda: test_site_info
-
-    await entry.runtime_data.energysites[0].info_coordinator.async_refresh()
+    # Change the state via a streamed site_info event, driven through the
+    # callback the integration registered with the library.
+    streamed_site_info = deepcopy(SITE_INFO["response"])
+    streamed_site_info.pop("tariff_content_v2", None)
+    streamed_site_info["components"].update(new_data)
+    mock_energy_info_stream.send(streamed_site_info)
     await hass.async_block_till_done()
 
     # Check the final state matches expected

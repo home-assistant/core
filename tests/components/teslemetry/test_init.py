@@ -19,7 +19,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
-from homeassistant.components.teslemetry import _get_access_token
+from homeassistant.components.teslemetry import STREAM_TOPICS, _get_access_token
 from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
 
 # Coordinator constants
@@ -1163,5 +1163,112 @@ async def test_get_access_token_rate_limited_after_setup_is_not_fatal(
     ):
         await _get_access_token(session)
     await hass.async_block_till_done()
+
+
+def test_stream_topic_allowlist() -> None:
+    """The stream subscribes to exactly the topics the integration consumes."""
+    assert [topic.value for topic in STREAM_TOPICS] == [
+        "state",
+        "vehicle_data",
+        "data",
+        "connectivity",
+        "credits",
+        "live_status",
+        "site_info",
+        "tariff_content_v2",
+    ]
+
+
+async def test_energy_stream_no_recurring_rest_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_live_status: AsyncMock,
+    mock_site_info: AsyncMock,
+) -> None:
+    """The live/info REST cold reads happen once and do not recur."""
+    await setup_platform(hass, [Platform.SENSOR])
+    assert mock_live_status.call_count == 1
+    assert mock_site_info.call_count == 1
+
+    # Advancing well past the old 30-second poll intervals triggers no REST reads.
+    freezer.tick(ENERGY_HISTORY_INTERVAL * 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_live_status.call_count == 1
+    assert mock_site_info.call_count == 1
+
+
+async def test_energy_stream_unload_unsubscribes_and_closes_stream(
+    hass: HomeAssistant,
+) -> None:
+    """Unload runs each listener unsubscribe and closes the shared stream."""
+    live_unsub = MagicMock()
+    info_unsub = MagicMock()
+    tariff_unsub = MagicMock()
+
+    with (
+        patch(
+            "teslemetry_stream.TeslemetryStreamEnergySite.listen_LiveStatus",
+            return_value=live_unsub,
+        ),
+        patch(
+            "teslemetry_stream.TeslemetryStreamEnergySite.listen_SiteInfo",
+            return_value=info_unsub,
+        ),
+        patch(
+            "teslemetry_stream.TeslemetryStreamEnergySite.listen_TariffContentV2",
+            return_value=tariff_unsub,
+        ),
+        patch("teslemetry_stream.TeslemetryStream.close") as mock_close,
+    ):
+        entry = await setup_platform(hass, [Platform.SENSOR])
+        assert entry.state is ConfigEntryState.LOADED
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    live_unsub.assert_called_once()
+    info_unsub.assert_called_once()
+    tariff_unsub.assert_called_once()
+    mock_close.assert_called_once()
+
+
+async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
+    hass: HomeAssistant,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_live_stream: MagicMock,
+    mock_energy_info_stream: MagicMock,
+) -> None:
+    """A dropped stream marks energy entities unavailable until documents resume."""
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    # Both stream-driven coordinators start available from the setup cold read.
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+
+    # A stream disconnect fails the live and info/tariff coordinators.
+    mock_add_connection_listener.send(False)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+    assert hass.states.get("calendar.energy_site_buy_tariff").state == STATE_UNAVAILABLE
+
+    # A streamed live_status document restores the live coordinator on reconnect.
+    live_status = deepcopy(LIVE_STATUS["response"])
+    live_status["solar_power"] = 456
+    mock_energy_live_stream.send(live_status)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
+
+    # A streamed site_info document restores the info/tariff coordinator.
+    slim_site_info = {
+        key: value
+        for key, value in deepcopy(SITE_INFO["response"]).items()
+        if key != "tariff_content_v2"
+    }
+    mock_energy_info_stream.send(slim_site_info)
+    await hass.async_block_till_done()
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
 
     assert not hass.config_entries.flow.async_progress()
