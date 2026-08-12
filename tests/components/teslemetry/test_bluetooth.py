@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.exc import BleakError
@@ -21,16 +20,19 @@ from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry import Vehicle
 
-from homeassistant.components.teslemetry import _ensure_subentry
-from homeassistant.components.teslemetry.const import CONF_VIN, SUBENTRY_TYPE_VEHICLE
+from homeassistant.components.teslemetry.const import (
+    CONF_VIN,
+    DOMAIN,
+    SUBENTRY_TYPE_VEHICLE,
+)
 from homeassistant.components.teslemetry.helpers import async_get_ble_parent
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from . import mock_config_entry
-from .const import METADATA
 
 from tests.common import MockConfigEntry
 
@@ -389,30 +391,6 @@ async def test_ble_parent_concurrent_first_init(hass: HomeAssistant) -> None:
     mock_parent.return_value.get_private_key.assert_awaited_once()
 
 
-async def test_ensure_subentry_preserves_paired_address(hass: HomeAssistant) -> None:
-    """Re-ensuring a subentry keeps the paired address and applies a new title."""
-    entry = mock_config_entry()
-    entry.add_to_hass(hass)
-
-    first = _ensure_subentry(
-        hass, entry, SUBENTRY_TYPE_VEHICLE, VIN, "Old name", {CONF_VIN: VIN}
-    )
-    hass.config_entries.async_update_subentry(
-        entry,
-        entry.subentries[first],
-        data={CONF_VIN: VIN, CONF_ADDRESS: ADDRESS},
-    )
-
-    second = _ensure_subentry(
-        hass, entry, SUBENTRY_TYPE_VEHICLE, VIN, "New name", {CONF_VIN: VIN}
-    )
-
-    assert first == second
-    assert entry.subentries[second].title == "New name"
-    # The paired address added out of band must survive the re-ensure merge.
-    assert entry.subentries[second].data[CONF_ADDRESS] == ADDRESS
-
-
 async def test_router_does_not_fail_over_on_unconfirmed() -> None:
     """An unconfirmed BLE command is never replayed on the cloud backend."""
     bluetooth = AsyncMock()
@@ -472,9 +450,29 @@ def _mock_ble_parent(vehicle: AsyncMock | None = None) -> MagicMock:
     return parent
 
 
-async def _setup_vehicle_subentry(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up an entry and return it with a vehicle subentry (no BLE yet)."""
+def _entry_with_vehicle_subentry() -> MockConfigEntry:
+    """Return a config entry with an added, not-yet-BLE-paired vehicle subentry."""
     entry = mock_config_entry()
+    return MockConfigEntry(
+        domain=entry.domain,
+        version=entry.version,
+        minor_version=entry.minor_version,
+        unique_id=entry.unique_id,
+        data=dict(entry.data),
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_VEHICLE,
+                unique_id=VIN,
+                title="Test",
+                data={CONF_VIN: VIN},
+            )
+        ],
+    )
+
+
+async def _setup_vehicle_subentry(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up an entry that already has a vehicle subentry (no BLE address yet)."""
+    entry = _entry_with_vehicle_subentry()
     entry.add_to_hass(hass)
     with patch("homeassistant.components.teslemetry.PLATFORMS", []):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -837,46 +835,36 @@ async def test_subentry_removal_reloads(hass: HomeAssistant) -> None:
     mock_reload.assert_called_once_with(entry.entry_id)
 
 
-async def test_stale_vehicle_subentry_removed_on_reload(hass: HomeAssistant) -> None:
-    """A vehicle subentry no longer backed by the account is removed on reload.
+async def test_no_subentry_auto_created_at_setup(hass: HomeAssistant) -> None:
+    """Setup never auto-creates a Bluetooth subentry for account vehicles.
 
-    This cleanup deletes the subentry's persisted pairing data (the BLE
-    address), not just a device-registry entry.
+    Bluetooth vehicles are opt-in via the "Add Bluetooth vehicle" flow, so an
+    account with vehicles but no user-added subentry must have none after setup.
     """
-    entry = await _setup_vehicle_subentry(hass)
-    assert entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "tesla_fleet_api.teslemetry.Teslemetry.products",
-            return_value={"response": []},
-        ),
-        patch("homeassistant.components.teslemetry.PLATFORMS", []),
-    ):
-        await hass.config_entries.async_reload(entry.entry_id)
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
 
 
-async def test_vehicle_subentry_retained_without_access(hass: HomeAssistant) -> None:
-    """A vehicle subentry is kept when the vehicle is only temporarily inaccessible.
+async def test_user_subentry_persists_across_reload(hass: HomeAssistant) -> None:
+    """A user-added vehicle subentry is never auto-removed on reload.
 
-    The stale-subentry cleanup must key off vehicles still in the account's
-    product list, not the access-filtered active vehicle list; otherwise a
-    transient subscription/scope change would delete the persisted BLE
-    pairing address and force the user to re-pair once access returns.
+    The old forced-sync deleted subentries no longer backed by the account's
+    product list; opt-in subentries must instead persist until the user removes
+    them, even when the account temporarily lists no vehicles.
     """
     entry = await _setup_vehicle_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
 
-    no_access_metadata = deepcopy(METADATA)
-    no_access_metadata["vehicles"][VIN]["access"] = False
-
     with (
         patch(
-            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
-            return_value=no_access_metadata,
+            "tesla_fleet_api.teslemetry.Teslemetry.products",
+            return_value={"response": []},
         ),
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
@@ -960,8 +948,78 @@ async def test_subentry_scan_finds_device_after_active_scan(
     vehicle.connect.assert_awaited_once()
 
 
-async def test_subentry_user_step_rejected(hass: HomeAssistant) -> None:
-    """Manually adding a vehicle subentry is rejected."""
+async def test_subentry_add_flow_creates_bound_subentry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """The add flow lists an account vehicle, pairs it, and binds its device.
+
+    The new subentry is keyed to the vehicle's VIN and no duplicate device is
+    created: the same account device the parent entry already registered stays
+    the one and only device for that VIN.
+    """
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # No Bluetooth subentry exists until the user adds one.
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    existing_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, VIN), entry.entry_id
+    )
+    assert existing_device is not None
+
+    vehicle = _mock_vehicle(on_whitelist=True)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_VIN: VIN}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    subentry = subentries[0]
+    assert subentry.unique_id == VIN
+    assert subentry.data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+
+    # The pairing attaches to the vehicle's existing device, never a duplicate.
+    bound_devices = [
+        device
+        for device in device_registry.devices.values()
+        if (DOMAIN, VIN) in device.identifiers
+    ]
+    assert bound_devices == [existing_device]
+
+
+async def test_subentry_add_flow_no_available_vehicles(hass: HomeAssistant) -> None:
+    """The add flow aborts when every account vehicle is already added."""
     entry = await _setup_vehicle_subentry(hass)
 
     result = await hass.config_entries.subentries.async_init(
@@ -970,4 +1028,4 @@ async def test_subentry_user_step_rejected(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_supported"
+    assert result["reason"] == "no_vehicles"

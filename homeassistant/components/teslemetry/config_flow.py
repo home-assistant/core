@@ -18,6 +18,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry
+import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -39,6 +40,12 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import CLIENT_ID, CONF_VIN, DOMAIN, LOGGER, SUBENTRY_TYPE_VEHICLE
 from .helpers import async_get_ble_parent
@@ -166,17 +173,20 @@ class OAuth2FlowHandler(
 
 
 class VehicleSubentryFlowHandler(ConfigSubentryFlow):
-    """Pair a vehicle's virtual key over Bluetooth for local command routing.
+    """Add local Bluetooth control to one of the account's vehicles.
 
-    Reconfiguring a vehicle subentry walks the user through adding the
-    integration's virtual key to the vehicle over BLE. Once paired, the BLE
-    address is stored on the subentry, which enables Bluetooth-first command
-    routing for that vehicle on the next reload.
+    The user opts a specific vehicle into local Bluetooth access from the
+    account config entry. The flow lets them pick an account vehicle that has
+    not been added yet, walks them through adding the integration's virtual key
+    to that vehicle over BLE, and stores the paired address on a new subentry -
+    which enables Bluetooth-first command routing for that vehicle on the next
+    reload. Reconfiguring an existing vehicle subentry re-runs the same pairing.
     """
 
     def __init__(self) -> None:
         """Initialize the vehicle subentry flow."""
         self._vin: str | None = None
+        self._title: str | None = None
         self._address: str | None = None
         self._vehicle: VehicleBluetooth | None = None
         self._pair_task: asyncio.Task[None] | None = None
@@ -185,13 +195,49 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Reject manual creation; vehicles come from the Teslemetry account."""
-        return self.async_abort(reason="not_supported")
+        """Select an account vehicle to add over Bluetooth, then pair it."""
+        entry = self._get_entry()
+        already_added = {
+            subentry.data[CONF_VIN]
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+            if CONF_VIN in subentry.data
+        }
+        # The account's vehicles come from runtime data; a paired vehicle uses
+        # the same existing device, so no new device is created here.
+        choices = {
+            vehicle.vin: vehicle.device["name"] or vehicle.vin
+            for vehicle in entry.runtime_data.vehicles
+            if vehicle.vin not in already_added
+        }
+        if not choices:
+            return self.async_abort(reason="no_vehicles")
+
+        if user_input is not None:
+            self._vin = user_input[CONF_VIN]
+            self._title = choices[self._vin]
+            return await self.async_step_scan()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_VIN): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=vin, label=name)
+                                for vin, name in choices.items()
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                }
+            ),
+        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Start Bluetooth pairing for the selected vehicle."""
+        """Re-run Bluetooth pairing for an already added vehicle."""
         self._vin = self._get_reconfigure_subentry().data[CONF_VIN]
         return await self.async_step_scan()
 
@@ -318,18 +364,30 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_progress_done(next_step_id="pair")
 
     async def _async_finish(self) -> SubentryFlowResult:
-        """Persist the paired BLE address and reload the entry."""
+        """Persist the paired BLE address and reload the entry.
+
+        On the initial add flow this creates a new subentry bound to the
+        vehicle's VIN; reconfiguring updates the existing subentry. Either way
+        the address is written before the reload is scheduled, since
+        async_schedule_reload starts an eager task that could otherwise run
+        setup before the update lands, leaving the reloaded entry cloud-only.
+        """
         assert self._address is not None
+        assert self._vin is not None
         await self._async_disconnect()
         entry = self._get_entry()
-        # Write the address before scheduling the reload: async_schedule_reload
-        # starts an eager task that could otherwise run setup before the update
-        # lands, leaving the reloaded entry cloud-only.
-        result = self.async_update_and_abort(
-            entry,
-            self._get_reconfigure_subentry(),
-            data_updates={CONF_ADDRESS: self._address},
-        )
+        if self.source == SOURCE_RECONFIGURE:
+            result = self.async_update_and_abort(
+                entry,
+                self._get_reconfigure_subentry(),
+                data_updates={CONF_ADDRESS: self._address},
+            )
+        else:
+            result = self.async_create_entry(
+                title=self._title or self._vin,
+                data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
+                unique_id=self._vin,
+            )
         self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return result
 

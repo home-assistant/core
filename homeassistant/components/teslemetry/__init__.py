@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Callable
 from functools import partial
-from types import MappingProxyType
 from typing import Any, Final, cast
 
 from aiohttp import ClientError
@@ -25,7 +24,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.bluetooth import async_ble_device_from_address
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -284,69 +283,39 @@ def _setup_subentry_removal_reload(
     entry.async_on_unload(entry.add_update_listener(_handle_update))
 
 
-def _ensure_subentry(
-    hass: HomeAssistant,
-    entry: TeslemetryConfigEntry,
-    subentry_type: str,
-    unique_id: str,
-    title: str,
-    data: dict[str, Any],
-) -> str:
-    """Return the subentry id for unique_id, creating or updating it as needed."""
+def _ble_address_for_vin(entry: TeslemetryConfigEntry, vin: str) -> str | None:
+    """Return the paired Bluetooth address for a vehicle, if one was added.
+
+    A vehicle gets a Bluetooth address only after the user opts it in through
+    the "Add Bluetooth vehicle" subentry flow; vehicles without such a subentry
+    stay cloud-only.
+    """
     for subentry in entry.subentries.values():
-        if subentry.subentry_type == subentry_type and subentry.unique_id == unique_id:
-            # Merge over the existing data so keys added by the pairing flow (the
-            # paired Bluetooth address) are preserved across reloads.
-            merged = {**subentry.data, **data}
-            if subentry.title != title or dict(subentry.data) != merged:
-                hass.config_entries.async_update_subentry(
-                    entry, subentry, title=title, data=merged
-                )
-            return subentry.subentry_id
-
-    subentry = ConfigSubentry(
-        data=MappingProxyType(data),
-        subentry_type=subentry_type,
-        title=title,
-        unique_id=unique_id,
-    )
-    hass.config_entries.async_add_subentry(entry, subentry)
-    return subentry.subentry_id
-
-
-def _remove_stale_subentries(
-    hass: HomeAssistant,
-    entry: TeslemetryConfigEntry,
-    current_subentry_ids: set[str],
-) -> None:
-    """Remove subentries that no longer have a matching vehicle."""
-    for subentry in list(entry.subentries.values()):
         if (
             subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
-            and subentry.subentry_id not in current_subentry_ids
+            and subentry.data.get(CONF_VIN) == vin
         ):
-            LOGGER.debug("Removing stale subentry %s", subentry.subentry_id)
-            hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
+            return subentry.data.get(CONF_ADDRESS)
+    return None
 
 
 async def _async_resolve_vehicle_api(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
-    subentry_id: str,
     vin: str,
     cloud_vehicle: Vehicle,
 ) -> Vehicle | VehicleRouter:
     """Return the API a vehicle's platforms should call.
 
-    An unpaired vehicle (its subentry carries no BLE ``address``) uses the cloud
-    Vehicle. A paired vehicle always gets a VehicleRouter, whether or not it is
-    in range right now: the router's health check re-reads Home Assistant's
-    Bluetooth discovery cache on every command, so a vehicle that drives away
-    and comes back resumes local routing on its own. A vehicle out of range is
-    skipped by the health check, sending the command straight to cloud without
-    attempting Bluetooth.
+    A vehicle the user has not added over Bluetooth uses the cloud Vehicle. An
+    added vehicle always gets a VehicleRouter, whether or not it is in range
+    right now: the router's health check re-reads Home Assistant's Bluetooth
+    discovery cache on every command, so a vehicle that drives away and comes
+    back resumes local routing on its own. A vehicle out of range is skipped by
+    the health check, sending the command straight to cloud without attempting
+    Bluetooth.
     """
-    address = entry.subentries[subentry_id].data.get(CONF_ADDRESS)
+    address = _ble_address_for_vin(entry, vin)
     if not address:
         return cloud_vehicle
 
@@ -501,21 +470,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
             stream_vehicle = stream.get_vehicle(vin)
 
-            subentry_id = _ensure_subentry(
-                hass,
-                entry,
-                SUBENTRY_TYPE_VEHICLE,
-                vin,
-                product["display_name"],
-                {CONF_VIN: vin},
-            )
-
-            # Route commands through Bluetooth first when the subentry has been
-            # paired; otherwise this returns the plain cloud Vehicle.
+            # Route commands through Bluetooth first when the user has added this
+            # vehicle over Bluetooth; otherwise this returns the plain cloud
+            # Vehicle.
             vehicle_api = await _async_resolve_vehicle_api(
                 hass,
                 entry,
-                subentry_id,
                 vin,
                 vehicle,
             )
@@ -531,7 +491,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     vin=vin,
                     firmware=firmware or "Unknown",
                     device=device,
-                    subentry_id=subentry_id,
                 )
             )
 
@@ -660,19 +619,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         ):
             LOGGER.debug("Removing stale device %s", device_entry.id)
             device_registry.async_remove_device(device_entry.id)
-
-    # Keep pairing subentries for every vehicle still in the account's product
-    # list, even ones this run skipped for lacking access right now, so a
-    # transient subscription/scope change does not drop the persisted BLE
-    # pairing address.
-    present_vins = {product["vin"] for product in products if "vin" in product}
-    present_subentry_ids = {
-        subentry.subentry_id
-        for subentry in entry.subentries.values()
-        if subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
-        and subentry.unique_id in present_vins
-    }
-    _remove_stale_subentries(hass, entry, present_subentry_ids)
 
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,

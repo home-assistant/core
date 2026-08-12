@@ -44,7 +44,6 @@ class TeslemetryVehicleData:
     vin: str
     firmware: str
     device: DeviceInfo
-    subentry_id: str
     wakelock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
