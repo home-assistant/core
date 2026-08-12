@@ -18,7 +18,7 @@ async def test_setup_unload_entry(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_flow_it.return_value.refresh_state.assert_awaited()
     mock_flow_it.return_value.register_websocket_callback.assert_called_once()
     mock_flow_it.return_value.websocket.start.assert_called_once()
@@ -26,7 +26,7 @@ async def test_setup_unload_entry(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_flow_it.return_value.close.assert_awaited_once()
 
 
