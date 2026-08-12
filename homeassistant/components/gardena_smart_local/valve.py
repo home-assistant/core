@@ -12,8 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DEFAULT_VALVE_DURATION_MINUTES
 from .coordinator import GardenaSmartLocalCoordinator
-from .entity import GardenaEntity, find_device_subentry_id, get_valve_duration_minutes
+from .entity import GardenaEntity, find_device_subentry_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ async def async_setup_entry(
                     continue
                 known_valves.add(key)
                 entities_by_subentry_id.setdefault(sid, []).append(
-                    GardenaValve(coordinator, entry, device, valve_id)
+                    GardenaValve(coordinator, device, valve_id)
                 )
                 _LOGGER.info(
                     "Adding new valve entity for device %s, valve %s",
@@ -82,13 +83,11 @@ class GardenaValve(GardenaEntity, ValveEntity):
     def __init__(
         self,
         coordinator: GardenaSmartLocalCoordinator,
-        entry: ConfigEntry,
         device: Device,
         valve_id: int = 0,
     ) -> None:
         """Initialize the valve."""
         super().__init__(coordinator, device)
-        self._entry = entry
         self._valve_id = valve_id
         # pylint: disable-next=home-assistant-entity-unique-id-redundant-platform
         self._attr_unique_id = f"{device.id}_valve_{valve_id}"
@@ -127,12 +126,13 @@ class GardenaValve(GardenaEntity, ValveEntity):
         await self.async_open_valve_for()
 
     async def async_open_valve_for(self, duration: int | None = None) -> None:
-        """Open the valve for a given duration, or the configured default."""
+        """Open the valve for a given duration, or a fixed default.
+
+        Per-valve configurable defaults land with the number platform PR;
+        until then this is always DEFAULT_VALVE_DURATION_MINUTES.
+        """
         if duration is None:
-            minutes = get_valve_duration_minutes(
-                self._entry, self._device.id, self._valve_id
-            )
-            duration = minutes * 60
+            duration = DEFAULT_VALVE_DURATION_MINUTES * 60
         await self._send_confirmed_command(
             self._device.build_open_valve_obj(self._valve_id, duration)
         )

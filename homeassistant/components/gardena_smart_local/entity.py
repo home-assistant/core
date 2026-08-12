@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_VALVE_DURATIONS, DEFAULT_VALVE_DURATION_MINUTES, DOMAIN
+from .const import DOMAIN
 from .coordinator import COMMAND_REPLY_TIMEOUT, GardenaSmartLocalCoordinator
 
 
@@ -25,25 +25,6 @@ def find_device_subentry_id(entry: ConfigEntry, device_id: str) -> str | None:
         ),
         None,
     )
-
-
-def get_valve_duration_minutes(
-    entry: ConfigEntry, device_id: str, valve_id: int
-) -> int:
-    """Return the configured default duration for a valve, in minutes.
-
-    Falls back to the default for devices without a subentry, and for valves
-    the user has never configured. Keys are strings because subentry data
-    round-trips through JSON.
-    """
-    subentry_id = find_device_subentry_id(entry, device_id)
-    if subentry_id is None:
-        return DEFAULT_VALVE_DURATION_MINUTES
-    durations = entry.subentries[subentry_id].data.get(CONF_VALVE_DURATIONS, {})
-    minutes = durations.get(str(valve_id))
-    if not isinstance(minutes, int):
-        return DEFAULT_VALVE_DURATION_MINUTES
-    return minutes
 
 
 class GardenaEntity(CoordinatorEntity[GardenaSmartLocalCoordinator]):
