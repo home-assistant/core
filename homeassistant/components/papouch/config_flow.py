@@ -68,8 +68,6 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             name, location = await client.get_device_info()
             if name and location:
                 return f"{name} ({location})"
-            if name:
-                return name
         except aiohttp.ClientError:
             pass
 
@@ -96,17 +94,16 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             if mode_device != WEB_MODE_INDEX:
                 return {}, await self.async_step_web_mode()
 
+            title_name = await self._get_device_name(user_input["ip_address"], password)
+
             data = {
                 "ip_address": user_input["ip_address"],
-                "password": user_input.get("password", ""),
+                "password": password,
+                "device_name": title_name,
             }
             options = {
                 "refresh_rate": user_input.get("refresh_rate", DEFAULT_SCAN_INTERVAL)
             }
-
-            title_name = await self._get_device_name(
-                user_input["ip_address"], user_input.get("password", "")
-            )
 
             return {}, self.async_create_entry(
                 title=f"{title_name} - {user_input['ip_address']}",
@@ -120,12 +117,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
-        """Discover the device from a DHCP request.
-
-        After finding some device HA will immediately send a "discovery" message
-        to create a device instatnce, but at that moment the device can have turned off
-        the WEB server and suppose that 5 seconds is enough for the device to activate it.
-        """
+        """Discover the device from a DHCP request."""
 
         self.discovered_ip = discovery_info.ip
 
@@ -302,10 +294,9 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         session = async_get_clientsession(self.hass)
         password = self._saved_input.get("password", "")
+        ip_address = self._saved_input["ip_address"]
 
-        client = PapouchHTTPClient(
-            self._saved_input["ip_address"], session, password=password
-        )
+        client = PapouchHTTPClient(ip_address, session, password=password)
 
         try:
             device = await create_device(client)
@@ -315,9 +306,12 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
             await device.switch_to_web_mode()
 
+            title_name = await self._get_device_name(ip_address, password)
+
             data = {
-                "ip_address": self._saved_input["ip_address"],
-                "password": self._saved_input.get("password", ""),
+                "ip_address": ip_address,
+                "password": password,
+                "device_name": title_name,
             }
             options = {
                 "refresh_rate": self._saved_input.get(
@@ -325,12 +319,8 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             }
 
-            title_name = await self._get_device_name(
-                user_input["ip_address"], user_input.get("password", "")
-            )
-
             return self.async_create_entry(
-                title=f"{title_name} - {user_input['ip_address']}",
+                title=f"{title_name} - {ip_address}",
                 data=data,
                 options=options,
                 description="web_mode_success",

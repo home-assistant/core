@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
+from aiopapouch.exceptions import DeviceAuthError
 import pytest
 
 from homeassistant import data_entry_flow
@@ -106,10 +107,30 @@ async def test_manual_success(
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Papouch (192.168.1.50)"
+    assert result2["title"] == "Quido (Lab) - 192.168.1.50"
     assert result2["data"]["ip_address"] == "192.168.1.50"
     assert result2["data"]["password"] == "admin"
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_manual_success_fallback_title(
+    hass: HomeAssistant, mock_discover_none, mock_api_client, mock_setup_entry
+) -> None:
+    """Test successful setup but fallback to Papouch Device if info fails."""
+    _, _, mock_info = mock_api_client
+    mock_info.side_effect = aiohttp.ClientError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Papouch Device - 192.168.1.50"
 
 
 async def test_manual_connection_error(
@@ -191,6 +212,7 @@ async def test_web_mode_switch(
 
     assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["description"] == "web_mode_success"
+    assert result3["title"] == "Quido (Lab) - 192.168.1.50"
     assert result3["data"]["password"] == "supersecret"
     mock_create_device.return_value.switch_to_web_mode.assert_called_once()
 
@@ -243,6 +265,7 @@ async def test_discovery_confirm_success(
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Quido (Lab) - 192.168.1.100"
     assert result2["data"]["ip_address"] == "192.168.1.100"
     assert result2["data"]["password"] == "dhcp_password"
 
@@ -485,6 +508,7 @@ async def test_user_step_connection_success(
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Quido (Lab) - 192.168.1.50"
     assert result2["data"]["ip_address"] == "192.168.1.50"
     assert result2["data"]["password"] == "password"
 
@@ -574,11 +598,75 @@ async def test_manual_already_configured(
     assert result2["reason"] == "already_configured"
 
 
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_api_client, mock_setup_entry
+) -> None:
+    """Test the complete reauthentication flow (success and failures)."""
+    mock_fetch, _, _ = mock_api_client
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Quido (Lab) - 192.168.1.50",
+        data={"ip_address": "192.168.1.50", "password": "old_password"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_fetch.side_effect = DeviceAuthError("Invalid password")
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"password": "wrong_password"},
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+    mock_fetch.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"password": "correct_password"},
+    )
+
+    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+    assert entry.data["password"] == "correct_password"
+
+
+async def test_reauth_connection_error(hass: HomeAssistant, mock_api_client) -> None:
+    """Test reauth flow handles connection errors."""
+    mock_fetch, _, _ = mock_api_client
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Quido (Lab) - 192.168.1.50",
+        data={"ip_address": "192.168.1.50", "password": "old_password"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    mock_fetch.side_effect = aiohttp.ClientError
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"password": "new_password"},
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test updating options via the options flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Papouch (192.168.1.100)",
+        title="Quido (Lab) - 192.168.1.100",
         data={"ip_address": "192.168.1.100", "password": ""},
         options={"refresh_rate": DEFAULT_SCAN_INTERVAL},
     )
