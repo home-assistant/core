@@ -14,7 +14,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+    async_get_hass,
+    callback,
+)
 from homeassistant.loader import (
     Integration,
     async_get_config_flows,
@@ -457,6 +463,15 @@ def async_get_exception_message(
 
 
 @callback
+def async_translate_default_state(hass: HomeAssistant, state: str) -> str:
+    """Translate a state every entity can have, regardless of its domain."""
+    translations = async_get_cached_translations(
+        hass, hass.config.language, "state", HOMEASSISTANT_DOMAIN
+    )
+    return translations.get(f"component.{HOMEASSISTANT_DOMAIN}.state.{state}", state)
+
+
+@callback
 def async_translate_state(
     hass: HomeAssistant,
     state: str,
@@ -467,7 +482,7 @@ def async_translate_state(
 ) -> str:
     """Translate provided state using cached translations."""
     if state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
-        return state
+        return async_translate_default_state(hass, state)
     language = hass.config.language
     if platform is not None and translation_key is not None:
         localize_key = (

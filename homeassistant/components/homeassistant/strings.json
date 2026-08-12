@@ -315,6 +315,10 @@
       "name": "Update entity"
     }
   },
+  "state": {
+    "unavailable": "Unavailable",
+    "unknown": "Unknown"
+  },
   "system_health": {
     "info": {
       "arch": "CPU architecture",

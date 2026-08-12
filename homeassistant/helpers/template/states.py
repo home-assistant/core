@@ -20,6 +20,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import (
+    async_translate_default_state,
     async_translate_state,
     async_translate_state_attr,
 )
@@ -178,7 +179,7 @@ class StateTranslated:
         state = _get_state_if_valid(self._hass, entity_id)
 
         if state is None:
-            return STATE_UNKNOWN
+            return async_translate_default_state(self._hass, STATE_UNKNOWN)
 
         state_value = state.state
         domain = state.domain

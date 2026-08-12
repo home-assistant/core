@@ -606,18 +606,41 @@ async def test_setup(hass: HomeAssistant) -> None:
         mock.assert_not_called()
 
 
+@pytest.mark.parametrize("state", ["unavailable", "unknown"])
+async def test_translate_default_state(hass: HomeAssistant, state: str) -> None:
+    """Test the default state translation helper."""
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={f"component.homeassistant.state.{state}": "TRANSLATED"},
+    ) as mock:
+        result = translation.async_translate_default_state(hass, state)
+        mock.assert_called_once_with(
+            hass, hass.config.language, "state", "homeassistant"
+        )
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={},
+    ):
+        assert translation.async_translate_default_state(hass, state) == state
+
+
+@pytest.mark.parametrize("state", ["unavailable", "unknown"])
+async def test_translate_state_default_states(hass: HomeAssistant, state: str) -> None:
+    """Test that the state translation helper translates the default states."""
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={f"component.homeassistant.state.{state}": "TRANSLATED"},
+    ):
+        result = translation.async_translate_state(
+            hass, state, "binary_sensor", "platform", "translation_key", None
+        )
+        assert result == "TRANSLATED"
+
+
 async def test_translate_state(hass: HomeAssistant) -> None:
     """Test the state translation helper."""
-    result = translation.async_translate_state(
-        hass, "unavailable", "binary_sensor", "platform", "translation_key", None
-    )
-    assert result == "unavailable"
-
-    result = translation.async_translate_state(
-        hass, "unknown", "binary_sensor", "platform", "translation_key", None
-    )
-    assert result == "unknown"
-
     with patch(
         "homeassistant.helpers.translation.async_get_cached_translations",
         return_value={

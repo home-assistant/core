@@ -423,6 +423,18 @@ def test_gen_strings_schema(
     assert validated == SAMPLE_STRINGS
 
 
+def test_default_states_only_for_core(config: Config) -> None:
+    """Test the default states can only be defined by the homeassistant integration."""
+    strings = {"state": {"unavailable": "Unavailable", "unknown": "Unknown"}}
+
+    integration = get_integration("homeassistant", config)
+    assert translations.gen_strings_schema(config, integration)(strings) == strings
+
+    integration = get_integration("test_integration", config)
+    with pytest.raises(vol.Invalid):
+        translations.gen_strings_schema(config, integration)(strings)
+
+
 @pytest.mark.parametrize(
     "translation_string",
     [

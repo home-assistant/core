@@ -338,6 +338,19 @@ _EXCEPTIONS_SCHEMA = {
     ),
 }
 
+_DEFAULT_STATES_SCHEMA = {
+    vol.Optional("state"): vol.Schema(
+        {
+            vol.Required("unavailable"): custom_translation_value_validator(
+                allow_placeholders=False
+            ),
+            vol.Required("unknown"): custom_translation_value_validator(
+                allow_placeholders=False
+            ),
+        }
+    ),
+}
+
 
 def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate a strings schema."""
@@ -566,6 +579,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 },
             },
             vol.Optional("common"): vol.Schema({cv.slug: translation_value_validator}),
+            **(_DEFAULT_STATES_SCHEMA if integration.domain == "homeassistant" else {}),
         }
     )
 

@@ -267,7 +267,9 @@ async def test_state_translated(
         },
     )
     await hass.async_block_till_done()
-    await translation._async_get_translations_cache(hass).async_load("en", set())
+    await translation._async_get_translations_cache(hass).async_load(
+        "en", {"homeassistant"}
+    )
 
     hass.states.async_set("switch.without_translations", "on", attributes={})
     hass.states.async_set("binary_sensor.without_device_class", "on", attributes={})
@@ -323,7 +325,7 @@ async def test_state_translated(
         render(hass, '{{ state_translated("contextfunction") }}')
 
     result = render(hass, '{{ state_translated("switch.invalid") }}')
-    assert result == "unknown"
+    assert result == "Unknown"
 
     with pytest.raises(TemplateError):
         render(hass, '{{ state_translated("-invalid") }}')
@@ -348,10 +350,10 @@ async def test_state_translated(
         assert result == "state_is_on"
 
     result = render(hass, '{{ state_translated("domain.is_unavailable") }}')
-    assert result == "unavailable"
+    assert result == "Unavailable"
 
     result = render(hass, '{{ state_translated("domain.is_unknown") }}')
-    assert result == "unknown"
+    assert result == "Unknown"
 
 
 async def test_state_attr_translated(
