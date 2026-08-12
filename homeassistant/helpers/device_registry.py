@@ -2513,12 +2513,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 device_info,
                 "a child device must have at least one identifier",
             )
-        if len(identifiers) > 1:
-            raise DeviceInfoError(
-                domain,
-                device_info,
-                "a child device can have at most one identifier",
-            )
 
         parent = self._device_data.get(parent_device_id)
         if parent is None:
