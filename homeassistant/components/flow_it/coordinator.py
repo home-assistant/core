@@ -77,9 +77,6 @@ class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
         """Fetch data from API endpoint."""
         try:
             await self.vmc.refresh_state()
-            if TYPE_CHECKING:
-                assert self.vmc.state is not None
-            return FlowItCoordinatorData(state=self.vmc.state)
         except FlowItAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -90,3 +87,7 @@ class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
+
+        if TYPE_CHECKING:
+            assert self.vmc.state is not None
+        return FlowItCoordinatorData(state=self.vmc.state)
