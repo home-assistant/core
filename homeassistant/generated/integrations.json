@@ -2071,6 +2071,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "fireavert": {
+      "name": "FireAvert",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "firefly_iii": {
       "name": "Firefly III",
       "integration_type": "service",
@@ -3064,6 +3070,18 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hortimax": {
+      "name": "Ridder HortiMaX Pro",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "hotspring": {
+      "name": "Hot Spring",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hp_ilo": {
       "name": "HP Integrated Lights-Out (ILO)",
       "integration_type": "hub",
@@ -3356,7 +3374,7 @@
       "name": "IOmeter",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "ios": {
       "name": "Home Assistant iOS",
@@ -4394,7 +4412,7 @@
       "supported_by": "energyzero"
     },
     "mikrotik": {
-      "name": "Mikrotik",
+      "name": "MikroTik",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7860,22 +7878,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "vlc": {
-      "name": "VideoLAN",
-      "integrations": {
-        "vlc": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "VLC media player"
-        },
-        "vlc_telnet": {
-          "integration_type": "service",
-          "config_flow": true,
-          "iot_class": "local_polling",
-          "name": "VLC media player via Telnet"
-        }
-      }
+    "vlc_telnet": {
+      "name": "VLC media player via Telnet",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "vodafone_station": {
       "name": "Vodafone Station",
@@ -8038,7 +8045,7 @@
     },
     "wiim": {
       "name": "WiiM",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },

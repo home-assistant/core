@@ -6,14 +6,24 @@ from typing import Any, override
 
 from neopool_modbus import NeoPoolModbusClient
 from neopool_modbus.exceptions import NeoPoolError
-from neopool_modbus.registers import MAX_RELAY_GPIO, find_corrupted_gpio_registers
+from neopool_modbus.registers import (
+    MAX_RELAY_GPIO,
+    find_corrupted_gpio_registers,
+    is_valid_relay_gpio,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_USE_LIGHT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    FOLLOW_UP_REFRESH_DELAY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +53,30 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self._corrupted_gpio_state: frozenset[tuple[str, int]] | None = None
+        self._follow_up_unsub: CALLBACK_TYPE | None = None
+
+    def request_refresh_with_followup(
+        self, delay: float = FOLLOW_UP_REFRESH_DELAY
+    ) -> None:
+        """Schedule a follow-up refresh after a delay.
+
+        The follow-up catches delayed device state changes that may not
+        be visible in Modbus registers immediately after a write.
+        """
+        self.cancel_follow_up_refresh()
+
+        @callback
+        def _do_refresh(_now: Any) -> None:
+            self._follow_up_unsub = None
+            self.hass.async_create_task(self.async_request_refresh())
+
+        self._follow_up_unsub = async_call_later(self.hass, delay, _do_refresh)
+
+    def cancel_follow_up_refresh(self) -> None:
+        """Cancel any pending follow-up refresh."""
+        if self._follow_up_unsub:
+            self._follow_up_unsub()
+            self._follow_up_unsub = None
 
     def _check_gpio_registers(self, data: dict[str, Any]) -> None:
         """Validate GPIO register values and (re-)raise or clear the repair issue."""
@@ -83,11 +117,42 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Clear a previously raised repair issue once the device is healthy.
             ir.async_delete_issue(self.hass, DOMAIN, "corrupted_gpio")
 
+    def _get_enabled_timers(self, data: dict[str, Any]) -> list[str]:
+        """Return the list of timer block names to poll each cycle.
+
+        The light timer is polled only when the light entity is enabled in
+        the options and the lighting GPIO is valid; the entity gates on the
+        same condition, so relay_light_enable would have no consumer
+        otherwise.
+        """
+        enabled: list[str] = []
+        if self.config_entry.options.get(CONF_USE_LIGHT, False) and is_valid_relay_gpio(
+            data.get("MBF_PAR_LIGHTING_GPIO", 0) or 0
+        ):
+            enabled.append("relay_light")
+        return enabled
+
+    async def _read_timers_into_data(self, data: dict[str, Any]) -> None:
+        """Read every enabled timer block and merge derived fields into data.
+
+        Only the ``<timer>_enable`` field is exposed: it is the sole timer
+        attribute consumed by the light platform (as a manual-mode guard).
+        Further derived keys will be added by follow-up platform PRs that
+        consume them.
+        """
+        enabled = self._get_enabled_timers(data)
+        if not enabled:
+            return
+        timers = await self.client.read_all_timers(enabled_timers=enabled)
+        for t_name, t in timers.items():
+            data[f"{t_name}_enable"] = t["enable"]
+
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the latest data from the pool controller."""
         try:
             data = await self.client.async_read_all()
+            await self._read_timers_into_data(data)
         except (NeoPoolError, OSError, TimeoutError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -96,5 +161,4 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
 
         self._check_gpio_registers(data)
-
         return data

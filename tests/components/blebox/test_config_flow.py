@@ -64,6 +64,7 @@ def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
 
     type(product).name = PropertyMock(return_value="My gate controller")
     type(product).model = PropertyMock(return_value="gateController")
+    type(product).product = PropertyMock(return_value="gateController")
     type(product).type = PropertyMock(return_value="gateBox")
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")

@@ -6,6 +6,7 @@ from typing import Any, Literal, override
 
 from wyoming.asr import Transcript
 from wyoming.client import AsyncTcpClient
+from wyoming.error import Error
 from wyoming.handle import Handled, NotHandled
 from wyoming.info import HandleProgram, IntentProgram
 from wyoming.intent import Intent, IntentsStart, IntentsStop, NotRecognized
@@ -20,7 +21,7 @@ from homeassistant.util import ulid as ulid_util
 
 from .const import DOMAIN
 from .data import WyomingService
-from .error import WyomingError
+from .error import WyomingError, error_event_message
 from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -179,6 +180,17 @@ class WyomingConversationEntity(
             event = await client.read_event()
             if event is None:
                 raise WyomingError("Connection lost")
+
+            if Error.is_type(event.type):
+                message = error_event_message(Error.from_event(event))
+                _LOGGER.error(message)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN, message
+                )
+
+                # Don't process any intents that were already received
+                intents.clear()
+                break
 
             if IntentsStart.is_type(event.type):
                 # Multiple intents may be present
