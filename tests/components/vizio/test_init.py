@@ -33,7 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import get_mock_inputs, setup_integration
+from .conftest import setup_integration
 from .const import (
     ADDITIONAL_APP_CONFIG,
     APP_RECORDS,
@@ -42,7 +42,6 @@ from .const import (
     ENTITY_ID,
     HOST,
     HOST2,
-    INPUT_LIST,
     MOCK_USER_VALID_TV_CONFIG,
     MODEL,
     NAME2,
@@ -50,7 +49,6 @@ from .const import (
     UNIQUE_ID,
     VERSION,
     VOLUME_STEP,
-    audio_setting,
     state_extended,
 )
 
@@ -205,122 +203,73 @@ async def test_device_registry_without_model_or_version(
 
 @pytest.mark.usefixtures("vizio_connect")
 async def test_state_extended_polling(
-    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_tv_config_entry: MockConfigEntry,
+    mock_vizio: AsyncMock,
 ) -> None:
     """Test modern firmware polls via a single state_extended call."""
-    with (
-        patch(
-            "homeassistant.components.vizio.Vizio.get_state_extended",
-            return_value=state_extended(current_input=CURRENT_INPUT),
-        ),
-        patch(
-            "homeassistant.components.vizio.Vizio.get_settings",
-            return_value={"volume": audio_setting("volume", 50)},
-        ),
-        patch(
-            "homeassistant.components.vizio.Vizio.get_inputs",
-            return_value=get_mock_inputs(INPUT_LIST),
-        ),
-        patch(
-            "homeassistant.components.vizio.Vizio.get_model_name",
-            return_value=MODEL,
-        ),
-        patch(
-            "homeassistant.components.vizio.Vizio.get_version",
-            return_value=VERSION,
-        ),
-        patch(
-            "homeassistant.components.vizio.Vizio.get_power_state"
-        ) as mock_power_state,
-        patch(
-            "homeassistant.components.vizio.Vizio.get_current_input"
-        ) as mock_current_input,
-        patch(
-            "homeassistant.components.vizio.Vizio.get_current_app_config"
-        ) as mock_app_config,
-    ):
-        await setup_integration(hass, mock_tv_config_entry)
+    await setup_integration(hass, mock_tv_config_entry)
 
-        state = hass.states.get(ENTITY_ID)
-        assert state.state == STATE_ON
-        assert state.attributes["source"] == CURRENT_INPUT
-        # The bundled endpoint replaces the individual state getters
-        mock_power_state.assert_not_called()
-        mock_current_input.assert_not_called()
-        mock_app_config.assert_not_called()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes["source"] == CURRENT_INPUT
+    # The bundled endpoint replaces the individual state getters
+    mock_vizio.get_power_state.assert_not_called()
+    mock_vizio.get_current_input.assert_not_called()
+    mock_vizio.get_current_app_config.assert_not_called()
 
 
 @pytest.mark.usefixtures("vizio_connect")
 async def test_state_extended_power_off(
-    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_tv_config_entry: MockConfigEntry,
+    mock_vizio: AsyncMock,
 ) -> None:
     """Test state_extended reporting the device as off."""
-    with (
-        patch(
-            "homeassistant.components.vizio.Vizio.get_state_extended",
-            return_value=state_extended(power_on=False),
-        ),
-        patch(
-            "homeassistant.components.vizio.Vizio.get_model_name",
-            return_value=MODEL,
-        ),
-        patch(
-            "homeassistant.components.vizio.Vizio.get_version",
-            return_value=VERSION,
-        ),
-        patch("homeassistant.components.vizio.Vizio.get_settings") as mock_settings,
-    ):
-        await setup_integration(hass, mock_tv_config_entry)
+    mock_vizio.get_state_extended.return_value = state_extended(power_on=False)
 
-        assert hass.states.get(ENTITY_ID).state == STATE_OFF
-        mock_settings.assert_not_called()
+    await setup_integration(hass, mock_tv_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    mock_vizio.get_settings.assert_not_called()
 
 
-@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+@pytest.mark.usefixtures("vizio_connect")
 async def test_state_extended_probed_only_once(
     hass: HomeAssistant,
     mock_tv_config_entry: MockConfigEntry,
+    mock_vizio: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test firmware without state_extended is not re-probed every refresh."""
+    mock_vizio.get_state_extended.side_effect = VizioNotFoundError("not supported")
+
     await setup_integration(hass, mock_tv_config_entry)
+    mock_vizio.get_state_extended.reset_mock()
 
-    with patch(
-        "homeassistant.components.vizio.Vizio.get_state_extended",
-        side_effect=VizioNotFoundError("not supported"),
-    ) as mock_state_extended:
-        for _ in range(3):
-            freezer.tick(timedelta(minutes=1))
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done()
+    for _ in range(3):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
-        mock_state_extended.assert_not_called()
+    mock_vizio.get_state_extended.assert_not_called()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
 @pytest.mark.usefixtures("vizio_connect")
 async def test_state_extended_connection_error(
-    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_tv_config_entry: MockConfigEntry,
+    mock_vizio: AsyncMock,
 ) -> None:
     """Test a state_extended connection error fails the update."""
-    with (
-        patch(
-            "homeassistant.components.vizio.Vizio.get_state_extended",
-            side_effect=VizioConnectionError("cannot connect"),
-        ),
-        patch(
-            "homeassistant.components.vizio.Vizio.get_model_name",
-            return_value=MODEL,
-        ),
-        patch(
-            "homeassistant.components.vizio.Vizio.get_version",
-            return_value=VERSION,
-        ),
-    ):
-        mock_tv_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_tv_config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert mock_tv_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_vizio.get_state_extended.side_effect = VizioConnectionError("cannot connect")
+
+    mock_tv_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_tv_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_tv_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
