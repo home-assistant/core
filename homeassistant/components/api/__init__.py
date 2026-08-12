@@ -66,7 +66,6 @@ ATTR_VERSION = "version"
 DOMAIN = "api"
 STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
-SERVICE_WAIT_TIMEOUT = 10
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

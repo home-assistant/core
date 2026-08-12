@@ -3070,6 +3070,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "hotspring": {
+      "name": "Hot Spring",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hp_ilo": {
       "name": "HP Integrated Lights-Out (ILO)",
       "integration_type": "hub",
@@ -4400,7 +4406,7 @@
       "supported_by": "energyzero"
     },
     "mikrotik": {
-      "name": "Mikrotik",
+      "name": "MikroTik",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
