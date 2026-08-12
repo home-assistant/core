@@ -1,21 +1,31 @@
 """Abstract entity definitions."""
 
+from typing import Any
+
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import WatercrystConfigEntry
+from .coordinator import WatercrystDataUpdateCoordinator
 
 
-class WatercrystEntity(Entity):
+class WatercrystEntity[CoordinatorT: WatercrystDataUpdateCoordinator[Any]](
+    CoordinatorEntity[CoordinatorT], Entity
+):
     """An abstract class for WATERCryst entities."""
 
     _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
-        self, config_entry: WatercrystConfigEntry, entity_description: EntityDescription
+        self,
+        config_entry: WatercrystConfigEntry,
+        coordinator: CoordinatorT,
+        entity_description: EntityDescription,
     ) -> None:
         """Initialize a WatercrystEntity instance."""
-        super().__init__()
+        Entity.__init__(self)
+        CoordinatorEntity.__init__(self, coordinator)
 
         data = config_entry.runtime_data
 

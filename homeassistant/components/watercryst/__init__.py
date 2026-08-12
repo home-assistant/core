@@ -28,7 +28,10 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
-from .coordinator import MeasurementsUpdateCoordinator, StateUpdateCoordinator
+from .coordinator import (
+    WatercrystMeasurementsUpdateCoordinator,
+    WatercrystStateUpdateCoordinator,
+)
 
 _PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -46,8 +49,8 @@ class RuntimeData:
     has_temperature_sensor: bool
     device_info: DeviceInfo
     client: AsyncApiClient
-    measurements: MeasurementsUpdateCoordinator
-    state: StateUpdateCoordinator
+    measurements: WatercrystMeasurementsUpdateCoordinator
+    state: WatercrystStateUpdateCoordinator
 
 
 type WatercrystConfigEntry = ConfigEntry[RuntimeData]
@@ -95,12 +98,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
         configuration_url=f"https://app.watercryst.com/devices/{info.biocat_serial}",
     )
 
-    state = StateUpdateCoordinator(hass=hass, entry=entry, client=client)
-    state.async_set_updated_data(initial_state)
-    measurements = MeasurementsUpdateCoordinator(
-        hass=hass, entry=entry, client=client, state=state
+    state = WatercrystStateUpdateCoordinator(
+        hass=hass, config_entry=entry, client=client
     )
+    state.async_set_updated_data(initial_state)
 
+    measurements = WatercrystMeasurementsUpdateCoordinator(
+        hass=hass, config_entry=entry, client=client, state=state
+    )
     await measurements.async_config_entry_first_refresh()
 
     entry.runtime_data = RuntimeData(
