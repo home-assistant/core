@@ -145,7 +145,7 @@ async def test_select_option_propagates_api_error(
     )
 
     with pytest.raises(
-        HomeAssistantError, match="Error communicating with the Imou API"
+        HomeAssistantError, match="Imou rejected the new option: cloud failure"
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
