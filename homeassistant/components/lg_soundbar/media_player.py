@@ -17,6 +17,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 
+EQUIVALENT_FUNCTIONS = (
+    ("Optical/HDMI ARC", "E-ARC", "ARC", "LG Optical", "Optical", "Optical2"),
+    ("HDMI", "HDMI2", "HDMI3"),
+    ("USB", "USB2"),
+    ("Bluetooth", "Portable"),
+    ("Wi-Fi", "Chromecast", "Spotify"),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -240,6 +248,14 @@ class LGDevice(MediaPlayerEntity):
         """Return the current input source."""
         if self._function == -1 or self._function >= len(temescal.functions):
             return None
+        if self._function not in self._functions:
+            name = temescal.functions[self._function]
+            for equivalents in EQUIVALENT_FUNCTIONS:
+                if name not in equivalents:
+                    continue
+                for candidate in equivalents:
+                    if temescal.functions.index(candidate) in self._functions:
+                        return candidate
         return temescal.functions[self._function]
 
     @property
