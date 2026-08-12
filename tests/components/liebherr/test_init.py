@@ -20,16 +20,19 @@ from pyliebherrhomeapi import (
 from pyliebherrhomeapi.exceptions import (
     LiebherrAuthenticationError,
     LiebherrConnectionError,
+    LiebherrNotFoundError,
+    LiebherrPreconditionFailedError,
+    LiebherrTimeoutError,
 )
 import pytest
 
 from homeassistant.components.liebherr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -86,6 +89,88 @@ async def test_coordinator_setup_errors(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (LiebherrAuthenticationError("Invalid API key"), ConfigEntryState.SETUP_ERROR),
+        (LiebherrTimeoutError("Request timed out"), ConfigEntryState.SETUP_RETRY),
+    ],
+    ids=["auth_failed", "timeout"],
+)
+async def test_coordinator_initial_refresh_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_liebherr_client: MagicMock,
+    side_effect: Exception,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test coordinator initial refresh errors."""
+    mock_config_entry.add_to_hass(hass)
+    mock_liebherr_client.get_device_state.side_effect = side_effect
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is expected_state
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_start_stream_is_idempotent(
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test starting an active stream does not create another task."""
+    coordinator = mock_config_entry.runtime_data.coordinators[MOCK_DEVICE.device_id]
+    stream_task = coordinator._stream_task
+
+    coordinator.async_start_stream()
+
+    assert coordinator._stream_task is stream_task
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        LiebherrNotFoundError("Device not found"),
+        LiebherrPreconditionFailedError("Device not onboarded"),
+    ],
+    ids=["not_found", "precondition_failed"],
+)
+async def test_terminal_stream_error_marks_entities_unavailable(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    sse_helper: SSEStreamHelper,
+    exception: Exception,
+) -> None:
+    """Test terminal stream errors mark entities unavailable."""
+    mock_liebherr_client.get_device_state.side_effect = exception
+
+    await sse_helper.async_push()
+
+    state = hass.states.get("sensor.test_fridge_top_zone")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_repeated_stream_disconnect(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    sse_helper: SSEStreamHelper,
+) -> None:
+    """Test repeated stream disconnects leave entities unavailable."""
+    mock_liebherr_client.get_device_state.side_effect = LiebherrConnectionError(
+        "Connection failed"
+    )
+
+    await sse_helper.async_push()
+    await sse_helper.async_push()
+
+    state = hass.states.get("sensor.test_fridge_top_zone")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_unload_entry(
@@ -354,7 +439,7 @@ async def test_stale_device_removal(
 
     # Simulate the new device being removed from the account.
     # Make get_device_state raise for new_device_id so we can detect
-    # if the stale coordinator is still polling after shutdown.
+    # if the stale coordinator is still consuming its stream after shutdown.
     mock_liebherr_client.get_devices.return_value = [MOCK_DEVICE]
 
     def _get_device_state_after_removal(device_id: str, **kw: Any) -> DeviceState:
@@ -378,11 +463,9 @@ async def test_stale_device_removal(
         (DOMAIN, "new_device_id"), mock_config_entry.entry_id
     )
 
-    # Advance past the coordinator update interval to confirm the stale
-    # coordinator is no longer polling (would raise AssertionError above)
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    # Trigger a stream event for the removed device to confirm the stale
+    # coordinator's stream task was cancelled (would raise AssertionError above)
+    await mock_liebherr_client._sse_helper.async_push("new_device_id")
 
     # Original device should still work
     assert hass.states.get("sensor.test_fridge_top_zone") is not None
