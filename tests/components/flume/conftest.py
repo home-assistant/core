@@ -3,7 +3,6 @@
 from collections.abc import Generator
 import datetime
 from http import HTTPStatus
-from typing import Any
 from unittest.mock import patch
 
 import jwt
@@ -79,21 +78,6 @@ NOTIFICATION = {
 
 NOTIFICATIONS_LIST = [NOTIFICATION]
 
-LOW_BATTERY_NOTIFICATION = {
-    "id": 222222,
-    "device_id": "1234",
-    "user_id": USER_ID,
-    "type": 16,
-    "message": "Open the Flume app and follow instructions to order batteries.",
-    "created_datetime": "2020-01-15T16:33:39.000Z",
-    "title": "Batteries are low for the Flume sensor at Home.",
-    "read": True,
-    "extra": {
-        "problem": "SENSOR_LOW_BATTERIES",
-        "event_rule_name": "Low Battery",
-    },
-}
-
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
@@ -140,27 +124,15 @@ def access_token_fixture(requests_mock: Mocker) -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="battery_level")
-def battery_level_fixture() -> str | None:
-    """Fixture for the battery level reported by the sensor device.
-
-    `None` omits the key entirely, as the bridge devices and older firmware do.
-    """
-    return "high"
-
-
 @pytest.fixture(name="device_list")
-def device_list_fixture(requests_mock: Mocker, battery_level: str | None) -> None:
+def device_list_fixture(requests_mock: Mocker) -> None:
     """Fixture to setup the device list API response access token."""
-    sensor_device = SENSOR_DEVICE.copy()
-    if battery_level is not None:
-        sensor_device["battery_level"] = battery_level
     requests_mock.register_uri(
         "GET",
         DEVICE_LIST_URL,
         status_code=HTTPStatus.OK,
         json={
-            "data": [BRIDGE_DEVICE, sensor_device],
+            "data": DEVICE_LIST,
         },
     )
 
@@ -186,22 +158,14 @@ def device_list_unauthorized_fixture(requests_mock: Mocker) -> None:
     )
 
 
-@pytest.fixture(name="notifications")
-def notifications_fixture() -> list[dict[str, Any]]:
-    """Fixture for the notifications returned by the API."""
-    return NOTIFICATIONS_LIST
-
-
 @pytest.fixture(name="notifications_list")
-def notifications_list_fixture(
-    requests_mock: Mocker, notifications: list[dict[str, Any]]
-) -> None:
+def notifications_list_fixture(requests_mock: Mocker) -> None:
     """Fixture to setup the device list API response access token."""
     requests_mock.register_uri(
         "GET",
         NOTIFICATIONS_URL,
         status_code=HTTPStatus.OK,
         json={
-            "data": notifications,
+            "data": NOTIFICATIONS_LIST,
         },
     )

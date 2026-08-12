@@ -1,84 +1,93 @@
-"""Test the flume binary sensors."""
+"""Tests for Flume binary sensors."""
 
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+from requests_mock.mocker import Mocker
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.components.flume.const import DOMAIN
+from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import LOW_BATTERY_NOTIFICATION, NOTIFICATION
+from .conftest import NOTIFICATIONS_URL, SENSOR_DEVICE, USER_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-LOW_BATTERY_ENTITY_ID = "binary_sensor.flume_sensor_sensor_location_battery"
+
+def active_notification(event_rule_name: str) -> dict[str, Any]:
+    """Build a read but uncleared notification for the sensor device."""
+    return {
+        "id": 222222,
+        "device_id": SENSOR_DEVICE["id"],
+        "user_id": USER_ID,
+        "type": 16,
+        "message": f"{event_rule_name} triggered at Home.",
+        "read": True,
+        "extra": {"event_rule_name": event_rule_name},
+    }
 
 
 @pytest.fixture(autouse=True)
-def platforms_fixture():
-    """Return the platforms to be loaded for this test."""
+def platforms_fixture() -> Generator[None]:
+    """Set up only the binary sensor platform."""
     with patch("homeassistant.components.flume.PLATFORMS", [Platform.BINARY_SENSOR]):
         yield
 
 
-@pytest.mark.usefixtures("access_token", "device_list", "notifications_list")
+@pytest.mark.usefixtures("access_token", "device_list")
 async def test_binary_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    requests_mock: Mocker,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test binary sensors."""
+    """Test binary sensors with no notification outstanding."""
+    requests_mock.get(NOTIFICATIONS_URL, json={"data": []})
+
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("access_token", "device_list")
 @pytest.mark.parametrize(
-    ("battery_level", "expected_state"),
+    ("event_rule_name", "unique_id"),
     [
-        ("low", STATE_ON),
-        ("medium", STATE_OFF),
-        ("high", STATE_OFF),
-        # An unrecognized or absent level must not be reported as a healthy
-        # battery.
-        ("unexpected", STATE_UNKNOWN),
-        (None, STATE_UNKNOWN),
+        pytest.param("Flume Smart Leak Alert", "leak_1234", id="leak"),
+        pytest.param("High Flow Alert", "flow_1234", id="high_flow"),
+        pytest.param("Low Battery", "low_battery_1234", id="low_battery"),
     ],
 )
-@pytest.mark.usefixtures("access_token", "device_list", "notifications_list")
-async def test_low_battery_from_device_list(
+async def test_notification_binary_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    expected_state: str,
+    entity_registry: er.EntityRegistry,
+    requests_mock: Mocker,
+    event_rule_name: str,
+    unique_id: str,
 ) -> None:
-    """Test the battery state is derived from the reported battery level."""
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    """Test each sensor is on while its notification is in the list.
 
-    state = hass.states.get(LOW_BATTERY_ENTITY_ID)
-    assert state
-    assert state.state == expected_state
-
-
-@pytest.mark.parametrize("battery_level", ["high"])
-@pytest.mark.parametrize("notifications", [[NOTIFICATION, LOW_BATTERY_NOTIFICATION]])
-@pytest.mark.usefixtures("access_token", "device_list", "notifications_list")
-async def test_low_battery_ignores_stale_notification(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test a stale low battery notification does not mark the battery low.
-
-    Flume keeps low battery notifications active until they are deleted in the
-    app, so they cannot be used to determine the current battery state.
+    A notification stays in the list until it is deleted in the Flume app.
     """
+    requests_mock.get(
+        NOTIFICATIONS_URL,
+        json={"data": [active_notification(event_rule_name)]},
+    )
+
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(LOW_BATTERY_ENTITY_ID)
-    assert state
-    assert state.state == STATE_OFF
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, unique_id
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
