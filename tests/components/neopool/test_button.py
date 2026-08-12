@@ -174,14 +174,22 @@ async def test_all_entities(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_when_modules_absent(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
     minimal_pool_data: dict[str, Any],
 ) -> None:
-    """Snapshot the button entities registered when no modules are present."""
+    """Only the ungated buttons register when no optional modules are present."""
     mock_neopool_client.async_read_all.return_value = minimal_pool_data
-    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.BUTTON]):
-        await setup_integration(hass, mock_config_entry)
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await setup_integration(hass, mock_config_entry)
+
+    button_ids = [
+        e.unique_id
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if e.domain == BUTTON_DOMAIN
+    ]
+    assert any(uid.endswith("_sync_time") for uid in button_ids)
+    assert any(uid.endswith("_mbf_escape") for uid in button_ids)
+    assert not any(uid.endswith("_reset_cell_partial") for uid in button_ids)

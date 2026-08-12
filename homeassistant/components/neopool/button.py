@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-import logging
 from typing import Any, override
 
 from neopool_modbus.capabilities import is_hydrolysis_present
@@ -19,8 +18,6 @@ from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
 from .helpers import prepare_device_time
 
-_LOGGER = logging.getLogger(__name__)
-
 PARALLEL_UPDATES = 1
 
 
@@ -29,30 +26,7 @@ class NeoPoolButtonEntityDescription(ButtonEntityDescription):
     """Describes a NeoPool button entity."""
 
     supported_fn: Callable[[dict[str, Any]], bool] | None = None
-    press_fn: Callable[[NeoPoolButton], Awaitable[None]]
-
-
-async def _press_sync_time(entity: NeoPoolButton) -> None:
-    """Push the current HA wall-clock to the device."""
-    _LOGGER.debug("Syncing time with device")
-    await entity.coordinator.client.async_sync_device_time(
-        prepare_device_time(entity.hass)
-    )
-
-
-async def _press_clear_errors(entity: NeoPoolButton) -> None:
-    """Clear all possible device errors."""
-    _LOGGER.debug("Clearing all possible errors")
-    await entity.coordinator.client.async_clear_errors()
-
-
-async def _press_reset_cell_partial(entity: NeoPoolButton) -> None:
-    """Reset the partial cell-runtime counter on the device."""
-    _LOGGER.info(
-        "Resetting partial cell runtime counter on device '%s'",
-        entity.coordinator.config_entry.title,
-    )
-    await entity.coordinator.client.async_reset_user_counters()
+    press_fn: Callable[[NeoPoolButton], Awaitable[Any]]
 
 
 BUTTON_DESCRIPTIONS: dict[str, NeoPoolButtonEntityDescription] = {
@@ -60,13 +34,15 @@ BUTTON_DESCRIPTIONS: dict[str, NeoPoolButtonEntityDescription] = {
         key="SYNC_TIME",
         translation_key="sync_time",
         entity_category=EntityCategory.CONFIG,
-        press_fn=_press_sync_time,
+        press_fn=lambda entity: entity.coordinator.client.async_sync_device_time(
+            prepare_device_time(entity.hass)
+        ),
     ),
     "MBF_ESCAPE": NeoPoolButtonEntityDescription(
         key="MBF_ESCAPE",
         translation_key="escape",
         entity_category=EntityCategory.CONFIG,
-        press_fn=_press_clear_errors,
+        press_fn=lambda entity: entity.coordinator.client.async_clear_errors(),
     ),
     "RESET_CELL_PARTIAL": NeoPoolButtonEntityDescription(
         key="RESET_CELL_PARTIAL",
@@ -74,7 +50,7 @@ BUTTON_DESCRIPTIONS: dict[str, NeoPoolButtonEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         supported_fn=is_hydrolysis_present,
-        press_fn=_press_reset_cell_partial,
+        press_fn=lambda entity: entity.coordinator.client.async_reset_user_counters(),
     ),
 }
 
