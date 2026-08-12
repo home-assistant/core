@@ -135,5 +135,6 @@ class ImouSwitch(ImouEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_operation_failed",
+                translation_placeholders={"error": e.message},
             ) from e
         await self.coordinator.async_request_refresh()

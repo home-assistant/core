@@ -296,7 +296,8 @@ async def test_camera_stream_source_propagates_api_error(
 
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     with pytest.raises(
-        HomeAssistantError, match="Error communicating with the Imou API"
+        HomeAssistantError,
+        match="Could not get the live stream URL from Imou: stream failure",
     ):
         await async_get_stream_source(hass, entity_id)
 
@@ -327,7 +328,8 @@ async def test_camera_image_propagates_api_error(
 
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     with pytest.raises(
-        HomeAssistantError, match="Error communicating with the Imou API"
+        HomeAssistantError,
+        match="Could not get a snapshot from Imou: image failure",
     ):
         await async_get_image(hass, entity_id)
 

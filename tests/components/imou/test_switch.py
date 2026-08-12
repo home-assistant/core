@@ -170,7 +170,7 @@ async def test_turn_on_service_propagates_api_error(
     entity_id = hass.states.async_all("switch")[0].entity_id
 
     with pytest.raises(
-        HomeAssistantError, match="Error communicating with the Imou API"
+        HomeAssistantError, match="Imou rejected the switch change: cloud failure"
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,

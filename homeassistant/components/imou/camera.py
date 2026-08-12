@@ -101,6 +101,7 @@ class ImouCamera(ImouEntity, Camera):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="get_stream_failed",
+                translation_placeholders={"error": err.message},
             ) from err
 
     @override
@@ -117,6 +118,7 @@ class ImouCamera(ImouEntity, Camera):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="get_image_failed",
+                translation_placeholders={"error": err.message},
             ) from err
 
     @property

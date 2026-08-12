@@ -113,4 +113,5 @@ class ImouButton(ImouEntity, ButtonEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="press_button_failed",
+                translation_placeholders={"error": e.message},
             ) from e
