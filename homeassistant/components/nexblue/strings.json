@@ -23,16 +23,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "is_disable": {
-        "name": "Availability",
-        "state": { "off": "Unavailable", "on": "Available" }
-      },
-      "is_lock": {
-        "name": "Cable lock state",
-        "state": { "off": "Unlocked", "on": "Locked" }
-      }
-    },
     "sensor": {
       "access_level": {
         "name": "Access level",

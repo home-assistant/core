@@ -1,13 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "is_disable": {
-        "default": "mdi:power-off"
-      },
-      "is_lock": {
-        "default": "mdi:lock-check"
-      }
-    },
     "sensor": {
       "access_level": {
         "default": "mdi:account-lock"
