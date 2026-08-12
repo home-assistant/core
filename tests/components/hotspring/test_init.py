@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 from hotspring import HotSpringConnectionError, HotSpringError, Spa
 import pytest
-
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hotspring.const import DOMAIN
