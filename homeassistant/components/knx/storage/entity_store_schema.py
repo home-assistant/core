@@ -1,5 +1,6 @@
 """KNX entity store schema."""
 
+from collections.abc import Hashable
 from enum import StrEnum, unique
 
 import voluptuous as vol
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_MODE,
     CONF_NAME,
+    CONF_PAYLOAD,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
     Platform,
@@ -51,8 +53,9 @@ from ..const import (
     FanZeroMode,
     NumberConf,
     SceneConf,
+    SelectConf,
 )
-from ..dpt import get_supported_dpts
+from ..dpt import get_supported_dpts, raw_payload_length
 from ..validation import validate_number_attributes, validate_sensor_attributes
 from .const import (
     CONF_ALWAYS_CALLBACK,
@@ -135,6 +138,7 @@ from .knx_selector import (
     GroupSelectOption,
     KnxPayloadSelector,
     KNXSectionFlat,
+    KnxSelectOptionsSelector,
     SyncStateSelector,
 )
 
@@ -586,6 +590,125 @@ SCENE_KNX_SCHEMA = vol.Schema(
     },
 )
 
+
+def _select_options_sub_validator(config: dict) -> dict:
+    """Validate select options against the configured DPT.
+
+    The `options_source` group selects one of two modes, distinguished by the
+    group address key:
+    - `ga_enum`: options are derived from a required enum DPT.
+    - `ga_custom`: options are configured manually, each as a typed value (needs
+      a DPT) or a raw payload. Payload ranges are validated per option by the
+      options selector.
+
+    All options are sent to the same group address, so they have to share a
+    single payload length - taken from the DPT if one is configured.
+    """
+    source = config[SelectConf.OPTIONS_SOURCE]
+    if SelectConf.GA_ENUM in source:
+        dpt = source[SelectConf.GA_ENUM].get(CONF_DPT)
+        if dpt is None or get_supported_dpts()[dpt]["dpt_class"] != "enum":
+            raise vol.Invalid(
+                "An enum data point type is required",
+                path=[SelectConf.OPTIONS_SOURCE, SelectConf.GA_ENUM],
+            )
+        return config
+
+    error_path: list[Hashable] = [SelectConf.OPTIONS_SOURCE, SelectConf.CUSTOM_OPTIONS]
+    options = source[SelectConf.CUSTOM_OPTIONS]
+    if not options:
+        raise vol.Invalid("At least one option is required", path=error_path)
+
+    dpt = source[SelectConf.GA_CUSTOM].get(CONF_DPT)
+    transcoder = DPTBase.parse_transcoder(dpt) if dpt is not None else None
+    payload_length = raw_payload_length(transcoder) if transcoder is not None else None
+
+    options_seen: set[str] = set()
+    payloads_seen: set[int] = set()
+    for option in options:
+        name = option[SelectConf.OPTION]
+        if name in options_seen:
+            raise vol.Invalid(f"Duplicate option not allowed: {name}", path=error_path)
+        options_seen.add(name)
+
+        if CONF_VALUE in option:
+            if transcoder is None:
+                raise vol.Invalid(
+                    f"A data point type is required for typed option '{name}'",
+                    path=error_path,
+                )
+            try:
+                payload = int.from_bytes(
+                    transcoder.validate_payload(transcoder.to_knx(option[CONF_VALUE])),
+                    byteorder="big",
+                )
+            except ConversionError as ex:
+                raise vol.Invalid(
+                    f"Value invalid for option '{name}' with DPT "
+                    f"{transcoder.dpt_number_str()}",
+                    path=error_path,
+                ) from ex
+        else:
+            option_length = option[CONF_PAYLOAD_LENGTH]
+            if payload_length is None:
+                payload_length = option_length
+            elif option_length != payload_length:
+                expected = (
+                    f"DPT {transcoder.dpt_number_str()}"
+                    if transcoder is not None
+                    else "the other options"
+                )
+                raise vol.Invalid(
+                    f"Payload length {option_length} of option '{name}' doesn't "
+                    f"match payload length {payload_length} of {expected}",
+                    path=error_path,
+                )
+            payload = int(option[CONF_PAYLOAD], 16)
+
+        if payload in payloads_seen:
+            raise vol.Invalid(
+                f"Duplicate payload not allowed for option '{name}'", path=error_path
+            )
+        payloads_seen.add(payload)
+    return config
+
+
+SELECT_KNX_SCHEMA = AllSerializeFirst(
+    vol.Schema(
+        {
+            vol.Required(SelectConf.OPTIONS_SOURCE): GroupSelect(
+                GroupSelectOption(
+                    translation_key="from_dpt",
+                    schema={
+                        vol.Required(SelectConf.GA_ENUM): GASelector(
+                            write_required=True, dpt=["enum"]
+                        ),
+                    },
+                ),
+                GroupSelectOption(
+                    translation_key="custom",
+                    schema={
+                        vol.Required(SelectConf.GA_CUSTOM): GASelector(
+                            write_required=True,
+                            dpt=["numeric", "enum", "complex", "string"],
+                            dpt_required=False,
+                        ),
+                        vol.Required(
+                            SelectConf.CUSTOM_OPTIONS
+                        ): KnxSelectOptionsSelector(ga_path=SelectConf.GA_CUSTOM),
+                    },
+                ),
+                collapsible=False,
+            ),
+            vol.Optional(
+                CONF_RESPOND_TO_READ, default=False
+            ): selector.BooleanSelector(),
+            vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        }
+    ),
+    _select_options_sub_validator,
+)
+
 SWITCH_KNX_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_GA_SWITCH): GASelector(write_required=True, valid_dpt="1"),
@@ -863,6 +986,7 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.NOTIFY: NOTIFY_KNX_SCHEMA,
     Platform.NUMBER: NUMBER_KNX_SCHEMA,
     Platform.SCENE: SCENE_KNX_SCHEMA,
+    Platform.SELECT: SELECT_KNX_SCHEMA,
     Platform.SENSOR: SENSOR_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,
     Platform.TEXT: TEXT_KNX_SCHEMA,
