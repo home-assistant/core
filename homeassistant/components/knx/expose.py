@@ -209,7 +209,7 @@ class KnxExposeEntity:
     def _set_expose_state(self, state: State | None) -> None:
         """Set the local state of all exposures without sending to KNX."""
         for option, xknx_expose in self._exposures:
-            state_value = self._get_expose_value(state, option)            
+            state_value = self._get_expose_value(state, option)
             try:
                 xknx_expose.sensor_value.value = state_value
             except ConversionError:
