@@ -122,8 +122,8 @@
           "name": "To account"
         },
         "amount": {
-          "description": "The amount of money to move.",
-          "name": "Amount"
+          "description": "[%key:component::monzo::services::deposit_into_pot::fields::amount::description%]",
+          "name": "[%key:component::monzo::services::deposit_into_pot::fields::amount::name%]"
         },
         "pot": {
           "description": "The pot to move money from.",
