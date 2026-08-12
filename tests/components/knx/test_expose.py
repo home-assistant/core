@@ -53,6 +53,7 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", False)
 
+
 @pytest.mark.parametrize(
     "core_state",
     [CoreState.not_running, CoreState.starting],
