@@ -8,4 +8,8 @@ MIDEA_DEVICE_NAMES: dict[DeviceType, str] = {
     DeviceType.CC: "MDV Wi-Fi Controller",
     DeviceType.CF: "Heat Pump",
     DeviceType.FB: "Electric Heater",
+    DeviceType.X40: "Integrated Ceiling Fan",
+    DeviceType.B6: "Range Hood",
+    DeviceType.CE: "Fresh Air Appliance",
+    DeviceType.FA: "Fan",
 }
