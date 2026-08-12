@@ -30,7 +30,7 @@ from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import mock_config_entry
 
@@ -949,13 +949,17 @@ async def test_subentry_scan_finds_device_after_active_scan(
 
 
 async def test_subentry_add_flow_creates_bound_subentry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """The add flow lists an account vehicle, pairs it, and binds its device.
 
     The new subentry is keyed to the vehicle's VIN and no duplicate device is
     created: the same account device the parent entry already registered stays
-    the one and only device for that VIN.
+    the one and only device for that VIN. Once loaded, that existing device and
+    its vehicle entities are owned by the created subentry, not left detached
+    from it on the parent entry.
     """
     entry = mock_config_entry()
     entry.add_to_hass(hass)
@@ -968,6 +972,13 @@ async def test_subentry_add_flow_creates_bound_subentry(
         (DOMAIN, VIN), entry.entry_id
     )
     assert existing_device is not None
+    # The device and its entities start on the parent entry, owned by no subentry.
+    assert existing_device.config_subentry_id is None
+    vehicle_entities = er.async_entries_for_device(
+        entity_registry, existing_device.id, include_disabled_entities=True
+    )
+    assert vehicle_entities
+    assert all(entity.config_subentry_id is None for entity in vehicle_entities)
 
     vehicle = _mock_vehicle(on_whitelist=True)
 
@@ -1009,13 +1020,33 @@ async def test_subentry_add_flow_creates_bound_subentry(
     assert subentry.unique_id == VIN
     assert subentry.data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
 
+    # The reload the flow schedules binds the existing device and entities to the
+    # new subentry; run it to observe that ownership.
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
     # The pairing attaches to the vehicle's existing device, never a duplicate.
     bound_devices = [
         device
         for device in device_registry.devices.values()
         if (DOMAIN, VIN) in device.identifiers
     ]
-    assert bound_devices == [existing_device]
+    assert len(bound_devices) == 1
+    bound_device = bound_devices[0]
+    # The same device ID is kept, now owned by the created subentry.
+    assert bound_device.id == existing_device.id
+    assert bound_device.config_subentry_id == subentry.subentry_id
+
+    # The vehicle entities keep their unique IDs and now belong to the subentry.
+    bound_entities = er.async_entries_for_device(
+        entity_registry, bound_device.id, include_disabled_entities=True
+    )
+    assert {entity.unique_id for entity in bound_entities} == {
+        entity.unique_id for entity in vehicle_entities
+    }
+    assert all(
+        entity.config_subentry_id == subentry.subentry_id for entity in bound_entities
+    )
 
 
 async def test_subentry_add_flow_no_available_vehicles(hass: HomeAssistant) -> None:

@@ -36,6 +36,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -281,6 +282,47 @@ def _setup_subentry_removal_reload(
         known = current
 
     entry.async_on_unload(entry.add_update_listener(_handle_update))
+
+
+def _async_bind_vehicle_subentries(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Bind each added vehicle's existing device and entities to its subentry.
+
+    A vehicle's device and entities are first registered by the parent entry
+    while it is cloud-only; opting it into Bluetooth adds a subentry keyed to its
+    VIN. That subentry must own the same device and entities so it is not left
+    detached, so move them across on every setup, keeping the device ID and entity
+    unique IDs. The entities move first: moving the device re-homes its entities to
+    the device's subentry and would drop any still left on the parent entry.
+    Removing the subentry clears this ownership and the reload it triggers
+    re-registers the device and entities cloud-only.
+    """
+    entity_registry = er.async_get(hass)
+    for subentry in entry.subentries.values():
+        if subentry.subentry_type != SUBENTRY_TYPE_VEHICLE:
+            continue
+        vin = subentry.data.get(CONF_VIN)
+        if vin is None:
+            continue
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, vin), entry.entry_id
+        )
+        if device is None:
+            continue
+        for entity in er.async_entries_for_device(
+            entity_registry, device.id, include_disabled_entities=True
+        ):
+            if entity.config_subentry_id != subentry.subentry_id:
+                entity_registry.async_update_entity(
+                    entity.entity_id, config_subentry_id=subentry.subentry_id
+                )
+        if device.config_subentry_id != subentry.subentry_id:
+            device_registry.async_update_device(
+                device.id, new_config_subentry_id=subentry.subentry_id
+            )
 
 
 def _ble_address_for_vin(entry: TeslemetryConfigEntry, vin: str) -> str | None:
@@ -628,6 +670,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         metadata_coordinator=metadata_coordinator,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    _async_bind_vehicle_subentries(hass, entry, device_registry)
 
     _setup_dynamic_discovery(
         hass,
