@@ -5,13 +5,13 @@
         "default": "mdi:star"
       },
       "go_to_alias_partial": {
-        "default": "mdi:star"
+        "default": "mdi:arrow-expand-vertical"
       },
       "go_to_alias_pedestrian": {
-        "default": "mdi:star"
+        "default": "mdi:walk"
       },
       "go_to_alias_ventilation": {
-        "default": "mdi:star"
+        "default": "mdi:weather-windy"
       }
     },
     "climate": {
