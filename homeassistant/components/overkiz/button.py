@@ -19,9 +19,6 @@ from . import OverkizDataConfigEntry
 from .const import IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
-# Default brightness step size used for RTS dimming commands
-_BRIGHTNESS_STEP_SIZE = 5
-
 
 @dataclass(frozen=True)
 class OverkizButtonDescription(ButtonEntityDescription):
@@ -92,13 +89,14 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         name="Brightness up",
         icon="mdi:brightness-7",
         # step (0-127), execution duration (0-15, optional)
-        press_args=[_BRIGHTNESS_STEP_SIZE],
+        press_args=[5],
     ),
     OverkizButtonDescription(
         key=OverkizCommand.STEP_NEGATIVE,
         name="Brightness down",
         icon="mdi:brightness-3",
-        press_args=[_BRIGHTNESS_STEP_SIZE],
+        # step (0-127), execution duration (0-15, optional)
+        press_args=[5],
     ),
     # SmokeSensor
     OverkizButtonDescription(
