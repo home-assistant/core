@@ -100,6 +100,34 @@
       "product_id": "product456",
       "authorize_code": "ijkl_code",
       "is_on": true
+    },
+    {
+      "name": "Patio Plug Left",
+      "is_online": true,
+      "wifi_connected": true,
+      "device_id": 1401,
+      "mesh_device_id": 11006,
+      "home_id": 10000,
+      "device_type_id": 67,
+      "device_type": "PLUG",
+      "mac_address": "AABBCC556677",
+      "product_id": "product789",
+      "authorize_code": "mnop_code",
+      "is_on": true
+    },
+    {
+      "name": "Patio Plug Right",
+      "is_online": true,
+      "wifi_connected": true,
+      "device_id": 1401,
+      "mesh_device_id": 12006,
+      "home_id": 10000,
+      "device_type_id": 67,
+      "device_type": "PLUG",
+      "mac_address": "AABBCC556677",
+      "product_id": "product789",
+      "authorize_code": "mnop_code",
+      "is_on": false
     }
   ]
 }

@@ -1,6 +1,6 @@
 """The Cync integration."""
 
-from pycync import Auth, Cync, User
+from pycync import Auth, Cync, CyncLight, User
 from pycync.exceptions import AuthFailedError, CyncError
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -36,7 +36,8 @@ def _migrate_unique_ids(
     id_map = {
         f"{device.parent_home_id}-{device.device_id}": device.unique_id
         for device in coordinator.data.values()
-        if f"{device.parent_home_id}-{device.device_id}" != device.unique_id
+        if isinstance(device, CyncLight)
+        and f"{device.parent_home_id}-{device.device_id}" != device.unique_id
     }
 
     if not id_map:
@@ -60,7 +61,8 @@ def _migrate_unique_ids(
             if domain == DOMAIN and (new_identifier := id_map.get(identifier)):
                 device_registry.async_update_device(
                     device_entry.id,
-                    new_identifiers={(DOMAIN, new_identifier)},
+                    new_identifiers=(device_entry.identifiers - {(DOMAIN, identifier)})
+                    | {(DOMAIN, new_identifier)},
                 )
                 break
 

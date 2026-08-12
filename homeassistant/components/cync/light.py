@@ -197,4 +197,4 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
     def _device(self) -> CyncLight:
         """Fetch the reference to the backing Cync light for this device."""
 
-        return self.coordinator.data[self._cync_device_id]
+        return self.coordinator.data[self._cync_unique_id]

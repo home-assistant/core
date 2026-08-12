@@ -61,6 +61,8 @@ class CyncSwitchEntity(CyncBaseEntity, SwitchEntity):
     @override
     def is_on(self) -> bool | None:
         """Return True if the plug is on."""
+        if self._cync_unique_id not in self.coordinator.state_confirmed:
+            return None
         return self._device.is_on
 
     @override
@@ -76,4 +78,4 @@ class CyncSwitchEntity(CyncBaseEntity, SwitchEntity):
     @property
     def _device(self) -> CyncPlug:
         """Fetch the reference to the backing Cync plug for this entity."""
-        return self.coordinator.data[self._cync_device_id]
+        return self.coordinator.data[self._cync_unique_id]

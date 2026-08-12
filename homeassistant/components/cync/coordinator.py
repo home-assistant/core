@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 type CyncConfigEntry = ConfigEntry[CyncCoordinator]
 
 
-class CyncCoordinator(DataUpdateCoordinator[dict[int, CyncDevice]]):
+class CyncCoordinator(DataUpdateCoordinator[dict[str, CyncDevice]]):
     """Coordinator to handle updating Cync device states."""
 
     config_entry: CyncConfigEntry
@@ -39,9 +39,11 @@ class CyncCoordinator(DataUpdateCoordinator[dict[int, CyncDevice]]):
             always_update=True,
         )
         self.cync = cync
+        self.state_confirmed: set[str] = set()
 
-    async def on_data_update(self, data: dict[int, CyncDevice]) -> None:
+    async def on_data_update(self, data: dict[str, CyncDevice]) -> None:
         """Update registered devices with new data."""
+        self.state_confirmed.update(data)
         merged_data = self.data | data if self.data else data
         self.async_set_updated_data(merged_data)
 
@@ -53,7 +55,7 @@ class CyncCoordinator(DataUpdateCoordinator[dict[int, CyncDevice]]):
             await self._update_config_cync_credentials(logged_in_user)
 
     @override
-    async def _async_update_data(self) -> dict[int, CyncDevice]:
+    async def _async_update_data(self) -> dict[str, CyncDevice]:
         """Refresh the user's auth token if it expires within one hour.
 
         Then, fetch all current device states.
@@ -66,7 +68,7 @@ class CyncCoordinator(DataUpdateCoordinator[dict[int, CyncDevice]]):
         self.cync.update_device_states()
         current_device_states = self.cync.get_devices()
 
-        return {device.device_id: device for device in current_device_states}
+        return {device.unique_id: device for device in current_device_states}
 
     async def _async_refresh_cync_credentials(self) -> None:
         """Attempt to refresh the Cync user's authentication token."""
