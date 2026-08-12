@@ -46,16 +46,18 @@
       },
       "exclude": {
         "data": {
-          "entities": "[%key:component::homekit::options::step::include::data::entities%]"
+          "entities": "[%key:component::homekit::options::step::include::data::entities%]",
+          "exclude_areas": "Excluded areas"
         },
-        "description": "All “{domains}” entities will be included except for the excluded entities and categorized entities.",
+        "description": "All “{domains}” entities will be included except for excluded entities, categorized entities, and entities in an excluded area.",
         "title": "Select the entities to be excluded"
       },
       "include": {
         "data": {
-          "entities": "Entities"
+          "entities": "Entities",
+          "include_areas": "Included areas"
         },
-        "description": "Select entities from each domain in “{domains}”. The include will cover the entire domain if you do not select any entities for a given domain.",
+        "description": "Select entities from each domain in “{domains}”. Selecting one or more areas limits the included entities to those areas. Entities you select are always included, and a domain with no selected entities or areas is included in full.",
         "title": "Select the entities to be included"
       },
       "init": {

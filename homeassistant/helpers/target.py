@@ -6,7 +6,9 @@ from collections.abc import Callable, Coroutine, Mapping
 import dataclasses
 import logging
 from logging import Logger
-from typing import Any, TypeGuard, override
+from typing import Any, Final, TypeGuard, override
+
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -23,6 +25,7 @@ from homeassistant.core import (
     HomeAssistant,
     State,
     callback,
+    split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError
 
@@ -35,7 +38,18 @@ from . import (
     group,
     label_registry as lr,
 )
+from .debounce import Debouncer
 from .deprecation import deprecated_class
+from .entityfilter import (
+    BASE_FILTER_SCHEMA,
+    CONF_EXCLUDE_DOMAINS,
+    CONF_EXCLUDE_ENTITIES,
+    CONF_EXCLUDE_ENTITY_GLOBS,
+    CONF_INCLUDE_DOMAINS,
+    CONF_INCLUDE_ENTITIES,
+    CONF_INCLUDE_ENTITY_GLOBS,
+    EntityFilter,
+)
 from .event import async_track_state_change_event
 from .typing import ConfigType
 
@@ -292,6 +306,255 @@ def async_extract_referenced_entity_ids(
     )
 
     return selected
+
+
+CONF_INCLUDE_TARGETS: Final = "include_targets"
+CONF_EXCLUDE_TARGETS: Final = "exclude_targets"
+
+_BASE_FILTER_KEYS = (
+    CONF_INCLUDE_DOMAINS,
+    CONF_INCLUDE_ENTITIES,
+    CONF_INCLUDE_ENTITY_GLOBS,
+    CONF_EXCLUDE_DOMAINS,
+    CONF_EXCLUDE_ENTITIES,
+    CONF_EXCLUDE_ENTITY_GLOBS,
+)
+
+TARGET_FIELDS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_DEVICE_ID, default=list): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(ATTR_AREA_ID, default=list): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_FLOOR_ID, default=list): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_LABEL_ID, default=list): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
+
+TARGET_FILTER_CONFIG_SCHEMA = vol.Schema(
+    {
+        **BASE_FILTER_SCHEMA.schema,
+        vol.Optional(CONF_INCLUDE_TARGETS, default=dict): TARGET_FIELDS_SCHEMA,
+        vol.Optional(CONF_EXCLUDE_TARGETS, default=dict): TARGET_FIELDS_SCHEMA,
+    }
+)
+
+
+@callback
+def _async_expand_target_selection(
+    hass: HomeAssistant, selection: TargetSelection
+) -> frozenset[str]:
+    """Expand a target selection to the entity ids a filter may expose.
+
+    Disabled entities, hidden entities and entities with an entity category
+    are excluded from the expansion, so target selections only ever match
+    entities a consumer may expose; such entities can still be selected
+    through explicit entity inclusion in the base filter.
+    """
+    if not selection.has_any_target:
+        return frozenset()
+    selected = async_extract_referenced_entity_ids(hass, selection, expand_group=False)
+    entities = er.async_get(hass).entities
+    return frozenset(
+        entity_id
+        for entity_id in selected.referenced | selected.indirectly_referenced
+        if (entry := entities.get(entity_id)) is None
+        or (
+            entry.disabled_by is None
+            and entry.hidden_by is None
+            and entry.entity_category is None
+        )
+    )
+
+
+class TargetFilter:
+    """An entity filter extended with registry target selections.
+
+    Filter precedence for an entity id, matching the base entity filter's
+    precedence for configurations without target selections:
+    1. In the base filter's included entity ids: included.
+    2. In the base filter's excluded entity ids: excluded.
+    3. Matching an included entity glob: included.
+    4. Matching an excluded entity glob: excluded.
+    5. Matched by an exclude target selection: excluded.
+    6. When include targets are configured they narrow the include: the
+       entity must be matched by an include target selection, and when the
+       base filter also includes domains its domain must be one of them.
+       Entities in the base filter's excluded domains stay excluded. Include
+       domains and include targets thus combine as an intersection, while the
+       explicit entity and glob includes above remain absolute.
+    7. Otherwise (no include targets configured) the base filter decides.
+    """
+
+    def __init__(self, config: dict[str, Any]) -> None:
+        """Init the filter from a TARGET_FILTER_CONFIG_SCHEMA validated config."""
+        self.config = config
+        self.base_filter = EntityFilter({key: config[key] for key in _BASE_FILTER_KEYS})
+        self.include_targets = TargetSelection(config[CONF_INCLUDE_TARGETS])
+        self.exclude_targets = TargetSelection(config[CONF_EXCLUDE_TARGETS])
+
+    @property
+    def has_targets(self) -> bool:
+        """Return whether any target selection is configured."""
+        return (
+            self.include_targets.has_any_target or self.exclude_targets.has_any_target
+        )
+
+    @callback
+    def explicitly_included(self, entity_id: str) -> bool:
+        """Check if an entity is explicitly included in the base filter."""
+        return self.base_filter.explicitly_included(entity_id)
+
+    @callback
+    def explicitly_excluded(self, entity_id: str) -> bool:
+        """Check if an entity is explicitly excluded in the base filter."""
+        return self.base_filter.explicitly_excluded(entity_id)
+
+    @callback
+    def async_expand_targets(
+        self, hass: HomeAssistant
+    ) -> tuple[frozenset[str], frozenset[str]]:
+        """Expand the include and exclude target selections to entity ids."""
+        return (
+            _async_expand_target_selection(hass, self.include_targets),
+            _async_expand_target_selection(hass, self.exclude_targets),
+        )
+
+    @callback
+    def async_get_filter(self, hass: HomeAssistant) -> Callable[[str], bool]:
+        """Return a filter function baked from the current target expansion."""
+        included, excluded = self.async_expand_targets(hass)
+        base = self.base_filter
+        has_include_targets = self.include_targets.has_any_target
+        include_domains = base.include_domains
+        include_entities = base.include_entities
+        exclude_domains = base.exclude_domains
+        exclude_entities = base.exclude_entities
+
+        @callback
+        def target_filter(entity_id: str) -> bool:
+            if entity_id in include_entities:
+                return True
+            if entity_id in exclude_entities:
+                return False
+            # Entity ids are handled above, so the explicit checks
+            # can only match on the glob patterns here.
+            if base.explicitly_included(entity_id):
+                return True
+            if base.explicitly_excluded(entity_id):
+                return False
+            if entity_id in excluded:
+                return False
+            if has_include_targets:
+                # Include targets narrow the include: the entity must match a
+                # target and, when domains are configured, fall in one of them.
+                domain = split_entity_id(entity_id)[0]
+                if domain in exclude_domains or entity_id not in included:
+                    return False
+                return not include_domains or domain in include_domains
+            return base(entity_id)
+
+        return target_filter
+
+
+def convert_target_filter(config: dict[str, Any]) -> TargetFilter:
+    """Convert the target filter schema into a target filter."""
+    return TargetFilter(config)
+
+
+TARGET_FILTER_SCHEMA = vol.All(TARGET_FILTER_CONFIG_SCHEMA, convert_target_filter)
+
+_TRACKED_ENTITY_CHANGES = frozenset(
+    {"area_id", "device_id", "disabled_by", "entity_category", "hidden_by", "labels"}
+)
+_TRACKED_DEVICE_CHANGES = frozenset({"area_id", "labels"})
+
+
+@callback
+def _async_entity_registry_filter(
+    event_data: er.EventEntityRegistryUpdatedData,
+) -> bool:
+    """Check if an entity registry event can affect expanded targets."""
+    if event_data["action"] != "update":
+        return True
+    return "old_entity_id" in event_data or bool(
+        _TRACKED_ENTITY_CHANGES & event_data["changes"].keys()
+    )
+
+
+@callback
+def _async_device_registry_filter(
+    event_data: dr.EventDeviceRegistryUpdatedData,
+) -> bool:
+    """Check if a device registry event can affect expanded targets."""
+    if event_data["action"] != "update":
+        return True
+    return bool(_TRACKED_DEVICE_CHANGES & event_data["changes"].keys())
+
+
+@callback
+def async_track_target_filter_changes(
+    hass: HomeAssistant,
+    target_filter: TargetFilter,
+    action: Callable[[], None],
+    *,
+    debounce_cooldown: float,
+) -> CALLBACK_TYPE:
+    """Run action when a registry change alters the filter's expanded targets.
+
+    Registry events are debounced; after the cooldown the target selections
+    are expanded once and action is only called if the expansion differs
+    from the last observed one. Tracking is a no-op for a filter without
+    target selections. Returns a callback to stop tracking.
+    """
+    if not target_filter.has_targets:
+        return lambda: None
+
+    snapshot = target_filter.async_expand_targets(hass)
+
+    @callback
+    def _async_check_targets() -> None:
+        nonlocal snapshot
+        new_snapshot = target_filter.async_expand_targets(hass)
+        if new_snapshot == snapshot:
+            return
+        snapshot = new_snapshot
+        action()
+
+    debouncer: Debouncer[None] = Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=debounce_cooldown,
+        immediate=False,
+        function=_async_check_targets,
+    )
+
+    @callback
+    def _async_registry_updated(event: Event[Any]) -> None:
+        debouncer.async_schedule_call()
+
+    unsubs = [
+        hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            _async_registry_updated,
+            event_filter=_async_entity_registry_filter,
+        ),
+        hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            _async_registry_updated,
+            event_filter=_async_device_registry_filter,
+        ),
+        # Area registry update events do not include changed fields.
+        hass.bus.async_listen(ar.EVENT_AREA_REGISTRY_UPDATED, _async_registry_updated),
+    ]
+
+    @callback
+    def _async_unsubscribe() -> None:
+        debouncer.async_shutdown()
+        for unsub in unsubs:
+            unsub()
+
+    return _async_unsubscribe
 
 
 class TargetEntityChangeTracker(abc.ABC):

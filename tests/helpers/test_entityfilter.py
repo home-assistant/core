@@ -479,3 +479,22 @@ def test_complex_include_exclude_filter() -> None:
     }
     filt: EntityFilter = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
     assert filt("switch.espresso_keuken") is True
+
+
+def test_entity_filter_exposes_parsed_sets() -> None:
+    """The parsed include/exclude sets are exposed as read-only properties."""
+    entity_filter = EntityFilter(
+        {
+            "include_domains": ["light"],
+            "include_entities": ["sensor.included"],
+            "include_entity_globs": [],
+            "exclude_domains": ["switch"],
+            "exclude_entities": ["sensor.excluded"],
+            "exclude_entity_globs": [],
+        }
+    )
+
+    assert entity_filter.include_domains == frozenset({"light"})
+    assert entity_filter.include_entities == frozenset({"sensor.included"})
+    assert entity_filter.exclude_domains == frozenset({"switch"})
+    assert entity_filter.exclude_entities == frozenset({"sensor.excluded"})

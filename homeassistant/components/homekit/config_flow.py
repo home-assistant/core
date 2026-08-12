@@ -25,6 +25,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_FRIENDLY_NAME,
     CONF_DEVICES,
     CONF_DOMAINS,
@@ -40,6 +41,12 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     selector,
+)
+from homeassistant.helpers.target import (
+    CONF_EXCLUDE_TARGETS,
+    CONF_INCLUDE_TARGETS,
+    TARGET_FILTER_CONFIG_SCHEMA,
+    TargetFilter,
 )
 from homeassistant.loader import async_get_integrations
 
@@ -140,8 +147,10 @@ DEFAULT_DOMAINS = [
 
 CONF_INCLUDE_DOMAINS: Final = "include_domains"
 CONF_INCLUDE_ENTITIES: Final = "include_entities"
+CONF_INCLUDE_AREAS: Final = "include_areas"
 CONF_EXCLUDE_DOMAINS: Final = "exclude_domains"
 CONF_EXCLUDE_ENTITIES: Final = "exclude_entities"
+CONF_EXCLUDE_AREAS: Final = "exclude_areas"
 
 
 class EntityFilterDict(TypedDict, total=False):
@@ -149,23 +158,32 @@ class EntityFilterDict(TypedDict, total=False):
 
     include_domains: list[str]
     include_entities: list[str]
+    include_targets: dict[str, list[str]]
     exclude_domains: list[str]
     exclude_entities: list[str]
+    exclude_targets: dict[str, list[str]]
 
 
 def _make_entity_filter(
     include_domains: list[str] | None = None,
     include_entities: list[str] | None = None,
+    include_areas: list[str] | None = None,
     exclude_domains: list[str] | None = None,
     exclude_entities: list[str] | None = None,
+    exclude_areas: list[str] | None = None,
 ) -> EntityFilterDict:
     """Create a filter dict."""
-    return EntityFilterDict(
+    entity_filter = EntityFilterDict(
         include_domains=include_domains or [],
         include_entities=include_entities or [],
         exclude_domains=exclude_domains or [],
         exclude_entities=exclude_entities or [],
     )
+    if include_areas:
+        entity_filter[CONF_INCLUDE_TARGETS] = {ATTR_AREA_ID: include_areas}
+    if exclude_areas:
+        entity_filter[CONF_EXCLUDE_TARGETS] = {ATTR_AREA_ID: exclude_areas}
+    return entity_filter
 
 
 async def _async_domain_names(hass: HomeAssistant, domains: list[str]) -> str:
@@ -177,10 +195,12 @@ async def _async_domain_names(hass: HomeAssistant, domains: list[str]) -> str:
 
 
 @callback
-def _async_build_entities_filter(
-    domains: list[str], entities: list[str]
+def _async_build_include_filter(
+    domains: list[str],
+    entities: list[str],
+    areas: list[str] | None = None,
 ) -> EntityFilterDict:
-    """Build an entities filter from domains and entities."""
+    """Build an entities filter from domains, entities, and areas."""
     # Include all of the domain if there are no entities
     # explicitly included as the user selected the domain
     return _make_entity_filter(
@@ -188,6 +208,7 @@ def _async_build_entities_filter(
             set(domains).difference(_domains_set_from_entities(entities))
         ),
         include_entities=entities,
+        include_areas=areas,
     )
 
 
@@ -198,20 +219,36 @@ def _async_entities_in_domain(entities: list[str], domain: str) -> list[str]:
 
 
 @callback
-def _async_included_domain_entities(
+def _async_domain_filtered_entities(
     hass: HomeAssistant,
     entity_filter: EntityFilterDict,
-    entities: list[str],
-    domain: str,
-) -> list[str]:
-    """Return a domain's included entities, expanding a whole domain include.
+    domains: list[str],
+) -> dict[str, list[str]]:
+    """Return, per domain, the entities the resolved filter would bridge.
 
-    The whole domain is included when none of its entities are selected
-    explicitly.
+    Mirrors the runtime selection in ``HomeKit.async_configure_accessories``:
+    the visible entities the filter keeps, plus explicitly included entities,
+    which are exposed even when hidden or categorized.
     """
-    if domain in entity_filter[CONF_INCLUDE_DOMAINS]:
-        return _async_get_matching_entities(hass, [domain])
-    return _async_entities_in_domain(entities, domain)
+    is_included = TargetFilter(
+        TARGET_FILTER_CONFIG_SCHEMA(entity_filter)
+    ).async_get_filter(hass)
+    include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+    result: dict[str, list[str]] = {}
+    for domain in domains:
+        included = [
+            entity_id
+            for entity_id in _async_get_matching_entities(hass, [domain])
+            if is_included(entity_id)
+        ]
+        seen = set(included)
+        included.extend(
+            entity_id
+            for entity_id in _async_entities_in_domain(include_entities, domain)
+            if entity_id not in seen
+        )
+        result[domain] = included
+    return result
 
 
 async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
@@ -612,7 +649,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            entity_filter = _async_build_entities_filter(domains, entities)
+            entity_filter = _async_build_include_filter(domains, entities)
             self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
             self.included_climates = _async_entities_in_domain(entities, CLIMATE_DOMAIN)
             hk_options[CONF_FILTER] = entity_filter
@@ -656,18 +693,23 @@ class OptionsFlowHandler(OptionsFlow):
         domains = hk_options[CONF_DOMAINS]
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            entity_filter = _async_build_entities_filter(domains, entities)
-            self.included_cameras = _async_included_domain_entities(
-                self.hass, entity_filter, entities, CAMERA_DOMAIN
+            include_areas = cv.ensure_list(user_input.get(CONF_INCLUDE_AREAS, []))
+            entity_filter = _async_build_include_filter(
+                domains, entities, include_areas
             )
-            self.included_climates = _async_included_domain_entities(
-                self.hass, entity_filter, entities, CLIMATE_DOMAIN
+            filtered = _async_domain_filtered_entities(
+                self.hass, entity_filter, [CAMERA_DOMAIN, CLIMATE_DOMAIN]
             )
+            self.included_cameras = filtered[CAMERA_DOMAIN]
+            self.included_climates = filtered[CLIMATE_DOMAIN]
             hk_options[CONF_FILTER] = entity_filter
             return await self.async_step_cameras()
 
         entity_filter = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        current_include_areas = entity_filter.get(CONF_INCLUDE_TARGETS, {}).get(
+            ATTR_AREA_ID, []
+        )
         all_supported_entities = _async_get_matching_entities(
             self.hass, domains, include_entity_category=True, include_hidden=True
         )
@@ -691,6 +733,11 @@ class OptionsFlowHandler(OptionsFlow):
                             include_entities=all_supported_entities,
                         )
                     ),
+                    vol.Optional(
+                        CONF_INCLUDE_AREAS, default=current_include_areas
+                    ): selector.AreaSelector(
+                        selector.AreaSelectorConfig(multiple=True)
+                    ),
                 }
             ),
         )
@@ -704,25 +751,25 @@ class OptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
-
-            def _remaining_in_domain(domain: str) -> list[str]:
-                if domain not in domains:
-                    return []
-                return [
-                    entity_id
-                    for entity_id in _async_get_matching_entities(self.hass, [domain])
-                    if entity_id not in entities
-                ]
-
-            self.included_cameras = _remaining_in_domain(CAMERA_DOMAIN)
-            self.included_climates = _remaining_in_domain(CLIMATE_DOMAIN)
-            hk_options[CONF_FILTER] = _make_entity_filter(
-                include_domains=domains, exclude_entities=entities
+            exclude_areas = cv.ensure_list(user_input.get(CONF_EXCLUDE_AREAS, []))
+            entity_filter = _make_entity_filter(
+                include_domains=domains,
+                exclude_entities=entities,
+                exclude_areas=exclude_areas,
             )
+            filtered = _async_domain_filtered_entities(
+                self.hass, entity_filter, [CAMERA_DOMAIN, CLIMATE_DOMAIN]
+            )
+            self.included_cameras = filtered[CAMERA_DOMAIN]
+            self.included_climates = filtered[CLIMATE_DOMAIN]
+            hk_options[CONF_FILTER] = entity_filter
             return await self.async_step_cameras()
 
         entity_filter = self.hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        current_exclude_areas = entity_filter.get(CONF_EXCLUDE_TARGETS, {}).get(
+            ATTR_AREA_ID, []
+        )
 
         all_supported_entities = _async_get_matching_entities(self.hass, domains)
         if not entities:
@@ -748,6 +795,11 @@ class OptionsFlowHandler(OptionsFlow):
                             include_entities=all_supported_entities,
                         )
                     ),
+                    vol.Optional(
+                        CONF_EXCLUDE_AREAS, default=current_exclude_areas
+                    ): selector.AreaSelector(
+                        selector.AreaSelectorConfig(multiple=True)
+                    ),
                 }
             ),
         )
@@ -772,8 +824,13 @@ class OptionsFlowHandler(OptionsFlow):
         entity_filter: EntityFilterDict = self.hk_options.get(CONF_FILTER, {})
         include_exclude_mode = MODE_INCLUDE
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        include_areas = entity_filter.get(CONF_INCLUDE_TARGETS, {}).get(
+            ATTR_AREA_ID, []
+        )
         if homekit_mode != HOMEKIT_MODE_ACCESSORY:
-            include_exclude_mode = MODE_INCLUDE if entities else MODE_EXCLUDE
+            include_exclude_mode = (
+                MODE_INCLUDE if entities or include_areas else MODE_EXCLUDE
+            )
         domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
         if include_entities := entity_filter.get(CONF_INCLUDE_ENTITIES):
             domains.extend(_domains_set_from_entities(include_entities))

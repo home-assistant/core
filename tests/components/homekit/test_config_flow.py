@@ -17,7 +17,7 @@ from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
 
@@ -691,6 +691,216 @@ async def test_options_flow_include_mode_basic(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
+async def test_options_flow_include_mode_with_areas(hass: HomeAssistant) -> None:
+    """Test config flow options in include mode with areas."""
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("climate.old", "off")
+    hass.states.async_set("climate.new", "off")
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["fan", "vacuum", "climate"],
+            "include_exclude_mode": "include",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "include"
+    assert _get_schema_default(result["data_schema"].schema, "include_areas") == []
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "entities": ["climate.new"],
+            "include_areas": ["living_room"],
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "climate"
+    result2 = await hass.config_entries.options.async_configure(
+        result2["flow_id"],
+        user_input={},
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "bridged_device_triggers"
+
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"],
+        user_input={},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "devices": [],
+        "mode": "bridge",
+        "filter": {
+            "include_domains": ["fan", "vacuum"],
+            "include_entities": ["climate.new"],
+            "include_targets": {"area_id": ["living_room"]},
+            "exclude_domains": [],
+            "exclude_entities": [],
+        },
+    }
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_options_flow_include_mode_areas_only_detected(
+    hass: HomeAssistant,
+) -> None:
+    """Test include mode is detected when only areas are included."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            "mode": "bridge",
+            "filter": {
+                "include_domains": ["fan", "vacuum"],
+                "include_entities": [],
+                "include_targets": {"area_id": ["living_room"]},
+                "exclude_domains": [],
+                "exclude_entities": [],
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert (
+        _get_schema_default(result["data_schema"].schema, "include_exclude_mode")
+        == "include"
+    )
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["fan", "vacuum"],
+            "include_exclude_mode": "include",
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "include"
+    assert _get_schema_default(result2["data_schema"].schema, "include_areas") == [
+        "living_room"
+    ]
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    "domains",
+    [
+        pytest.param(["climate"], id="domain_and_area"),
+        pytest.param([], id="area_only"),
+    ],
+)
+async def test_options_flow_include_area_narrows_climate_step(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    domains: list[str],
+) -> None:
+    """Test an included area narrows the climate step to the area's entities."""
+    mancave = area_registry.async_create("Mancave")
+    kitchen = area_registry.async_create("Kitchen")
+
+    climate_mancave = entity_registry.async_get_or_create(
+        "climate", "test", "mancave", suggested_object_id="mancave"
+    )
+    entity_registry.async_update_entity(climate_mancave.entity_id, area_id=mancave.id)
+    climate_kitchen = entity_registry.async_get_or_create(
+        "climate", "test", "kitchen", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity(climate_kitchen.entity_id, area_id=kitchen.id)
+    hass.states.async_set(climate_mancave.entity_id, "off")
+    hass.states.async_set(climate_kitchen.entity_id, "off")
+    await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={"mode": "bridge", "filter": {"include_domains": []}},
+    )
+    config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"domains": domains, "include_exclude_mode": "include"},
+    )
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": [], "include_areas": [mancave.id]},
+    )
+    # Only the climate entity in the included area is offered for accessory
+    # configuration, not every climate entity in the house.
+    assert result2["step_id"] == "climate"
+    labels = [str(key) for key in result2["data_schema"].schema]
+    assert len(labels) == 1
+    assert climate_mancave.entity_id in labels[0]
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_options_flow_exclude_mode_with_areas(hass: HomeAssistant) -> None:
+    """Test config flow options in exclude mode with areas."""
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("climate.old", "off")
+    hass.states.async_set("climate.new", "off")
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["fan", "vacuum", "climate"],
+            "include_exclude_mode": "exclude",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "exclude"
+    assert _get_schema_default(result["data_schema"].schema, "exclude_areas") == []
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "entities": ["climate.old", "climate.new"],
+            "exclude_areas": ["garage"],
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "bridged_device_triggers"
+
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"],
+        user_input={},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "devices": [],
+        "mode": "bridge",
+        "filter": {
+            "include_domains": ["fan", "vacuum", "climate"],
+            "include_entities": [],
+            "exclude_domains": [],
+            "exclude_entities": ["climate.old", "climate.new"],
+            "exclude_targets": {"area_id": ["garage"]},
+        },
+    }
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
 async def test_options_flow_exclude_mode_with_cameras(hass: HomeAssistant) -> None:
     """Test config flow options in exclude mode with cameras."""
 
@@ -909,6 +1119,7 @@ async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> No
     assert result["step_id"] == "exclude"
     assert result["data_schema"]({}) == {
         "entities": ["camera.native_h264", "camera.transcode_h264"],
+        "exclude_areas": [],
     }
     schema = result["data_schema"].schema
     assert _get_schema_default(schema, "entities") == [
@@ -1060,6 +1271,7 @@ async def test_options_flow_with_camera_audio(hass: HomeAssistant) -> None:
     assert result["step_id"] == "exclude"
     assert result["data_schema"]({}) == {
         "entities": ["camera.audio", "camera.no_audio"],
+        "exclude_areas": [],
     }
     schema = result["data_schema"].schema
     assert _get_schema_default(schema, "entities") == [

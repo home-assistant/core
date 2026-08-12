@@ -33,7 +33,11 @@ from homeassistant.helpers.entityfilter import (
     CONF_INCLUDE_DOMAINS,
     CONF_INCLUDE_ENTITIES,
     CONF_INCLUDE_ENTITY_GLOBS,
-    convert_filter,
+)
+from homeassistant.helpers.target import (
+    CONF_EXCLUDE_TARGETS,
+    CONF_INCLUDE_TARGETS,
+    convert_target_filter,
 )
 
 from .util import PATH_HOMEKIT
@@ -86,14 +90,16 @@ async def _async_start_bridge(
 ) -> HomeKit:
     """Start a HomeKit instance exposing the demo climate entity."""
     hass.data.setdefault(PERSIST_LOCK_DATA, asyncio.Lock())
-    entity_filter = convert_filter(
+    target_filter = convert_target_filter(
         {
             CONF_INCLUDE_DOMAINS: [],
             CONF_INCLUDE_ENTITIES: [ENTITY_ID],
+            CONF_INCLUDE_ENTITY_GLOBS: [],
+            CONF_INCLUDE_TARGETS: {},
             CONF_EXCLUDE_DOMAINS: [],
             CONF_EXCLUDE_ENTITIES: [],
-            CONF_INCLUDE_ENTITY_GLOBS: [],
             CONF_EXCLUDE_ENTITY_GLOBS: [],
+            CONF_EXCLUDE_TARGETS: {},
         }
     )
     homekit = HomeKit(
@@ -101,7 +107,7 @@ async def _async_start_bridge(
         name="mock_name",
         port=DEFAULT_PORT,
         ip_address=None,
-        entity_filter=entity_filter,
+        target_filter=target_filter,
         exclude_accessory_mode=False,
         entity_config=entity_config or {},
         homekit_mode=homekit_mode,
