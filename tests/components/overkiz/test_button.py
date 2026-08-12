@@ -110,8 +110,8 @@ async def test_button_press(
     ("device", "command_name", "parameters"),
     [
         pytest.param(GO_TO_ALIAS, "goToAlias", ["1"], id="go_to_alias"),
-        pytest.param(STEP_POSITIVE, "stepPositive", [5, 0], id="step_positive"),
-        pytest.param(STEP_NEGATIVE, "stepNegative", [5, 0], id="step_negative"),
+        pytest.param(STEP_POSITIVE, "stepPositive", [5], id="step_positive"),
+        pytest.param(STEP_NEGATIVE, "stepNegative", [5], id="step_negative"),
     ],
 )
 async def test_button_press_with_args(

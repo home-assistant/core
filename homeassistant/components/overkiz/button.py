@@ -89,13 +89,13 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         name="Brightness up",
         icon="mdi:brightness-7",
         # step (0-127), execution duration (0-15, optional)
-        press_args=[5, 0],
+        press_args=[5],
     ),
     OverkizButtonDescription(
         key=OverkizCommand.STEP_NEGATIVE,
         name="Brightness down",
         icon="mdi:brightness-3",
-        press_args=[5, 0],
+        press_args=[5],
     ),
     # SmokeSensor
     OverkizButtonDescription(
