@@ -1,7 +1,6 @@
 """Test the ZhongHong setup and YAML import."""
 
 from typing import Any
-from unittest.mock import AsyncMock
 
 import pytest
 
@@ -80,7 +79,6 @@ async def test_setup_stops_listener_when_first_refresh_fails(
 async def test_yaml_import(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a YAML configuration is imported into a config entry."""
@@ -104,7 +102,6 @@ async def test_yaml_import(
 async def test_yaml_import_already_configured(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
@@ -125,24 +122,20 @@ async def test_yaml_import_with_an_unreachable_gateway(
     mock_gateway: FakeGateway,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test an unreachable gateway is imported anyway and retried.
+    """Test a gateway that does not answer is reported instead of imported.
 
-    The gateway takes a single connection at a time and can still be holding
-    the one from the previous run, so a restart is exactly when the import is
-    most likely to find it unreachable. The YAML platform is only set up once
-    per start, so refusing to import here would strand the user on YAML.
+    The YAML can describe a gateway that has since been replaced or taken
+    away, and a configuration entry that never works tells the user less than
+    being shown which part of it no longer holds.
     """
     mock_gateway.discovery_error = OSError
 
     assert await async_setup_component(hass, CLIMATE_DOMAIN, YAML_CONFIG)
     await hass.async_block_till_done()
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.SETUP_RETRY
-
+    assert not hass.config_entries.async_entries(DOMAIN)
     assert issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
 
 

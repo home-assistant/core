@@ -1,7 +1,7 @@
 """Common fixtures for the ZhongHong tests."""
 
 from collections.abc import Callable, Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from zhong_hong_hvac.protocol import (
@@ -177,18 +177,6 @@ def mock_gateway(gateway: FakeGateway) -> Generator[FakeGateway]:
         ),
     ):
         yield gateway
-
-
-@pytest.fixture
-def mock_socket_probe() -> Generator[AsyncMock]:
-    """Patch the config flow's reachability probe."""
-    writer = MagicMock(wait_closed=AsyncMock())
-    with patch(
-        "homeassistant.components.zhong_hong.config_flow.asyncio.open_connection",
-        new_callable=AsyncMock,
-        return_value=(MagicMock(), writer),
-    ) as probe:
-        yield probe
 
 
 @pytest.fixture

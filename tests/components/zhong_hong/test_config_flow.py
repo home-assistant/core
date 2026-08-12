@@ -1,6 +1,9 @@
 """Test the ZhongHong config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock
+
+import pytest
 
 from homeassistant.components.zhong_hong.config_flow import DISCOVERY_TIMEOUT
 from homeassistant.components.zhong_hong.const import (
@@ -13,8 +16,9 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 
-from .conftest import DEVICE_ADDRESS, HOST, FakeGateway
+from .conftest import HOST, FakeGateway
 
 from tests.common import MockConfigEntry
 
@@ -28,7 +32,6 @@ USER_INPUT = {
 async def test_user_flow(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the happy path of the user flow."""
@@ -55,41 +58,17 @@ async def test_user_flow(
     assert mock_gateway.discovery_timeouts == [DISCOVERY_TIMEOUT]
 
 
-async def test_user_flow_unreachable_host(
+async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test an unreachable host is reported and the flow can be retried."""
-    mock_socket_probe.side_effect = OSError
+    """Test a gateway that cannot be reached is reported, and can be retried.
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-    # The gateway is never asked to discover when the host does not answer.
-    assert mock_gateway.stop_listen_calls == 0
-
-    mock_socket_probe.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == USER_INPUT
-
-
-async def test_user_flow_discovery_fails(
-    hass: HomeAssistant,
-    mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test a host that answers but is not a gateway is reported."""
+    Discovery is what reports it, whether there is nothing at the address at
+    all or something that does not speak the protocol. Its bound covers
+    connecting, so neither costs more than the form can afford to wait.
+    """
     mock_gateway.discovery_error = OSError
 
     result = await hass.config_entries.flow.async_init(
@@ -98,7 +77,7 @@ async def test_user_flow_discovery_fails(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
-    # The probing gateway must not be left holding an open socket.
+    # A gateway that refused us must not be left holding an open socket.
     assert mock_gateway.stop_listen_calls == 1
 
     mock_gateway.discovery_error = None
@@ -108,12 +87,12 @@ async def test_user_flow_discovery_fails(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == USER_INPUT
 
 
 async def test_user_flow_no_devices_found(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test a gateway without air conditioners is reported."""
@@ -135,41 +114,9 @@ async def test_user_flow_no_devices_found(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_closes_the_probe_before_discovering(
-    hass: HomeAssistant,
-    mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test the probe socket is gone before discovery opens its own.
-
-    The gateway takes one connection at a time, so a probe still on its way
-    out would have discovery refused and report a reachable gateway as
-    unreachable.
-    """
-    writer = mock_socket_probe.return_value[1]
-    closed_before_discovery = False
-
-    def _discovery_ac(timeout: float | None = None) -> list[tuple[int, int]]:
-        nonlocal closed_before_discovery
-        closed_before_discovery = writer.wait_closed.await_count == 1
-        return [DEVICE_ADDRESS]
-
-    mock_gateway.discovery_ac = _discovery_ac
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert closed_before_discovery
-
-
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -187,7 +134,6 @@ async def test_user_flow_already_configured(
 async def test_user_flow_second_gateway_on_another_port(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -207,7 +153,6 @@ async def test_user_flow_second_gateway_on_another_port(
 async def test_import_flow(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test a YAML configuration is imported."""
@@ -221,36 +166,46 @@ async def test_import_flow(
     assert result["data"] == USER_INPUT
 
 
-async def test_import_flow_does_not_touch_the_gateway(
+@pytest.mark.parametrize(
+    ("attribute", "value", "reason"),
+    [
+        ("discovery_error", OSError, "cannot_connect"),
+        ("discovery_result", [], "no_devices_found"),
+    ],
+    ids=["cannot_connect", "no_devices_found"],
+)
+async def test_import_flow_with_a_gateway_that_does_not_answer(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
     mock_setup_entry: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    attribute: str,
+    value: Any,
+    reason: str,
 ) -> None:
-    """Test an import goes through without the gateway being reachable.
+    """Test YAML that no longer describes a working gateway is not imported.
 
-    The gateway takes one connection at a time and may still be holding the
-    previous run's, so checking it here would fail for reasons that say
-    nothing about the configuration. Setting up the entry retries; this does
-    not.
+    The configuration can have gone stale since it was written, and a
+    configuration entry that never works is worse than being told why.
     """
-    mock_socket_probe.side_effect = OSError
-    mock_gateway.discovery_error = OSError
+    setattr(mock_gateway, attribute, value)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == USER_INPUT
-    assert mock_socket_probe.call_count == 0
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_yaml_import_issue_{reason}"
+    )
 
 
 async def test_import_flow_already_configured(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
-    mock_socket_probe: AsyncMock,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
