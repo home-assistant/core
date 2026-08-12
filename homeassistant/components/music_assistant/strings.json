@@ -387,12 +387,16 @@
           "description": "Use a forced volume level for the announcement. Omit to use player default.",
           "name": "Announce volume"
         },
+        "message": {
+          "description": "Text to announce, spoken by the default text-to-speech engine. Provide either a message or a URL.",
+          "name": "Message"
+        },
         "pre_announce_url": {
           "description": "URL to the pre-announcement sound.",
           "name": "Pre-announce URL"
         },
         "url": {
-          "description": "URL to the notification sound.",
+          "description": "URL to the notification sound. Provide either a message or a URL.",
           "name": "URL"
         },
         "use_pre_announce": {

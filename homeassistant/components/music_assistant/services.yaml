@@ -62,8 +62,14 @@ play_announcement:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
         - media_player.MediaPlayerEntityFeature.MEDIA_ANNOUNCE
   fields:
+    message:
+      required: false
+      example: "Dinner is ready!"
+      selector:
+        text:
+          multiline: true
     url:
-      required: true
+      required: false
       example: "http://someremotesite.com/doorbell.mp3"
       selector:
         text:

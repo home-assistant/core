@@ -36,6 +36,7 @@ from .const import (
     ATTR_LIMIT,
     ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
+    ATTR_MESSAGE,
     ATTR_OFFSET,
     ATTR_ORDER_BY,
     ATTR_PLAYLISTS,
@@ -150,12 +151,19 @@ def register_actions(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_PLAY_ANNOUNCEMENT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={
-            vol.Required(ATTR_URL): cv.string,
-            vol.Optional(ATTR_USE_PRE_ANNOUNCE): vol.Coerce(bool),
-            vol.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
-            vol.Optional(ATTR_ANNOUNCE_VOLUME): vol.Coerce(int),
-        },
+        schema=vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional(ATTR_URL): cv.string,
+                    vol.Optional(ATTR_MESSAGE): cv.string,
+                    vol.Optional(ATTR_USE_PRE_ANNOUNCE): vol.Coerce(bool),
+                    vol.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
+                    vol.Optional(ATTR_ANNOUNCE_VOLUME): vol.Coerce(int),
+                }
+            ),
+            cv.has_at_least_one_key(ATTR_URL, ATTR_MESSAGE),
+            cv.has_at_most_one_key(ATTR_URL, ATTR_MESSAGE),
+        ),
         func="_async_handle_play_announcement",
     )
     service.async_register_platform_entity_service(

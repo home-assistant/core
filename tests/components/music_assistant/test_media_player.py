@@ -1,5 +1,7 @@
 """Test Music Assistant media player entities."""
 
+from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, call
 
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
@@ -14,6 +16,7 @@ from music_assistant_models.player import PlayerMedia
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
+import voluptuous as vol
 
 from homeassistant.auth.models import Credentials
 from homeassistant.components.media_player import (
@@ -37,6 +40,7 @@ from homeassistant.components.media_player import (
     SERVICE_UNJOIN,
     MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_source import DOMAIN as MEDIA_SOURCE_DOMAIN
 from homeassistant.components.music_assistant.const import (
     ATTR_ALBUM,
     ATTR_ANNOUNCE_VOLUME,
@@ -44,6 +48,7 @@ from homeassistant.components.music_assistant.const import (
     ATTR_AUTO_PLAY,
     ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
+    ATTR_MESSAGE,
     ATTR_PRE_ANNOUNCE_URL,
     ATTR_RADIO_MODE,
     ATTR_SOURCE_PLAYER,
@@ -58,7 +63,8 @@ from homeassistant.components.music_assistant.services import (
     SERVICE_PLAY_MEDIA_ADVANCED,
     SERVICE_TRANSFER_QUEUE,
 )
-from homeassistant.config_entries import HomeAssistantError
+from homeassistant.components.tts import DATA_TTS_MANAGER
+from homeassistant.config_entries import ConfigFlow, HomeAssistantError
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -77,8 +83,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import (
     setup_integration_from_fixtures,
@@ -86,7 +94,12 @@ from .common import (
     trigger_subscription_callback,
 )
 
-from tests.common import AsyncMock, MockUser
+from tests.common import AsyncMock, MockUser, mock_config_flow, mock_platform
+from tests.components.tts.common import (
+    DEFAULT_LANG,
+    MockTTSEntity,
+    mock_config_entry_setup,
+)
 
 MOCK_TRACK = Track(
     item_id="1",
@@ -94,6 +107,10 @@ MOCK_TRACK = Track(
     name="Test Track",
     provider_mappings={},
 )
+
+
+class MockTTSConfigFlow(ConfigFlow):
+    """Config flow for the mock text-to-speech integration."""
 
 
 async def test_media_player(
@@ -1002,6 +1019,83 @@ async def test_media_player_play_announcement_action(
         volume_level=50,
         pre_announce_url="http://blah.com/chime.mp3",
     )
+
+
+async def test_media_player_play_announcement_action_with_message(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    mock_tts_cache_dir: Path,
+) -> None:
+    """Test media_player play_announcement action with a spoken message."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"}
+    )
+    assert await async_setup_component(hass, MEDIA_SOURCE_DOMAIN, {})
+    mock_platform(hass, "test.config_flow")
+    with mock_config_flow("test", MockTTSConfigFlow):
+        await mock_config_entry_setup(hass, MockTTSEntity(DEFAULT_LANG))
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_ANNOUNCEMENT,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MESSAGE: "Dinner is ready!",
+            ATTR_USE_PRE_ANNOUNCE: True,
+            ATTR_ANNOUNCE_VOLUME: 50,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    announcement_url = music_assistant_client.send_command.call_args.kwargs["url"]
+    # the message is rendered by the Home Assistant TTS engine and handed over
+    # to Music Assistant as an absolute URL it can fetch
+    assert announcement_url.startswith("http://example.local:8123/api/tts_proxy/")
+    stream = hass.data[DATA_TTS_MANAGER].token_to_stream[
+        announcement_url.rsplit("/", 1)[-1]
+    ]
+    assert stream.engine == "tts.test"
+    assert music_assistant_client.send_command.call_args == call(
+        "players/cmd/play_announcement",
+        player_id=mass_player_id,
+        url=announcement_url,
+        pre_announce=True,
+        volume_level=50,
+        pre_announce_url=None,
+    )
+
+
+@pytest.mark.parametrize(
+    "announcement_data",
+    [
+        {},
+        {
+            ATTR_URL: "http://blah.com/announcement.mp3",
+            ATTR_MESSAGE: "Dinner is ready!",
+        },
+    ],
+    ids=["neither", "both"],
+)
+async def test_media_player_play_announcement_action_invalid_input(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    announcement_data: dict[str, Any],
+) -> None:
+    """Test play_announcement action requires exactly one of message and url."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_ANNOUNCEMENT,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player_1",
+                **announcement_data,
+            },
+            blocking=True,
+        )
+    assert music_assistant_client.send_command.call_count == 0
 
 
 async def test_media_player_transfer_queue_action(
