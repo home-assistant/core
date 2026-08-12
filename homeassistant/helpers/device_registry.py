@@ -1587,7 +1587,7 @@ class ChildDeviceRegistryItems(BaseRegistryItems[ChildDeviceEntry]):
         self._unindex_entry_value(
             key, entry.config_entry_id, self._config_entry_id_index
         )
-        if area_id := entry.area_id:
+        if (area_id := entry.area_id) is not None:
             self._unindex_entry_value(key, area_id, self._area_id_index)
         for label in entry.labels:
             self._unindex_entry_value(key, label, self._labels_index)
@@ -2463,7 +2463,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
         created_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
-        identifiers: set[tuple[str, str]] | UndefinedType | None = UNDEFINED,
+        identifiers: set[tuple[str, str]],
         modified_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
         name: str | UndefinedType | None = UNDEFINED,
         parent_device_id: str,
@@ -2492,9 +2492,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 config_entry, translation_key, translation_placeholders
             )
 
-        if identifiers is None or identifiers is UNDEFINED:
-            identifiers = set()
-
         # Reconstruct a ChildDeviceInfo dict from the arguments, used for error reporting
         # and conversion of an existing device to a child device.
         device_info: DeviceInfo = {  # type: ignore[assignment]
@@ -2509,6 +2506,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         }
 
         domain = config_entry.domain
+
+        if not identifiers:
+            raise DeviceInfoError(
+                domain,
+                device_info,
+                "a child device must have at least one identifier",
+            )
+        if len(identifiers) > 1:
+            raise DeviceInfoError(
+                domain,
+                device_info,
+                "a child device can have at most one identifier",
+            )
 
         parent = self._device_data.get(parent_device_id)
         if parent is None:

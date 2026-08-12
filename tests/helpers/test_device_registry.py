@@ -10027,6 +10027,27 @@ async def test_child_device_update_identifiers(
 
 
 @pytest.mark.usefixtures("hass")
+async def test_child_device_get_or_create_rejects_invalid_identifier_count(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a child device with zero or multiple identifiers is rejected."""
+    parent, _child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    with pytest.raises(dr.DeviceInfoError, match="must have at least one identifier"):
+        device_registry.async_get_or_create_child(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers=set(),
+            parent_device_id=parent.id,
+            name="Outlet 1",
+        )
+    # The rejected registration leaves the existing child unchanged
+    assert len(device_registry.child_devices) == 1
+
+
+@pytest.mark.usefixtures("hass")
 async def test_child_device_get_or_create_merges_identifiers(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
