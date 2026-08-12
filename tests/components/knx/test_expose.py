@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 
 from .conftest import KNXTestKit
 
@@ -50,6 +50,39 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # Change attribute and state
     hass.states.async_set(entity_id, "off", {"brightness": 0})
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", False)
+
+
+async def test_binary_expose_does_not_send_initial_state_during_startup(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test an initial state during startup is not exposed to KNX."""
+    entity_id = "binary_sensor.fake"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "binary",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+            }
+        },
+    )
+
+    hass.set_state(CoreState.starting)
+
+    # Restored/initial state during startup initializes the expose value only.
+    hass.states.async_set(entity_id, "on", {})
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+
+    # The initialized value is available for GroupValueRead responses.
+    await knx.receive_read("1/1/8")
+    await knx.assert_response("1/1/8", True)
+
+    # Once startup is complete, actual state changes are exposed normally.
+    hass.set_state(CoreState.running)
+    hass.states.async_set(entity_id, "off", {})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", False)
 
