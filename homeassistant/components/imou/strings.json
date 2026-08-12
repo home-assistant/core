@@ -124,7 +124,19 @@
     }
   },
   "exceptions": {
+    "get_image_failed": {
+      "message": "Error communicating with the Imou API"
+    },
+    "get_stream_failed": {
+      "message": "Error communicating with the Imou API"
+    },
+    "press_button_failed": {
+      "message": "Error communicating with the Imou API"
+    },
     "select_option_failed": {
+      "message": "Error communicating with the Imou API"
+    },
+    "switch_operation_failed": {
       "message": "Error communicating with the Imou API"
     }
   },
