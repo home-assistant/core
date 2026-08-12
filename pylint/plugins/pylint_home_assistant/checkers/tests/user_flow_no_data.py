@@ -36,11 +36,11 @@ def _context_source_is_user(context: nodes.NodeNG) -> bool:
         if not (isinstance(key, nodes.Const) and key.value == "source"):
             continue
         if isinstance(value, nodes.Const):
-            return value.value == _USER
+            return bool(value.value == _USER)
         if isinstance(value, nodes.Name):
-            return value.name == _SOURCE_USER
+            return bool(value.name == _SOURCE_USER)
         if isinstance(value, nodes.Attribute):
-            return value.attrname == _SOURCE_USER
+            return bool(value.attrname == _SOURCE_USER)
         return False
     return False
 
