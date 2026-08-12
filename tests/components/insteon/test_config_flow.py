@@ -118,9 +118,7 @@ async def test_fail_on_existing(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
