@@ -5,7 +5,9 @@ from copy import deepcopy
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+from aiohttp import ClientError
 from aiopowerwall import (
+    DEFAULT_GATEWAY_HOST,
     PowerwallAuthenticationError,
     PowerwallConnectionError,
     PowerwallError,
@@ -838,3 +840,155 @@ async def test_wall_connector_only_site_not_offered_for_local_control(
     schema = result["data_schema"].schema
     site_field = next(iter(schema))
     assert set(schema[site_field].container) == {str(SITE_ID)}
+
+
+async def test_add_flow_aborts_when_entry_not_loaded(hass: HomeAssistant) -> None:
+    """The add flow aborts when the account entry is not loaded.
+
+    The resolved energy sites only exist while the entry is loaded, so a flow
+    started against an unloaded entry cannot read them and must bail out.
+    """
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_ENERGY_SITE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_gateway_discovery_failure_proceeds_without_host(
+    hass: HomeAssistant,
+) -> None:
+    """A failed gateway-address discovery leaves the host default unset."""
+    entry = await _setup_account_no_subentry(hass)
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
+            new=AsyncMock(side_effect=ClientError),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
+        ),
+    ):
+        result = await _start_add_flow_select_site(hass, entry)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+    assert _credentials_host_default(result) == DEFAULT_GATEWAY_HOST
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_pending_key_resumes_without_reregister(hass: HomeAssistant) -> None:
+    """A key already pending on the gateway resumes pairing without re-adding it."""
+    entry = await _setup_account_no_subentry(hass)
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(
+                    AuthorizedClientState.PENDING_VERIFICATION
+                )
+            ),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
+            new=AsyncMock(),
+        ) as mock_add,
+    ):
+        result = await _start_add_flow_select_site(hass, entry)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    mock_add.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_unrecognized_state_aborts_pairing(hass: HomeAssistant) -> None:
+    """An unrecognized authorized-client state aborts rather than re-registering."""
+    entry = await _setup_account_no_subentry(hass)
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(return_value=_own_key_clients("gremlin")),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
+            new=AsyncMock(),
+        ) as mock_add,
+    ):
+        result = await _start_add_flow_select_site(hass, entry)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    mock_add.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_add_authorized_client_failure_aborts(hass: HomeAssistant) -> None:
+    """A failure while registering the key aborts the flow."""
+    entry = await _setup_account_no_subentry(hass)
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(return_value=_empty_clients()),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
+            new=AsyncMock(side_effect=ClientError),
+        ),
+    ):
+        result = await _start_add_flow_select_site(hass, entry)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+@pytest.mark.parametrize(
+    ("second_lookup", "expected_error"),
+    [
+        pytest.param(InvalidResponse(), "cannot_connect", id="lookup_failure"),
+        pytest.param(_empty_clients(), "key_not_registered", id="key_not_registered"),
+        pytest.param(_own_key_clients("gremlin"), "cannot_connect", id="unknown_state"),
+    ],
+)
+async def test_pair_step_second_lookup_errors(
+    hass: HomeAssistant,
+    second_lookup: Exception | AuthorizedClients,
+    expected_error: str,
+) -> None:
+    """Re-checking the pending key reports each non-approval outcome on the form."""
+    entry = await _setup_account_no_subentry(hass)
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(side_effect=[_empty_clients(), second_lookup]),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
+            new=AsyncMock(),
+        ),
+    ):
+        result = await _start_add_flow_select_site(hass, entry)
+        assert result["step_id"] == "pair"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    assert result["errors"] == {"base": expected_error}
