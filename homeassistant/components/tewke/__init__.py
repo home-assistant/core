@@ -18,11 +18,7 @@ if TYPE_CHECKING:
     from .data import TewkeConfigEntry
 
 PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
     Platform.LIGHT,
-    Platform.NUMBER,
-    Platform.SENSOR,
 ]
 
 
