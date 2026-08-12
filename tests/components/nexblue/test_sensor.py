@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from nexblue_api import NexBlueDeviceOfflineError, NexBlueError
 import pytest
 
+from homeassistant.components.nexblue.const import DOMAIN
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -31,8 +32,9 @@ async def test_sensors(
     assert brightness.attributes["unit_of_measurement"] == PERCENTAGE
     assert brightness.attributes["state_class"] == "measurement"
 
-    device = device_registry.async_get_device(
-        identifiers={("nexblue", CHARGER.serial_number)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, CHARGER.serial_number),
+        init_integration.entry_id,
     )
     assert device is not None
     assert device.name == CHARGER.serial_number
