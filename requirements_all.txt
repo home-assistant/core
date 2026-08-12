@@ -2694,6 +2694,9 @@ python-homeassistant-analytics==0.9.0
 # homeassistant.components.homewizard
 python-homewizard-energy==10.2.0
 
+# homeassistant.components.hotspring
+python-hotspring==1.3.0
+
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
 
