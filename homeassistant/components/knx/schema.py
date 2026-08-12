@@ -71,6 +71,7 @@ from .const import (
     FanZeroMode,
     NumberConf,
     SceneConf,
+    SelectConf,
 )
 from .dpt import get_supported_dpts
 from .validation import (
@@ -139,8 +140,8 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     payloads_seen = set()
     payload_length = entity_config[CONF_PAYLOAD_LENGTH]
 
-    for opt in entity_config[SelectSchema.CONF_OPTIONS]:
-        option = opt[SelectSchema.CONF_OPTION]
+    for opt in entity_config[SelectConf.OPTIONS]:
+        option = opt[SelectConf.OPTION]
         payload = opt[CONF_PAYLOAD]
         if payload > (max_payload := _max_payload_value(payload_length)):
             raise vol.Invalid(
@@ -831,9 +832,6 @@ class SelectSchema(KNXPlatformSchema):
 
     PLATFORM = Platform.SELECT
 
-    CONF_OPTION = "option"
-    CONF_OPTIONS = "options"
-
     ENTITY_SCHEMA = vol.All(
         _entity_base_schema(PLATFORM).extend(
             {
@@ -842,9 +840,9 @@ class SelectSchema(KNXPlatformSchema):
                 vol.Required(CONF_PAYLOAD_LENGTH): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=14)
                 ),
-                vol.Required(CONF_OPTIONS): [
+                vol.Required(SelectConf.OPTIONS): [
                     {
-                        vol.Required(CONF_OPTION): vol.Coerce(str),
+                        vol.Required(SelectConf.OPTION): vol.Coerce(str),
                         vol.Required(CONF_PAYLOAD): cv.positive_int,
                     }
                 ],
