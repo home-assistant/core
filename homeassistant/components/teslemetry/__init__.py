@@ -639,7 +639,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     device=device,
                     can_local_control=can_local_control,
                     subentry_id=subentry_id,
-                    gateway_id=product.get("gateway_id"),
                 )
             )
 

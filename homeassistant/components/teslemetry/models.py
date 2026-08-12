@@ -64,7 +64,3 @@ class TeslemetryEnergyData:
     # The id of the user-added local-control subentry bound to this site, or None
     # when the site has not been opted into local control.
     subentry_id: str | None
-    # The site's gateway DIN as the cloud reports it, which pairing compares
-    # against the DIN the local gateway reports so a subentry can only ever be
-    # bound to its own hardware. None when the cloud omits it.
-    gateway_id: str | None
