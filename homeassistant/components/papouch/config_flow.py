@@ -9,12 +9,13 @@ from typing import Any, override
 
 import aiohttp
 from aiopapouch import PapouchHTTPClient, create_device, is_device_supported
-from aiopapouch.exceptions import DeviceAuthError
+from aiopapouch.exceptions import DeviceAuthError, DeviceLogicError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import PapouchConfigEntry
@@ -82,6 +83,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             if entry.data.get("ip_address") == user_input["ip_address"]:
                 return {}, self.async_abort(reason="already_configured")
 
+        ip_address = user_input["ip_address"]
         password = str(user_input.get("password", ""))
         errors, mode_device = await self._test_connection(
             user_input["ip_address"], password
@@ -94,7 +96,20 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             if mode_device != WEB_MODE_INDEX:
                 return {}, await self.async_step_web_mode()
 
-            title_name = await self._get_device_name(user_input["ip_address"], password)
+            session = async_get_clientsession(self.hass)
+            client = PapouchHTTPClient(ip_address, session, password=password)
+
+            title_name = await self._get_device_name(ip_address, password)
+
+            try:
+                mac_address = await client.get_device_mac()
+            except aiohttp.ClientError, DeviceLogicError:
+                return {"base": "cannot_connect"}, None
+
+            if mac_address:
+                formatted_mac = format_mac(mac_address)
+                await self.async_set_unique_id(formatted_mac)
+                self._abort_if_unique_id_configured()
 
             data = {
                 "ip_address": user_input["ip_address"],
@@ -120,14 +135,43 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         """Discover the device from a DHCP request."""
 
         self.discovered_ip = discovery_info.ip
+        discovered_mac = format_mac(discovery_info.macaddress)
+
+        await self.async_set_unique_id(discovered_mac)
 
         for entry in self._async_current_entries():
-            if entry.data.get("ip_address") == self.discovered_ip:
+            if entry.unique_id == discovered_mac:
+                if entry.data.get("ip_address") != self.discovered_ip:
+                    base_title = (
+                        entry.title.rsplit(" - ", 1)[0]
+                        if " - " in entry.title
+                        else entry.title
+                    )
+                    new_title = f"{base_title} - {self.discovered_ip}"
+
+                    updated_data = {
+                        **entry.data,
+                        "ip_address": self.discovered_ip,
+                    }
+
+                    self.hass.config_entries.async_update_entry(
+                        entry, data=updated_data, title=new_title
+                    )
+
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
+
                 return self.async_abort(reason="already_configured")
 
-        discovered_mac = discovery_info.macaddress
-        await self.async_set_unique_id(discovered_mac)
-        self._abort_if_unique_id_configured(updates={"ip_address": self.discovered_ip})
+            if (
+                entry.unique_id is None
+                and entry.data.get("ip_address") == self.discovered_ip
+            ):
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=discovered_mac
+                )
+                return self.async_abort(reason="already_configured")
 
         session = async_get_clientsession(self.hass)
         client = PapouchHTTPClient(self.discovered_ip, session)
@@ -142,9 +186,8 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         if not is_device_supported(device_name):
             return self.async_abort(reason="unsupported_device")
 
-        self.discovered_name = (
-            f"{device_name} ({device_location}) - {self.discovered_ip}"
-        )
+        title_name = f"{device_name} ({device_location})"
+        self.discovered_name = f"{title_name} - {self.discovered_ip}"
 
         self.context.update({"title_placeholders": {"name": self.discovered_name}})
 
@@ -307,6 +350,16 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             await device.switch_to_web_mode()
 
             title_name = await self._get_device_name(ip_address, password)
+
+            try:
+                mac_address = await client.get_device_mac()
+            except aiohttp.ClientError, DeviceLogicError:
+                return self.async_abort(reason="cannot_connect")
+
+            if mac_address:
+                formatted_mac = format_mac(mac_address)
+                await self.async_set_unique_id(formatted_mac)
+                self._abort_if_unique_id_configured()
 
             data = {
                 "ip_address": ip_address,

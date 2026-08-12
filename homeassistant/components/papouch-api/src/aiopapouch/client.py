@@ -8,7 +8,9 @@ from typing import Any, override
 import aiohttp
 import defusedxml.ElementTree as defused_ET
 
-from .exceptions import DeviceAuthError, DeviceConnectionError
+from homeassistant.helpers.device_registry import format_mac
+
+from .exceptions import DeviceAuthError, DeviceConnectionError, DeviceLogicError
 
 INFO_URL = "is.xml"
 DATA_URL = "fresh.xml"
@@ -62,6 +64,10 @@ class PapouchTransport(ABC):
     @abstractmethod
     async def get_device_info(self) -> tuple[str | None, str | None]:
         """Return name and location of the device."""
+
+    @abstractmethod
+    async def get_device_mac(self) -> str:
+        """Return MAC of the device."""
 
     @property
     @abstractmethod
@@ -131,6 +137,19 @@ class PapouchHTTPClient(PapouchTransport):
         device_location = heartbeat.attrib.get("location")
 
         return (device_name, device_location)
+
+    @override
+    async def get_device_mac(self) -> str:
+        settings = await self.fetch_settings()
+        root = defused_ET.fromstring(settings)
+        box = root.find(".//set[@box='12']")
+
+        if box is not None:
+            return format_mac(str(box.attrib.get("mac", "")))
+
+        raise DeviceLogicError(
+            f"Device: {self.ip_address} doesn't have a box 12 with MAC address"
+        )
 
     async def _send_request(
         self, method: str, endpoint: str, context: str, **kwargs: Any

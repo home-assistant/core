@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
-from aiopapouch.exceptions import DeviceAuthError
+from aiopapouch.exceptions import DeviceAuthError, DeviceLogicError
 import pytest
 
 from homeassistant import data_entry_flow
@@ -50,7 +50,7 @@ def mock_discover_found():
 
 @pytest.fixture
 def mock_api_client():
-    """Fixture to mock API client fetch info and device mode methods."""
+    """Fixture to mock API client fetch info, device mode and MAC methods."""
     with (
         patch(
             "homeassistant.components.papouch.config_flow.PapouchHTTPClient.fetch_info"
@@ -63,8 +63,12 @@ def mock_api_client():
             "homeassistant.components.papouch.config_flow.PapouchHTTPClient.get_device_info",
             return_value=("Quido", "Lab"),
         ) as mock_info,
+        patch(
+            "homeassistant.components.papouch.config_flow.PapouchHTTPClient.get_device_mac",
+            return_value="00:11:22:33:44:55",
+        ) as mock_mac,
     ):
-        yield mock_fetch, mock_mode, mock_info
+        yield mock_fetch, mock_mode, mock_info, mock_mac
 
 
 @pytest.fixture
@@ -110,6 +114,7 @@ async def test_manual_success(
     assert result2["title"] == "Quido (Lab) - 192.168.1.50"
     assert result2["data"]["ip_address"] == "192.168.1.50"
     assert result2["data"]["password"] == "admin"
+    assert result2["data"]["device_name"] == "Quido (Lab)"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -117,7 +122,7 @@ async def test_manual_success_fallback_title(
     hass: HomeAssistant, mock_discover_none, mock_api_client, mock_setup_entry
 ) -> None:
     """Test successful setup but fallback to Papouch Device if info fails."""
-    _, _, mock_info = mock_api_client
+    _, _, mock_info, _ = mock_api_client
     mock_info.side_effect = aiohttp.ClientError
 
     result = await hass.config_entries.flow.async_init(
@@ -137,7 +142,7 @@ async def test_manual_connection_error(
     hass: HomeAssistant, mock_discover_none, mock_api_client
 ) -> None:
     """Test handling of connection errors during manual IP entry."""
-    mock_fetch, _, _ = mock_api_client
+    mock_fetch, _, _, _ = mock_api_client
     mock_fetch.side_effect = aiohttp.ClientError
 
     result = await hass.config_entries.flow.async_init(
@@ -172,6 +177,7 @@ async def test_dhcp_already_configured(hass: HomeAssistant, dhcp_info) -> None:
         domain=DOMAIN,
         data={"ip_address": "192.168.1.100"},
         options={"refresh_rate": 60},
+        unique_id="aa:bb:cc:dd:ee:ff",
     )
     entry.add_to_hass(hass)
 
@@ -183,6 +189,73 @@ async def test_dhcp_already_configured(hass: HomeAssistant, dhcp_info) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_dhcp_ip_update(hass: HomeAssistant, dhcp_info, mock_setup_entry) -> None:
+    """Test DHCP updates IP address of an existing entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Quido (Lab) - 192.168.1.99",
+        data={"ip_address": "192.168.1.99"},
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "dhcp"}, data=dhcp_info
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data["ip_address"] == "192.168.1.100"
+    assert entry.title == "Quido (Lab) - 192.168.1.100"
+
+
+async def test_dhcp_heal_legacy_entry(hass: HomeAssistant, dhcp_info) -> None:
+    """Test DHCP updates an existing entry that lacks a unique_id."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Quido (Lab) - 192.168.1.100",
+        data={"ip_address": "192.168.1.100"},
+        unique_id=None,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "dhcp"}, data=dhcp_info
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+
+
+async def test_web_mode_mac_error(
+    hass: HomeAssistant, mock_discover_none, mock_api_client, mock_create_device
+) -> None:
+    """Test web mode switch aborts if getting MAC address fails."""
+    _, mock_mode, _, mock_mac = mock_api_client
+
+    mock_mode.return_value = 2
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "supersecret"},
+    )
+
+    mock_mac.side_effect = aiohttp.ClientError
+
+    result_cannot_connect = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], {"next_step_id": "execute_switch"}
+    )
+
+    assert result_cannot_connect["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result_cannot_connect["reason"] == "cannot_connect"
+
+
 async def test_web_mode_switch(
     hass: HomeAssistant,
     mock_discover_none,
@@ -191,7 +264,7 @@ async def test_web_mode_switch(
     mock_setup_entry,
 ) -> None:
     """Test the config flow when the device requires switching to WEB mode."""
-    _, mock_mode, _ = mock_api_client
+    _, mock_mode, _, _ = mock_api_client
     mock_mode.return_value = 2
 
     result = await hass.config_entries.flow.async_init(
@@ -236,7 +309,7 @@ async def test_dhcp_unsupported_device(
     hass: HomeAssistant, dhcp_info, mock_api_client, mock_create_device
 ) -> None:
     """Test DHCP discovery aborts when an unsupported device is detected."""
-    _, _, mock_info = mock_api_client
+    _, _, mock_info, _ = mock_api_client
     mock_info.return_value = ("UnknownDeviceName123", "Lab")
 
     result = await hass.config_entries.flow.async_init(
@@ -294,7 +367,7 @@ async def test_mode_missing_abort(
     hass: HomeAssistant, mock_discover_none, mock_api_client
 ) -> None:
     """Test config flow aborts when the device mode is missing."""
-    _, mock_mode, _ = mock_api_client
+    _, mock_mode, _, _ = mock_api_client
     mock_mode.return_value = -1
 
     result = await hass.config_entries.flow.async_init(
@@ -314,7 +387,7 @@ async def test_web_mode_abort_switch(
     hass: HomeAssistant, mock_discover_none, mock_api_client
 ) -> None:
     """Test aborting the config flow from the web mode menu."""
-    _, mock_mode, _ = mock_api_client
+    _, mock_mode, _, _ = mock_api_client
     mock_mode.return_value = 2
 
     result = await hass.config_entries.flow.async_init(
@@ -338,7 +411,7 @@ async def test_web_mode_unsupported_device(
     hass: HomeAssistant, mock_discover_none, mock_api_client, mock_create_device
 ) -> None:
     """Test config flow aborts when switching to web mode on an unsupported device."""
-    _, mock_mode, _ = mock_api_client
+    _, mock_mode, _, _ = mock_api_client
     mock_mode.return_value = 2
 
     result = await hass.config_entries.flow.async_init(
@@ -363,7 +436,7 @@ async def test_web_mode_client_error(
     hass: HomeAssistant, mock_discover_none, mock_api_client, mock_create_device
 ) -> None:
     """Test config flow aborts on client error during web mode switch execution."""
-    _, mock_mode, _ = mock_api_client
+    _, mock_mode, _, _ = mock_api_client
     mock_mode.return_value = 2
 
     result = await hass.config_entries.flow.async_init(
@@ -388,7 +461,7 @@ async def test_dhcp_client_error(
     hass: HomeAssistant, dhcp_info, mock_api_client, mock_create_device
 ) -> None:
     """Test DHCP discovery aborts on client error when fetching device info."""
-    _, _, mock_info = mock_api_client
+    _, _, mock_info, _ = mock_api_client
     mock_info.side_effect = aiohttp.ClientError
 
     result = await hass.config_entries.flow.async_init(
@@ -407,7 +480,7 @@ async def test_discovery_confirm_mode_missing(
         DOMAIN, context={"source": "dhcp"}, data=dhcp_info
     )
 
-    _, mock_mode, _ = mock_api_client
+    _, mock_mode, _, _ = mock_api_client
     mock_mode.return_value = -1
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -427,7 +500,7 @@ async def test_discovery_confirm_web_mode_redirect(
         DOMAIN, context={"source": "dhcp"}, data=dhcp_info
     )
 
-    _, mock_mode, _ = mock_api_client
+    _, mock_mode, _, _ = mock_api_client
     mock_mode.return_value = 2
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -517,7 +590,7 @@ async def test_user_step_mode_missing(
     hass: HomeAssistant, mock_discover_found, mock_api_client
 ) -> None:
     """Test the mode_is_missing abort directly from the user step."""
-    _, mock_mode, _ = mock_api_client
+    _, mock_mode, _, _ = mock_api_client
     mock_mode.return_value = -1
 
     result = await hass.config_entries.flow.async_init(
@@ -537,7 +610,7 @@ async def test_user_step_web_mode_redirect(
     hass: HomeAssistant, mock_discover_found, mock_api_client
 ) -> None:
     """Test redirect to web mode directly from the user step."""
-    _, mock_mode, _ = mock_api_client
+    _, mock_mode, _, _ = mock_api_client
     mock_mode.return_value = 2
 
     result = await hass.config_entries.flow.async_init(
@@ -598,11 +671,32 @@ async def test_manual_already_configured(
     assert result2["reason"] == "already_configured"
 
 
+async def test_manual_mac_error(
+    hass: HomeAssistant, mock_discover_none, mock_api_client
+) -> None:
+    """Test manual flow aborts if getting MAC address fails."""
+    _, _, _, mock_mac = mock_api_client
+
+    mock_mac.side_effect = DeviceLogicError("No MAC found")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "admin"},
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
 async def test_reauth_flow(
     hass: HomeAssistant, mock_api_client, mock_setup_entry
 ) -> None:
     """Test the complete reauthentication flow (success and failures)."""
-    mock_fetch, _, _ = mock_api_client
+    mock_fetch, _, _, _ = mock_api_client
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -611,11 +705,13 @@ async def test_reauth_flow(
     )
     entry.add_to_hass(hass)
 
+    # 1. Start Reauth
     result = await entry.start_reauth_flow(hass)
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
+    # 2. Simulate bad password (DeviceAuthError)
     mock_fetch.side_effect = DeviceAuthError("Invalid password")
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -626,6 +722,7 @@ async def test_reauth_flow(
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    # 3. Simulate correct password (Success)
     mock_fetch.side_effect = None
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -640,7 +737,7 @@ async def test_reauth_flow(
 
 async def test_reauth_connection_error(hass: HomeAssistant, mock_api_client) -> None:
     """Test reauth flow handles connection errors."""
-    mock_fetch, _, _ = mock_api_client
+    mock_fetch, _, _, _ = mock_api_client
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -651,6 +748,7 @@ async def test_reauth_connection_error(hass: HomeAssistant, mock_api_client) -> 
 
     result = await entry.start_reauth_flow(hass)
 
+    # Simulate network failure
     mock_fetch.side_effect = aiohttp.ClientError
 
     result2 = await hass.config_entries.flow.async_configure(
