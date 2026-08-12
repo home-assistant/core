@@ -1021,9 +1021,22 @@ async def test_subentry_add_flow_creates_bound_subentry(
     assert subentry.data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
 
     # The reload the flow schedules binds the existing device and entities to the
-    # new subentry; run it to observe that ownership.
-    await hass.config_entries.async_reload(entry.entry_id)
-    await hass.async_block_till_done()
+    # new subentry; run it to observe that ownership. Mock the Bluetooth parent so
+    # setting up the now-paired subentry neither writes the vehicle key file nor
+    # opens a real connection.
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = MagicMock()
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
 
     # The pairing attaches to the vehicle's existing device, never a duplicate.
     bound_devices = [
