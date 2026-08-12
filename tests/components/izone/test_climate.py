@@ -633,20 +633,26 @@ async def test_command_connection_error_recovers_on_coordinator_refresh(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    "service",
-    [IZONE_SERVICE_AIRFLOW_MIN, IZONE_SERVICE_AIRFLOW_MAX],
+    ("service", "airflow"),
+    [
+        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 41, id="min-int"),
+        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 41, id="max-int"),
+        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 40.9, id="min-float"),
+        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 40.9, id="max-float"),
+    ],
 )
 async def test_airflow_rejects_non_multiples_of_five(
     hass: HomeAssistant,
     mock_zones: list[Mock],
     service: str,
+    airflow: float,
 ) -> None:
     """Airflow services reject values that are not multiples of 5."""
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ZONE_ENTITY, ATTR_AIRFLOW: 41},
+            {ATTR_ENTITY_ID: ZONE_ENTITY, ATTR_AIRFLOW: airflow},
             blocking=True,
         )
 
