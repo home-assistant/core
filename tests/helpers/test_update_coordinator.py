@@ -2061,3 +2061,47 @@ async def test_no_config_entry_requires_domain(hass: HomeAssistant) -> None:
     """Test a coordinator without a config entry must be given a domain."""
     with pytest.raises(ValueError, match="config_entry or domain is required"):
         get_restore_crd(hass, config_entry=None)
+
+
+async def test_recovery_mode_preserves_stored_data(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test a save in recovery mode does not overwrite the on-disk data."""
+    hass_storage[restore_state.RESTORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {restore_entry.entry_id: {RESTORE_KEY: {"value": "stored"}}},
+    }
+    # Recovery mode loads empty and leaves the store read-only
+    await restore_state.async_load_coordinator_data(hass, load_empty=True)
+
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    crd.async_set_updated_data({"value": "pushed"})
+    await flush_restore_store(hass)
+
+    # The on-disk payload recovery mode must preserve is untouched
+    assert hass_storage[restore_state.RESTORE_STORAGE_KEY]["data"] == {
+        restore_entry.entry_id: {RESTORE_KEY: {"value": "stored"}}
+    }
+
+
+async def test_persist_successful_none_refresh(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test a successful refresh returning None clears previously stored data."""
+    await set_stored_data(hass, hass_storage, restore_entry, {"value": "stored"})
+
+    async def update_method() -> None:
+        return None
+
+    crd = get_restore_crd(hass, config_entry=restore_entry, update_method=update_method)
+    await crd.async_refresh()
+    assert crd.last_update_success is True
+    assert crd.data is None
+    await flush_restore_store(hass)
+
+    # The successful None result is persisted, so old data cannot resurrect
+    assert get_stored_data(hass_storage, restore_entry) is None

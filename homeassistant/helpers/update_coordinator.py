@@ -732,7 +732,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     def _async_refresh_finished(self) -> None:
         """Persist data after a successful refresh."""
         super()._async_refresh_finished()
-        if self.last_update_success and self.data is not None:
+        if self.last_update_success:
             self._schedule_save()
 
     @override

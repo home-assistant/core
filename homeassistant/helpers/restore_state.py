@@ -369,9 +369,12 @@ class _RestoreStoreManager:
         self._active_keys: set[tuple[str, str]] = set()
 
     async def async_load(self, *, load_empty: bool = False) -> None:
-        """Load the store."""
+        """Load the store.
+
+        Optionally set the store to load empty and become read-only.
+        """
         if load_empty:
-            return
+            self._store.set_load_empty()
         if (stored := await self._store.async_load()) is not None:
             self._data = stored
 
