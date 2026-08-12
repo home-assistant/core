@@ -1,6 +1,5 @@
 """Config flow for the ZhongHong integration."""
 
-import asyncio
 from functools import partial
 from typing import Any, override
 
@@ -11,12 +10,15 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
+    BREAKS_IN_HA_VERSION,
     CONF_GATEWAY_ADDRESS,
     DEFAULT_GATEWAY_ADDRESS,
     DEFAULT_PORT,
     DOMAIN,
+    INTEGRATION_TITLE,
     LOGGER,
 )
 
@@ -30,12 +32,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-CONNECT_TIMEOUT = 5
-
 # Left to itself the library retries discovery for over five minutes, which is
 # what an address that accepts the connection without speaking the protocol
 # costs. Waiting that out belongs to the retries that set the entry up, not to
-# someone sitting in front of a form.
+# someone sitting in front of a form. The bound covers connecting as well, so
+# an address with nothing behind it is answered for within it too.
 DISCOVERY_TIMEOUT = 15
 
 
@@ -45,19 +46,6 @@ async def _async_validate_gateway(
     """Return an error key, or None when the gateway answered with devices."""
     host: str = data[CONF_HOST]
     port: int = data[CONF_PORT]
-
-    # Probe the socket first, so a mistyped address is answered for in seconds
-    # rather than waiting on discovery. The probe has to be closed and waited
-    # on before discovery opens its own: the gateway takes one connection at a
-    # time and refuses a second one, so a probe still on the way out would make
-    # a perfectly reachable gateway look unreachable.
-    try:
-        async with asyncio.timeout(CONNECT_TIMEOUT):
-            _, writer = await asyncio.open_connection(host, port)
-            writer.close()
-            await writer.wait_closed()
-    except OSError, TimeoutError:
-        return "cannot_connect"
 
     hub = ZhongHongGateway(host, port, data[CONF_GATEWAY_ADDRESS])
     try:
@@ -116,16 +104,7 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle an import from configuration.yaml.
-
-        The gateway is deliberately not contacted here. It accepts a single TCP
-        connection at a time, and on a restart it can still be holding the one
-        from the previous run, so a reachability check would fail for reasons
-        that have nothing to do with the configuration. The YAML platform is
-        only set up once per start, so that failure would strand the user on
-        YAML until they restarted again. Setting up the entry retries on its
-        own, which is where an unreachable gateway belongs.
-        """
+        """Handle an import from configuration.yaml."""
         self._async_abort_entries_match(
             {
                 CONF_HOST: import_data[CONF_HOST],
@@ -133,5 +112,26 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_GATEWAY_ADDRESS: import_data[CONF_GATEWAY_ADDRESS],
             }
         )
+
+        if error := await _async_validate_gateway(self.hass, import_data):
+            # The YAML can have gone stale: the gateway may have been replaced
+            # or removed since it was written. Say which one failed, rather
+            # than leaving a configuration entry behind that never works.
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{error}",
+                breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{error}",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": INTEGRATION_TITLE,
+                    "host": import_data[CONF_HOST],
+                },
+            )
+            return self.async_abort(reason=error)
 
         return self.async_create_entry(title=import_data[CONF_HOST], data=import_data)

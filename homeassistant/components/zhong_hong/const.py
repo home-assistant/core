@@ -9,6 +9,9 @@ from homeassistant.components.climate import FAN_HIGH, FAN_LOW, FAN_MIDDLE
 DOMAIN: Final = "zhong_hong"
 INTEGRATION_TITLE: Final = "ZhongHong"
 
+# When the YAML configuration stops being imported.
+BREAKS_IN_HA_VERSION: Final = "2027.3.0"
+
 LOGGER = logging.getLogger(__package__)
 
 CONF_GATEWAY_ADDRESS: Final = "gateway_address"
