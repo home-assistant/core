@@ -376,7 +376,7 @@ class TargetEntityChangeTracker(abc.ABC):
         # Subscribe to registry updates that can change the entities to track:
         # - Entity registry: entity added/removed;
         #   entity labels changed; entity area changed.
-        # - Device registry: device labels changed; device area changed
+        # - Device registry: device labels changed; device area changed;
         #   child device added/removed under a targeted parent.
         # - Area registry: area floor changed.
         #

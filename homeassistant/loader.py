@@ -406,7 +406,7 @@ class ComponentProtocol(Protocol):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        device_entry: dr.DeviceEntry | dr.ChildDeviceEntry,
+        device_entry: dr.AnyDeviceEntry,
     ) -> bool:
         """Remove a config entry device.
 

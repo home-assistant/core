@@ -10780,7 +10780,7 @@ async def test_update_device_via_device_id_naming_child_raises(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't link device to unknown via device .*it is a child device",
+        match="is a child device, which can't be a via device",
     ):
         device_registry.async_update_device(device.id, via_device_id=child_device.id)
 
@@ -11295,16 +11295,20 @@ async def test_child_device_stale_identifier_reconciliation(
 
 @pytest.mark.usefixtures("hass")
 async def test_live_child_device_identifier_collision_raises(
+    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a device colliding with a live child device raises."""
-    _create_parent_and_child(device_registry, mock_config_entry.entry_id)
-    device_registry.async_get_or_create(
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+    hub = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("test", "hub")},
         name="Hub",
     )
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
 
     # A device matched by its own identifier that also claims a live child's identifier
     # collides with the child and is rejected by reconciliation. (Claiming only the
@@ -11315,6 +11319,18 @@ async def test_live_child_device_identifier_collision_raises(
             identifiers={("test", "hub"), ("test", "strip_outlet_1")},
             name="Hub",
         )
+
+    # The raise precedes every strip/remove in reconciliation, so nothing changed
+    unchanged_child = device_registry.async_get(child_device.id)
+    assert isinstance(unchanged_child, dr.ChildDeviceEntry)
+    assert unchanged_child is child_device
+    assert unchanged_child.parent_device_id == parent.id
+    assert unchanged_child.identifiers == {("test", "strip_outlet_1")}
+    assert device_registry.async_get(hub.id) is hub
+    assert len(device_registry.devices) == 2
+    assert len(device_registry.child_devices) == 1
+    await hass.async_block_till_done()
+    assert len(update_events) == 0
 
 
 async def test_child_and_main_device_same_identifier_across_entries(
