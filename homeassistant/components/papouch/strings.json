@@ -4,6 +4,7 @@
       "already_configured": "This device is already configured, you can delete it from the integration and configure it again.",
       "cannot_connect": "Home Assistant can't connect to the device.",
       "mode_is_missing": "The device didn't provide its current mode",
+      "reauth_successful": "Re-authentication was successful",
       "unsupported_device": "This device is unsupported.",
       "web_mode_required": "The integration requires the device to be in web mode to function."
     },
@@ -13,6 +14,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect to the device.",
+      "invalid_auth": "The password you provided is invalid, try a different one.",
       "invalid_ip_format": "Invalid IP address format."
     },
     "flow_title": "{name}",
@@ -41,6 +43,16 @@
           "refresh_rate": "How often Home Assistant should poll the device for new data."
         },
         "title": "Manual Setup"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "New Password"
+        },
+        "data_description": {
+          "password": "Enter a new admin password of the device."
+        },
+        "description": "The password for your device **{name}** is no longer valid. Please enter the new password.",
+        "title": "Reauthenticate {name}"
       },
       "user": {
         "data": {

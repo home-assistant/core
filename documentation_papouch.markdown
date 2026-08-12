@@ -42,7 +42,7 @@ All supported Papouch devices feature DHCP discovery. Once the integration is ac
 This will be active if DHCP is enabled in the device.
 {% endnote %}
 
-Active discovery is also triggered automatically when you manually add the integration via the user interface. It will scan your local network using UDP broadcasts and present a list of available, unregistered devices along with their names, locations, and IP addresses.
+Active discovery is also triggered automatically when you manually add the integration via the user interface. It will scan your local network using UDP broadcasts and present a list of available, unregistered devices along with their names, locations, and IP addresses. However if a device has a password it won't be displayed in the list of available devices, even though with a right password it is.
 
 {% note %}
 If your Home Assistant instance is running in an isolated network environment (such as WSL or specific Docker network configurations) where UDP broadcasts cannot reach the container, automatic discovery will fail. In this case, you can simply select the option to enter the IP address manually during the configuration flow.

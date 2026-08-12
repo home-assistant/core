@@ -8,7 +8,7 @@ from typing import Any, override
 import aiohttp
 import defusedxml.ElementTree as defused_ET
 
-from .exceptions import DeviceConnectionError
+from .exceptions import DeviceAuthError, DeviceConnectionError
 
 INFO_URL = "is.xml"
 DATA_URL = "fresh.xml"
@@ -91,12 +91,8 @@ class PapouchHTTPClient(PapouchTransport):
         return "http"
 
     async def _fetch(self, endpoint: str) -> str:
-        async with self.session.get(
-            self.base_url + endpoint, auth=self._auth
-        ) as response:
-            response.raise_for_status()
-            raw_xml = await response.text()
-            return re.sub(r'\s+xmlns="[^"]+"', "", raw_xml)
+        raw_xml = await self._send_request("GET", endpoint, context=endpoint)
+        return re.sub(r'\s+xmlns="[^"]+"', "", raw_xml)
 
     @override
     async def fetch_info(self) -> str:
@@ -151,6 +147,9 @@ class PapouchHTTPClient(PapouchTransport):
                 **kwargs,
             ) as response:
                 if response.status != 200:
+                    if response.status == 401:
+                        raise DeviceAuthError("Invalid password")
+
                     raise DeviceConnectionError(
                         f"Failed to send command: {response.status}"
                     )

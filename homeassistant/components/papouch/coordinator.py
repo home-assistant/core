@@ -4,12 +4,13 @@ from datetime import timedelta
 import logging
 from typing import override
 
-import aiohttp
 from aiopapouch import PapouchDevice, PapouchTransport
+from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -44,5 +45,9 @@ class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             fresh_data = await self.api_client.fetch_data()
             return await self.device.parse_fresh_data(fresh_data)
-        except aiohttp.ClientError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from None
+        except DeviceAuthError as err:
+            raise ConfigEntryAuthFailed(
+                "Authentication failed, password might have changed."
+            ) from err
+        except DeviceConnectionError as err:
+            raise ConfigEntryNotReady(f"Error communicating with API: {err}") from None

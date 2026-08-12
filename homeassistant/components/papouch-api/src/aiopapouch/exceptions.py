@@ -9,6 +9,10 @@ class DeviceConnectionError(DeviceError):
     """Connection error."""
 
 
+class DeviceAuthError(DeviceError):
+    """Authorization error."""
+
+
 class DeviceResponseError(DeviceError):
     """Response error."""
 

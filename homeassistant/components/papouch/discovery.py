@@ -1,10 +1,11 @@
 """File used for discovering Papouch devices on the local network."""
 
 import asyncio
+import logging
 from typing import cast, override
 
-import aiohttp
 from aiopapouch import PapouchHTTPClient, is_device_supported
+from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -13,6 +14,8 @@ ACTIVE_DISCOVERY_TIMEOUT = 2
 MAGIC_PACKET = b"\x00\x00\x00\xf6"
 TARGET_PORT = 30718
 SEMAPHORE_COUNTER = 5
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class PapouchDiscoveryProtocol(asyncio.DatagramProtocol):
@@ -51,7 +54,8 @@ async def _get_device_info(
 
     try:
         device_name, device_location = await client.get_device_info()
-    except aiohttp.ClientError:
+    except (DeviceConnectionError, DeviceAuthError) as err:
+        _LOGGER.debug("Could not get device info from %s: %s", ip_address, err)
         return None
     else:
         if not is_device_supported(device_name):
@@ -88,7 +92,7 @@ async def async_discover_papouch_devices(
     raw_ips = list(protocol.discovered_ips)
     semaphore = asyncio.Semaphore(SEMAPHORE_COUNTER)
 
-    async def _safe_check(ip: str):
+    async def _safe_check(ip: str) -> tuple[str, tuple[str, str] | None]:
         async with semaphore:
             try:
                 async with asyncio.timeout(ACTIVE_DISCOVERY_TIMEOUT):

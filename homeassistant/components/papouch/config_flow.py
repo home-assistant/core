@@ -1,6 +1,7 @@
 """Config flow for the Papouch integration."""
 
 import asyncio
+from collections.abc import Mapping
 import ipaddress
 import logging
 import re
@@ -8,6 +9,7 @@ from typing import Any, override
 
 import aiohttp
 from aiopapouch import PapouchHTTPClient, create_device, is_device_supported
+from aiopapouch.exceptions import DeviceAuthError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -30,6 +32,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
+        self._reauth_entry: PapouchConfigEntry | None = None
         self.discovered_ip: str | None = None
         self.discovered_name: str | None = None
         self._saved_input: dict | None = None
@@ -49,11 +52,28 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await client.fetch_info()
             mode_device = await client.get_device_mode()
+        except DeviceAuthError:
+            return {"base": "invalid_auth"}, None
         except aiohttp.ClientError as err:
             _LOGGER.error("Failed to connect to the device: %s", err)
             return {"base": "cannot_connect"}, None
         else:
             return {}, mode_device
+
+    async def _get_device_name(self, ip_address: str, password: str = "") -> str:
+        """Fetch the real device name and location directly from the device."""
+        session = async_get_clientsession(self.hass)
+        client = PapouchHTTPClient(ip_address, session, password=password)
+        try:
+            name, location = await client.get_device_info()
+            if name and location:
+                return f"{name} ({location})"
+            if name:
+                return name
+        except aiohttp.ClientError:
+            pass
+
+        return "Papouch Device"
 
     async def _async_process_user_input(
         self, user_input: dict[str, Any]
@@ -84,8 +104,12 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
                 "refresh_rate": user_input.get("refresh_rate", DEFAULT_SCAN_INTERVAL)
             }
 
+            title_name = await self._get_device_name(
+                user_input["ip_address"], user_input.get("password", "")
+            )
+
             return {}, self.async_create_entry(
-                title=f"Papouch ({user_input['ip_address']})",
+                title=f"{title_name} - {user_input['ip_address']}",
                 data=data,
                 options=options,
             )
@@ -270,7 +294,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_execute_switch(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
         """Action when user clicks the switch button."""
 
@@ -301,8 +325,12 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             }
 
+            title_name = await self._get_device_name(
+                user_input["ip_address"], user_input.get("password", "")
+            )
+
             return self.async_create_entry(
-                title=f"Papouch ({self._saved_input['ip_address']})",
+                title=f"{title_name} - {user_input['ip_address']}",
                 data=data,
                 options=options,
                 description="web_mode_success",
@@ -315,6 +343,55 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Action when user clicks cancel."""
         return self.async_abort(reason="web_mode_required")
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle initiation of re-authentication."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None and self._reauth_entry:
+            password = user_input.get("password", "")
+            ip_address = self._reauth_entry.data["ip_address"]
+
+            errors, _ = await self._test_connection(ip_address, password)
+
+            if not errors:
+                new_data = {**self._reauth_entry.data, "password": password}
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry, data=new_data
+                )
+
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+
+                return self.async_abort(reason="reauth_successful")
+
+        device_name = self._reauth_entry.title if self._reauth_entry else "Papouch"
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("password"): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "ip_address": self._reauth_entry.data["ip_address"]
+                if self._reauth_entry
+                else "",
+                "name": device_name,
+            },
+        )
 
     @override
     @staticmethod
