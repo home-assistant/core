@@ -140,18 +140,21 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR)
     ),
     "Curtain": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
     ),
     "Curtain3": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+    ),
+    "Curtain4": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
     ),
     "Roller Shade": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
     ),
     "Blind Tilt": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
     ),
     "Garage Door Opener": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.BINARY_SENSOR, Platform.COVER)
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.COVER)
     ),
 }
