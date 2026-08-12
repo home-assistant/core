@@ -1,11 +1,4 @@
-"""Test the Teslemetry energy stream wiring.
-
-These tests cover the conversion of the energy live/info/tariff coordinators
-from recurring REST polling to listener-driven updates off the account SSE
-stream. The energy listeners are synchronous registration calls, so the shared
-``mock_add_listener`` fixture (a ``MagicMock``) captures them and dispatches
-matching events.
-"""
+"""Test the Teslemetry energy live/info/tariff stream wiring."""
 
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -97,11 +90,17 @@ async def test_stream_topics_allowlist(hass: HomeAssistant) -> None:
     ]
 
 
-@pytest.mark.parametrize("is_cache", [False, True])
+@pytest.mark.parametrize(
+    "extra_event_fields",
+    [
+        pytest.param({}, id="live"),
+        pytest.param({"isCache": True}, id="cache"),
+    ],
+)
 async def test_live_status_stream_updates(
     hass: HomeAssistant,
     mock_add_listener: MagicMock,
-    is_cache: bool,
+    extra_event_fields: dict[str, object],
 ) -> None:
     """Live and snapshot live_status events drive the same entity states."""
     await setup_platform(hass, [Platform.SENSOR])
@@ -110,10 +109,12 @@ async def test_live_status_stream_updates(
     assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
     assert hass.states.get("sensor.wall_connector_power").state == "0.0"
 
-    event = {"site_id": SITE_ID, "live_status": _live_status(solar_power=456)}
+    event = {
+        "site_id": SITE_ID,
+        "live_status": _live_status(solar_power=456),
+        **extra_event_fields,
+    }
     event["live_status"]["wall_connectors"][0]["wall_connector_power"] = 789
-    if is_cache:
-        event["isCache"] = True
     mock_add_listener.send(event)
     await hass.async_block_till_done()
 
@@ -121,31 +122,42 @@ async def test_live_status_stream_updates(
     assert hass.states.get("sensor.wall_connector_power").state == "0.789"
 
 
-@pytest.mark.parametrize("tariff_first", [False, True])
+@pytest.mark.parametrize(
+    "order",
+    [
+        pytest.param(("site_info", "tariff"), id="site_info_first"),
+        pytest.param(("tariff", "site_info"), id="tariff_first"),
+    ],
+)
 async def test_site_info_and_tariff_compose(
     hass: HomeAssistant,
     mock_add_listener: MagicMock,
-    tariff_first: bool,
+    order: tuple[str, str],
 ) -> None:
     """Slim site_info and tariff events are independently replaceable partitions."""
     entry = await setup_platform(hass, [Platform.CALENDAR])
     info_coordinator = entry.runtime_data.energysites[0].info_coordinator
 
+    # The REST cold read populated the tariff code with the fixture value.
+    assert info_coordinator.data["tariff_content_v2_code"] == "Test"
+
     slim = deepcopy(SLIM_SITE_INFO)
     slim["version"] = "99.9.9"
-    site_info_event = {"site_id": SITE_ID, "site_info": slim}
-    tariff_event = {"site_id": SITE_ID, "tariff_content_v2": deepcopy(TARIFF_V2)}
+    # A distinct tariff code proves the streamed tariff replaces the cold read.
+    streamed_tariff = deepcopy(TARIFF_V2)
+    streamed_tariff["code"] = "Streamed"
+    events = {
+        "site_info": {"site_id": SITE_ID, "site_info": slim},
+        "tariff": {"site_id": SITE_ID, "tariff_content_v2": streamed_tariff},
+    }
 
-    for event in (
-        (tariff_event, site_info_event)
-        if tariff_first
-        else (site_info_event, tariff_event)
-    ):
-        mock_add_listener.send(event)
+    for name in order:
+        mock_add_listener.send(events[name])
         await hass.async_block_till_done()
 
     # Both partitions survive regardless of arrival order.
     assert info_coordinator.data["version"] == "99.9.9"
+    assert info_coordinator.data["tariff_content_v2_code"] == "Streamed"
     assert info_coordinator.data["tariff_content_v2_seasons"]
     assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
 
