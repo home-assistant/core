@@ -18,33 +18,29 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "number.connectedspa_ddeeff_target_temperature"
 
 
 async def test_number_state(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    mock_hotspring: MagicMock,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the number entity state."""
-    state = hass.states.get(ENTITY_ID)
-    assert state == snapshot
-
-    entry = entity_registry.async_get(ENTITY_ID)
-    assert entry == snapshot
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_set_target_temperature(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_hotspring: MagicMock,
 ) -> None:
     """Test setting target temperature."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
-
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -70,14 +66,12 @@ async def test_set_target_temperature(
 )
 async def test_set_target_temperature_error(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_hotspring: MagicMock,
     exception: type[Exception],
     match: str,
 ) -> None:
     """Test exception handling when setting target temperature."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
-
     mock_hotspring.set_temperature.side_effect = exception
 
     with pytest.raises(HomeAssistantError, match=match):

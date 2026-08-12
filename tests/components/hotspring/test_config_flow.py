@@ -31,7 +31,7 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
 
     assert result["title"] == "ConnectedSpa_DDEEFF"
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_HOST] == "192.168.1.100"
+    assert result["data"] == {CONF_HOST: "192.168.1.100"}
     assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
@@ -45,7 +45,9 @@ async def test_user_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.100"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.100"}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -85,7 +87,7 @@ async def test_form_cannot_connect(
 
     assert result["title"] == "ConnectedSpa_DDEEFF"
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_HOST] == "192.168.1.100"
+    assert result["data"] == {CONF_HOST: "192.168.1.100"}
     assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
@@ -93,7 +95,8 @@ async def test_form_cannot_connect(
 async def test_form_no_mac_address(
     hass: HomeAssistant, mock_hotspring: MagicMock, device_fixture: Spa
 ) -> None:
-    """Test we show user form on missing MAC address."""
+    """Test we show user form on missing MAC address and recover."""
+    valid_info = device_fixture.info
     device_fixture.info = SpaInfo(
         hostname="ConnectedSpa_DDEEFF",
         root_topic="unknownTopic123",
@@ -118,3 +121,13 @@ async def test_form_no_mac_address(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    device_fixture.info = valid_info
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.100"}
+    )
+
+    assert result["title"] == "ConnectedSpa_DDEEFF"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: "192.168.1.100"}
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"

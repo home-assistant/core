@@ -5,6 +5,8 @@ from unittest.mock import MagicMock
 from hotspring import HotSpringConnectionError, HotSpringError, Spa
 import pytest
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.hotspring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -28,15 +30,14 @@ async def test_device_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test device registry entry creation with updated info."""
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "AA:BB:CC:DD:EE:FF"), init_integration.entry_id
     )
     assert device is not None
-    assert device.manufacturer == "Hot Spring"
-    assert device.model == "Relay"
-    assert device.sw_version == "1.0.0"
+    assert device == snapshot
 
 
 @pytest.mark.parametrize(
