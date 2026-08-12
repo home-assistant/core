@@ -95,6 +95,15 @@
       "message": "Provide a temperature value when adjusting a zone."
     }
   },
+  "selector": {
+    "demand_control_mode": {
+      "options": {
+        "auto": "Auto",
+        "manual": "Manual",
+        "scheduled": "Scheduled"
+      }
+    }
+  },
   "services": {
     "set_demand_control": {
       "description": "Limits the maximum power of the Daikin unit as a percentage of its nominal power, for example during peak electricity price periods.",
@@ -112,7 +121,7 @@
           "name": "Maximum power"
         },
         "mode": {
-          "description": "Demand control mode: 0 for manual, 1 for scheduled, 2 for auto.",
+          "description": "Demand control mode: manual, scheduled or auto.",
           "name": "Mode"
         }
       },

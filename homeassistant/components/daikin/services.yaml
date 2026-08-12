@@ -18,13 +18,11 @@ set_demand_control:
           step: 1
           unit_of_measurement: "%"
     mode:
-      default: "0"
+      default: "manual"
       selector:
         select:
+          translation_key: "demand_control_mode"
           options:
-            - value: "0"
-              label: Manual
-            - value: "1"
-              label: Scheduled
-            - value: "2"
-              label: Auto
+            - "manual"
+            - "scheduled"
+            - "auto"

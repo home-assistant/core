@@ -77,10 +77,20 @@ async def test_set_demand_control(
     )
 
 
+@pytest.mark.parametrize(
+    ("mode", "expected_mode"),
+    [
+        ("manual", 0),
+        ("scheduled", 1),
+        ("auto", 2),
+    ],
+)
 async def test_set_demand_control_with_mode(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     zone_device: ZoneDevice,
+    mode: str,
+    expected_mode: int,
 ) -> None:
     """Test the set_demand_control service with an explicit mode."""
     zone_device.support_demand_control = True
@@ -97,13 +107,13 @@ async def test_set_demand_control_with_mode(
             ),
             ATTR_EN_DEMAND: True,
             ATTR_MAX_POW: 40,
-            ATTR_MODE: 2,
+            ATTR_MODE: mode,
         },
         blocking=True,
     )
 
     zone_device.set_demand_control.assert_called_once_with(
-        en_demand="on", max_pow=40, mode=2
+        en_demand="on", max_pow=40, mode=expected_mode
     )
 
 

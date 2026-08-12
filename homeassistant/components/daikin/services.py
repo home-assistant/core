@@ -8,6 +8,7 @@ from homeassistant.helpers.service import async_extract_config_entry_ids
 from .const import (
     ATTR_EN_DEMAND,
     ATTR_MAX_POW,
+    DAIKIN_DEMAND_CONTROL_MODES,
     DOMAIN,
     SERVICE_SET_DEMAND_CONTROL,
     SET_DEMAND_CONTROL_SCHEMA,
@@ -43,7 +44,7 @@ async def async_set_demand_control(call: ServiceCall) -> None:
     await device.set_demand_control(
         en_demand="on" if call.data[ATTR_EN_DEMAND] else "off",
         max_pow=call.data[ATTR_MAX_POW],
-        mode=call.data[ATTR_MODE],
+        mode=DAIKIN_DEMAND_CONTROL_MODES[call.data[ATTR_MODE]],
     )
     await entry.runtime_data.async_refresh()
 
