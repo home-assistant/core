@@ -24,16 +24,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_flow_it() -> Generator[AsyncMock]:
     """Mock FlowItVMCMachine for integration tests."""
-    mock_vmc = AsyncMock()
-    mock_vmc.get_info.return_value.hostname = "Flow-it Device"
-
-    json_data = load_json_value_fixture("machine_status.json", DOMAIN)
-    json_data["name"] = "001122334455"
-    mock_vmc.state = MachineStatusResponse(**json_data)
-
-    mock_vmc.register_websocket_callback = MagicMock()
-    mock_vmc.websocket.start = MagicMock()
-
     with (
         patch(
             "homeassistant.components.flow_it.FlowItVMCMachine",
@@ -44,7 +34,21 @@ def mock_flow_it() -> Generator[AsyncMock]:
             new=mock,
         ),
     ):
-        mock.return_value = mock_vmc
+        mock_vmc = mock.return_value
+
+        # Override methods with faulty signatures due to decorators
+        mock_vmc.refresh_state = AsyncMock()
+        mock_vmc.send_command = AsyncMock()
+
+        mock_vmc.get_info.return_value.hostname = "Flow-it Device"
+
+        json_data = load_json_value_fixture("machine_status.json", DOMAIN)
+        json_data["name"] = "001122334455"
+        mock_vmc.state = MachineStatusResponse(**json_data)
+
+        mock_vmc.register_websocket_callback = MagicMock()
+        mock_vmc.websocket.start = MagicMock()
+
         yield mock
 
 
