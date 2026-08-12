@@ -64,8 +64,8 @@ async def test_get_triggers_non_module_device(
 
     not_included_types = ("transmitter", "transponder", "fingerprint", "send_keys")
 
-    host_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)}
+    host_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
     )
     group_device = get_device(hass, entry, (0, 5, True))
 

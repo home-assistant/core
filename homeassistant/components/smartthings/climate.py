@@ -582,6 +582,39 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
         )
 
+    def _get_setpoint_range_value(self, key: str) -> float | None:
+        """Return a value from the cooling setpoint range, if the device reports it."""
+        if (
+            setpoint_range := self.get_attribute_value(
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+                Attribute.COOLING_SETPOINT_RANGE,
+            )
+        ) is None:
+            return None
+        return setpoint_range.get(key)
+
+    @property
+    @override
+    def target_temperature_step(self) -> float | None:
+        """Return the supported step of target temperature."""
+        return self._get_setpoint_range_value("step")
+
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        if (minimum := self._get_setpoint_range_value("minimum")) is None:
+            return DEFAULT_MIN_TEMP
+        return minimum
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        if (maximum := self._get_setpoint_range_value("maximum")) is None:
+            return DEFAULT_MAX_TEMP
+        return maximum
+
     @property
     @override
     def temperature_unit(self) -> str:

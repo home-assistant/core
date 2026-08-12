@@ -397,7 +397,10 @@ async def test_stale_device_removed(
     """A player removed from the account has its device dropped."""
     await setup_integration(hass, mock_config_entry)
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, PLAYER_ID)}) is not None
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, PLAYER_ID), mock_config_entry.entry_id
+        )
+        is not None
     )
 
     mock_yoto_client.players.clear()
@@ -405,5 +408,10 @@ async def test_stale_device_removed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, PLAYER_ID)}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, PLAYER_ID), mock_config_entry.entry_id
+        )
+        is None
+    )
     mock_yoto_client.unsubscribe_player_events.assert_called_once_with(PLAYER_ID)
