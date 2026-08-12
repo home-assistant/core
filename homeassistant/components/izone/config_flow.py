@@ -14,7 +14,6 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, FlowType
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
-from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -443,8 +442,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self._async_handoff_to_shelf(candidate)
 
-        self._async_schedule_integration_discovery_flow(endpoint.uid, endpoint.host)
-        await self.hass.async_block_till_done()
+        await self._async_shelve_integration_discovery_flow(endpoint.uid, endpoint.host)
         if (candidate := self._async_shelf_candidate_for_uid(endpoint.uid)) is not None:
             return self._async_handoff_to_shelf(candidate)
         return self._async_show_manual_host_form(
@@ -452,21 +450,27 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             suggested_values={CONF_HOST: host},
         )
 
-    @callback
-    def _async_schedule_integration_discovery_flow(
+    async def _async_shelve_integration_discovery_flow(
         self,
         uid: str,
         host: str,
     ) -> None:
-        """Queue integration discovery (import fan-out or HomeKit sibling)."""
-        discovery_flow.async_create_flow(
-            self.hass,
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
-                "unique_id": uid,
-            },
-            data={CONF_HOST: host},
+        """Await a shelf confirm flow for manual host (do not drain all background tasks)."""
+        context: config_entries.ConfigFlowContext = {
+            "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            "unique_id": uid,
+        }
+        data = {CONF_HOST: host}
+        # Same dedupe gate as discovery_flow._async_init_flow.
+        if (
+            self.hass.config_entries.flow.async_has_matching_discovery_flow(
+                DOMAIN, context, data
+            )
+            or self.hass.is_stopping
+        ):
+            return
+        await self.hass.config_entries.flow.async_init(
+            DOMAIN, context=context, data=data
         )
 
     @staticmethod
@@ -504,7 +508,4 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 continue
             if candidate.uid in current_ids or candidate.uid in in_progress_ids:
                 continue
-            self._async_schedule_integration_discovery_flow(
-                candidate.uid,
-                candidate.host,
-            )
+            izone_discovery.async_note_integration_discovery(self.hass, candidate)

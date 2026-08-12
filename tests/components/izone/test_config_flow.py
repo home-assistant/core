@@ -1243,25 +1243,26 @@ async def test_confirm_asserts_when_unique_id_is_not_string(
 
 
 def test_async_fan_out_skips_uids_already_in_progress() -> None:
-    """Fan-out skips scheduling flows for UIDs already in progress."""
+    """Fan-out skips noting discovery for UIDs already in progress."""
     candidate = endpoint_from_controller(
         create_mock_controller("000000002", "192.0.2.2")
     )
     # Drive the helper with a stub flow: happy-path fan-out tests only cover the
-    # "schedule missing UIDs" branch, not the already-in-progress skip.
+    # "note missing UIDs" branch, not the already-in-progress skip.
     fake_flow = SimpleNamespace(
+        hass=object(),
         _async_current_ids=Mock(return_value=set()),
         _async_in_progress=Mock(return_value=[{"context": {"unique_id": "000000002"}}]),
-        _async_schedule_integration_discovery_flow=Mock(),
     )
 
-    config_flow.IZoneConfigFlow._async_fan_out_discovered_endpoints(
-        fake_flow,
-        [candidate],
-        selected_uid="000000001",
-    )
+    with patch.object(izone_discovery, "async_note_integration_discovery") as mock_note:
+        config_flow.IZoneConfigFlow._async_fan_out_discovered_endpoints(
+            fake_flow,
+            [candidate],
+            selected_uid="000000001",
+        )
 
-    fake_flow._async_schedule_integration_discovery_flow.assert_not_called()
+    mock_note.assert_not_called()
 
 
 async def test_homekit_aborts_for_yaml_excluded_uid_without_discovery(
@@ -1704,7 +1705,9 @@ async def test_user_manual_host_shelve_miss_stays_on_form(
             new=AsyncMock(return_value=endpoint),
         ),
         patch(
-            "homeassistant.components.izone.config_flow.discovery_flow.async_create_flow",
+            "homeassistant.components.izone.config_flow.IZoneConfigFlow."
+            "_async_shelve_integration_discovery_flow",
+            new=AsyncMock(),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
