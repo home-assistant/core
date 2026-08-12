@@ -1200,6 +1200,9 @@
     "set_scheduled_departure_preconditioning": {
       "message": "Preconditioning departure time is required when enabling"
     },
+    "stream_disconnected": {
+      "message": "Disconnected from the Teslemetry stream"
+    },
     "token_data_malformed": {
       "message": "Token data malformed, try reauthenticating"
     },

@@ -184,6 +184,30 @@ def mock_add_listener():
         yield mock_add_listener
 
 
+@pytest.fixture
+def mock_add_connection_listener():
+    """Mock Teslemetry Stream add connection listener method."""
+    with patch(
+        "teslemetry_stream.TeslemetryStream.async_add_connection_listener",
+    ) as mock_add_connection_listener:
+        mock_add_connection_listener.listeners = []
+
+        def unsubscribe() -> None:
+            return
+
+        def side_effect(callback):
+            mock_add_connection_listener.listeners.append(callback)
+            return unsubscribe
+
+        def send(connected: bool) -> None:
+            for listener in mock_add_connection_listener.listeners:
+                listener(connected)
+
+        mock_add_connection_listener.send = send
+        mock_add_connection_listener.side_effect = side_effect
+        yield mock_add_connection_listener
+
+
 @pytest.fixture(autouse=True)
 def mock_stream_get_config():
     """Mock Teslemetry Stream listen method."""

@@ -44,6 +44,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CLIENT_ID, DOMAIN, LOGGER, VEHICLE_ISSUE_LEARN_MORE
 from .coordinator import (
@@ -521,9 +522,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     if stream:
         entry.async_on_unload(stream.close)
+        # The stream is the only freshness signal for the energy coordinators, so
+        # a dropped connection must mark their entities unavailable rather than
+        # leaving stale live/info/tariff data available indefinitely.
+        if energysites:
+            entry.async_on_unload(
+                stream.async_add_connection_listener(
+                    create_handle_energy_stream_connection(energysites)
+                )
+            )
         entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True
+
+
+def create_handle_energy_stream_connection(
+    energysites: list[TeslemetryEnergyData],
+) -> Callable[[bool], None]:
+    """Create a stream connection listener for the energy coordinators."""
+
+    @callback
+    def handle_connection(connected: bool) -> None:
+        """Fail stream-driven energy coordinators while the stream is down.
+
+        Each subsequent streamed document restores its coordinator via
+        async_set_updated_data, so no reload is required on reconnect.
+        """
+        if connected:
+            return
+        error = UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="stream_disconnected",
+        )
+        for energysite in energysites:
+            if energysite.live_coordinator is not None:
+                energysite.live_coordinator.async_set_update_error(error)
+            energysite.info_coordinator.async_set_update_error(error)
+
+    return handle_connection
 
 
 async def _async_setup_energy_site(
