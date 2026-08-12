@@ -82,6 +82,7 @@ from .validation import (
     numeric_type_validator,
     sensor_type_validator,
     string_type_validator,
+    sync_state_no_false_validator,
     sync_state_validator,
     validate_number_attributes,
     validate_sensor_attributes,
@@ -449,6 +450,9 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_SWING_HORIZONTAL_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_SWING_HORIZONTAL_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_HUMIDITY_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
     )
@@ -489,6 +493,9 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CoverConf.INVERT_POSITION, default=False): cv.boolean,
                 vol.Optional(CoverConf.INVERT_ANGLE, default=False): cv.boolean,
                 vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         vol.Any(
@@ -731,6 +738,9 @@ class LightSchema(KNXPlatformSchema):
                 vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         vol.Any(
@@ -804,6 +814,9 @@ class NumberSchema(KNXPlatformSchema):
                 vol.Optional(NumberConf.STEP): cv.positive_float,
                 vol.Optional(CONF_DEVICE_CLASS): NUMBER_DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         _number_limit_sub_validator,
@@ -894,6 +907,7 @@ class SwitchSchema(KNXPlatformSchema):
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_no_false_validator,
         }
     )
 
@@ -910,6 +924,7 @@ class TextSchema(KNXPlatformSchema):
             vol.Optional(CONF_MODE, default=TextMode.TEXT): vol.Coerce(TextMode),
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_no_false_validator,
         }
     )
 
