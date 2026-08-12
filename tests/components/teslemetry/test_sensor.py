@@ -1,5 +1,6 @@
 """Test the Teslemetry sensor platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -22,9 +23,19 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_conversion import PressureConverter
 
 from . import assert_entities, assert_entities_alt, setup_platform
-from .const import ENERGY_HISTORY_EMPTY, VEHICLE_DATA_ALT
+from .const import ENERGY_HISTORY_EMPTY, METADATA, PRODUCTS, VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed
+
+# VIN used across the Teslemetry test fixtures.
+VEHICLE_VIN = "LRW3F7EK4NC700000"
+
+
+def _products_with_driver_assist(driver_assist: str) -> dict:
+    """Return a products response with the vehicle's driver-assist capability set."""
+    products = deepcopy(PRODUCTS)
+    products["response"][0]["vehicle_config"]["driver_assist"] = driver_assist
+    return products
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -62,11 +73,15 @@ async def test_sensors_streaming(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
+    mock_products: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
     """Tests that the sensor entities with streaming are correct."""
 
     freezer.move_to("2024-01-01 00:00:00+00:00")
+
+    # miles_since_reset and self_driving_miles_since_reset are HW4-only fields.
+    mock_products.return_value = _products_with_driver_assist("TeslaAP4")
 
     entry = await setup_platform(hass, [Platform.SENSOR])
 
@@ -175,10 +190,14 @@ async def test_sensors_streaming(
 async def test_new_streaming_sensors_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    mock_products: AsyncMock,
     mock_add_listener: AsyncMock,
     entity_id: str,
 ) -> None:
     """Test the new firmware-2025.44 streaming sensors are disabled-by-default diagnostics."""
+
+    # miles_since_reset and self_driving_miles_since_reset are HW4-only fields.
+    mock_products.return_value = _products_with_driver_assist("TeslaAP4")
 
     await setup_platform(hass, [Platform.SENSOR])
 
@@ -186,6 +205,53 @@ async def test_new_streaming_sensors_disabled_by_default(
     assert entry is not None
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "sensor.test_miles_since_reset",
+        "sensor.test_self_driving_miles_since_reset",
+    ],
+    ids=["miles_since_reset", "self_driving_miles_since_reset"],
+)
+@pytest.mark.parametrize(
+    ("firmware", "driver_assist", "expected"),
+    [
+        ("2025.44.25.5", "TeslaAP4", True),
+        ("2025.44.25.5", "TeslaAP3", False),
+        ("2025.44.25.4", "TeslaAP4", False),
+        ("2025.44.25.4", "TeslaAP3", False),
+    ],
+    ids=[
+        "hw4_at_threshold",
+        "hw3_at_threshold",
+        "hw4_below_threshold",
+        "hw3_below_threshold",
+    ],
+)
+async def test_hw4_mileage_sensors_gating(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    mock_products: AsyncMock,
+    mock_add_listener: AsyncMock,
+    entity_id: str,
+    firmware: str,
+    driver_assist: str,
+    expected: bool,
+) -> None:
+    """Test HW4 mileage sensors need both AP4 hardware and qualifying firmware."""
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VEHICLE_VIN]["firmware"] = firmware
+    mock_metadata.return_value = metadata
+
+    mock_products.return_value = _products_with_driver_assist(driver_assist)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    assert (entity_registry.async_get(entity_id) is not None) is expected
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
