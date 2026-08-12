@@ -38,6 +38,14 @@
         "name": "Factory reset"
       }
     },
+    "image": {
+      "active_contour": {
+        "name": "Active contour"
+      },
+      "contour": {
+        "name": "Contour {number}"
+      }
+    },
     "number": {
       "manual_watering_time": {
         "name": "Manual watering time"

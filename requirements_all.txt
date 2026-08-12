@@ -390,7 +390,7 @@ aiopulse==0.4.7
 aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==3.4.0
+aiopvapi==3.4.1
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
@@ -1872,7 +1872,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.14.5
+plugwise==1.14.6
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2610,6 +2610,9 @@ pysnooz==0.8.6
 # homeassistant.components.soma
 pysoma==0.0.12
 
+# homeassistant.components.somfy_mylink
+pysomfymylink==1.0.0
+
 # homeassistant.components.spc
 pyspcwebgw==0.7.0
 
@@ -2620,7 +2623,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.14.0
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.6.2
+pystiebeleltron==0.6.3
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.7
@@ -2693,6 +2696,9 @@ python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==10.2.0
+
+# homeassistant.components.hotspring
+python-hotspring==1.3.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -3078,9 +3084,6 @@ solarman-opendata==0.0.3
 
 # homeassistant.components.solax
 solax==3.2.4
-
-# homeassistant.components.somfy_mylink
-somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonos
 sonos-websocket==0.2.0
