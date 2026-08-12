@@ -3246,6 +3246,32 @@ def async_get_device_id_by_identifier(
     return device.id
 
 
+@callback
+def async_get_device_and_config_entry_for_domain(
+    hass: HomeAssistant, device_id: str, *, domain: str
+) -> tuple[DeviceEntry | None, ConfigEntry | None]:
+    """Get the device and the config entry of the domain owning it.
+
+    Returns (None, None) for an unknown device id, and (device, None) when no
+    config entry of the domain owns the device. A returned pair is consistent:
+    for a pre-migration composite device id, the device is the domain's split
+    device, not the composite; if several splits belong to config entries of
+    the domain, which pair is returned is undefined. When no split matches the
+    domain, the restored composite is returned as the device.
+    """
+    registry = async_get(hass)
+    if (device := registry.devices.get(device_id)) is not None:
+        config_entry = hass.config_entries.async_get_entry(device.config_entry_id)
+        if config_entry is not None and config_entry.domain == domain:
+            return device, config_entry
+        return device, None
+    for split in registry.async_get_devices_for_composite_device_id(device_id):
+        config_entry = hass.config_entries.async_get_entry(split.config_entry_id)
+        if config_entry is not None and config_entry.domain == domain:
+            return split, config_entry
+    return registry.async_get(device_id), None
+
+
 def async_setup(hass: HomeAssistant) -> None:
     """Set up device registry."""
     if DATA_REGISTRY in hass.data:

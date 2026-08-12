@@ -9500,6 +9500,68 @@ async def test_get_composite_splits(
     assert device_registry.devices.get_composite_splits() == {}
 
 
+async def test_async_get_device_and_config_entry_for_domain(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test getting the device and config entry of a domain owning a device."""
+    entry = MockConfigEntry(domain="domain_a")
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("domain_a", "1")}
+    )
+
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, device.id, domain="domain_a"
+    ) == (device, entry)
+    # A domain not owning the device still gets the device
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, device.id, domain="domain_b"
+    ) == (device, None)
+    # An unknown device id
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, "unknown_id", domain="domain_a"
+    ) == (None, None)
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_async_get_device_and_config_entry_for_domain_composite(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test getting the device and config entry via a composite device id."""
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = _composite_device_storage(entry_a, entry_b)
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    device_registry = dr.async_get(hass)
+
+    split_a = _get_device_for_config_entry(
+        device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
+    )
+    split_b = _get_device_for_config_entry(
+        device_registry, entry_b.entry_id, identifiers={("domain_b", "1")}
+    )
+
+    # The returned pair is consistent: the domain's split device, not the composite
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, COMPOSITE_ID, domain="domain_a"
+    ) == (split_a, entry_a)
+    assert dr.async_get_device_and_config_entry_for_domain(
+        hass, COMPOSITE_ID, domain="domain_b"
+    ) == (split_b, entry_b)
+    # A domain owning none of the splits gets the restored composite and no entry
+    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, COMPOSITE_ID, domain="domain_c"
+    )
+    assert config_entry is None
+    assert device is not None
+    assert device.id == COMPOSITE_ID
+    assert device.config_entries == {entry_a.entry_id, entry_b.entry_id}
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_clear_config_entry_clears_composite_primary_config_entry(
     hass: HomeAssistant, hass_storage: dict[str, Any]
