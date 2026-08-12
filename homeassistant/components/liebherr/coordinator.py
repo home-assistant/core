@@ -174,10 +174,6 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
     def _handle_stream_connected(self) -> None:
         """Handle SSE (re)connect: next event carries the full state."""
         self._replace_next_event = True
-        if self.last_update_success:
-            return
-        self.last_update_success = True
-        self.async_update_listeners()
 
     @callback
     def _handle_stream_disconnected(self) -> None:

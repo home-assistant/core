@@ -1,6 +1,7 @@
 """Test the Liebherr sensor platform."""
 
 import copy
+from dataclasses import replace
 from unittest.mock import MagicMock, patch
 
 from pyliebherrhomeapi import (
@@ -24,6 +25,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
 
@@ -172,17 +174,32 @@ async def test_sensor_update_failure(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    # Simulate reconnect + fresh state
-    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
-        MOCK_DEVICE_STATE
+    # Simulate reconnect with a changed top-zone temperature.
+    fresh_state = replace(
+        MOCK_DEVICE_STATE,
+        controls=[
+            replace(control, value=6)
+            if isinstance(control, TemperatureControl) and control.zone_id == 1
+            else control
+            for control in MOCK_DEVICE_STATE.controls
+        ],
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: fresh_state
+    reconnect_states: list[str] = []
+    unsubscribe = async_track_state_change_event(
+        hass,
+        entity_id,
+        lambda event: reconnect_states.append(event.data["new_state"].state),
     )
 
     await sse_helper.async_reconnect()
+    unsubscribe()
 
-    # Sensor should recover
+    # Sensor should recover directly with fresh data, without exposing stale data.
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "5"
+    assert state.state == "6"
+    assert reconnect_states == ["6"]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
