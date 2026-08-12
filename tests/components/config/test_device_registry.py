@@ -1087,7 +1087,7 @@ async def test_remove_config_entry_from_child_device(
     entry.supports_remove_device = True
 
     # Rejected by the integration
-    response = await ws_client.remove_device(child_device.id, entry.entry_id)
+    response = await ws_client.remove_device(child_device.id)
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert removed_devices == [child_device.id]
@@ -1096,7 +1096,7 @@ async def test_remove_config_entry_from_child_device(
     removed_devices.clear()
 
     # The integration hook receives the child device entry
-    response = await ws_client.remove_device(child_device.id, entry.entry_id)
+    response = await ws_client.remove_device(child_device.id)
     assert response["success"]
     assert removed_devices == [child_device.id]
     assert device_registry.async_get(child_device.id) is None
@@ -1133,7 +1133,7 @@ async def test_remove_config_entry_from_parent_with_children(
     )
     entry.supports_remove_device = True
 
-    response = await ws_client.remove_device(parent.id, entry.entry_id)
+    response = await ws_client.remove_device(parent.id)
     assert response["success"]
     # The hook is consulted once, with the parent; child devices cascade
     assert consulted_devices == [parent.id]
