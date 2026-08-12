@@ -387,7 +387,7 @@ aiopulse==0.4.7
 aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==3.4.0
+aiopvapi==3.4.1
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
