@@ -64,11 +64,11 @@
     }
   },
   "exceptions": {
+    "demand_control_invalid_device": {
+      "message": "No Daikin config entry found for the given device."
+    },
     "demand_control_unsupported": {
       "message": "This Daikin device does not support demand control."
-    },
-    "demand_control_zone_unsupported": {
-      "message": "Demand control can only be set on the main climate entity."
     },
     "error_communicating": {
       "message": "Error communicating with Daikin device: {error}"
@@ -99,6 +99,10 @@
     "set_demand_control": {
       "description": "Limits the maximum power of the Daikin unit as a percentage of its nominal power, for example during peak electricity price periods.",
       "fields": {
+        "device_id": {
+          "description": "The Daikin device to limit.",
+          "name": "Device"
+        },
         "en_demand": {
           "description": "Whether demand control should be enabled.",
           "name": "Enable"

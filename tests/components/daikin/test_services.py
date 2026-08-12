@@ -4,17 +4,16 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.daikin.const import (
     ATTR_EN_DEMAND,
     ATTR_MAX_POW,
     DOMAIN,
     KEY_MAC,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_MODE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import ZoneDevice
 
@@ -40,27 +39,33 @@ async def _async_setup_daikin(
     return config_entry
 
 
+def _device_id(
+    device_registry: dr.DeviceRegistry, config_entry_id: str, mac: str
+) -> str:
+    """Return the device id for a Daikin device."""
+    return device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac), config_entry_id
+    ).id
+
+
 async def test_set_demand_control(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     zone_device: ZoneDevice,
 ) -> None:
     """Test the set_demand_control service."""
     zone_device.support_demand_control = True
     zone_device.set_demand_control = AsyncMock()
 
-    await _async_setup_daikin(hass, zone_device)
-
-    entity_id = entity_registry.async_get_entity_id(
-        CLIMATE_DOMAIN, DOMAIN, zone_device.mac
-    )
-    assert entity_id is not None
+    config_entry = await _async_setup_daikin(hass, zone_device)
 
     await hass.services.async_call(
         DOMAIN,
         "set_demand_control",
         {
-            ATTR_ENTITY_ID: entity_id,
+            ATTR_DEVICE_ID: _device_id(
+                device_registry, config_entry.entry_id, zone_device.mac
+            ),
             ATTR_EN_DEMAND: True,
             ATTR_MAX_POW: 40,
         },
@@ -74,25 +79,22 @@ async def test_set_demand_control(
 
 async def test_set_demand_control_with_mode(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     zone_device: ZoneDevice,
 ) -> None:
     """Test the set_demand_control service with an explicit mode."""
     zone_device.support_demand_control = True
     zone_device.set_demand_control = AsyncMock()
 
-    await _async_setup_daikin(hass, zone_device)
-
-    entity_id = entity_registry.async_get_entity_id(
-        CLIMATE_DOMAIN, DOMAIN, zone_device.mac
-    )
-    assert entity_id is not None
+    config_entry = await _async_setup_daikin(hass, zone_device)
 
     await hass.services.async_call(
         DOMAIN,
         "set_demand_control",
         {
-            ATTR_ENTITY_ID: entity_id,
+            ATTR_DEVICE_ID: _device_id(
+                device_registry, config_entry.entry_id, zone_device.mac
+            ),
             ATTR_EN_DEMAND: True,
             ATTR_MAX_POW: 40,
             ATTR_MODE: 2,
@@ -107,25 +109,22 @@ async def test_set_demand_control_with_mode(
 
 async def test_set_demand_control_disabled(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     zone_device: ZoneDevice,
 ) -> None:
     """Test the set_demand_control service with demand control disabled."""
     zone_device.support_demand_control = True
     zone_device.set_demand_control = AsyncMock()
 
-    await _async_setup_daikin(hass, zone_device)
-
-    entity_id = entity_registry.async_get_entity_id(
-        CLIMATE_DOMAIN, DOMAIN, zone_device.mac
-    )
-    assert entity_id is not None
+    config_entry = await _async_setup_daikin(hass, zone_device)
 
     await hass.services.async_call(
         DOMAIN,
         "set_demand_control",
         {
-            ATTR_ENTITY_ID: entity_id,
+            ATTR_DEVICE_ID: _device_id(
+                device_registry, config_entry.entry_id, zone_device.mac
+            ),
             ATTR_EN_DEMAND: False,
             ATTR_MAX_POW: 40,
         },
@@ -139,59 +138,25 @@ async def test_set_demand_control_disabled(
 
 async def test_set_demand_control_unsupported(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     zone_device: ZoneDevice,
 ) -> None:
     """Test the set_demand_control service on a device that does not support it."""
     zone_device.support_demand_control = False
 
-    await _async_setup_daikin(hass, zone_device)
-
-    entity_id = entity_registry.async_get_entity_id(
-        CLIMATE_DOMAIN, DOMAIN, zone_device.mac
-    )
-    assert entity_id is not None
+    config_entry = await _async_setup_daikin(hass, zone_device)
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             "set_demand_control",
             {
-                ATTR_ENTITY_ID: entity_id,
+                ATTR_DEVICE_ID: _device_id(
+                    device_registry, config_entry.entry_id, zone_device.mac
+                ),
                 ATTR_EN_DEMAND: True,
                 ATTR_MAX_POW: 40,
             },
             blocking=True,
         )
     assert err.value.translation_key == "demand_control_unsupported"
-
-
-async def test_set_demand_control_on_zone_unsupported(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    zone_device: ZoneDevice,
-) -> None:
-    """Test the set_demand_control service on a zone climate entity."""
-    zone_device.support_demand_control = True
-    zone_device.set_demand_control = AsyncMock()
-
-    await _async_setup_daikin(hass, zone_device)
-
-    entity_id = entity_registry.async_get_entity_id(
-        CLIMATE_DOMAIN, DOMAIN, f"{zone_device.mac}-zone0-temperature"
-    )
-    assert entity_id is not None
-
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            DOMAIN,
-            "set_demand_control",
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_EN_DEMAND: True,
-                ATTR_MAX_POW: 40,
-            },
-            blocking=True,
-        )
-    assert err.value.translation_key == "demand_control_zone_unsupported"
-    zone_device.set_demand_control.assert_not_called()

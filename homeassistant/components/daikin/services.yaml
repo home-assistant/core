@@ -1,9 +1,10 @@
 set_demand_control:
-  target:
-    entity:
-      integration: daikin
-      domain: climate
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: daikin
     en_demand:
       required: true
       selector:

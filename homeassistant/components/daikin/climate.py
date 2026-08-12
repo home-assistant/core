@@ -23,7 +23,6 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -33,8 +32,6 @@ from .const import (
     ATTR_STATE_ON,
     ATTR_TARGET_TEMPERATURE,
     DOMAIN,
-    SERVICE_SET_DEMAND_CONTROL,
-    SET_DEMAND_CONTROL_SCHEMA,
     ZONE_NAME_UNCONFIGURED,
 )
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
@@ -173,13 +170,6 @@ async def async_setup_entry(
             if _zone_is_configured(zone)
         )
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_DEMAND_CONTROL,
-        SET_DEMAND_CONTROL_SCHEMA,
-        "async_set_demand_control",
-    )
 
 
 def format_target_temperature(target_temperature: float) -> str:
@@ -396,22 +386,6 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         )
         await self.coordinator.async_refresh()
 
-    async def async_set_demand_control(
-        self, *, en_demand: bool, max_pow: int, mode: int = 0
-    ) -> None:
-        """Set the demand control maximum power of the unit."""
-        if not self.device.support_demand_control:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="demand_control_unsupported",
-            )
-        await self.device.set_demand_control(
-            en_demand="on" if en_demand else "off",
-            max_pow=max_pow,
-            mode=mode,
-        )
-        await self.coordinator.async_refresh()
-
 
 class DaikinZoneClimate(DaikinEntity, ClimateEntity):
     """Representation of a Daikin zone temperature controller."""
@@ -579,11 +553,4 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="zone_hvac_read_only",
-        )
-
-    async def async_set_demand_control(self, **kwargs: Any) -> None:
-        """Reject demand control calls on zone entities."""
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="demand_control_zone_unsupported",
         )
