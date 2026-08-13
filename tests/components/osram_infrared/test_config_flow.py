@@ -2,6 +2,7 @@
 
 import pytest
 
+from homeassistant.components.osram_infrared.config_flow import OsramIrConfigFlow
 from homeassistant.components.osram_infrared.const import (
     CONF_IR_EMITTER_ENTITY_ID,
     CONF_IR_RECEIVER_ENTITY_ID,
@@ -143,4 +144,45 @@ async def test_user_flow_without_receiver(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+    }
+
+
+async def test_validate_input_rejects_stale_emitter(
+    hass: HomeAssistant,
+) -> None:
+    """Test validation rejects an emitter missing from the latest emitter list."""
+    flow = OsramIrConfigFlow()
+    flow.hass = hass
+
+    errors = flow._async_validate_input(
+        {
+            CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+        },
+        emitter_entity_ids=[],
+        receiver_entity_ids=[],
+    )
+
+    assert errors == {
+        CONF_IR_EMITTER_ENTITY_ID: "cannot_connect",
+    }
+
+
+async def test_validate_input_rejects_stale_receiver(
+    hass: HomeAssistant,
+) -> None:
+    """Test validation rejects a receiver missing from the latest receiver list."""
+    flow = OsramIrConfigFlow()
+    flow.hass = hass
+
+    errors = flow._async_validate_input(
+        {
+            CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+            CONF_IR_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
+        },
+        emitter_entity_ids=[MOCK_INFRARED_EMITTER_ENTITY_ID],
+        receiver_entity_ids=[],
+    )
+
+    assert errors == {
+        CONF_IR_RECEIVER_ENTITY_ID: "cannot_connect",
     }
