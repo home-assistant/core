@@ -155,7 +155,7 @@ def _build_entities(
             consumption_address=consumption_address,
         )
         for direction in _DIRECTIONS
-        for slot in getattr(period, direction)
+        for slot in (period.offtake if direction == "offtake" else period.injection)
         if _normalize_slot_code(slot.time_of_use_slot_code) != _BLENDED_SLOT_CODE
         for excl_vat in (False, True)
     ]
@@ -273,6 +273,12 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         )
         object_id = slugify(f"{location} {' '.join(entity_words)}")
         self.entity_id = f"sensor.{object_id}"
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True only when a current price is available."""
+        return super().available and self.native_value is not None
 
     @property
     @override

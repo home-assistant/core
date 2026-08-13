@@ -66,6 +66,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]])
         self.client = client
         self.business_agreement_numbers = business_agreement_numbers
         self.ean_energy_types: dict[str, str | None] = {}
+        self._logged_failures: set[str] = set()
 
     @override
     async def _async_update_data(self) -> dict[str, PricesResponse]:
@@ -85,11 +86,15 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]])
                 raise ConfigEntryAuthFailed from result
             if isinstance(result, EngieBeError):
                 first_error = first_error or result
-                if self.data is not None and ban in self.data:
+                had_data = self.data is not None and ban in self.data
+                if ban in self._logged_failures:
+                    LOGGER.debug(
+                        "Fetching prices for %s still failing: %s", _mask(ban), result
+                    )
+                elif had_data:
                     LOGGER.warning(
                         "Fetching prices for %s failed: %s", _mask(ban), result
                     )
-                    data[ban] = self.data[ban]
                 else:
                     LOGGER.warning(
                         "Fetching prices for %s failed and no previous data is"
@@ -97,10 +102,16 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]])
                         _mask(ban),
                         result,
                     )
+                self._logged_failures.add(ban)
+                if had_data:
+                    data[ban] = self.data[ban]
                 continue
             if isinstance(result, BaseException):
                 raise result
             any_success = True
+            if ban in self._logged_failures:
+                LOGGER.info("Fetching prices for %s recovered", _mask(ban))
+                self._logged_failures.discard(ban)
             data[ban] = result
 
         if first_error is not None and not any_success:

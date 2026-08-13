@@ -165,6 +165,60 @@ async def test_unexpected_exception_is_not_swallowed(
     assert coordinator.last_update_success is False
 
 
+async def test_failure_and_recovery_are_logged_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failing BAN logs one WARNING, then DEBUG on repeat failures, then one recovery INFO."""
+    await _setup_two_bans(hass, mock_config_entry, mock_engie_client)
+
+    mock_engie_client.return_value.async_get_prices.side_effect = [
+        EngieBeCommunicationError("boom"),
+        _build_prices(0.2),
+    ]
+    caplog.set_level("DEBUG", logger="homeassistant.components.engie_be")
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("failed") == 1
+    assert "recovered" not in caplog.text
+    caplog.clear()
+
+    mock_engie_client.return_value.async_get_prices.side_effect = [
+        EngieBeCommunicationError("boom"),
+        _build_prices(0.2),
+    ]
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "still failing" in caplog.text
+    assert "failed" not in caplog.text
+    caplog.clear()
+
+    mock_engie_client.return_value.async_get_prices.side_effect = [
+        _build_prices(0.3),
+        _build_prices(0.4),
+    ]
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("recovered") == 1
+
+    state_ban = hass.states.get(_entity_id(entity_registry, BAN))
+    state_ban_2 = hass.states.get(_entity_id(entity_registry, BAN_2))
+    assert state_ban is not None
+    assert state_ban_2 is not None
+    assert state_ban.state == "0.3"
+    assert state_ban_2.state == "0.4"
+
+
 async def test_recovery_after_all_bans_fail(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

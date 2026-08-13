@@ -19,7 +19,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.engie_be.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -437,13 +437,13 @@ def _degraded_ean_absent() -> dict[str, PricesResponse]:
         pytest.param(_degraded_ean_absent, id="ean-absent"),
     ],
 )
-async def test_native_value_degrades_to_unknown(
+async def test_native_value_degrades_to_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     degraded_data: Callable[[], dict[str, PricesResponse]],
 ) -> None:
-    """Test native_value returns None (state unknown) for every degraded-data branch."""
+    """Test native_value returning None makes the entity unavailable for every degraded-data branch."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -459,7 +459,52 @@ async def test_native_value_degrades_to_unknown(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_stale_reused_prices_go_unavailable_past_period_end(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failing BAN's reused prices go unavailable once its period no longer covers today, leaving an unaffected BAN's sensor available."""
+    freezer.move_to("2026-08-13T12:00:00+02:00")
+    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
+        build_relations(BAN, BAN_2)
+    )
+    mock_engie_client.return_value.async_get_prices.side_effect = [
+        build_prices(valid_from="2026-08-01", valid_to="2026-08-14"),
+        build_prices(),
+    ]
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    )
+    other_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN_2}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    )
+    assert entity_id is not None
+    assert other_entity_id is not None
+
+    mock_engie_client.return_value.async_get_prices.side_effect = [
+        EngieBeCommunicationError("boom"),
+        build_prices(),
+    ]
+    freezer.tick(timedelta(days=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    other_state = hass.states.get(other_entity_id)
+    assert state is not None
+    assert other_state is not None
+    assert state.state == STATE_UNAVAILABLE
+    float(other_state.state)
 
 
 async def test_recovering_ban_adds_entities(
