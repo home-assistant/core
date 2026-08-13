@@ -11,12 +11,12 @@ from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
     TeslaFleetError,
+    TeslemetryRegistrationError,
 )
 
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     DOMAIN,
-    REGISTER_URL,
     SOFTWARE_ID,
     TOKEN_URL,
 )
@@ -108,23 +108,12 @@ async def test_oauth_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-@pytest.mark.parametrize(
-    "register_kwargs",
-    [
-        pytest.param({"exc": ClientConnectionError()}, id="connection_error"),
-        pytest.param({"exc": TimeoutError()}, id="timeout"),
-        pytest.param({"json": {}}, id="missing_client_id"),
-        pytest.param({"text": "not-json"}, id="malformed_response"),
-    ],
-)
 async def test_registration_failure_shows_retry_form(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    register_kwargs: dict[str, Any],
+    mock_register_client: AsyncMock,
 ) -> None:
-    """Test transport, timeout, and malformed responses show a retryable form."""
-    aioclient_mock.clear_requests()
-    aioclient_mock.post(REGISTER_URL, **register_kwargs)
+    """Test a library registration error shows a retryable form."""
+    mock_register_client.side_effect = TeslemetryRegistrationError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -138,11 +127,10 @@ async def test_registration_failure_shows_retry_form(
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_registration_failure_recovers(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    mock_register_client: AsyncMock,
 ) -> None:
     """Test the flow recovers when registration succeeds on retry."""
-    aioclient_mock.clear_requests()
-    aioclient_mock.post(REGISTER_URL, exc=ClientConnectionError())
+    mock_register_client.side_effect = TeslemetryRegistrationError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -152,8 +140,7 @@ async def test_registration_failure_recovers(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
-    aioclient_mock.clear_requests()
-    aioclient_mock.post(REGISTER_URL, json={"client_id": DCR_CLIENT_ID})
+    mock_register_client.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -170,6 +157,7 @@ async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_register_client: AsyncMock,
 ) -> None:
     """Test reauth flow."""
 
@@ -213,10 +201,7 @@ async def test_reauth(
 
     # Reauth must reuse the client registered during the original setup, not
     # register a new one.
-    register_calls = [
-        call for call in aioclient_mock.mock_calls if str(call[1]) == REGISTER_URL
-    ]
-    assert len(register_calls) == 1
+    mock_register_client.assert_called_once()
 
 
 @pytest.mark.usefixtures("current_request_with_host")

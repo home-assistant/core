@@ -6,9 +6,10 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from tesla_fleet_api.teslemetry import TeslemetryClientRegistration
 from teslemetry_stream.stream import recursive_match
 
-from homeassistant.components.teslemetry.const import REGISTER_URL, TOKEN_URL
+from homeassistant.components.teslemetry.const import TOKEN_URL
 
 from .const import (
     COMMAND_OK,
@@ -36,9 +37,15 @@ def mock_setup_entry():
 
 
 @pytest.fixture(autouse=True)
-def mock_register_post(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock the dynamic client registration endpoint."""
-    aioclient_mock.post(REGISTER_URL, json={"client_id": DCR_CLIENT_ID})
+def mock_register_client() -> Generator[AsyncMock]:
+    """Mock the library dynamic client registration helper."""
+    with patch(
+        "homeassistant.components.teslemetry.oauth.register_client",
+        return_value=TeslemetryClientRegistration(
+            client_id=DCR_CLIENT_ID, raw={"client_id": DCR_CLIENT_ID}
+        ),
+    ) as mock_register_client:
+        yield mock_register_client
 
 
 @pytest.fixture

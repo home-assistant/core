@@ -13,6 +13,7 @@ from tesla_fleet_api.exceptions import (
     LoginRequired,
     SubscriptionRequired,
     TeslaFleetError,
+    TeslemetryRegistrationError,
 )
 from tesla_fleet_api.teslemetry import Teslemetry
 from teslemetry_stream import TeslemetryStream
@@ -54,7 +55,7 @@ from .coordinator import (
 )
 from .helpers import async_update_device_sw_version, flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
-from .oauth import TeslemetryRegistrationError, async_ensure_client_credential
+from .oauth import async_ensure_client_credential
 from .services import async_setup_services
 
 PLATFORMS: Final = [

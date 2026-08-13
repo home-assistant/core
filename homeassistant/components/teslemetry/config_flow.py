@@ -9,6 +9,7 @@ from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
     TeslaFleetError,
+    TeslemetryRegistrationError,
 )
 from tesla_fleet_api.teslemetry import Teslemetry
 
@@ -21,7 +22,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
-from .oauth import TeslemetryRegistrationError, async_ensure_client_credential
+from .oauth import async_ensure_client_credential
 
 
 class OAuth2FlowHandler(

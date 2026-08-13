@@ -20,7 +20,7 @@ from tesla_fleet_api.exceptions import (
 )
 
 from homeassistant.components.teslemetry import _get_access_token
-from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN, REGISTER_URL
+from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
 
 # Coordinator constants
 from homeassistant.components.teslemetry.coordinator import (
@@ -32,11 +32,8 @@ from homeassistant.components.teslemetry.coordinator import (
     VEHICLE_INTERVAL,
 )
 from homeassistant.components.teslemetry.models import TeslemetryData
-from homeassistant.components.teslemetry.oauth import (
-    TeslemetryImplementation,
-    async_ensure_client_credential,
-)
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.teslemetry.oauth import TeslemetryImplementation
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
@@ -45,6 +42,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -72,7 +70,6 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -389,7 +386,7 @@ async def test_device_retention_during_reload(
 
 
 async def test_migrate_from_version_1_success(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_register_client: AsyncMock
 ) -> None:
     """Test successful config migration from version 1."""
     mock_entry = MockConfigEntry(
@@ -423,9 +420,7 @@ async def test_migrate_from_version_1_success(
     # The migrate grant only accepts the legacy static client_id, so no DCR
     # client should be registered, and the implementation backing the migrated
     # entry must be the one that minted its refresh token.
-    assert not [
-        call for call in aioclient_mock.mock_calls if str(call[1]) == REGISTER_URL
-    ]
+    mock_register_client.assert_not_called()
     implementations = await config_entry_oauth2_flow.async_get_implementations(
         hass, DOMAIN
     )
@@ -472,8 +467,9 @@ async def test_migrate_from_version_1_token_endpoint_error(hass: HomeAssistant) 
     assert entry.version == 1  # Version should remain unchanged on migration failure
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_failed_migration_then_fresh_flow_registers_client(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_register_client: AsyncMock
 ) -> None:
     """A failed migration must not leave a stale credential that skips DCR."""
     mock_entry = MockConfigEntry(
@@ -499,15 +495,16 @@ async def test_failed_migration_then_fresh_flow_registers_client(
         hass, DOMAIN
     )
     assert DOMAIN not in implementations
+    mock_register_client.assert_not_called()
 
-    # Removing the failed entry and starting fresh must perform DCR.
+    # Removing the failed entry and starting a fresh flow must perform DCR.
     await hass.config_entries.async_remove(mock_entry.entry_id)
-    await async_ensure_client_credential(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    register_calls = [
-        call for call in aioclient_mock.mock_calls if str(call[1]) == REGISTER_URL
-    ]
-    assert len(register_calls) == 1
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    mock_register_client.assert_called_once()
     implementations = await config_entry_oauth2_flow.async_get_implementations(
         hass, DOMAIN
     )

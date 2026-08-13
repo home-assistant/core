@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any, Final, override
 
-from aiohttp import ClientError
+from tesla_fleet_api.teslemetry import register_client
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -14,18 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import AUTHORIZE_URL, DOMAIN, REGISTER_URL, SOFTWARE_ID, TOKEN_URL
+from .const import AUTHORIZE_URL, DOMAIN, SOFTWARE_ID, TOKEN_URL
 
 REGISTRATION_LOCK: Final = f"{DOMAIN}_registration_lock"
-
-
-class TeslemetryRegistrationError(Exception):
-    """Raised when dynamic client registration cannot be completed.
-
-    Internal control-flow signal: always caught and converted into a deferred
-    startup retry or an in-place ``cannot_connect`` config-flow step, so it is
-    never surfaced to the user directly.
-    """
 
 
 class TeslemetryImplementation(
@@ -74,11 +65,8 @@ class TeslemetryImplementation(
 
     @override
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh a token.
-
-        Software metadata is re-sent on every refresh so the server can pick
-        up a software_version change after a Home Assistant upgrade.
-        """
+        """Refresh tokens."""
+        # Re-send software metadata so the server picks up a version change after an upgrade.
         new_token = await self._token_request(
             {
                 "grant_type": "refresh_token",
@@ -93,18 +81,9 @@ class TeslemetryImplementation(
 
 
 async def async_ensure_client_credential(hass: HomeAssistant) -> None:
-    """Ensure an OAuth client is registered for this Home Assistant installation.
-
-    Teslemetry supports RFC 7591 dynamic client registration. The first time
-    this installation connects, a client is registered and its client_id is
-    imported as the application credential used for every future
-    authorization, including reauthentication, so the server can recognize
-    repeat authorizations as the same client instead of minting a new one.
-
-    Registration is serialized with a per-installation lock and re-checked
-    inside it so two concurrent flows recovering from a setup-time failure
-    cannot register and persist different clients under the same auth key.
-    """
+    """Register an OAuth client for this installation if one does not exist yet."""
+    # Serialize and re-check inside the lock so two concurrent recoveries cannot
+    # register and persist different clients under the same auth key.
     lock: asyncio.Lock = hass.data.setdefault(REGISTRATION_LOCK, asyncio.Lock())
     async with lock:
         implementations = await config_entry_oauth2_flow.async_get_implementations(
@@ -113,35 +92,14 @@ async def async_ensure_client_credential(hass: HomeAssistant) -> None:
         if DOMAIN in implementations:
             return
 
-        session = async_get_clientsession(hass)
-        try:
-            response = await session.post(
-                REGISTER_URL,
-                json={
-                    "client_name": "Home Assistant",
-                    "software_id": SOFTWARE_ID,
-                    "software_version": __version__,
-                },
-            )
-            response.raise_for_status()
-            registration = await response.json()
-        except (ClientError, TimeoutError) as err:
-            raise TeslemetryRegistrationError(
-                "Could not reach Teslemetry to register a client"
-            ) from err
-        except ValueError as err:
-            raise TeslemetryRegistrationError(
-                "Teslemetry returned a malformed registration response"
-            ) from err
-
-        client_id = registration.get("client_id") if registration else None
-        if not client_id or not isinstance(client_id, str):
-            raise TeslemetryRegistrationError(
-                "Teslemetry registration response did not contain a client_id"
-            )
-
+        registration = await register_client(
+            async_get_clientsession(hass),
+            "Home Assistant",
+            SOFTWARE_ID,
+            __version__,
+        )
         await async_import_client_credential(
             hass,
             DOMAIN,
-            ClientCredential(client_id, "", name="Teslemetry"),
+            ClientCredential(registration.client_id, "", name="Teslemetry"),
         )
