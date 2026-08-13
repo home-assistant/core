@@ -67,12 +67,14 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: The integration does not encounter states that require manual user intervention or configuration migration via the repair system.
   stale-devices:
     status: exempt
     comment: There are no stale devices.
 
   # Platinum
   async-dependency: done
-  inject-websession: todo
+  inject-websession: done
   strict-typing: done

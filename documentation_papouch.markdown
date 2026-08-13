@@ -12,6 +12,7 @@ ha_release: 2026.8
 ha_iot_class: Local Polling
 ha_config_flow: true
 ha_domain: papouch
+ha_diagnostics: true
 ---
 
 The **Papouch** integration allows you to integrate your [Papouch](https://papouch.com/) hardware devices into Home Assistant.
@@ -39,10 +40,10 @@ Currently, only Ethernet devices in **WEB** mode are supported:
 All supported Papouch devices feature DHCP discovery. Once the integration is active in your Home Assistant instance, devices sending DHCP requests will automatically appear in the **Discovered** section on the Integrations page. Clicking **Configure** will guide you through the setup process.
 
 {% note %}
-This will be active if DHCP is enabled in the device.
+This will be active if DHCP is enabled in the device. Note that devices with an active password configured may fail or be skipped during automatic DHCP discovery because authentication is required.
 {% endnote %}
 
-Active discovery is also triggered automatically when you manually add the integration via the user interface. It will scan your local network using UDP broadcasts and present a list of available, unregistered devices along with their names, locations, and IP addresses. However if a device has a password it won't be displayed in the list of available devices, even though with a right password it is.
+Active discovery is also triggered automatically when you manually add the integration via the user interface. It will scan your local network using UDP broadcasts and present a list of available, unregistered devices along with their names, locations, and IP addresses. However, if a device has a password set, it will not be displayed in the list of available devices during network scans.
 
 {% note %}
 If your Home Assistant instance is running in an isolated network environment (such as WSL or specific Docker network configurations) where UDP broadcasts cannot reach the container, automatic discovery will fail. In this case, you can simply select the option to enter the IP address manually during the configuration flow.
@@ -52,15 +53,15 @@ If your device was not discovered automatically, you can complete the setup manu
 
 1. The setup flow will always begin with an active network scan.
 2. If the list of discovered devices is empty, or if you prefer not to select any of the automatically discovered devices, choose the option to enter the IP address manually.
-3. Enter the device's IP address, your preferred polling interval and **admin** password (if set)
+3. Enter the device's IP address, your preferred polling interval, and the admin password (if set).
 4. In the final step, you can assign the device to an area and customize its name.
 
 {% note %}
-If the device doesn't have any password set and you did set one, it will work, of course it won't work vice versa.
+If the device doesn't have any password set and you provide one in the setup, it will work; however, the reverse will fail if the device expects a password that is not provided.
 {% endnote %}
 
 {% note %}
-Some of the devices can be run in various modes (e.g. TCP client/server etc.). That means if you are trying to configure a device that is for example in TCP server, the integration will notice that and provide you a choice if you want to switch it to the WEB mode or abort the configuration. We don't support other modes since there is no point of not changing it to WEB mode in that particular case.
+Some of the devices can be run in various modes (e.g. TCP client/server, etc.). That means if you are trying to configure a device that is, for example, in TCP server mode, the integration will detect this and offer you a choice to either switch it to WEB mode or abort the configuration. Other modes are not supported since the device must operate in WEB mode for proper integration functionality.
 {% endnote %}
 
 {% note %}
@@ -69,12 +70,32 @@ The device must be powered on and reachable by Home Assistant during the initial
 
 If you need to change your selection during the manual configuration, simply close the setup dialog and start the process again.
 
-## Polling interval
+## Reconfiguration
 
-After creating a configuration for some device, you can change its polling interval by
+If your device's IP address or access password changes, you can update the integration settings without removing and re-adding the device:
 
 1. Navigate to **Settings** > **Devices & Services**.
-2. Click the cog right next to three dots in your Papouch integration and type a new polling interval, then **Submit**.
+2. Click the three dots next to your Papouch integration and select **Reconfigure**.
+3. Update the IP address and/or password as needed.
+
+{% note %}
+The reconfiguration flow updates the connection credentials and IP address used by Home Assistant to communicate with the device. It does not modify the physical device's internal configuration (such as changing its IP address or password on the device itself).
+{% endnote %}
+
+## Polling interval
+
+After creating a configuration for a device, you can change its polling interval by:
+
+1. Navigate to **Settings** > **Devices & Services**.
+2. Click the cog icon right next to the three dots in your Papouch integration, enter a new polling interval, and click **Submit**.
+
+## Diagnostics
+
+This integration supports Home Assistant diagnostics, allowing you to export technical details and configuration states to help troubleshoot issues. You can download the diagnostic data by:
+
+1. Navigating to **Settings** > **Devices & Services**.
+2. Finding your Papouch integration and clicking the three dots on the configuration entry.
+3. Selecting **Download diagnostics**.
 
 ## Using the device
 
@@ -86,7 +107,7 @@ If you change settings directly via the device's web interface, the integration 
 
 ### Known limitations and nuances
 
-This section describes various limitations and nuances that can/will happen during using the devices.
+This section describes various limitations and nuances that can occur while using the devices.
 
 #### Number entities
 
@@ -106,7 +127,7 @@ Changing the physical unit of measurement on the device's web interface will not
 
 #### Dynamic entities
 
-Some devices (e.g., TH2E) expose a variable number of entities depending on the configured sensor type. If you change the sensor type, some previously active entities may become unavailable. You can safely delete these orphaned entities from Home Assistant; their historical data will remain intact, and they will be recreated if you ever switch the sensor type back. But this doesn't mean that entities will be created, use a restart button for that (more in [Troubleshooting](#troubleshooting)).
+Some devices (e.g., TH2E) expose a variable number of entities depending on the configured sensor type. If you change the sensor type, some previously active entities may become unavailable. You can safely delete these orphaned entities from Home Assistant; their historical data will remain intact, and they will be recreated if you ever switch the sensor type back. To recreate entities after changing hardware configurations, use a reload action (more details in [Troubleshooting](#troubleshooting)).
 
 ### Quido
 
@@ -127,7 +148,7 @@ The official manual can be found in the downloads section of the [Quido product 
 
 The integration provides the following entities for TH2E devices:
 
-- **Button**: Triggers automatic configuration of the connected sensor type. Does restart.
+- **Button**: Triggers automatic configuration of the connected sensor type (triggers a restart).
 - **Select**: Allows manual selection and configuration of the connected sensor type.
 - **Sensor**: Provides environmental readings depending on the configured sensor type.
 
@@ -137,35 +158,33 @@ For more details, see the official manual available in the downloads section of 
 
 The integration provides the following entities for TME devices:
 
-- **Sensor**: Provides environmental readings depending on the connected sensor type.
+- **Sensor**: Provides environmental readings depending on the configured sensor type.
 
 For more details, see the official manuals available in the downloads section of the [TME](https://papouch.com/tme-ethernetovy-teplomer-p4602/?sti=635677&vid=1879) and [TME Multi/Radio](https://papouch.com/tme-radio-bezdratovy-meric-teploty-a-vlhkosti-p4603/?sti=635678&vid=2965) product pages.
 
 ### Papago
 
-Papago is a name for a whole family of devices.
+Papago is a family of devices.
 
 #### METEO
 
 The integration provides these entities:
 
-- **Buttons** Automatic type configuration of the sensor.
-  - Only for sensors A and B, since sensor C can have only 1 possible type of a sensor.
-  - Note that this doesn't lead to the restart.
+- **Button**: Automatic type configuration of the sensor (only for sensors A and B, since sensor C has only 1 possible sensor type. This does not cause a restart).
 - **Select**: Allows manual selection and configuration of the connected sensor type.
-- **Sensors** Various sensors depending on the type of the sensor.
+- **Sensor**: Various sensors depending on the type of the sensor.
 
 The official manual can be found in the downloads section of the [Papago Meteo product page](https://papouch.com/papago-meteo-eth-zakladna-prumyslove-meteostanice-s-ethernetem-a-poe-p6878/?vid=4887).
 
 #### 5HDI DO
 
-The integration provides the following entities for Quido devices:
+The integration provides the following entities:
 
 - **Binary sensor**: Watches the state of digital inputs.
 - **Button**: Allows bulk connecting/disconnecting of all outputs and resetting counters.
 - **Number**:
   - Decreasing counters by a specific value (up to 2<sup>32</sup> - 1).
-  - Setting the output connection/disconnection duration (from 0.5 s to 127.5 s with 0.5s step).
+  - Setting the output connection/disconnection duration (from 0.5s to 127.5s with 0.5s step).
 - **Select**: Changes the operation mode of the input counters.
 - **Sensor**: Reads temperature and pulse counts.
 - **Switch**: Changes the state of individual outputs.
@@ -176,9 +195,8 @@ The official manual can be found in the downloads section of the [Papago 5HDI DO
 
 The integration provides these entities:
 
-- **Buttons** Automatic type configuration of the both sensors.
-  - Note that this doesn't lead to the restart.
-- **Sensors** Various sensors depending on the type of the sensor.
+- **Button**: Automatic type configuration of both sensors (does not cause a restart).
+- **Sensor**: Various sensors depending on the type of the sensor.
 - **Select**: Allows manual selection and configuration of the connected sensor type.
 
 The official manual can be found in the downloads section of the [Papago 2TH product page](https://papouch.com/papago-2th-eth-2-mereni-teploty-vlhkosti-a-rosneho-bodu-s-ethernetem-p2989/).
@@ -188,10 +206,10 @@ The official manual can be found in the downloads section of the [Papago 2TH pro
 - **Binary sensor**: Watches the state of digital inputs.
 - **Button**:
   - Allows bulk connecting/disconnecting of all outputs and resetting counters.
-  - Automatic type configuration of the both sensors. Doesn't need a restart.
+  - Automatic type configuration of both sensors (does not require a restart).
 - **Number**:
   - Decreasing counters by a specific value (up to 2<sup>32</sup> - 1).
-  - Setting the output connection/disconnection duration (from 0.5 s to 127.5 s with 0.5s step).
+  - Setting the output connection/disconnection duration (from 0.5s to 127.5s with 0.5s step).
 - **Select**:
   - Changes the operation mode of the input counters.
   - Allows manual selection and configuration of the connected sensor type.
