@@ -48,7 +48,13 @@ class PapouchNumber(PapouchEntity, NumberEntity):
         self.category = number_data["category"]
 
         self._attr_unique_id = f"{mac}_{self.category}_{self.item_id}"
-        self._attr_name = number_data["name"]
+
+        if number_data.get("use_custom_name", False):
+            self._attr_name = number_data["name"]
+        else:
+            self._attr_translation_key = number_data["translation"]
+            if "placeholder" in number_data:
+                self._attr_translation_placeholders = number_data["placeholder"]
 
         self._attr_native_min_value = number_data.get("min_value", 0)
         self._attr_native_max_value = number_data.get("max_value", 100)

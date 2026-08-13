@@ -151,7 +151,8 @@ class TMEBase(PapouchDevice, ABC):
                         {
                             "item_id": sub_id,
                             "type": "sensor",
-                            "name": f"{sensor_name} Temperature".strip(),
+                            "translation": "sensor_temperature_placeholder",
+                            "placeholder": {"placeholder": sensor_name},
                             "device_class": "temperature",
                             "state_class": "measurement",
                             "unit": unit,
@@ -162,7 +163,8 @@ class TMEBase(PapouchDevice, ABC):
                         {
                             "item_id": sub_id,
                             "type": "sensor",
-                            "name": f"{sensor_name} Humidity".strip(),
+                            "translation": "sensor_humidity_placeholder",
+                            "placeholder": {"placeholder": sensor_name},
                             "device_class": "humidity",
                             "state_class": "measurement",
                             "unit": unit,
@@ -173,7 +175,8 @@ class TMEBase(PapouchDevice, ABC):
                         {
                             "item_id": sub_id,
                             "type": "sensor",
-                            "name": f"{sensor_name} Battery".strip(),
+                            "translation": "sensor_batt_placeholder",
+                            "placeholder": {"placeholder": sensor_name},
                             "device_class": "battery",
                             "state_class": "measurement",
                             "unit": "%",
@@ -184,7 +187,8 @@ class TMEBase(PapouchDevice, ABC):
                         {
                             "item_id": sub_id,
                             "type": "sensor",
-                            "name": f"{sensor_name} Signal Strength".strip(),
+                            "translation": "sensor_rsii_placeholder",
+                            "placeholder": {"placeholder": sensor_name},
                             "device_class": "signal_strength",
                             "state_class": "measurement",
                             "unit": "dBm",

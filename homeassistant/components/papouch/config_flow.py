@@ -111,6 +111,8 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 mac_address = await client.get_device_mac()
+            except DeviceAuthError:
+                return {"base": "invalid_auth"}, None
             except aiohttp.ClientError, DeviceLogicError:
                 return {"base": "cannot_connect"}, None
 

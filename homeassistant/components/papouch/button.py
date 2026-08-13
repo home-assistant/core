@@ -48,7 +48,13 @@ class PapouchCommandButton(PapouchEntity, ButtonEntity):
         self.cmd_type = btn_data["cmd"]
 
         self._attr_unique_id = f"{mac}_btn_{self.cmd_type}"
-        self._attr_name = btn_data["name"]
+
+        if btn_data.get("use_custom_name", False):
+            self._attr_name = btn_data["name"]
+        else:
+            self._attr_translation_key = btn_data["translation"]
+            if "placeholder" in btn_data:
+                self._attr_translation_placeholders = btn_data["placeholder"]
 
         if "icon" in btn_data:
             self._attr_icon = btn_data["icon"]

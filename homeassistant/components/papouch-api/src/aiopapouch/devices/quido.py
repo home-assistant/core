@@ -64,9 +64,18 @@ class QuidoBase(PapouchDevice, ABC):
     def get_supported_buttons(self) -> list[dict[str, Any]]:
         """Return the configuration data for buttons that supports Quido."""
         return [
-            {"name": "Connect all coils", "cmd": "connect_all_coils"},
-            {"name": "Disconnect all coils", "cmd": "disconnect_all_coils"},
-            {"name": "Reset all counters", "cmd": "reset_all_counters"},
+            {
+                "cmd": "connect_all_coils",
+                "translation": "connect_all_coils",
+            },
+            {
+                "cmd": "disconnect_all_coils",
+                "translation": "disconnect_all_coils",
+            },
+            {
+                "cmd": "reset_all_counters",
+                "translation": "reset_all_counters",
+            },
         ]
 
     @override
@@ -76,7 +85,8 @@ class QuidoBase(PapouchDevice, ABC):
             {
                 "item_id": str(i),
                 "type": "input",
-                "name": f"Input {i}",
+                "translation": "input_placeholder",
+                "placeholder": {"placeholder": str(i)},
             }
             for i in range(1, self.number_inputs + 1)
         ]
@@ -89,7 +99,8 @@ class QuidoBase(PapouchDevice, ABC):
                 "item_id": str(i),
                 "category": "decrease_counter",
                 "type": "counter",
-                "name": f"Decrease counter {i} by",
+                "translation": "decrease_counter_placeholder",
+                "placeholder": {"placeholder": str(i)},
                 "min_value": 0,
                 "max_value": (2**self.size_counter_bits) - 1,
                 "step": 1,
@@ -103,6 +114,10 @@ class QuidoBase(PapouchDevice, ABC):
                 "category": f"output_{action}_time",
                 "type": "switch",
                 "name": f"Output {i} {action} for duration (s)",
+                "translation": "output_on_duration_placeholder"
+                if action == "on"
+                else "output_off_duration_placeholder",
+                "placeholder": {"placeholder": str(i)},
                 "min_value": 0.5,
                 "max_value": 127.5,
                 "step": 0.5,
@@ -119,11 +134,11 @@ class QuidoBase(PapouchDevice, ABC):
     @override
     def get_supported_sensors(self) -> list[dict[str, Any]]:
         """Return the configuration data for read-only sensors."""
-        sensors = [
+        sensors: list[dict[str, Any]] = [
             {
                 "item_id": str(i),
                 "type": "temperature",
-                "name": f"Temperature {i}",
+                "translation": "sensor_temperature",
                 "device_class": "temperature",
                 "state_class": "measurement",
                 "unit": self.temperature_unit,
@@ -136,7 +151,8 @@ class QuidoBase(PapouchDevice, ABC):
                 {
                     "item_id": str(i),
                     "type": "counter",
-                    "name": f"Input {i} Count",
+                    "translation": "sensor_counter_placeholder",
+                    "placeholder": {"placeholder": str(i)},
                     "state_class": "total",
                     "unit": "pulses",
                     "icon": "mdi:square-wave",
@@ -153,7 +169,8 @@ class QuidoBase(PapouchDevice, ABC):
         return [
             {
                 "item_id": str(i),
-                "name": f"Output {i}",
+                "translation": "output_placeholder",
+                "placeholder": {"placeholder": str(i)},
             }
             for i in range(1, self.number_outputs + 1)
         ]
@@ -167,7 +184,8 @@ class QuidoBase(PapouchDevice, ABC):
                 {
                     "item_id": str(i),
                     "category": "counter_mode",
-                    "name": f"Counter {i} Mode",
+                    "translation": "counter_mode",
+                    "placeholder": {"placeholder": str(i)},
                     "options": self.COUNTER_MODES,
                 }
             )

@@ -134,7 +134,7 @@ class TH2E(PapouchDevice, HTTPMixin):
     @override
     def get_supported_buttons(self) -> list[dict[str, Any]]:
         """Unused in TH2E."""
-        return [{"name": "Set sensor automatically", "cmd": "set_sensor"}]
+        return [{"translation": "set_sensor", "cmd": "set_sensor"}]
 
     @override
     def get_supported_binary_sensors(self) -> list[dict[str, Any]]:
@@ -161,7 +161,7 @@ class TH2E(PapouchDevice, HTTPMixin):
                         {
                             "item_id": item_id,
                             "type": "sensor",
-                            "name": "Temperature",
+                            "translation": "sensor_temperature",
                             "device_class": "temperature",
                             "state_class": "measurement",
                             "unit": self._get_unit(sns_type, unit_code),
@@ -173,7 +173,7 @@ class TH2E(PapouchDevice, HTTPMixin):
                         {
                             "item_id": item_id,
                             "type": "sensor",
-                            "name": "Humidity",
+                            "translation": "sensor_humidity",
                             "device_class": "humidity",
                             "state_class": "measurement",
                             "unit": self._get_unit(sns_type, unit_code),
@@ -185,7 +185,7 @@ class TH2E(PapouchDevice, HTTPMixin):
                         {
                             "item_id": item_id,
                             "type": "sensor",
-                            "name": "Dew Point",
+                            "translation": "sensor_dew_point",
                             "device_class": "temperature",
                             "state_class": "measurement",
                             "unit": self._get_unit(sns_type, unit_code),
@@ -206,7 +206,8 @@ class TH2E(PapouchDevice, HTTPMixin):
             {
                 "item_id": 1,
                 "category": "sensor_type",
-                "name": "Sensor type:",
+                "translation": "sensor_type",
+                "placeholder": {"placeholder": "Sensor"},
                 "options": self.SENSOR_TYPES,
             }
         ]

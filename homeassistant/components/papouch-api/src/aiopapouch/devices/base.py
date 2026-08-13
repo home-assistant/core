@@ -90,18 +90,18 @@ class PapouchDevice(ABC):
     """
 
     COUNTER_MODES = [
-        "Off",
-        "Counts descending edges",
-        "Counts ascending edges",
-        "Counts ascending and descending edges",
+        "off",
+        "counts_descending_edges",
+        "counts_ascending_edges",
+        "counts_ascending_and_descending_edges",
     ]
 
     SENSOR_TYPES = [
-        "Unused",
-        "Temperature / Humidity (TH15)",
-        "Temperature (DS)",
-        "Temperature / Humidity (TH3x)",
-        "Temperature (TMP)",
+        "unused",
+        "temperature_humidity_th15",
+        "temperature_ds",
+        "temperature_humidity_th3x",
+        "temperature_tmp",
     ]
 
     TEMPERATURE_SNS_TYPE = "1"
@@ -183,8 +183,11 @@ class PapouchDevice(ABC):
 
         Expected dictionary structure:
         {
-            "name": str,
             "cmd": str,
+            "name": str, # Fallback name
+            "translation": str (Optional), # Key in strings.json
+            "placeholder": dict[str, str] (Optional), # Translation formatting vars
+            "use_custom_name": bool (Optional), # If True, 'name' is forced and translation ignored
             "icon": str (Optional) # e.g. mdi:gesture-tap-button
         }
         """
@@ -197,8 +200,11 @@ class PapouchDevice(ABC):
         {
             "item_id": str,
             "type": str,
-            "name": str,
-            "device_class": str  (Optional),
+            "name": str, # Fallback name
+            "translation": str (Optional),
+            "placeholder": dict[str, str] (Optional),
+            "use_custom_name": bool (Optional),
+            "device_class": str (Optional),
             "icon": str (Optional) # e.g. mdi:radiobox-blank
         }
         """
@@ -212,11 +218,14 @@ class PapouchDevice(ABC):
             "item_id": str,
             "category": str,
             "type": str,
-            "name": str,
+            "name": str, # Fallback name
+            "translation": str (Optional),
+            "placeholder": dict[str, str] (Optional),
+            "use_custom_name": bool (Optional),
             "min_value": float | int,
             "max_value": float | int,
             "step": float | int,
-            "unit": str  (Optional),
+            "unit": str (Optional),
             "icon": str (Optional) # e.g. mdi:numeric
         }
         """
@@ -227,12 +236,15 @@ class PapouchDevice(ABC):
 
         Expected dictionary structure:
         {
-            "item_id": int,
+            "item_id": str | int,
             "type": str,
-            "name": str,
-            "device_class": str  (Optional),
-            "state_class": str  (Optional),
-            "unit": str  (Optional),
+            "name": str, # Fallback name
+            "translation": str (Optional),
+            "placeholder": dict[str, str] (Optional),
+            "use_custom_name": bool (Optional),
+            "device_class": str (Optional),
+            "state_class": str (Optional),
+            "unit": str (Optional),
             "icon": str (Optional) # e.g. mdi:square-wave
         }
         """
@@ -244,7 +256,10 @@ class PapouchDevice(ABC):
         Expected dictionary structure:
         {
             "item_id": str,
-            "name": str,
+            "name": str, # Fallback name
+            "translation": str (Optional),
+            "placeholder": dict[str, str] (Optional),
+            "use_custom_name": bool (Optional),
             "icon": str (Optional) # e.g. mdi:power
         }
         """
@@ -257,9 +272,12 @@ class PapouchDevice(ABC):
         {
             "item_id": str,
             "category": str,
-            "name": str,
+            "name": str, # Fallback name
             "options": list[str],
-            "icon": str (Optional) # e.g. mdi:form-dropdown,
+            "translation": str (Optional),
+            "placeholder": dict[str, str] (Optional),
+            "use_custom_name": bool (Optional),
+            "icon": str (Optional) # e.g. mdi:form-dropdown
         }
         """
 

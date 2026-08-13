@@ -49,7 +49,14 @@ class PapouchSelectEntity(PapouchEntity, SelectEntity):
         self.category = select_data["category"]
 
         self._attr_unique_id = f"{mac}_{self.category}_{self.item_id}"
-        self._attr_name = select_data["name"]
+
+        if select_data.get("use_custom_name", False):
+            self._attr_name = select_data["name"]
+        else:
+            self._attr_translation_key = select_data["translation"]
+            if "placeholder" in select_data:
+                self._attr_translation_placeholders = select_data["placeholder"]
+
         self._attr_options = select_data["options"]
 
         if "icon" in select_data:

@@ -90,6 +90,134 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "input_placeholder": {
+        "name": "Input {placeholder}"
+      }
+    },
+    "button": {
+      "connect_all_coils": {
+        "name": "Connect all relays"
+      },
+      "disconnect_all_coils": {
+        "name": "Disconnect all relays"
+      },
+      "reset_all_counters": {
+        "name": "Reset all counters"
+      },
+      "set_sensor": {
+        "name": "Set sensor automatically"
+      },
+      "set_sensor_placeholder": {
+        "name": "Set {placeholder} automatically"
+      }
+    },
+    "number": {
+      "decrease_counter_placeholder": {
+        "name": "Decrease counter {placeholder} by:"
+      },
+      "output_off_duration_placeholder": {
+        "name": "Output {placeholder} off for duration (s)"
+      },
+      "output_on_duration_placeholder": {
+        "name": "Output {placeholder} on for duration (s)"
+      },
+      "set_counter_placeholder": {
+        "name": "Set counter {placeholder} on:"
+      }
+    },
+    "select": {
+      "counter_mode": {
+        "name": "Counter {placeholder} mode",
+        "state": {
+          "counts_ascending_and_descending_edges": "Counts ascending and descending edges",
+          "counts_ascending_edges": "Counts ascending edges",
+          "counts_descending_edges": "Counts descending edges",
+          "off": "Off"
+        }
+      },
+      "sensor_type": {
+        "name": "{placeholder} type",
+        "state": {
+          "temperature_ds": "Temperature (DS)",
+          "temperature_humidity_th15": "Temperature / Humidity (TH15)",
+          "temperature_humidity_th3x": "Temperature / Humidity (TH3x)",
+          "temperature_tmp": "Temperature (TMP)",
+          "unused": "Unused"
+        }
+      },
+      "sensor_type_meteo_ab": {
+        "name": "{placeholder} type",
+        "state": {
+          "atmospheric_pressure": "Atmospheric pressure",
+          "co2_concentration_sd4x": "CO2 concentration (SCD4x)",
+          "co2_concentration_t6713": "CO2 concentration (T6713)",
+          "rain_gauge": "Rain gauge",
+          "temperature_ds": "Temperature (DS)",
+          "temperature_humidity_th3x": "Temperature / Humidity (TH3x)",
+          "temperature_tmp": "Temperature (TMP)",
+          "unused": "Unused"
+        }
+      },
+      "sensor_type_meteo_c": {
+        "name": "{placeholder} type",
+        "state": {
+          "davis": "Davis",
+          "unused": "Unused"
+        }
+      }
+    },
+    "sensor": {
+      "sensor_batt_placeholder": {
+        "name": "{placeholder} Battery"
+      },
+      "sensor_co2_placeholder": {
+        "name": "{placeholder} CO2"
+      },
+      "sensor_counter_placeholder": {
+        "name": "Input {placeholder} Count"
+      },
+      "sensor_dew_point": {
+        "name": "Dew Point"
+      },
+      "sensor_dew_point_placeholder": {
+        "name": "{placeholder} Dew Point"
+      },
+      "sensor_humidity": {
+        "name": "Humidity"
+      },
+      "sensor_humidity_placeholder": {
+        "name": "{placeholder} Humidity"
+      },
+      "sensor_pressure_placeholder": {
+        "name": "{placeholder} Pressure"
+      },
+      "sensor_rain_placeholder": {
+        "name": "{placeholder} Rainfall"
+      },
+      "sensor_rsii_placeholder": {
+        "name": "{placeholder} Signal Strength"
+      },
+      "sensor_temperature": {
+        "name": "Temperature"
+      },
+      "sensor_temperature_placeholder": {
+        "name": "{placeholder} Temperature"
+      },
+      "sensor_wind_direction_placeholder": {
+        "name": "{placeholder} Wind Direction"
+      },
+      "sensor_wind_speed_placeholder": {
+        "name": "{placeholder} Wind Speed"
+      }
+    },
+    "switch": {
+      "output_placeholder": {
+        "name": "Output {placeholder}"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {

@@ -48,7 +48,13 @@ class PapouchSensor(PapouchEntity, SensorEntity):
         self.item_id = sensor_data["item_id"]
         self.data_key = sensor_data["type"]
         self._attr_unique_id = f"{mac}_{self.data_key}_{self.item_id}"
-        self._attr_name = sensor_data["name"]
+
+        if sensor_data.get("use_custom_name", False):
+            self._attr_name = sensor_data["name"]
+        else:
+            self._attr_translation_key = sensor_data["translation"]
+            if "placeholder" in sensor_data:
+                self._attr_translation_placeholders = sensor_data["placeholder"]
 
         if "device_class" in sensor_data:
             self._attr_device_class = sensor_data["device_class"]

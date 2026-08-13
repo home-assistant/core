@@ -33,7 +33,8 @@ def mock_papouch_device():
         {
             "item_id": "1",
             "type": "temperature",
-            "name": "Temp 1",
+            "translation": "sensor_temperature_placeholder",
+            "placeholder": {"placeholder": "Sensor 1"},
             "unit": "°C",
             "device_class": "temperature",
             "state_class": "measurement",
@@ -45,21 +46,32 @@ def mock_papouch_device():
             "item_id": "1",
             "type": "input",
             "name": "Input 1",
+            "use_custom_name": True,
             "device_class": "door",
             "icon": "mdi:door-open",
         }
     ]
     device.get_supported_switches.return_value = [
-        {"item_id": "1", "name": "Switch 1", "icon": "mdi:toggle-switch"}
+        {
+            "item_id": "1",
+            "name": "Switch 1",
+            "use_custom_name": True,
+            "icon": "mdi:toggle-switch",
+        }
     ]
     device.get_supported_buttons.return_value = [
-        {"cmd": "reset", "name": "Reset", "icon": "mdi:restart"}
+        {
+            "cmd": "reset",
+            "translation": "reset_all_counters",
+            "icon": "mdi:restart",
+        }
     ]
     device.get_supported_numbers.return_value = [
         {
             "item_id": "1",
             "category": "limit",
-            "name": "Limit 1",
+            "translation": "set_counter_placeholder",
+            "placeholder": {"placeholder": "1"},
             "mode": "box",
             "min_value": 0,
             "max_value": 100,
@@ -71,7 +83,8 @@ def mock_papouch_device():
         {
             "item_id": "1",
             "category": "mode",
-            "name": "Mode 1",
+            "translation": "sensor_type",
+            "placeholder": {"placeholder": "Sensor 1"},
             "options": ["A", "B"],
             "icon": "mdi:format-list-bulleted",
         }

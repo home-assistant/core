@@ -47,7 +47,13 @@ class PapouchSwitch(PapouchEntity, SwitchEntity):
 
         self.item_id = switch_data["item_id"]
         self._attr_unique_id = f"{mac}_{'switch'}_{self.item_id}"
-        self._attr_name = switch_data["name"]
+
+        if switch_data.get("use_custom_name", False):
+            self._attr_name = switch_data["name"]
+        else:
+            self._attr_translation_key = switch_data["translation"]
+            if "placeholder" in switch_data:
+                self._attr_translation_placeholders = switch_data["placeholder"]
 
         if "icon" in switch_data:
             self._attr_icon = switch_data["icon"]

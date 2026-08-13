@@ -249,8 +249,9 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
             sensor_name = self.sensors.get(item_id, {}).get("name", f"Sensor {item_id}")
             buttons.append(
                 {
-                    "name": f"Set {sensor_name} automatically",
                     "cmd": f"set_sensor_{item_id}",
+                    "translation": "set_sensor_placeholder",
+                    "placeholder": {"placeholder": sensor_name},
                 }
             )
 
@@ -266,6 +267,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                     "item_id": item_id,
                     "type": "input",
                     "name": item_data.name,
+                    "use_custom_name": True,
                 }
                 for item_id, item_data in self.inputs.items()
             ]
@@ -285,7 +287,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                         "item_id": item_id,
                         "category": "decrease_counter",
                         "type": "counter",
-                        "name": f"Decrease counter {input_data.name} by:",
+                        "translation": "decrease_counter_placeholder",
+                        "placeholder": {"placeholder": input_data.name},
                         "min_value": 0,
                         "max_value": (2**self.size_counter_bits) - 1,
                         "step": 10 ** (-int(input_data.decimal_count)),
@@ -295,7 +298,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                         "item_id": f"{item_id}",
                         "category": "set_counter",
                         "type": "counter",
-                        "name": f"Set counter {input_data.name} on:",
+                        "translation": "set_counter_placeholder",
+                        "placeholder": {"placeholder": input_data.name},
                         "min_value": 0,
                         "max_value": (2**self.size_counter_bits) - 1,
                         "step": 10 ** (-int(input_data.decimal_count)),
@@ -316,6 +320,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                     "item_id": item_id,
                     "type": "counter",
                     "name": item_data.name,
+                    "use_custom_name": True,
                     "state_class": "total",
                     "unit": item_data.unit,
                     "icon": "mdi:square-wave",
@@ -335,7 +340,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                             {
                                 "item_id": sub_id,
                                 "type": "sensor",
-                                "name": f"{sensor_name} Temperature",
+                                "translation": "sensor_temperature_placeholder",
+                                "placeholder": {"placeholder": sensor_name},
                                 "device_class": "temperature",
                                 "state_class": "measurement",
                                 "unit": self._get_unit(sns_type, unit_code),
@@ -348,6 +354,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                                 "item_id": sub_id,
                                 "type": "sensor",
                                 "name": f"{sensor_name} Humidity",
+                                "translation": "sensor_humidity_placeholder",
+                                "placeholder": {"placeholder": sensor_name},
                                 "device_class": "humidity",
                                 "state_class": "measurement",
                                 "unit": self._get_unit(sns_type, unit_code),
@@ -359,7 +367,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                             {
                                 "item_id": sub_id,
                                 "type": "sensor",
-                                "name": f"{sensor_name} Dew Point",
+                                "translation": "sensor_dew_point_placeholder",
+                                "placeholder": {"placeholder": sensor_name},
                                 "device_class": "temperature",
                                 "state_class": "measurement",
                                 "unit": self._get_unit(sns_type, unit_code),
@@ -371,7 +380,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                             {
                                 "item_id": sub_id,
                                 "type": "sensor",
-                                "name": f"{sensor_name} CO2",
+                                "translation": "sensor_co2_placeholder",
+                                "placeholder": {"placeholder": sensor_name},
                                 "device_class": "carbon_dioxide",
                                 "state_class": "measurement",
                                 "unit": self._get_unit(sns_type, unit_code),
@@ -383,7 +393,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                             {
                                 "item_id": sub_id,
                                 "type": "sensor",
-                                "name": f"{sensor_name} Pressure",
+                                "translation": "sensor_pressure_placeholder",
+                                "placeholder": {"placeholder": sensor_name},
                                 "device_class": "atmospheric_pressure",
                                 "state_class": "measurement",
                                 "unit": self._get_unit(sns_type, unit_code),
@@ -396,7 +407,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                         sensor_def = {
                             "item_id": sub_id,
                             "type": "sensor",
-                            "name": f"{sensor_name} Wind Direction",
+                            "translation": "sensor_wind_direction_placeholder",
+                            "placeholder": {"placeholder": sensor_name},
                             "icon": "mdi:compass",
                         }
 
@@ -411,7 +423,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                             {
                                 "item_id": sub_id,
                                 "type": "sensor",
-                                "name": f"{sensor_name} Wind Speed",
+                                "translation": "sensor_wind_speed_placeholder",
+                                "placeholder": {"placeholder": sensor_name},
                                 "device_class": "wind_speed",
                                 "state_class": "measurement",
                                 "unit": self._get_unit(sns_type, unit_code),
@@ -437,7 +450,10 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                         sensor_def = {
                             "item_id": sub_id,
                             "type": "sensor",
-                            "name": f"{sensor_name} Rainfall {time_label}".strip(),
+                            "translation": "sensor_rain_placeholder",
+                            "placeholder": {
+                                "placeholder": f"{sensor_name} {time_label}"
+                            },
                             "state_class": "measurement",
                             "unit": unit_str,
                         }
@@ -453,10 +469,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
     def get_supported_switches(self) -> list[dict[str, Any]]:
         """Return the configuration data for switches."""
         return [
-            {
-                "item_id": item_id,
-                "name": item_data.name,
-            }
+            {"item_id": item_id, "name": item_data.name, "use_custom_name": True}
             for item_id, item_data in self.outputs.items()
         ]
 
@@ -470,7 +483,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                 {
                     "item_id": item_id,
                     "category": "sensor_type",
-                    "name": f"{sensor_name} type",
+                    "translation": "sensor_type",
+                    "placeholder": {"placeholder": sensor_name},
                     "options": self.SENSOR_TYPES,
                 }
             )
@@ -480,7 +494,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                 {
                     "item_id": str(int(item_id) + self.INPUT_ID_INCREMENT),
                     "category": "input_type",
-                    "name": f"{input_data.name} counter mode",
+                    "translation": "counter_mode",
+                    "placeholder": {"placeholder": input_data.name},
                     "options": self.COUNTER_MODES,
                 }
             )
@@ -938,19 +953,19 @@ class PapagoETH_METEO(PapagoETH):
     ]
 
     SENSOR_TYPES_AB = {
-        "0": "Unused",
-        "2": "Temperature (DS)",
-        "3": "Temperature / Humidity (TH3x)",
-        "4": "Temperature (TMP)",
-        "5": "CO2 concentration (T6713)",
-        "7": "Atmospheric pressure",
-        "9": "CO2 concentration (SCD4x)",
-        "10": "Rain gauge",
+        "0": "unused",
+        "2": "temperature_ds",
+        "3": "temperature_humidity_th3x",
+        "4": "temperature_tmp",
+        "5": "co2_concentration_t6713",
+        "7": "atmospheric_pressure",
+        "9": "co2_concentration_sd4x",
+        "10": "rain_gauge",
     }
 
     SENSOR_TYPES_C = {
-        "0": "Unused",
-        "6": "Davis",
+        "0": "unused",
+        "6": "davis",
     }
 
     @override
@@ -968,8 +983,9 @@ class PapagoETH_METEO(PapagoETH):
             sensor_name = self.sensors.get(item_id, {}).get("name", f"Sensor {item_id}")
             buttons.append(
                 {
-                    "name": f"Set {sensor_name} automatically",
                     "cmd": f"set_sensor_{item_id}",
+                    "translation": "set_sensor_placeholder",
+                    "placeholder": {"placeholder": sensor_name},
                 }
             )
 
@@ -990,6 +1006,10 @@ class PapagoETH_METEO(PapagoETH):
                 {
                     "item_id": item_id,
                     "category": "sensor_type",
+                    "translation": "sensor_type_meteo_c"
+                    if item_id == "3"
+                    else "sensor_type_meteo_ab",
+                    "placeholder": {"placeholder": sensor_name},
                     "name": f"{sensor_name} type",
                     "options": list(options_dict.values()),
                 }
