@@ -71,7 +71,14 @@ class HassIOAddonPanel(HomeAssistantView):
     @require_admin
     async def post(self, request: web.Request, addon: str) -> web.Response:
         """Handle new add-on panel requests."""
-        panels = await self.get_panels()
+        # Supervisor calls this endpoint because an add-on's panel state just
+        # changed, so fetch it fresh instead of relying on the coordinator's
+        # cache, which may still hold the value from before this change.
+        try:
+            panels = await self.client.ingress.panels()
+        except SupervisorError as err:
+            _LOGGER.error("Can't read panel info: %s", err)
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         # Panel exists for add-on slug
         if addon not in panels or not panels[addon].enable:
@@ -110,26 +117,15 @@ class HassIOAddonPanel(HomeAssistantView):
             frontend.async_remove_panel(self.hass, addon, warn_if_unknown=False)
         return web.Response()
 
-    async def get_panels(self) -> dict[str, IngressPanel]:
-        """Return panel info, preferring the main coordinator's cache.
-
-        The coordinator is not available yet very early during Home Assistant
-        startup. Other callers besides Supervisor rely on this API working at
-        that point too, so fall back to a fresh Supervisor call instead of
-        failing outright.
-        """
-        if (coordinator := self.hass.data.get(MAIN_COORDINATOR)) is not None:
-            return coordinator.data.panels
-
-        try:
-            return await self.client.ingress.panels()
-        except SupervisorError as err:
-            _LOGGER.error("Can't read panel info: %s", err)
-        return {}
-
 
 def _register_panel(hass: HomeAssistant, addon: str, data: IngressPanel) -> None:
-    """Helper to register the panel."""
+    """Helper to register the panel.
+
+    Uses update=True so this is idempotent: a config entry reload can run this
+    for a panel the frontend still has registered from before the reload, and
+    the push API's early-startup fallback can register one before the
+    coordinator's own reconciliation runs for the first time.
+    """
     frontend.async_register_built_in_panel(
         hass,
         "app",
@@ -138,4 +134,5 @@ def _register_panel(hass: HomeAssistant, addon: str, data: IngressPanel) -> None
         sidebar_icon=data.icon,
         require_admin=data.admin,
         config={"addon": addon},
+        update=True,
     )

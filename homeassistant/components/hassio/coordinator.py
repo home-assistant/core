@@ -1504,7 +1504,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         try:
             # Cast is required here because asyncio.gather only has overloads to
             # maintain typing for 6 arguments. It falls back to list[<common parent>]
-            # after that which is what mypy sees here since we have 7 API calls.
+            # after that which is what mypy sees here since we have 8 API calls.
             (
                 info,
                 core_info,

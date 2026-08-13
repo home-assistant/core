@@ -91,6 +91,7 @@ async def test_hassio_addon_panel_registration(
         sidebar_icon="mdi:test-tube",
         require_admin=True,
         config={"addon": "test_addon"},
+        update=True,
     )
 
 
