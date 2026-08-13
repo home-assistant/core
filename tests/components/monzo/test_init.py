@@ -11,6 +11,7 @@ from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -56,9 +57,73 @@ async def test_config_entry_title_falls_back_without_owner(
     monzo: AsyncMock,
 ) -> None:
     """Test the existing title is retained without matching owner metadata."""
+    monzo.user_account.accounts.return_value = [
+        {key: value for key, value in account.items() if key != "owners"}
+        for account in TEST_ACCOUNTS
+    ]
     await setup_integration(hass, polling_config_entry)
 
     assert polling_config_entry.title == TITLE
+
+
+async def test_device_names(
+    hass: HomeAssistant,
+    polling_config_entry: MockConfigEntry,
+    monzo: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices use descriptive resource names without a hierarchy."""
+    joint_account = {
+        **TEST_ACCOUNTS[0],
+        "id": "acc_joint",
+        "name": "Joint Account",
+        "owners": [
+            TEST_ACCOUNTS[0]["owners"][0],
+            {
+                "user_id": "another-user",
+                "preferred_name": "Jane Martin",
+                "preferred_first_name": "Jane",
+            },
+        ],
+    }
+    monzo.user_account.accounts.return_value = [TEST_ACCOUNTS[0], joint_account]
+    monzo.user_account.pots.return_value = [
+        {
+            "id": "pot_joint",
+            "name": "Holiday",
+            "balance": 12345,
+            "currency": "GBP",
+        }
+    ]
+
+    await setup_integration(hass, polling_config_entry)
+
+    owner_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(USER_ID)), polling_config_entry.entry_id
+    )
+    current_account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "acc_curr"), polling_config_entry.entry_id
+    )
+    joint_account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "acc_joint"), polling_config_entry.entry_id
+    )
+    pot_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "pot_joint"), polling_config_entry.entry_id
+    )
+
+    assert owner_device is None
+    assert current_account_device is not None
+    assert current_account_device.name == "Current Account"
+    assert current_account_device.area_id is None
+    assert current_account_device.via_device_id is None
+    assert joint_account_device is not None
+    assert joint_account_device.name == "Joint Account — Jake Martin & Jane Martin"
+    assert joint_account_device.area_id is None
+    assert joint_account_device.via_device_id is None
+    assert pot_device is not None
+    assert pot_device.name == "Holiday"
+    assert pot_device.area_id is None
+    assert pot_device.via_device_id is None
 
 
 async def test_api_can_trigger_reauth(

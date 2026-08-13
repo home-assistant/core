@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import StateType
 
 from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoData
 from .entity import MonzoBaseEntity
+from .helpers import get_account_name
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,6 +69,7 @@ async def async_setup_entry(
             entity_description,
             account_id,
             account["name"],
+            get_account_name(account),
             account["balance"]["currency"],
             lambda x: x.accounts,
         )
@@ -81,6 +83,7 @@ async def async_setup_entry(
             entity_description,
             pot_id,
             MODEL_POT,
+            pot["name"],
             pot["currency"],
             lambda x: x.pots,
         )
@@ -102,11 +105,18 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
         entity_description: MonzoSensorEntityDescription,
         resource_id: str,
         device_model: str,
+        device_name: str,
         currency: str,
         data_accessor: Callable[[MonzoData], dict[str, dict[str, Any]]],
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, resource_id, device_model, data_accessor)
+        super().__init__(
+            coordinator,
+            resource_id,
+            device_model,
+            device_name,
+            data_accessor,
+        )
         self.entity_description = entity_description
         self._attr_native_unit_of_measurement = currency
         self._attr_unique_id = f"{resource_id}_{entity_description.key}"

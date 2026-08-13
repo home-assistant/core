@@ -10,6 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_DATA, DOMAIN, EVENT_TRANSACTION_CREATED
 from .coordinator import MonzoConfigEntry
+from .helpers import get_account_name
 from .webhook import webhook_signal
 
 PARALLEL_UPDATES = 0
@@ -44,7 +45,7 @@ class MonzoTransactionEvent(EventEntity):
             identifiers={(DOMAIN, self._account_id)},
             manufacturer="Monzo",
             model=account["name"],
-            name=account["name"],
+            name=get_account_name(account),
         )
 
     @override
