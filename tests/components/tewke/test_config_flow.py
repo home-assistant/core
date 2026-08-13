@@ -196,3 +196,36 @@ async def test_zeroconf_flow_connection_error(
     assert result["title"] == "Tewke Switch"
     assert mock_tap.discover.call_count == 2
     assert mock_tap.close.call_count == 2
+
+
+async def test_zeroconf_flow_wrong_device(
+    hass: HomeAssistant, mock_tap: AsyncMock
+) -> None:
+    """Test zeroconf flow aborts if the device hardwareId mismatches."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ipaddress.ip_address("192.168.0.123"),
+            ip_addresses=[ipaddress.ip_address("192.168.0.123")],
+            hostname="tewke-test.local.",
+            name="Tewke Tap._tewke-coap._udp.local.",
+            port=5683,
+            properties={"hardwareId": "test_dock_id"},
+            type="_tewke-coap._udp.local.",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    # Make the device return a different wall_dock_id when connecting
+    mock_tap.wall_dock_id = "wrong_dock_id"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "cannot_connect"
+    mock_tap.close.assert_called_once()

@@ -1,9 +1,6 @@
-"""Scene-based entity classes for the Tewke integration.
+"""Scene-based light entities for the Tewke integration.
 
-Each Tewke scene can be exposed as one of three HA platform types depending on
-the control type chosen during config flow:
-
-* "TewkeSceneLight" — "LightEntity", brightness 0-255 (optimistic)
+Each Tewke scene is exposed as a dimmable light with brightness from 0-255.
 
 Scene brightness is write-only on the Tewke API; the last commanded value is
 held locally for optimistic rendering.
@@ -102,7 +99,8 @@ class TewkeSceneEntity(TewkeEntity):
             if state and brightness is not None:
                 self._brightness = brightness
             self.async_write_ha_state()
-            await self.coordinator.async_request_refresh()
+            if not self.coordinator.config_entry.runtime_data.observe_active:
+                await self.coordinator.async_request_refresh()
 
 
 # pylint: disable-next=home-assistant-enforce-class-module

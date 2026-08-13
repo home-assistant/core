@@ -112,7 +112,8 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
             self._is_on = tewke_brightness != 0
             self._brightness = tewke_brightness
             self.async_write_ha_state()
-            await self.coordinator.async_request_refresh()
+            if not self.coordinator.config_entry.runtime_data.observe_active:
+                await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_off(self, **_kwargs: object) -> None:
@@ -124,4 +125,5 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
             self._is_on = False
             self._brightness = 0
             self.async_write_ha_state()
-            await self.coordinator.async_request_refresh()
+            if not self.coordinator.config_entry.runtime_data.observe_active:
+                await self.coordinator.async_request_refresh()

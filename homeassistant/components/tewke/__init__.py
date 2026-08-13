@@ -32,6 +32,7 @@ async def async_setup_entry(
     try:
         await tap.discover()
     except PyTewkeDiscoveryError as err:
+        await tap.close()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="discovery_error",
@@ -39,6 +40,7 @@ async def async_setup_entry(
         ) from err
 
     if tap.wall_dock_id is None:
+        await tap.close()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="missing_wall_dock_id",

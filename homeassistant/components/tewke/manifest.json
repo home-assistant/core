@@ -8,7 +8,7 @@
   "iot_class": "local_push",
   "loggers": ["pytewke"],
   "quality_scale": "gold",
-  "requirements": ["pytewke==0.7.0"],
+  "requirements": ["pytewke==0.7.1"],
   "zeroconf": [
     {
       "type": "_tewke-coap._udp.local."

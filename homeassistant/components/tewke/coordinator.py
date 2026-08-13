@@ -66,14 +66,14 @@ async def _fetch_with_retries[T](fn: Callable[[], Awaitable[T]]) -> T:
             return await fn()
         except _RETRYABLE_ERRORS as err:
             last_err = err
-            LOGGER.debug(
-                "Transient Tap error (attempt %d/%d), retrying in %.0fs: %s",
-                attempt + 1,
-                len(_RETRY_DELAYS),
-                delay,
-                err,
-            )
             if attempt < len(_RETRY_DELAYS) - 1:
+                LOGGER.debug(
+                    "Transient Tap error (attempt %d/%d), retrying in %.0fs: %s",
+                    attempt + 1,
+                    len(_RETRY_DELAYS),
+                    delay,
+                    err,
+                )
                 await asyncio.sleep(delay)
         except PyTewkeInvalidResponseError, Exception:
             # Non-transient or unexpected error — fail immediately.
@@ -92,7 +92,7 @@ class TewkeCoordinatorData(TypedDict):
     radar: RadarData | None
     energy: EnergyData | None
     energy_override: EnergyOverrideData | None
-    config: ConfigData | None
+    config: ConfigData
 
 
 class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
@@ -210,6 +210,8 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
                 self._observe_retry_task = None
 
         self._observe_retry_task = self.hass.async_create_task(_retry())
+        if self._observe_retry_task.done():
+            self._observe_retry_task = None
 
     async def _setup_observe(self) -> bool:
         async with self._observe_setup_lock:
@@ -254,6 +256,7 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
         try:
             scenes = await _fetch_with_retries(tap.get_scenes)
             targets = await _fetch_with_retries(tap.get_targets)
+            config = await _fetch_with_retries(tap.get_config)
         except (
             PyTewkeCoapError,
             PyTewkeInvalidResponseError,
@@ -309,17 +312,6 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
         ) as err:
             LOGGER.debug("Energy override data not available from Tewke Tap: %s", err)
             energy_override = None
-
-        try:
-            config: ConfigData | None = await tap.get_config()
-        except (
-            PyTewkeCoapError,
-            PyTewkeInvalidResponseError,
-            PyTewkeUnknownError,
-            TimeoutError,
-        ) as err:
-            LOGGER.debug("Config data not available from Tewke Tap: %s", err)
-            config = None
 
         if self.data is not None:
             current_scenes = self.data["scenes"]

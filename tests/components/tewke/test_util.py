@@ -16,7 +16,7 @@ from homeassistant.components.tewke.util import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -55,7 +55,7 @@ async def test_async_setup_observe_success(
 
     coordinator = MagicMock()
     coordinator.data = {
-        "scenes": {"scene1": Scene.model_construct(id="scene1", name="Scene 1")}
+        "scenes": {"scene1": Scene.model_construct(id="scene1", name="Scene 1")}  # type: ignore[call-arg]
     }
 
     mock_tap._observation_manager = AsyncMock()
@@ -69,7 +69,7 @@ async def test_async_setup_observe_success(
         assert result is True
         assert mock_config_entry.runtime_data.observe_active is True
         mock_tap.clear_callbacks.assert_called_once()
-        mock_tap._observation_manager.close.assert_awaited_once()
+        mock_tap.close_observations.assert_awaited_once()
         mock_tap.observe.assert_awaited_once()
 
 
@@ -100,6 +100,7 @@ async def test_async_setup_observe_error(
 async def test_tewke_observer(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test TewkeObserver callbacks."""
@@ -115,11 +116,15 @@ async def test_tewke_observer(
 
     coordinator = MagicMock()
     coordinator.data = TewkeCoordinatorData(
-        config=ConfigData.model_construct(hardware_id="test_hardware"),
+        config=ConfigData.model_construct(hardware_id="test_hardware"),  # type: ignore[call-arg]
         energy=None,
+        energy_override=None,
         radar=None,
         sensors=None,
-        scenes={"scene1": Scene.model_construct(id="scene1", name="Scene 1")},
+        scenes={
+            "scene1": Scene.model_construct(id="scene1", name="Scene 1"),  # type: ignore[call-arg]
+            "scene2": Scene.model_construct(id="scene2", name="Scene 2"),  # type: ignore[call-arg]
+        },
         targets={},
     )
 
@@ -130,11 +135,29 @@ async def test_tewke_observer(
 
     observer = _TewkeObserver(coordinator, hass, mock_config_entry)
 
+    # Add scene2 to entity registry
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform=DOMAIN,
+        unique_id="test_hardware_scene2",
+    )
+    assert entity_registry.async_get_entity_id("light", DOMAIN, "test_hardware_scene2")
+
+    # Mock wall_dock_id as None to hit the early return
+    mock_tap.wall_dock_id = None
+    observer.on_config_update(
+        ConfigData.model_construct(hardware_id="test_hardware")  # type: ignore[call-arg]
+    )
+    mock_tap.wall_dock_id = "test_dock_id"
+
     # Test on_scene_update: deleted scene
     observer.on_scene_update(
-        {"scene1": Scene.model_construct(id="scene1", name="Scene 1")}
+        {"scene1": Scene.model_construct(id="scene1", name="Scene 1")}  # type: ignore[call-arg]
     )
     assert "scene2" not in coordinator.data["scenes"]
+    assert not entity_registry.async_get_entity_id(
+        "light", DOMAIN, "test_hardware_scene2"
+    )
 
     # Test on_scene_update: new scene
     with patch(
@@ -142,8 +165,8 @@ async def test_tewke_observer(
     ) as mock_dispatcher:
         observer.on_scene_update(
             {
-                "scene1": Scene.model_construct(id="scene1", name="Scene 1"),
-                "scene3": Scene.model_construct(id="scene3", name="Scene 3"),
+                "scene1": Scene.model_construct(id="scene1", name="Scene 1"),  # type: ignore[call-arg]
+                "scene3": Scene.model_construct(id="scene3", name="Scene 3"),  # type: ignore[call-arg]
             }
         )
         assert "scene3" in coordinator.data["scenes"]
@@ -156,23 +179,23 @@ async def test_tewke_observer(
     # Test on_scene_update: no new scenes
     observer.on_scene_update(
         {
-            "scene1": Scene.model_construct(id="scene1", name="Scene 1"),
-            "scene3": Scene.model_construct(id="scene3", name="Scene 3"),
+            "scene1": Scene.model_construct(id="scene1", name="Scene 1"),  # type: ignore[call-arg]
+            "scene3": Scene.model_construct(id="scene3", name="Scene 3"),  # type: ignore[call-arg]
         }
     )
 
     # Test on_target_update
-    observer.on_target_update({1: Target.model_construct(id=1, name="Target 1")})
+    observer.on_target_update({1: Target.model_construct(id=1, name="Target 1")})  # type: ignore[call-arg]
     assert coordinator.async_set_updated_data.call_count > 0
 
     # Test on_sensor_update
-    observer.on_sensor_update(SensorData.model_construct())
+    observer.on_sensor_update(SensorData.model_construct())  # type: ignore[call-arg]
 
     # Test on_radar_update
-    observer.on_radar_update(RadarData.model_construct())
+    observer.on_radar_update(RadarData.model_construct())  # type: ignore[call-arg]
 
     # Test on_energy_update
-    observer.on_energy_update(EnergyData.model_construct())
+    observer.on_energy_update(EnergyData.model_construct())  # type: ignore[call-arg]
 
     # Test on_config_update: renaming
     device = device_registry.async_get_or_create(
@@ -183,11 +206,13 @@ async def test_tewke_observer(
     )
 
     observer.on_config_update(
-        ConfigData.model_construct(device_name="New Name", tewke_os_version="1.1.0")
+        ConfigData.model_construct(device_name="New Name", tewke_os_version="1.1.0")  # type: ignore[call-arg]
     )
 
-    device = device_registry.async_get(device.id)
-    assert device.name == "New Name"
-    assert device.sw_version == "1.1.0"
+    assert device
+    updated_device = device_registry.async_get(device.id)
+    assert updated_device
+    assert updated_device.name == "New Name"
+    assert updated_device.sw_version == "1.1.0"
     assert mock_config_entry.data[CONF_NAME] == "New Name"
     assert mock_config_entry.title == "New Name"

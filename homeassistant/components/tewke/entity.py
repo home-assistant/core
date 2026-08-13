@@ -61,8 +61,7 @@ def tewke_error_handler(action: str, identifier: str) -> Generator[None]:
 class TewkeEntity(CoordinatorEntity[TewkeCoordinator]):
     """Base class for Tewke entities.
 
-    Each subclass represents a single scene or target output exposed as a HA
-    platform entity (switch, light, fan). State is fetched via the shared
+    Each subclass represents a scene or target output exposed as a light entity. State is fetched via the shared
     coordinator.
     """
 

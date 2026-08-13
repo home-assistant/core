@@ -30,7 +30,7 @@ from tests.common import MockConfigEntry
 def mock_tap_with_lights(mock_tap: AsyncMock) -> AsyncMock:
     """Mock tap with lights data."""
     mock_tap.get_config = AsyncMock(
-        return_value=ConfigData.model_construct(
+        return_value=ConfigData.model_construct(  # type: ignore[call-arg]
             hardware_id="hw123",
             device_name="My Tap",
         )
@@ -74,6 +74,81 @@ def mock_tap_with_lights(mock_tap: AsyncMock) -> AsyncMock:
     return mock_tap
 
 
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("light.living_room_tewke_switch_morning", id="morning"),
+        pytest.param("light.living_room_tewke_switch_night", id="night"),
+        pytest.param("light.main_light", id="main"),
+    ],
+)
+async def test_light_entities_enabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_tap_with_lights: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_id: str,
+) -> None:
+    """Test the creation of enabled Tewke light entities."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity_registry.async_get_or_create(
+        LIGHT_DOMAIN,
+        "tewke",
+        "hw123_target_1",
+        suggested_object_id="main_light",
+        disabled_by=None,
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state == snapshot(name=f"{entity_id}-state")
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("light.living_room_tewke_switch_second_light", id="second_light"),
+    ],
+)
+async def test_light_entities_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_tap_with_lights: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_id: str,
+) -> None:
+    """Test the creation of disabled Tewke light entities."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity_registry.async_get_or_create(
+        LIGHT_DOMAIN,
+        "tewke",
+        "hw123_target_1",
+        suggested_object_id="main_light",
+        disabled_by=None,
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    state = hass.states.get(entity_id)
+    assert state is None
+
+
 async def test_lights(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -102,15 +177,6 @@ async def test_lights(
     light_entities = [ent for ent in entities if ent.domain == LIGHT_DOMAIN]
 
     assert len(light_entities) == 4
-
-    for entity_entry in light_entities:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        state = hass.states.get(entity_entry.entity_id)
-        if entity_entry.disabled_by:
-            assert state is None
-        else:
-            assert state is not None
-            assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
     # Turn on scene1
     await hass.services.async_call(
@@ -186,6 +252,7 @@ async def test_lights(
     target2_entity_id = entity_registry.async_get_entity_id(
         LIGHT_DOMAIN, "tewke", "hw123_target_2"
     )
+    assert target2_entity_id
     entity_registry.async_update_entity(target2_entity_id, disabled_by=None)
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -202,6 +269,7 @@ async def test_lights(
 
     # Check brightness of non-dimmable
     state = hass.states.get(target2_entity_id)
+    assert state
     assert state.attributes.get(ATTR_BRIGHTNESS) is None
 
 
@@ -227,10 +295,13 @@ async def test_light_availability(
     await hass.async_block_till_done()
 
     # Verify initially available
-    assert hass.states.get(target1_entity_id).state != "unavailable"
-    assert (
-        hass.states.get("light.living_room_tewke_switch_morning").state != "unavailable"
-    )
+    state_target1 = hass.states.get(target1_entity_id)
+    assert state_target1
+    assert state_target1.state != "unavailable"
+
+    state_scene = hass.states.get("light.living_room_tewke_switch_morning")
+    assert state_scene
+    assert state_scene.state != "unavailable"
 
     # Remove target1 and scene1 from coordinator data to test availability
     coordinator = mock_config_entry.runtime_data.coordinator
@@ -255,10 +326,13 @@ async def test_light_availability(
 
     coordinator.async_set_updated_data(new_data)
 
-    assert hass.states.get(target1_entity_id).state == "unavailable"
-    assert (
-        hass.states.get("light.living_room_tewke_switch_morning").state == "unavailable"
-    )
+    state_target1 = hass.states.get(target1_entity_id)
+    assert state_target1
+    assert state_target1.state == "unavailable"
+
+    state_scene = hass.states.get("light.living_room_tewke_switch_morning")
+    assert state_scene
+    assert state_scene.state == "unavailable"
 
     # Call async_turn_on on unavailable target to test missing target condition
     # This also covers the `if not super().available` checks in target and scene
@@ -279,6 +353,7 @@ async def test_light_availability(
     # Also test `async_turn_on` on a target entity where `coordinator.data["targets"]` is missing the target
     # This covers `if target is None: return` in target.async_turn_on and `brightness` when target is None
     new_data = TewkeCoordinatorData(
+        scenes={},
         targets={},  # Target missing
         sensors=coordinator.data["sensors"],
         radar=coordinator.data["radar"],
@@ -363,3 +438,52 @@ async def test_light_errors(
             {ATTR_ENTITY_ID: "light.main_light"},
             blocking=True,
         )
+
+
+async def test_scene_update_none_scene(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_tap_with_lights: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test scene update with None scene."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.living_room_tewke_switch_morning")
+    assert state
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    mock_config_entry.runtime_data.observe_active = False
+    mock_tap_with_lights.observe.side_effect = PyTewkeCoapError
+
+    mock_tap_with_lights.get_scenes.return_value = {}
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("light.living_room_tewke_switch_morning").state == "unavailable"
+    )
+
+
+async def test_scene_turn_on_no_observe(
+    hass: HomeAssistant,
+    mock_tap_with_lights: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test scene turn on without observe."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_config_entry.runtime_data.observe_active = False
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.living_room_tewke_switch_morning"},
+        blocking=True,
+    )
+
+    mock_tap_with_lights.set_scene.assert_called_once()

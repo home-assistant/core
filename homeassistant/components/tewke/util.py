@@ -205,8 +205,7 @@ async def async_setup_observe(
     tap = entry.runtime_data.tap
 
     tap.clear_callbacks()
-    if tap._observation_manager is not None:  # noqa: SLF001
-        await tap._observation_manager.close()  # noqa: SLF001
+    await tap.close_observations()
 
     observer = _TewkeObserver(coordinator, hass, entry)
 

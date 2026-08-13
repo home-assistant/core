@@ -25,11 +25,8 @@ def mock_tap():
         tap_instance.get_energy = AsyncMock(return_value=None)
         tap_instance.get_energy_override = AsyncMock(return_value=None)
 
-        # We need a valid ConfigData object because light assumes it exists to get hardware_id
-
         mock_config = ConfigData.model_construct(
             hardwareId="test_dock_id",
-            # Add other defaults if needed
         )
         tap_instance.get_config = AsyncMock(return_value=mock_config)
         tap_instance.close = AsyncMock()

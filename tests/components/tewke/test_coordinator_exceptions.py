@@ -4,17 +4,20 @@ import logging
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytewke.data import ConfigData
 from pytewke.error import PyTewkeCoapError
 
 from homeassistant.components.tewke.coordinator import TewkeCoordinator, UpdateFailed
 from homeassistant.components.tewke.data import TewkeData
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
+
 pytestmark = pytest.mark.usefixtures("mock_tap")
 
 
 async def test_coordinator_setup_observe_fails(
-    hass: HomeAssistant, mock_config_entry, mock_tap
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap: AsyncMock
 ) -> None:
     """Test when _setup_observe raises an exception."""
     mock_tap.get_scenes = AsyncMock()
@@ -45,7 +48,7 @@ async def test_coordinator_setup_observe_fails(
 
 
 async def test_coordinator_device_swap(
-    hass: HomeAssistant, mock_config_entry, mock_tap
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap: AsyncMock
 ) -> None:
     """Test device swap detection."""
     mock_tap.wall_dock_id = "different_dock_id"
@@ -69,7 +72,7 @@ async def test_coordinator_device_swap(
 
 
 async def test_coordinator_get_scenes_fails(
-    hass: HomeAssistant, mock_config_entry, mock_tap
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap: AsyncMock
 ) -> None:
     """Test when get_scenes fails with a CoAP error."""
     mock_tap.get_scenes = AsyncMock(side_effect=PyTewkeCoapError("Timeout", 408))
@@ -86,6 +89,7 @@ async def test_coordinator_get_scenes_fails(
         hass, logging.getLogger(__name__), "Tewke Tap", mock_config_entry
     )
     with (
+        patch("homeassistant.components.tewke.coordinator.asyncio.sleep"),
         patch.object(coordinator, "_setup_observe", return_value=True),
         pytest.raises(UpdateFailed, match="communication_error"),
     ):
@@ -93,7 +97,7 @@ async def test_coordinator_get_scenes_fails(
 
 
 async def test_coordinator_get_targets_fails(
-    hass: HomeAssistant, mock_config_entry, mock_tap
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap: AsyncMock
 ) -> None:
     """Test when get_targets fails with a TimeoutError."""
     mock_tap.get_scenes = AsyncMock(return_value={})
@@ -111,6 +115,7 @@ async def test_coordinator_get_targets_fails(
         hass, logging.getLogger(__name__), "Tewke Tap", mock_config_entry
     )
     with (
+        patch("homeassistant.components.tewke.coordinator.asyncio.sleep"),
         patch.object(coordinator, "_setup_observe", return_value=True),
         pytest.raises(UpdateFailed, match="communication_error"),
     ):
@@ -118,7 +123,7 @@ async def test_coordinator_get_targets_fails(
 
 
 async def test_coordinator_optional_endpoints_fail(
-    hass: HomeAssistant, mock_config_entry, mock_tap
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap: AsyncMock
 ) -> None:
     """Test when optional endpoints fail with a CoAP error."""
     mock_tap.get_scenes = AsyncMock(return_value={})
@@ -129,7 +134,11 @@ async def test_coordinator_optional_endpoints_fail(
     mock_tap.get_energy_override = AsyncMock(
         side_effect=PyTewkeCoapError("Timeout", 408)
     )
-    mock_tap.get_config = AsyncMock(side_effect=PyTewkeCoapError("Timeout", 408))
+    mock_tap.get_config = AsyncMock(
+        return_value=ConfigData.model_construct(  # type: ignore[call-arg]
+            hardware_id="test_dock_id",
+        )
+    )
     mock_tap.wall_dock_id = "test_dock_id"
 
     mock_config_entry.runtime_data = TewkeData(
@@ -148,4 +157,4 @@ async def test_coordinator_optional_endpoints_fail(
         assert data["radar"] is None
         assert data["energy"] is None
         assert data["energy_override"] is None
-        assert data["config"] is None
+        assert data["config"].hardware_id == "test_dock_id"

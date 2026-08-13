@@ -4,7 +4,12 @@ import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytewke.error import PyTewkeCoapError, PyTewkeInvalidResponseError
+from pytewke import Scene
+from pytewke.error import (
+    PyTewkeCoapError,
+    PyTewkeInvalidResponseError,
+    PyTewkeObserveError,
+)
 
 from homeassistant.components.tewke.coordinator import (
     TewkeCoordinator,
@@ -12,6 +17,8 @@ from homeassistant.components.tewke.coordinator import (
 )
 from homeassistant.components.tewke.data import TewkeData
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 async def test_fetch_with_retries_success() -> None:
@@ -26,7 +33,10 @@ async def test_fetch_with_retries_transient_error() -> None:
     """Test _fetch_with_retries succeeds after retries."""
     mock_fn = AsyncMock(side_effect=[PyTewkeCoapError("Timeout", 408), "success"])
 
-    with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+    with patch(
+        "homeassistant.components.tewke.coordinator.asyncio.sleep",
+        new_callable=AsyncMock,
+    ) as mock_sleep:
         result = await _fetch_with_retries(mock_fn)
 
     assert result == "success"
@@ -39,7 +49,10 @@ async def test_fetch_with_retries_exhausted() -> None:
     mock_fn = AsyncMock(side_effect=PyTewkeCoapError("Timeout", 408))
 
     with (
-        patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        patch(
+            "homeassistant.components.tewke.coordinator.asyncio.sleep",
+            new_callable=AsyncMock,
+        ) as mock_sleep,
         pytest.raises(PyTewkeCoapError),
     ):
         await _fetch_with_retries(mock_fn)
@@ -53,7 +66,10 @@ async def test_fetch_with_retries_non_transient() -> None:
     mock_fn = AsyncMock(side_effect=PyTewkeInvalidResponseError("Invalid"))
 
     with (
-        patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        patch(
+            "homeassistant.components.tewke.coordinator.asyncio.sleep",
+            new_callable=AsyncMock,
+        ) as mock_sleep,
         pytest.raises(PyTewkeInvalidResponseError),
     ):
         await _fetch_with_retries(mock_fn)
@@ -63,7 +79,7 @@ async def test_fetch_with_retries_non_transient() -> None:
 
 
 async def test_coordinator_update_data_first_boot(
-    hass: HomeAssistant, mock_config_entry, mock_tap
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap: AsyncMock
 ) -> None:
     """Test coordinator fetch data on first boot."""
 
@@ -83,8 +99,7 @@ async def test_coordinator_update_data_first_boot(
     )
 
     data = await coordinator._async_update_data()
-    assert data["scenes"] == {"scene1": {"name": "Mock Scene"}}
-    assert data["scenes"] == {"scene1": {"name": "Mock Scene"}}
+    assert data["scenes"] == {"scene1": {"name": "Mock Scene"}}  # type: ignore[comparison-overlap]
     assert data["targets"] == {}
     assert data["sensors"] is None
 
@@ -94,7 +109,7 @@ async def test_coordinator_update_data_first_boot(
 
 
 async def test_coordinator_update_data_active_observe(
-    hass: HomeAssistant, mock_config_entry, mock_tap
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap: AsyncMock
 ) -> None:
     """Test coordinator skips fetch if observe is active and data is populated."""
 
@@ -111,8 +126,35 @@ async def test_coordinator_update_data_active_observe(
         "test",
         mock_config_entry,
     )
-    coordinator.data = {"scenes": {}}
+    coordinator.data = {"scenes": {}}  # type: ignore[typeddict-item]
 
     data = await coordinator._async_update_data()
-    assert data == {"scenes": {}}
+    assert data == {"scenes": {}}  # type: ignore[comparison-overlap]
     assert mock_tap.get_scenes.call_count == 0
+
+
+async def test_coordinator_new_scenes(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap: AsyncMock
+) -> None:
+    """Test finding new scenes during polling."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+
+    new_scene = Scene(id="99", name="New Scene", isActive=False, brightness=255)
+
+    async def _get_scenes(*args, **kwargs):
+        return {"99": new_scene}
+
+    mock_tap.get_scenes.side_effect = _get_scenes
+
+    mock_tap.observe.side_effect = PyTewkeObserveError
+    mock_config_entry.runtime_data.observe_active = False
+
+    data = await coordinator._async_update_data()
+    await hass.async_block_till_done()
+
+    assert "99" in data["scenes"]
+    assert data["scenes"]["99"].name == "New Scene"

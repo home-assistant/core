@@ -1,5 +1,7 @@
 """Test Tewke diagnostics."""
 
+from unittest.mock import AsyncMock
+
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -14,7 +16,7 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
-    mock_tap,
+    mock_tap: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
