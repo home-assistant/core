@@ -58,10 +58,11 @@ def _build_identity_indexes(
 ]:
     """Index old infos by unique_id and by name for identity matching.
 
-    Names duplicated across devices are ambiguous and left to key
-    matching; a device never has duplicate names, so unique_ids are
-    unique. reserved: guaranteed a unique_id match; key matches must
-    skip these or a reused key could swap two entities' identities.
+    Names are unique per device_id, so unique_ids are unique; the same
+    name may exist on multiple devices, and such names are ambiguous
+    move candidates left to key matching. reserved: guaranteed a
+    unique_id match; key matches must skip these or a reused key could
+    swap two entities' identities.
     """
     old_info_by_unique_id: dict[str, DeviceEntityKey] = {}
     movable_by_name: dict[str, DeviceEntityKey] = {}
