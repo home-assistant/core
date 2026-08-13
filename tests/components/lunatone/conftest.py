@@ -162,6 +162,17 @@ def mock_lunatone_sensors() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_lunatone_scan() -> Generator[AsyncMock]:
+    """Mock a Lunatone DALI scan object."""
+    with patch(
+        "homeassistant.components.lunatone.DALIScan",
+        autospec=True,
+    ) as mock_dali_scan:
+        scan = mock_dali_scan.return_value
+        yield scan
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
