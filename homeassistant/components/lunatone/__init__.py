@@ -30,7 +30,11 @@ from .coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS: Final[list[Platform]] = [Platform.LIGHT, Platform.SENSOR]
+PLATFORMS: Final[list[Platform]] = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SENSOR,
+]
 
 
 async def _update_unique_id(

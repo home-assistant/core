@@ -38,13 +38,9 @@
     }
   },
   "entity": {
-    "sensor": {
+    "binary_sensor": {
       "scan_status": {
-        "name": "DALI scan status",
-        "state": {
-          "idle": "Idle",
-          "in_progress": "In progress"
-        }
+        "name": "DALI scan"
       }
     }
   },
