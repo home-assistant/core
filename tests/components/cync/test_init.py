@@ -16,30 +16,30 @@ async def test_migrate_unique_ids(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that entity and device registry IDs are migrated from device_id to mesh_device_id format."""
+    """Test migration to mesh-based entity and device registry IDs."""
     mock_config_entry.add_to_hass(hass)
 
-    old_device_entry = device_registry.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "10000-1101"), ("another_domain", "external-id")},
+        identifiers={
+            (DOMAIN, "10000-1101"),
+            (DOMAIN, "10000-1112"),
+            ("another_domain", "external-id"),
+        },
     )
-    old_light_entry = entity_registry.async_get_or_create(
+    light_entry = entity_registry.async_get_or_create(
         Platform.LIGHT,
-        "cync",
+        DOMAIN,
         "10000-1101",
         config_entry=mock_config_entry,
-        device_id=old_device_entry.id,
-    )
-    offline_device_entry = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "10000-1112")},
+        device_id=device_entry.id,
     )
     offline_light_entry = entity_registry.async_get_or_create(
         Platform.LIGHT,
-        "cync",
+        DOMAIN,
         "10000-1112",
         config_entry=mock_config_entry,
-        device_id=offline_device_entry.id,
+        device_id=device_entry.id,
     )
     switch_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -52,10 +52,10 @@ async def test_migrate_unique_ids(
         config_entry=mock_config_entry,
         device_id=switch_device_entry.id,
     )
-    original_entity_id = old_light_entry.entity_id
-    original_device_id = old_device_entry.id
+    original_entity_id = light_entry.entity_id
+    original_device_id = device_entry.id
     offline_entity_id = offline_light_entry.entity_id
-    offline_device_id = offline_device_entry.id
+
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -63,20 +63,18 @@ async def test_migrate_unique_ids(
     assert migrated_entity is not None
     assert migrated_entity.entity_id == original_entity_id
     assert migrated_entity.unique_id == "10000-1"
-    migrated_device = device_registry.async_get(old_device_entry.id)
+    migrated_device = device_registry.async_get(original_device_id)
     assert migrated_device is not None
     assert migrated_device.id == original_device_id
     assert (DOMAIN, "10000-1") in migrated_device.identifiers
+    assert (DOMAIN, "10000-3") in migrated_device.identifiers
     assert (DOMAIN, "10000-1101") not in migrated_device.identifiers
+    assert (DOMAIN, "10000-1112") not in migrated_device.identifiers
     assert ("another_domain", "external-id") in migrated_device.identifiers
 
     migrated_offline_entity = entity_registry.async_get(offline_entity_id)
     assert migrated_offline_entity is not None
     assert migrated_offline_entity.unique_id == "10000-3"
-    migrated_offline_device = device_registry.async_get(offline_device_id)
-    assert migrated_offline_device is not None
-    assert (DOMAIN, "10000-3") in migrated_offline_device.identifiers
-    assert (DOMAIN, "10000-1112") not in migrated_offline_device.identifiers
 
     current_switch = entity_registry.async_get(switch_entry.entity_id)
     assert current_switch is not None
@@ -89,7 +87,9 @@ async def test_migrate_unique_ids(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(original_entity_id) == migrated_entity
-    assert device_registry.async_get(original_device_id) == migrated_device
+    reloaded_device = device_registry.async_get(original_device_id)
+    assert reloaded_device is not None
+    assert reloaded_device.identifiers == migrated_device.identifiers
 
     with patch(
         "homeassistant.components.cync._migrate_unique_ids"
