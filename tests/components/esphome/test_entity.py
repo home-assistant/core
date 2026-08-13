@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import asdict
+import logging
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -2877,3 +2878,52 @@ async def test_entity_renamed_with_stable_key_and_same_named_sibling(
     state = hass.states.get("binary_sensor.sub_one_battery")
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_FRIENDLY_NAME] == "sub_one BATTERY"
+
+
+async def test_disabled_entity_rekeyed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a key change for a disabled entity.
+
+    A disabled entity has no live object and no key subscriptions, so
+    the key change has no subscriber; the registry entry must still be
+    preserved.
+    """
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=1,
+            name="Sensor One",
+            disabled_by_default=True,
+        ),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+    )
+    entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    assert entry_one is not None
+    assert entry_one.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.test_sensor_one")
+
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=101,
+            name="Sensor One",
+            disabled_by_default=True,
+        ),
+    ]
+    with caplog.at_level(logging.DEBUG, "homeassistant.components.esphome"):
+        await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
+
+    assert "no subscriber for key change 1 -> 101" in caplog.text
+    new_entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    assert new_entry_one is not None
+    assert new_entry_one.id == entry_one.id
+    assert actions_one == []
