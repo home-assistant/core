@@ -3,6 +3,20 @@
   dict({
     'data': dict({
       'device': dict({
+        'IB1234': dict({
+          'characteristics': dict({
+            'capabilities': list([
+            ]),
+          }),
+          'connectionState': dict({
+            'timestamp': '2020-03-23T18:30:07.377Z',
+            'value': True,
+          }),
+          'currentFwVersion': '62.7',
+          'deviceType': 'IB01',
+          'serialNo': 'IB1234',
+          'shortSerialNo': 'IB1234',
+        }),
         'WR1': dict({
           'accessPointWiFi': dict({
             'ssid': 'tado8480',
@@ -61,6 +75,10 @@
       'geofence': dict({
         'presence': 'HOME',
         'presenceLocked': False,
+      }),
+      'rate_limit': dict({
+        'per-day': 1000,
+        'remaining': 100,
       }),
       'weather': dict({
         'outsideTemperature': dict({

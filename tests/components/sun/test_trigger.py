@@ -338,6 +338,84 @@ async def test_dawn_defaults_to_civil(
         assert service_calls[0].data["type"] == "civil"
 
 
+@pytest.mark.parametrize(
+    ("trigger_key", "astral_event"),
+    [
+        ("sun.sunrise", SUN_EVENT_SUNRISE),
+        ("sun.sunset", SUN_EVENT_SUNSET),
+        ("sun.solar_noon", "noon"),
+        ("sun.solar_midnight", "midnight"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("offset_type", "sign"),
+    [("before", -1), ("after", 1)],
+    ids=["before", "after"],
+)
+async def test_event_trigger_offset(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_key: str,
+    astral_event: str,
+    offset_type: str,
+    sign: int,
+) -> None:
+    """Test the solar event triggers apply a before/after time offset."""
+    offset = timedelta(hours=1)
+    with freeze_time(_TEST_DATETIME):
+        await _arm_automation(
+            hass,
+            {
+                "platform": trigger_key,
+                "options": {"offset": {"hours": 1}, "offset_type": offset_type},
+            },
+            {},
+        )
+        expected = get_astral_event_next(
+            hass, astral_event, _TEST_DATETIME, sign * offset
+        )
+        # The offset shifts the fire time away from the bare event time.
+        assert expected != get_astral_event_next(hass, astral_event, _TEST_DATETIME)
+
+        async_fire_time_changed(hass, expected + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+@pytest.mark.parametrize("trigger_key", ["sun.dawn", "sun.dusk"])
+@pytest.mark.parametrize(
+    ("offset_type", "sign"),
+    [("before", -1), ("after", 1)],
+    ids=["before", "after"],
+)
+async def test_dawn_dusk_trigger_offset(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_key: str,
+    offset_type: str,
+    sign: int,
+) -> None:
+    """Test the dawn and dusk triggers apply a before/after time offset."""
+    event = trigger_key.split(".")[1]
+    offset = timedelta(hours=1)
+    with freeze_time(_TEST_DATETIME):
+        await _arm_automation(
+            hass,
+            {
+                "platform": trigger_key,
+                "options": {"offset": {"hours": 1}, "offset_type": offset_type},
+            },
+            {},
+        )
+        expected = _DAWN_DUSK[event, "civil"] + sign * offset
+
+        async_fire_time_changed(hass, expected + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
 # --- Edge cases: no matching solar event on the following day ----------------
 
 # Longyearbyen, Svalbard (deep polar latitude) and Kotzebue, Alaska (above the

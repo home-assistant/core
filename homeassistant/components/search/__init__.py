@@ -147,14 +147,8 @@ class Searcher:
             if device_entry := self._device_registry.async_get(device.id):
                 self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
 
-            # Automations referencing this device
-            self._add(
-                ItemType.AUTOMATION,
-                automation.automations_with_device(self.hass, device.id),
-            )
-
-            # Scripts referencing this device
-            self._add(ItemType.SCRIPT, script.scripts_with_device(self.hass, device.id))
+            # Automations and scripts referencing this device
+            self._async_add_automations_and_scripts_for_device(device)
 
             # Entities of this device
             for entity_entry in er.async_entries_for_device(
@@ -239,8 +233,7 @@ class Searcher:
 
         # Devices referenced in this automation
         for device in automation.devices_in_automation(self.hass, automation_entity_id):
-            self._add(ItemType.DEVICE, device)
-            self._async_resolve_up_device(device)
+            self._async_search_referenced_device(device)
 
         # Entities referenced in this automation
         for entity_id in automation.entities_in_automation(
@@ -319,14 +312,8 @@ class Searcher:
             # Add labels of this device
             self._add(ItemType.LABEL, device_entry.labels)
 
-        # Automations referencing this device
-        self._add(
-            ItemType.AUTOMATION,
-            automation.automations_with_device(self.hass, device_id),
-        )
-
-        # Scripts referencing this device
-        self._add(ItemType.SCRIPT, script.scripts_with_device(self.hass, device_id))
+        # Automations and scripts referencing this device
+        self._async_add_automations_and_scripts_for_device(device_entry)
 
         # Entities of this device
         for entity_entry in er.async_entries_for_device(
@@ -335,6 +322,46 @@ class Searcher:
             self._add(ItemType.ENTITY, entity_entry.entity_id)
             # Add all entity information as well
             self._async_search_entity(entity_entry.entity_id, entry_point=False)
+
+    @callback
+    def _async_add_automations_and_scripts_for_device(
+        self, device_entry: dr.DeviceEntry
+    ) -> None:
+        """Add automations and scripts referencing a device.
+
+        A device produced by splitting a pre-migration composite device is also
+        matched by automations and scripts referencing the composite device id, so
+        the composite id is searched too. A sibling split's id is never searched, so
+        references to a sibling are not matched.
+        """
+        device_ids = {device_entry.id}
+        if device_entry.composite_device_id is not None:
+            device_ids.add(device_entry.composite_device_id)
+        for device_id in device_ids:
+            self._add(
+                ItemType.AUTOMATION,
+                automation.automations_with_device(self.hass, device_id),
+            )
+            self._add(ItemType.SCRIPT, script.scripts_with_device(self.hass, device_id))
+
+    @callback
+    def _async_search_referenced_device(self, device_id: str) -> None:
+        """Add a device referenced by an automation or script.
+
+        An automation or script created before a composite device was split
+        references the composite device id, which is not a live device. It is
+        expanded to the live split device ids, so the real devices are returned.
+        Any other id (a live device, or a stale reference) is added unchanged.
+        """
+        split_devices = self._device_registry.async_get_devices_for_composite_device_id(
+            device_id
+        )
+        device_ids: Iterable[str] = (
+            [device.id for device in split_devices] if split_devices else (device_id,)
+        )
+        for resolved_device_id in device_ids:
+            self._add(ItemType.DEVICE, resolved_device_id)
+            self._async_resolve_up_device(resolved_device_id)
 
     @callback
     def _async_search_entity(self, entity_id: str, *, entry_point: bool = True) -> None:
@@ -524,8 +551,7 @@ class Searcher:
 
         # Devices referenced in this script
         for device in script.devices_in_script(self.hass, script_entity_id):
-            self._add(ItemType.DEVICE, device)
-            self._async_resolve_up_device(device)
+            self._async_search_referenced_device(device)
 
         # Entities referenced in this script
         for entity_id in script.entities_in_script(self.hass, script_entity_id):

@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from roborock import (
+    CleaningMode,
     CleanRoutes,
     HomeDataRoom,
     MultiMapsListMapInfo,
@@ -416,6 +417,8 @@ def make_home_trait(
     home_trait.home_map_info = home_map_info
     home_trait.current_map_data = home_map_info[current_map]
     home_trait.home_map_content = home_map_content
+    notify = attach_update_listeners(home_trait)
+    home_trait.refresh.side_effect = notify
     return home_trait
 
 
@@ -452,6 +455,8 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     v1_properties.status.mop_route_options = list(CleanRoutes)
     v1_properties.status.mop_route_mapping = _mop_route_mapping
     v1_properties.status.mop_route_name = _mop_route_mapping.get(STATUS.mop_mode)
+    v1_properties.status.cleaning_mode_options = list(CleaningMode)
+    v1_properties.status.current_cleaning_mode_name = CleaningMode.VAC_AND_MOP.value
     v1_properties.dnd = make_dnd_timer(dataclass_template=DND_TIMER)
     v1_properties.clean_summary = make_mock_trait(
         trait_spec=CleanSummaryTrait,

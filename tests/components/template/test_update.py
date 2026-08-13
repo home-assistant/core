@@ -6,6 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, update
+from homeassistant.components.template.update import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_ICON,
@@ -24,6 +25,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_extra_template_attributes,
     async_get_flow_preview_state,
     make_test_action,
     make_test_trigger,
@@ -980,3 +982,47 @@ async def test_flow_preview(
     assert state["state"] == STATE_ON
     assert state["attributes"]["installed_version"] == "1.0"
     assert state["attributes"]["latest_version"] == "2.0"
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass,
+        TEST_UPDATE,
+        style,
+        TEST_UPDATE_CONFIG,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    [*list(update.UpdateEntityStateAttribute), "device_class"],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_UPDATE,
+        style,
+        0,
+        {
+            **TEST_UPDATE_CONFIG,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )

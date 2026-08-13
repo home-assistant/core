@@ -3,17 +3,13 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE, PARAM_STATUS
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.imou.const import (
-    PARAM_HEADER_DETECT,
-    PARAM_MOTION_DETECT,
-    PARAM_STATE,
-    PARAM_STATUS,
-)
+from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -21,6 +17,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -48,6 +45,7 @@ SWITCH_MOCK_DEVICES = [
 ]
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SWITCH]], indirect=True)
 @pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_switch_entities_snapshot(
@@ -83,7 +81,7 @@ async def test_setup_ignores_unknown_switch_types(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Unknown switch keys from the API are not turned into entities."""
-    registry = er.async_get(hass)
+    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
     switch_entries = [entry for entry in entries if entry.domain == SWITCH_DOMAIN]
     assert len(switch_entries) == 1
@@ -167,7 +165,9 @@ async def test_turn_on_service_propagates_api_error(
 
     entity_id = hass.states.async_all("switch")[0].entity_id
 
-    with pytest.raises(HomeAssistantError, match="cloud failure"):
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the switch change: cloud failure"
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,

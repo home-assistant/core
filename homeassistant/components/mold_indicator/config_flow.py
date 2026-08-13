@@ -162,7 +162,6 @@ def ws_start_preview(
         )
 
     preview_entity = MoldIndicator(
-        hass,
         name,
         hass.config.units is METRIC_SYSTEM,
         indoor_temp,
