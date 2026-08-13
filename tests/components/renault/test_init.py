@@ -262,7 +262,7 @@ async def test_registry_cleanup(
     # Try to remove "VF1ZOE40VIN" - fails as it is live
     device = device_registry.async_get_device_by_identifier((DOMAIN, live_id), entry_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert not response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
     assert (
@@ -272,7 +272,7 @@ async def test_registry_cleanup(
 
     # Try to remove "VF1AAAAA555777888" - succeeds as it is dead
     device = device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
     assert (
