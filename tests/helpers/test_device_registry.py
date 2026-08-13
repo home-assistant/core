@@ -9708,6 +9708,103 @@ async def test_child_device_create(
     }
 
 
+@pytest.mark.parametrize(
+    ("attr_name", "expected_default"),
+    [
+        ("configuration_url", None),
+        ("connections", set()),
+        ("entry_type", None),
+        ("hw_version", None),
+        ("manufacturer", None),
+        ("model", None),
+        ("model_id", None),
+        ("serial_number", None),
+        ("sw_version", None),
+        ("via_device_id", None),
+    ],
+)
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(AttributeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(AttributeError),
+            0,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_child_device_deprecated_device_entry_attrs(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    attr_name: str,
+    expected_default: Any,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test accessing a DeviceEntry-only attribute on a child device.
+
+    Custom integrations get the DeviceEntry default value and a deprecation warning;
+    core and core integrations raise AttributeError so the attribute reads as missing.
+    """
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    what = (
+        f"accesses ChildDeviceEntry.{attr_name}, which does not exist on child devices"
+    )
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        assert getattr(child_device, attr_name) == expected_default
+    assert caplog.text.count(what) == expected_log
+
+
+@pytest.mark.parametrize("attr_name", sorted(dr._CHILD_DEVICE_COMPAT_ATTRS))
+@pytest.mark.usefixtures("hass")
+async def test_child_device_deprecated_attrs_missing_for_core(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    attr_name: str,
+) -> None:
+    """Test DeviceEntry-only attributes read as missing without an integration frame.
+
+    This is the template/pure-core path: hasattr must be False so device_attr and
+    is_device_attr fall back to None instead of raising.
+    """
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    assert hasattr(child_device, attr_name) is False
+    with pytest.raises(AttributeError, match=f"has no attribute '{attr_name}'"):
+        getattr(child_device, attr_name)
+
+
+@pytest.mark.usefixtures("hass")
+async def test_child_device_unknown_attribute_raises(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test accessing a genuinely unknown attribute on a child device raises."""
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    with pytest.raises(AttributeError, match="has no attribute 'does_not_exist'"):
+        getattr(child_device, "does_not_exist")  # noqa: B009
+
+
 @pytest.mark.usefixtures("hass")
 async def test_async_get_exclude_child_devices(
     device_registry: dr.DeviceRegistry,
