@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any, override
 
-from aiortm import Auth, AuthError, ResponseError
+from aiortm import AioRTMError, Auth, AuthError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -70,7 +70,7 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._url, self._frob = await auth.authenticate_desktop()
             except AuthError:
                 errors["base"] = "invalid_auth"
-            except ResponseError:
+            except AioRTMError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001 pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
@@ -111,7 +111,7 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="timeout_token")
         except AuthError:
             return self.async_abort(reason="invalid_auth")
-        except ResponseError:
+        except AioRTMError:
             return self.async_abort(reason="cannot_connect")
         except Exception:  # noqa: BLE001 pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")
@@ -132,8 +132,7 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the config entry from token data.
 
         The token data has the same structure whether it comes from get_token
-        or check_token. The username defaults to the Remember The Milk account
-        username but can be overridden, e.g. to keep the YAML account name.
+        or check_token.
         """
         await self.async_set_unique_id(token_data["user"]["id"])
         self._abort_if_unique_id_configured()
@@ -167,7 +166,7 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
             token_data = await auth.check_token()
         except AuthError:
             return self.async_abort(reason="invalid_auth")
-        except ResponseError:
+        except AioRTMError:
             return self.async_abort(reason="cannot_connect")
         except Exception:  # noqa: BLE001 pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")

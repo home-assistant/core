@@ -5,14 +5,11 @@ from collections.abc import Awaitable
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aiortm import AioRTMError, AuthError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.remember_the_milk.config_flow import (
-    TOKEN_TIMEOUT_SEC,
-    AuthError,
-    ResponseError,
-)
+from homeassistant.components.remember_the_milk.config_flow import TOKEN_TIMEOUT_SEC
 from homeassistant.components.remember_the_milk.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -55,7 +52,7 @@ async def test_successful_flow(
     ("exception", "error"),
     [
         (AuthError, "invalid_auth"),
-        (ResponseError, "cannot_connect"),
+        (AioRTMError, "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -112,7 +109,7 @@ async def mock_get_token(*args: Any) -> None:
     ("side_effect", "reason", "timeout"),
     [
         (AuthError, "invalid_auth", TOKEN_TIMEOUT_SEC),
-        (ResponseError, "cannot_connect", TOKEN_TIMEOUT_SEC),
+        (AioRTMError, "cannot_connect", TOKEN_TIMEOUT_SEC),
         (Exception, "unknown", TOKEN_TIMEOUT_SEC),
         (mock_get_token, "timeout_token", 0),
     ],
@@ -208,7 +205,7 @@ async def test_import_flow(
     [
         (None, None, "invalid_auth"),
         ("test-token", AuthError, "invalid_auth"),
-        ("test-token", ResponseError, "cannot_connect"),
+        ("test-token", AioRTMError, "cannot_connect"),
         ("test-token", Exception, "unknown"),
     ],
 )

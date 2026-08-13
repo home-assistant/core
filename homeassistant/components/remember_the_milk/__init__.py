@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
-from aiortm import AioRTMClient, Auth, AuthError
+from aiortm import AioRTMClient, AioRTMError, Auth, AuthError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import EntityComponent
@@ -162,6 +162,8 @@ async def async_setup_entry(
         await client.rtm.api.check_token()
     except AuthError:
         token_valid = False
+    except AioRTMError as err:
+        raise ConfigEntryNotReady from err
 
     # The entity will be deprecated when a todo platform is added.
     entity = RememberTheMilkEntity(

@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from aiortm import AuthError
+from aiortm import AioRTMError, AuthError
 import pytest
 
 from homeassistant.components.remember_the_milk.const import DOMAIN
@@ -10,6 +10,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
+
+from .const import PROFILE
 
 from tests.common import MockConfigEntry
 
@@ -39,18 +41,40 @@ async def test_load_unload_config_entry(
 
 
 @pytest.mark.usefixtures("storage")
-async def test_config_entry_auth_failed(
+@pytest.mark.parametrize(
+    ("side_effect", "entry_state", "ignore_missing_translations"),
+    [
+        pytest.param(
+            AuthError("Invalid token!"),
+            ConfigEntryState.SETUP_ERROR,
+            [
+                f"component.{DOMAIN}.services.{PROFILE}_create_task.",
+                f"component.{DOMAIN}.services.{PROFILE}_complete_task.",
+            ],
+            id="auth_error",
+        ),
+        pytest.param(
+            AioRTMError("Connection failed!"),
+            ConfigEntryState.SETUP_RETRY,
+            [],
+            id="rtm_error",
+        ),
+    ],
+)
+async def test_config_entry_check_token_fails(
     hass: HomeAssistant,
     client: MagicMock,
     config_entry: MockConfigEntry,
+    side_effect: Exception,
+    entry_state: ConfigEntryState,
 ) -> None:
-    """Test that an invalid token puts the entry in SETUP_ERROR state."""
-    client.rtm.api.check_token.side_effect = AuthError("Invalid token!")
+    """Test that token check failures put the entry in the expected state."""
+    client.rtm.api.check_token.side_effect = side_effect
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is entry_state
 
 
 @pytest.mark.usefixtures("client", "storage")
