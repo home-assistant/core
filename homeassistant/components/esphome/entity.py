@@ -463,18 +463,11 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
             static_info = cast(_InfoT, static_info)
             assert device_info
         unique_id = build_device_unique_id(device_info.mac_address, static_info)
-        if (
-            new_key := static_info.key
-        ) != self._key and unique_id != self._attr_unique_id:
-            # A key change is only valid for this entity's unique_id; keys
-            # are not collision safe, so never adopt an info that belongs
-            # to a different entity.
-            return
         self._static_info = static_info
-        if new_key != self._key:
+        if static_info.key != self._key:
             # The key is only stable for a session; a firmware update may
             # re-derive it. Move the key based subscriptions to the new key.
-            self._key = new_key
+            self._key = static_info.key
             if self._key_unsubs:
                 self._unsubscribe_key_updates()
                 self._subscribe_key_updates()
