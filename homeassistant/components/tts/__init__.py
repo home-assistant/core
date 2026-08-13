@@ -326,6 +326,10 @@ async def _async_convert_audio(
     if from_extension:
         command.extend(["-f", from_extension])
 
+    if is_input_gen and from_extension == "wav":
+        # The container is known, so minimize probing latency for live TTS audio.
+        command.extend(["-probesize", "32"])
+
     if is_input_gen:
         # Async generator
         command.extend(["-i", "pipe:0"])

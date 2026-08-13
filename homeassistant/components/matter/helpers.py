@@ -80,7 +80,7 @@ def get_device_id(
 def node_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> MatterNode | None:
     """Get node id from ha device id."""
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get(ha_device_id)
+    device = dev_reg.async_get(ha_device_id, include_child_devices=False)
     if device is None:
         raise MissingNode(f"Invalid device ID: {ha_device_id}")
     return get_node_from_device_entry(hass, device)
