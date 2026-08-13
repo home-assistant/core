@@ -2,7 +2,7 @@
 
 from functools import partial
 import logging
-from typing import Any, cast, override
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aioesphomeapi import (
@@ -90,6 +90,11 @@ class EsphomeMediaPlayer(
     """A media player implementation for esphome."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    # Stable dict key into entry_data.media_player_formats; the unique_id
+    # is not used since it follows static info updates, which could point
+    # the cleanup in async_will_remove_from_hass at another entity's
+    # entry when keys are reused across a reconnect.
+    _format_key: str | None = None
 
     @callback
     @override
@@ -103,9 +108,11 @@ class EsphomeMediaPlayer(
         for espflag in esp_flags:
             flags |= _FEATURES[espflag]
         self._attr_supported_features = flags
-        self._entry_data.media_player_formats[self.unique_id] = cast(
-            MediaPlayerInfo, static_info
-        ).supported_formats
+        if self._format_key is None:
+            self._format_key = self.unique_id
+        self._entry_data.media_player_formats[self._format_key] = (
+            self._static_info.supported_formats
+        )
 
     @property
     @esphome_state_property
@@ -144,7 +151,9 @@ class EsphomeMediaPlayer(
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
         bypass_proxy = kwargs.get(ATTR_MEDIA_EXTRA, {}).get(ATTR_BYPASS_PROXY)
         supported_formats: list[MediaPlayerSupportedFormat] | None = (
-            self._entry_data.media_player_formats.get(self.unique_id)
+            self._entry_data.media_player_formats.get(self._format_key)
+            if self._format_key is not None
+            else None
         )
 
         if (
@@ -171,7 +180,8 @@ class EsphomeMediaPlayer(
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()
-        self._entry_data.media_player_formats.pop(self.unique_id, None)
+        if self._format_key is not None:
+            self._entry_data.media_player_formats.pop(self._format_key, None)
 
     def _get_proxy_url(
         self,

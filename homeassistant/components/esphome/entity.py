@@ -42,6 +42,46 @@ _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
 
 
+def _build_identity_indexes(
+    current_infos: dict[DeviceEntityKey, EntityInfo],
+    mac: str,
+    new_unique_ids: set[str],
+) -> tuple[dict[str, DeviceEntityKey], dict[str, DeviceEntityKey]]:
+    """Index the old infos by unique_id and by name.
+
+    The unique_id (mac/device_id/type/name) is the long term identity
+    and matches entities across key changes; the name is the device
+    independent identity and matches entities that moved between
+    devices. Duplicates cannot be matched by identity and are left to
+    the key based matching; entities whose unique_id is still present
+    are not move candidates.
+    """
+    old_info_by_unique_id: dict[str, DeviceEntityKey] = {}
+    duplicate_unique_ids: set[str] = set()
+    movable_by_name: dict[str, DeviceEntityKey] = {}
+    duplicate_names: set[str] = set()
+    for dict_key, existing_info in current_infos.items():
+        old_unique_id = build_device_unique_id(mac, existing_info)
+        if old_unique_id in duplicate_unique_ids:
+            continue
+        if old_unique_id in old_info_by_unique_id:
+            duplicate_unique_ids.add(old_unique_id)
+            del old_info_by_unique_id[old_unique_id]
+            continue
+        old_info_by_unique_id[old_unique_id] = dict_key
+        if old_unique_id in new_unique_ids:
+            continue
+        name = existing_info.name
+        if name in duplicate_names:
+            continue
+        if name in movable_by_name:
+            duplicate_names.add(name)
+            del movable_by_name[name]
+            continue
+        movable_by_name[name] = dict_key
+    return old_info_by_unique_id, movable_by_name
+
+
 @callback
 def async_static_info_updated(
     hass: HomeAssistant,
@@ -64,14 +104,13 @@ def async_static_info_updated(
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
-    # The API key is only stable for a session; the unique_id
-    # (mac/device_id/type/name) is the long term identity, so index the
-    # old infos by unique_id to match entities across key changes.
+    # The API key is only stable for a session, so entities are matched
+    # by identity first: unique_id, then name for cross device moves
     mac = device_info.mac_address
-    old_info_by_unique_id: dict[str, DeviceEntityKey] = {
-        build_device_unique_id(mac, old_info): dict_key
-        for dict_key, old_info in current_infos.items()
-    }
+    new_unique_ids = {build_device_unique_id(mac, info) for info in infos}
+    old_info_by_unique_id, movable_by_name = _build_identity_indexes(
+        current_infos, mac, new_unique_ids
+    )
     rekeys: list[tuple[EntityInfo, EntityInfo]] = []
 
     # Track info by (info.device_id, info.key) to properly handle entities
@@ -83,32 +122,43 @@ def async_static_info_updated(
 
         # Identity match by unique_id: same device_id, type and name.
         # Survives the key being re-derived by a firmware update.
-        if (
-            old_dict_key := old_info_by_unique_id.pop(unique_id, None)
-        ) is not None and (
-            old_info := current_infos.pop(old_dict_key, None)
-        ) is not None:
-            if old_info.key != info.key:
-                # Same entity with a new key: the live entity re-points
-                # its key based subscriptions after the loop. The
-                # registry entry is untouched.
-                rekeys.append((old_info, info))
-            # Equal unique_ids imply equal device_ids, so no migration needed
-            continue
+        if (old_dict_key := old_info_by_unique_id.pop(unique_id, None)) is not None:
+            if (matched_info := current_infos.pop(old_dict_key, None)) is not None:
+                if matched_info.key != info.key:
+                    # Same entity with a new key: the live entity re-points
+                    # its key based subscriptions after the loop. The
+                    # registry entry is untouched.
+                    rekeys.append((matched_info, info))
+                # Equal unique_ids imply equal device_ids, no migration needed
+                continue
 
         # Same key and device_id: a rename on firmware where the key is
         # not derived from the name; the entity is updated in place
         if current_infos.pop(info_key, None) is not None:
             continue
 
-        # Search for the same key on a different device_id
-        # This handles the case where entity moved between devices
-        for existing_device_id, existing_key in list(current_infos):
-            if existing_key == info.key:
-                old_info = current_infos.pop((existing_device_id, existing_key))
-                break
-        else:
-            # Create new entity if it doesn't exist
+        # Match by name when unambiguous: the entity moved between
+        # devices. Survives the key changing at the same time.
+        old_info: EntityInfo | None = None
+        if (move_dict_key := movable_by_name.pop(info.name, None)) is not None:
+            old_info = current_infos.pop(move_dict_key, None)
+
+        # Search for the same name and key on a different device_id to
+        # resolve moves of entities with ambiguous names, skipping
+        # entities whose identity is still present in the new infos so
+        # a reused key cannot steal an unrelated entity
+        if old_info is None:
+            for existing_dict_key, existing_info in list(current_infos.items()):
+                if (
+                    existing_dict_key[1] == info.key
+                    and existing_info.name == info.name
+                    and build_device_unique_id(mac, existing_info) not in new_unique_ids
+                ):
+                    old_info = current_infos.pop(existing_dict_key)
+                    break
+
+        # Create new entity if it doesn't exist
+        if old_info is None:
             add_entities.append(entity_type(entry_data, info, state_type))
             continue
 
@@ -176,8 +226,11 @@ def async_static_info_updated(
         )
 
         # Signal the existing entity to remove itself
-        # The entity is registered with the old device_id, so we signal with that
-        entry_data.async_signal_entity_removal(info_type, old_info.device_id, info.key)
+        # The entity is registered with the old device_id and old key,
+        # so we signal with those
+        entry_data.async_signal_entity_removal(
+            info_type, old_info.device_id, old_info.key
+        )
 
         # Create new entity with the new device_id
         add_entities.append(entity_type(entry_data, info, state_type))

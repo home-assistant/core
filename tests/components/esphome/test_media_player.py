@@ -11,6 +11,7 @@ from aioesphomeapi import (
     MediaPlayerState,
     MediaPlayerSupportedFormat,
     UserService,
+    build_device_unique_id,
 )
 import pytest
 
@@ -38,7 +39,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
@@ -667,3 +668,109 @@ async def test_media_player_formats_reload_preserves_data(
         ".wav" in call_args.kwargs["media_url"]
     )  # Should use wav format for announcement
     assert call_args.kwargs["announcement"] is True
+
+
+async def test_media_player_formats_survive_rekey_onto_removed_entity_key(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test formats survive an entity taking over a removed entity's key.
+
+    The removed media player briefly receives the surviving entity's
+    info through the shared key before its teardown runs, so its
+    cleanup must not delete the surviving entity's formats.
+    """
+    formats_one = [
+        MediaPlayerSupportedFormat(
+            format="mp3",
+            sample_rate=48000,
+            num_channels=2,
+            purpose=MediaPlayerFormatPurpose.DEFAULT,
+        ),
+    ]
+    formats_two = [
+        MediaPlayerSupportedFormat(
+            format="wav",
+            sample_rate=16000,
+            num_channels=1,
+            purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+            sample_bytes=2,
+        ),
+    ]
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="player_one",
+            key=1,
+            name="Player One",
+            supports_pause=True,
+            supported_formats=formats_one,
+        ),
+        MediaPlayerInfo(
+            object_id="player_two",
+            key=2,
+            name="Player Two",
+            supports_pause=True,
+            supported_formats=formats_two,
+        ),
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.IDLE
+        ),
+        MediaPlayerEntityState(
+            key=2, volume=50, muted=False, state=MediaPlayerState.IDLE
+        ),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    await hass.async_block_till_done()
+
+    entry_data = device.entry.runtime_data
+    mac = device.device_info.mac_address
+    unique_id_one = build_device_unique_id(mac, entity_info[0])
+    unique_id_two = build_device_unique_id(mac, entity_info[1])
+    assert entry_data.media_player_formats == {
+        unique_id_one: formats_one,
+        unique_id_two: formats_two,
+    }
+
+    # Player One takes over Player Two's key, Player Two is removed
+    updated_entity_info = [
+        MediaPlayerInfo(
+            object_id="player_one",
+            key=2,
+            name="Player One",
+            supports_pause=True,
+            supported_formats=formats_one,
+        ),
+    ]
+    mock_client.list_entities_services = AsyncMock(
+        return_value=(updated_entity_info, [])
+    )
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, updated_entity_info, [])
+    )
+    await device.mock_disconnect(expected_disconnect=False)
+    await device.mock_connect()
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            MEDIA_PLAYER_DOMAIN, "esphome", unique_id_one
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            MEDIA_PLAYER_DOMAIN, "esphome", unique_id_two
+        )
+        is None
+    )
+    # The surviving entity's formats must not have been removed by the
+    # removed entity's cleanup
+    assert entry_data.media_player_formats == {unique_id_one: formats_one}
