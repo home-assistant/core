@@ -47,12 +47,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CalDav todo platform for a config entry."""
-    calendars = await async_get_calendars(
-        hass,
-        entry.runtime_data.client,
-        SUPPORTED_COMPONENT,
-        entry.runtime_data.warned_calendars,
-    )
+    calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
     async_add_entities(
         (
             WebDavTodoListEntity(

@@ -1,6 +1,5 @@
 """The caldav component."""
 
-from dataclasses import dataclass, field
 import logging
 
 import caldav
@@ -20,16 +19,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import TIMEOUT
 
-
-@dataclass
-class CalDavData:
-    """Runtime data for the CalDAV integration."""
-
-    client: caldav.DAVClient
-    warned_calendars: set[tuple[str, str]] = field(default_factory=set)
-
-
-type CalDavConfigEntry = ConfigEntry[CalDavData]
+type CalDavConfigEntry = ConfigEntry[caldav.DAVClient]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
     except DAVError as err:
         raise ConfigEntryNotReady("CalDAV client error") from err
 
-    entry.runtime_data = CalDavData(client)
+    entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

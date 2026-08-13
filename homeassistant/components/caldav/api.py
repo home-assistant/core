@@ -7,16 +7,15 @@ from caldav.lib.error import DAVError
 
 from homeassistant.core import HomeAssistant
 
+from .const import WARNED_CALENDARS
+
 _LOGGER = logging.getLogger(__name__)
 
 ASSUMED_COMPONENTS = frozenset({"VEVENT", "VTODO"})
 
 
 async def async_get_calendars(
-    hass: HomeAssistant,
-    client: caldav.DAVClient,
-    component: str,
-    warned_calendars: set[tuple[str, str]],
+    hass: HomeAssistant, client: caldav.DAVClient, component: str
 ) -> list[caldav.Calendar]:
     """Get all calendars that support the specified component."""
 
@@ -45,6 +44,7 @@ async def async_get_calendars(
     calendars, needs_warning = await hass.async_add_executor_job(_get_calendars)
 
     if needs_warning:
+        warned_calendars = hass.data.setdefault(WARNED_CALENDARS, set())
         for url, name, comp in needs_warning:
             # This workaround and warning can be removed when we upgrade to caldav 3.0
             if (url, comp) not in warned_calendars:
