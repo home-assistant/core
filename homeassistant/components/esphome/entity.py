@@ -67,7 +67,11 @@ def _build_identity_indexes(
         old_unique_id = build_device_unique_id(mac, existing_info)
         old_info_by_unique_id[old_unique_id] = dict_key
         if old_unique_id not in new_unique_ids:
-            movable_by_name.setdefault(existing_info.name, []).append(dict_key)
+            # Unnamed entities use the device derived object_id as
+            # their identity so they cannot pair across devices
+            movable_by_name.setdefault(
+                existing_info.name or existing_info.object_id, []
+            ).append(dict_key)
     return old_info_by_unique_id, movable_by_name
 
 
@@ -125,7 +129,7 @@ def async_static_info_updated(
         # Name match: the entity moved between devices. Prefer a
         # candidate whose (device_id, key) slot has no incoming info,
         # since that slot's info is an in place rename of the candidate
-        if not (candidates := movable_by_name.get(info.name)):
+        if not (candidates := movable_by_name.get(info.name or info.object_id)):
             deferred.append((info, unique_id))
             continue
         idx = next((i for i, key in enumerate(candidates) if key not in new_infos), 0)

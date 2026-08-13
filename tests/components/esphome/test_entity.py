@@ -3145,3 +3145,63 @@ async def test_new_entity_on_other_device_reusing_removed_entities_key(
 
     assert hass.states.get("binary_sensor.test_volt") is None
     assert hass.states.get("binary_sensor.sub_one_batt").state == STATE_UNKNOWN
+
+
+async def test_unnamed_entities_do_not_pair_across_devices(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test unnamed entities are not matched as moves across devices.
+
+    An unnamed entity's identity is its device derived object_id, so a
+    removed unnamed entity must not hand its registry entry to an
+    unrelated unnamed entity appearing on another device.
+    """
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
+    ]
+    device_info = {
+        "devices": sub_devices,
+    }
+    entity_info = [
+        BinarySensorInfo(
+            object_id="test",
+            key=1,
+            name="",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+    entry_main = entity_registry.async_get("binary_sensor.test")
+    assert entry_main is not None
+
+    actions_main = track_entity_registry_actions(hass, "binary_sensor.test")
+
+    # The main device's unnamed entity is removed while an unrelated
+    # unnamed entity appears on sub_one
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sub_one",
+            key=2,
+            name="",
+            device_id=11111111,
+        ),
+    ]
+    await reconnect_with_updated_entity_info(
+        hass, device, updated_entity_info, states=[]
+    )
+
+    assert entity_registry.async_get("binary_sensor.test") is None
+    assert actions_main == ["remove"]
+    entry_sub = entity_registry.async_get("binary_sensor.sub_one")
+    assert entry_sub is not None
+    assert entry_sub.id != entry_main.id
