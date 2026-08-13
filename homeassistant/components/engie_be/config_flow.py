@@ -17,7 +17,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_MFA_METHOD, CONF_REFRESH_TOKEN, DOMAIN, USER_MANAGEMENT_URL
 
@@ -50,13 +50,14 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
         self._mfa_method = MfaMethod(user_input[CONF_MFA_METHOD])
 
-        client = EngieBeClient(session=async_get_clientsession(self.hass))
+        session = async_create_clientsession(self.hass)
+        client = EngieBeClient(session=session)
         try:
             self._auth_flow = await client.async_start_authentication(
                 self._username,
                 self._password,
                 self._mfa_method,
-                auth_session=async_get_clientsession(self.hass),
+                auth_session=session,
             )
         except EngieBeAuthenticationError:
             return {"base": "invalid_auth"}

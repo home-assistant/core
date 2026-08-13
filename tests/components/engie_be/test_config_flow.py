@@ -1,6 +1,6 @@
 """Test the ENGIE Belgium config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioengiebelgium import (
     EngieBeAuthenticationError,
@@ -39,14 +39,20 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
-    )
+    sentinel_session = MagicMock()
+    with patch(
+        "homeassistant.components.engie_be.config_flow.async_create_clientsession",
+        return_value=sentinel_session,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mfa"
 
     call_kwargs = mock_config_flow_client.async_start_authentication.call_args.kwargs
-    assert call_kwargs["auth_session"] is async_get_clientsession(hass)
+    assert call_kwargs["auth_session"] is sentinel_session
+    assert call_kwargs["auth_session"] is not async_get_clientsession(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"code": "123456"}
