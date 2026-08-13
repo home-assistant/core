@@ -7,9 +7,12 @@
     "pip_requirements",
     "pre-commit",
     "dockerfile",
+    "npm",
     "custom.regex",
     "homeassistant-manifest"
   ],
+
+  "ignorePaths": ["**/node_modules/**"],
 
   "pre-commit": {
     "enabled": true
@@ -24,6 +27,10 @@
 
   "dockerfile": {
     "managerFilePatterns": ["/^Dockerfile$/"]
+  },
+
+  "npm": {
+    "managerFilePatterns": ["/^tests/e2e/package\\.json$/"]
   },
 
   "homeassistant-manifest": {
@@ -177,6 +184,14 @@
         "yamllint",
         "zizmor"
       ],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "pnpm version pinned in the E2E tests packageManager field (allowlisted)",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["packageManager"],
+      "matchPackageNames": ["pnpm"],
       "enabled": true,
       "labels": ["dependency"]
     },
