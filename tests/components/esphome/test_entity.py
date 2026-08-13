@@ -2927,3 +2927,103 @@ async def test_disabled_entity_rekeyed(
     assert new_entry_one is not None
     assert new_entry_one.id == entry_one.id
     assert actions_one == []
+
+
+async def test_entity_renamed_while_same_named_sibling_moves(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a stable key rename while a same named sibling moves devices.
+
+    The mover must claim the sibling on sub_one, not the rename
+    candidate on the main device, and both registry entries must be
+    preserved.
+    """
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="sub_two", area_id=0),
+    ]
+    device_info = {
+        "devices": sub_devices,
+    }
+    entity_info = [
+        BinarySensorInfo(
+            object_id="battery",
+            key=1,
+            name="Battery",
+        ),
+        BinarySensorInfo(
+            object_id="battery",
+            key=1,
+            name="Battery",
+            device_id=11111111,
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=11111111),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+    entry_main = entity_registry.async_get("binary_sensor.test_battery")
+    entry_sub = entity_registry.async_get("binary_sensor.sub_one_battery")
+    assert entry_main is not None
+    assert entry_sub is not None
+
+    actions_main = track_entity_registry_actions(hass, "binary_sensor.test_battery")
+    actions_sub = track_entity_registry_actions(hass, "binary_sensor.sub_one_battery")
+
+    # Case only rename on the main device while the sub_one sibling
+    # moves to sub_two; the renamed entity is listed first
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="battery",
+            key=1,
+            name="BATTERY",
+        ),
+        BinarySensorInfo(
+            object_id="battery",
+            key=1,
+            name="Battery",
+            device_id=22222222,
+        ),
+    ]
+    await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
+
+    new_entry_main = entity_registry.async_get("binary_sensor.test_battery")
+    new_entry_sub = entity_registry.async_get("binary_sensor.sub_one_battery")
+    assert new_entry_main is not None
+    assert new_entry_sub is not None
+    assert new_entry_main.id == entry_main.id
+    assert new_entry_sub.id == entry_sub.id
+    assert "remove" not in actions_main
+    assert "remove" not in actions_sub
+
+    # The rename followed the new unique_id and stayed on the main device
+    assert new_entry_main.unique_id == build_device_unique_id(
+        device.device_info.mac_address, updated_entity_info[0]
+    )
+    # The sibling migrated to sub_two
+    sub_two = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
+    )
+    assert sub_two is not None
+    assert new_entry_sub.device_id == sub_two.id
+
+    device.set_state(BinarySensorState(key=1, state=False, missing_state=False))
+    device.set_state(
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=22222222)
+    )
+    await hass.async_block_till_done()
+    state_main = hass.states.get("binary_sensor.test_battery")
+    state_sub = hass.states.get("binary_sensor.sub_one_battery")
+    assert state_main.state == STATE_OFF
+    assert state_main.attributes[ATTR_FRIENDLY_NAME] == "Test BATTERY"
+    assert state_sub.state == STATE_ON

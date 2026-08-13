@@ -110,16 +110,18 @@ def async_migrate_unique_id(
     new_unique_id: str,
 ) -> None:
     """Migrate a registry entry to a new unique_id unless it is claimed."""
-    if (
-        old_unique_id != new_unique_id
-        and (
-            entity_id := ent_reg.async_get_entity_id(
-                platform_domain, DOMAIN, old_unique_id
-            )
-        )
-        and not ent_reg.async_get_entity_id(platform_domain, DOMAIN, new_unique_id)
+    if old_unique_id == new_unique_id or not (
+        entity_id := ent_reg.async_get_entity_id(platform_domain, DOMAIN, old_unique_id)
     ):
-        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+        return
+    if ent_reg.async_get_entity_id(platform_domain, DOMAIN, new_unique_id):
+        _LOGGER.debug(
+            "Cannot migrate unique_id %s -> %s: already claimed",
+            old_unique_id,
+            new_unique_id,
+        )
+        return
+    ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
 class StoreData(TypedDict, total=False):

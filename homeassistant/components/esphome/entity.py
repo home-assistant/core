@@ -51,32 +51,24 @@ def _build_identity_indexes(
     current_infos: dict[DeviceEntityKey, EntityInfo],
     mac: str,
     new_unique_ids: set[str],
-) -> tuple[
-    dict[str, DeviceEntityKey],
-    dict[str, list[DeviceEntityKey]],
-    set[DeviceEntityKey],
-]:
+) -> tuple[dict[str, DeviceEntityKey], dict[str, list[DeviceEntityKey]]]:
     """Index old infos by unique_id and by name for identity matching.
 
     ESPHome validates that names are unique per device_id, so
     unique_ids are unique. The key derives from the name (hash of the
     name, or of the object_id which derives from the name), so a key
-    can never disambiguate entities the name cannot; the same name on
-    multiple devices shares one key and moves are matched in listing
-    order. reserved: guaranteed a unique_id match; key matches must
-    skip these or a reused key could swap two entities' identities.
+    can never disambiguate entities the name cannot. Entities whose
+    unique_id is still present are matched by unique_id and are not
+    move candidates.
     """
     old_info_by_unique_id: dict[str, DeviceEntityKey] = {}
     movable_by_name: dict[str, list[DeviceEntityKey]] = {}
-    reserved: set[DeviceEntityKey] = set()
     for dict_key, existing_info in current_infos.items():
         old_unique_id = build_device_unique_id(mac, existing_info)
         old_info_by_unique_id[old_unique_id] = dict_key
-        if old_unique_id in new_unique_ids:
-            reserved.add(dict_key)
-            continue
-        movable_by_name.setdefault(existing_info.name, []).append(dict_key)
-    return old_info_by_unique_id, movable_by_name, reserved
+        if old_unique_id not in new_unique_ids:
+            movable_by_name.setdefault(existing_info.name, []).append(dict_key)
+    return old_info_by_unique_id, movable_by_name
 
 
 @callback
@@ -105,25 +97,18 @@ def async_static_info_updated(
     mac = device_info.mac_address
     unique_ids = [build_device_unique_id(mac, info) for info in infos]
     new_unique_ids = set(unique_ids)
-    old_info_by_unique_id, movable_by_name, reserved = _build_identity_indexes(
+    for info in infos:
+        new_infos[(info.device_id, info.key)] = info
+    old_info_by_unique_id, movable_by_name = _build_identity_indexes(
         current_infos, mac, new_unique_ids
     )
-    # Names of incoming infos without a unique_id match; these claim
-    # same named old entities as moves, so the in place key match must
-    # not consume those candidates
-    claimed_names = {
-        info.name
-        for info, unique_id in zip(infos, unique_ids, strict=True)
-        if unique_id not in old_info_by_unique_id
-    }
     rekeys: list[tuple[EntityInfo, EntityInfo]] = []
+    deferred: list[tuple[EntityInfo, str]] = []
 
-    # Track info by (info.device_id, info.key) to properly handle entities
-    # moving between devices and support sub-devices with overlapping keys
+    # First pass: unique_id matches and moves between devices. All
+    # moves resolve before any rename so a rename candidate cannot be
+    # mistaken for a mover.
     for info, unique_id in zip(infos, unique_ids, strict=True):
-        info_key = (info.device_id, info.key)
-        new_infos[info_key] = info
-
         # Identity match by unique_id; survives key re-derivation
         if (old_dict_key := old_info_by_unique_id.pop(unique_id, None)) is not None:
             matched_info = current_infos.pop(old_dict_key)
@@ -134,34 +119,20 @@ def async_static_info_updated(
             # Equal unique_ids imply equal device_ids
             continue
 
-        # Name match: the entity moved between devices. Runs before the
-        # key match so a move into a vacated key slot is not mistaken
-        # for a rename.
+        # Name match: the entity moved between devices. Prefer a
+        # candidate whose (device_id, key) slot has no incoming info,
+        # since that slot's info is an in place rename of the candidate
         old_info: EntityInfo | None = None
-        if move_dict_keys := movable_by_name.get(info.name):
-            old_info = current_infos.pop(move_dict_keys.pop(0))
+        if candidates := movable_by_name.get(info.name):
+            for idx, move_dict_key in enumerate(candidates):
+                if move_dict_key not in new_infos:
+                    old_info = current_infos.pop(candidates.pop(idx))
+                    break
+            else:
+                old_info = current_infos.pop(candidates.pop(0))
 
-        # Same key and device_id: a rename with a stable key; the
-        # registry entry follows the new unique_id. Skip candidates a
-        # later info will claim by name move.
-        if (
-            old_info is None
-            and info_key not in reserved
-            and (renamed_info := current_infos.get(info_key)) is not None
-            and renamed_info.name not in claimed_names
-        ):
-            del current_infos[info_key]
-            async_migrate_unique_id(
-                ent_reg,
-                platform.domain,
-                build_device_unique_id(mac, renamed_info),
-                unique_id,
-            )
-            continue
-
-        # Create new entity if it doesn't exist
         if old_info is None:
-            add_entities.append(entity_type(entry_data, info, state_type))
+            deferred.append((info, unique_id))
             continue
 
         # Entity has switched devices, need to migrate unique_id
@@ -236,6 +207,22 @@ def async_static_info_updated(
 
         # Create new entity with the new device_id
         add_entities.append(entity_type(entry_data, info, state_type))
+
+    # Second pass: anything left at an incoming (device_id, key) slot
+    # is a rename with a stable key; the registry entry follows the
+    # new unique_id. Everything else is a new entity.
+    for info, unique_id in deferred:
+        if (
+            renamed_info := current_infos.pop((info.device_id, info.key), None)
+        ) is None:
+            add_entities.append(entity_type(entry_data, info, state_type))
+            continue
+        async_migrate_unique_id(
+            ent_reg,
+            platform.domain,
+            build_device_unique_id(mac, renamed_info),
+            unique_id,
+        )
 
     if rekeys:
         entry_data.async_update_entity_keys(info_type, rekeys)
