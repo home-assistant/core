@@ -69,10 +69,16 @@ async def test_form_invalid_credentials_user(
 async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test if we get the error message on already configured."""
     MockConfigEntry(domain=DOMAIN, unique_id="123456", data={}).add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

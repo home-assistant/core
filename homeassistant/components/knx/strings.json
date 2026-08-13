@@ -924,6 +924,37 @@
             }
           }
         },
+        "select": {
+          "description": "The KNX select platform lets you present a list of named options and map each to a value sent to and read from the KNX bus.",
+          "knx": {
+            "options_source": {
+              "custom_options": {
+                "description": "Define the selectable options and the value each one sends.",
+                "label": "Options"
+              },
+              "description": "Choose how the selectable options are defined.",
+              "ga_custom": {
+                "description": "Group address the selected value is sent to and read from.",
+                "label": "[%key:component::knx::config_panel::common::group_address%]"
+              },
+              "ga_enum": {
+                "description": "[%key:component::knx::config_panel::entities::create::select::knx::options_source::ga_custom::description%]",
+                "label": "[%key:component::knx::config_panel::common::group_address%]"
+              },
+              "options": {
+                "custom": {
+                  "description": "Define the options and the value each one sends manually.",
+                  "label": "Custom options"
+                },
+                "from_dpt": {
+                  "description": "The options are derived from the values of an enum data point type.",
+                  "label": "Options from data point type"
+                }
+              },
+              "title": "Options"
+            }
+          }
+        },
         "sensor": {
           "description": "Read-only entity for numeric or string datapoints. Temperature, percent etc.",
           "knx": {
@@ -1162,6 +1193,10 @@
         "raw_length": "Payload length",
         "raw_length_description": "Length of the raw payload in bytes. For DPT 1, 2 and 3 use `0`.",
         "raw_payload": "Raw payload"
+      },
+      "knx-select-options-selector": {
+        "add_option": "Add option",
+        "option": "Option name"
       }
     }
   },
