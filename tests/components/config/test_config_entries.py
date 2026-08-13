@@ -12,7 +12,7 @@ from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow, loader
-from homeassistant.components.config import config_entries
+from homeassistant.components.config import DOMAIN, config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
@@ -411,7 +411,6 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
                 data_schema=vol.Schema(schema),
                 description_placeholders={
                     "url": "https://example.com",
-                    "show_advanced_options": self.show_advanced_options,
                 },
                 errors={"username": "Should be unique."},
             )
@@ -419,7 +418,7 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
     with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
-            json={"handler": "test", "show_advanced_options": True},
+            json={"handler": "test"},
         )
 
     assert resp.status == HTTPStatus.OK
@@ -437,7 +436,6 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
         ],
         "description_placeholders": {
             "url": "https://example.com",
-            "show_advanced_options": True,
         },
         "errors": {"username": "Should be unique."},
         "last_step": None,
@@ -469,7 +467,7 @@ async def test_initialize_flow_unmet_dependency(
     with mock_config_flow("test2", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
-            json={"handler": "test2", "show_advanced_options": True},
+            json={"handler": "test2"},
         )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
@@ -737,7 +735,7 @@ async def test_get_progress_index(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test querying for the flows that are in progress."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_platform(hass, "test.config_flow", None)
     ws_client = await hass_ws_client(hass)
 
@@ -808,7 +806,7 @@ async def test_get_progress_index_unauth(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
 ) -> None:
     """Test we can't get flows that are in progress."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     hass_admin_user.groups = []
     ws_client = await hass_ws_client(hass)
 
@@ -892,7 +890,7 @@ async def test_get_progress_subscribe(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test querying for the flows that are in progress."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_platform(hass, "test.config_flow", None)
     ws_client = await hass_ws_client(hass)
 
@@ -1005,7 +1003,7 @@ async def test_get_progress_subscribe(
 
 async def test_get_progress_subscribe_create_entry(hass: HomeAssistant) -> None:
     """Test flows creating entry immediately don't trigger subscription notification."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_platform(hass, "test.config_flow", None)
 
     mock_integration(
@@ -1037,7 +1035,7 @@ async def test_get_progress_subscribe_in_progress(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test querying for the flows that are in progress."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_platform(hass, "test.config_flow", None)
     ws_client = await hass_ws_client(hass)
 
@@ -1159,7 +1157,7 @@ async def test_get_progress_subscribe_in_progress_bad_flow(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test querying for the flows that are in progress."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_platform(hass, "test.config_flow", None)
     mock_platform(hass, "test2.config_flow", None)
     ws_client = await hass_ws_client(hass)
@@ -1285,7 +1283,7 @@ async def test_get_progress_subscribe_unauth(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
 ) -> None:
     """Test we can't subscribe to flows."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     hass_admin_user.groups = []
     ws_client = await hass_ws_client(hass)
 
@@ -2025,7 +2023,7 @@ async def test_get_single(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can get a config entry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
@@ -2084,7 +2082,7 @@ async def test_update_prefrences(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can update system options."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
@@ -2136,7 +2134,7 @@ async def test_update_entry(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can update entry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(domain="demo", title="Initial Title")
@@ -2161,7 +2159,7 @@ async def test_update_entry_nonexisting(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can update entry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json(
@@ -2182,7 +2180,7 @@ async def test_disable_entry(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can disable entry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
@@ -2243,7 +2241,7 @@ async def test_disable_entry_nonexisting(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can disable entry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json(
@@ -2283,7 +2281,7 @@ async def test_ignore_flow(
     entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
 ) -> None:
     """Test we can ignore a flow."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
@@ -2333,7 +2331,7 @@ async def test_ignore_flow_nonexisting(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test we can ignore a flow."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json(
@@ -2355,7 +2353,7 @@ async def test_get_matching_entries_ws(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get entries with the websocket api."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
         hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
@@ -2808,7 +2806,7 @@ async def test_subscribe_entries_ws(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test subscribe entries with the websocket api."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
         hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
@@ -3027,7 +3025,7 @@ async def test_subscribe_entries_ws_filtered(
 ) -> None:
     """Test subscribe entries with the websocket api with a type filter."""
     created = utcnow().timestamp()
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
         hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
@@ -3455,7 +3453,7 @@ async def test_list_subentries(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can list subentries."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(
@@ -3514,7 +3512,7 @@ async def test_update_subentry(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can update a subentry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(
@@ -3590,7 +3588,7 @@ async def test_delete_subentry(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can delete a subentry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(

@@ -7,15 +7,19 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-TEST_PLATFORM = SWITCH_DOMAIN
-pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
+pytestmark = pytest.mark.parametrize("platforms", [(Platform.SWITCH,)])
 
 ENTITY_ID = "switch.freezer_superfreezing"
 
@@ -71,7 +75,7 @@ async def test_switching(
     """Test the switch can be turned on/off."""
 
     await hass.services.async_call(
-        TEST_PLATFORM, service, {ATTR_ENTITY_ID: entity}, blocking=True
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity}, blocking=True
     )
     mock_miele_client.send_action.assert_called_once()
 
@@ -103,6 +107,6 @@ async def test_api_failure(
 
     with pytest.raises(HomeAssistantError, match=f"Failed to set state for {entity}"):
         await hass.services.async_call(
-            TEST_PLATFORM, service, {ATTR_ENTITY_ID: entity}, blocking=True
+            SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity}, blocking=True
         )
     mock_miele_client.send_action.assert_called_once()

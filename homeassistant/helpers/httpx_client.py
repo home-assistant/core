@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 import sys
 from types import TracebackType
-from typing import Any, Self
+from typing import Any, Self, override
 
 # httpx dynamically imports httpcore, so we need to import it
 # to avoid it being imported later when the event loop is running
@@ -68,10 +68,12 @@ def get_async_client(
 class HassHttpXAsyncClient(httpx.AsyncClient):
     """httpx AsyncClient that suppresses context management."""
 
+    @override
     async def __aenter__(self) -> Self:
         """Prevent an integration from reopen of the client via context manager."""
         return self
 
+    @override
     async def __aexit__(
         self,
         exc_type: type[BaseException] | None = None,

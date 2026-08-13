@@ -5,7 +5,7 @@ This module defines and sets up the select entities for the MyNeomitis integrati
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyaxencoapi import PyAxencoAPI
 
@@ -154,6 +154,7 @@ class MyNeoSelect(SelectEntity):
         )
         self._unavailable_logged: bool = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register listener when entity is added to hass."""
         await super().async_added_to_hass()
@@ -189,6 +190,7 @@ class MyNeoSelect(SelectEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Send the new mode via the API."""
         mode_code = self.entity_description.preset_mode_map.get(option)

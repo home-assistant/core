@@ -1,5 +1,7 @@
 """Demo platform that offers a fake event entity."""
 
+from typing import override
+
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
@@ -35,6 +37,7 @@ class DemoEvent(EventEntity):
             identifiers={(DOMAIN, "push")},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.hass.bus.async_listen("demo_button_pressed", self._async_handle_event)

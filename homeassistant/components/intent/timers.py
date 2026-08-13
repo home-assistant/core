@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -294,11 +294,10 @@ class TimerManager:
         # Fill in area/floor info
         device_registry = dr.async_get(self.hass)
         if device_id and (device := device_registry.async_get(device_id)):
-            timer.area_id = device.area_id
+            area_id = dr.async_get_effective_area_id(self.hass, device)
+            timer.area_id = area_id
             area_registry = ar.async_get(self.hass)
-            if device.area_id and (
-                area := area_registry.async_get_area(device.area_id)
-            ):
+            if area_id and (area := area_registry.async_get_area(area_id)):
                 timer.area_name = _normalize_name(area.name)
                 timer.floor_id = area.floor_id
 
@@ -622,8 +621,8 @@ def _find_timer(
         area_registry = ar.async_get(hass)
         if (
             (device := device_registry.async_get(device_id))
-            and device.area_id
-            and (area := area_registry.async_get_area(device.area_id))
+            and (area_id := dr.async_get_effective_area_id(hass, device))
+            and (area := area_registry.async_get_area(area_id))
         ):
             # Try area
             matching_area_timers = [
@@ -729,11 +728,14 @@ def _find_timers(
     # Use device id to order remaining timers
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
-    if (device is None) or (device.area_id is None):
+    if device is None:
+        return matching_timers
+    area_id = dr.async_get_effective_area_id(hass, device)
+    if area_id is None:
         return matching_timers
 
     area_registry = ar.async_get(hass)
-    area = area_registry.async_get_area(device.area_id)
+    area = area_registry.async_get_area(area_id)
     if area is None:
         return matching_timers
 
@@ -832,6 +834,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
         vol.Optional("conversation_command"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -940,6 +943,7 @@ class CancelTimerIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -960,6 +964,7 @@ class CancelAllTimersIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -993,6 +998,7 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -1017,6 +1023,7 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -1040,6 +1047,7 @@ class PauseTimerIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -1064,6 +1072,7 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -1088,6 +1097,7 @@ class TimerStatusIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass

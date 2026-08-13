@@ -41,6 +41,26 @@
           "heating": "mdi:heat-wave"
         }
       }
+    },
+    "water_heater": {
+      "overkiz": {
+        "state": {
+          "auto": "mdi:thermostat-auto",
+          "eco": "mdi:leaf",
+          "manual": "mdi:hand-back-right-outline",
+          "performance": "mdi:rocket-launch"
+        },
+        "state_attributes": {
+          "operation_mode": {
+            "state": {
+              "auto": "mdi:thermostat-auto",
+              "eco": "mdi:leaf",
+              "manual": "mdi:hand-back-right-outline",
+              "performance": "mdi:rocket-launch"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

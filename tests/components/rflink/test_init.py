@@ -72,7 +72,7 @@ async def mock_rflink(
         "homeassistant.components.rflink.create_rflink_connection", mock_create
     )
 
-    await async_setup_component(hass, "rflink", config)
+    await async_setup_component(hass, DOMAIN, config)
 
     if old_yaml:
         await async_setup_component(hass, domain, config)

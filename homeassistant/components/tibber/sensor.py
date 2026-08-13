@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from tibber import FatalHttpExceptionError, RetryableHttpExceptionError, TibberHome
@@ -698,6 +698,7 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the device."""
         sensors = self.coordinator.sensors_by_device.get(self._device_id, {})
@@ -723,6 +724,7 @@ class TibberSensor(SensorEntity):
         self._model: str | None = None
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         device_info = DeviceInfo(
@@ -770,11 +772,13 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
         self._update_attributes()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the sensor is available."""
         return super().available and self._price_data_available
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._update_attributes()
         super()._handle_coordinator_update()
@@ -834,6 +838,7 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
         self._device_name = self._home_name
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
         return getattr(self._tibber_home, self.entity_description.key)  # type: ignore[no-any-return]
@@ -862,11 +867,13 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
             self._attr_native_unit_of_measurement = tibber_home.currency
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._tibber_home.rt_subscription_running
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         if not (live_measurement := self.coordinator.get_live_measurement()):
             return

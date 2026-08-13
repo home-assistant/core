@@ -1,75 +1,32 @@
 """Microsoft Teams platform for notify component."""
 
-import logging
-from typing import Any
-
-import pymsteams
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
+from homeassistant.components.notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_FILE_URL = "image_url"
+DOMAIN = "msteams"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({vol.Required(CONF_URL): cv.url})
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> MSTeamsNotificationService | None:
+) -> None:
     """Get the Microsoft Teams notification service."""
-    webhook_url = config.get(CONF_URL)
-
-    try:
-        return MSTeamsNotificationService(webhook_url)
-
-    except RuntimeError:
-        _LOGGER.exception("Error in creating a new Microsoft Teams message")
-        return None
-
-
-class MSTeamsNotificationService(BaseNotificationService):
-    """Implement the notification service for Microsoft Teams."""
-
-    def __init__(self, webhook_url):
-        """Initialize the service."""
-        self._webhook_url = webhook_url
-
-    def send_message(self, message: str = "", **kwargs: Any) -> None:
-        """Send a message to the webhook."""
-
-        teams_message = pymsteams.connectorcard(self._webhook_url)
-
-        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = kwargs.get(ATTR_DATA)
-
-        teams_message.title(title)
-
-        teams_message.text(message)
-
-        if data is not None and (file_url := data.get(ATTR_FILE_URL)) is not None:
-            if not file_url.startswith("http"):
-                _LOGGER.error("URL should start with http or https")
-                return
-
-            message_section = pymsteams.cardsection()
-            message_section.addImage(file_url)
-            teams_message.addSection(message_section)
-        try:
-            teams_message.send()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except RuntimeError as err:
-            _LOGGER.error("Could not send notification. Error: %s", err)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        DOMAIN,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="integration_removed",
+        translation_placeholders={
+            CONF_URL: "https://devblogs.microsoft.com/microsoft365dev/retirement-of-office-365-connectors-within-microsoft-teams/"
+        },
+    )

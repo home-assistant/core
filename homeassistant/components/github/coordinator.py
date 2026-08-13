@@ -1,9 +1,11 @@
 """Custom data update coordinator for the GitHub integration."""
 
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, override
 
 from aiogithubapi import (
     GitHubAPI,
+    GitHubAuthenticatedUserModel,
     GitHubConnectionException,
     GitHubEventModel,
     GitHubException,
@@ -103,7 +105,53 @@ query ($owner: String!, $repository: String!) {
 }
 """
 
-type GithubConfigEntry = ConfigEntry[dict[str, GitHubDataUpdateCoordinator]]
+type GithubConfigEntry = ConfigEntry[GitHubRuntimeData]
+
+
+@dataclass
+class GitHubRuntimeData:
+    """Runtime data for the GitHub integration."""
+
+    user_coordinator: GitHubUserDataUpdateCoordinator
+    repositories: dict[str, GitHubDataUpdateCoordinator]
+
+
+class GitHubUserDataUpdateCoordinator(
+    DataUpdateCoordinator[GitHubAuthenticatedUserModel]
+):
+    """Data update coordinator for the authenticated GitHub user."""
+
+    config_entry: GithubConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: GithubConfigEntry,
+        client: GitHubAPI,
+    ) -> None:
+        """Initialize GitHub user data update coordinator."""
+        self._client = client
+
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name="user",
+            update_interval=FALLBACK_UPDATE_INTERVAL,
+        )
+
+    @override
+    async def _async_update_data(self) -> GitHubAuthenticatedUserModel:
+        """Update data."""
+        try:
+            response = await self._client.user.get()
+        except (GitHubConnectionException, GitHubRatelimitException) as exception:
+            raise UpdateFailed(exception) from exception
+        except GitHubException as exception:
+            LOGGER.exception(exception)
+            raise UpdateFailed(exception) from exception
+
+        return response.data
 
 
 class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -133,6 +181,7 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=FALLBACK_UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> GitHubResponseModel[dict[str, Any]]:
         """Update data."""
         owner, repository = self.repository.split("/")

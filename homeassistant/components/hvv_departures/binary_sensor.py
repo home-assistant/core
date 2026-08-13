@@ -3,10 +3,17 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectorError
-from pygti.exceptions import InvalidAuth
+from pygti.exceptions import GTIError
+from pygti.models import (
+    ElevatorState,
+    SDName,
+    SDNameType,
+    StationInformationRequest,
+    StationInformationResponse,
+)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -38,20 +45,21 @@ async def async_setup_entry(
     station = entry.data[CONF_STATION]
 
     def get_elevator_entities_from_station_information(
-        station_name, station_information
-    ):
+        station_name: str,
+        station_information: StationInformationResponse | None,
+    ) -> dict[str, Any]:
         """Convert station information into a list of elevators."""
         elevators = {}
 
         if station_information is None:
             return {}
 
-        for partial_station in station_information.get("partialStations", []):
-            for elevator in partial_station.get("elevators", []):
-                state = elevator.get("state") != "READY"
-                available = elevator.get("state") != "UNKNOWN"
-                label = elevator.get("label")
-                description = elevator.get("description")
+        for partial_station in station_information.partialStations or []:
+            for elevator in partial_station.elevators or []:
+                state = elevator.state != ElevatorState.READY
+                available = elevator.state != ElevatorState.UNKNOWN
+                label = elevator.label
+                description = elevator.description
 
                 if label is not None:
                     name = f"Elevator {label}"
@@ -61,7 +69,7 @@ async def async_setup_entry(
                 if description is not None:
                     name += f" ({description})"
 
-                lines = elevator.get("lines")
+                lines = elevator.lines
 
                 idx = f"{station_name}-{label}-{lines}"
 
@@ -70,33 +78,35 @@ async def async_setup_entry(
                     "name": name,
                     "available": available,
                     "attributes": {
-                        "cabin_width": elevator.get("cabinWidth"),
-                        "cabin_length": elevator.get("cabinLength"),
-                        "door_width": elevator.get("doorWidth"),
-                        "elevator_type": elevator.get("elevatorType"),
-                        "button_type": elevator.get("buttonType"),
-                        "cause": elevator.get("cause"),
+                        "cabin_width": elevator.cabinWidth,
+                        "cabin_length": elevator.cabinLength,
+                        "door_width": elevator.doorWidth,
+                        "elevator_type": elevator.elevatorType,
+                        "button_type": elevator.buttonType,
+                        "cause": elevator.cause,
                         "lines": lines,
                     },
                 }
         return elevators
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, Any]:
         """Fetch data from API endpoint.
 
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
         """
 
-        payload = {"station": {"id": station["id"], "type": station["type"]}}
+        payload = StationInformationRequest(
+            station=SDName(id=station["id"], type=SDNameType(station["type"]))
+        )
 
         try:
             async with asyncio.timeout(10):
                 return get_elevator_entities_from_station_information(
-                    station_name, await hub.gti.stationInformation(payload)
+                    station_name, await hub.gti.getStationInformation(payload)
                 )
-        except InvalidAuth as err:
-            raise UpdateFailed(f"Authentication failed: {err}") from err
+        except GTIError as err:
+            raise UpdateFailed(f"GTI API error: {err}") from err
         except ClientConnectorError as err:
             raise UpdateFailed(f"Network not available: {err}") from err
         except Exception as err:
@@ -129,7 +139,12 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     _attr_has_entity_name = True
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
-    def __init__(self, coordinator, idx, config_entry):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        idx: str,
+        config_entry: HVVConfigEntry,
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self.coordinator = coordinator
@@ -140,7 +155,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
-                (
+                (  # type: ignore[arg-type]
                     DOMAIN,
                     config_entry.entry_id,
                     config_entry.data[CONF_STATION]["id"],
@@ -152,11 +167,13 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return entity state."""
-        return self.coordinator.data[self.idx]["state"]
+        return bool(self.coordinator.data[self.idx]["state"])
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -165,6 +182,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if not (

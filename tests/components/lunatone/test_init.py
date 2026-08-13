@@ -29,8 +29,8 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.unique_id
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.manufacturer == MANUFACTURER

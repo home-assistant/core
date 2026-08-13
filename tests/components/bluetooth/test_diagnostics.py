@@ -187,6 +187,8 @@ async def test_diagnostics(
                     "workers": {
                         "00:00:00:00:00:02": {
                             "failed_window": False,
+                            "last_window_at": 0.0,
+                            "last_window_duration": 0.0,
                             "name": "hci1 (00:00:00:00:00:02)",
                             "next_event_at": ANY,
                             "next_sweep_at": ANY,
@@ -327,8 +329,10 @@ async def test_diagnostics_macos(
                 "Core Bluetooth": {
                     "adapter_type": None,
                     "address": "00:00:00:00:00:00",
+                    "advertise": True,
                     "manufacturer": "Apple",
                     "passive_scan": False,
+                    "powered": True,
                     "product": "Unknown MacOS Model",
                     "product_id": "Unknown",
                     "sw_version": ANY,
@@ -348,8 +352,10 @@ async def test_diagnostics_macos(
                     "Core Bluetooth": {
                         "adapter_type": None,
                         "address": "00:00:00:00:00:00",
+                        "advertise": True,
                         "manufacturer": "Apple",
                         "passive_scan": False,
+                        "powered": True,
                         "product": "Unknown MacOS Model",
                         "product_id": "Unknown",
                         "sw_version": ANY,

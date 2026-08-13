@@ -8,7 +8,7 @@ from pyipma.observation import Observation
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.ipma.const import MIN_TIME_BETWEEN_UPDATES
+from homeassistant.components.ipma.const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
 from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
@@ -59,7 +59,7 @@ async def test_setup_config_flow(hass: HomeAssistant) -> None:
         "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -82,7 +82,7 @@ async def test_failed_get_observation_forecast(hass: HomeAssistant) -> None:
         "pyipma.location.Location.get",
         return_value=MockBadLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -114,7 +114,7 @@ async def test_forecast_service(
         "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -159,7 +159,7 @@ async def test_forecast_subscription(
         "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

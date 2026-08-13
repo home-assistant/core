@@ -1,6 +1,7 @@
 """Support for Modern Forms switches."""
 
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
@@ -67,6 +68,7 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         sleep_time: datetime = dt_util.utc_from_timestamp(
@@ -97,6 +99,7 @@ class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         sleep_time: datetime = dt_util.utc_from_timestamp(

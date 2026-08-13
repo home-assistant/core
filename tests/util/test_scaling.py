@@ -5,8 +5,10 @@ import math
 import pytest
 
 from homeassistant.util.percentage import (
+    int_states_in_range,
     scale_ranged_value_to_int_range,
     scale_to_ranged_value,
+    states_in_range,
 )
 
 
@@ -247,3 +249,42 @@ async def test_scale_ranged_value_to_int_range_starting_zero_with_zero_offset(
         input_val
     )
     assert scale_to_ranged_value(dest_range, source_range, output_float) == input_val
+
+
+@pytest.mark.parametrize(
+    ("input_range", "expected"),
+    [
+        ((1, 10), 10),
+        ((1, 100), 100),
+        ((1, 255), 255),
+        ((0, 9), 10),
+        ((0, 3), 4),
+        ((0, 0), 1),
+        ((5, 5), 1),
+        ((100, 100), 1),
+        ((0.5, 1.5), 2.0),
+        ((0.0, 3.0), 4.0),
+    ],
+)
+async def test_states_in_range(
+    input_range: tuple[float, float], expected: float
+) -> None:
+    """Test states_in_range returns the correct count for various ranges."""
+    assert states_in_range(input_range) == expected
+
+
+@pytest.mark.parametrize(
+    ("input_range", "expected"),
+    [
+        ((1, 10), 10),
+        ((1, 6), 6),
+        ((0, 3), 4),
+        ((1.0, 3.5), 3),
+        ((0.0, 4.9), 5),
+    ],
+)
+async def test_int_states_in_range(
+    input_range: tuple[float, float], expected: int
+) -> None:
+    """Test int_states_in_range returns the correct integer count."""
+    assert int_states_in_range(input_range) == expected

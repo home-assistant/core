@@ -12,7 +12,7 @@ from opendisplay import (
 )
 import pytest
 
-from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY
+from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -145,6 +145,7 @@ async def test_setup_device_registry_fields(
     )
     assert len(devices) == 1
     device = devices[0]
+    assert device.sw_version == "1.2.3"
     assert (device.hw_version is not None) == expect_hw_version
     assert (device.configuration_url is not None) == expect_config_url
 
@@ -195,7 +196,7 @@ async def test_setup_invalid_encryption_key_format(
 ) -> None:
     """Test that a malformed stored encryption key triggers reauth."""
     entry = MockConfigEntry(
-        domain="opendisplay",
+        domain=DOMAIN,
         unique_id="AA:BB:CC:DD:EE:FF",
         title="OpenDisplay 1234",
         data={CONF_ENCRYPTION_KEY: "not-valid-hex!"},

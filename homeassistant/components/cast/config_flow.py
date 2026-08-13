@@ -1,6 +1,6 @@
 """Config flow for Cast."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -32,8 +32,16 @@ OPTIONS_SCHEMA = KNOWN_HOSTS_SCHEMA.extend(
         vol.Required(CONF_MORE_OPTIONS): section(
             vol.Schema(
                 {
-                    vol.Optional(CONF_UUID): str,
-                    vol.Optional(CONF_IGNORE_CEC): str,
+                    vol.Optional(CONF_UUID): SelectSelector(
+                        SelectSelectorConfig(
+                            custom_value=True, options=[], multiple=True
+                        ),
+                    ),
+                    vol.Optional(CONF_IGNORE_CEC): SelectSelector(
+                        SelectSelectorConfig(
+                            custom_value=True, options=[], multiple=True
+                        ),
+                    ),
                 }
             ),
             SectionConfig(collapsed=True),
@@ -49,18 +57,21 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: CastConfigEntry,
     ) -> CastOptionsFlowHandler:
         """Get the options flow for this handler."""
         return CastOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_config()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -109,13 +120,11 @@ class CastOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the Google Cast options."""
         if user_input is not None:
-            ignore_cec = _string_to_list(
-                user_input[CONF_MORE_OPTIONS].get(CONF_IGNORE_CEC, "")
+            ignore_cec = _trim_items(
+                user_input[CONF_MORE_OPTIONS].get(CONF_IGNORE_CEC, [])
             )
             known_hosts = _trim_items(user_input.get(CONF_KNOWN_HOSTS, []))
-            wanted_uuid = _string_to_list(
-                user_input[CONF_MORE_OPTIONS].get(CONF_UUID, "")
-            )
+            wanted_uuid = _trim_items(user_input[CONF_MORE_OPTIONS].get(CONF_UUID, []))
             updated_config = dict(self.config_entry.data)
             updated_config[CONF_IGNORE_CEC] = ignore_cec
             updated_config[CONF_KNOWN_HOSTS] = known_hosts
@@ -132,26 +141,13 @@ class CastOptionsFlowHandler(OptionsFlow):
         for key in (CONF_UUID, CONF_IGNORE_CEC):
             if key not in self.config_entry.data:
                 continue
-            suggested[CONF_MORE_OPTIONS][key] = _list_to_string(
-                self.config_entry.data[key]
-            )
+            suggested[CONF_MORE_OPTIONS][key] = self.config_entry.data[key]
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, suggested),
             last_step=True,
         )
-
-
-def _list_to_string(items: list[str]) -> str:
-    comma_separated_string = ""
-    if items:
-        comma_separated_string = ",".join(items)
-    return comma_separated_string
-
-
-def _string_to_list(string: str) -> list[str]:
-    return [x.strip() for x in string.split(",") if x.strip()]
 
 
 def _trim_items(items: list[str]) -> list[str]:

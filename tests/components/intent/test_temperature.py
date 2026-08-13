@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.intent import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import ATTR_DEVICE_CLASS, Platform, UnitOfTemperature
@@ -141,7 +142,7 @@ async def test_get_temperature(
 ) -> None:
     """Test HassClimateGetTemperature intent."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     climate_1 = MockClimateEntity()
     climate_1._attr_name = "Climate 1"
@@ -182,7 +183,7 @@ async def test_get_temperature(
     # first floor => living room and office
     # 2nd floor => bedroom
     # 3rd floor => attic
-    floor_registry = fr.async_get(hass)
+    floor_registry = fr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     first_floor = floor_registry.async_create("First floor")
     living_room_area = area_registry.async_update(
         living_room_area.id, floor_id=first_floor.floor_id
@@ -421,7 +422,7 @@ async def test_get_temperature_no_entities(
 ) -> None:
     """Test HassClimateGetTemperature intent with no climate entities."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     await create_mock_platform(hass, [])
 
@@ -443,7 +444,7 @@ async def test_not_exposed(
 ) -> None:
     """Test HassClimateGetTemperature intent when entities aren't exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     climate_1 = MockClimateEntity()
     climate_1._attr_name = "Climate 1"

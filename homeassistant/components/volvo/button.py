@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from volvocarsapi.models import VolvoApiException
 
@@ -93,6 +94,7 @@ class VolvoButton(VolvoBaseEntity, ButtonEntity):
 
     entity_description: VolvoButtonDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
 

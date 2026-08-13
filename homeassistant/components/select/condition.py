@@ -28,7 +28,10 @@ IS_OPTION_SELECTED_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     }
 )
 
-SELECT_DOMAIN_SPECS = {DOMAIN: DomainSpec(), INPUT_SELECT_DOMAIN: DomainSpec()}
+SELECT_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    DOMAIN: DomainSpec(),
+    INPUT_SELECT_DOMAIN: DomainSpec(),
+}
 
 
 class IsOptionSelectedCondition(EntityStateConditionBase):

@@ -447,4 +447,4 @@ async def test_async_browse_image_missing(
         resp = await client.get(
             f"/api/media_player_proxy/{TEST_MASTER_ENTITY_NAME}/browse_media/{MediaType.TRACK}/{media_content_id}"
         )
-        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+        assert resp.status == HTTPStatus.NOT_FOUND

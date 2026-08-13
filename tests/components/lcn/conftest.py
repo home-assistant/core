@@ -40,7 +40,7 @@ class MockDeviceConnection(DeviceConnection):
     request_status_motor_position = AsyncMock()
     request_status_binary_sensors = AsyncMock()
     request_status_variable = AsyncMock()
-    request_status_led_and_logic_ops = AsyncMock()
+    request_status_leds_and_logic_ops = AsyncMock()
     request_status_locked_keys = AsyncMock()
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -137,7 +137,7 @@ def get_device(
 ) -> dr.DeviceEntry:
     """Get LCN device for specified address."""
     device_registry = dr.async_get(hass)
-    identifiers = {(DOMAIN, generate_unique_id(entry.entry_id, address))}
-    device = device_registry.async_get_device(identifiers=identifiers)
+    identifier = (DOMAIN, generate_unique_id(entry.entry_id, address))
+    device = device_registry.async_get_device_by_identifier(identifier, entry.entry_id)
     assert device
     return device

@@ -5,12 +5,15 @@ from typing import TYPE_CHECKING, Final
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.const import __version__ as ha_version
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from .domain_data import DomainData
 
 DOMAIN = "esphome"
+
+CLIENT_INFO = f"Home Assistant {ha_version}"
 
 ESPHOME_DATA: HassKey[DomainData] = HassKey(DOMAIN)
 
@@ -27,7 +30,7 @@ DEFAULT_BLUETOOTH_SCANNING_MODE = BluetoothScanningMode.AUTO.value
 
 DEFAULT_PORT: Final = 6053
 
-STABLE_BLE_VERSION_STR = "2025.11.0"
+STABLE_BLE_VERSION_STR = "2026.5.1"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",

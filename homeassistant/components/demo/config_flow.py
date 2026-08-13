@@ -1,6 +1,6 @@
 """Config flow to configure demo component."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -29,6 +29,7 @@ class DemoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:

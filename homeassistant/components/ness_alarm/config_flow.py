@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from types import MappingProxyType
-from typing import Any
+from typing import Any, override
 
 from nessclient import Client
 import voluptuous as vol
@@ -70,6 +70,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -80,6 +81,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
@@ -99,6 +101,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await client.close()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -7,10 +7,15 @@ DOMAIN: Final = "smtp"
 ATTR_IMAGES: Final = "images"  # optional embedded image file attachments
 ATTR_HTML: Final = "html"
 ATTR_SENDER_NAME: Final = "sender_name"
+ATTR_ATTACHMENTS: Final = "attachments"
+ATTR_MEDIA_SOURCE: Final = "media_source"
+ATTR_FILENAME: Final = "filename"
+ATTR_CONTENT_ID: Final = "content_id"
 
 CONF_ENCRYPTION: Final = "encryption"
 CONF_SERVER: Final = "server"
 CONF_SENDER_NAME: Final = "sender_name"
+SECTION_OPTIONS: Final = "options"
 
 DEFAULT_HOST: Final = "localhost"
 DEFAULT_PORT: Final = 587
@@ -19,3 +24,7 @@ DEFAULT_DEBUG: Final = False
 DEFAULT_ENCRYPTION: Final = "starttls"
 
 ENCRYPTION_OPTIONS: Final = ["tls", "starttls", "none"]
+
+SUBENTRY_TYPE_RECIPIENT: Final = "recipient"
+CONF_ENTRY = "entry"
+CONF_OLD_RECIPIENT: Final = "old_recipient"

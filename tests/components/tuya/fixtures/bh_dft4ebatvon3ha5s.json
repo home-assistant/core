@@ -1,0 +1,80 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Smart Kettle",
+  "category": "bh",
+  "product_id": "dft4ebatvon3ha5s",
+  "product_name": "Smart Kettle",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-01-01T00:00:00+00:00",
+  "create_time": "2025-01-01T00:00:00+00:00",
+  "update_time": "2025-01-01T00:00:00+00:00",
+  "function": {
+    "start": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_setting_quick_c": {
+      "type": "Enum",
+      "value": {
+        "range": ["85", "90"]
+      }
+    },
+    "work_type": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "setting_quick",
+          "boiling_quick",
+          "temp_setting",
+          "temp_boiling"
+        ]
+      }
+    }
+  },
+  "status_range": {
+    "start": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_setting_quick_c": {
+      "type": "Enum",
+      "value": {
+        "range": ["85", "90"]
+      }
+    },
+    "work_type": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "setting_quick",
+          "boiling_quick",
+          "temp_setting",
+          "temp_boiling"
+        ]
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "start": false,
+    "temp_setting_quick_c": "85",
+    "work_type": "setting_quick",
+    "temp_current": 24
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import cover, mqtt
+from homeassistant.components import cover
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
@@ -14,7 +14,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     CoverState,
 )
-from homeassistant.components.mqtt.const import CONF_STATE_TOPIC
+from homeassistant.components.mqtt.const import CONF_STATE_TOPIC, DOMAIN
 from homeassistant.components.mqtt.cover import (
     CONF_GET_POSITION_TEMPLATE,
     CONF_GET_POSITION_TOPIC,
@@ -81,16 +81,14 @@ from .common import (
 from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {cover.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
-}
+DEFAULT_CONFIG = {DOMAIN: {cover.DOMAIN: {"name": "test", "state_topic": "test-topic"}}}
 
 
 @pytest.mark.parametrize(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -134,7 +132,7 @@ async def test_state_via_state_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -180,7 +178,7 @@ async def test_opening_and_closing_state_via_custom_state_payload(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "position-topic",
@@ -234,7 +232,7 @@ async def test_open_closed_state_from_position_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "position-topic",
@@ -295,7 +293,7 @@ async def test_open_closed_state_from_position_optimistic_alt_positions(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "tilt_command_topic": "set-position-topic",
@@ -356,7 +354,7 @@ async def test_tilt_open_closed_toggle_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "tilt_command_topic": "set-position-topic",
@@ -421,7 +419,7 @@ async def test_tilt_open_closed_toggle_optimistic_alt_positions(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "get-position-topic",
@@ -462,7 +460,7 @@ async def test_position_via_position_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -503,7 +501,7 @@ async def test_state_via_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -546,7 +544,7 @@ async def test_state_via_template_and_entity_id(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -592,7 +590,7 @@ async def test_state_via_template_with_json_value(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "get-position-topic",
@@ -638,7 +636,7 @@ async def test_position_via_template_and_entity_id(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     cover.DOMAIN: {"name": "test", "qos": 0, "command_topic": "abc"}
                 }
             },
@@ -646,7 +644,7 @@ async def test_position_via_template_and_entity_id(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     cover.DOMAIN: {
                         "name": "test",
                         "qos": 0,
@@ -660,7 +658,7 @@ async def test_position_via_template_and_entity_id(
         # ({"set_position_topic": "abc"}, True), - not a valid configuration
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     cover.DOMAIN: {
                         "name": "test",
                         "qos": 0,
@@ -673,7 +671,7 @@ async def test_position_via_template_and_entity_id(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     cover.DOMAIN: {
                         "name": "test",
                         "qos": 0,
@@ -685,7 +683,7 @@ async def test_position_via_template_and_entity_id(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     cover.DOMAIN: {
                         "name": "test",
                         "qos": 0,
@@ -716,7 +714,7 @@ async def test_optimistic_flag(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -784,7 +782,7 @@ async def test_optimistic_state_change(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "optimistic": True,
@@ -859,7 +857,7 @@ async def test_optimistic_state_change_with_position(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -894,7 +892,7 @@ async def test_send_open_cover_command(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -929,7 +927,7 @@ async def test_send_close_cover_command(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -965,7 +963,7 @@ async def test_send_stop_cover_command(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     cover.DOMAIN: {
                         "name": "test",
                         "state_topic": "state-topic",
@@ -979,7 +977,7 @@ async def test_send_stop_cover_command(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     cover.DOMAIN: {
                         "name": "test",
                         "state_topic": "state-topic",
@@ -1021,7 +1019,7 @@ async def test_send_stop_tilt_command(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "get-position-topic",
@@ -1076,7 +1074,7 @@ async def test_current_cover_position(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "get-position-topic",
@@ -1142,7 +1140,7 @@ async def test_current_cover_position_inverted(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -1167,7 +1165,7 @@ async def test_optimistic_position(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "get-position-topic",
@@ -1209,7 +1207,7 @@ async def test_position_update(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     cover.DOMAIN: {
                         "name": "test",
                         "position_topic": "get-position-topic",
@@ -1229,7 +1227,7 @@ async def test_position_update(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     cover.DOMAIN: {
                         "name": "test",
                         "position_topic": "get-position-topic",
@@ -1274,7 +1272,7 @@ async def test_set_position_templated(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "get-position-topic",
@@ -1322,7 +1320,7 @@ async def test_set_position_templated_and_attributes(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "get-position-topic",
@@ -1363,7 +1361,7 @@ async def test_set_tilt_templated(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "get-position-topic",
@@ -1457,7 +1455,7 @@ async def test_set_tilt_templated_and_attributes(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "state-topic",
@@ -1493,7 +1491,7 @@ async def test_set_position_untemplated(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "position_topic": "state-topic",
@@ -1531,7 +1529,7 @@ async def test_set_position_untemplated_custom_percentage_range(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "qos": 0,
@@ -1558,7 +1556,7 @@ async def test_no_command_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -1584,7 +1582,7 @@ async def test_no_payload_close(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -1610,7 +1608,7 @@ async def test_no_payload_open(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -1636,7 +1634,7 @@ async def test_no_payload_stop(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "command_topic": "test",
                     "name": "test",
@@ -1664,7 +1662,7 @@ async def test_with_command_topic_and_tilt(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -1695,7 +1693,7 @@ async def test_tilt_defaults(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -1785,7 +1783,7 @@ async def test_tilt_via_invocation_defaults(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -1877,7 +1875,7 @@ async def test_tilt_given_value(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -1957,7 +1955,7 @@ async def test_tilt_given_value_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2039,7 +2037,7 @@ async def test_tilt_given_value_altered_range(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2080,7 +2078,7 @@ async def test_tilt_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2124,7 +2122,7 @@ async def test_tilt_via_topic_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2177,7 +2175,7 @@ async def test_tilt_via_topic_template_json_value(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2227,7 +2225,7 @@ async def test_tilt_via_topic_altered_range(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2264,7 +2262,7 @@ async def test_tilt_status_out_of_range_warning(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2299,7 +2297,7 @@ async def test_tilt_status_not_numeric_warning(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2349,7 +2347,7 @@ async def test_tilt_via_topic_altered_range_inverted(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2402,7 +2400,7 @@ async def test_tilt_via_topic_template_altered_range(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2440,7 +2438,7 @@ async def test_tilt_position(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2479,7 +2477,7 @@ async def test_tilt_position_templated(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2559,7 +2557,7 @@ async def test_custom_availability_payload(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "device_class": "garage",
@@ -2583,7 +2581,7 @@ async def test_valid_device_class(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "device_class": "abc123",
@@ -2669,7 +2667,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -2807,7 +2805,7 @@ async def test_entity_debug_info_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2868,7 +2866,7 @@ async def test_state_and_position_topics_state_not_set_via_position_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2925,7 +2923,7 @@ async def test_set_state_via_position_using_stopped_state(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -2963,7 +2961,7 @@ async def test_position_via_position_topic_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -3010,7 +3008,7 @@ async def test_position_via_position_topic_template_json_value(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -3053,7 +3051,7 @@ async def test_position_template_with_entity_id(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -3084,7 +3082,7 @@ async def test_position_via_position_topic_template_return_json(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -3117,7 +3115,7 @@ async def test_position_via_position_topic_template_return_json_warning(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -3165,7 +3163,7 @@ async def test_position_and_tilt_via_position_topic_template_return_json(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -3213,7 +3211,7 @@ async def test_position_via_position_topic_template_all_variables(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -3271,7 +3269,7 @@ async def test_set_state_via_stopped_state_no_position_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -3301,7 +3299,7 @@ async def test_position_via_position_topic_template_return_invalid_json(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -3328,7 +3326,7 @@ async def test_set_position_topic_without_get_position_topic_error(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -3354,7 +3352,7 @@ async def test_value_template_without_state_topic_error(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -3381,7 +3379,7 @@ async def test_position_template_without_position_topic_error(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -3407,7 +3405,7 @@ async def test_set_position_template_without_set_position_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -3433,7 +3431,7 @@ async def test_tilt_command_template_without_tilt_command_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 cover.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -3494,7 +3492,7 @@ async def test_publishing_with_custom_encoding(
     """Test publishing MQTT payload with different encoding."""
     domain = cover.DOMAIN
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqtt.DOMAIN][domain]["position_topic"] = "some-position-topic"
+    config[DOMAIN][domain]["position_topic"] = "some-position-topic"
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -3541,7 +3539,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         cover.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][cover.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][cover.DOMAIN],
         topic,
         value,
         attribute,
