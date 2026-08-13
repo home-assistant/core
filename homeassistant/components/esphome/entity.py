@@ -104,6 +104,8 @@ def async_static_info_updated(
     )
     rekeys: list[tuple[EntityInfo, EntityInfo]] = []
     deferred: list[tuple[EntityInfo, str]] = []
+    # Slots of brand new entities; movers re-added in the first pass
+    # keep their own cached state and are deliberately not tracked
     new_entity_slots: set[DeviceEntityKey] = set()
 
     # First pass: unique_id matches and moves between devices. All
