@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: Final[list[Platform]] = [
     Platform.BINARY_SENSOR,
     Platform.LIGHT,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 
