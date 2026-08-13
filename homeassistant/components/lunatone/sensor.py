@@ -2,7 +2,7 @@
 
 from typing import Final, override
 
-from lunatone_rest_api_client import Sensor
+from lunatone_rest_api_client import DALIScan, Sensor
 from lunatone_rest_api_client.models import SensorAddressType, SensorType
 
 from homeassistant.components.sensor import (
@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     LIGHT_LUX,
+    EntityCategory,
     UnitOfPressure,
     UnitOfRatio,
     UnitOfTemperature,
@@ -24,7 +25,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import LunatoneConfigEntry, LunatoneSensorsDataUpdateCoordinator
+from .coordinator import (
+    LunatoneConfigEntry,
+    LunatoneScanDataUpdateCoordinator,
+    LunatoneSensorsDataUpdateCoordinator,
+)
 
 PARALLEL_UPDATES = 0
 SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
@@ -78,6 +83,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lunatone sensors from the config entry."""
+    coordinator_scan = config_entry.runtime_data.coordinator_scan
     coordinator_sensors = config_entry.runtime_data.coordinator_sensors
 
     assert config_entry.unique_id is not None
@@ -88,6 +94,9 @@ async def async_setup_entry(
         )
         for sensor_id, sensor_data in coordinator_sensors.data.items()
         if (description := SENSOR_TYPES.get(sensor_data.data.type))
+    )
+    async_add_entities(
+        [LunatoneDALIScanSensor(coordinator_scan, config_entry.unique_id)]
     )
 
 
@@ -160,3 +169,40 @@ class LunatoneSensor(
     def native_value(self) -> float | None:
         """Return the measurement value of the sensor."""
         return self.sensor.data.value
+
+
+class LunatoneDALIScanSensor(
+    CoordinatorEntity[LunatoneScanDataUpdateCoordinator], SensorEntity
+):
+    """Representation of a Lunatone Sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: LunatoneScanDataUpdateCoordinator,
+        config_entry_unique_id: str,
+    ) -> None:
+        """Initialize a Lunatone Sensor."""
+        super().__init__(coordinator)
+        self.entity_category = EntityCategory.DIAGNOSTIC
+
+        self._config_entry_unique_id = config_entry_unique_id
+
+        # self._attr_name = "DALI Scan Progress"
+        self._attr_unique_id = f"{config_entry_unique_id}-scan-progress"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._config_entry_unique_id)},
+        )
+        self._attr_translation_key = "scan_status"
+
+    @property
+    def scan(self) -> DALIScan:
+        """Return the sensor data."""
+        return self.coordinator.dali_scan_api
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the measurement value of the sensor."""
+        return "in_progress" if self.scan.is_busy and self.scan.progress else "idle"
