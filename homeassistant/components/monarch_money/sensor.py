@@ -39,10 +39,9 @@ class MonarchMoneyCashflowSensorEntityDescription(SensorEntityDescription):
 
 def _account_owner_name(account: MonarchAccount) -> str | None:
     """Return the account owner's display name."""
-    account_owner = getattr(account, "account_owner", None)
-    if not account_owner:
+    if not account.account_owner:
         return None
-    return account_owner.get("displayName") or account_owner.get("name")
+    return account.account_owner.get("displayName") or account.account_owner.get("name")
 
 
 # These sensors include assets like a boat that might have value
