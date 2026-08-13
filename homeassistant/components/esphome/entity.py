@@ -55,41 +55,25 @@ def _build_identity_indexes(
     dict[str, DeviceEntityKey],
     dict[str, DeviceEntityKey],
     set[DeviceEntityKey],
-    set[DeviceEntityKey],
 ]:
     """Index old infos by unique_id and by name for identity matching.
 
-    Duplicates are unmatchable by identity and left to key matching.
-    still_present: unique_id also occurs in the new infos (not movable).
-    reserved: guaranteed a unique_id match; key matches must skip these
-    or a reused key could swap two entities' identities.
+    Names duplicated across devices are ambiguous and left to key
+    matching; a device never has duplicate names, so unique_ids are
+    unique. reserved: guaranteed a unique_id match; key matches must
+    skip these or a reused key could swap two entities' identities.
     """
     old_info_by_unique_id: dict[str, DeviceEntityKey] = {}
-    duplicate_unique_ids: set[str] = set()
     movable_by_name: dict[str, DeviceEntityKey] = {}
     duplicate_names: set[str] = set()
-    still_present: set[DeviceEntityKey] = set()
     reserved: set[DeviceEntityKey] = set()
     for dict_key, existing_info in current_infos.items():
         old_unique_id = build_device_unique_id(mac, existing_info)
-        name = existing_info.name
-        present = old_unique_id in new_unique_ids
-        if present:
-            still_present.add(dict_key)
-        if old_unique_id in duplicate_unique_ids:
-            continue
-        if old_unique_id in old_info_by_unique_id:
-            duplicate_unique_ids.add(old_unique_id)
-            reserved.discard(old_info_by_unique_id[old_unique_id])
-            del old_info_by_unique_id[old_unique_id]
-            # Duplicate unique_ids share a name
-            duplicate_names.add(name)
-            movable_by_name.pop(name, None)
-            continue
         old_info_by_unique_id[old_unique_id] = dict_key
-        if present:
+        if old_unique_id in new_unique_ids:
             reserved.add(dict_key)
             continue
+        name = existing_info.name
         if name in duplicate_names:
             continue
         if name in movable_by_name:
@@ -97,7 +81,7 @@ def _build_identity_indexes(
             del movable_by_name[name]
             continue
         movable_by_name[name] = dict_key
-    return old_info_by_unique_id, movable_by_name, still_present, reserved
+    return old_info_by_unique_id, movable_by_name, reserved
 
 
 @callback
@@ -127,8 +111,8 @@ def async_static_info_updated(
     unique_ids = [build_device_unique_id(mac, info) for info in infos]
     new_unique_ids = set(unique_ids)
     new_names = {info.name for info in infos}
-    old_info_by_unique_id, movable_by_name, still_present, reserved = (
-        _build_identity_indexes(current_infos, mac, new_unique_ids)
+    old_info_by_unique_id, movable_by_name, reserved = _build_identity_indexes(
+        current_infos, mac, new_unique_ids
     )
     rekeys: list[tuple[EntityInfo, EntityInfo]] = []
 
@@ -183,7 +167,7 @@ def async_static_info_updated(
                 if (
                     existing_dict_key[1] == info.key
                     and existing_info.name == info.name
-                    and existing_dict_key not in still_present
+                    and existing_dict_key not in reserved
                 ):
                     old_info = current_infos.pop(existing_dict_key)
                     break
@@ -271,20 +255,7 @@ def async_static_info_updated(
 
     # Anything still in current_infos is now gone
     if current_infos:
-        removed_infos: list[EntityInfo] = []
-        for dict_key, leftover_info in current_infos.items():
-            if dict_key in still_present:
-                # A surviving entity claims the registry entry
-                # (duplicate unique_ids); remove only the entity object.
-                # Removal is eager and frees the platform slot before
-                # the pending adds run.
-                entry_data.async_signal_entity_removal(
-                    info_type, dict_key[0], dict_key[1]
-                )
-            else:
-                removed_infos.append(leftover_info)
-        if removed_infos:
-            entry_data.async_remove_entities(hass, removed_infos, mac)
+        entry_data.async_remove_entities(hass, current_infos.values(), mac)
 
     # Then update the actual info
     entry_data.info[info_type] = new_infos

@@ -2159,14 +2159,14 @@ async def test_entities_rekeyed_on_sub_devices_with_same_name(
         ),
         BinarySensorInfo(
             object_id="battery",
-            key=2,
+            key=1,
             name="Battery",
             device_id=22222222,
         ),
     ]
     states = [
         BinarySensorState(key=1, state=True, missing_state=False, device_id=11111111),
-        BinarySensorState(key=2, state=True, missing_state=False, device_id=22222222),
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=22222222),
     ]
     device = await mock_esphome_device(
         mock_client=mock_client,
@@ -2191,7 +2191,7 @@ async def test_entities_rekeyed_on_sub_devices_with_same_name(
         ),
         BinarySensorInfo(
             object_id="battery",
-            key=102,
+            key=101,
             name="Battery",
             device_id=22222222,
         ),
@@ -2207,12 +2207,12 @@ async def test_entities_rekeyed_on_sub_devices_with_same_name(
     assert actions_one == []
     assert actions_two == []
 
-    # Each entity must follow its own new key
+    # Each entity must follow the new key on its own device
     device.set_state(
         BinarySensorState(key=101, state=False, missing_state=False, device_id=11111111)
     )
     device.set_state(
-        BinarySensorState(key=102, state=True, missing_state=False, device_id=22222222)
+        BinarySensorState(key=101, state=True, missing_state=False, device_id=22222222)
     )
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.sub_one_battery").state == STATE_OFF
@@ -2423,60 +2423,6 @@ async def test_entity_new_key_reuses_removed_entity_key_on_other_device(
     assert hass.states.get("binary_sensor.test_sensor_three").state == STATE_OFF
 
 
-async def test_entities_with_duplicate_names_not_removed_on_reconnect(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-) -> None:
-    """Test two entities with the same name are stable across a reconnect.
-
-    Duplicate names produce duplicate unique_ids, which is already a
-    broken configuration, but they must not be matched by identity or
-    the shared registry entry would be removed on every reconnect.
-    """
-    entity_info = [
-        BinarySensorInfo(
-            object_id="duplicate",
-            key=1,
-            name="Duplicate",
-        ),
-        BinarySensorInfo(
-            object_id="duplicate",
-            key=2,
-            name="Duplicate",
-        ),
-        BinarySensorInfo(
-            object_id="duplicate",
-            key=3,
-            name="Duplicate",
-        ),
-    ]
-    states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-    ]
-    device = await mock_esphome_device(
-        mock_client=mock_client,
-        entity_info=entity_info,
-        states=states,
-    )
-    entry = entity_registry.async_get("binary_sensor.test_duplicate")
-    assert entry is not None
-
-    actions = track_entity_registry_actions(hass, "binary_sensor.test_duplicate")
-
-    await reconnect_with_updated_entity_info(hass, device, entity_info)
-
-    new_entry = entity_registry.async_get("binary_sensor.test_duplicate")
-    assert new_entry is not None
-    assert new_entry.id == entry.id
-    assert actions == []
-
-    device.set_state(BinarySensorState(key=1, state=False, missing_state=False))
-    await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.test_duplicate").state == STATE_OFF
-
-
 async def test_entities_with_same_name_moved_between_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -2508,21 +2454,21 @@ async def test_entities_with_same_name_moved_between_devices(
         ),
         BinarySensorInfo(
             object_id="battery",
-            key=2,
+            key=1,
             name="Battery",
             device_id=22222222,
         ),
         BinarySensorInfo(
             object_id="battery",
-            key=5,
+            key=1,
             name="Battery",
             device_id=55555555,
         ),
     ]
     states = [
         BinarySensorState(key=1, state=True, missing_state=False, device_id=11111111),
-        BinarySensorState(key=2, state=True, missing_state=False, device_id=22222222),
-        BinarySensorState(key=5, state=True, missing_state=False, device_id=55555555),
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=22222222),
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=55555555),
     ]
     device = await mock_esphome_device(
         mock_client=mock_client,
@@ -2551,7 +2497,7 @@ async def test_entities_with_same_name_moved_between_devices(
         ),
         BinarySensorInfo(
             object_id="battery",
-            key=2,
+            key=1,
             name="Battery",
             device_id=44444444,
         ),
@@ -2581,12 +2527,12 @@ async def test_entities_with_same_name_moved_between_devices(
     assert new_entry_one.device_id == sub_three.id
     assert new_entry_two.device_id == sub_four.id
 
-    # Each entity must follow its key on the new device
+    # Each entity must follow the key on its new device
     device.set_state(
         BinarySensorState(key=1, state=False, missing_state=False, device_id=33333333)
     )
     device.set_state(
-        BinarySensorState(key=2, state=True, missing_state=False, device_id=44444444)
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=44444444)
     )
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.sub_one_battery").state == STATE_OFF
@@ -2745,62 +2691,6 @@ async def test_entity_moved_into_removed_entities_key_slot(
     state = hass.states.get("binary_sensor.sub_one_batt")
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_FRIENDLY_NAME] == "sub_two Batt"
-
-
-async def test_duplicate_name_entity_rekeyed_and_other_removed(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-) -> None:
-    """Test duplicate named entities where one is removed and one re-keyed.
-
-    Both old infos share a unique_id and one registry entry; the entry
-    is claimed by the surviving entity, so it must not be removed even
-    though both old infos are leftovers.
-    """
-    entity_info = [
-        BinarySensorInfo(
-            object_id="duplicate",
-            key=1,
-            name="Duplicate",
-        ),
-        BinarySensorInfo(
-            object_id="duplicate",
-            key=2,
-            name="Duplicate",
-        ),
-    ]
-    states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-    ]
-    device = await mock_esphome_device(
-        mock_client=mock_client,
-        entity_info=entity_info,
-        states=states,
-    )
-    entry = entity_registry.async_get("binary_sensor.test_duplicate")
-    assert entry is not None
-
-    actions = track_entity_registry_actions(hass, "binary_sensor.test_duplicate")
-
-    updated_entity_info = [
-        BinarySensorInfo(
-            object_id="duplicate",
-            key=5,
-            name="Duplicate",
-        ),
-    ]
-    await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
-
-    new_entry = entity_registry.async_get("binary_sensor.test_duplicate")
-    assert new_entry is not None
-    assert new_entry.id == entry.id
-    assert "remove" not in actions
-
-    device.set_state(BinarySensorState(key=5, state=False, missing_state=False))
-    await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.test_duplicate").state == STATE_OFF
 
 
 async def test_entity_moved_while_new_entity_takes_old_slot_listed_first(
