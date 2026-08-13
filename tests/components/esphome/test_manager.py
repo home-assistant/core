@@ -2,9 +2,12 @@
 
 import asyncio
 import base64
-from collections.abc import Generator
+from collections.abc import Callable, Generator
+from functools import partial
 import json
 import logging
+import math
+import operator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
@@ -55,6 +58,10 @@ from homeassistant.components.esphome.const import (
 from homeassistant.components.esphome.encryption_key_storage import (
     ENCRYPTION_KEY_STORAGE_KEY,
 )
+from homeassistant.components.esphome.entry_data import (
+    _NON_FINITE_KEY,
+    _decode_non_finite_floats,
+)
 from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.const import (
@@ -63,6 +70,7 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_CLOSE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.data_entry_flow import FlowResultType
@@ -73,6 +81,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
@@ -419,6 +428,88 @@ async def test_camera_and_event_states_excluded_from_persisted_states(
 
     stored_states = hass_storage[f"esphome.{entry.entry_id}"]["data"]["states"]
     assert set(stored_states) == {"sensor"}
+
+
+@pytest.mark.parametrize(
+    ("value", "expected_stored_state", "check"),
+    [
+        pytest.param(math.nan, {_NON_FINITE_KEY: "nan"}, math.isnan, id="nan"),
+        pytest.param(
+            math.inf,
+            {_NON_FINITE_KEY: "inf"},
+            partial(operator.eq, math.inf),
+            id="inf",
+        ),
+        pytest.param(
+            -math.inf,
+            {_NON_FINITE_KEY: "-inf"},
+            partial(operator.eq, -math.inf),
+            id="negative_inf",
+        ),
+        pytest.param(
+            50.5,
+            50.5,
+            partial(operator.eq, 50.5),
+            id="finite",
+        ),
+    ],
+)
+async def test_deep_sleep_device_persists_non_finite_sensor_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+    value: float,
+    expected_stored_state: dict[str, str] | float,
+    check: Callable[[float], bool],
+) -> None:
+    """Non-finite sensor states are persisted reversibly and survive real JSON."""
+    entity_info = [SensorInfo(object_id="mysensor", key=1, name="my sensor")]
+    states = [SensorState(key=1, state=value)]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+        device_info={"has_deep_sleep": True},
+    )
+    entry = device.entry
+    storage_key = f"esphome.{entry.entry_id}"
+
+    await device.mock_disconnect(expected_disconnect=True)
+    # Flush the delayed save scheduled by the disconnect-time
+    # async_save_to_store() call so we can inspect it immediately.
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = hass_storage[storage_key]["data"]
+    stored_state = data["states"]["sensor"][0]
+    assert stored_state["state"] == expected_stored_state
+
+    # hass_storage may not exercise real orjson serialization, so encode and
+    # decode the payload through the actual Store JSON path as well. This is
+    # the assertion that would have caught the original NaN -> null bug.
+    round_tripped = json.loads(json_bytes(data))
+    decoded_state = _decode_non_finite_floats(round_tripped["states"]["sensor"][0])
+    assert check(decoded_state["state"])
+
+
+async def test_cold_start_restores_non_finite_sensor_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """A persisted NaN sensor state restores as unknown instead of raising."""
+    entry, _ = _seed_deep_sleep_storage(hass, hass_storage, expected_disconnect=True)
+    storage_key = f"{DOMAIN}.{entry.entry_id}"
+    hass_storage[storage_key]["data"]["states"]["sensor"][0]["state"] = {
+        _NON_FINITE_KEY: "nan"
+    }
+
+    await _async_setup_without_connecting(hass, mock_client, entry)
+
+    state = hass.states.get("sensor.my_sensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_esphome_device_service_calls_allowed(

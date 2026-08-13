@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
 import logging
+import math
 from operator import delitem
 from typing import TYPE_CHECKING, Any, Final, TypedDict, cast
 
@@ -86,6 +87,37 @@ COMPONENT_TYPE_TO_STATE_TYPE: Final[dict[str, type[EntityState]]] = {
 _SENTINEL = object()
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
+
+# orjson (used by Store) serializes NaN/inf/-inf floats as JSON null, which would
+# silently turn them into None on restore. Non-finite floats are common in ESPHome
+# state (e.g. NaN for an unknown sensor reading), so they are encoded as a sentinel
+# dict before saving and decoded back to the original float when loading.
+_NON_FINITE_KEY: Final = "__esphome_non_finite__"
+
+
+def _encode_non_finite_floats(value: Any) -> Any:
+    """Recursively replace non-finite floats with a reversible sentinel dict."""
+    if isinstance(value, float):
+        if math.isfinite(value):
+            return value
+        return {_NON_FINITE_KEY: repr(value)}
+    if isinstance(value, dict):
+        return {key: _encode_non_finite_floats(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_encode_non_finite_floats(item) for item in value]
+    return value
+
+
+def _decode_non_finite_floats(value: Any) -> Any:
+    """Recursively restore non-finite floats encoded by _encode_non_finite_floats."""
+    if isinstance(value, dict):
+        if (encoded := value.get(_NON_FINITE_KEY)) is not None and len(value) == 1:
+            return float(encoded)
+        return {key: _decode_non_finite_floats(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_decode_non_finite_floats(item) for item in value]
+    return value
+
 
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
@@ -436,7 +468,7 @@ class RuntimeEntryData:
                 if (state_cls := COMPONENT_TYPE_TO_STATE_TYPE.get(comp_type)) is None:
                     continue
                 for state in states:
-                    obj = state_cls.from_dict(state)
+                    obj = state_cls.from_dict(_decode_non_finite_floats(state))
                     self.state[state_cls][obj.key] = obj
                     # Seed stale_state so the first real update after the
                     # device wakes is always dispatched, even if the value
@@ -476,7 +508,8 @@ class RuntimeEntryData:
             store_data["expected_disconnect"] = self.expected_disconnect
             store_data["states"] = {
                 STATE_TYPE_TO_COMPONENT_TYPE[state_type]: [
-                    state.to_dict() for state in states.values()
+                    _encode_non_finite_floats(state.to_dict())
+                    for state in states.values()
                 ]
                 for state_type, states in self.state.items()
                 if state_type in STATE_TYPE_TO_COMPONENT_TYPE
