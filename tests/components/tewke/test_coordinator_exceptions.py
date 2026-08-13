@@ -20,13 +20,17 @@ async def test_coordinator_setup_observe_fails(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tap: AsyncMock
 ) -> None:
     """Test when _setup_observe raises an exception."""
-    mock_tap.get_scenes = AsyncMock()
-    mock_tap.get_targets = AsyncMock()
-    mock_tap.get_sensors = AsyncMock()
-    mock_tap.get_radar = AsyncMock()
-    mock_tap.get_energy = AsyncMock()
-    mock_tap.get_energy_override = AsyncMock()
-    mock_tap.get_config = AsyncMock()
+    mock_tap.get_scenes = AsyncMock(return_value={})
+    mock_tap.get_targets = AsyncMock(return_value=[])
+    mock_tap.get_sensors = AsyncMock(return_value=None)
+    mock_tap.get_radar = AsyncMock(return_value=None)
+    mock_tap.get_energy = AsyncMock(return_value=None)
+    mock_tap.get_energy_override = AsyncMock(return_value=None)
+    mock_tap.get_config = AsyncMock(
+        return_value=ConfigData.model_construct(
+            hardware_id="test_dock_id",
+        )
+    )
 
     mock_config_entry.runtime_data = TewkeData(
         host="127.0.0.1",

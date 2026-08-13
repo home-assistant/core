@@ -232,11 +232,6 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
         The full fetch only runs when we have no data yet (initial startup)
         or when observations are down and we need to fall back to polling.
         """
-        try:
-            await self._setup_observe()
-        except Exception as err:
-            raise UpdateFailed from err
-
         if self.config_entry.runtime_data.observe_active and self.data is not None:
             return self.data
 
@@ -332,7 +327,7 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
                     list(new_scenes.values()),
                 )
 
-        return TewkeCoordinatorData(
+        new_data = TewkeCoordinatorData(
             scenes=dict(scenes),
             targets=targets,
             sensors=sensors,
@@ -341,3 +336,12 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
             energy_override=energy_override,
             config=config,
         )
+
+        self.data = new_data
+
+        try:
+            await self._setup_observe()
+        except Exception as err:
+            raise UpdateFailed from err
+
+        return new_data

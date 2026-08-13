@@ -77,9 +77,9 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the discovered device and create the config entry."""
         errors: dict[str, str] = {}
+        room_suffix = f", in room **{self._room_name}**" if self._room_name else ""
 
         if user_input is None:
-            room_suffix = f", in room **{self._room_name}**" if self._room_name else ""
             return self.async_show_form(
                 step_id="zeroconf_confirm",
                 description_placeholders={
@@ -108,7 +108,14 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
             await tap.close()
             self._tap = None
             errors["base"] = "cannot_connect"
-            return self.async_abort(reason="cannot_connect")
+            return self.async_show_form(
+                step_id="zeroconf_confirm",
+                description_placeholders={
+                    "name": self._discovered_name,
+                    "room_suffix": room_suffix,
+                },
+                errors=errors,
+            )
 
         expected_unique_id = (
             self._get_reconfigure_entry().unique_id
