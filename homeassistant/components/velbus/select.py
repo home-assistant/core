@@ -42,7 +42,7 @@ class VelbusSelect(VelbusEntity, SelectEntity):
         """Initialize a select Velbus entity."""
         super().__init__(channel)
         self._attr_options = self._channel.get_options()
-        self._attr_unique_id = f"{self._attr_unique_id}-program_select"
+        self._attr_unique_id = f"{self._attr_unique_id}-program_select"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @api_call
     @override

@@ -1,5 +1,6 @@
 """HTTP views to interact with the device registry."""
 
+import logging
 from typing import Any, cast
 
 import voluptuous as vol
@@ -12,17 +13,61 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryDisabler
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Device Registry views."""
 
+    websocket_api.async_register_command(hass, websocket_list_composite_splits)
     websocket_api.async_register_command(hass, websocket_list_devices)
+    websocket_api.async_register_command(hass, websocket_list_linked_devices)
     websocket_api.async_register_command(hass, websocket_update_device)
+    websocket_api.async_register_command(hass, websocket_remove_device)
     websocket_api.async_register_command(
         hass, websocket_remove_config_entry_from_device
     )
     return True
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/device_registry/list_composite_splits",
+    }
+)
+def websocket_list_composite_splits(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle list composite device splits command.
+
+    Maps every pre-migration composite device id that was removed by splitting the
+    device into one device per config entry to the ids of the devices which replaced
+    it, and which of those (if any) belongs to the composite's former primary config
+    entry.
+    """
+    registry = dr.async_get(hass)
+    connection.send_result(
+        msg["id"],
+        {
+            composite_id: {
+                "split_ids": [device.id for device in devices],
+                "primary_id": next(
+                    (
+                        device.id
+                        for device in devices
+                        if device.config_entry_id
+                        == device.composite_primary_config_entry
+                    ),
+                    None,
+                ),
+            }
+            for composite_id, devices in registry.devices.get_composite_splits().items()
+        },
+    )
 
 
 @callback
@@ -53,6 +98,44 @@ def websocket_list_devices(
     )
     msg_json = b"".join((msg_json_prefix, inner, b"]}"))
     connection.send_message(msg_json)
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/device_registry/list_linked_devices",
+        vol.Required("device_id"): str,
+    }
+)
+def websocket_list_linked_devices(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle list linked devices command.
+
+    Linked devices share at least one connection or identifier with the given
+    device. Each such connection or identifier is unique within a config entry, so
+    the linked devices belong to other config entries.
+    """
+    registry = dr.async_get(hass)
+    device_id = msg["device_id"]
+
+    if (device := registry.async_get(device_id)) is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Device not found"
+        )
+        return
+
+    linked_devices = [
+        entry.id
+        for entry in registry.async_get_devices(
+            identifiers=device.identifiers, connections=device.connections
+        )
+        if entry.id != device_id
+    ]
+
+    connection.send_result(msg["id"], {"linked_devices": linked_devices})
 
 
 @require_admin
@@ -92,36 +175,42 @@ def websocket_update_device(
     connection.send_message(websocket_api.result_message(msg_id, entry.dict_repr))
 
 
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        "type": "config/device_registry/remove_config_entry",
-        "config_entry_id": str,
-        "device_id": str,
-    }
-)
-@websocket_api.async_response
-async def websocket_remove_config_entry_from_device(
+async def _async_remove_device(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
+    *,
+    expected_config_entry_id: str | None = None,
 ) -> None:
-    """Remove config entry from a device."""
+    """Remove a device.
+
+    Shared implementation for the config/device_registry/remove command and its
+    deprecated config/device_registry/remove_config_entry alias. The alias passes
+    expected_config_entry_id, and the device is only removed if it belongs to that
+    config entry.
+    """
     registry = dr.async_get(hass)
-    config_entry_id = msg["config_entry_id"]
     device_id = msg["device_id"]
 
+    # A composite device id has no single underlying device to remove; reject it.
+    if registry.async_is_composite_device_id(device_id):
+        raise HomeAssistantError("Cannot remove a composite device")
+
+    if (device_entry := registry.async_get(device_id)) is None:
+        raise HomeAssistantError("Unknown device")
+
+    if (
+        expected_config_entry_id is not None
+        and expected_config_entry_id != device_entry.config_entry_id
+    ):
+        raise HomeAssistantError("Config entry not in device")
+
+    config_entry_id = device_entry.config_entry_id
     if (config_entry := hass.config_entries.async_get_entry(config_entry_id)) is None:
         raise HomeAssistantError("Unknown config entry")
 
     if not config_entry.supports_remove_device:
         raise HomeAssistantError("Config entry does not support device removal")
-
-    if (device_entry := registry.async_get(device_id)) is None:
-        raise HomeAssistantError("Unknown device")
-
-    if config_entry_id not in device_entry.config_entries:
-        raise HomeAssistantError("Config entry not in device")
 
     try:
         integration = await loader.async_get_integration(hass, config_entry.domain)
@@ -136,14 +225,55 @@ async def websocket_remove_config_entry_from_device(
             "Failed to remove device entry, rejected by integration"
         )
 
-    # Integration might have removed the config entry already, that is fine.
+    # The integration might have removed the device already, that is fine.
     if registry.async_get(device_id):
-        entry = registry.async_update_device(
-            device_id, remove_config_entry_id=config_entry_id
-        )
+        registry.async_remove_device(device_id)
 
-        entry_as_dict = entry.dict_repr if entry else None
-    else:
-        entry_as_dict = None
+    connection.send_message(websocket_api.result_message(msg["id"], None))
 
-    connection.send_message(websocket_api.result_message(msg["id"], entry_as_dict))
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config/device_registry/remove",
+        "device_id": str,
+    }
+)
+@websocket_api.async_response
+async def websocket_remove_device(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Remove a device."""
+    await _async_remove_device(hass, connection, msg)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config/device_registry/remove_config_entry",
+        "config_entry_id": str,
+        "device_id": str,
+    }
+)
+@websocket_api.async_response
+async def websocket_remove_config_entry_from_device(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Remove a device.
+
+    Deprecated alias of config/device_registry/remove. The config_entry_id
+    parameter is kept for backwards compatibility and must match the device's
+    config entry.
+    """
+    _LOGGER.warning(
+        "The websocket command config/device_registry/remove_config_entry is "
+        "deprecated and will be removed in Home Assistant 2027.9; use "
+        "config/device_registry/remove instead"
+    )
+    await _async_remove_device(
+        hass, connection, msg, expected_config_entry_id=msg["config_entry_id"]
+    )

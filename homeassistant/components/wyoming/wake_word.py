@@ -7,6 +7,7 @@ from typing import override
 
 from wyoming.audio import AudioChunk, AudioStart
 from wyoming.client import AsyncTcpClient
+from wyoming.error import Error
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import wake_word
@@ -14,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import WyomingService, load_wyoming_info
-from .error import WyomingError
+from .error import WyomingError, error_event_message
 from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
             for ww in wake_service.models
         ]
         self._attr_name = wake_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-wake_word"
+        self._attr_unique_id = f"{config_entry.entry_id}-wake_word"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override
     async def get_supported_wake_words(self) -> list[wake_word.WakeWord]:
@@ -122,6 +123,12 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                             event = wake_task.result()
                             if event is None:
                                 _LOGGER.debug("Connection lost")
+                                break
+
+                            if Error.is_type(event.type):
+                                _LOGGER.error(
+                                    error_event_message(Error.from_event(event))
+                                )
                                 break
 
                             if Detection.is_type(event.type):

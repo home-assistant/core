@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     STATE_UNKNOWN,
+    UnitOfDensity,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -48,6 +48,7 @@ def airsensor_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My air sensor")
     type(product).model = PropertyMock(return_value="airSensor")
+    type(product).product = PropertyMock(return_value="airSensor")
     return (feature, "sensor.my_air_sensor_pm1")
 
 
@@ -69,6 +70,7 @@ def tempsensor_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My temperature sensor")
     type(product).model = PropertyMock(return_value="tempSensor")
+    type(product).product = PropertyMock(return_value="tempSensor")
     return (feature, "sensor.my_temperature_sensor_temperature")
 
 
@@ -174,6 +176,7 @@ async def test_multi_sensor_single_has_no_channel_suffix(
     product = feature.product
     type(product).name = PropertyMock(return_value="My smart meter")
     type(product).model = PropertyMock(return_value="smartMeter")
+    type(product).product = PropertyMock(return_value="smartMeter")
 
     await async_setup_entity(hass, "sensor.my_smart_meter_voltage")
     state = hass.states.get("sensor.my_smart_meter_voltage")
@@ -201,6 +204,7 @@ async def test_multi_sensor_multiple_have_channel_suffix(
     product = setup_product_mock("sensors", features)
     type(product).name = PropertyMock(return_value="My smart meter")
     type(product).model = PropertyMock(return_value="smartMeter")
+    type(product).product = PropertyMock(return_value="smartMeter")
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")
     type(product).unique_id = PropertyMock(return_value="aabbcc112233")
@@ -235,7 +239,7 @@ async def test_airsensor_update(airsensor, hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert (
         state.attributes[ATTR_UNIT_OF_MEASUREMENT]
-        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     )
 
     assert state.state == "49"
@@ -256,6 +260,7 @@ def open_status_sensor_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My open sensor")
     type(product).model = PropertyMock(return_value="openSensor")
+    type(product).product = PropertyMock(return_value="openSensor")
     return (feature, "sensor.my_open_sensor_open_status")
 
 
@@ -304,10 +309,7 @@ async def test_open_status_sensor_none_value(
     """Test that a None native_value yields an unknown state."""
     feature_mock, entity_id = open_status_sensor
 
-    def set_none():
-        feature_mock.native_value = None
-
-    feature_mock.async_update = AsyncMock(side_effect=set_none)
+    feature_mock.native_value = None
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -329,6 +331,7 @@ def co2_definition_sensor_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My CO2 sensor")
     type(product).model = PropertyMock(return_value="co2Sensor")
+    type(product).product = PropertyMock(return_value="co2Sensor")
     return (feature, "sensor.my_co2_sensor_carbon_dioxide_level")
 
 
@@ -380,10 +383,7 @@ async def test_co2_definition_sensor_none_value(
     """Test that a None native_value yields an unknown state."""
     feature_mock, entity_id = co2_definition_sensor
 
-    def set_none():
-        feature_mock.native_value = None
-
-    feature_mock.async_update = AsyncMock(side_effect=set_none)
+    feature_mock.native_value = None
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)

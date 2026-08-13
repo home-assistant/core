@@ -1,8 +1,9 @@
 """Support for Template fans."""
 
+from dataclasses import asdict, dataclass
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Self, override
 
 import voluptuous as vol
 
@@ -12,7 +13,9 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     ENTITY_ID_FORMAT,
     FanEntity,
+    FanEntityCapabilityAttribute,
     FanEntityFeature,
+    FanEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_STATE
@@ -22,6 +25,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as template_validators
@@ -36,7 +40,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -89,7 +93,11 @@ FAN_COMMON_SCHEMA = vol.Schema(
 )
 
 FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
-    make_template_entity_common_modern_schema(FAN_DOMAIN, DEFAULT_NAME).schema
+    make_template_entity_common_schema(
+        FAN_DOMAIN,
+        DEFAULT_NAME,
+        (FanEntityStateAttribute, FanEntityCapabilityAttribute),
+    ).schema
 )
 
 FAN_CONFIG_ENTRY_SCHEMA = FAN_COMMON_SCHEMA.extend(
@@ -155,12 +163,44 @@ def async_create_preview_fan(
     )
 
 
-class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
+@dataclass(kw_only=True)
+class FanExtraStoredData(ExtraStoredData):
+    """Fan extra stored data."""
+
+    is_on: bool | None
+    percentage: int | None
+    preset_mode: str | None
+    oscillating: bool | None
+    direction: str | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the fan data."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored fan data from a dict."""
+        try:
+            return cls(
+                is_on=restored["is_on"],
+                percentage=restored["percentage"],
+                preset_mode=restored["preset_mode"],
+                oscillating=restored["oscillating"],
+                direction=restored["direction"],
+            )
+        except KeyError:
+            return None
+
+
+class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     """Representation of a template fan features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
+    _restore_state_extra_data = FanExtraStoredData
+    _restore_state_properties = ("_attr_is_on",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -343,6 +383,27 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 self.entity_id,
                 ", ".join(_VALID_DIRECTIONS),
             )
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> FanExtraStoredData:
+        """Return extra state data to be restored."""
+        return FanExtraStoredData(
+            is_on=self._attr_is_on,
+            percentage=self._attr_percentage,
+            preset_mode=self._attr_preset_mode,
+            oscillating=self._attr_oscillating,
+            direction=self._attr_current_direction,
+        )
+
+    @override
+    def restore_extra_data(self, extra_data: FanExtraStoredData) -> None:
+        """Restore extra state data."""
+        self._attr_is_on = extra_data.is_on
+        self._attr_percentage = extra_data.percentage
+        self._attr_preset_mode = extra_data.preset_mode
+        self._attr_oscillating = extra_data.oscillating
+        self._attr_current_direction = extra_data.direction
 
 
 class StateFanEntity(TemplateEntity, AbstractTemplateFan):

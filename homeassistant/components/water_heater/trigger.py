@@ -4,12 +4,7 @@ from typing import override
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_OPTIONS,
-    STATE_OFF,
-    UnitOfTemperature,
-)
+from homeassistant.const import CONF_OPTIONS, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
@@ -26,7 +21,7 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN
+from .const import DOMAIN, WaterHeaterStateAttribute
 
 CONF_OPERATION_MODE = "operation_mode"
 
@@ -61,7 +56,9 @@ class _WaterHeaterTargetTemperatureTriggerMixin(
     """Mixin for water heater target temperature triggers with unit conversion."""
 
     _base_unit = UnitOfTemperature.CELSIUS
-    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
+    _domain_specs = {
+        DOMAIN: DomainSpec(value_source=WaterHeaterStateAttribute.TEMPERATURE)
+    }
     _unit_converter = TemperatureConverter
 
     @override
@@ -69,7 +66,7 @@ class _WaterHeaterTargetTemperatureTriggerMixin(
         """Skip water heater entities that do not expose a target temperature."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ATTR_TEMPERATURE) is not None
+            and state.attributes.get(WaterHeaterStateAttribute.TEMPERATURE) is not None
         )
 
     @override

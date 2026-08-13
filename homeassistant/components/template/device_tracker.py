@@ -1,7 +1,8 @@
 """Support for device trackers which integrates with other components."""
 
 from collections.abc import Callable
-from typing import Any
+from dataclasses import asdict, dataclass
+from typing import Any, Self, override
 
 import voluptuous as vol
 
@@ -9,7 +10,10 @@ from homeassistant.components import zone
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ENTITY_ID_FORMAT,
+    DeviceTrackerEntityCapabilityAttribute,
+    DeviceTrackerEntityStateAttribute,
     TrackerEntity,
+    TrackerEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
@@ -19,6 +23,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator, validators as template_validators
@@ -30,7 +35,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -115,8 +120,14 @@ TRACKER_COMMON_SCHEMA = vol.Schema(
 TRACKER_YAML_SCHEMA = vol.All(
     _validate_in_zones_or_lat_and_lon,
     TRACKER_COMMON_SCHEMA.extend(
-        make_template_entity_common_modern_schema(
-            DEVICE_TRACKER_DOMAIN, DEFAULT_NAME
+        make_template_entity_common_schema(
+            DEVICE_TRACKER_DOMAIN,
+            DEFAULT_NAME,
+            (
+                DeviceTrackerEntityCapabilityAttribute,
+                DeviceTrackerEntityStateAttribute,
+                TrackerEntityStateAttribute,
+            ),
         ).schema
     ),
 )
@@ -174,10 +185,40 @@ def async_create_preview_tracker(
     )
 
 
-class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity):
+@dataclass(kw_only=True)
+class TrackerExtraStoredData(ExtraStoredData):
+    """Holds extra stored data for template tracker entities."""
+
+    in_zones: list[str] | None
+    latitude: float | None
+    longitude: float | None
+    location_accuracy: float
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the tracker data."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored tracker state from a dict."""
+        try:
+            return cls(
+                in_zones=restored["in_zones"],
+                latitude=restored["latitude"],
+                longitude=restored["longitude"],
+                location_accuracy=restored["location_accuracy"],
+            )
+        except KeyError:
+            return None
+
+
+class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity, RestoreEntity):
     """Representation of a template device tracker features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _restore_state_extra_data = TrackerExtraStoredData
+    _restore_state_properties = ("_attr_in_zones",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -216,6 +257,25 @@ class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity):
     def _update_location_accuracy(self, value: float | None) -> None:
         """Update the location accuracy."""
         self._attr_location_accuracy = self._location_accuracy_validator(value) or 0.0
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> TrackerExtraStoredData:
+        """Return tracker specific state data to be restored."""
+        return TrackerExtraStoredData(
+            in_zones=self._attr_in_zones,
+            latitude=self._attr_latitude,
+            longitude=self._attr_longitude,
+            location_accuracy=self._attr_location_accuracy,
+        )
+
+    @override
+    def restore_extra_data(self, extra_data: TrackerExtraStoredData) -> None:
+        """Restore the extra data."""
+        self._attr_in_zones = extra_data.in_zones
+        self._attr_latitude = extra_data.latitude
+        self._attr_longitude = extra_data.longitude
+        self._attr_location_accuracy = extra_data.location_accuracy
 
 
 class StateTrackerEntity(TemplateEntity, AbstractTemplateTracker):

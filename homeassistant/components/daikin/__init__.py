@@ -100,31 +100,26 @@ async def async_migrate_unique_id(
     if new_unique_id == old_unique_id:
         return
 
-    duplicate = dev_reg.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, new_mac)}, identifiers=None
+    duplicate = dev_reg.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, new_mac), config_entry.entry_id
     )
 
     # Remove duplicated device
     if duplicate is not None:
-        if config_entry.entry_id in duplicate.config_entries:
-            _LOGGER.debug(
-                "Removing duplicated device %s",
-                duplicate.name,
-            )
+        _LOGGER.debug(
+            "Removing duplicated device %s",
+            duplicate.name,
+        )
 
-            # The automatic cleanup in entity registry is scheduled as a task, remove
-            # the entities manually to avoid unique_id collision when the entities
-            # are migrated.
-            duplicate_entities = er.async_entries_for_device(
-                ent_reg, duplicate.id, True
-            )
-            for entity in duplicate_entities:
-                if entity.config_entry_id == config_entry.entry_id:
-                    ent_reg.async_remove(entity.entity_id)
+        # The automatic cleanup in entity registry is scheduled as a task, remove
+        # the entities manually to avoid unique_id collision when the entities
+        # are migrated.
+        duplicate_entities = er.async_entries_for_device(ent_reg, duplicate.id, True)
+        for entity in duplicate_entities:
+            if entity.config_entry_id == config_entry.entry_id:
+                ent_reg.async_remove(entity.entity_id)
 
-            dev_reg.async_update_device(
-                duplicate.id, remove_config_entry_id=config_entry.entry_id
-            )
+        dev_reg.async_remove_device(duplicate.id)
 
     # Migrate devices
     for device_entry in dr.async_entries_for_config_entry(
@@ -132,16 +127,16 @@ async def async_migrate_unique_id(
     ):
         for connection in device_entry.connections:
             if connection[1] == old_unique_id:
-                new_connections = {(CONNECTION_NETWORK_MAC, new_mac)}
+                mac_connection = {(CONNECTION_NETWORK_MAC, new_mac)}
 
                 _LOGGER.debug(
                     "Migrating device %s connections to %s",
                     device_entry.name,
-                    new_connections,
+                    mac_connection,
                 )
                 dev_reg.async_update_device(
                     device_entry.id,
-                    merge_connections=new_connections,
+                    new_connections=device_entry.connections | mac_connection,
                 )
 
         if device_entry.name is None:
