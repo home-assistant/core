@@ -1,8 +1,9 @@
 """Tests for the OSRAM infrared config flow."""
 
+from unittest.mock import patch
+
 import pytest
 
-from homeassistant.components.osram_infrared.config_flow import OsramIrConfigFlow
 from homeassistant.components.osram_infrared.const import (
     CONF_IR_EMITTER_ENTITY_ID,
     CONF_IR_RECEIVER_ENTITY_ID,
@@ -147,42 +148,106 @@ async def test_user_flow_without_receiver(hass: HomeAssistant) -> None:
     }
 
 
-async def test_validate_input_rejects_stale_emitter(
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_user_flow_stale_emitter_selection(
     hass: HomeAssistant,
 ) -> None:
-    """Test validation rejects an emitter missing from the latest emitter list."""
-    flow = OsramIrConfigFlow()
-    flow.hass = hass
-
-    errors = flow._async_validate_input(
-        {
-            CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
-        },
-        emitter_entity_ids=[],
-        receiver_entity_ids=[],
+    """Test user flow rejects an emitter that disappears before submit."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
 
-    assert errors == {
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.osram_infrared.config_flow.async_get_emitters",
+        return_value=["infrared.other_emitter"],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {
         CONF_IR_EMITTER_ENTITY_ID: "cannot_connect",
     }
 
 
-async def test_validate_input_rejects_stale_receiver(
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity",
+    "mock_infrared_receiver_entity",
+)
+async def test_user_flow_stale_receiver_selection(
     hass: HomeAssistant,
 ) -> None:
-    """Test validation rejects a receiver missing from the latest receiver list."""
-    flow = OsramIrConfigFlow()
-    flow.hass = hass
-
-    errors = flow._async_validate_input(
-        {
-            CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
-            CONF_IR_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
-        },
-        emitter_entity_ids=[MOCK_INFRARED_EMITTER_ENTITY_ID],
-        receiver_entity_ids=[],
+    """Test user flow rejects a receiver that disappears before submit."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
 
-    assert errors == {
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.osram_infrared.config_flow.async_get_receivers",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+                CONF_IR_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {
         CONF_IR_RECEIVER_ENTITY_ID: "cannot_connect",
+    }
+
+
+async def test_user_flow_uses_entity_id_as_title_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Test user flow uses the emitter entity ID when it is missing from registry."""
+    emitter_entity_id = "infrared.missing_registry_emitter"
+
+    with (
+        patch(
+            "homeassistant.components.osram_infrared.config_flow.async_get_emitters",
+            return_value=[emitter_entity_id],
+        ),
+        patch(
+            "homeassistant.components.osram_infrared.config_flow.er.async_get",
+        ) as mock_async_get_entity_registry,
+    ):
+        mock_async_get_entity_registry.return_value.async_get.return_value = None
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_IR_EMITTER_ENTITY_ID: emitter_entity_id,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"OSRAM light via {emitter_entity_id}"
+    assert result["data"] == {
+        CONF_IR_EMITTER_ENTITY_ID: emitter_entity_id,
     }
