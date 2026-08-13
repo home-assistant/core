@@ -39,6 +39,14 @@ def client_fixture() -> Generator[MagicMock]:
             "homeassistant.components.remember_the_milk.config_flow.Auth.check_token",
             AsyncMock(return_value=TOKEN_RESPONSE),
         ),
+        patch(
+            "homeassistant.components.remember_the_milk.config_flow.Auth.authenticate_desktop",
+            AsyncMock(return_value=("https://test-url.com", "test-frob")),
+        ),
+        patch(
+            "homeassistant.components.remember_the_milk.config_flow.Auth.get_token",
+            AsyncMock(return_value=TOKEN_RESPONSE),
+        ),
     ):
         client = client_class.return_value
         client.rtm.api.check_token = AsyncMock(return_value=TOKEN_RESPONSE)
@@ -80,6 +88,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     entry = MockConfigEntry(
         data=CREATE_ENTRY_DATA,
         domain=DOMAIN,
+        unique_id="1234567",
     )
     entry.add_to_hass(hass)
     return entry

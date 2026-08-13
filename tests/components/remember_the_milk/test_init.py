@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from aiortm import AuthError
 import pytest
 
 from homeassistant.components.remember_the_milk.const import DOMAIN
@@ -35,6 +36,21 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("storage")
+async def test_config_entry_auth_failed(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that an invalid token puts the entry in SETUP_ERROR state."""
+    client.rtm.api.check_token.side_effect = AuthError("Invalid token!")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.usefixtures("client", "storage")

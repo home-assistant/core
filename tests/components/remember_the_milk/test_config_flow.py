@@ -2,12 +2,10 @@
 
 import asyncio
 from collections.abc import Awaitable
-from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.remember_the_milk.config_flow import (
@@ -19,32 +17,15 @@ from homeassistant.components.remember_the_milk.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import CREATE_ENTRY_DATA, PROFILE
+from .const import CREATE_ENTRY_DATA, PROFILE, TOKEN_RESPONSE
 
 from tests.common import MockConfigEntry
-
-TOKEN_DATA = {
-    "token": "test-token",
-    "user": {
-        "fullname": PROFILE,
-        "id": "test-user-id",
-        "username": PROFILE,
-    },
-}
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-def get_suggested_value(data_schema: vol.Schema, key: str) -> Any:
-    """Return the suggested value for a key in a data schema."""
-    for schema_key in data_schema.schema:
-        if schema_key == key:
-            return (schema_key.description or {}).get("suggested_value")
-    return None
-
-
 async def test_successful_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, client: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test successful flow."""
     result = await hass.config_entries.flow.async_init(
@@ -53,28 +34,20 @@ async def test_successful_flow(
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
-    with patch(
-        "homeassistant.components.remember_the_milk.config_flow.Auth.authenticate_desktop",
-        return_value=("https://test-url.com", "test-frob"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "api_key": "test-api-key",
-                "shared_secret": "test-secret",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "api_key": "test-api-key",
+            "shared_secret": "test-secret",
+        },
+    )
 
-    with patch(
-        "homeassistant.components.remember_the_milk.config_flow.Auth.get_token",
-        return_value=TOKEN_DATA,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == PROFILE
+    assert result["title"] == TOKEN_RESPONSE["user"]["fullname"]
     assert result["data"] == CREATE_ENTRY_DATA
-    assert result["result"].unique_id == "test-user-id"
+    assert result["result"].unique_id == TOKEN_RESPONSE["user"]["id"]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -88,6 +61,7 @@ async def test_successful_flow(
 )
 async def test_form_errors(
     hass: HomeAssistant,
+    client: AsyncMock,
     mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
@@ -101,21 +75,6 @@ async def test_form_errors(
         "homeassistant.components.remember_the_milk.config_flow.Auth.authenticate_desktop",
         side_effect=exception,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "api_key": "test-api-key",
-                "shared_secret": "test-secret",
-            },
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
-
-    with patch(
-        "homeassistant.components.remember_the_milk.config_flow.Auth.authenticate_desktop",
-        return_value=("https://test-url.com", "test-frob"),
-    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -124,16 +83,23 @@ async def test_form_errors(
             },
         )
 
-    with patch(
-        "homeassistant.components.remember_the_milk.config_flow.Auth.get_token",
-        return_value=TOKEN_DATA,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "api_key": "test-api-key",
+            "shared_secret": "test-secret",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == PROFILE
+    assert result["title"] == TOKEN_RESPONSE["user"]["fullname"]
     assert result["data"] == CREATE_ENTRY_DATA
-    assert result["result"].unique_id == "test-user-id"
+    assert result["result"].unique_id == TOKEN_RESPONSE["user"]["id"]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -153,6 +119,7 @@ async def mock_get_token(*args: Any) -> None:
 )
 async def test_token_abort_reasons(
     hass: HomeAssistant,
+    client: AsyncMock,
     side_effect: Exception | Awaitable[None],
     reason: str,
     timeout: int,
@@ -162,17 +129,13 @@ async def test_token_abort_reasons(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.remember_the_milk.config_flow.Auth.authenticate_desktop",
-        return_value=("https://test-url.com", "test-frob"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "api_key": "test-api-key",
-                "shared_secret": "test-secret",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "api_key": "test-api-key",
+            "shared_secret": "test-secret",
+        },
+    )
 
     with (
         patch(
@@ -190,153 +153,35 @@ async def test_token_abort_reasons(
     assert result["reason"] == reason
 
 
-async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
+async def test_abort_if_already_configured(
+    hass: HomeAssistant, client: AsyncMock, config_entry: MockConfigEntry
+) -> None:
     """Test abort if the same username is already configured."""
-    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id="test-user-id")
-    mock_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
-    with patch(
-        "homeassistant.components.remember_the_milk.config_flow.Auth.authenticate_desktop",
-        return_value=("https://test-url.com", "test-frob"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "api_key": "test-api-key",
-                "shared_secret": "test-secret",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "api_key": "test-api-key",
+            "shared_secret": "test-secret",
+        },
+    )
 
-    with patch(
-        "homeassistant.components.remember_the_milk.config_flow.Auth.get_token",
-        return_value=TOKEN_DATA,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-@pytest.mark.parametrize(
-    "source", [config_entries.SOURCE_IMPORT, config_entries.SOURCE_USER]
-)
-@pytest.mark.parametrize(
-    ("reauth_unique_id", "abort_reason", "abort_entry_data"),
-    [
-        (
-            "test-user-id",
-            "reauth_successful",
-            CREATE_ENTRY_DATA | {"token": "new-test-token"},
-        ),
-        ("other-user-id", "unique_id_mismatch", CREATE_ENTRY_DATA),
-    ],
-)
-async def test_reauth(
-    hass: HomeAssistant,
-    source: str,
-    reauth_unique_id: str,
-    abort_reason: str,
-    abort_entry_data: dict[str, str],
-) -> None:
-    """Test reauth flow."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="test-user-id", data=CREATE_ENTRY_DATA, source=source
-    )
-    mock_entry.add_to_hass(hass)
-
-    result = await mock_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    # The credentials form is pre-filled from the stored config entry data.
-    data_schema = result["data_schema"]
-    assert data_schema is not None
-    assert get_suggested_value(data_schema, "api_key") == "test-api-key"
-    assert get_suggested_value(data_schema, "shared_secret") == "test-secret"
-
-    with patch(
-        "homeassistant.components.remember_the_milk.config_flow.Auth.authenticate_desktop",
-        return_value=("https://test-url.com", "test-frob"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "api_key": "test-api-key",
-                "shared_secret": "test-secret",
-            },
-        )
-    reauth_data: dict[str, Any] = deepcopy(TOKEN_DATA) | {"token": "new-test-token"}
-    reauth_data["user"]["id"] = reauth_unique_id
-    with patch(
-        "homeassistant.components.remember_the_milk.config_flow.Auth.get_token",
-        return_value=reauth_data,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == abort_reason
-    assert mock_entry.data == abort_entry_data
-    assert mock_entry.unique_id == "test-user-id"
-
-
-async def test_reauth_change_credentials(hass: HomeAssistant) -> None:
-    """Test reauth flow where the user changes the stored credentials."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="test-user-id", data=CREATE_ENTRY_DATA
-    )
-    mock_entry.add_to_hass(hass)
-
-    result = await mock_entry.start_reauth_flow(hass)
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["step_id"] == "user"
-
-    with patch(
-        "homeassistant.components.remember_the_milk.config_flow.Auth.authenticate_desktop",
-        return_value=("https://test-url.com", "test-frob"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "api_key": "new-api-key",
-                "shared_secret": "new-secret",
-            },
-        )
-
-    reauth_data = deepcopy(TOKEN_DATA) | {"token": "new-test-token"}
-    with patch(
-        "homeassistant.components.remember_the_milk.config_flow.Auth.get_token",
-        return_value=reauth_data,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_entry.data == {
-        "api_key": "new-api-key",
-        "shared_secret": "new-secret",
-        "token": "new-test-token",
-        "username": PROFILE,
-    }
-    assert mock_entry.unique_id == "test-user-id"
 
 
 async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test import flow with a valid stored token."""
     with patch(
         "homeassistant.components.remember_the_milk.config_flow.Auth.check_token",
-        return_value=TOKEN_DATA,
+        return_value=TOKEN_RESPONSE,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -349,14 +194,14 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
             },
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == PROFILE
+    assert result["title"] == TOKEN_RESPONSE["user"]["fullname"]
     assert result["data"] == {
         "api_key": "test-api-key",
         "shared_secret": "test-secret",
         "token": "test-token",
         "username": PROFILE,
     }
-    assert result["result"].unique_id == "test-user-id"
+    assert result["result"].unique_id == TOKEN_RESPONSE["user"]["id"]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -398,7 +243,7 @@ async def test_import_flow_username_mismatch(hass: HomeAssistant) -> None:
     """Test import flow aborts when the token username doesn't match the name."""
     with patch(
         "homeassistant.components.remember_the_milk.config_flow.Auth.check_token",
-        return_value=TOKEN_DATA,
+        return_value=TOKEN_RESPONSE,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -414,23 +259,13 @@ async def test_import_flow_username_mismatch(hass: HomeAssistant) -> None:
     assert result["reason"] == "invalid_auth"
 
 
-async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
+async def test_import_flow_already_configured(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test import flow aborts when the account name is already configured."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "api_key": "new-api-key",
-            "shared_secret": "new-secret",
-            "token": "test-token",
-            "username": PROFILE,
-        },
-        unique_id=PROFILE,
-    )
-    mock_entry.add_to_hass(hass)
-
     with patch(
         "homeassistant.components.remember_the_milk.config_flow.Auth.check_token",
-        return_value=TOKEN_DATA,
+        return_value=TOKEN_RESPONSE,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
