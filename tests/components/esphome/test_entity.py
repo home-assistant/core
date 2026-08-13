@@ -2359,3 +2359,64 @@ async def test_entities_swap_keys(
     assert state_two.state == STATE_ON
     assert state_one.attributes[ATTR_FRIENDLY_NAME] == "Test Sensor One"
     assert state_two.attributes[ATTR_FRIENDLY_NAME] == "Test Sensor Two"
+
+
+async def test_entity_rekeyed_and_moved_between_devices(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test an entity changing key and device in the same update.
+
+    Neither the unique_id nor the key matches, so this is treated as a
+    remove and add; a device move changes the unique_id anyway.
+    """
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
+    ]
+    device_info = {
+        "devices": sub_devices,
+    }
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=1,
+            name="Sensor One",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert entity_registry.async_get("binary_sensor.test_sensor_one") is not None
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.test_sensor_one")
+
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=101,
+            name="Sensor One",
+            device_id=11111111,
+        ),
+    ]
+    await _reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
+    )
+
+    assert entity_registry.async_get("binary_sensor.test_sensor_one") is None
+    assert actions_one == ["remove"]
+    new_entry = entity_registry.async_get("binary_sensor.sub_one_sensor_one")
+    assert new_entry is not None
+
+    device.set_state(
+        BinarySensorState(key=101, state=False, missing_state=False, device_id=11111111)
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.sub_one_sensor_one").state == STATE_OFF
