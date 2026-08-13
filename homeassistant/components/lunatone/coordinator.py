@@ -189,4 +189,9 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
         if self.dali_scan_api.data is None:
             raise UpdateFailed("Did not receive scan data from Lunatone REST API")
 
+        update_interval = DEFAULT_SCAN_UPDATE_INTERVAL
+        if self.dali_scan_api.is_busy:
+            update_interval = timedelta(seconds=1)
+        self.update_interval = update_interval
+
         return self.dali_scan_api.data
