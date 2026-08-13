@@ -58,14 +58,18 @@ def _migrate_unique_ids(
         device_entry = device_registry.async_get(device_id)
         if device_entry is None:
             continue
-        for domain, identifier in device_entry.identifiers:
-            if domain == DOMAIN and (new_identifier := id_map.get(identifier)):
-                device_registry.async_update_device(
-                    device_entry.id,
-                    new_identifiers=(device_entry.identifiers - {(DOMAIN, identifier)})
-                    | {(DOMAIN, new_identifier)},
-                )
-                break
+        new_identifiers = {
+            (
+                domain,
+                id_map.get(identifier, identifier) if domain == DOMAIN else identifier,
+            )
+            for domain, identifier in device_entry.identifiers
+        }
+        if new_identifiers != device_entry.identifiers:
+            device_registry.async_update_device(
+                device_entry.id,
+                new_identifiers=new_identifiers,
+            )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:

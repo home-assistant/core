@@ -21,7 +21,11 @@ async def test_migrate_unique_ids(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1101"), ("another_domain", "external-id")},
+        identifiers={
+            (DOMAIN, "1000-1101"),
+            (DOMAIN, "1000-1112"),
+            ("another_domain", "external-id"),
+        },
     )
     light_entry = entity_registry.async_get_or_create(
         Platform.LIGHT,
@@ -30,16 +34,12 @@ async def test_migrate_unique_ids(
         config_entry=mock_config_entry,
         device_id=device_entry.id,
     )
-    offline_device_entry = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1112")},
-    )
     offline_light_entry = entity_registry.async_get_or_create(
         Platform.LIGHT,
         DOMAIN,
         "1000-1112",
         config_entry=mock_config_entry,
-        device_id=offline_device_entry.id,
+        device_id=device_entry.id,
     )
     switch_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -62,13 +62,15 @@ async def test_migrate_unique_ids(
     migrated_device = device_registry.async_get(device_entry.id)
     assert migrated_device is not None
     assert (DOMAIN, "1000-1") in migrated_device.identifiers
+    assert (DOMAIN, "1000-3") in migrated_device.identifiers
     assert (DOMAIN, "1000-1101") not in migrated_device.identifiers
+    assert (DOMAIN, "1000-1112") not in migrated_device.identifiers
     assert ("another_domain", "external-id") in migrated_device.identifiers
 
     migrated_offline_light = entity_registry.async_get(offline_light_entry.entity_id)
     assert migrated_offline_light is not None
     assert migrated_offline_light.unique_id == "1000-3"
-    migrated_offline_device = device_registry.async_get(offline_device_entry.id)
+    migrated_offline_device = device_registry.async_get(device_entry.id)
     assert migrated_offline_device is not None
     assert (DOMAIN, "1000-3") in migrated_offline_device.identifiers
     assert (DOMAIN, "1000-1112") not in migrated_offline_device.identifiers
@@ -84,7 +86,9 @@ async def test_migrate_unique_ids(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(light_entry.entity_id) == migrated_light
-    assert device_registry.async_get(device_entry.id) == migrated_device
+    reloaded_device = device_registry.async_get(device_entry.id)
+    assert reloaded_device is not None
+    assert reloaded_device.identifiers == migrated_device.identifiers
 
     with patch(
         "homeassistant.components.cync._migrate_unique_ids"
