@@ -5,6 +5,7 @@ pubsub subscriber.
 """
 
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock
@@ -44,6 +45,7 @@ from homeassistant.exceptions import (
     ServiceNotSupported,
     ServiceValidationError,
 )
+from homeassistant.util import dt as dt_util
 
 from .common import (
     DEVICE_COMMAND,
@@ -55,11 +57,18 @@ from .common import (
 )
 from .conftest import FakeAuth
 
+from tests.common import async_fire_time_changed
 from tests.components.climate import common
 
 type CreateEvent = Callable[[dict[str, Any]], Awaitable[None]]
 
 EVENT_ID = "some-event-id"
+
+
+async def async_fire_temperature_debounce(hass: HomeAssistant) -> None:
+    """Fire the pending temperature debounce timer."""
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -663,6 +672,7 @@ async def test_thermostat_set_cool(
 
     await common.async_set_temperature(hass, temperature=24.0)
     await hass.async_block_till_done()
+    await async_fire_temperature_debounce(hass)
 
     assert auth.method == "post"
     assert auth.url == DEVICE_COMMAND
@@ -700,12 +710,53 @@ async def test_thermostat_set_heat(
 
     await common.async_set_temperature(hass, temperature=20.0)
     await hass.async_block_till_done()
+    await async_fire_temperature_debounce(hass)
 
     assert auth.method == "post"
     assert auth.url == DEVICE_COMMAND
     assert auth.json == {
         "command": "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
         "params": {"heatCelsius": 20.0},
+    }
+
+
+async def test_thermostat_temperature_changes_use_trailing_debounce(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
+    """Test only the final temperature is sent after the debounce period."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+            },
+        }
+    )
+    await setup_platform()
+
+    await common.async_set_temperature(hass, temperature=20.0)
+    await common.async_set_temperature(hass, temperature=21.0)
+    await common.async_set_temperature(hass, temperature=22.0)
+    await hass.async_block_till_done()
+
+    assert auth.captured_requests == []
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 22.0
+
+    await async_fire_temperature_debounce(hass)
+
+    assert len(auth.captured_requests) == 1
+    assert auth.json == {
+        "command": "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
+        "params": {"heatCelsius": 22.0},
     }
 
 
@@ -737,6 +788,7 @@ async def test_thermostat_set_temperature_hvac_mode(
 
     await common.async_set_temperature(hass, temperature=24.0, hvac_mode=HVACMode.COOL)
     await hass.async_block_till_done()
+    await async_fire_temperature_debounce(hass)
 
     assert auth.method == "post"
     assert auth.url == DEVICE_COMMAND
@@ -747,6 +799,7 @@ async def test_thermostat_set_temperature_hvac_mode(
 
     await common.async_set_temperature(hass, temperature=26.0, hvac_mode=HVACMode.HEAT)
     await hass.async_block_till_done()
+    await async_fire_temperature_debounce(hass)
 
     assert auth.method == "post"
     assert auth.url == DEVICE_COMMAND
@@ -759,6 +812,7 @@ async def test_thermostat_set_temperature_hvac_mode(
         hass, target_temp_low=20.0, target_temp_high=24.0, hvac_mode=HVACMode.HEAT_COOL
     )
     await hass.async_block_till_done()
+    await async_fire_temperature_debounce(hass)
 
     assert auth.method == "post"
     assert auth.url == DEVICE_COMMAND
@@ -828,6 +882,7 @@ async def test_thermostat_set_temperature_range_too_close(
         target_temp_high=target_high,
     )
     await hass.async_block_till_done()
+    await async_fire_temperature_debounce(hass)
 
     assert auth.method == "post"
     assert auth.url == DEVICE_COMMAND
@@ -868,6 +923,7 @@ async def test_thermostat_set_heat_cool(
         hass, target_temp_low=20.0, target_temp_high=24.0
     )
     await hass.async_block_till_done()
+    await async_fire_temperature_debounce(hass)
 
     assert auth.method == "post"
     assert auth.url == DEVICE_COMMAND
@@ -1711,6 +1767,7 @@ async def test_thermostat_hvac_mode_failure(
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setting an hvac_mode that is not supported."""
     create_device.create(
@@ -1751,11 +1808,12 @@ async def test_thermostat_hvac_mode_failure(
     assert HVACMode.HEAT in str(e_info)
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError) as e_info:
-        await common.async_set_temperature(hass, temperature=25.0)
-    assert "temperature" in str(e_info)
-    assert "climate.my_thermostat" in str(e_info)
-    assert "25.0" in str(e_info)
+    await common.async_set_temperature(hass, temperature=25.0)
+    await async_fire_temperature_debounce(hass)
+    assert (
+        "Error sending debounced temperature command for climate.my_thermostat"
+        in caplog.text
+    )
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
     with pytest.raises(HomeAssistantError) as e_info:

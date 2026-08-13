@@ -1,6 +1,8 @@
 """Support for Google Nest SDM climate devices."""
 
-from datetime import timedelta
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+import logging
 from typing import Any, cast, override
 
 from google_nest_sdm.device import Device
@@ -27,12 +29,15 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from .device_info import NestDeviceInfo
 from .types import NestConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 # Mapping for sdm.devices.traits.ThermostatMode mode field
 THERMOSTAT_MODE_MAP: dict[str, HVACMode] = {
@@ -72,6 +77,16 @@ MAX_FAN_DURATION = 43200  # 12 hours is the max in the SDM API
 MIN_TEMP = 10
 MAX_TEMP = 32
 MIN_TEMP_RANGE = 1.66667
+# Avoid Google's aggressive API rate limits when making incremental adjustments.
+TEMPERATURE_DEBOUNCE_SECONDS = 10
+
+
+@dataclass(frozen=True)
+class _PendingTemperature:
+    """A temperature command waiting for its debounce period."""
+
+    kwargs: dict[str, Any]
+    hvac_mode: HVACMode
 
 
 async def async_setup_entry(
@@ -108,6 +123,8 @@ class ThermostatEntity(ClimateEntity):
         self._attr_unique_id = device.name
         self._attr_device_info = self._device_info.device_info
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._cancel_temperature_timer: CALLBACK_TYPE | None = None
+        self._pending_temperature: _PendingTemperature | None = None
         if mode_trait := device.traits.get(ThermostatModeTrait.NAME):
             self._attr_hvac_modes = [
                 THERMOSTAT_MODE_MAP[mode]
@@ -130,6 +147,7 @@ class ThermostatEntity(ClimateEntity):
         self.async_on_remove(
             self._device.add_update_listener(self.async_write_ha_state)
         )
+        self.async_on_remove(self._async_cancel_pending_temperature)
 
     @property
     @override
@@ -153,6 +171,11 @@ class ThermostatEntity(ClimateEntity):
     @override
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
+        if (
+            self._pending_temperature
+            and ATTR_TEMPERATURE in self._pending_temperature.kwargs
+        ):
+            return self._pending_temperature.kwargs[ATTR_TEMPERATURE]
         if not (trait := self._target_temperature_trait):
             return None
         if self.hvac_mode == HVACMode.HEAT:
@@ -165,6 +188,11 @@ class ThermostatEntity(ClimateEntity):
     @override
     def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
+        if (
+            self._pending_temperature
+            and ATTR_TARGET_TEMP_HIGH in self._pending_temperature.kwargs
+        ):
+            return self._pending_temperature.kwargs[ATTR_TARGET_TEMP_HIGH]
         if self.hvac_mode != HVACMode.HEAT_COOL:
             return None
         if not (trait := self._target_temperature_trait):
@@ -175,6 +203,11 @@ class ThermostatEntity(ClimateEntity):
     @override
     def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
+        if (
+            self._pending_temperature
+            and ATTR_TARGET_TEMP_LOW in self._pending_temperature.kwargs
+        ):
+            return self._pending_temperature.kwargs[ATTR_TARGET_TEMP_LOW]
         if self.hvac_mode != HVACMode.HEAT_COOL:
             return None
         if not (trait := self._target_temperature_trait):
@@ -285,6 +318,7 @@ class ThermostatEntity(ClimateEntity):
         """Set new target hvac mode."""
         api_mode = THERMOSTAT_INV_MODE_MAP[hvac_mode]
         trait = self._device.traits[ThermostatModeTrait.NAME]
+        await self._async_flush_pending_temperature()
         try:
             await trait.set_mode(api_mode)
         except ApiException as err:
@@ -294,30 +328,112 @@ class ThermostatEntity(ClimateEntity):
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
-        hvac_mode = self.hvac_mode
-        if kwargs.get(ATTR_HVAC_MODE) is not None:
+        """Schedule a new target temperature after a trailing-edge debounce."""
+        hvac_mode = (
+            self._pending_temperature.hvac_mode
+            if self._pending_temperature
+            else self.hvac_mode
+        )
+        includes_hvac_mode = kwargs.get(ATTR_HVAC_MODE) is not None
+        if includes_hvac_mode:
             hvac_mode = kwargs[ATTR_HVAC_MODE]
             await self.async_set_hvac_mode(hvac_mode)
-        low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        temp = kwargs.get(ATTR_TEMPERATURE)
         if ThermostatTemperatureSetpointTrait.NAME not in self._device.traits:
             raise HomeAssistantError(
                 f"Error setting {self.entity_id} temperature to {kwargs}: "
                 "Unable to find setpoint trait."
             )
+
+        # Normalize a too-narrow range now, while the device's previous target is
+        # still available. This also makes the optimistic state match what will
+        # eventually be sent to the API.
+        pending_kwargs = dict(kwargs)
+        low_temp = pending_kwargs.get(ATTR_TARGET_TEMP_LOW)
+        high_temp = pending_kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        if low_temp and high_temp and high_temp - low_temp < MIN_TEMP_RANGE:
+            current_high = self.target_temperature_high
+            if current_high and abs(high_temp - current_high) < 0.01:
+                high_temp = low_temp + MIN_TEMP_RANGE
+            else:
+                low_temp = high_temp - MIN_TEMP_RANGE
+            pending_kwargs[ATTR_TARGET_TEMP_LOW] = low_temp
+            pending_kwargs[ATTR_TARGET_TEMP_HIGH] = high_temp
+
+        self._cancel_scheduled_temperature()
+        pending = self._pending_temperature = _PendingTemperature(
+            pending_kwargs, hvac_mode
+        )
+        self.async_write_ha_state()
+
+        async def async_send_temperature(_now: datetime) -> None:
+            self._cancel_temperature_timer = None
+            try:
+                await self._async_execute_pending_temperature(pending)
+            except HomeAssistantError:
+                _LOGGER.exception(
+                    "Error sending debounced temperature command for %s",
+                    self.entity_id,
+                )
+
+        self._cancel_temperature_timer = async_call_later(
+            self.hass, TEMPERATURE_DEBOUNCE_SECONDS, async_send_temperature
+        )
+
+    def _cancel_scheduled_temperature(self) -> None:
+        """Cancel the scheduled temperature callback, if any."""
+        if self._cancel_temperature_timer:
+            self._cancel_temperature_timer()
+            self._cancel_temperature_timer = None
+
+    def _async_cancel_pending_temperature(self) -> None:
+        """Cancel and discard the pending temperature command, if any."""
+        self._cancel_scheduled_temperature()
+        if self._pending_temperature:
+            self._pending_temperature = None
+            self.async_write_ha_state()
+
+    async def _async_flush_pending_temperature(self) -> None:
+        """Immediately send and clear the pending temperature command."""
+        self._cancel_scheduled_temperature()
+        pending = self._pending_temperature
+        if not pending:
+            return
+
+        try:
+            await self._async_execute_pending_temperature(pending)
+        except HomeAssistantError:
+            # An older setpoint failure must not block the newer mode request.
+            _LOGGER.exception(
+                "Error flushing pending temperature before changing mode on %s",
+                self.entity_id,
+            )
+
+    async def _async_execute_pending_temperature(
+        self, expected: _PendingTemperature
+    ) -> None:
+        """Claim and execute a pending temperature command."""
+        # Cancelling a timer cannot retract a callback already queued on the
+        # event loop. Only let that callback execute the command it scheduled.
+        if expected is not self._pending_temperature:
+            return
+
+        # Claim the command before awaiting Google so a racing timer or flush
+        # cannot execute it a second time.
+        self._pending_temperature = None
+        self.async_write_ha_state()
+        await self._async_execute_temperature(expected.kwargs, expected.hvac_mode)
+
+    async def _async_execute_temperature(
+        self, kwargs: dict[str, Any], hvac_mode: HVACMode
+    ) -> None:
+        """Send a temperature command to the Nest API."""
+        low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        temp = kwargs.get(ATTR_TEMPERATURE)
         trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
         try:
             if self.preset_mode == PRESET_ECO or hvac_mode == HVACMode.HEAT_COOL:
                 if low_temp and high_temp:
-                    if high_temp - low_temp < MIN_TEMP_RANGE:
-                        # Ensure there is a minimum gap from the new temp. Pick
-                        # the temp that is not changing as the one to move.
-                        if abs(high_temp - self.target_temperature_high) < 0.01:
-                            high_temp = low_temp + MIN_TEMP_RANGE
-                        else:
-                            low_temp = high_temp - MIN_TEMP_RANGE
                     await trait.set_range(low_temp, high_temp)
             elif hvac_mode == HVACMode.COOL and temp:
                 await trait.set_cool(temp)
@@ -336,6 +452,7 @@ class ThermostatEntity(ClimateEntity):
         if self.preset_mode == preset_mode:  # API doesn't like duplicate preset modes
             return
         trait = self._device.traits[ThermostatEcoTrait.NAME]
+        await self._async_flush_pending_temperature()
         try:
             await trait.set_mode(PRESET_INV_MODE_MAP[preset_mode])
         except ApiException as err:
