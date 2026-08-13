@@ -5,8 +5,12 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from homeassistant.components.device_tracker import TrackerEntity
+from homeassistant.components.device_tracker import (
+    TrackerEntity,
+    TrackerEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_BATTERY_LEVEL, EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -16,12 +20,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN, TRACKER_UPDATE
 from .const import (
-    ATTR_ACCURACY,
     ATTR_ALTITUDE,
-    ATTR_BATTERY,
     ATTR_BEARING,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_SPEED,
     EVENT_ALARM,
     EVENT_ALL_EVENTS,
@@ -162,15 +162,17 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
             return
 
         attr = state.attributes
-        self._attr_latitude = attr.get(ATTR_LATITUDE)
-        self._attr_longitude = attr.get(ATTR_LONGITUDE)
-        self._attr_location_accuracy = attr.get(ATTR_ACCURACY, 0)
+        self._attr_latitude = attr.get(EntityStateAttribute.LATITUDE)
+        self._attr_longitude = attr.get(EntityStateAttribute.LONGITUDE)
+        self._attr_location_accuracy = attr.get(
+            TrackerEntityStateAttribute.GPS_ACCURACY, 0
+        )
         self._attr_extra_state_attributes = {
             ATTR_ALTITUDE: attr.get(ATTR_ALTITUDE),
             ATTR_BEARING: attr.get(ATTR_BEARING),
             ATTR_SPEED: attr.get(ATTR_SPEED),
         }
-        self._battery = attr.get(ATTR_BATTERY)
+        self._battery = attr.get(ATTR_BATTERY_LEVEL)
 
     @override
     async def async_will_remove_from_hass(self) -> None:

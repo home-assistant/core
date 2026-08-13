@@ -57,27 +57,27 @@ def _common_sensor_descriptions[_UnitT: ATAUnit | ATWUnit](
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
+        MelCloudHomeBinarySensorEntityDescription(
+            key="frost_protection",
+            translation_key="frost_protection",
+            state_fn=lambda unit: (
+                unit.frost_protection.enabled if unit.frost_protection else None
+            ),
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        MelCloudHomeBinarySensorEntityDescription(
+            key="overheat_protection",
+            translation_key="overheat_protection",
+            state_fn=lambda unit: (
+                unit.overheat_protection.enabled if unit.overheat_protection else None
+            ),
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
     )
 
 
 ATA_SENSORS: tuple[MelCloudHomeBinarySensorEntityDescription[ATAUnit], ...] = (
     *_common_sensor_descriptions(ATAUnit),
-    MelCloudHomeBinarySensorEntityDescription(
-        key="frost_protection",
-        translation_key="frost_protection",
-        state_fn=lambda unit: (
-            unit.frost_protection.enabled if unit.frost_protection else None
-        ),
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    MelCloudHomeBinarySensorEntityDescription(
-        key="overheat_protection",
-        translation_key="overheat_protection",
-        state_fn=lambda unit: (
-            unit.overheat_protection.enabled if unit.overheat_protection else None
-        ),
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 )
 
 ATW_SENSORS: tuple[MelCloudHomeBinarySensorEntityDescription[ATWUnit], ...] = (

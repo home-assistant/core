@@ -13,13 +13,6 @@ from .const import DEVICE_ATA, DEVICE_ATW, DOMAIN, WEB_BASE_URL
 from .coordinator import MelCloudHomeCoordinator
 
 
-def unit_ids(unit: ATAUnit | ATWUnit) -> dict[str, list[str]]:
-    """Return the client keyword argument selecting this unit."""
-    if isinstance(unit, ATAUnit):
-        return {"ata_unit_ids": [unit.id]}
-    return {"atw_unit_ids": [unit.id]}
-
-
 class MelCloudHomeEntity(CoordinatorEntity[MelCloudHomeCoordinator]):
     """Base entity for MELCloud Home."""
 
