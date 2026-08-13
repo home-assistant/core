@@ -119,6 +119,7 @@ async def test_adam_water_heater_setpoint_change(
         )
     assert mock_smile_adam_jip.set_dhw_mode.call_count == 1
 
+    # Test setting to the same operation_mode, will not be executed
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
         SERVICE_SET_OPERATION_MODE,
@@ -128,10 +129,7 @@ async def test_adam_water_heater_setpoint_change(
         },
         blocking=True,
     )
-    assert mock_smile_adam_jip.set_dhw_mode.call_count == 2
-    mock_smile_adam_jip.set_dhw_mode.assert_called_with(
-        "dhw_mode", "e4684553153b44afbef2200885f379dc", "eco", 2
-    )
+    assert mock_smile_adam_jip.set_dhw_mode.call_count == 1
 
 
 @pytest.mark.parametrize("chosen_env", ["anna_loria_cooling_active"], indirect=True)
