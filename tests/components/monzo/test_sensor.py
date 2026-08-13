@@ -18,7 +18,11 @@ from homeassistant.components.monzo.sensor import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
 
 from . import setup_integration
 from .conftest import TEST_ACCOUNTS, TEST_POTS
@@ -109,6 +113,7 @@ async def test_deleted_pot_is_removed_and_can_be_rediscovered(
     polling_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a deleted pot is removed without affecting another pot."""
@@ -129,6 +134,14 @@ async def test_deleted_pot_is_removed_and_can_be_rediscovered(
     )
     assert deleted_entity_id
     assert holiday_entity_id
+    label = label_registry.async_create("Savings")
+    deleted_entity_id = entity_registry.async_update_entity(
+        deleted_entity_id,
+        labels={label.label_id},
+        name="Rainy day fund",
+        new_entity_id="sensor.rainy_day_fund",
+    ).entity_id
+    await hass.async_block_till_done()
 
     basic_monzo.user_account.pots.return_value = [{**holiday_pot, "balance": 54321}]
     freezer.tick(timedelta(minutes=1))
@@ -157,6 +170,10 @@ async def test_deleted_pot_is_removed_and_can_be_rediscovered(
     restored_state = hass.states.get(restored_entity_id)
     assert restored_state is not None
     assert restored_state.state == "1345.78"
+    restored_entry = entity_registry.async_get(restored_entity_id)
+    assert restored_entry is not None
+    assert restored_entry.labels == {label.label_id}
+    assert restored_entry.name == "Rainy day fund"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

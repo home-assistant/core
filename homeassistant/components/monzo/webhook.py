@@ -102,11 +102,11 @@ class MonzoWebhookManager:
                 EVENT_CORE_CONFIG_UPDATE, self._async_core_config_updated
             )
         )
-        await self.async_register_remote_webhooks()
         self._known_account_ids.update(self.coordinator.data.accounts)
         self.entry.async_on_unload(
             self.coordinator.async_add_listener(self._async_accounts_updated)
         )
+        await self.async_register_remote_webhooks()
 
     async def async_register_remote_webhooks(
         self, _now: datetime | None = None

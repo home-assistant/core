@@ -128,6 +128,53 @@ async def test_new_account_event_and_webhook_are_discovered(
     )
 
 
+async def test_account_discovered_during_initial_webhook_registration(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test accounts discovered during initial registration get a webhook."""
+    registration_started = asyncio.Event()
+    continue_registration = asyncio.Event()
+    registered_webhooks: dict[str, list[Webhook]] = {}
+
+    async def list_webhooks(account_id: str) -> list[Webhook]:
+        if account_id == "acc_curr" and not registration_started.is_set():
+            registration_started.set()
+            await continue_registration.wait()
+        return registered_webhooks.get(account_id, [])
+
+    async def register_webhook(account_id: str, url: str) -> Webhook:
+        registered = Webhook(f"webhook-{account_id}", account_id, url)
+        registered_webhooks[account_id] = [registered]
+        return registered
+
+    monzo.user_account.list_account_webhooks.side_effect = list_webhooks
+    monzo.user_account.register_webhook.side_effect = register_webhook
+    setup_task = hass.async_create_task(
+        setup_integration(hass, polling_config_entry), "set up Monzo"
+    )
+    await registration_started.wait()
+
+    new_account = {
+        "id": "acc_joint",
+        "name": "Joint Account",
+        "type": "uk_retail_joint",
+        "balance": {"balance": 456, "total_balance": 654, "currency": "GBP"},
+    }
+    monzo.user_account.accounts.return_value = [*TEST_ACCOUNTS, new_account]
+    await polling_config_entry.runtime_data.coordinator.async_refresh()
+    continue_registration.set()
+    await setup_task
+    await hass.async_block_till_done()
+
+    assert monzo.user_account.register_webhook.await_args_list == [
+        call("acc_curr", WEBHOOK_URL),
+        call("acc_flex", WEBHOOK_URL),
+        call("acc_joint", WEBHOOK_URL),
+    ]
+
+
 async def test_removed_account_entities_are_removed(
     hass: HomeAssistant,
     monzo: AsyncMock,
