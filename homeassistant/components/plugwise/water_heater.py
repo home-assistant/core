@@ -186,6 +186,9 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
                 translation_placeholders={"op_mode": operation_mode},
             )
 
+        if operation_mode == self.current_operation:
+            return
+
         await self.coordinator.api.set_dhw_mode(
             DHW_MODE,
             self._dev_id,
