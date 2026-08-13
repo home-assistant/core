@@ -239,6 +239,15 @@ def async_static_info_updated(
 
     if rekeys:
         entry_data.async_update_entity_keys(info_type, rekeys)
+        # Prune states cached under retired keys
+        states = entry_data.state[state_type]
+        live_keys = {key for _, key in new_infos}
+        for rekeyed_info, _ in rekeys:
+            if (old_key := rekeyed_info.key) not in live_keys:
+                states.pop(old_key, None)
+                entry_data.stale_state.discard(
+                    (state_type, rekeyed_info.device_id, old_key)
+                )
 
     # Anything still in current_infos is now gone
     if current_infos:

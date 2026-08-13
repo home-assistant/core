@@ -287,11 +287,20 @@ class RuntimeEntryData:
         snapshots = [
             (
                 tuple(callbacks.get((info_type, old_info.device_id, old_info.key), ())),
+                old_info,
                 new_info,
             )
             for old_info, new_info in rekeys
         ]
-        for entity_callbacks, new_info in snapshots:
+        for entity_callbacks, old_info, new_info in snapshots:
+            if not entity_callbacks:
+                _LOGGER.debug(
+                    "%s: no subscriber for key change %s -> %s",
+                    new_info.name,
+                    old_info.key,
+                    new_info.key,
+                )
+                continue
             for callback_ in entity_callbacks:
                 callback_(new_info)
 

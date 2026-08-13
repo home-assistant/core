@@ -272,6 +272,7 @@ class MockESPHomeDevice:
         self.on_log_message: Callable[[SubscribeLogsResponse], None]
         self.device_info = device_info
         self.current_log_level = LogLevel.LOG_LEVEL_NONE
+        self.states: list[EntityState] = []
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -450,11 +451,12 @@ async def _mock_generic_device_entry(
         }
 
     mock_device = MockESPHomeDevice(entry, mock_client, device_info)
+    mock_device.states = states
 
     def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
         """Subscribe to state."""
         mock_device.set_state_callback(callback)
-        for state in states:
+        for state in mock_device.states:
             callback(state)
 
     def _subscribe_service_calls(
@@ -535,7 +537,7 @@ async def _mock_generic_device_entry(
             on_state_sub, on_state_request
         )
         # Set the initial states
-        for state in states:
+        for state in mock_device.states:
             on_state(state)
 
     mock_client.subscribe_home_assistant_states_and_services = (
@@ -760,6 +762,7 @@ async def reconnect_with_updated_entity_info(
     hass: HomeAssistant,
     device: MockESPHomeDevice,
     entity_info: list[EntityInfo],
+    states: list[EntityState] | None = None,
 ) -> None:
     """Reconnect the mock device with updated entity info."""
     mock_client = device.client
@@ -767,6 +770,8 @@ async def reconnect_with_updated_entity_info(
     mock_client.device_info_and_list_entities = AsyncMock(
         return_value=(device.device_info, entity_info, [])
     )
+    if states is not None:
+        device.states = states
     await device.mock_disconnect(expected_disconnect=False)
     await device.mock_connect()
     await hass.async_block_till_done()
