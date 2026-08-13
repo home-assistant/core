@@ -957,9 +957,10 @@ async def test_subentry_add_flow_creates_bound_subentry(
 
     The new subentry is keyed to the vehicle's VIN and no duplicate device is
     created: the same account device the parent entry already registered stays
-    the one and only device for that VIN. Once loaded, that existing device and
-    its vehicle entities are owned by the created subentry, not left detached
-    from it on the parent entry.
+    the one and only device for that VIN. Committing the subentry triggers a real
+    reload that picks up the stored BLE address, so the vehicle comes up routing
+    over Bluetooth with its existing device and entities owned by the created
+    subentry, not left detached from it on the parent entry.
     """
     entry = mock_config_entry()
     entry.add_to_hass(hass)
@@ -989,6 +990,11 @@ async def test_subentry_add_flow_creates_bound_subentry(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    # async_schedule_reload is deliberately left unpatched: the subentry is
+    # committed only after the flow step returns, so the real reload the parent
+    # entry's subentry-change listener schedules must run here with the BLE
+    # address present. Keep the setup-time Bluetooth mocks active so that reload
+    # neither writes the vehicle key file nor opens a real connection.
     with (
         patch(
             "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
@@ -998,33 +1004,6 @@ async def test_subentry_add_flow_creates_bound_subentry(
             "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
-        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
-    ):
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_VIN: VIN}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "scan"
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    mock_reload.assert_called_once_with(entry.entry_id)
-
-    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
-    assert len(subentries) == 1
-    subentry = subentries[0]
-    assert subentry.unique_id == VIN
-    assert subentry.data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
-
-    # The reload the flow schedules binds the existing device and entities to the
-    # new subentry; run it to observe that ownership. Mock the Bluetooth parent so
-    # setting up the now-paired subentry neither writes the vehicle key file nor
-    # opens a real connection.
-    with (
         patch(
             "homeassistant.components.teslemetry.async_ble_device_from_address",
             return_value=MagicMock(),
@@ -1035,8 +1014,31 @@ async def test_subentry_add_flow_creates_bound_subentry(
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
         mock_parent.return_value.vehicles.createBluetooth.return_value = MagicMock()
-        await hass.config_entries.async_reload(entry.entry_id)
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_VIN: VIN}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        # The subentry commits after the flow step returns; its change listener
+        # then schedules the reload, which runs to completion here.
         await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    subentry = subentries[0]
+    assert subentry.unique_id == VIN
+    assert subentry.data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+
+    # The real reload picked up the stored address: the reloaded vehicle now
+    # routes over Bluetooth instead of staying cloud-only.
+    assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
 
     # The pairing attaches to the vehicle's existing device, never a duplicate.
     bound_devices = [

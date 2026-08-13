@@ -257,16 +257,19 @@ def _setup_vehicle_repairs(
     )
 
 
-def _setup_subentry_removal_reload(
+def _setup_subentry_change_reload(
     hass: HomeAssistant, entry: TeslemetryConfigEntry
 ) -> None:
-    """Reload the entry when a subentry is removed to drop its routing.
+    """Reload the entry when a vehicle subentry is added or removed.
 
-    A paired vehicle's BLE address is read from the subentry at setup. Removing
-    the subentry forgets that address and disables local routing (the virtual
-    key stays on the vehicle for re-pairing); this only takes effect on the
-    next reload. Only a removal triggers this; data updates from pairing reload
-    themselves, and entry-data updates (e.g. token refreshes) must not.
+    A paired vehicle's BLE address is read from the subentry at setup. The add
+    flow commits its new subentry only after the flow step returns, so the
+    reload that picks up the address must be scheduled here, once the subentry
+    actually exists. Removing a subentry forgets its address and disables local
+    routing (the virtual key stays on the vehicle for re-pairing). Either change
+    only takes effect on the next reload. Only add/remove triggers this;
+    reconfigure pairing reloads itself, and entry-data updates (e.g. token
+    refreshes) must not.
     """
     known = set(entry.subentries)
 
@@ -275,10 +278,10 @@ def _setup_subentry_removal_reload(
     ) -> None:
         nonlocal known
         current = set(updated_entry.subentries)
-        if known - current:
+        if known.symmetric_difference(current):
             hass.config_entries.async_schedule_reload(updated_entry.entry_id)
         # Track the latest set so further updates before the reload runs (e.g. a
-        # token refresh) do not re-schedule it off the same removal.
+        # token refresh) do not re-schedule it off the same change.
         known = current
 
     entry.async_on_unload(entry.add_update_listener(_handle_update))
@@ -689,7 +692,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         vehicle_metadata,
     )
 
-    _setup_subentry_removal_reload(hass, entry)
+    _setup_subentry_change_reload(hass, entry)
 
     if stream:
         entry.async_on_unload(stream.close)

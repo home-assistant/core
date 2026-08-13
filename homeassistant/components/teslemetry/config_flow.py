@@ -366,11 +366,13 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
     async def _async_finish(self) -> SubentryFlowResult:
         """Persist the paired BLE address and reload the entry.
 
-        On the initial add flow this creates a new subentry bound to the
-        vehicle's VIN; reconfiguring updates the existing subentry. Either way
-        the address is written before the reload is scheduled, since
-        async_schedule_reload starts an eager task that could otherwise run
-        setup before the update lands, leaving the reloaded entry cloud-only.
+        Reconfiguring updates the existing subentry synchronously here, so the
+        address is stored before this schedules the reload. The initial add flow
+        instead returns a create result the subentry flow manager commits only
+        after this step returns, so it must not schedule the reload itself: doing
+        so would start an eager task that could run setup before the new subentry
+        exists, leaving the reloaded entry cloud-only. The parent entry's
+        subentry-change listener schedules that reload once the address lands.
         """
         assert self._address is not None
         assert self._vin is not None
@@ -382,14 +384,13 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                 self._get_reconfigure_subentry(),
                 data_updates={CONF_ADDRESS: self._address},
             )
-        else:
-            result = self.async_create_entry(
-                title=self._title or self._vin,
-                data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
-                unique_id=self._vin,
-            )
-        self.hass.config_entries.async_schedule_reload(entry.entry_id)
-        return result
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return result
+        return self.async_create_entry(
+            title=self._title or self._vin,
+            data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
+            unique_id=self._vin,
+        )
 
     async def _async_abort(self, reason: str) -> SubentryFlowResult:
         """Disconnect any open BLE connection and abort the flow."""
