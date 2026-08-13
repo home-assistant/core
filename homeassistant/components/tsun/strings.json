@@ -1,0 +1,45 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This device is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "cannot_detect_logger_sn": "The numeric SN could not be read automatically. Enter it manually.",
+      "invalid_response": "The device returned an unsupported or invalid response",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "logger_sn": "SN",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the micro-inverter logger.",
+          "logger_sn": "Numeric SN used for local communication. It is read automatically when the local status page is available.",
+          "port": "Local TCP port; 8899 is proposed by default."
+        },
+        "description": "Enter the local address. Home Assistant will try to read the numeric SN automatically and request it only when necessary.",
+        "title": "Connect a TSUN micro-inverter"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ac_current": { "name": "AC current" },
+      "ac_energy_today": { "name": "AC energy today" },
+      "ac_energy_total": { "name": "AC energy total" },
+      "ac_frequency": { "name": "AC frequency" },
+      "ac_power": { "name": "AC power" },
+      "ac_voltage": { "name": "AC voltage" },
+      "current": { "name": "PV{input} current" },
+      "dc_power_total": { "name": "Total DC power" },
+      "energy_today": { "name": "PV{input} energy today" },
+      "energy_total": { "name": "PV{input} energy total" },
+      "power": { "name": "PV{input} power" },
+      "voltage": { "name": "PV{input} voltage" }
+    }
+  }
+}
