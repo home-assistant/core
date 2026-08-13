@@ -40,7 +40,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
 
     entry = result["result"]
     assert entry.title == "NexBlue (User@Example.com)"
-    assert entry.unique_id == "user@example.com"
+    assert entry.unique_id == TOKEN.account_id
     assert entry.data == {
         CONF_USERNAME: "User@Example.com",
         CONF_PASSWORD: "password",
@@ -63,19 +63,34 @@ async def test_user_flow_errors(
     side_effect: type[Exception],
     expected_error: str,
 ) -> None:
-    """Test errors returned by the user flow."""
-    mock_client.async_login.side_effect = side_effect
+    """Test the user flow can recover after an error."""
+    mock_client.async_login.side_effect = [side_effect, TOKEN]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_USERNAME: "user@example.com",
-            CONF_PASSWORD: "password",
+            CONF_PASSWORD: "incorrect-password",
         },
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "user@example.com",
+            CONF_PASSWORD: "correct-password",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_client")
@@ -89,7 +104,13 @@ async def test_user_flow_duplicate_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_USERNAME: "USER@example.com",
             CONF_PASSWORD: "password",
         },
@@ -109,6 +130,9 @@ async def test_user_flow_retries_with_corrected_credentials(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -133,20 +157,80 @@ async def test_user_flow_rejects_login_without_refresh_token(
     hass: HomeAssistant,
     mock_client: MagicMock,
 ) -> None:
-    """Test a login response without a refresh token is rejected."""
-    mock_client.async_login.return_value = TokenBundle(
-        access_token="access-token",
-        refresh_token=None,
-        expires_in=3600,
-    )
+    """Test the user flow can recover when a login response lacks a refresh token."""
+    mock_client.async_login.side_effect = [
+        TokenBundle(
+            access_token="access-token",
+            refresh_token=None,
+            expires_in=3600,
+            account_id="00000000-0000-0000-0000-000000000001",
+        ),
+        TOKEN,
+    ]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_USERNAME: "user@example.com",
             CONF_PASSWORD: "password",
         },
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "user@example.com",
+            CONF_PASSWORD: "password",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_rejects_login_without_account_id(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+) -> None:
+    """Test the user flow can recover when a login response lacks an account ID."""
+    mock_client.async_login.side_effect = [
+        TokenBundle(
+            access_token="access-token",
+            refresh_token="refresh-token",
+            expires_in=3600,
+        ),
+        TOKEN,
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "user@example.com",
+            CONF_PASSWORD: "password",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "user@example.com",
+            CONF_PASSWORD: "password",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

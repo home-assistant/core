@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["nexblue-api==0.1.1"]
+  "requirements": ["nexblue-api==0.1.2"]
 }

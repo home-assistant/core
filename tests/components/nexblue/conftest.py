@@ -1,44 +1,23 @@
 """Fixtures for the NexBlue integration tests."""
 
 from collections.abc import Generator
+from json import loads
 from unittest.mock import MagicMock, patch
 
-from nexblue_api.models import Charger, ChargerStatus, TokenBundle
+from nexblue_api import Charger, ChargerStatus, TokenBundle
 import pytest
 
 from homeassistant.components.nexblue.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
-CHARGER = Charger(serial_number="NB123456")
-CHARGER_STATUS = ChargerStatus(
-    serial_number=CHARGER.serial_number,
-    protocol_version="00.16.00",
-    charging_state=2,
-    power_kw=7.2,
-    energy_kwh=1.5,
-    lifetime_energy_kwh=42.0,
-    is_lock=True,
-    network_status=1,
-    is_disable=False,
-    cable_current_limit_a=32,
-    circuit_fuse_a=32,
-    current_limit_a=16,
-    cable_lock_mode=0,
-    access_level=0,
-    phase_charging=1,
-    brightness_percent=100,
-    uk_reg=None,
-    current_a=(16.0, 0.0, 0.0),
-    voltage_v=(230, 0, 0),
+CHARGER = Charger.from_api(loads(load_fixture("charger.json", DOMAIN)))
+CHARGER_STATUS = ChargerStatus.from_api(
+    CHARGER.serial_number, loads(load_fixture("charger_status.json", DOMAIN))
 )
-TOKEN = TokenBundle(
-    access_token="access-token",
-    refresh_token="refresh-token",
-    expires_in=3600,
-)
+TOKEN = TokenBundle.from_api(loads(load_fixture("token.json", DOMAIN)))
 
 
 @pytest.fixture
@@ -47,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="NexBlue (user@example.com)",
-        unique_id="user@example.com",
+        unique_id=TOKEN.account_id,
         data={
             CONF_USERNAME: "user@example.com",
             CONF_PASSWORD: "password",

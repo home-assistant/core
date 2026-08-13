@@ -63,8 +63,19 @@ async def test_setup_entry_persists_rotated_refresh_token(
 
 
 @pytest.mark.parametrize(
-    ("refresh_error", "login_error"),
-    [(NexBlueAuthError, NexBlueAuthError), (NexBlueConnectionError, None)],
+    ("refresh_error", "login_error", "expected_state"),
+    [
+        (
+            NexBlueAuthError,
+            NexBlueAuthError,
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            NexBlueConnectionError,
+            None,
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
 )
 async def test_setup_entry_failure(
     hass: HomeAssistant,
@@ -72,6 +83,7 @@ async def test_setup_entry_failure(
     mock_client: MagicMock,
     refresh_error: type[Exception],
     login_error: type[Exception] | None,
+    expected_state: ConfigEntryState,
 ) -> None:
     """Test setup does not load when NexBlue cannot authenticate or connect."""
     mock_client.async_ensure_access_token.side_effect = refresh_error
@@ -81,7 +93,7 @@ async def test_setup_entry_failure(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is not ConfigEntryState.LOADED
+    assert mock_config_entry.state is expected_state
 
 
 async def test_setup_entry_fails_when_fallback_login_has_no_refresh_token(
@@ -101,7 +113,7 @@ async def test_setup_entry_fails_when_fallback_login_has_no_refresh_token(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is not ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     mock_client.async_login.assert_awaited_once()
 
 

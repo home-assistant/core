@@ -28,8 +28,7 @@
         "name": "Access level",
         "state": {
           "authorized_users_only": "Authorized users only",
-          "no_restrictions": "No restrictions",
-          "unknown": "Unknown"
+          "no_restrictions": "No restrictions"
         }
       },
       "brightness": { "name": "LED brightness" },
@@ -38,8 +37,7 @@
         "name": "Cable lock mode",
         "state": {
           "always_locked": "Always locked",
-          "locked_while_charging": "Locked while charging",
-          "unknown": "Unknown"
+          "locked_while_charging": "Locked while charging"
         }
       },
       "charging_state": {
@@ -52,8 +50,7 @@
           "ev_waiting": "Waiting for car response",
           "finished": "Charging complete",
           "idle": "Connect cable to charge",
-          "lb_waiting": "Waiting for available power",
-          "unknown": "Unknown"
+          "lb_waiting": "Waiting for available power"
         }
       },
       "circuit_fuse": { "name": "Circuit fuse" },
@@ -66,7 +63,6 @@
           "ethernet": "Ethernet",
           "modem": "4G",
           "none": "None",
-          "unknown": "Unknown",
           "wifi": "Wi-Fi"
         }
       },
@@ -74,8 +70,7 @@
         "name": "Phase charging",
         "state": {
           "single_phase": "Single-phase",
-          "three_phase": "Three-phase",
-          "unknown": "Unknown"
+          "three_phase": "Three-phase"
         }
       },
       "voltage": { "name": "Voltage {phase}" }

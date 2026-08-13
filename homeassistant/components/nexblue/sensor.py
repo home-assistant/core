@@ -29,14 +29,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
 
-
-def _enum_value(values: dict[int, str], value: int | None) -> str:
-    """Return a translated state key for a protocol value."""
-    if value is None:
-        return "unknown"
-    return values.get(value, "unknown")
-
-
 CHARGING_STATE_MAP = {
     0: "idle",
     1: "connected",
@@ -72,8 +64,8 @@ class NexBlueSensorEntityDescription(SensorEntityDescription):
 
 
 def _enum_options(values: dict[int, str]) -> list[str]:
-    """Return options for an enum sensor, including unknown protocol values."""
-    return [*values.values(), "unknown"]
+    """Return the supported options for an enum sensor."""
+    return list(values.values())
 
 
 SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
@@ -82,7 +74,7 @@ SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
         translation_key="charging_state",
         device_class=SensorDeviceClass.ENUM,
         options=_enum_options(CHARGING_STATE_MAP),
-        value_fn=lambda status: _enum_value(CHARGING_STATE_MAP, status.charging_state),
+        value_fn=lambda status: CHARGING_STATE_MAP.get(status.charging_state),
     ),
     NexBlueSensorEntityDescription(
         key="cable_lock_mode",
@@ -90,9 +82,7 @@ SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=_enum_options(CABLE_LOCK_MODE_MAP),
-        value_fn=lambda status: _enum_value(
-            CABLE_LOCK_MODE_MAP, status.cable_lock_mode
-        ),
+        value_fn=lambda status: CABLE_LOCK_MODE_MAP.get(status.cable_lock_mode),
     ),
     NexBlueSensorEntityDescription(
         key="access_level",
@@ -100,7 +90,7 @@ SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=_enum_options(ACCESS_LEVEL_MAP),
-        value_fn=lambda status: _enum_value(ACCESS_LEVEL_MAP, status.access_level),
+        value_fn=lambda status: ACCESS_LEVEL_MAP.get(status.access_level),
     ),
     NexBlueSensorEntityDescription(
         key="phase_charging",
@@ -108,7 +98,7 @@ SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=_enum_options(PHASE_CHARGING_MAP),
-        value_fn=lambda status: _enum_value(PHASE_CHARGING_MAP, status.phase_charging),
+        value_fn=lambda status: PHASE_CHARGING_MAP.get(status.phase_charging),
     ),
     NexBlueSensorEntityDescription(
         key="power",
@@ -198,7 +188,7 @@ SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=_enum_options(NETWORK_STATUS_MAP),
-        value_fn=lambda status: _enum_value(NETWORK_STATUS_MAP, status.network_status),
+        value_fn=lambda status: NETWORK_STATUS_MAP.get(status.network_status),
     ),
     NexBlueSensorEntityDescription(
         key="brightness",

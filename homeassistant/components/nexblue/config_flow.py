@@ -7,6 +7,7 @@ from nexblue_api import (
     NexBlueClient,
     NexBlueConnectionError,
     NexBlueError,
+    TokenBundle,
 )
 import voluptuous as vol
 
@@ -37,20 +38,23 @@ class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            refresh_token, error = await self._async_validate_login(
+            token, error = await self._async_validate_login(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
             if error:
                 errors["base"] = error
             else:
-                await self.async_set_unique_id(user_input[CONF_USERNAME].casefold())
+                assert token is not None
+                assert token.account_id is not None
+                assert token.refresh_token is not None
+                await self.async_set_unique_id(token.account_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"NexBlue ({user_input[CONF_USERNAME]})",
                     data={
                         CONF_USERNAME: user_input[CONF_USERNAME],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_REFRESH_TOKEN: refresh_token,
+                        CONF_REFRESH_TOKEN: token.refresh_token,
                     },
                 )
 
@@ -60,8 +64,8 @@ class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_login(
         self, username: str, password: str
-    ) -> tuple[str | None, str | None]:
-        """Validate credentials and return a refresh token safe to persist."""
+    ) -> tuple[TokenBundle | None, str | None]:
+        """Validate credentials and return token data safe to persist."""
         client = NexBlueClient(async_get_clientsession(self.hass), DEFAULT_API_URL)
         try:
             token = await client.async_login(username, password)
@@ -77,4 +81,6 @@ class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not token.refresh_token:
             return None, "invalid_auth"
-        return token.refresh_token, None
+        if not token.account_id:
+            return None, "unknown"
+        return token, None
