@@ -11,6 +11,7 @@ from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import AuthenticatedMonzoAPI
@@ -71,10 +72,22 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
                 message += " Enabling debug logging for details."
             raise UpdateFailed(message) from err
 
-        return MonzoData(
+        data = MonzoData(
             accounts={account["id"]: account for account in accounts},
             pots={pot["id"]: pot for pot in pots},
         )
+        if self.data:
+            stale_resource_ids = (self.data.accounts.keys() | self.data.pots.keys()) - (
+                data.accounts.keys() | data.pots.keys()
+            )
+            device_registry = dr.async_get(self.hass)
+            for resource_id in stale_resource_ids:
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, resource_id), self.config_entry.entry_id
+                ):
+                    device_registry.async_remove_device(device.id)
+
+        return data
 
 
 @dataclass

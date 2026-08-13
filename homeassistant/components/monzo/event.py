@@ -27,7 +27,9 @@ async def async_setup_entry(
     @callback
     def _async_add_new_entities() -> None:
         """Add transaction events for newly discovered accounts."""
-        new_account_ids = coordinator.data.accounts.keys() - known_account_ids
+        current_account_ids = set(coordinator.data.accounts)
+        known_account_ids.intersection_update(current_account_ids)
+        new_account_ids = current_account_ids - known_account_ids
         if not new_account_ids:
             return
         async_add_entities(

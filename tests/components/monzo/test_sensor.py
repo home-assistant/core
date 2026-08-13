@@ -18,7 +18,7 @@ from homeassistant.components.monzo.sensor import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import TEST_ACCOUNTS, TEST_POTS
@@ -103,13 +103,15 @@ async def test_unavailable_entity(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_deleted_pot_does_not_change_another_pot(
+async def test_deleted_pot_is_removed_and_can_be_rediscovered(
     hass: HomeAssistant,
     basic_monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test deleting a pot does not shift another pot's data."""
+    """Test a deleted pot is removed without affecting another pot."""
     holiday_pot = {
         "id": "pot_holiday",
         "name": "Holiday",
@@ -133,8 +135,28 @@ async def test_deleted_pot_does_not_change_another_pot(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(deleted_entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(deleted_entity_id) is None
+    assert entity_registry.async_get(deleted_entity_id) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, TEST_POTS[0]["id"]), polling_config_entry.entry_id
+        )
+        is None
+    )
     assert hass.states.get(holiday_entity_id).state == "543.21"
+
+    basic_monzo.user_account.pots.return_value = [TEST_POTS[0], holiday_pot]
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    restored_entity_id = await async_get_entity_id(
+        hass, TEST_POTS[0]["id"], POT_SENSORS[0]
+    )
+    assert restored_entity_id == deleted_entity_id
+    restored_state = hass.states.get(restored_entity_id)
+    assert restored_state is not None
+    assert restored_state.state == "1345.78"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

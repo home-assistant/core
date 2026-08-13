@@ -20,11 +20,12 @@ from homeassistant.components.monzo.const import (
     MONZO_WEBHOOK_TRANSACTION_CREATED,
 )
 from homeassistant.components.monzo.webhook import WEBHOOK_RETRY_DELAY
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.webhook import async_generate_path
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestReauthError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
@@ -125,6 +126,42 @@ async def test_new_account_event_and_webhook_are_discovered(
     monzo.user_account.register_webhook.assert_awaited_once_with(
         "acc_joint", WEBHOOK_URL
     )
+
+
+async def test_removed_account_entities_are_removed(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a removed account loses its device and entities."""
+    await setup_integration(hass, polling_config_entry)
+    monzo.user_account.accounts.return_value = [TEST_ACCOUNTS[0]]
+    monzo.user_account.list_account_webhooks.reset_mock()
+    monzo.user_account.register_webhook.reset_mock()
+
+    await polling_config_entry.runtime_data.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "acc_flex"), polling_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            EVENT_DOMAIN, DOMAIN, "acc_flex_transaction"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, "acc_flex_balance")
+        is None
+    )
+    monzo.user_account.list_account_webhooks.assert_not_awaited()
+    monzo.user_account.register_webhook.assert_not_awaited()
 
 
 async def test_registers_non_https_remote_webhook(

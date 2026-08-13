@@ -327,14 +327,12 @@ class MonzoWebhookManager:
 
     @callback
     def _async_accounts_updated(self) -> None:
-        """Reconcile webhooks when Monzo discovers a new account."""
-        new_account_ids = (
-            self.coordinator.data.accounts.keys() - self._known_account_ids
-        )
-        if not new_account_ids:
-            return
-        self._known_account_ids.update(new_account_ids)
-        self._async_schedule_registration("add webhooks for new Monzo accounts")
+        """Reconcile webhooks when the set of Monzo accounts changes."""
+        current_account_ids = set(self.coordinator.data.accounts)
+        new_account_ids = current_account_ids - self._known_account_ids
+        self._known_account_ids = current_account_ids
+        if new_account_ids:
+            self._async_schedule_registration("add webhooks for new Monzo accounts")
 
     @callback
     def _async_schedule_registration(self, name: str) -> None:

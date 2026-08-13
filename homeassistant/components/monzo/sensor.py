@@ -68,8 +68,12 @@ async def async_setup_entry(
     @callback
     def _async_add_new_entities() -> None:
         """Add sensors for newly discovered accounts and pots."""
-        new_account_ids = coordinator.data.accounts.keys() - known_account_ids
-        new_pot_ids = coordinator.data.pots.keys() - known_pot_ids
+        current_account_ids = set(coordinator.data.accounts)
+        current_pot_ids = set(coordinator.data.pots)
+        known_account_ids.intersection_update(current_account_ids)
+        known_pot_ids.intersection_update(current_pot_ids)
+        new_account_ids = current_account_ids - known_account_ids
+        new_pot_ids = current_pot_ids - known_pot_ids
         if not new_account_ids and not new_pot_ids:
             return
 
