@@ -71,6 +71,7 @@ class MonzoWebhookManager:
         self._register_lock = asyncio.Lock()
         self._retry_cancel: CALLBACK_TYPE | None = None
         self._webhook_url: str | None = None
+        self._known_account_ids: set[str] = set()
 
     async def async_setup(self) -> None:
         """Set up the local webhook and remote subscriptions."""
@@ -102,6 +103,10 @@ class MonzoWebhookManager:
             )
         )
         await self.async_register_remote_webhooks()
+        self._known_account_ids.update(self.coordinator.data.accounts)
+        self.entry.async_on_unload(
+            self.coordinator.async_add_listener(self._async_accounts_updated)
+        )
 
     async def async_register_remote_webhooks(
         self, _now: datetime | None = None
@@ -319,6 +324,17 @@ class MonzoWebhookManager:
         if "external_url" not in event.data:
             return
         self._async_schedule_registration("update Monzo webhooks")
+
+    @callback
+    def _async_accounts_updated(self) -> None:
+        """Reconcile webhooks when Monzo discovers a new account."""
+        new_account_ids = (
+            self.coordinator.data.accounts.keys() - self._known_account_ids
+        )
+        if not new_account_ids:
+            return
+        self._known_account_ids.update(new_account_ids)
+        self._async_schedule_registration("add webhooks for new Monzo accounts")
 
     @callback
     def _async_schedule_registration(self, name: str) -> None:

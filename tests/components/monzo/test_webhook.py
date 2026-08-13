@@ -10,10 +10,12 @@ from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError, Web
 import pytest
 
 from homeassistant.components import cloud
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.monzo.const import (
     ATTR_DATA,
     CONF_CLOUDHOOK_URL,
     CONF_WEBHOOK_URL,
+    DOMAIN,
     EVENT_TRANSACTION_CREATED,
     MONZO_WEBHOOK_TRANSACTION_CREATED,
 )
@@ -22,13 +24,14 @@ from homeassistant.components.webhook import async_generate_path
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestReauthError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.network import NoURLAvailableError
 
 from . import setup_integration
-from .conftest import WEBHOOK_ID, WEBHOOK_URL
+from .conftest import TEST_ACCOUNTS, WEBHOOK_ID, WEBHOOK_URL
 
 from tests.common import (
     MockConfigEntry,
@@ -76,6 +79,52 @@ async def test_registers_one_remote_webhook_per_account(
         call("acc_flex", WEBHOOK_URL),
     ]
     assert polling_config_entry.data[CONF_WEBHOOK_URL] == WEBHOOK_URL
+
+
+async def test_new_account_event_and_webhook_are_discovered(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a newly discovered account gets an event entity and webhook."""
+    await setup_integration(hass, polling_config_entry)
+    new_account = {
+        "id": "acc_joint",
+        "name": "Joint Account",
+        "type": "uk_retail_joint",
+        "balance": {"balance": 456, "total_balance": 654, "currency": "GBP"},
+    }
+    monzo.user_account.accounts.return_value = [*TEST_ACCOUNTS, new_account]
+    monzo.user_account.list_account_webhooks.reset_mock()
+    monzo.user_account.list_account_webhooks.side_effect = [
+        [Webhook("webhook-acc_curr", "acc_curr", WEBHOOK_URL)],
+        [Webhook("webhook-acc_flex", "acc_flex", WEBHOOK_URL)],
+        [],
+    ]
+    monzo.user_account.register_webhook.reset_mock()
+
+    await polling_config_entry.runtime_data.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        EVENT_DOMAIN, DOMAIN, "acc_joint_transaction"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+    monzo.user_account.register_webhook.assert_awaited_once_with(
+        "acc_joint", WEBHOOK_URL
+    )
+
+    await polling_config_entry.runtime_data.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert monzo.user_account.list_account_webhooks.await_count == 3
+    monzo.user_account.register_webhook.assert_awaited_once_with(
+        "acc_joint", WEBHOOK_URL
+    )
 
 
 async def test_registers_non_https_remote_webhook(

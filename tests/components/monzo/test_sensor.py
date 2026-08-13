@@ -138,6 +138,46 @@ async def test_deleted_pot_does_not_change_another_pot(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_new_accounts_and_pots_are_discovered(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensors are added for accounts and pots discovered after setup."""
+    await setup_integration(hass, polling_config_entry)
+    new_account = {
+        "id": "acc_joint",
+        "name": "Joint Account",
+        "type": "uk_retail_joint",
+        "balance": {"balance": 456, "total_balance": 654, "currency": "GBP"},
+    }
+    new_pot = {
+        "id": "pot_holiday",
+        "name": "Holiday",
+        "balance": 12345,
+        "currency": "EUR",
+    }
+    monzo.user_account.accounts.return_value = [*TEST_ACCOUNTS, new_account]
+    monzo.user_account.pots.return_value = [*TEST_POTS, new_pot]
+
+    await polling_config_entry.runtime_data.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    account_entity_id = await async_get_entity_id(
+        hass, new_account["id"], ACCOUNT_SENSORS[0]
+    )
+    pot_entity_id = await async_get_entity_id(hass, new_pot["id"], POT_SENSORS[0])
+    assert account_entity_id is not None
+    account_state = hass.states.get(account_entity_id)
+    assert account_state is not None
+    assert account_state.state == "4.56"
+    assert pot_entity_id is not None
+    pot_state = hass.states.get(pot_entity_id)
+    assert pot_state is not None
+    assert pot_state.state == "123.45"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
