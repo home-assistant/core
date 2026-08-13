@@ -56,21 +56,11 @@ from .const import (
 
 
 class PowerwallLookupError(Exception):
-    """Signal that the authorized-client lookup failed for a non-retryable reason.
-
-    Distinct from the key simply being absent: the gateway did not return a
-    usable client list, so the caller must abort (or keep the user on a
-    retryable form) rather than mistake the failure for an unregistered key and
-    re-register it, which would reset an already pending or verified key.
-    """
+    """Signal that the authorized-client lookup failed for a non-retryable reason."""
 
 
 class PowerwallKeyRejectedError(Exception):
-    """Signal that the gateway refused a v1r-signed read with our RSA key.
-
-    Distinct from a bad gateway password: the login succeeded, but the key has
-    not been approved on the gateway, so only signed requests fail.
-    """
+    """Signal that the gateway refused a v1r-signed read with our RSA key."""
 
 
 _PENDING_STATES = (AuthorizedClientState.PENDING_VERIFICATION,)
@@ -197,17 +187,7 @@ class OAuth2FlowHandler(
 
 
 class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
-    """Pair a local Powerwall gateway for TEDAPI v1r command routing.
-
-    The authorized-client key this flow registers is intentionally left on
-    the gateway when the Home Assistant config entry/subentry is later
-    removed. The same gateway-side authorization may be relied on by other
-    consumers that share the credential (such as other integrations), so
-    removing this integration's config must not deauthorize a credential
-    those other consumers may still be using. tesla-fleet-api does expose
-    ``remove_authorized_client``, but it is deliberately not called on
-    removal for that reason.
-    """
+    """Pair a local Powerwall gateway for TEDAPI v1r command routing."""
 
     def __init__(self) -> None:
         """Initialize the energy site subentry flow."""
@@ -222,12 +202,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Let the user opt an account energy site into local Powerwall control.
-
-        Only battery-capable sites that have not already been added are offered;
-        selecting one starts key pairing, ending in a new subentry bound to that
-        site.
-        """
+        """Let the user opt an account energy site into local Powerwall control."""
         entry = cast(TeslemetryConfigEntry, self._get_entry())
         # runtime_data (the resolved energy sites) only exists while the entry is
         # loaded; core clears it on unload, so bail out cleanly if it is not.
@@ -330,12 +305,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_pair(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Check once whether the pending key has been approved on the gateway.
-
-        Advances to credentials if verified; otherwise re-shows this form with
-        an error describing what the user still needs to do, so they can
-        approve the key and submit again.
-        """
+        """Check once whether the pending key has been approved on the gateway."""
         assert self._energy_site is not None
         if user_input is None:
             return self.async_show_form(step_id="pair")
@@ -362,18 +332,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(step_id="pair", errors={"base": "cannot_connect"})
 
     async def _find_authorized_client(self) -> AuthorizedClient | None:
-        """Return our RSA key's authorized-client entry on the gateway, or None.
-
-        Parsing lives in the library's typed ``find_authorized_clients`` accessor
-        (envelope unwrap, null-body handling, ``state`` typing). ``None`` is
-        returned only when the gateway answers successfully but our key is not
-        among the authorized clients (an explicitly empty list authoritatively
-        means "not registered").
-
-        Any lookup failure raises ``PowerwallLookupError`` rather than being
-        collapsed into ``None`` so the caller never mistakes a failed lookup for
-        an absent key and re-registers it.
-        """
+        """Return our RSA key's authorized-client entry on the gateway, or None."""
         assert self._energy_site is not None
         try:
             result = await self._energy_site.find_authorized_clients()
@@ -390,13 +349,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         )
 
     async def _verify_local_gateway(self, host: str, password: str) -> None:
-        """Prove the LAN connection and the RSA key against the gateway.
-
-        ``connect()`` performs the gateway password login; the signed read
-        that follows is what an unapproved key actually fails, raising
-        ``PowerwallAuthenticationError`` when it does. Any other protocol
-        fault is a ``PowerwallFaultError`` and is not a rejected key.
-        """
+        """Prove the LAN connection and the RSA key against the gateway."""
         assert self._key_pem is not None
         assert self._energy_site is not None
         async with PowerwallClient(
@@ -452,11 +405,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
     @callback
     def _async_save_credentials(self, host: str, password: str) -> SubentryFlowResult:
-        """Persist the verified gateway credentials to a new subentry.
-
-        Creates a subentry bound to the selected site; the parent entry then
-        reloads (via its update listener) so the site starts routing locally.
-        """
+        """Persist the verified gateway credentials to a new subentry."""
         return self.async_create_entry(
             title=self._site_name,
             data={

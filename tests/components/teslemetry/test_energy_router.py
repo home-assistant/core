@@ -90,12 +90,7 @@ def _entry_with_powerwall() -> MockConfigEntry:
 
 @pytest.fixture(autouse=True)
 def mock_gateway_discovery() -> Generator[AsyncMock]:
-    """Default gateway-address discovery to no result.
-
-    Keeps every pairing test path deterministic now that the add flow's
-    ``_prepare_energy_site`` calls ``find_gateway_address``. Tests exercising
-    discovery itself override this per-test.
-    """
+    """Default gateway-address discovery to no result."""
     with patch(
         "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
         new=AsyncMock(return_value=None),
@@ -147,13 +142,7 @@ def _mock_powerwall_client(
 def _own_key_clients(
     state: AuthorizedClientState | int | str | None,
 ) -> AuthorizedClients:
-    """Return a typed client list carrying our key in the given state.
-
-    Includes a decoy entry so the flow's own key-matching predicate has noise
-    to skip past. Unwrapping the gateway's raw envelope into these typed
-    entries is the library's job, so tests drive the accessor the integration
-    actually calls rather than the raw command underneath it.
-    """
+    """Return a typed client list carrying our key in the given state."""
     return AuthorizedClients(
         clients=[
             AuthorizedClient(
@@ -214,11 +203,7 @@ async def test_energy_site_cloud_without_powerwall(hass: HomeAssistant) -> None:
 
 
 def _entry_with_unpaired_subentry() -> MockConfigEntry:
-    """Return a config entry whose energy site subentry exists but is unpaired.
-
-    Local control is opt-in, so a subentry only exists once the user adds one.
-    Used to prove the add flow no longer offers a site that is already added.
-    """
+    """Return a config entry whose energy site subentry exists but is unpaired."""
     entry = mock_config_entry()
     return MockConfigEntry(
         domain=entry.domain,
@@ -240,11 +225,7 @@ def _entry_with_unpaired_subentry() -> MockConfigEntry:
 async def _start_add_flow_select_site(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> SubentryFlowResult:
-    """Start the add flow and select the battery site, returning the next step.
-
-    The shared key-pairing steps run identically whether reached from add or
-    reconfigure; the add flow reaches them right after the site is selected.
-    """
+    """Start the add flow and select the battery site, returning the next step."""
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, SUBENTRY_TYPE_ENERGY_SITE),
         context={"source": "user"},
@@ -312,14 +293,7 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
 
 @pytest.mark.usefixtures("mock_rsa_key")
 async def test_subentry_null_body_aborts_as_lookup_failure(hass: HomeAssistant) -> None:
-    """A malformed authorized-clients read aborts rather than registering.
-
-    Tesla's undocumented endpoint can answer with JSON ``null``; the library's
-    typed accessor raises ``InvalidResponse`` for it rather than collapsing it
-    to an empty client list, since a malformed response could just as easily be
-    hiding an already-registered key. The flow must not mistake that failure
-    for an absent key and re-register it.
-    """
+    """A malformed authorized-clients read aborts rather than registering."""
     entry = await _setup_account_no_subentry(hass)
 
     with (
@@ -375,13 +349,7 @@ async def test_subentry_credentials_errors(
     client_kwargs: dict[str, Exception],
     expected_error: str,
 ) -> None:
-    """The credentials step reports each local verification failure distinctly.
-
-    A key the gateway has not approved only fails the signed read, so it must
-    not be reported as a bad password. A generic gateway fault (busy, timeout,
-    internal) is a different failure than a rejected key and must not be
-    reported as one.
-    """
+    """The credentials step reports each local verification failure distinctly."""
     entry = await _setup_account_no_subentry(hass)
 
     client = _mock_powerwall_client(**client_kwargs)
@@ -651,11 +619,7 @@ async def test_stale_cleanup_preserves_foreign_subentry(hass: HomeAssistant) -> 
 
 
 async def test_stale_cleanup_removes_energy_subentry(hass: HomeAssistant) -> None:
-    """A paired site that is gone from the account has its subentry pruned.
-
-    The counterpart to the scope guard: with an authoritative inventory in hand,
-    pruning must still happen.
-    """
+    """A paired site that is gone from the account has its subentry pruned."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
@@ -680,12 +644,7 @@ async def test_stale_cleanup_removes_energy_subentry(hass: HomeAssistant) -> Non
 async def test_stale_cleanup_preserves_pairing_on_transient_access_loss(
     hass: HomeAssistant,
 ) -> None:
-    """A paired site that momentarily reports no access keeps its subentry.
-
-    The site is still on the account (present in ``products``); only its
-    ``access`` flag flipped, which can happen on a subscription/token blip.
-    That must not delete the local gateway host/password.
-    """
+    """A paired site that momentarily reports no access keeps its subentry."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
@@ -734,13 +693,7 @@ async def test_solar_only_site_has_no_local_control(hass: HomeAssistant) -> None
 async def test_stale_cleanup_preserves_pairing_without_energy_scope(
     hass: HomeAssistant,
 ) -> None:
-    """Losing the energy scope must not delete a paired site's stored credentials.
-
-    Without ``energy_device_data`` the product loop skips every energy site, so
-    the resolved site list is empty for want of an inventory rather than because
-    the sites are gone. Pruning against it would silently drop the user's local
-    gateway host/password.
-    """
+    """Losing the energy scope must not delete a paired site's stored credentials."""
     entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
@@ -798,10 +751,7 @@ async def test_subentry_credentials_password_truncated(hass: HomeAssistant) -> N
 async def test_wall_connector_only_site_not_offered_for_local_control(
     hass: HomeAssistant,
 ) -> None:
-    """A wall-connector-only site can't do local control; only a Powerwall can.
-
-    The add flow offers the battery site but never the wall-connector-only one.
-    """
+    """A wall-connector-only site can't do local control; only a Powerwall can."""
     products = deepcopy(PRODUCTS)
     products["response"].append(
         {
@@ -843,11 +793,7 @@ async def test_wall_connector_only_site_not_offered_for_local_control(
 
 
 async def test_add_flow_aborts_when_entry_not_loaded(hass: HomeAssistant) -> None:
-    """The add flow aborts when the account entry is not loaded.
-
-    The resolved energy sites only exist while the entry is loaded, so a flow
-    started against an unloaded entry cannot read them and must bail out.
-    """
+    """The add flow aborts when the account entry is not loaded."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
 

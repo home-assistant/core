@@ -258,12 +258,7 @@ def _setup_vehicle_repairs(
 
 
 def _find_energy_subentry_id(entry: TeslemetryConfigEntry, site_id: int) -> str | None:
-    """Return the user-added local-control subentry id bound to site_id, if any.
-
-    Local-control subentries are opt-in: the user adds one per site through the
-    "Add local energy site" flow. Setup never creates one; it only resolves an
-    existing subentry so the site's platforms route through the local gateway.
-    """
+    """Return the user-added local-control subentry id bound to site_id, if any."""
     return next(
         (
             subentry.subentry_id
@@ -281,11 +276,7 @@ def _remove_stale_subentries(
     subentry_type: str,
     current_subentry_ids: set[str],
 ) -> None:
-    """Remove subentries of the given type with no matching product.
-
-    Filtered by subentry_type so this only prunes its own kind and never
-    touches subentries owned by another feature (e.g. vehicle subentries).
-    """
+    """Remove subentries of the given type with no matching product."""
     for subentry in list(entry.subentries.values()):
         if (
             subentry.subentry_type == subentry_type
@@ -301,18 +292,7 @@ def _prune_energy_subentries(
     scopes: list[Scope],
     products: list[dict[str, Any]],
 ) -> None:
-    """Remove energy-site subentries whose site is no longer on the account.
-
-    Skipped without the energy scope: setup then skips every energy product, so
-    an empty site list means the inventory was never resolved rather than that
-    the sites are gone. Pruning against it would delete the local gateway
-    credentials a user paired.
-
-    Kept against the raw product inventory rather than the access-filtered
-    energysites list: a site can report ``access: false`` transiently (a
-    subscription/token blip) while still being on the account, and pruning on
-    that flag alone would delete its paired gateway credentials.
-    """
+    """Remove energy-site subentries whose site is no longer on the account."""
     if Scope.ENERGY_DEVICE_DATA not in scopes:
         return
     product_site_ids = {
@@ -334,11 +314,7 @@ def _prune_energy_subentries(
 
 
 async def _async_get_rsa_key_pem(hass: HomeAssistant) -> bytes:
-    """Return the integration's RSA private key PEM, generating it if needed.
-
-    Cached on ``hass.data`` so the key file is only touched once even when
-    several energy sites are paired for local TEDAPI v1r access.
-    """
+    """Return the integration's RSA private key PEM, generating it if needed."""
     pem: bytes | None = hass.data.get(RSA_PARENT_KEY)
     if pem is None:
         path = hass.config.path(POWERWALL_KEY_FILE)
@@ -357,13 +333,7 @@ async def _async_resolve_local_control(
     site_id: int,
     cloud_energy_site: EnergySite,
 ) -> tuple[bool, str | None, EnergySite | EnergySiteRouter]:
-    """Resolve opt-in local control for an energy site.
-
-    Only a battery/Powerwall gateway can pair for local (TEDAPI) command control;
-    solar-only and wall-connector-only sites cannot. Returns whether the site can
-    do local control, its user-added subentry id (or None when not opted in), and
-    the API its platforms should call - a router when paired, else the cloud site.
-    """
+    """Resolve opt-in local control for an energy site."""
     if not battery:
         return False, None, cloud_energy_site
     subentry_id = _find_energy_subentry_id(entry, site_id)
@@ -381,13 +351,7 @@ async def _async_resolve_energy_site_api(
     subentry_id: str,
     cloud_energy_site: EnergySite,
 ) -> EnergySite | EnergySiteRouter:
-    """Return the API an energy site's platforms should call.
-
-    When the subentry has been paired (its data carries a local gateway
-    ``host``/``password``), wrap the cloud EnergySite in an EnergySiteRouter that
-    tries the local Powerwall (via aiopowerwall) first and fails over to cloud
-    per command. Otherwise returns the plain cloud EnergySite unchanged.
-    """
+    """Return the API an energy site's platforms should call."""
     data = entry.subentries[subentry_id].data
     host = data.get(CONF_HOST)
     password = data.get(CONF_PASSWORD)
