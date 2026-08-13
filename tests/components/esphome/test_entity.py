@@ -2607,3 +2607,71 @@ async def test_entities_with_same_name_moved_between_devices(
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.sub_one_battery").state == STATE_OFF
     assert hass.states.get("binary_sensor.sub_two_battery").state == STATE_ON
+
+
+async def test_entity_rekeyed_while_old_key_reused_by_renamed_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a re-key where the freed key is reused by a renamed entity.
+
+    The renamed entity arrives first in the info list and matches
+    Sensor Two's old key, but Sensor Two's identity is claimed by a
+    later info, so the in place key match must not consume it.
+    """
+    entity_info, states = _two_binary_sensor_setup()
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    entry_two = entity_registry.async_get("binary_sensor.test_sensor_two")
+    assert entry_one is not None
+    assert entry_two is not None
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.test_sensor_one")
+    actions_two = track_entity_registry_actions(hass, "binary_sensor.test_sensor_two")
+
+    # Sensor Two is re-keyed 2 to 1 while a renamed entity takes over
+    # key 2; the renamed entity is listed first
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_renamed",
+            key=2,
+            name="Sensor Renamed",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=1,
+            name="Sensor Two",
+        ),
+    ]
+    await reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
+    )
+
+    new_entry_two = entity_registry.async_get("binary_sensor.test_sensor_two")
+    assert new_entry_two is not None
+    assert new_entry_two.id == entry_two.id
+    assert new_entry_two.unique_id == entry_two.unique_id
+    assert actions_two == []
+
+    # Sensor One is gone and the renamed entity is brand new
+    assert entity_registry.async_get("binary_sensor.test_sensor_one") is None
+    assert actions_one == ["remove"]
+    entry_renamed = entity_registry.async_get("binary_sensor.test_sensor_renamed")
+    assert entry_renamed is not None
+    assert entry_renamed.id != entry_one.id
+
+    # Each entity must follow its own key with its own identity
+    device.set_state(BinarySensorState(key=1, state=False, missing_state=False))
+    device.set_state(BinarySensorState(key=2, state=True, missing_state=False))
+    await hass.async_block_till_done()
+    state_two = hass.states.get("binary_sensor.test_sensor_two")
+    state_renamed = hass.states.get("binary_sensor.test_sensor_renamed")
+    assert state_two.state == STATE_OFF
+    assert state_two.attributes[ATTR_FRIENDLY_NAME] == "Test Sensor Two"
+    assert state_renamed.state == STATE_ON

@@ -122,6 +122,14 @@ def async_static_info_updated(
     old_info_by_unique_id, movable_by_name, still_present = _build_identity_indexes(
         current_infos, mac, new_unique_ids
     )
+    # Old infos whose identity is claimed by an incoming info are
+    # reserved for that unique_id match; the key based matches must not
+    # consume them, or a reused key could swap two entities' identities
+    reserved = {
+        dict_key
+        for unique_id, dict_key in old_info_by_unique_id.items()
+        if unique_id in new_unique_ids
+    }
     rekeys: list[tuple[EntityInfo, EntityInfo]] = []
 
     # Track info by (info.device_id, info.key) to properly handle entities
@@ -144,7 +152,7 @@ def async_static_info_updated(
 
         # Same key and device_id: a rename on firmware where the key is
         # not derived from the name; the entity is updated in place
-        if current_infos.pop(info_key, None) is not None:
+        if info_key not in reserved and current_infos.pop(info_key, None) is not None:
             continue
 
         # Match by name when unambiguous: the entity moved between
