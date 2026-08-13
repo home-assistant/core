@@ -51,14 +51,14 @@ async def test_adam_water_heater_setpoint_change(
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
-            ATTR_OPERATION_MODE: "eco",
+            ATTR_OPERATION_MODE: "comfort",
             ATTR_TEMPERATURE: 55,
         },
         blocking=True,
     )
     assert mock_smile_adam_jip.set_dhw_mode.call_count == 1
     mock_smile_adam_jip.set_dhw_mode.assert_called_with(
-        "dhw_mode", "e4684553153b44afbef2200885f379dc", "eco", 2
+        "dhw_mode", "e4684553153b44afbef2200885f379dc", "comfort", 2
     )
     assert mock_smile_adam_jip.set_number.call_count == 1
     mock_smile_adam_jip.set_number.assert_called_with(
