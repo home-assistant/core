@@ -109,3 +109,14 @@ set_home_cooling_mode:
       example: 3014xxxxxxxxxxxxxxxxxxxx
       selector:
         text:
+
+pull_latch:
+  target:
+    entity:
+      integration: homematicip_cloud
+      domain: button
+  fields:
+    pin:
+      example: "1234"
+      selector:
+        text:

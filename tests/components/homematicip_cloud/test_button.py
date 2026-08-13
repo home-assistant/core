@@ -4,10 +4,17 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.homematicip_cloud.button import (
+    ATTR_PIN,
+    SERVICE_PULL_LATCH,
+)
+from homeassistant.components.homematicip_cloud.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .helper import HomeFactory, get_and_check_entity_basics
@@ -175,3 +182,86 @@ async def test_hmip_full_flush_door_controller_button(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == now.isoformat()
+
+
+async def test_hmip_full_flush_lock_controller_pull_latch_with_pin(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    full_flush_lock_controller_device_data: dict[str, Any],
+) -> None:
+    """The pull_latch action forwards the PIN the button press cannot carry."""
+    entity_id = "button.universal_motorschloss_controller_door_opener"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Universal Motorschloss Controller"],
+        extra_devices=[full_flush_lock_controller_device_data],
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    auth_channel = next(
+        ch
+        for ch in hmip_device.functionalChannels
+        if ch.functionalChannelType.name == "ACCESS_AUTHORIZATION_CHANNEL"
+        and ch.channelRole == "DOOR_OPENER_ACTUATOR"
+    )
+
+    with patch.object(
+        auth_channel, "async_pull_latch", new_callable=AsyncMock
+    ) as mock_pull_latch:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PULL_LATCH,
+            {ATTR_ENTITY_ID: entity_id, ATTR_PIN: "1234"},
+            blocking=True,
+        )
+
+    mock_pull_latch.assert_awaited_once_with("1234")
+
+
+async def test_hmip_full_flush_lock_controller_pull_latch_without_pin(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    full_flush_lock_controller_device_data: dict[str, Any],
+) -> None:
+    """Without a PIN the action behaves like a plain button press."""
+    entity_id = "button.universal_motorschloss_controller_door_opener"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Universal Motorschloss Controller"],
+        extra_devices=[full_flush_lock_controller_device_data],
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    auth_channel = next(
+        ch
+        for ch in hmip_device.functionalChannels
+        if ch.functionalChannelType.name == "ACCESS_AUTHORIZATION_CHANNEL"
+        and ch.channelRole == "DOOR_OPENER_ACTUATOR"
+    )
+
+    with patch.object(
+        auth_channel, "async_pull_latch", new_callable=AsyncMock
+    ) as mock_pull_latch:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PULL_LATCH,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    mock_pull_latch.assert_awaited_once_with(None)
+
+
+async def test_hmip_pull_latch_on_non_opener_button(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Targeting a button that is not a door opener reports a clear error."""
+    entity_name = "Garagentor"
+    await default_mock_hap_factory.async_get_mock_hap(test_devices=[entity_name])
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PULL_LATCH,
+            {ATTR_ENTITY_ID: "button.garagentor"},
+            blocking=True,
+        )
