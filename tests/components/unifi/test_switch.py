@@ -1394,7 +1394,6 @@ async def test_object_oriented_network_configs(
     entity_id = "switch.unifi_network_nintendo_switch_block_internet"
     assert hass.states.get("switch.unifi_network_vpn_traffic_route") is None
 
-    # Validate state object
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
@@ -1406,7 +1405,6 @@ async def test_object_oriented_network_configs(
         f"/object-oriented-network-config/{config['id']}"
     )
 
-    # Disable Policy Engine rule
     aioclient_mock.put(config_url)
 
     call_count = aioclient_mock.call_count
@@ -1431,7 +1429,6 @@ async def test_object_oriented_network_configs(
 
     call_count = aioclient_mock.call_count
 
-    # Enable Policy Engine rule
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_on",
