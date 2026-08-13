@@ -718,7 +718,10 @@ async def test_thermostat_heatit_z_trm6(
 
 
 async def test_thermostat_heatit_z_trm7(
-    hass: HomeAssistant, client, climate_heatit_z_trm7, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_heatit_z_trm7: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test a heatit Z-TRM7 entity switches current_temperature with sensor mode."""
     node = climate_heatit_z_trm7

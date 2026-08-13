@@ -917,7 +917,9 @@ def climate_heatit_z_trm6_fixture(client, climate_heatit_z_trm6_state) -> Node:
 
 
 @pytest.fixture(name="climate_heatit_z_trm7")
-def climate_heatit_z_trm7_fixture(client, climate_heatit_z_trm7_state) -> Node:
+def climate_heatit_z_trm7_fixture(
+    client: MagicMock, climate_heatit_z_trm7_state: dict[str, Any]
+) -> Node:
     """Mock a climate HEATIT Z-TRM7 node."""
     node = Node(client, copy.deepcopy(climate_heatit_z_trm7_state))
     client.driver.controller.nodes[node.node_id] = node
