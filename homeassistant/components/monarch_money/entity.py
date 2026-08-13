@@ -88,14 +88,3 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
     def account_data(self) -> MonarchAccount:
         """Return the account data."""
         return self.coordinator.data.account_data[self._account_id]
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return account owner attributes."""
-        if not self.account_data.account_owner:
-            return {}
-        owner_name = self.account_data.account_owner.get(
-            "displayName"
-        ) or self.account_data.account_owner.get("name")
-        return {"account_owner": owner_name} if owner_name else {}
