@@ -3273,9 +3273,9 @@ async def test_entity_move_with_claimed_unique_id(
 ) -> None:
     """Test a device move whose target unique_id is already claimed.
 
-    An orphaned registry entry holding the target unique_id must not
-    abort the update; the move keeps its old unique_id and the rest of
-    the entities are still processed.
+    A stale orphan claiming the target unique_id is removed so the
+    moved entity keeps its identity, and the rest of the entities are
+    still processed.
     """
     sub_devices = [
         SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
@@ -3343,7 +3343,14 @@ async def test_entity_move_with_claimed_unique_id(
 
     # The update completed: the sibling still processes states
     assert hass.states.get("binary_sensor.test_other").state == STATE_OFF
-    assert entity_registry.async_get(orphan.entity_id) is not None
+    # The orphan was removed and the moved entity kept its identity
+    # with the new unique_id
+    assert entity_registry.async_get(orphan.entity_id) is None
+    moved_entry = entity_registry.async_get("binary_sensor.test_foo")
+    assert moved_entry is not None
+    assert moved_entry.unique_id == build_device_unique_id(
+        device.device_info.mac_address, moved_info
+    )
 
 
 async def test_mover_does_not_adopt_other_movers_state(
@@ -3396,3 +3403,65 @@ async def test_mover_does_not_adopt_other_movers_state(
 
     assert hass.states.get("binary_sensor.test_sensor_one").state == STATE_UNKNOWN
     assert hass.states.get("binary_sensor.test_sensor_two").state == STATE_UNKNOWN
+
+
+async def test_entity_move_with_disabled_claimant(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a device move whose target unique_id is claimed by a disabled entry.
+
+    The disabled entry is kept so the disable preference survives; the
+    moved entity binds to it and stays disabled.
+    """
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
+    ]
+    device_info = {
+        "devices": sub_devices,
+    }
+    entity_info = [
+        BinarySensorInfo(
+            object_id="foo",
+            key=1,
+            name="Foo",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert hass.states.get("binary_sensor.test_foo").state == STATE_ON
+
+    # A disabled registry entry claims Foo's post move unique_id
+    moved_info = BinarySensorInfo(
+        object_id="foo",
+        key=1,
+        name="Foo",
+        device_id=11111111,
+    )
+    claimant = entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        build_device_unique_id(device.device_info.mac_address, moved_info),
+        config_entry=device.entry,
+    )
+    entity_registry.async_update_entity(
+        claimant.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+
+    await reconnect_with_updated_entity_info(hass, device, [moved_info], states=[])
+
+    # The disabled claimant survives with its disable preference and
+    # the moved entity is not added
+    kept = entity_registry.async_get(claimant.entity_id)
+    assert kept is not None
+    assert kept.disabled_by is er.RegistryEntryDisabler.USER
+    assert hass.states.get("binary_sensor.test_foo").state == STATE_UNAVAILABLE

@@ -165,15 +165,28 @@ def async_static_info_updated(
 
         updates: dict[str, Any] = {}
 
-        # Update unique_id if it changed and the new one is not claimed
+        # Update unique_id if it changed. A claimant of the new
+        # unique_id is a stale orphan and is removed so the moved
+        # entity keeps its identity and helpers; a disabled claimant
+        # is kept so the disable preference survives.
         if old_unique_id != unique_id:
-            if ent_reg.async_get_entity_id(platform.domain, DOMAIN, unique_id):
-                _LOGGER.debug(
-                    "Cannot migrate unique_id %s -> %s: already claimed",
-                    old_unique_id,
-                    unique_id,
-                )
-            else:
+            migrate = True
+            if claimant_id := ent_reg.async_get_entity_id(
+                platform.domain, DOMAIN, unique_id
+            ):
+                claimant = ent_reg.async_get(claimant_id)
+                if claimant is not None and claimant.disabled_by is not None:
+                    _LOGGER.debug(
+                        "Cannot migrate unique_id %s -> %s: claimed by "
+                        "disabled entry %s",
+                        old_unique_id,
+                        unique_id,
+                        claimant_id,
+                    )
+                    migrate = False
+                else:
+                    ent_reg.async_remove(claimant_id)
+            if migrate:
                 updates["new_unique_id"] = unique_id
 
         # Update device assignment in registry
