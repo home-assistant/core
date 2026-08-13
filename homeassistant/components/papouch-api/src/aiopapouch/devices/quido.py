@@ -104,7 +104,6 @@ class QuidoBase(PapouchDevice, ABC):
                 "min_value": 0,
                 "max_value": (2**self.size_counter_bits) - 1,
                 "step": 1,
-                "icon": "mdi:arrow-down-bold-box",
             }
             for i in range(1, self.number_inputs + 1)
         ]
@@ -123,7 +122,6 @@ class QuidoBase(PapouchDevice, ABC):
                 "step": 0.5,
                 "unit": "s",
                 "mode": "box",
-                "icon": "mdi:flash" if action == "on" else "mdi:flash-off",
             }
             for i in range(1, self.number_outputs + 1)
             for action in ("on", "off")
@@ -155,7 +153,6 @@ class QuidoBase(PapouchDevice, ABC):
                     "placeholder": {"placeholder": str(i)},
                     "state_class": "total",
                     "unit": "pulses",
-                    "icon": "mdi:square-wave",
                 }
                 for i in range(1, self.number_inputs + 1)
             ]

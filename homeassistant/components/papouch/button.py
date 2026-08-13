@@ -59,9 +59,6 @@ class PapouchCommandButton(PapouchEntity, ButtonEntity):
             if "placeholder" in btn_data:
                 self._attr_translation_placeholders = btn_data["placeholder"]
 
-        if "icon" in btn_data:
-            self._attr_icon = btn_data["icon"]
-
     @override
     async def async_press(self) -> None:
         """Execute the command."""

@@ -292,7 +292,6 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                         "min_value": 0,
                         "max_value": (2**self.size_counter_bits) - 1,
                         "step": 10 ** (-int(input_data.decimal_count)),
-                        "icon": "mdi:arrow-down-bold-box",
                     },
                     {
                         "item_id": f"{item_id}",
@@ -303,7 +302,6 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                         "min_value": 0,
                         "max_value": (2**self.size_counter_bits) - 1,
                         "step": 10 ** (-int(input_data.decimal_count)),
-                        "icon": "mdi:pencil-box-multiple-outline",
                     },
                 ]
             )
@@ -323,7 +321,6 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                     "use_custom_name": True,
                     "state_class": "total",
                     "unit": item_data.unit,
-                    "icon": "mdi:square-wave",
                 }
             )
 
@@ -409,7 +406,6 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                             "type": "sensor",
                             "translation": "sensor_wind_direction_placeholder",
                             "placeholder": {"placeholder": sensor_name},
-                            "icon": "mdi:compass",
                         }
 
                         if unit_str == "°":

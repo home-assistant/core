@@ -188,7 +188,6 @@ class PapouchDevice(ABC):
             "translation": str (Optional), # Key in strings.json
             "placeholder": dict[str, str] (Optional), # Translation formatting vars
             "use_custom_name": bool (Optional), # If True, 'name' is forced and translation ignored
-            "icon": str (Optional) # e.g. mdi:gesture-tap-button
         }
         """
 
@@ -205,7 +204,6 @@ class PapouchDevice(ABC):
             "placeholder": dict[str, str] (Optional),
             "use_custom_name": bool (Optional),
             "device_class": str (Optional),
-            "icon": str (Optional) # e.g. mdi:radiobox-blank
         }
         """
 
@@ -226,7 +224,6 @@ class PapouchDevice(ABC):
             "max_value": float | int,
             "step": float | int,
             "unit": str (Optional),
-            "icon": str (Optional) # e.g. mdi:numeric
         }
         """
 
@@ -245,7 +242,6 @@ class PapouchDevice(ABC):
             "device_class": str (Optional),
             "state_class": str (Optional),
             "unit": str (Optional),
-            "icon": str (Optional) # e.g. mdi:square-wave
         }
         """
 
@@ -260,7 +256,6 @@ class PapouchDevice(ABC):
             "translation": str (Optional),
             "placeholder": dict[str, str] (Optional),
             "use_custom_name": bool (Optional),
-            "icon": str (Optional) # e.g. mdi:power
         }
         """
 
@@ -277,7 +272,6 @@ class PapouchDevice(ABC):
             "translation": str (Optional),
             "placeholder": dict[str, str] (Optional),
             "use_custom_name": bool (Optional),
-            "icon": str (Optional) # e.g. mdi:form-dropdown
         }
         """
 

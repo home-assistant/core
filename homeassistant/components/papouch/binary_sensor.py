@@ -58,8 +58,6 @@ class PapouchBinarySensor(PapouchEntity, BinarySensorEntity):
 
         if "device_class" in sensor_data:
             self._attr_device_class = sensor_data["device_class"]
-        if "icon" in sensor_data:
-            self._attr_icon = sensor_data["icon"]
 
     @override
     @property

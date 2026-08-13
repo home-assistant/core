@@ -58,9 +58,6 @@ class PapouchSwitch(PapouchEntity, SwitchEntity):
             if "placeholder" in switch_data:
                 self._attr_translation_placeholders = switch_data["placeholder"]
 
-        if "icon" in switch_data:
-            self._attr_icon = switch_data["icon"]
-
     @override
     @property
     def is_on(self) -> bool | None:

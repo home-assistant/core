@@ -62,8 +62,6 @@ class PapouchSensor(PapouchEntity, SensorEntity):
             self._attr_state_class = sensor_data["state_class"]
         if "unit" in sensor_data:
             self._attr_native_unit_of_measurement = sensor_data["unit"]
-        if "icon" in sensor_data:
-            self._attr_icon = sensor_data["icon"]
 
     @override
     @property
