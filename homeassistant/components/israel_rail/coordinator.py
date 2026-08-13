@@ -84,13 +84,14 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
 
     @override
     async def _async_update_data(self) -> list[DataConnection]:
+        query_time = dt_util.now()
         try:
             train_routes = await self.hass.async_add_executor_job(
                 self._train_schedule.query,
                 self._start,
                 self._destination,
-                datetime.now().strftime("%Y-%m-%d"),  # pylint: disable=home-assistant-enforce-naive-now
-                datetime.now().strftime("%H:%M"),  # pylint: disable=home-assistant-enforce-naive-now
+                query_time.strftime("%Y-%m-%d"),
+                query_time.strftime("%H:%M"),
             )
         except Exception as e:
             raise UpdateFailed(
