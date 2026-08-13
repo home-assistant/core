@@ -275,5 +275,6 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                         },
                     ) from err
             finally:
+                self._update_done()
                 self.coordinator.in_progress = False
                 self._finished_event.clear()

@@ -320,6 +320,10 @@ async def test_update_reboot_timeout(
         ):
             await install_task
 
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
 
 @pytest.mark.parametrize(
     "entity_id",
