@@ -57,20 +57,8 @@ BINARY_SENSORS: list[BinarySensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
-        key="presets_function",
-        translation_key="presets_function",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    BinarySensorEntityDescription(
         key="fall_asleep_status",
         translation_key="fall_asleep_status",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    BinarySensorEntityDescription(
-        key="portable_sense",
-        translation_key="portable_sense",
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
