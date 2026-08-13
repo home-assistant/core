@@ -2207,31 +2207,28 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         else:
             connections = _normalize_connections(connections)
 
-        device: DeviceEntry | None = self.devices.get_entry(
+        # A child is referenced via parent_device_id, not adopted by a device info
+        if (
+            matched_child_device := self.child_devices.get_entry(
+                identifiers=identifiers, config_entry_id=config_entry_id
+            )
+        ) is not None:
+            raise DeviceInfoError(
+                config_entry.domain,
+                device_info,
+                f"identifiers {sorted(identifiers)} overlap with those of child device "
+                f"{matched_child_device.id} with identifiers "
+                f"{sorted(matched_child_device.identifiers)}",
+            )
+
+        device = self.devices.get_entry(
             connections=connections,
             identifiers=identifiers,
             config_entry_id=config_entry_id,
         )
-        matched_child_device: ChildDeviceEntry | None = None
-
-        # We do not allow registering a device without parent_device_id if the
-        # identifiers match an existing child.
-        #
-        # Reject registering a device whose identifiers belong to an existing child
-        # device: a child is referenced via parent_device_id, not adopted by a plain
-        # device info. The matched child is rejected below.
-        #
-        # Only look for a child when no connections were passed. A child device has no
-        # connections, so a device info that carries connections describes a different
-        # (main) device; an identifier overlap with a child is handle by the collision
-        # reconciliation below, not a child reference to reject.
-        if device is None and not connections:
-            matched_child_device = self.child_devices.get_entry(
-                identifiers=identifiers, config_entry_id=config_entry_id
-            )
 
         self._async_reconcile_collisions(
-            device if device is not None else matched_child_device,
+            device,
             config_entry,
             device_info,
             identifiers,
@@ -2241,17 +2238,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # Collision reconciliation can update the matched device (e.g. detach
             # its via link)
             device = self.devices[device.id]
-        elif matched_child_device is not None:
-            # A device info whose identifiers belong to a child device is ambiguous: a
-            # child device is referenced explicitly via parent_device_id, not attached
-            # to by a device info. Raise rather than silently return or adopt the child.
-            raise DeviceInfoError(
-                config_entry.domain,
-                device_info,
-                f"identifiers {sorted(identifiers)} belong to child device "
-                f"{matched_child_device.id}; declare it with parent_device_id "
-                "to reference it",
-            )
 
         # Resolved after collision reconciliation so a removed stale duplicate can't be
         # linked
@@ -2567,6 +2553,23 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             identifiers=identifiers, config_entry_id=config_entry_id
         )
 
+        # Identifiers are unique per config entry, so raise if identifiers are
+        # owned by another child device.
+        for identifier in sorted(identifiers):
+            if (
+                other_child := self.child_devices.get_entry(
+                    identifiers={identifier}, config_entry_id=config_entry_id
+                )
+            ) is not None and (
+                child_device is None or other_child.id != child_device.id
+            ):
+                raise DeviceInfoError(
+                    domain,
+                    device_info,
+                    f"identifier {identifier} is already registered for child "
+                    f"device {other_child.id} of the same config entry",
+                )
+
         if child_device is not None and child_device.parent_device_id != parent.id:
             raise DeviceInfoError(
                 domain,
@@ -2591,16 +2594,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
         self._async_reconcile_collisions(
-            child_device if child_device is not None else matched_device,
+            matched_device,
             config_entry,
             device_info,
             identifiers,
             set(),
         )
-        if child_device is not None:
-            # Collision reconciliation can update the matched child device
-            child_device = self.child_devices[child_device.id]
-        elif matched_device is not None:
+        if child_device is None and matched_device is not None:
             # The identifiers are registered by a full device of the config entry:
             # the integration split the device into child devices, so convert it,
             # preserving its id.
@@ -2698,6 +2698,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "devices itself, and a child device can't be the parent of another "
                 "child device",
             )
+        # The caller guarantees device and parent share the config entry; only
+        # subentry agreement is left to check
         if device.config_subentry_id != parent.config_subentry_id:
             raise DeviceInfoError(
                 config_entry.domain,
@@ -2728,7 +2730,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         The caller must have validated the conversion with
         _async_validate_device_to_child_conversion.
         """
-        self.hass.verify_event_loop_thread("device_registry.async_get_or_create")
+        self.hass.verify_event_loop_thread("device_registry.async_get_or_create_child")
 
         # The update event reports the old values of every conceptually changed
         # field: the fields a child device does not have change to None / empty.
@@ -3312,7 +3314,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         child_device_id: str,
         *,
-        allow_collisions: bool = False,
         area_id: str | UndefinedType | None = UNDEFINED,
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         is_new: bool = False,
@@ -3343,7 +3344,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 child_device_id,
                 old.config_entry_id,
                 merge_identifiers,
-                allow_collisions,
             )
             old_identifiers = old.identifiers
             if not merge_identifiers.issubset(old_identifiers):
@@ -3357,7 +3357,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     child_device_id,
                     old.config_entry_id,
                     new_identifiers,
-                    allow_collisions,
                 )
             )
             old_values["identifiers"] = old.identifiers
@@ -3667,7 +3666,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     @callback
     def _async_reconcile_collisions(
         self,
-        matched_device: AnyDeviceEntry | None,
+        matched_device: DeviceEntry | None,
         config_entry: ConfigEntry,
         device_info: DeviceInfo,
         identifiers: set[tuple[str, str]],
@@ -3677,15 +3676,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         Shared keys are stripped from stale duplicates (devices not registered this
         setup session); a duplicate left without any keys is removed. A collision
-        with a device registered this setup session raises. Devices and child
-        devices share the per-config-entry key namespace, so both are considered.
+        with a device registered this setup session raises.
         """
         matched_device_id: str | None = None
         if matched_device is not None:
             matched_device_id = matched_device.id
-            if isinstance(matched_device, ChildDeviceEntry):
-                identifiers = matched_device.identifiers | identifiers
-            elif not matched_device.has_composite_identifiers:
+            if not matched_device.has_composite_identifiers:
                 identifiers = matched_device.identifiers | identifiers
                 connections = matched_device.connections | connections
         colliding = self.devices.get_colliding_device_ids(
@@ -3694,14 +3690,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             config_entry_id=config_entry.entry_id,
             exclude_device_id=matched_device_id,
         )
-        child_colliding: dict[str, set[tuple[str, str]]] = {}
-        for identifier in identifiers:
-            if (
-                child_holder := self.child_devices.get_entry(
-                    identifiers={identifier}, config_entry_id=config_entry.entry_id
-                )
-            ) is not None and child_holder.id != matched_device_id:
-                child_colliding.setdefault(child_holder.id, set()).add(identifier)
         live_device_ids = self._live_device_ids.get(config_entry.entry_id, ())
         for holder_id, (shared_identifiers, shared_connections) in colliding.items():
             if holder_id not in live_device_ids:
@@ -3712,15 +3700,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"identifiers or connections "
                 f"{sorted(shared_identifiers | shared_connections)} are already "
                 f"registered for device {holder_id} of the same config entry",
-            )
-        for holder_id, child_shared_identifiers in child_colliding.items():
-            if holder_id not in live_device_ids:
-                continue
-            raise DeviceInfoError(
-                config_entry.domain,
-                device_info,
-                f"identifiers {sorted(child_shared_identifiers)} are already "
-                f"registered for child device {holder_id} of the same config entry",
             )
         for holder_id, (shared_identifiers, shared_connections) in colliding.items():
             holder = self.devices[holder_id]
@@ -3746,33 +3725,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if shared_connections:
                 strip_values["new_connections"] = remaining_connections
             self._async_update_device(holder_id, allow_collisions=True, **strip_values)
-        for holder_id, child_shared_identifiers in child_colliding.items():
-            # A colliding device removed above may have cascade-removed this child
-            if holder_id not in self.child_devices:
-                continue
-            child_holder = self.child_devices[holder_id]
-            child_remaining_identifiers = (
-                child_holder.identifiers - child_shared_identifiers
-            )
-            if not child_remaining_identifiers:
-                _LOGGER.debug(
-                    "Removing child device %s, its identifiers are all registered "
-                    "by another device of the same config entry",
-                    holder_id,
-                )
-                self.async_remove_device(holder_id)
-                continue
-            _LOGGER.debug(
-                "Stripping %s from child device %s, registered by another device "
-                "of the same config entry",
-                sorted(child_shared_identifiers),
-                holder_id,
-            )
-            self._async_update_child_device(
-                holder_id,
-                allow_collisions=True,
-                new_identifiers=child_remaining_identifiers,
-            )
 
     @callback
     def _async_purge_colliding_deleted_devices(
@@ -3878,16 +3830,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         child_device_id: str,
         config_entry_id: str,
         identifiers: set[tuple[str, str]],
-        allow_collisions: bool,
     ) -> set[tuple[str, str]]:
         """Validate child device identifiers, raise on collision.
 
         Identifiers are unique per config entry, in a namespace shared between
         devices and child devices.
         """
-        if allow_collisions:
-            return identifiers
-
         for identifier in identifiers:
             if (
                 existing_child_device := self.child_devices.get_entry(

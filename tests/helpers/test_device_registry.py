@@ -10501,7 +10501,7 @@ async def test_link_device_info_matching_child_raises(
         device_registry, mock_config_entry.entry_id
     )
 
-    with pytest.raises(dr.DeviceInfoError, match="belong to child device"):
+    with pytest.raises(dr.DeviceInfoError, match="overlap with those of child device"):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             identifiers=identifiers,
@@ -10610,7 +10610,7 @@ async def test_primary_device_info_matching_child_raises(
         device_registry, mock_config_entry.entry_id
     )
 
-    with pytest.raises(dr.DeviceInfoError, match="belong to child device"):
+    with pytest.raises(dr.DeviceInfoError, match="overlap with those of child device"):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             identifiers={("test", "strip_outlet_1")},
@@ -11168,31 +11168,36 @@ async def test_async_cleanup_removes_child_device_with_stale_config_entry(
 
 
 @pytest.mark.usefixtures("hass")
-async def test_child_device_stale_identifier_reconciliation(
+async def test_device_info_with_connections_matching_child_raises(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a stale child device's colliding identifiers are reconciled."""
+    """Test a device info with connections claiming a child's identifier raises.
+
+    Child device identifier collisions are always rejected, even for a stale child
+    and even when the device info carries connections.
+    """
     _, child_device = _create_parent_and_child(
         device_registry, mock_config_entry.entry_id
     )
-    # Make all devices of the config entry stale (a new setup session starts)
+    # A new setup session: the child device is stale, but is still not adopted
     device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
 
-    # A device registering the stale child device's only identifier replaces it,
-    # restoring the identity (id) from the deleted child device
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
-        identifiers={("test", "strip_outlet_1")},
-        name="Not an outlet",
-    )
-    assert isinstance(device, dr.DeviceEntry)
-    assert device.id == child_device.id
+    with pytest.raises(dr.DeviceInfoError, match="overlap with those of child device"):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+            identifiers={("test", "strip_outlet_1")},
+            name="Not an outlet",
+        )
+
+    # The rejection leaves the child device untouched and creates no main device
     assert (
-        device_registry.async_get(child_device.id, include_main_devices=False) is None
+        device_registry.async_get(child_device.id, include_main_devices=False)
+        is child_device
     )
-    assert not device_registry.child_devices
+    assert len(device_registry.child_devices) == 1
+    assert len(device_registry.devices) == 1
 
 
 @pytest.mark.usefixtures("hass")
@@ -11213,16 +11218,15 @@ async def test_live_child_device_identifier_collision_raises(
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
 
     # A device matched by its own identifier that also claims a live child's identifier
-    # collides with the child and is rejected by reconciliation. (Claiming only the
-    # child's identifier instead routes to conversion, covered separately.)
-    with pytest.raises(dr.DeviceInfoError, match="already registered for child"):
+    # collides with the child and is rejected
+    with pytest.raises(dr.DeviceInfoError, match="overlap with those of child device"):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             identifiers={("test", "hub"), ("test", "strip_outlet_1")},
             name="Hub",
         )
 
-    # The raise precedes every strip/remove in reconciliation, so nothing changed
+    # The raise precedes reconciliation, so nothing changed
     unchanged_child = device_registry.async_get(child_device.id)
     assert isinstance(unchanged_child, dr.ChildDeviceEntry)
     assert unchanged_child is child_device
@@ -11870,35 +11874,18 @@ async def test_child_device_identifier_collision_with_other_child(
     )
 
 
-@pytest.mark.parametrize(
-    ("child_identifiers", "expected_remaining"),
-    [
-        pytest.param({("test", "strip_outlet_1")}, None, id="all_taken_removes_child"),
-        pytest.param(
-            {("test", "strip_outlet_1"), ("test", "strip_outlet_1_alias")},
-            {("test", "strip_outlet_1_alias")},
-            id="partial_strip",
-        ),
-    ],
-)
 @pytest.mark.usefixtures("hass")
-async def test_stale_child_device_collision_stripped_or_removed(
+async def test_stale_child_device_identifier_collision_raises(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    child_identifiers: set[tuple[str, str]],
-    expected_remaining: set[tuple[str, str]] | None,
 ) -> None:
-    """Test a stale child device colliding with a registration is stripped or removed.
+    """Test a device claiming a stale child's identifier raises.
 
-    Registering a device matched by its own identifier that also claims a stale child's
-    identifier strips that identifier from the child, removing the child if it has no
-    other identifier.
+    Child device identifier collisions are rejected regardless of whether the child
+    was registered this setup session; stale children are never stripped or removed.
     """
     _, child_device = _create_parent_and_child(
         device_registry, mock_config_entry.entry_id
-    )
-    device_registry.async_update_child_device(
-        child_device.id, new_identifiers=child_identifiers
     )
     hub = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -11908,18 +11895,62 @@ async def test_stale_child_device_collision_stripped_or_removed(
     # A new setup session: every device of the config entry is now stale
     device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
 
-    registered = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={("test", "hub"), ("test", "strip_outlet_1")},
-        name="Hub",
-    )
-    # The registration is matched to the hub by its own identifier and adopts the
-    # stripped identifier
-    assert registered.id == hub.id
-    assert ("test", "strip_outlet_1") in registered.identifiers
+    with pytest.raises(dr.DeviceInfoError, match="overlap with those of child device"):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("test", "hub"), ("test", "strip_outlet_1")},
+            name="Hub",
+        )
 
-    result = device_registry.async_get(child_device.id, include_main_devices=False)
-    assert (result.identifiers if result is not None else None) == expected_remaining
+    # The rejection leaves the child device and the hub untouched
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False)
+        is child_device
+    )
+    assert child_device.identifiers == {("test", "strip_outlet_1")}
+    assert device_registry.async_get(hub.id) is hub
+    assert hub.identifiers == {("test", "hub")}
+
+
+@pytest.mark.usefixtures("hass")
+async def test_get_or_create_child_identifier_owned_by_other_child_raises(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a child registration claiming another child's identifier raises.
+
+    A registration spanning the identifiers of two children is rejected instead of
+    merging them, even when the children are stale.
+    """
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+    other_child = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_2")},
+        parent_device_id=parent.id,
+        name="Outlet 2",
+    )
+    # A new setup session: both children are stale
+    device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
+
+    with pytest.raises(dr.DeviceInfoError, match="already registered for child"):
+        device_registry.async_get_or_create_child(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("test", "strip_outlet_1"), ("test", "strip_outlet_2")},
+            parent_device_id=parent.id,
+            name="Merged outlet",
+        )
+
+    # The rejection leaves both children untouched
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False)
+        is child_device
+    )
+    assert (
+        device_registry.async_get(other_child.id, include_main_devices=False)
+        is other_child
+    )
 
 
 @pytest.mark.usefixtures("hass")
