@@ -13,7 +13,7 @@
         'smooth',
       ]),
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
-        <ColorMode.HS: 'hs'>,
+        <ColorMode.RGB: 'rgb'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -63,7 +63,7 @@
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
       <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
-        <ColorMode.HS: 'hs'>,
+        <ColorMode.RGB: 'rgb'>,
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,

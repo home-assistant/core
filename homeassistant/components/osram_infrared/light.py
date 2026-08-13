@@ -12,7 +12,7 @@ from homeassistant.components.infrared import (
 )
 from homeassistant.components.light import (
     ATTR_EFFECT,
-    ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
     EFFECT_OFF,
     ColorMode,
     LightEntity,
@@ -22,6 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .const import CONF_IR_EMITTER_ENTITY_ID, CONF_IR_RECEIVER_ENTITY_ID
 from .entity import OsramIrEmitterEntity
@@ -32,6 +33,8 @@ PARALLEL_UPDATES = 1
 
 # Use the dedicated white command for colors with low saturation.
 WHITE_SATURATION_THRESHOLD = 45.0
+
+RGB_WHITE: Final[tuple[int, int, int]] = (255, 255, 255)
 
 # The physical remote exposes 15 discrete color presets.
 HUE_TO_CODE: Final[dict[int, OsramLightCode]] = {
@@ -58,6 +61,14 @@ CODE_TO_HUE: Final[dict[OsramLightCode, int]] = {
     code: hue for hue, code in HUE_TO_CODE.items()
 }
 
+CODE_TO_RGB: Final[dict[OsramLightCode, tuple[int, int, int]]] = {
+    OsramLightCode.WHITE: RGB_WHITE,
+    **{
+        code: color_util.color_hs_to_RGB(hue, 100.0)
+        for code, hue in CODE_TO_HUE.items()
+    },
+}
+
 EFFECT_TO_CODE: Final[dict[str, OsramLightCode]] = {
     "flash": OsramLightCode.FLASH,
     "strobe": OsramLightCode.STROBE,
@@ -72,6 +83,8 @@ EFFECT_LIST: Final[list[str]] = [
     EFFECT_OFF,
     *EFFECT_TO_CODE,
 ]
+
+CMD_REPEAT_COUNT = 3
 
 
 async def async_setup_entry(
@@ -116,15 +129,30 @@ def _snap_hue(hue: float) -> int:
     )
 
 
+def _rgb_color_to_code_and_reported_rgb(
+    rgb_color: tuple[int, int, int],
+) -> tuple[OsramLightCode, tuple[int, int, int]]:
+    """Return nearest OSRAM command and reported RGB color for an RGB color."""
+    hue, saturation = color_util.color_RGB_to_hs(*rgb_color)
+
+    if saturation <= WHITE_SATURATION_THRESHOLD:
+        return OsramLightCode.WHITE, RGB_WHITE
+
+    snapped_hue = _snap_hue(hue)
+    code = HUE_TO_CODE[snapped_hue]
+
+    return code, CODE_TO_RGB[code]
+
+
 class OsramIrLight(OsramIrEmitterEntity, LightEntity):
     """Representation of an OSRAM infrared light."""
 
     _attr_assumed_state = True
-    _attr_color_mode = ColorMode.HS
+    _attr_color_mode = ColorMode.RGB
     _attr_effect_list = EFFECT_LIST
-    _attr_hs_color = (0.0, 0.0)
     _attr_name = None
-    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_rgb_color = RGB_WHITE
+    _attr_supported_color_modes = {ColorMode.RGB}
     _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(self, entry: ConfigEntry, emitter_entity_id: str) -> None:
@@ -138,7 +166,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         self._attr_is_on = False
         self._attr_effect = EFFECT_OFF
         self._last_static_color_code = OsramLightCode.WHITE
-        self._last_static_hs_color = (0.0, 0.0)
+        self._last_static_rgb_color = RGB_WHITE
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -146,13 +174,13 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         if not self._attr_is_on:
             await self._async_send_code(
                 OsramLightCode.ON,
-                repeat_count=5,
+                repeat_count=CMD_REPEAT_COUNT,
             )
 
         if (effect := kwargs.get(ATTR_EFFECT)) is not None:
             await self._async_set_effect(effect)
-        elif (hs_color := kwargs.get(ATTR_HS_COLOR)) is not None:
-            await self._async_set_hs_color(hs_color)
+        elif (rgb_color := kwargs.get(ATTR_RGB_COLOR)) is not None:
+            await self._async_set_rgb_color(rgb_color)
 
         self._attr_is_on = True
         self.async_write_ha_state()
@@ -162,45 +190,37 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         """Turn off the light."""
         await self._async_send_code(
             OsramLightCode.OFF,
-            repeat_count=5,
+            repeat_count=CMD_REPEAT_COUNT,
         )
 
         self._update_off_state()
         self.async_write_ha_state()
 
-    async def _async_set_hs_color(
+    async def _async_set_rgb_color(
         self,
-        hs_color: tuple[float, float],
+        rgb_color: tuple[int, int, int],
     ) -> None:
         """Set the nearest supported static color preset."""
-        hue, saturation = hs_color
-
-        if saturation <= WHITE_SATURATION_THRESHOLD:
-            code = OsramLightCode.WHITE
-            reported_hs_color = (0.0, 0.0)
-        else:
-            snapped_hue = _snap_hue(hue)
-            code = HUE_TO_CODE[snapped_hue]
-            reported_hs_color = (float(snapped_hue), 100.0)
+        code, reported_rgb_color = _rgb_color_to_code_and_reported_rgb(rgb_color)
 
         await self._async_send_code(
             code,
-            repeat_count=5,
+            repeat_count=CMD_REPEAT_COUNT,
         )
 
-        self._update_static_color_state(code, reported_hs_color)
+        self._update_static_color_state(code, reported_rgb_color)
 
     async def _async_set_effect(self, effect: str) -> None:
         """Start or stop a native OSRAM effect."""
         if effect == EFFECT_OFF:
             await self._async_send_code(
                 self._last_static_color_code,
-                repeat_count=5,
+                repeat_count=CMD_REPEAT_COUNT,
             )
 
             self._update_static_color_state(
                 self._last_static_color_code,
-                self._last_static_hs_color,
+                self._last_static_rgb_color,
             )
             return
 
@@ -211,7 +231,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
                 f"Unsupported OSRAM infrared effect: {effect}"
             ) from err
 
-        await self._async_send_code(code)
+        await self._async_send_code(code, repeat_count=CMD_REPEAT_COUNT)
         self._update_effect_state(effect)
 
     @callback
@@ -224,20 +244,22 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
     def _update_static_color_state(
         self,
         code: OsramLightCode,
-        hs_color: tuple[float, float],
+        rgb_color: tuple[int, int, int],
     ) -> None:
         """Update the local state after selecting a static color."""
         self._attr_is_on = True
         self._attr_effect = EFFECT_OFF
-        self._attr_hs_color = hs_color
+        self._attr_color_mode = ColorMode.RGB
+        self._attr_rgb_color = rgb_color
         self._last_static_color_code = code
-        self._last_static_hs_color = hs_color
+        self._last_static_rgb_color = rgb_color
 
     @callback
     def _update_effect_state(self, effect: str) -> None:
         """Update the local state after selecting an effect."""
         self._attr_is_on = True
         self._attr_effect = effect
+        self._attr_color_mode = ColorMode.RGB
 
 
 class OsramIrLightWithReceiver(OsramIrLight, InfraredReceiverConsumerEntity):
@@ -294,18 +316,8 @@ class OsramIrLightWithReceiver(OsramIrLight, InfraredReceiverConsumerEntity):
         if code is OsramLightCode.ON:
             return
 
-        if code is OsramLightCode.WHITE:
-            self._update_static_color_state(
-                OsramLightCode.WHITE,
-                (0.0, 0.0),
-            )
-            return
-
-        if (hue := CODE_TO_HUE.get(code)) is not None:
-            self._update_static_color_state(
-                code,
-                (float(hue), 100.0),
-            )
+        if (rgb_color := CODE_TO_RGB.get(code)) is not None:
+            self._update_static_color_state(code, rgb_color)
             return
 
         if (effect := CODE_TO_EFFECT.get(code)) is not None:

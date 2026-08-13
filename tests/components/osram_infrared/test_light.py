@@ -8,12 +8,14 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.infrared import InfraredReceivedSignal
 from homeassistant.components.light import (
     ATTR_EFFECT,
-    ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.components.osram_infrared.const import DOMAIN
+from homeassistant.components.osram_infrared.light import CMD_REPEAT_COUNT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
@@ -52,13 +54,18 @@ async def test_entities(
     """Test all light entities are created with correct attributes."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={("osram_infrared", mock_config_entry.entry_id)}
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry,
+        mock_config_entry.entry_id,
     )
-    assert device_entry
+    assert len(device_entries) == 1
+
+    device_entry = next(iter(device_entries))
+    assert device_entry.identifiers == {(DOMAIN, mock_config_entry.entry_id)}
 
     entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+        entity_registry,
+        mock_config_entry.entry_id,
     )
     for entity_entry in entity_entries:
         assert entity_entry.device_id == device_entry.id
@@ -82,7 +89,7 @@ async def test_turn_on_sends_on_code(
         == [
             OsramLightCode.ON,
         ]
-        * 5
+        * CMD_REPEAT_COUNT
     )
 
     state = hass.states.get("light.osram_light")
@@ -108,7 +115,7 @@ async def test_turn_off_sends_off_code(
         == [
             OsramLightCode.OFF,
         ]
-        * 5
+        * CMD_REPEAT_COUNT
     )
 
     state = hass.states.get("light.osram_light")
@@ -117,40 +124,40 @@ async def test_turn_off_sends_off_code(
 
 
 @pytest.mark.parametrize(
-    ("hs_color", "expected_code", "expected_hs_color"),
+    ("rgb_color", "expected_code", "expected_rgb_color"),
     [
-        ((42.0, 20.0), OsramLightCode.WHITE, (0.0, 0.0)),
-        ((92.0, 100.0), OsramLightCode.HUE_120, (120.0, 100.0)),
-        ((350.0, 100.0), OsramLightCode.HUE_000, (0.0, 100.0)),
+        ((180, 180, 180), OsramLightCode.WHITE, (255, 255, 255)),
+        ((0, 255, 0), OsramLightCode.HUE_120, (0, 255, 0)),
+        ((255, 0, 40), OsramLightCode.HUE_000, (255, 0, 0)),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
-async def test_turn_on_with_hs_color_sends_nearest_color_code(
+async def test_turn_on_with_rgb_color_sends_nearest_color_code(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    hs_color: tuple[float, float],
+    rgb_color: tuple[int, int, int],
     expected_code: OsramLightCode,
-    expected_hs_color: tuple[float, float],
+    expected_rgb_color: tuple[int, int, int],
 ) -> None:
-    """Test setting HS color sends the nearest supported OSRAM color code."""
+    """Test setting RGB color sends the nearest supported OSRAM color code."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_HS_COLOR: hs_color,
+            ATTR_RGB_COLOR: rgb_color,
         },
         blocking=True,
     )
 
     assert mock_infrared_emitter_entity.send_command_calls == [
-        *([OsramLightCode.ON] * 5),
-        *([expected_code] * 5),
+        *([OsramLightCode.ON] * CMD_REPEAT_COUNT),
+        *([expected_code] * CMD_REPEAT_COUNT),
     ]
 
     state = hass.states.get("light.osram_light")
     assert state
-    assert tuple(state.attributes[ATTR_HS_COLOR]) == expected_hs_color
+    assert tuple(state.attributes[ATTR_RGB_COLOR]) == expected_rgb_color
 
 
 @pytest.mark.parametrize(
@@ -180,8 +187,8 @@ async def test_turn_on_with_effect_sends_effect_code(
     )
 
     assert mock_infrared_emitter_entity.send_command_calls == [
-        *([OsramLightCode.ON] * 5),
-        expected_code,
+        *([OsramLightCode.ON] * CMD_REPEAT_COUNT),
+        *([expected_code] * CMD_REPEAT_COUNT),
     ]
 
     state = hass.states.get("light.osram_light")
@@ -200,7 +207,7 @@ async def test_turn_on_with_effect_off_restores_last_static_color(
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_HS_COLOR: (92.0, 100.0),
+            ATTR_RGB_COLOR: (0, 255, 0),
         },
         blocking=True,
     )
@@ -232,14 +239,14 @@ async def test_turn_on_with_effect_off_restores_last_static_color(
         == [
             OsramLightCode.HUE_120,
         ]
-        * 5
+        * CMD_REPEAT_COUNT
     )
 
     state = hass.states.get("light.osram_light")
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
-    assert tuple(state.attributes[ATTR_HS_COLOR]) == (120.0, 100.0)
+    assert tuple(state.attributes[ATTR_RGB_COLOR]) == (0, 255, 0)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -267,7 +274,7 @@ async def test_turn_on_with_unsupported_effect_raises(
         == [
             OsramLightCode.ON,
         ]
-        * 5
+        * CMD_REPEAT_COUNT
     )
 
 
@@ -306,11 +313,11 @@ async def test_receiver_off_code_updates_light_state(
 
 
 @pytest.mark.parametrize(
-    ("received_code", "expected_hs_color"),
+    ("received_code", "expected_rgb_color"),
     [
-        (OsramLightCode.WHITE, (0.0, 0.0)),
-        (OsramLightCode.HUE_120, (120.0, 100.0)),
-        (OsramLightCode.HUE_300, (300.0, 100.0)),
+        (OsramLightCode.WHITE, (255, 255, 255)),
+        (OsramLightCode.HUE_120, (0, 255, 0)),
+        (OsramLightCode.HUE_300, (255, 0, 255)),
     ],
 )
 @pytest.mark.usefixtures("init_integration_with_receiver")
@@ -318,7 +325,7 @@ async def test_receiver_static_color_code_updates_light_state(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
     received_code: OsramLightCode,
-    expected_hs_color: tuple[float, float],
+    expected_rgb_color: tuple[int, int, int],
 ) -> None:
     """Test receiving static color commands updates the assumed color state."""
     command = NECCommand(
@@ -335,8 +342,8 @@ async def test_receiver_static_color_code_updates_light_state(
 
     assert state is not None
     assert state.state == STATE_ON
-    assert tuple(state.attributes[ATTR_HS_COLOR]) == expected_hs_color
-    assert state.attributes[ATTR_EFFECT] == "off"
+    assert tuple(state.attributes[ATTR_RGB_COLOR]) == expected_rgb_color
+    assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
 
 
 @pytest.mark.parametrize(
