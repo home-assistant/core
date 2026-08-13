@@ -13,7 +13,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
 
-INPUT_IMAGE_SCOPE: Final = "images_scope"
+INPUT_IMAGES_SCOPE: Final = "images_scope"
 
 
 class OAuth2FlowHandler(
@@ -25,7 +25,7 @@ class OAuth2FlowHandler(
 
     MINOR_VERSION = 3
 
-    image_scope: bool | None = None
+    images_scope: bool | None = None
 
     @property
     @override
@@ -37,8 +37,7 @@ class OAuth2FlowHandler(
     @override
     def extra_authorize_data(self) -> dict[str, str]:
         return {
-            "scope": "Control Monitor Settings IdentifyAppliance"
-            + (" Images" if self.image_scope else "")
+            "scope": f"Control Monitor Settings IdentifyAppliance{' Images' if self.images_scope else ''}",
         }
 
     @override
@@ -59,17 +58,17 @@ class OAuth2FlowHandler(
     async def async_step_scopes(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Ask the user if he wants to use the image scope."""
+        """Ask for the scopes to use."""
         if user_input is not None:
-            self.image_scope = user_input[INPUT_IMAGE_SCOPE]
-        if self.image_scope is not None:
+            self.images_scope = user_input[INPUT_IMAGES_SCOPE]
+        if self.images_scope is not None:
             return await super().async_step_auth(None)
 
         return self.async_show_form(
             step_id="scopes",
             data_schema=vol.Schema(
                 {
-                    vol.Required(INPUT_IMAGE_SCOPE): bool,
+                    vol.Required(INPUT_IMAGES_SCOPE): bool,
                 }
             ),
         )

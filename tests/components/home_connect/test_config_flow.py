@@ -39,8 +39,7 @@ def assert_authorize_url(url: str, state: str, images_scope: bool | None) -> Non
         "client_id": CLIENT_ID,
         "redirect_uri": "https://example.com/auth/external/callback",
         "state": state,
-        "scope": "Control Monitor Settings IdentifyAppliance"
-        + (" Images" if images_scope else ""),
+        "scope": f"Control Monitor Settings IdentifyAppliance{' Images' if images_scope else ''}",
     }
 
 
