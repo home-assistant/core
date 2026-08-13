@@ -178,9 +178,7 @@ class TsunSensor(TsunEntity, SensorEntity):
         """Initialize a TSUN sensor."""
         super().__init__(coordinator, entry)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.data.device.logger_sn}_{description.key}"
-        )
+        self._attr_unique_id = f"{coordinator.data.device.logger_sn}_{description.key}"
 
     @property
     @override

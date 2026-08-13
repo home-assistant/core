@@ -31,9 +31,7 @@ from .coordinator import get_poll_lock
 _LOGGER = logging.getLogger(__name__)
 
 
-def _connection_schema(
-    *, request_logger_sn: bool = False
-) -> vol.Schema:
+def _connection_schema(*, request_logger_sn: bool = False) -> vol.Schema:
     schema: dict[vol.Marker, Any] = {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
