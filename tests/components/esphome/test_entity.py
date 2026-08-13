@@ -28,6 +28,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
@@ -1851,11 +1852,6 @@ async def test_entities_rekeyed_after_firmware_update(
     assert actions_one == []
     assert actions_two == []
 
-    # States cached under the retired keys must be pruned
-    entry_data = device.entry.runtime_data
-    assert 1 not in entry_data.state[BinarySensorState]
-    assert 2 not in entry_data.state[BinarySensorState]
-
     # State updates must follow the new key
     device.set_state(BinarySensorState(key=101, state=False, missing_state=False))
     await hass.async_block_till_done()
@@ -1983,7 +1979,12 @@ async def test_entity_rekeyed_and_another_removed(
             name="Sensor One",
         ),
     ]
-    await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
+    await reconnect_with_updated_entity_info(
+        hass,
+        device,
+        updated_entity_info,
+        states=[BinarySensorState(key=101, state=True, missing_state=False)],
+    )
 
     new_entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
     assert new_entry_one is not None
@@ -3027,3 +3028,67 @@ async def test_entity_renamed_while_same_named_sibling_moves(
     assert state_main.state == STATE_OFF
     assert state_main.attributes[ATTR_FRIENDLY_NAME] == "Test BATTERY"
     assert state_sub.state == STATE_ON
+
+
+async def test_new_entities_reusing_retired_keys_do_not_adopt_stale_states(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test new entities reusing retired keys start unknown.
+
+    Keys retired by a re-key or a removal may be handed to unrelated
+    entities by a later firmware build; those entities must come up
+    unknown instead of adopting the retired key's last state.
+    """
+    entity_info, states = _two_binary_sensor_setup()
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert hass.states.get("binary_sensor.test_sensor_one").state == STATE_ON
+    assert hass.states.get("binary_sensor.test_sensor_two").state == STATE_ON
+
+    # Sensor One is re-keyed to 101, Sensor Two is removed
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=101,
+            name="Sensor One",
+        ),
+    ]
+    await reconnect_with_updated_entity_info(
+        hass,
+        device,
+        updated_entity_info,
+        states=[BinarySensorState(key=101, state=True, missing_state=False)],
+    )
+    assert hass.states.get("binary_sensor.test_sensor_two") is None
+
+    # A later build hands the retired keys 1 and 2 to new entities;
+    # no states are streamed for them
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=101,
+            name="Sensor One",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_three",
+            key=1,
+            name="Sensor Three",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_four",
+            key=2,
+            name="Sensor Four",
+        ),
+    ]
+    await reconnect_with_updated_entity_info(
+        hass, device, updated_entity_info, states=[]
+    )
+
+    assert hass.states.get("binary_sensor.test_sensor_three").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.test_sensor_four").state == STATE_UNKNOWN

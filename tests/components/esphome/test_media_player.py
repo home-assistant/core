@@ -709,6 +709,9 @@ async def test_media_player_formats_survive_rekey_onto_removed_entity_key(
             key=1,
             name="Player One",
             supports_pause=True,
+            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
+            # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+            feature_flags=1200653,
             supported_formats=formats_one,
         ),
         MediaPlayerInfo(
@@ -734,14 +737,9 @@ async def test_media_player_formats_survive_rekey_onto_removed_entity_key(
     )
     await hass.async_block_till_done()
 
-    entry_data = device.entry.runtime_data
     mac = device.device_info.mac_address
     unique_id_one = build_device_unique_id(mac, entity_info[0])
     unique_id_two = build_device_unique_id(mac, entity_info[1])
-    assert entry_data.media_player_formats == {
-        unique_id_one: formats_one,
-        unique_id_two: formats_two,
-    }
 
     # Player One takes over Player Two's key, Player Two is removed
     updated_entity_info = [
@@ -750,10 +748,22 @@ async def test_media_player_formats_survive_rekey_onto_removed_entity_key(
             key=2,
             name="Player One",
             supports_pause=True,
+            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
+            # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+            feature_flags=1200653,
             supported_formats=formats_one,
         ),
     ]
-    await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
+    await reconnect_with_updated_entity_info(
+        hass,
+        device,
+        updated_entity_info,
+        states=[
+            MediaPlayerEntityState(
+                key=2, volume=50, muted=False, state=MediaPlayerState.IDLE
+            )
+        ],
+    )
 
     assert (
         entity_registry.async_get_entity_id(
@@ -767,6 +777,19 @@ async def test_media_player_formats_survive_rekey_onto_removed_entity_key(
         )
         is None
     )
+
     # The surviving entity's formats must not have been removed by the
-    # removed entity's cleanup
-    assert entry_data.media_player_formats == {unique_id_one: formats_one}
+    # removed entity's cleanup: playing media must still use the proxy
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player_one",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://127.0.0.1/test.mp3",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_called_once()
+    call_args = mock_client.media_player_command.call_args
+    assert "/api/esphome/ffmpeg_proxy/" in call_args.kwargs["media_url"]
