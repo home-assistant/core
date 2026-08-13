@@ -195,6 +195,9 @@
     },
     "send_ir_code_failed": {
       "message": "Failed to send IR code: {error}."
+    },
+    "unknown_effect": {
+      "message": "Unknown effect: {effect}."
     }
   },
   "issues": {
