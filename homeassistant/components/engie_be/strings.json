@@ -1,0 +1,223 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "You are authenticated with a different account than the one set up. Please authenticate with the configured account."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_mfa_code": "Invalid verification code. Please try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "mfa": {
+        "data": {
+          "code": "Verification code"
+        },
+        "data_description": {
+          "code": "The verification code ENGIE Belgium just sent you."
+        },
+        "description": "Enter the 6-digit verification code that was sent to you."
+      },
+      "reauth_confirm": {
+        "data": {
+          "mfa_method": "Two-factor authentication method",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "mfa_method": "Choose how you want to receive your verification code.",
+          "password": "[%key:component::engie_be::config::step::user::data_description::password%]"
+        },
+        "description": "Your stored ENGIE Belgium access has expired for {username}. Enter your password and choose how you want to receive a new verification code. If this prompt keeps reappearing, the most common cause is sharing your ENGIE account between this integration and engie.be or the ENGIE Smart App. A dedicated ENGIE account is required for this integration.",
+        "title": "Reauthenticate ENGIE Belgium"
+      },
+      "reauth_mfa": {
+        "data": {
+          "code": "Verification code"
+        },
+        "data_description": {
+          "code": "The verification code ENGIE Belgium just sent you."
+        },
+        "description": "Enter the 6-digit verification code that was just sent to you to finish re-authenticating.",
+        "title": "Enter verification code"
+      },
+      "user": {
+        "data": {
+          "mfa_method": "Two-factor authentication method",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "Email address"
+        },
+        "data_description": {
+          "mfa_method": "Choose how you want to receive your verification code.",
+          "password": "Your ENGIE Belgium account password.",
+          "username": "Your ENGIE Belgium account email address."
+        },
+        "description": "Enter your ENGIE Belgium credentials and two-factor authentication method. **A dedicated ENGIE account is required**: signing into the same account from engie.be or the ENGIE Smart App appears to revoke the integration's session and force you to re-authenticate. Create a separate user via the [ENGIE user management page]({user_management_url}). New accounts have 2FA enabled by default."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "electricity_price_injection": {
+        "name": "Electricity injection price{ean_suffix}"
+      },
+      "electricity_price_injection_excl_vat": {
+        "name": "Electricity injection price excl. VAT{ean_suffix}"
+      },
+      "electricity_price_injection_offpeak": {
+        "name": "Electricity off-peak injection price{ean_suffix}"
+      },
+      "electricity_price_injection_offpeak_excl_vat": {
+        "name": "Electricity off-peak injection price excl. VAT{ean_suffix}"
+      },
+      "electricity_price_injection_peak": {
+        "name": "Electricity peak injection price{ean_suffix}"
+      },
+      "electricity_price_injection_peak_excl_vat": {
+        "name": "Electricity peak injection price excl. VAT{ean_suffix}"
+      },
+      "electricity_price_injection_slot": {
+        "name": "Electricity injection price ({slot_code}){ean_suffix}"
+      },
+      "electricity_price_injection_slot_excl_vat": {
+        "name": "Electricity injection price excl. VAT ({slot_code}){ean_suffix}"
+      },
+      "electricity_price_injection_superoffpeak": {
+        "name": "Electricity super off-peak injection price{ean_suffix}"
+      },
+      "electricity_price_injection_superoffpeak_excl_vat": {
+        "name": "Electricity super off-peak injection price excl. VAT{ean_suffix}"
+      },
+      "electricity_price_offtake": {
+        "name": "Electricity offtake price{ean_suffix}"
+      },
+      "electricity_price_offtake_excl_vat": {
+        "name": "Electricity offtake price excl. VAT{ean_suffix}"
+      },
+      "electricity_price_offtake_offpeak": {
+        "name": "Electricity off-peak offtake price{ean_suffix}"
+      },
+      "electricity_price_offtake_offpeak_excl_vat": {
+        "name": "Electricity off-peak offtake price excl. VAT{ean_suffix}"
+      },
+      "electricity_price_offtake_peak": {
+        "name": "Electricity peak offtake price{ean_suffix}"
+      },
+      "electricity_price_offtake_peak_excl_vat": {
+        "name": "Electricity peak offtake price excl. VAT{ean_suffix}"
+      },
+      "electricity_price_offtake_slot": {
+        "name": "Electricity offtake price ({slot_code}){ean_suffix}"
+      },
+      "electricity_price_offtake_slot_excl_vat": {
+        "name": "Electricity offtake price excl. VAT ({slot_code}){ean_suffix}"
+      },
+      "electricity_price_offtake_superoffpeak": {
+        "name": "Electricity super off-peak offtake price{ean_suffix}"
+      },
+      "electricity_price_offtake_superoffpeak_excl_vat": {
+        "name": "Electricity super off-peak offtake price excl. VAT{ean_suffix}"
+      },
+      "energy_price_injection": {
+        "name": "Injection price{ean_suffix}"
+      },
+      "energy_price_injection_excl_vat": {
+        "name": "Injection price excl. VAT{ean_suffix}"
+      },
+      "energy_price_injection_offpeak": {
+        "name": "Off-peak injection price{ean_suffix}"
+      },
+      "energy_price_injection_offpeak_excl_vat": {
+        "name": "Off-peak injection price excl. VAT{ean_suffix}"
+      },
+      "energy_price_injection_peak": {
+        "name": "Peak injection price{ean_suffix}"
+      },
+      "energy_price_injection_peak_excl_vat": {
+        "name": "Peak injection price excl. VAT{ean_suffix}"
+      },
+      "energy_price_injection_slot": {
+        "name": "Injection price ({slot_code}){ean_suffix}"
+      },
+      "energy_price_injection_slot_excl_vat": {
+        "name": "Injection price excl. VAT ({slot_code}){ean_suffix}"
+      },
+      "energy_price_injection_superoffpeak": {
+        "name": "Super off-peak injection price{ean_suffix}"
+      },
+      "energy_price_injection_superoffpeak_excl_vat": {
+        "name": "Super off-peak injection price excl. VAT{ean_suffix}"
+      },
+      "energy_price_offtake": {
+        "name": "Offtake price{ean_suffix}"
+      },
+      "energy_price_offtake_excl_vat": {
+        "name": "Offtake price excl. VAT{ean_suffix}"
+      },
+      "energy_price_offtake_offpeak": {
+        "name": "Off-peak offtake price{ean_suffix}"
+      },
+      "energy_price_offtake_offpeak_excl_vat": {
+        "name": "Off-peak offtake price excl. VAT{ean_suffix}"
+      },
+      "energy_price_offtake_peak": {
+        "name": "Peak offtake price{ean_suffix}"
+      },
+      "energy_price_offtake_peak_excl_vat": {
+        "name": "Peak offtake price excl. VAT{ean_suffix}"
+      },
+      "energy_price_offtake_slot": {
+        "name": "Offtake price ({slot_code}){ean_suffix}"
+      },
+      "energy_price_offtake_slot_excl_vat": {
+        "name": "Offtake price excl. VAT ({slot_code}){ean_suffix}"
+      },
+      "energy_price_offtake_superoffpeak": {
+        "name": "Super off-peak offtake price{ean_suffix}"
+      },
+      "energy_price_offtake_superoffpeak_excl_vat": {
+        "name": "Super off-peak offtake price excl. VAT{ean_suffix}"
+      },
+      "gas_price_offtake": {
+        "name": "Gas offtake price{ean_suffix}"
+      },
+      "gas_price_offtake_excl_vat": {
+        "name": "Gas offtake price excl. VAT{ean_suffix}"
+      },
+      "gas_price_offtake_offpeak": {
+        "name": "Gas off-peak offtake price{ean_suffix}"
+      },
+      "gas_price_offtake_offpeak_excl_vat": {
+        "name": "Gas off-peak offtake price excl. VAT{ean_suffix}"
+      },
+      "gas_price_offtake_peak": {
+        "name": "Gas peak offtake price{ean_suffix}"
+      },
+      "gas_price_offtake_peak_excl_vat": {
+        "name": "Gas peak offtake price excl. VAT{ean_suffix}"
+      },
+      "gas_price_offtake_slot": {
+        "name": "Gas offtake price ({slot_code}){ean_suffix}"
+      },
+      "gas_price_offtake_slot_excl_vat": {
+        "name": "Gas offtake price excl. VAT ({slot_code}){ean_suffix}"
+      },
+      "gas_price_offtake_superoffpeak": {
+        "name": "Gas super off-peak offtake price{ean_suffix}"
+      },
+      "gas_price_offtake_superoffpeak_excl_vat": {
+        "name": "Gas super off-peak offtake price excl. VAT{ean_suffix}"
+      }
+    }
+  },
+  "selector": {
+    "mfa_method": {
+      "options": {
+        "email": "Email",
+        "sms": "SMS"
+      }
+    }
+  }
+}

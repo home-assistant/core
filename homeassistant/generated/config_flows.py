@@ -210,6 +210,7 @@ FLOWS = {
         "energieleser",
         "energyid",
         "energyzero",
+        "engie_be",
         "enigma2",
         "enocean",
         "enphase_envoy",
