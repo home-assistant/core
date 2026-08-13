@@ -164,8 +164,15 @@ class MideaClimate(MideaEntity, ClimateEntity):
     _attr_max_temp = TEMPERATURE_MAX
     _attr_min_temp = TEMPERATURE_MIN
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _protocol_hvac_modes: dict[int, HVACMode] = {}
+
     _zone: int | None = None
+
+    def __init__(
+        self, device: MideaClimateDevice, description: MideaClimateEntityDescription
+    ) -> None:
+        """Midea Climate entity init."""
+        self._protocol_hvac_modes: dict[int, HVACMode] = {}
+        super().__init__(device, description)
 
     def _float_attribute(self, attr: str) -> float | None:
         """Return a device attribute as float, if convertible."""
@@ -312,14 +319,6 @@ class MideaACClimate(MideaClimate):
         FAN_AUTO,
     ]
 
-    _protocol_hvac_modes = {
-        1: HVACMode.AUTO,
-        2: HVACMode.COOL,
-        3: HVACMode.DRY,
-        4: HVACMode.HEAT,
-        5: HVACMode.FAN_ONLY,
-    }
-
     _attr_swing_modes: list[str] = [
         SWING_OFF,
         SWING_VERTICAL,
@@ -342,6 +341,13 @@ class MideaACClimate(MideaClimate):
     ) -> None:
         """Midea AC Climate entity init."""
         super().__init__(device, description)
+        self._protocol_hvac_modes = {
+            1: HVACMode.AUTO,
+            2: HVACMode.COOL,
+            3: HVACMode.DRY,
+            4: HVACMode.HEAT,
+            5: HVACMode.FAN_ONLY,
+        }
         self._attr_target_temperature_step = float(
             PRECISION_WHOLE if self._device.temperature_step == 1 else PRECISION_HALVES,
         )
@@ -447,14 +453,6 @@ class MideaCCClimate(MideaClimate):
 
     _device: MideaCCDevice
 
-    _protocol_hvac_modes = {
-        1: HVACMode.FAN_ONLY,
-        2: HVACMode.DRY,
-        3: HVACMode.HEAT,
-        4: HVACMode.COOL,
-        5: HVACMode.AUTO,
-    }
-
     _attr_hvac_modes = [
         HVACMode.OFF,
         HVACMode.FAN_ONLY,
@@ -465,6 +463,19 @@ class MideaCCClimate(MideaClimate):
     ]
     _attr_swing_modes = [SWING_OFF, SWING_ON]
     _attr_preset_modes = [PRESET_NONE, PRESET_SLEEP, PRESET_ECO]
+
+    def __init__(
+        self, device: MideaCCDevice, description: MideaClimateEntityDescription
+    ) -> None:
+        """Midea CC Climate entity init."""
+        super().__init__(device, description)
+        self._protocol_hvac_modes = {
+            1: HVACMode.FAN_ONLY,
+            2: HVACMode.DRY,
+            3: HVACMode.HEAT,
+            4: HVACMode.COOL,
+            5: HVACMode.AUTO,
+        }
 
     @property
     @override
@@ -522,15 +533,20 @@ class MideaCFClimate(MideaClimate):
         HVACMode.HEAT,
     ]
 
-    _protocol_hvac_modes = {
-        1: HVACMode.AUTO,
-        2: HVACMode.COOL,
-        3: HVACMode.HEAT,
-    }
-
     _attr_target_temperature_step: float | None = PRECISION_WHOLE
 
     _attr_supported_features = FEATURES_TARGET_AND_POWER
+
+    def __init__(
+        self, device: MideaCFDevice, description: MideaClimateEntityDescription
+    ) -> None:
+        """Midea CF Climate entity init."""
+        super().__init__(device, description)
+        self._protocol_hvac_modes = {
+            1: HVACMode.AUTO,
+            2: HVACMode.COOL,
+            3: HVACMode.HEAT,
+        }
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -579,11 +595,6 @@ class MideaC3Climate(MideaClimate):
         C3Attributes.zone1_power,
         C3Attributes.zone2_power,
     )
-    _protocol_hvac_modes = {
-        1: HVACMode.AUTO,
-        2: HVACMode.COOL,
-        3: HVACMode.HEAT,
-    }
 
     _attr_hvac_modes = [
         HVACMode.OFF,
@@ -600,6 +611,11 @@ class MideaC3Climate(MideaClimate):
     ) -> None:
         """Midea C3 Climate entity init."""
         super().__init__(device, description)
+        self._protocol_hvac_modes = {
+            1: HVACMode.AUTO,
+            2: HVACMode.COOL,
+            3: HVACMode.HEAT,
+        }
         self._zone = zone
         self._power_attr = MideaC3Climate._powers[zone]
 
