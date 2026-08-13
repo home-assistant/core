@@ -49,13 +49,13 @@ async def test_remove_config_entry_device(
     music_assistant_client.config.remove_player_config = AsyncMock(
         side_effect=ActionUnavailable
     )
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert music_assistant_client.config.remove_player_config.call_count == 1
     assert response["success"] is False
 
     # test if the removal should be allowed if the device is not in use
     music_assistant_client.config.remove_player_config = AsyncMock()
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"] is True
     await hass.async_block_till_done()
     assert not device_registry.async_get(device_entry.id)
@@ -73,7 +73,7 @@ async def test_remove_config_entry_device(
     assert entity_registry.async_get(entity_id)
     assert hass.states.get(entity_id)
     music_assistant_client.config.remove_player_config = AsyncMock()
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert music_assistant_client.config.remove_player_config.call_count == 0
     assert response["success"] is True
 
