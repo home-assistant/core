@@ -102,6 +102,22 @@
       "is_on": true
     },
     {
+      "name": "Garage Light",
+      "is_online": true,
+      "wifi_connected": true,
+      "device_id": 1501,
+      "mesh_device_id": 10007,
+      "home_id": 10000,
+      "device_type_id": 137,
+      "device_type": "LIGHT",
+      "mac_address": "AABBCC778899",
+      "product_id": "product123",
+      "authorize_code": "qrst_code",
+      "is_on": false,
+      "brightness": 70,
+      "color_temp": 30
+    },
+    {
       "name": "Patio Plug Left",
       "is_online": true,
       "wifi_connected": true,
