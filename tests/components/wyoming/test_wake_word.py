@@ -3,8 +3,10 @@
 import asyncio
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from wyoming.asr import Transcript
+from wyoming.error import Error
 from wyoming.info import Info, WakeModel, WakeProgram
 from wyoming.wake import Detection
 
@@ -83,6 +85,45 @@ async def test_streaming_audio_connection_lost(
         result = await entity.async_process_audio_stream(audio_stream(), None)
 
     assert result is None
+
+
+@pytest.mark.usefixtures("init_wyoming_wake_word")
+@pytest.mark.parametrize(
+    ("error_code", "expected_message"),
+    [
+        pytest.param(None, "Error from Wyoming service: Boom!", id="without_code"),
+        pytest.param(
+            "ModelNotFoundError",
+            "Error from Wyoming service: Boom! (code: ModelNotFoundError)",
+            id="with_code",
+        ),
+    ],
+)
+async def test_streaming_audio_error_event(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    error_code: str | None,
+    expected_message: str,
+) -> None:
+    """Test that an error event from the service is reported."""
+    entity = wake_word.async_get_wake_word_detection_entity(
+        hass, "wake_word.test_wake_word"
+    )
+    assert entity is not None
+
+    async def audio_stream():
+        # Delay to force a pending audio chunk
+        await asyncio.sleep(0.05)
+        yield b"chunk", 1
+
+    with patch(
+        "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
+        MockAsyncTcpClient([Error(text="Boom!", code=error_code).event()]),
+    ):
+        result = await entity.async_process_audio_stream(audio_stream(), None)
+
+    assert result is None
+    assert expected_message in caplog.text
 
 
 async def test_streaming_audio_oserror(
