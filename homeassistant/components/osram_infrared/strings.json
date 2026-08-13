@@ -4,6 +4,9 @@
       "already_configured": "This OSRAM light has already been configured with this infrared entity.",
       "no_infrared_emitters": "[%key:common::config_flow::abort::no_infrared_emitters%]"
     },
+    "error": {
+      "cannot_connect": "Failed to connect"
+    },
     "step": {
       "user": {
         "data": {
