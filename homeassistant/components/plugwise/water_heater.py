@@ -167,7 +167,7 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
             )
 
         if ATTR_OPERATION_MODE in kwargs:
-            await self.async_set_operation_mode(kwargs[ATTR_OPERATION_MODE])
+            await self._async_set_operation_mode(kwargs[ATTR_OPERATION_MODE])
 
         await self.coordinator.api.set_number(
             self._dev_id,
@@ -179,20 +179,24 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set the operation mode."""
-        if self.operation_list is None or operation_mode not in self.operation_list:
+        await self._async_set_operation_mode(operation_mode)
+
+    async def _async_set_operation_mode(self, mode: str) -> None:
+        """Set the operation mode."""
+        if self.operation_list is None or mode not in self.operation_list:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key=FAIL_OPERATION_MODE,
-                translation_placeholders={"op_mode": operation_mode},
+                translation_placeholders={"op_mode": mode},
             )
 
-        if operation_mode == self.current_operation:
+        if mode == self.current_operation:
             return
 
         await self.coordinator.api.set_dhw_mode(
             DHW_MODE,
             self._dev_id,
-            operation_mode,
+            mode,
             self._dhw_modes_count,
         )
 
