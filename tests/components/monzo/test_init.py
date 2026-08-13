@@ -16,8 +16,49 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import setup_integration
+from .conftest import TEST_ACCOUNTS, TITLE, USER_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def test_config_entry_title_uses_authenticated_owner(
+    hass: HomeAssistant,
+    polling_config_entry: MockConfigEntry,
+    monzo: AsyncMock,
+) -> None:
+    """Test the config entry is named after the authenticated owner."""
+    monzo.user_account.accounts.return_value = [
+        {
+            **TEST_ACCOUNTS[0],
+            "owners": [
+                {
+                    "user_id": "another-user",
+                    "preferred_name": "Jane Martin",
+                },
+                {
+                    "user_id": str(USER_ID),
+                    "preferred_name": "Jake Martin",
+                    "preferred_first_name": "Jake",
+                },
+            ],
+        },
+        TEST_ACCOUNTS[1],
+    ]
+
+    await setup_integration(hass, polling_config_entry)
+
+    assert polling_config_entry.title == "Jake Martin"
+
+
+async def test_config_entry_title_falls_back_without_owner(
+    hass: HomeAssistant,
+    polling_config_entry: MockConfigEntry,
+    monzo: AsyncMock,
+) -> None:
+    """Test the existing title is retained without matching owner metadata."""
+    await setup_integration(hass, polling_config_entry)
+
+    assert polling_config_entry.title == TITLE
 
 
 async def test_api_can_trigger_reauth(
