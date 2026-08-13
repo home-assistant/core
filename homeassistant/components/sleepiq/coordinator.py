@@ -57,9 +57,7 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(f"Timed out fetching SleepIQ data: {err}") from err
         except SleepIQAPIException as err:
             if err.code == HTTPStatus.UNAUTHORIZED:
-                raise ConfigEntryAuthFailed(
-                    f"Authentication to SleepIQ failed: {err}"
-                ) from err
+                raise ConfigEntryAuthFailed from err
             raise UpdateFailed(f"Failed to fetch SleepIQ data: {err}") from err
 
 
@@ -94,9 +92,7 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(f"Timed out fetching SleepIQ pause data: {err}") from err
         except SleepIQAPIException as err:
             if err.code == HTTPStatus.UNAUTHORIZED:
-                raise ConfigEntryAuthFailed(
-                    f"Authentication to SleepIQ failed: {err}"
-                ) from err
+                raise ConfigEntryAuthFailed from err
             raise UpdateFailed(f"Failed to fetch SleepIQ pause data: {err}") from err
 
 
@@ -136,9 +132,7 @@ class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(f"Timed out fetching SleepIQ sleep data: {err}") from err
         except SleepIQAPIException as err:
             if err.code == HTTPStatus.UNAUTHORIZED:
-                raise ConfigEntryAuthFailed(
-                    f"Authentication to SleepIQ failed: {err}"
-                ) from err
+                raise ConfigEntryAuthFailed from err
             raise UpdateFailed(f"Failed to fetch SleepIQ sleep data: {err}") from err
 
 
