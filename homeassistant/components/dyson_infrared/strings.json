@@ -7,10 +7,12 @@
     "step": {
       "user": {
         "data": {
+          "command_step_delay": "Delay between repeated commands",
           "device_type": "Device type",
           "infrared_emitter_entity_id": "Infrared transmitter"
         },
         "data_description": {
+          "command_step_delay": "How long to wait between commands when stepping fan speed or temperature by more than one level at a time.",
           "device_type": "The type of device to control.",
           "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands."
         },
@@ -20,6 +22,19 @@
     }
   },
   "entity": {
+    "climate": {
+      "heater_cooler": {
+        "name": "Dyson Heater/Cooler",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "diffused": "Diffused",
+              "focused": "Focused"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "fan": {
         "name": "Dyson Fan"
@@ -29,7 +44,8 @@
   "selector": {
     "device_type": {
       "options": {
-        "fan": "Fan"
+        "fan": "Fan",
+        "heater_cooler": "Heater/Cooler"
       }
     }
   }

@@ -11,20 +11,26 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
 from .const import (
+    CONF_COMMAND_STEP_DELAY,
     CONF_DEVICE_TYPE,
     CONF_INFRARED_EMITTER_ENTITY_ID,
+    DEFAULT_COMMAND_STEP_DELAY,
     DOMAIN,
     DysonDeviceType,
 )
 
 DEVICE_TYPE_NAMES: dict[DysonDeviceType, str] = {
     DysonDeviceType.FAN: "Fan",
+    DysonDeviceType.HEATER_COOLER: "Heater/Cooler",
 }
 
 
@@ -77,6 +83,17 @@ class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=emitter_entity_ids,
+                        )
+                    ),
+                    vol.Optional(
+                        CONF_COMMAND_STEP_DELAY, default=DEFAULT_COMMAND_STEP_DELAY
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            max=5,
+                            step=0.05,
+                            unit_of_measurement="s",
+                            mode=NumberSelectorMode.BOX,
                         )
                     ),
                 }

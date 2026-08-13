@@ -2,9 +2,13 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.dyson_infrared.const import (
+    CONF_COMMAND_STEP_DELAY,
     CONF_DEVICE_TYPE,
     CONF_INFRARED_EMITTER_ENTITY_ID,
+    DEFAULT_COMMAND_STEP_DELAY,
     DOMAIN,
     DysonDeviceType,
 )
@@ -14,7 +18,19 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form_and_create_entry(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("device_type", "expected_title"),
+    [
+        (DysonDeviceType.FAN, "Dyson Fan via My Living Room Emitter"),
+        (
+            DysonDeviceType.HEATER_COOLER,
+            "Dyson Heater/Cooler via My Living Room Emitter",
+        ),
+    ],
+)
+async def test_form_and_create_entry(
+    hass: HomeAssistant, device_type: DysonDeviceType, expected_title: str
+) -> None:
     """Test that the user config flow shows the form and creates an entry."""
     with (
         patch(
@@ -42,7 +58,7 @@ async def test_form_and_create_entry(hass: HomeAssistant) -> None:
         assert result["errors"] is None
 
         user_input = {
-            CONF_DEVICE_TYPE: DysonDeviceType.FAN.value,
+            CONF_DEVICE_TYPE: device_type.value,
             CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.my_living_room_emitter",
         }
 
@@ -52,10 +68,54 @@ async def test_form_and_create_entry(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Dyson Fan via My Living Room Emitter"
-    assert result2["data"] == user_input
+    assert result2["title"] == expected_title
+    assert result2["data"] == {
+        **user_input,
+        CONF_COMMAND_STEP_DELAY: DEFAULT_COMMAND_STEP_DELAY,
+    }
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result2["result"].unique_id == "fan_infrared.my_living_room_emitter"
+    assert (
+        result2["result"].unique_id
+        == f"{device_type.value}_infrared.my_living_room_emitter"
+    )
+
+
+async def test_form_with_custom_command_step_delay(hass: HomeAssistant) -> None:
+    """Test a custom command_step_delay value is stored on the entry."""
+    with (
+        patch(
+            "homeassistant.components.dyson_infrared.config_flow.infrared.async_get_emitters",
+            return_value=["infrared.my_living_room_emitter"],
+        ),
+        patch(
+            "homeassistant.components.dyson_infrared.config_flow.er.async_get",
+        ) as mock_er,
+        patch(
+            "homeassistant.components.dyson_infrared.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        mock_entry = AsyncMock()
+        mock_entry.name = "My Living Room Emitter"
+        mock_er.return_value.async_get.return_value = mock_entry
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+
+        user_input = {
+            CONF_DEVICE_TYPE: DysonDeviceType.FAN.value,
+            CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.my_living_room_emitter",
+            CONF_COMMAND_STEP_DELAY: 1.5,
+        }
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input,
+        )
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == user_input
 
 
 async def test_abort_no_emitters(hass: HomeAssistant) -> None:

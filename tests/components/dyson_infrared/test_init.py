@@ -2,15 +2,32 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.dyson_infrared import PLATFORMS
+import pytest
+
+from homeassistant.components.dyson_infrared.const import (
+    CONF_DEVICE_TYPE,
+    DysonDeviceType,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_entry(hass: HomeAssistant) -> None:
-    """Test setting up the Dyson Infrared config entry."""
-    entry = MockConfigEntry(domain="dyson_infrared")
+@pytest.mark.parametrize(
+    ("device_type", "platform"),
+    [
+        (DysonDeviceType.FAN, Platform.FAN),
+        (DysonDeviceType.HEATER_COOLER, Platform.CLIMATE),
+    ],
+)
+async def test_async_setup_entry(
+    hass: HomeAssistant, device_type: DysonDeviceType, platform: Platform
+) -> None:
+    """Test setting up the Dyson Infrared config entry forwards the right platform."""
+    entry = MockConfigEntry(
+        domain="dyson_infrared", data={CONF_DEVICE_TYPE: device_type}
+    )
     entry.add_to_hass(hass)
 
     with patch.object(
@@ -19,12 +36,23 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
         result = await hass.config_entries.async_setup(entry.entry_id)
 
         assert result is True
-        mock_forward.assert_called_once_with(entry, PLATFORMS)
+        mock_forward.assert_called_once_with(entry, [platform])
 
 
-async def test_async_unload_entry(hass: HomeAssistant) -> None:
-    """Test unloading a config entry forwards unload to platforms."""
-    entry = MockConfigEntry(domain="dyson_infrared")
+@pytest.mark.parametrize(
+    ("device_type", "platform"),
+    [
+        (DysonDeviceType.FAN, Platform.FAN),
+        (DysonDeviceType.HEATER_COOLER, Platform.CLIMATE),
+    ],
+)
+async def test_async_unload_entry(
+    hass: HomeAssistant, device_type: DysonDeviceType, platform: Platform
+) -> None:
+    """Test unloading a config entry forwards unload to the right platform."""
+    entry = MockConfigEntry(
+        domain="dyson_infrared", data={CONF_DEVICE_TYPE: device_type}
+    )
     entry.add_to_hass(hass)
 
     with patch.object(hass.config_entries, "async_forward_entry_setups"):
@@ -36,4 +64,4 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
         result = await hass.config_entries.async_unload(entry.entry_id)
 
         assert result is True
-        mock_unload.assert_called_once_with(entry, PLATFORMS)
+        mock_unload.assert_called_once_with(entry, [platform])
