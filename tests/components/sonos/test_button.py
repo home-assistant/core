@@ -21,6 +21,8 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 CANCEL_ANNOUNCEMENT_BUTTON = "button.zone_a_cancel_announcement"
 
+pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
+
 
 async def _announce_clip(hass: HomeAssistant, content_id: str) -> None:
     """Play an announcement clip to set the active clip id."""

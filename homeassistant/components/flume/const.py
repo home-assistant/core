@@ -19,7 +19,7 @@ NOTIFICATION_SCAN_INTERVAL = timedelta(minutes=5)
 DEVICE_SCAN_INTERVAL = timedelta(minutes=1)
 DEVICE_CONNECTION_SCAN_INTERVAL = timedelta(minutes=60)
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 FLUME_TYPE_BRIDGE = 1
 FLUME_TYPE_SENSOR = 2

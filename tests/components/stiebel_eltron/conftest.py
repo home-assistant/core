@@ -1,6 +1,6 @@
 """Common fixtures for the STIEBEL ELTRON tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from modbus_connection.mock import MockModbusConnection
@@ -32,10 +32,11 @@ def mock_get_controller_model() -> Generator[MagicMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_connect_tcp(
+async def mock_connect_tcp(
     mock_modbus_connection: MockModbusConnection,
-) -> Generator[AsyncMock]:
+) -> AsyncGenerator[AsyncMock]:
     """Patch connect_tcp to return the in-memory mock connection."""
+    assert mock_modbus_connection.connected
     connect = AsyncMock(return_value=mock_modbus_connection)
     with (
         patch("homeassistant.components.stiebel_eltron.connect_tcp", new=connect),

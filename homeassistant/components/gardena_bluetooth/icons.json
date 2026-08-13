@@ -1,5 +1,13 @@
 {
   "entity": {
+    "image": {
+      "active_contour": {
+        "default": "mdi:sprinkler-variant"
+      },
+      "contour": {
+        "default": "mdi:vector-polygon"
+      }
+    },
     "text": {
       "contour_name": {
         "default": "mdi:vector-polygon"

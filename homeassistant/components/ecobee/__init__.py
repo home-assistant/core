@@ -26,7 +26,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
-from .const import _LOGGER, CONF_REFRESH_TOKEN, DOMAIN, PLATFORMS
+from .const import CONF_REFRESH_TOKEN, DOMAIN, LOGGER, PLATFORMS
 from .services import async_setup_services
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bo
     await runtime_data.update()
 
     if runtime_data.ecobee.thermostats is None:
-        _LOGGER.error("No ecobee devices found to set up")
+        LOGGER.error("No ecobee devices found to set up")
         return False
 
     entry.runtime_data = runtime_data
@@ -116,14 +116,14 @@ class EcobeeData:
         """Get the latest data from ecobee.com."""
         try:
             await self._hass.async_add_executor_job(self.ecobee.update)
-            _LOGGER.debug("Updating ecobee")
+            LOGGER.debug("Updating ecobee")
         except ExpiredTokenError:
-            _LOGGER.debug("Refreshing expired ecobee tokens")
+            LOGGER.debug("Refreshing expired ecobee tokens")
             await self.refresh()
 
     async def refresh(self) -> bool:
         """Refresh ecobee tokens and update config entry."""
-        _LOGGER.debug("Refreshing ecobee tokens and updating config entry")
+        LOGGER.debug("Refreshing ecobee tokens and updating config entry")
         try:
             success = await self._hass.async_add_executor_job(
                 self.ecobee.refresh_tokens
@@ -144,7 +144,7 @@ class EcobeeData:
                 translation_key="credentials_rejected",
             ) from err
         except EcobeeAuthUnknownError:
-            _LOGGER.exception("Unexpected error refreshing ecobee tokens")
+            LOGGER.exception("Unexpected error refreshing ecobee tokens")
             return False
 
         if success:
@@ -167,7 +167,7 @@ class EcobeeData:
                 data=data,
             )
             return True
-        _LOGGER.error("Error refreshing ecobee tokens")
+        LOGGER.error("Error refreshing ecobee tokens")
         return False
 
 

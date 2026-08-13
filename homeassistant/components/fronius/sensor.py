@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -859,7 +860,11 @@ class MeterSensor(_FroniusSensorEntity):
             manufacturer=meter_data["manufacturer"]["value"],
             model=meter_data["model"]["value"],
             name=meter_data["model"]["value"],
-            via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.solar_net.solar_net_device_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
         self._attr_unique_id = f"{meter_uid}-{description.key}"
 
@@ -883,7 +888,11 @@ class OhmpilotSensor(_FroniusSensorEntity):
             model=f"{device_data['model']['value']} {device_data['hardware']['value']}",
             name=device_data["model"]["value"],
             sw_version=device_data["software"]["value"],
-            via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.solar_net.solar_net_device_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
         self._attr_unique_id = f"{device_data['serial']['value']}-{description.key}"
 
@@ -925,5 +934,9 @@ class StorageSensor(_FroniusSensorEntity):
             manufacturer=storage_data["manufacturer"]["value"],
             model=storage_data["model"]["value"],
             name=storage_data["model"]["value"],
-            via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.solar_net.solar_net_device_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
