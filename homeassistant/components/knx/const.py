@@ -19,6 +19,11 @@ if TYPE_CHECKING:
 DOMAIN: Final = "knx"
 KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
 
+# Prefix of device identifiers created via the `knx/create_device` websocket
+# command (see websocket.py). A YAML `device.id` matching this prefix is
+# assumed to reference such a device verbatim and is not slugified.
+UI_DEVICE_ID_PREFIX: Final = "knx_vdev_"
+
 # Address is used for configuration and services by the
 # same functions so the key has to match
 KNX_ADDRESS: Final = "address"
@@ -26,6 +31,7 @@ KNX_ADDRESS: Final = "address"
 CONF_INVERT: Final = "invert"
 CONF_KNX_EXPOSE: Final = "expose"
 CONF_KNX_INDIVIDUAL_ADDRESS: Final = "individual_address"
+CONF_VALUE: Final = "value"
 
 ##
 # Connection constants
@@ -52,8 +58,20 @@ CONF_KNX_DEFAULT_RATE_LIMIT: Final = 0
 
 DEFAULT_ROUTING_IA: Final = "0.0.240"
 
+CONF_KNX_TELEGRAM_DB_BACKEND: Final = "telegram_db_backend"
 CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: Final = "telegram_db_retention_days"
 CONF_KNX_TELEGRAM_DB_LOAD_HOURS: Final = "telegram_db_load_hours"
+CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: Final = "telegram_db_postgres_dsn"
+
+CONF_KNX_TELEGRAM_DB_HOST: Final = "host"
+CONF_KNX_TELEGRAM_DB_PORT: Final = "port"
+CONF_KNX_TELEGRAM_DB_USER: Final = "user"
+CONF_KNX_TELEGRAM_DB_PASSWORD: Final = "password"
+CONF_KNX_TELEGRAM_DB_DATABASE: Final = "database"
+CONF_KNX_TELEGRAM_DB_TLS: Final = "tls"
+
+KNX_TELEGRAM_BACKEND_SQLITE: Final = "sqlite"
+KNX_TELEGRAM_BACKEND_POSTGRES: Final = "postgres"
 
 KNX_TELEGRAM_DB_RETENTION_DEFAULT: Final = 10  # days
 KNX_TELEGRAM_LOAD_HOURS_DEFAULT: Final = 24  # 1 day
@@ -77,6 +95,7 @@ CONF_KNX_SECURE_USER_PASSWORD: Final = "user_password"
 CONF_KNX_SECURE_DEVICE_AUTHENTICATION: Final = "device_authentication"
 
 
+CONF_DEFAULT_ENTITY_ID: Final = "default_entity_id"
 CONF_CONTEXT_TIMEOUT: Final = "context_timeout"
 CONF_IGNORE_INTERNAL_STATE: Final = "ignore_internal_state"
 CONF_PAYLOAD_LENGTH: Final = "payload_length"
@@ -138,6 +157,8 @@ class KNXConfigEntryOptions(TypedDict, total=False):
     #   Integration only (not forwarded to xknx)
     telegram_db_retention_days: int
     telegram_db_load_hours: int
+    telegram_db_backend: str  # sqlite | postgres
+    telegram_db_postgres_dsn: str
 
 
 class ColorTempModes(Enum):
@@ -178,18 +199,22 @@ SUPPORTED_PLATFORMS_YAML: Final = {
 
 SUPPORTED_PLATFORMS_UI: Final = {
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DATE,
     Platform.FAN,
     Platform.DATETIME,
     Platform.LIGHT,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TEXT,
     Platform.TIME,
+    Platform.WEATHER,
 }
 
 # Map KNX controller modes to HA modes. This list might not be complete.
@@ -260,3 +285,16 @@ class SceneConf:
     """Common config keys for scene."""
 
     SCENE_NUMBER: Final = "scene_number"
+
+
+class SelectConf:
+    """Config keys for select."""
+
+    # shared between YAML and UI
+    OPTIONS: Final = "options"
+    OPTION: Final = "option"
+    # UI only
+    OPTIONS_SOURCE: Final = "options_source"
+    GA_ENUM: Final = "ga_enum"
+    GA_CUSTOM: Final = "ga_custom"
+    CUSTOM_OPTIONS: Final = "custom_options"

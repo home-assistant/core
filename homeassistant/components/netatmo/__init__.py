@@ -29,17 +29,8 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import (
-    DATA_CAMERAS,
-    DATA_DEVICE_IDS,
-    DATA_EVENTS,
-    DATA_HOMES,
-    DATA_PERSONS,
-    DATA_SCHEDULES,
-    DOMAIN,
-    PLATFORMS,
-)
-from .data_handler import NetatmoConfigEntry, NetatmoDataHandler
+from .const import DOMAIN, PLATFORMS
+from .coordinator import NetatmoConfigEntry, NetatmoDataHandler
 from .services import async_setup_services
 from .webhook import async_register_webhook, async_unregister_webhook
 
@@ -52,17 +43,6 @@ MAX_WEBHOOK_RETRIES = 3
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Netatmo component."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    hass.data[DOMAIN] = {
-        DATA_PERSONS: {},
-        DATA_DEVICE_IDS: {},
-        DATA_SCHEDULES: {},
-        DATA_HOMES: {},
-        DATA_EVENTS: {},
-        DATA_CAMERAS: {},
-    }
-
     async_setup_services(hass)
 
     return True
@@ -170,13 +150,15 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: NetatmoConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    data = config_entry.runtime_data
-    modules = [m for h in data.account.homes.values() for m in h.modules]
-    rooms = [r for h in data.account.homes.values() for r in h.rooms]
+    homes = config_entry.runtime_data.account.homes.values()
+    valid_ids = {
+        *(home.entity_id for home in homes),
+        *(module for home in homes for module in home.modules),
+        *(room for home in homes for room in home.rooms),
+    }
 
     return not any(
-        identifier
+        identifier[1] in valid_ids
         for identifier in device_entry.identifiers
-        if (identifier[0] == DOMAIN and identifier[1] in modules)
-        or identifier[1] in rooms
+        if identifier[0] == DOMAIN
     )

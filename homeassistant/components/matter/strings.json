@@ -346,6 +346,9 @@
           "normal": "[%key:common::state::normal%]"
         }
       },
+      "selected_chime": {
+        "name": "Chime sound"
+      },
       "sensitivity_level": {
         "name": "Sensitivity",
         "state": {

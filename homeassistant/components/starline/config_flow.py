@@ -1,6 +1,6 @@
 """Config flow to configure StarLine component."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from starline import StarlineAuth
 import voluptuous as vol
@@ -10,7 +10,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import (
-    _LOGGER,
     CONF_APP_ID,
     CONF_APP_SECRET,
     CONF_CAPTCHA_CODE,
@@ -23,6 +22,7 @@ from .const import (
     ERROR_AUTH_APP,
     ERROR_AUTH_MFA,
     ERROR_AUTH_USER,
+    LOGGER,
 )
 
 
@@ -192,16 +192,21 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Authenticate application."""
         try:
-            self._app_code = await self.hass.async_add_executor_job(
-                self._auth.get_app_code, self._app_id, self._app_secret
-            )
-            # pylint: disable-next=home-assistant-sequential-executor-jobs
-            self._app_token = await self.hass.async_add_executor_job(
-                self._auth.get_app_token, self._app_id, self._app_secret, self._app_code
-            )
+
+            def _get_app_token() -> str:
+                if TYPE_CHECKING:
+                    assert self._app_id is not None
+                    assert self._app_secret is not None
+
+                app_code = self._auth.get_app_code(self._app_id, self._app_secret)
+                return self._auth.get_app_token(
+                    self._app_id, self._app_secret, app_code
+                )
+
+            self._app_token = await self.hass.async_add_executor_job(_get_app_token)
             return self._async_form_auth_user(error)
         except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Error auth StarLine: %s", err)
+            LOGGER.error("Error auth StarLine: %s", err)
             return self._async_form_auth_app(ERROR_AUTH_APP)
 
     async def _async_authenticate_user(
@@ -236,7 +241,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
             raise Exception(data)  # noqa: TRY002, TRY301
         except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Error auth user: %s", err)
+            LOGGER.error("Error auth user: %s", err)
             return self._async_form_auth_user(ERROR_AUTH_USER)
 
     async def _async_get_entry(self) -> ConfigFlowResult:

@@ -28,9 +28,9 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_DOMAIN,
     BASE_PLATFORMS,
+    EntityStateAttribute,
     __version__ as HA_VERSION,
 )
 from homeassistant.core import (
@@ -734,7 +734,7 @@ DEFAULT_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsModifications()
 DEFAULT_ENTITY_ANALYTICS_CONFIG = EntityAnalyticsModifications()
 
 
-async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
+async def _async_snapshot_payload(hass: HomeAssistant) -> dict:
     """Return detailed information about entities and devices for a snapshot."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
@@ -746,12 +746,7 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
     # Get device list
     for device_entry in dev_reg.devices.values():
-        if not device_entry.primary_config_entry:
-            continue
-
-        config_entry = hass.config_entries.async_get_entry(
-            device_entry.primary_config_entry
-        )
+        config_entry = hass.config_entries.async_get_entry(device_entry.config_entry_id)
 
         if config_entry is None:
             continue
@@ -915,7 +910,9 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 # It is also not present, if entity is not in the state machine,
                 # which can happen for disabled entities.
                 "assumed_state": (
-                    entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
+                    entity_state.attributes.get(
+                        EntityStateAttribute.ASSUMED_STATE, False
+                    )
                     if entity_state is not None
                     else None
                 ),
