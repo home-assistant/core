@@ -654,11 +654,60 @@ class DeviceEntry(BaseDeviceEntry):
         return self._suggested_area
 
 
+_CHILD_DEVICE_COMPAT_ATTRS = frozenset(
+    {
+        "configuration_url",
+        "connections",
+        "entry_type",
+        "hw_version",
+        "manufacturer",
+        "model",
+        "model_id",
+        "serial_number",
+        # "suggested_area",  # Excluded, to be removed in 2026.9
+        "sw_version",
+        "via_device_id",
+    }
+)
+
+
 @attr.s(frozen=True, slots=True)
 class ChildDeviceEntry(BaseDeviceEntry):
     """Child Device Registry Entry."""
 
     parent_device_id: str = attr.ib(kw_only=True)
+
+    if not TYPE_CHECKING:
+        # Hidden from the type checker, otherwise mypy disables [attr-defined]
+        # errors when it sees the __getattr__ below.
+        def __getattr__(self, name: str) -> Any:
+            """Return the DeviceEntry default for a DeviceEntry-only attribute.
+
+            Backwards-compatibility shim for custom integrations that access an
+            attribute which only exists on DeviceEntry (e.g. connections,
+            manufacturer): they get the DeviceEntry default and a deprecation warning.
+            """
+            if name not in _CHILD_DEVICE_COMPAT_ATTRS:
+                raise AttributeError(
+                    f"'{type(self).__name__}' object has no attribute '{name}'"
+                )
+            try:
+                integration_frame = get_integration_frame()
+            except MissingIntegrationFrame:
+                integration_frame = None
+            if integration_frame is None or not integration_frame.custom_integration:
+                raise AttributeError(
+                    f"'{type(self).__name__}' object has no attribute '{name}'"
+                )
+            report_usage(
+                f"accesses ChildDeviceEntry.{name}, which does not exist on child "
+                "devices",
+                breaks_in_ha_version="2027.9.0",
+                core_behavior=ReportBehavior.IGNORE,
+                core_integration_behavior=ReportBehavior.IGNORE,
+                custom_integration_behavior=ReportBehavior.LOG,
+            )
+            return set() if name == "connections" else None
 
     @property
     @override
