@@ -53,7 +53,7 @@ def _build_identity_indexes(
     new_unique_ids: set[str],
 ) -> tuple[
     dict[str, DeviceEntityKey],
-    dict[str, DeviceEntityKey],
+    dict[str, list[DeviceEntityKey]],
     set[DeviceEntityKey],
 ]:
     """Index old infos by unique_id and by name for identity matching.
@@ -61,15 +61,13 @@ def _build_identity_indexes(
     ESPHome validates that names are unique per device_id, so
     unique_ids are unique. The key derives from the name (hash of the
     name, or of the object_id which derives from the name), so a key
-    can never disambiguate entities the name cannot. The same name may
-    exist on multiple devices; such names are ambiguous move
-    candidates. reserved: guaranteed a unique_id match; key matches
-    must skip these or a reused key could swap two entities'
-    identities.
+    can never disambiguate entities the name cannot; the same name on
+    multiple devices shares one key and moves are matched in listing
+    order. reserved: guaranteed a unique_id match; key matches must
+    skip these or a reused key could swap two entities' identities.
     """
     old_info_by_unique_id: dict[str, DeviceEntityKey] = {}
-    movable_by_name: dict[str, DeviceEntityKey] = {}
-    duplicate_names: set[str] = set()
+    movable_by_name: dict[str, list[DeviceEntityKey]] = {}
     reserved: set[DeviceEntityKey] = set()
     for dict_key, existing_info in current_infos.items():
         old_unique_id = build_device_unique_id(mac, existing_info)
@@ -77,14 +75,7 @@ def _build_identity_indexes(
         if old_unique_id in new_unique_ids:
             reserved.add(dict_key)
             continue
-        name = existing_info.name
-        if name in duplicate_names:
-            continue
-        if name in movable_by_name:
-            duplicate_names.add(name)
-            del movable_by_name[name]
-            continue
-        movable_by_name[name] = dict_key
+        movable_by_name.setdefault(existing_info.name, []).append(dict_key)
     return old_info_by_unique_id, movable_by_name, reserved
 
 
@@ -114,10 +105,17 @@ def async_static_info_updated(
     mac = device_info.mac_address
     unique_ids = [build_device_unique_id(mac, info) for info in infos]
     new_unique_ids = set(unique_ids)
-    new_names = {info.name for info in infos}
     old_info_by_unique_id, movable_by_name, reserved = _build_identity_indexes(
         current_infos, mac, new_unique_ids
     )
+    # Names of incoming infos without a unique_id match; these claim
+    # same named old entities as moves, so the in place key match must
+    # not consume those candidates
+    claimed_names = {
+        info.name
+        for info, unique_id in zip(infos, unique_ids, strict=True)
+        if unique_id not in old_info_by_unique_id
+    }
     rekeys: list[tuple[EntityInfo, EntityInfo]] = []
 
     # Track info by (info.device_id, info.key) to properly handle entities
@@ -128,32 +126,29 @@ def async_static_info_updated(
 
         # Identity match by unique_id; survives key re-derivation
         if (old_dict_key := old_info_by_unique_id.pop(unique_id, None)) is not None:
-            if (matched_info := current_infos.pop(old_dict_key, None)) is not None:
-                if matched_info.key != info.key:
-                    # Same entity, new key: re-point subscriptions after
-                    # the loop; the registry entry is untouched
-                    rekeys.append((matched_info, info))
-                # Equal unique_ids imply equal device_ids
-                continue
+            matched_info = current_infos.pop(old_dict_key)
+            if matched_info.key != info.key:
+                # Same entity, new key: re-point subscriptions after
+                # the loop; the registry entry is untouched
+                rekeys.append((matched_info, info))
+            # Equal unique_ids imply equal device_ids
+            continue
 
-        # Unambiguous name match: the entity moved between devices.
-        # Runs before the key match so a move into a vacated key slot
-        # is not mistaken for a rename.
+        # Name match: the entity moved between devices. Runs before the
+        # key match so a move into a vacated key slot is not mistaken
+        # for a rename.
         old_info: EntityInfo | None = None
-        if (move_dict_key := movable_by_name.pop(info.name, None)) is not None:
-            old_info = current_infos.pop(move_dict_key, None)
+        if move_dict_keys := movable_by_name.get(info.name):
+            old_info = current_infos.pop(move_dict_keys.pop(0))
 
         # Same key and device_id: a rename with a stable key; the
         # registry entry follows the new unique_id. Skip candidates a
-        # later info will claim by unique_id or by name move.
+        # later info will claim by name move.
         if (
             old_info is None
             and info_key not in reserved
             and (renamed_info := current_infos.get(info_key)) is not None
-            and not (
-                renamed_info.name in new_names
-                and movable_by_name.get(renamed_info.name) == info_key
-            )
+            and renamed_info.name not in claimed_names
         ):
             del current_infos[info_key]
             async_migrate_unique_id(
@@ -163,18 +158,6 @@ def async_static_info_updated(
                 unique_id,
             )
             continue
-
-        # Same name on another device: an ambiguous move. Same named
-        # entities share one key, so the key cannot disambiguate; take
-        # the first candidate a unique_id match will not claim.
-        if old_info is None:
-            for existing_dict_key, existing_info in current_infos.items():
-                if (
-                    existing_info.name == info.name
-                    and existing_dict_key not in reserved
-                ):
-                    old_info = current_infos.pop(existing_dict_key)
-                    break
 
         # Create new entity if it doesn't exist
         if old_info is None:

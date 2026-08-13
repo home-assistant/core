@@ -2036,10 +2036,11 @@ async def test_entity_renamed_with_stable_key(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test a rename on firmware where the key is not name derived.
+    """Test a rename that keeps the object_id and key stable.
 
-    The key stays the same so the entity is updated in place and its
-    registry entry follows the new name based unique_id.
+    A case only rename keeps the object_id, and therefore the key,
+    stable; the entity is updated in place and its registry entry
+    follows the new name based unique_id.
     """
     entity_info = [
         BinarySensorInfo(
@@ -2065,7 +2066,7 @@ async def test_entity_renamed_with_stable_key(
         BinarySensorInfo(
             object_id="sensor_one",
             key=1,
-            name="Sensor One Renamed",
+            name="SENSOR ONE",
         ),
     ]
     await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
@@ -2084,7 +2085,7 @@ async def test_entity_renamed_with_stable_key(
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test_sensor_one")
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Sensor One Renamed"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test SENSOR ONE"
 
 
 async def test_entity_renamed_and_rekeyed(
