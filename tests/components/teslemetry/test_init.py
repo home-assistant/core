@@ -17,10 +17,17 @@ from tesla_fleet_api.exceptions import (
     RateLimited,
     SubscriptionRequired,
     TeslaFleetError,
+    TeslemetryRegistrationError,
 )
 
 from homeassistant.components.teslemetry import _get_access_token
-from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
+from homeassistant.components.teslemetry.const import (
+    CLIENT_ID,
+    DCR_AUTH_DOMAIN,
+    DOMAIN,
+    SOFTWARE_ID,
+    TOKEN_URL,
+)
 
 # Coordinator constants
 from homeassistant.components.teslemetry.coordinator import (
@@ -40,6 +47,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    __version__,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -52,6 +60,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.setup import async_setup_component
 
 from . import mock_config_entry, setup_platform
 from .const import (
@@ -70,6 +79,7 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -508,13 +518,92 @@ async def test_failed_migration_then_fresh_flow_registers_client(
     implementations = await config_entry_oauth2_flow.async_get_implementations(
         hass, DOMAIN
     )
-    assert implementations[DOMAIN].client_id == DCR_CLIENT_ID
+    assert implementations[DCR_AUTH_DOMAIN].client_id == DCR_CLIENT_ID
+
+
+async def test_setup_defers_registration_on_error(
+    hass: HomeAssistant, mock_register_client: AsyncMock
+) -> None:
+    """A registration failure during setup must not block the integration.
+
+    Registration is retried when the user starts the config flow, so a
+    transient error here is deferred instead of being fatal.
+    """
+    mock_register_client.side_effect = TeslemetryRegistrationError
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    mock_register_client.assert_called_once()
+    # No credential should have been imported when registration failed.
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    assert DCR_AUTH_DOMAIN not in implementations
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_dcr_flow_and_legacy_migration_coexist(
+    hass: HomeAssistant, mock_register_client: AsyncMock
+) -> None:
+    """A DCR client and a migrated legacy client must not overwrite each other.
+
+    A fresh flow dynamically registers a client while a v1 entry still awaits
+    migration; the later legacy migration imports its static client under a
+    distinct auth key, so each entry keeps resolving to its own client instead
+    of the DCR credential being clobbered.
+    """
+    v1_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id="legacy-account",
+        data=CONFIG_V1,
+    )
+    v1_entry.add_to_hass(hass)
+
+    # A fresh flow registers a DCR client while the v1 entry is still awaiting
+    # migration.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    mock_register_client.assert_called_once()
+
+    # Migrating the v1 entry imports the legacy static client.
+    with patch(
+        "homeassistant.components.teslemetry.Teslemetry.migrate_to_oauth",
+        new_callable=AsyncMock,
+    ) as mock_migrate:
+        mock_migrate.return_value = {
+            "token": {
+                "access_token": "migrated_token",
+                "token_type": "Bearer",
+                "refresh_token": "migrated_refresh_token",
+                "expires_in": 3600,
+                "expires_at": time.time() + 3600,
+            }
+        }
+        await hass.config_entries.async_setup(v1_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Both credentials survive under distinct auth keys.
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    assert implementations[DOMAIN].client_id == CLIENT_ID
+    assert implementations[DCR_AUTH_DOMAIN].client_id == DCR_CLIENT_ID
+
+    # Migration must not register a second DCR client.
+    mock_register_client.assert_called_once()
+    # The migrated entry resolves to its own legacy client.
+    assert v1_entry.version == 2
+    assert v1_entry.data["auth_implementation"] == DOMAIN
 
 
 async def test_migrate_version_2_no_migration_needed(hass: HomeAssistant) -> None:
     """Test that version 2 entries don't need migration."""
     oauth_config = {
-        "auth_implementation": DOMAIN,
+        "auth_implementation": DCR_AUTH_DOMAIN,
         "token": {
             "access_token": "existing_oauth_token",
             "token_type": "Bearer",
@@ -787,7 +876,7 @@ async def test_missing_token_data(hass: HomeAssistant) -> None:
         version=2,
         unique_id=UNIQUE_ID,
         data={
-            "auth_implementation": DOMAIN,
+            "auth_implementation": DCR_AUTH_DOMAIN,
             # token is intentionally missing
         },
     )
@@ -1236,3 +1325,51 @@ async def test_get_access_token_rate_limited_after_setup_is_not_fatal(
     await hass.async_block_till_done()
 
     assert not hass.config_entries.flow.async_progress()
+
+
+async def test_refresh_token_resends_software_metadata(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Refreshing an expired token must re-send the software metadata.
+
+    The server relies on it to pick up a version change after an upgrade.
+    """
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id=UNIQUE_ID,
+        data={
+            "auth_implementation": DCR_AUTH_DOMAIN,
+            "token": {
+                "access_token": "old_access_token",
+                "refresh_token": "old_refresh_token",
+                "expires_at": time.time() - 3600,
+            },
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "access_token": "new_access_token",
+            "refresh_token": "new_refresh_token",
+            "expires_in": 3600,
+        },
+    )
+
+    session = OAuth2Session(
+        hass,
+        mock_entry,
+        TeslemetryImplementation(hass, DCR_AUTH_DOMAIN, DCR_CLIENT_ID),
+    )
+    await session.async_ensure_token_valid()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    body = aioclient_mock.mock_calls[0][2]
+    assert body["grant_type"] == "refresh_token"
+    assert body["refresh_token"] == "old_refresh_token"
+    assert body["client_id"] == DCR_CLIENT_ID
+    assert body["software_id"] == SOFTWARE_ID
+    assert body["software_version"] == __version__
+    assert mock_entry.data["token"]["access_token"] == "new_access_token"

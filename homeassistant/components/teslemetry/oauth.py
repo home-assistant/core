@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import AUTHORIZE_URL, DOMAIN, SOFTWARE_ID, TOKEN_URL
+from .const import AUTHORIZE_URL, DCR_AUTH_DOMAIN, DOMAIN, SOFTWARE_ID, TOKEN_URL
 
 REGISTRATION_LOCK: Final = f"{DOMAIN}_registration_lock"
 
@@ -89,7 +89,7 @@ async def async_ensure_client_credential(hass: HomeAssistant) -> None:
         implementations = await config_entry_oauth2_flow.async_get_implementations(
             hass, DOMAIN
         )
-        if DOMAIN in implementations:
+        if DCR_AUTH_DOMAIN in implementations:
             return
 
         registration = await register_client(
@@ -98,8 +98,14 @@ async def async_ensure_client_credential(hass: HomeAssistant) -> None:
             SOFTWARE_ID,
             __version__,
         )
+        # Import under a dedicated auth_domain so the dynamically registered
+        # client never shares an auth key with the legacy static client that
+        # backs migrated v1 entries; otherwise a later legacy migration would
+        # overwrite this credential and the DCR-backed entry would resolve to
+        # the wrong client.
         await async_import_client_credential(
             hass,
             DOMAIN,
             ClientCredential(registration.client_id, "", name="Teslemetry"),
+            auth_domain=DCR_AUTH_DOMAIN,
         )

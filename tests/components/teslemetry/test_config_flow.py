@@ -16,6 +16,7 @@ from tesla_fleet_api.exceptions import (
 
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
+    DCR_AUTH_DOMAIN,
     DOMAIN,
     SOFTWARE_ID,
     TOKEN_URL,
@@ -92,7 +93,7 @@ async def test_oauth_flow(
     assert result
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == UNIQUE_ID
-    assert result["data"]["auth_implementation"] == "teslemetry"
+    assert result["data"]["auth_implementation"] == DCR_AUTH_DOMAIN
     assert result["data"]["token"]["refresh_token"] == response["refresh_token"]
     assert result["data"]["token"]["access_token"] == response["access_token"]
     assert result["data"]["token"]["type"] == response["type"]
@@ -148,7 +149,7 @@ async def test_registration_failure_recovers(
     implementations = await config_entry_oauth2_flow.async_get_implementations(
         hass, DOMAIN
     )
-    assert implementations[DOMAIN].client_id == DCR_CLIENT_ID
+    assert implementations[DCR_AUTH_DOMAIN].client_id == DCR_CLIENT_ID
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -218,7 +219,7 @@ async def test_reauth_account_mismatch(
         version=2,
         unique_id="baduid",
         data={
-            "auth_implementation": DOMAIN,
+            "auth_implementation": DCR_AUTH_DOMAIN,
             "token": {
                 "access_token": "old_access_token",
                 "refresh_token": "old_refresh_token",
@@ -393,7 +394,7 @@ async def test_reconfigure(
     assert result["reason"] == "reconfigure_successful"
 
     # Verify entry data was updated
-    assert mock_entry.data["auth_implementation"] == DOMAIN
+    assert mock_entry.data["auth_implementation"] == DCR_AUTH_DOMAIN
     assert mock_entry.data["token"]["refresh_token"] == "new_refresh_token"
     assert mock_entry.data["token"]["access_token"] == "new_access_token"
     assert mock_entry.data["token"]["type"] == "Bearer"
@@ -416,7 +417,7 @@ async def test_reconfigure_account_mismatch(
         version=2,
         unique_id="baduid",
         data={
-            "auth_implementation": DOMAIN,
+            "auth_implementation": DCR_AUTH_DOMAIN,
             "token": {
                 "access_token": "old_access_token",
                 "refresh_token": "old_refresh_token",
