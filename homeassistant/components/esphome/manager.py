@@ -673,6 +673,7 @@ class ESPHomeManager:
 
         api_version = cli.api_version
         assert api_version is not None, "API version must be set"
+        entry_data.async_prepare_availability(api_version)
         entry_data.async_on_connect(hass, device_info, api_version)
 
         await self._handle_dynamic_encryption_key(device_info)
@@ -734,6 +735,7 @@ class ESPHomeManager:
             on_service_call=self.async_on_service_call,
             on_state_sub=self.async_on_state_subscription,
             on_state_request=self.async_on_state_request,
+            on_device_state=entry_data.async_update_device_availability,
         )
 
         entry_data.async_save_to_store()

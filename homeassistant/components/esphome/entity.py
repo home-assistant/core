@@ -354,9 +354,10 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
         self._states = cast(dict[int, _StateT], entry_data.state[state_type])
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
-        self._on_entry_data_changed()
         self._key = entity_info.key
         self._state_type = state_type
+        self._static_info = cast(_InfoT, entity_info)
+        self._on_entry_data_changed()
         self._on_static_info_update(entity_info)
 
         # Determine the device connection based on whether this
@@ -389,6 +390,12 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
                 self._state_type,
                 self._key,
                 self._on_state_update,
+            )
+        )
+        self.async_on_remove(
+            entry_data.async_subscribe_device_availability(
+                self._static_info.device_id,
+                self._on_availability_update,
             )
         )
         self.async_on_remove(
@@ -480,9 +487,19 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
         if self._device_info.has_deep_sleep:
             # During deep sleep the ESP will not be connectable (by design)
             # For these cases, show it as available
-            self._attr_available = entry_data.expected_disconnect
+            connection_available = entry_data.expected_disconnect
         else:
-            self._attr_available = entry_data.available
+            connection_available = entry_data.available
+        self._attr_available = (
+            connection_available
+            and self._static_info.device_id not in entry_data.unavailable_devices
+        )
+
+    @callback
+    def _on_availability_update(self) -> None:
+        """Call when the sub-device availability changes."""
+        self._on_entry_data_changed()
+        self.async_write_ha_state()
 
     @callback
     def _on_device_update(self) -> None:

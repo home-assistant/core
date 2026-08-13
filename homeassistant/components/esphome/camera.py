@@ -42,6 +42,16 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         super()._on_device_update()
         if not self.available:
             self._set_futures(False)
+        elif self._entry_data.available:
+            self.async_write_ha_state()
+
+    @callback
+    @override
+    def _on_availability_update(self) -> None:
+        """Handle sub-device availability changes."""
+        super()._on_availability_update()
+        if not self.available:
+            self._set_futures(False)
 
     @callback
     @override
