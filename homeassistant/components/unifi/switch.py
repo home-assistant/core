@@ -37,7 +37,10 @@ from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
 from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicyUpdateRequest
-from aiounifi.models.object_oriented_network_config import ObjectOrientedNetworkConfig
+from aiounifi.models.object_oriented_network_config import (
+    ObjectOrientedNetworkConfig,
+    ObjectOrientedNetworkInternetMode,
+)
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.port_forward import PortForward, PortForwardEnableRequest
@@ -171,14 +174,12 @@ def async_object_oriented_network_config_supported_fn(
 ) -> bool:
     """Check if Policy Engine rule can be controlled as a switch."""
     config = hub.api.object_oriented_network_configs[obj_id]
-    if not (secure := config.raw.get("secure")):
-        return False
-
-    internet = secure.get("internet")
+    secure = config.secure
     return (
-        secure.get("enabled") is True
-        and internet is not None
-        and internet.get("mode") == "TURN_OFF_INTERNET"
+        secure.available
+        and secure.enabled
+        and secure.internet is not None
+        and secure.internet.mode is ObjectOrientedNetworkInternetMode.TURN_OFF_INTERNET
     )
 
 
