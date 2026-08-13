@@ -44,18 +44,10 @@ class OAuth2FlowHandler(
         }
 
     @override
-    async def async_step_auth(
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Create an entry for auth.
-
-        We need to intercede to ask the user if he wants to use the image scope
-        before generating the URL. Otherwise, attempts with application credentials
-        that don't have the image scope will fail.
-        """
-        if user_input is not None:
-            return await super().async_step_auth(user_input)
-
+        """Handle a flow start."""
         return await self.async_step_scopes(user_input)
 
     async def async_step_scopes(
@@ -65,7 +57,7 @@ class OAuth2FlowHandler(
         if user_input is not None:
             self.images_scope = user_input[INPUT_IMAGES_SCOPE]
         if self.images_scope is not None:
-            return await super().async_step_auth(None)
+            return await self.async_step_pick_implementation(None)
 
         return self.async_show_form(
             step_id="scopes",
