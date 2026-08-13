@@ -31,11 +31,7 @@ def get_account_name(account: dict[str, Any]) -> str:
             if not isinstance(owner, dict):
                 continue
             for key in ("preferred_name", "preferred_first_name"):
-                if (
-                    isinstance(name := owner.get(key), str)
-                    and name
-                    and name not in owner_names
-                ):
+                if isinstance(name := owner.get(key), str) and name:
                     owner_names.append(name)
                     break
 

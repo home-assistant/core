@@ -94,8 +94,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> boo
     coordinator = MonzoCoordinator(hass, entry, external_api)
 
     await coordinator.async_config_entry_first_refresh()
-    if owner_name := get_authenticated_owner_name(
-        coordinator.data.accounts.values(), entry.unique_id
+    generated_titles = {DOMAIN}
+    if isinstance(profile := entry.data.get("profile"), str):
+        generated_titles.add(profile)
+    if entry.title in generated_titles and (
+        owner_name := get_authenticated_owner_name(
+            coordinator.data.accounts.values(), entry.unique_id
+        )
     ):
         hass.config_entries.async_update_entry(entry, title=owner_name)
 

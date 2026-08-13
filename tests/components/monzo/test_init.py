@@ -66,6 +66,22 @@ async def test_config_entry_title_falls_back_without_owner(
     assert polling_config_entry.title == TITLE
 
 
+async def test_config_entry_title_preserves_custom_name(
+    hass: HomeAssistant,
+    polling_config_entry: MockConfigEntry,
+    monzo: AsyncMock,
+) -> None:
+    """Test a user-defined config entry title is retained."""
+    polling_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        polling_config_entry, title="Household finances"
+    )
+
+    assert await hass.config_entries.async_setup(polling_config_entry.entry_id)
+
+    assert polling_config_entry.title == "Household finances"
+
+
 async def test_device_names(
     hass: HomeAssistant,
     polling_config_entry: MockConfigEntry,
@@ -114,6 +130,40 @@ async def test_device_names(
     assert joint_account_device.name == "Joint Account — Jake Martin & Jane Martin"
     assert pot_device is not None
     assert pot_device.name == "Holiday"
+
+
+async def test_joint_account_owners_with_same_name(
+    hass: HomeAssistant,
+    polling_config_entry: MockConfigEntry,
+    monzo: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test distinct joint owners can have the same preferred name."""
+    monzo.user_account.accounts.return_value = [
+        {
+            **TEST_ACCOUNTS[0],
+            "id": "acc_joint",
+            "name": "Joint Account",
+            "owners": [
+                {
+                    "user_id": str(USER_ID),
+                    "preferred_name": "Alex Smith",
+                },
+                {
+                    "user_id": "another-user",
+                    "preferred_name": "Alex Smith",
+                },
+            ],
+        }
+    ]
+
+    await setup_integration(hass, polling_config_entry)
+
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "acc_joint"), polling_config_entry.entry_id
+    )
+    assert account_device is not None
+    assert account_device.name == "Joint Account — Alex Smith & Alex Smith"
 
 
 async def test_api_can_trigger_reauth(
