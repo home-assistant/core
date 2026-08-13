@@ -290,7 +290,8 @@ async def test_light_availability_follows_ir_entity(
     )
 
 
-@pytest.mark.usefixtures("init_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_off_code_updates_light_state(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -320,7 +321,8 @@ async def test_receiver_off_code_updates_light_state(
         (OsramLightCode.HUE_300, (255, 0, 255)),
     ],
 )
-@pytest.mark.usefixtures("init_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_static_color_code_updates_light_state(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -354,7 +356,8 @@ async def test_receiver_static_color_code_updates_light_state(
         (OsramLightCode.SMOOTH, "smooth"),
     ],
 )
-@pytest.mark.usefixtures("init_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_effect_code_updates_light_state(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -379,7 +382,8 @@ async def test_receiver_effect_code_updates_light_state(
     assert state.attributes[ATTR_EFFECT] == expected_effect
 
 
-@pytest.mark.usefixtures("init_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_ignores_other_nec_addresses(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -401,7 +405,8 @@ async def test_receiver_ignores_other_nec_addresses(
     assert state.state == STATE_OFF
 
 
-@pytest.mark.usefixtures("init_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_ignores_non_nec_signals(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -418,7 +423,8 @@ async def test_receiver_ignores_non_nec_signals(
     assert state.state == STATE_OFF
 
 
-@pytest.mark.usefixtures("init_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_resubscribes_after_receiver_unavailable(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -453,7 +459,8 @@ async def test_receiver_resubscribes_after_receiver_unavailable(
         OsramLightCode.MODE,
     ],
 )
-@pytest.mark.usefixtures("init_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_on_like_codes_turn_light_on(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -475,7 +482,8 @@ async def test_receiver_on_like_codes_turn_light_on(
     assert state.state == STATE_ON
 
 
-@pytest.mark.usefixtures("init_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_ignores_unknown_osram_command(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
