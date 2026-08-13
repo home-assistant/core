@@ -1,5 +1,7 @@
 """Tests for the Cync integration setup."""
 
+from unittest.mock import patch
+
 from homeassistant.components.cync.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -26,6 +28,7 @@ async def test_migrate_unique_ids(
         DOMAIN,
         "1000-1101",
         config_entry=mock_config_entry,
+        device_id=device_entry.id,
     )
     offline_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -36,6 +39,18 @@ async def test_migrate_unique_ids(
         DOMAIN,
         "1000-1112",
         config_entry=mock_config_entry,
+        device_id=offline_device_entry.id,
+    )
+    switch_device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "1000-1006")},
+    )
+    switch_entry = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        "1000-1101",
+        config_entry=mock_config_entry,
+        device_id=switch_device_entry.id,
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -58,8 +73,23 @@ async def test_migrate_unique_ids(
     assert (DOMAIN, "1000-3") in migrated_offline_device.identifiers
     assert (DOMAIN, "1000-1112") not in migrated_offline_device.identifiers
 
+    current_switch = entity_registry.async_get(switch_entry.entity_id)
+    assert current_switch is not None
+    assert current_switch.unique_id == "1000-1101"
+    current_switch_device = device_registry.async_get(switch_device_entry.id)
+    assert current_switch_device is not None
+    assert (DOMAIN, "1000-1006") in current_switch_device.identifiers
+
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(light_entry.entity_id) == migrated_light
     assert device_registry.async_get(device_entry.id) == migrated_device
+
+    with patch(
+        "homeassistant.components.cync._migrate_unique_ids"
+    ) as migrate_unique_ids:
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    migrate_unique_ids.assert_not_called()
