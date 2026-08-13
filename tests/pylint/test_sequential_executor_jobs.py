@@ -290,20 +290,55 @@ def test_executor_job_in_loop_flagged(
     assert messages[0].msg_id == "home-assistant-executor-job-in-loop"
 
 
-def test_executor_job_after_loop_not_flagged(
-    linter: UnittestLinter,
-    executor_checker: SequentialExecutorJobsChecker,
-) -> None:
-    """Test that a single executor job after a loop is not flagged."""
-    root_node = astroid.parse(
-        """
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
 async def async_setup(hass, config):
     for item in items:
         do_something(item)
     await hass.async_add_executor_job(call_a)
 """,
-        "homeassistant.components.test_integration",
-    )
+            id="after_loop",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        data = await fetch_async(item)
+""",
+            id="loop_with_trailing_await",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        data = await fetch_async(item)
+        await hass.async_add_executor_job(call_a, data)
+""",
+            id="loop_with_leading_await",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        if item:
+            data = await fetch_async(item)
+        await hass.async_add_executor_job(call_a, item)
+""",
+            id="loop_with_nested_await",
+        ),
+    ],
+)
+def test_executor_job_loop_not_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+    code: str,
+) -> None:
+    """Test loop cases that should not be flagged."""
+    root_node = astroid.parse(code, "homeassistant.components.test_integration")
 
     with assert_no_messages(linter):
         walk_checker(linter, executor_checker, root_node)

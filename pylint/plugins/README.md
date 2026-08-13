@@ -858,6 +858,11 @@ iteration. Move the loop into a single function and call
 `async_add_executor_job` once with that function. The rule applies to
 integration modules only.
 
+The rule only fires when the loop body contains no other awaited async
+work besides executor jobs. If the loop awaits async coroutines (for
+example fetching data), the blocking calls cannot be hoisted into a
+single executor job, since executor functions cannot run async code.
+
 
 ## `home_assistant_has_entity_name` checker
 
