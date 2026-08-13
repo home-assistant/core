@@ -90,9 +90,11 @@ class ShellyCameraEntity(ShellyRpcAttributeEntity, Camera):
     def available(self) -> bool:
         """Available."""
         available = super().available
-        config = self.coordinator.device.config[self.key]
+        if not available:
+            return False
 
-        return available and not config["privacy"] and config["rtsp"]["enable"]
+        config = self.coordinator.device.config[self.key]
+        return not config["privacy"] and config["rtsp"]["enable"]
 
     @override
     @property
@@ -124,7 +126,7 @@ class ShellyCameraEntity(ShellyRpcAttributeEntity, Camera):
 
         if username and password:
             return (
-                f"rtsp://{quote(username)}:{quote(password)}@{host}"
+                f"rtsp://{quote(username, safe='')}:{quote(password, safe='')}@{host}"
                 f"/stream/{self.entity_description.stream}"
             )
 
