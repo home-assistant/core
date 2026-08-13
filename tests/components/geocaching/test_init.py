@@ -1,7 +1,8 @@
 """Tests for the Geocaching integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from homeassistant.components.geocaching import async_update_entry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -26,3 +27,15 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_update_listener(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the config entry update listener."""
+    with patch.object(
+        hass.config_entries, "async_reload", new_callable=AsyncMock
+    ) as async_reload:
+        await async_update_entry(hass, mock_config_entry)
+
+    async_reload.assert_awaited_once_with(mock_config_entry.entry_id)

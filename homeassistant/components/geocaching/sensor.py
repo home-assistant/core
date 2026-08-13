@@ -12,14 +12,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import UnitOfLength
+from homeassistant.const import CONF_CODE, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from .const import DOMAIN, SUBENTRY_TYPE_TRACKABLE, SUBENTRY_TYPE_TRACKED_CACHE
 from .coordinator import GeocachingConfigEntry, GeocachingDataUpdateCoordinator
 from .entity import (
     GeocachingBaseEntity,
@@ -116,30 +115,40 @@ async def async_setup_entry(
     """Set up a Geocaching sensor entry."""
     coordinator = entry.runtime_data
 
-    entities: list[Entity] = []
-
-    entities.extend(
+    async_add_entities(
         GeocachingProfileSensor(coordinator, description)
         for description in PROFILE_SENSORS
     )
 
-    status = coordinator.data
+    cache_subentries = {
+        subentry.data[CONF_CODE]: subentry
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_TRACKED_CACHE)
+    }
+    for cache in coordinator.data.tracked_caches:
+        if (subentry := cache_subentries.get(cache.reference_code)) is None:
+            continue
+        async_add_entities(
+            (
+                GeoEntityCacheSensorEntity(coordinator, cache, description)
+                for description in CACHE_SENSORS
+            ),
+            config_subentry_id=subentry.subentry_id,
+        )
 
-    # Add entities for tracked caches
-    entities.extend(
-        GeoEntityCacheSensorEntity(coordinator, cache, description)
-        for cache in status.tracked_caches
-        for description in CACHE_SENSORS
-    )
-
-    # Add entities for tracked trackables
-    entities.extend(
-        GeoEntityTrackableSensorEntity(coordinator, trackable, description)
-        for trackable in status.trackables.values()
-        for description in TRACKABLE_SENSORS
-    )
-
-    async_add_entities(entities)
+    trackable_subentries = {
+        subentry.data[CONF_CODE]: subentry
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_TRACKABLE)
+    }
+    for trackable in coordinator.data.trackables.values():
+        if (subentry := trackable_subentries.get(trackable.reference_code)) is None:
+            continue
+        async_add_entities(
+            (
+                GeoEntityTrackableSensorEntity(coordinator, trackable, description)
+                for description in TRACKABLE_SENSORS
+            ),
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 # Base class for a cache entity.
