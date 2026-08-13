@@ -298,7 +298,7 @@ class RuntimeEntryData:
             if not entity_callbacks:
                 _LOGGER.debug(
                     "%s: no subscriber for key change %s -> %s",
-                    new_info.name,
+                    new_info.name or new_info.object_id,
                     old_info.key,
                     new_info.key,
                 )

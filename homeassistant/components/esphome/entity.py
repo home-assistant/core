@@ -104,6 +104,7 @@ def async_static_info_updated(
     )
     rekeys: list[tuple[EntityInfo, EntityInfo]] = []
     deferred: list[tuple[EntityInfo, str]] = []
+    new_entity_slots: set[DeviceEntityKey] = set()
 
     # First pass: unique_id matches and moves between devices. All
     # moves resolve before any rename so a rename candidate cannot be
@@ -208,6 +209,7 @@ def async_static_info_updated(
         if (
             renamed_info := current_infos.pop((info.device_id, info.key), None)
         ) is None:
+            new_entity_slots.add((info.device_id, info.key))
             add_entities.append(entity_type(entry_data, info, state_type))
             continue
         async_migrate_unique_id(
@@ -224,13 +226,14 @@ def async_static_info_updated(
     if current_infos:
         entry_data.async_remove_entities(hass, current_infos.values(), mac)
 
-    # The state cache holds only live keys so a future entity that
-    # reuses a retired key cannot adopt a stale state
-    if rekeys or current_infos:
-        live_keys = {key for _, key in new_infos}
+    # A cached state is only valid while its (device_id, key) slot is
+    # occupied by the same entity; anything else is stale and must not
+    # be adopted by another entity through a reused key
+    if rekeys or current_infos or new_entity_slots:
         states = entry_data.state[state_type]
-        for cached_key in list(states):
-            if cached_key not in live_keys:
+        for cached_key, cached_state in list(states.items()):
+            slot = (cached_state.device_id, cached_key)
+            if slot not in new_infos or slot in new_entity_slots:
                 del states[cached_key]
         entry_data.stale_state -= {
             stale_key

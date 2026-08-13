@@ -3092,3 +3092,56 @@ async def test_new_entities_reusing_retired_keys_do_not_adopt_stale_states(
 
     assert hass.states.get("binary_sensor.test_sensor_three").state == STATE_UNKNOWN
     assert hass.states.get("binary_sensor.test_sensor_four").state == STATE_UNKNOWN
+
+
+async def test_new_entity_on_other_device_reusing_removed_entities_key(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a new entity on another device reusing a removed entity's key.
+
+    The key stays live on the other device, so the removed entity's
+    cached state must be dropped by slot, not by key, or the new
+    entity would adopt it.
+    """
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
+    ]
+    device_info = {
+        "devices": sub_devices,
+    }
+    entity_info = [
+        BinarySensorInfo(
+            object_id="volt",
+            key=2,
+            name="Volt",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=2, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert hass.states.get("binary_sensor.test_volt").state == STATE_ON
+
+    # Volt is removed while a new Batt on sub_one reuses key 2;
+    # no state is streamed for Batt
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="batt",
+            key=2,
+            name="Batt",
+            device_id=11111111,
+        ),
+    ]
+    await reconnect_with_updated_entity_info(
+        hass, device, updated_entity_info, states=[]
+    )
+
+    assert hass.states.get("binary_sensor.test_volt") is None
+    assert hass.states.get("binary_sensor.sub_one_batt").state == STATE_UNKNOWN

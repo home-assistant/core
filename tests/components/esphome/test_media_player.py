@@ -793,3 +793,112 @@ async def test_media_player_formats_survive_rekey_onto_removed_entity_key(
     mock_client.media_player_command.assert_called_once()
     call_args = mock_client.media_player_command.call_args
     assert "/api/esphome/ffmpeg_proxy/" in call_args.kwargs["media_url"]
+
+
+async def test_media_player_formats_not_shared_with_sibling_taking_old_name(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test formats are not shared with a player adopting this one's old name.
+
+    After a stable key rename the old name based unique_id is free; a
+    new player claiming it must keep its own formats entry, or its
+    formats would replace the renamed player's.
+    """
+    default_formats = [
+        MediaPlayerSupportedFormat(
+            format="mp3",
+            sample_rate=48000,
+            num_channels=2,
+            purpose=MediaPlayerFormatPurpose.DEFAULT,
+        ),
+    ]
+    announcement_formats = [
+        MediaPlayerSupportedFormat(
+            format="wav",
+            sample_rate=16000,
+            num_channels=1,
+            purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+            sample_bytes=2,
+        ),
+    ]
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="p_one",
+            key=1,
+            name="Alpha",
+            supports_pause=True,
+            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
+            # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+            feature_flags=1200653,
+            supported_formats=default_formats,
+        ),
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.IDLE
+        ),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert hass.states.get("media_player.test_alpha") is not None
+
+    # Rename with a stable key, then a new player with announcement
+    # only formats claims the old name
+    renamed = MediaPlayerInfo(
+        object_id="p_one",
+        key=1,
+        name="Beta",
+        supports_pause=True,
+        feature_flags=1200653,
+        supported_formats=default_formats,
+    )
+    new_player = MediaPlayerInfo(
+        object_id="alpha",
+        key=2,
+        name="Alpha",
+        supports_pause=True,
+        feature_flags=1200653,
+        supported_formats=announcement_formats,
+    )
+    await reconnect_with_updated_entity_info(hass, device, [renamed])
+    await reconnect_with_updated_entity_info(hass, device, [renamed, new_player])
+    assert hass.states.get("media_player.test_alpha_2") is not None
+
+    # The renamed player must still use its own default format proxy,
+    # not the new player's announcement only formats
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_alpha",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://127.0.0.1/test.mp3",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_called_once()
+    call_args = mock_client.media_player_command.call_args
+    assert "/api/esphome/ffmpeg_proxy/" in call_args.kwargs["media_url"]
+    assert ".mp3" in call_args.kwargs["media_url"]
+    mock_client.media_player_command.reset_mock()
+
+    # The new player has no default format, so it must not proxy; a
+    # shared formats entry would hand it the renamed player's mp3
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_alpha_2",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://127.0.0.1/test.mp3",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_called_once()
+    call_args = mock_client.media_player_command.call_args
+    assert call_args.kwargs["media_url"] == "http://127.0.0.1/test.mp3"
