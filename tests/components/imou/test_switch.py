@@ -97,7 +97,9 @@ async def test_turn_on_via_service(
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
     """Turning on a switch calls the vendor library through the coordinator."""
-    mock_imou_ha_device_manager.async_switch_operation.side_effect = _apply_switch_operation
+    mock_imou_ha_device_manager.async_switch_operation.side_effect = (
+        _apply_switch_operation
+    )
     motion_entry = next(
         entry
         for entry in er.async_entries_for_config_entry(
@@ -130,7 +132,9 @@ async def test_turn_off_via_service(
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
     """Turning off a switch calls the vendor library through the coordinator."""
-    mock_imou_ha_device_manager.async_switch_operation.side_effect = _apply_switch_operation
+    mock_imou_ha_device_manager.async_switch_operation.side_effect = (
+        _apply_switch_operation
+    )
     header_entry = next(
         entry
         for entry in er.async_entries_for_config_entry(
@@ -161,7 +165,9 @@ async def test_turn_on_service_propagates_api_error(
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
     """Imou API errors from async_switch_operation surface to the service call."""
-    mock_imou_ha_device_manager.async_switch_operation.side_effect = ImouException("cloud failure")
+    mock_imou_ha_device_manager.async_switch_operation.side_effect = ImouException(
+        "cloud failure"
+    )
 
     entity_id = hass.states.async_all("switch")[0].entity_id
 

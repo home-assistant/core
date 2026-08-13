@@ -324,7 +324,9 @@ async def test_camera_image_propagates_api_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Imou API errors from snapshot fetch surface to the caller."""
-    mock_imou_ha_device_manager.async_get_device_image.side_effect = ImouException("image failure")
+    mock_imou_ha_device_manager.async_get_device_image.side_effect = ImouException(
+        "image failure"
+    )
 
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     with pytest.raises(

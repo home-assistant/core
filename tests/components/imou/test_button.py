@@ -122,7 +122,9 @@ async def test_press_button_service_propagates_api_error(
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
     """Imou API errors from async_press_button surface to the service call."""
-    mock_imou_ha_device_manager.async_press_button.side_effect = ImouException("cloud failure")
+    mock_imou_ha_device_manager.async_press_button.side_effect = ImouException(
+        "cloud failure"
+    )
 
     entity_id = hass.states.async_all("button")[0].entity_id
 
