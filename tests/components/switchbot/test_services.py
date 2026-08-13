@@ -117,7 +117,18 @@ async def test_get_keypad_info_service(
     entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
     entry.add_to_hass(hass)
 
-    basic_info = {"firmware": 2.4, "hardware": 22, "battery": 95}
+    basic_info = {
+        "firmware": 2.4,
+        "hardware": 22,
+        "support_fingerprint": 1,
+        "lock_button_enabled": True,
+        "tamper_alarm_enabled": True,
+        "backlight_enabled": True,
+        "backlight_level": 5,
+        "prompt_tone_enabled": True,
+        "battery": 95,
+        "battery_charging": True,
+    }
     get_basic_info = AsyncMock(return_value=basic_info)
     get_password_count = AsyncMock(return_value=credential_counts)
     with patch.multiple(
@@ -142,7 +153,15 @@ async def test_get_keypad_info_service(
         )
 
     assert response == {
-        "basic_info": {"firmware": 2.4, "hardware": 22},
+        "basic_info": {
+            "firmware": 2.4,
+            "hardware": 22,
+            "support_fingerprint": 1,
+            "lock_button_enabled": True,
+            "backlight_enabled": True,
+            "backlight_level": 5,
+            "prompt_tone_enabled": True,
+        },
         "credential_counts": credential_counts,
     }
     get_basic_info.assert_awaited_once_with()

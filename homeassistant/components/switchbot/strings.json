@@ -473,7 +473,7 @@
       "name": "Add password"
     },
     "get_keypad_info": {
-      "description": "Retrieve firmware and hardware versions and aggregate credential counts from a Keypad Vision device.",
+      "description": "Retrieve keypad settings, firmware and hardware versions, and aggregate credential counts from a Keypad Vision device.",
       "fields": {
         "device_id": {
           "description": "The device ID of the Keypad Vision device",

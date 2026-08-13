@@ -119,7 +119,7 @@ async def async_add_password(call: ServiceCall) -> None:
 
 
 async def async_get_keypad_info(call: ServiceCall) -> ServiceResponse:
-    """Get keypad versions and credential counts."""
+    """Get keypad settings, versions, and credential counts."""
     device_id = call.data[ATTR_DEVICE_ID]
     coordinator = _async_target(call.hass, device_id)
 
@@ -142,6 +142,11 @@ async def async_get_keypad_info(call: ServiceCall) -> ServiceResponse:
         "basic_info": {
             "firmware": basic_info["firmware"],
             "hardware": basic_info["hardware"],
+            "support_fingerprint": basic_info["support_fingerprint"],
+            "lock_button_enabled": basic_info["lock_button_enabled"],
+            "backlight_enabled": basic_info["backlight_enabled"],
+            "backlight_level": basic_info["backlight_level"],
+            "prompt_tone_enabled": basic_info["prompt_tone_enabled"],
         },
         "credential_counts": credential_counts,
     }
