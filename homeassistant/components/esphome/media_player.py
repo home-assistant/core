@@ -91,14 +91,6 @@ class EsphomeMediaPlayer(
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the media player."""
-        # Per instance media_player_formats key; a unique_id based key
-        # could alias another entity after a rename and point cleanup
-        # at that entity's entry
-        self._format_key = f"{id(self)}"
-        super().__init__(*args, **kwargs)
-
     @callback
     @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
@@ -111,7 +103,7 @@ class EsphomeMediaPlayer(
         for espflag in esp_flags:
             flags |= _FEATURES[espflag]
         self._attr_supported_features = flags
-        self._entry_data.media_player_formats[self._format_key] = (
+        self._entry_data.media_player_formats[self] = (
             self._static_info.supported_formats
         )
 
@@ -152,7 +144,7 @@ class EsphomeMediaPlayer(
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
         bypass_proxy = kwargs.get(ATTR_MEDIA_EXTRA, {}).get(ATTR_BYPASS_PROXY)
         supported_formats: list[MediaPlayerSupportedFormat] | None = (
-            self._entry_data.media_player_formats.get(self._format_key)
+            self._entry_data.media_player_formats.get(self)
         )
 
         if (
@@ -179,7 +171,7 @@ class EsphomeMediaPlayer(
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()
-        self._entry_data.media_player_formats.pop(self._format_key, None)
+        self._entry_data.media_player_formats.pop(self, None)
 
     def _get_proxy_url(
         self,

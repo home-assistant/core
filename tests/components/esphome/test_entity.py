@@ -3205,3 +3205,143 @@ async def test_unnamed_entities_do_not_pair_across_devices(
     entry_sub = entity_registry.async_get("binary_sensor.sub_one")
     assert entry_sub is not None
     assert entry_sub.id != entry_main.id
+
+
+async def test_moved_entity_does_not_adopt_removed_entities_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a mover landing on a removed entity's key starts unknown.
+
+    The removed entity's cached state sits under the mover's new key
+    and must be dropped, or the re-added mover would adopt it.
+    """
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
+    ]
+    device_info = {
+        "devices": sub_devices,
+    }
+    entity_info = [
+        BinarySensorInfo(
+            object_id="foo",
+            key=5,
+            name="Foo",
+        ),
+        BinarySensorInfo(
+            object_id="bar",
+            key=9,
+            name="Bar",
+            device_id=11111111,
+        ),
+    ]
+    states = [
+        BinarySensorState(key=5, state=True, missing_state=False),
+        BinarySensorState(key=9, state=False, missing_state=False, device_id=11111111),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert hass.states.get("binary_sensor.test_foo").state == STATE_ON
+    assert hass.states.get("binary_sensor.sub_one_bar").state == STATE_OFF
+
+    # Foo is removed while Bar moves to the main device and a firmware
+    # rebuild hands it Foo's old key; no states are streamed
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="bar",
+            key=5,
+            name="Bar",
+        ),
+    ]
+    await reconnect_with_updated_entity_info(
+        hass, device, updated_entity_info, states=[]
+    )
+
+    assert hass.states.get("binary_sensor.test_foo") is None
+    assert hass.states.get("binary_sensor.sub_one_bar").state == STATE_UNKNOWN
+
+
+async def test_entity_move_with_claimed_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a device move whose target unique_id is already claimed.
+
+    An orphaned registry entry holding the target unique_id must not
+    abort the update; the move keeps its old unique_id and the rest of
+    the entities are still processed.
+    """
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
+    ]
+    device_info = {
+        "devices": sub_devices,
+    }
+    entity_info = [
+        BinarySensorInfo(
+            object_id="foo",
+            key=1,
+            name="Foo",
+        ),
+        BinarySensorInfo(
+            object_id="other",
+            key=2,
+            name="Other",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=2, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert hass.states.get("binary_sensor.test_foo").state == STATE_ON
+
+    # An orphaned registry entry already claims Foo's post move unique_id
+    moved_info = BinarySensorInfo(
+        object_id="foo",
+        key=1,
+        name="Foo",
+        device_id=11111111,
+    )
+    orphan = entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        build_device_unique_id(device.device_info.mac_address, moved_info),
+        config_entry=device.entry,
+    )
+
+    updated_entity_info = [
+        moved_info,
+        BinarySensorInfo(
+            object_id="other",
+            key=2,
+            name="Other",
+        ),
+    ]
+    await reconnect_with_updated_entity_info(
+        hass,
+        device,
+        updated_entity_info,
+        states=[
+            BinarySensorState(
+                key=1, state=True, missing_state=False, device_id=11111111
+            ),
+            BinarySensorState(key=2, state=False, missing_state=False),
+        ],
+    )
+
+    # The update completed: the sibling still processes states
+    assert hass.states.get("binary_sensor.test_other").state == STATE_OFF
+    assert entity_registry.async_get(orphan.entity_id) is not None

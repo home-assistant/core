@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Final, TypedDict, cast
+from weakref import WeakKeyDictionary
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
@@ -184,8 +185,10 @@ class RuntimeEntryData:
         EntityInfoKey, list[Callable[[EntityInfo], None]]
     ] = field(default_factory=dict)
     original_options: dict[str, Any] = field(default_factory=dict)
-    media_player_formats: dict[str, list[MediaPlayerSupportedFormat]] = field(
-        default_factory=lambda: defaultdict(list)
+    # Keyed by the entity object so cleanup can never touch another
+    # entity's entry and never-added entities self clean via GC
+    media_player_formats: WeakKeyDictionary[Any, list[MediaPlayerSupportedFormat]] = (
+        field(default_factory=WeakKeyDictionary)
     )
     assist_satellite_config_update_callbacks: list[
         Callable[[AssistSatelliteConfiguration], None]

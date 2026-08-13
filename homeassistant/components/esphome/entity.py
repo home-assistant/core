@@ -111,6 +111,7 @@ def async_static_info_updated(
     # Slots of brand new entities; movers re-added in the first pass
     # keep their own cached state and are deliberately not tracked
     new_entity_slots: set[DeviceEntityKey] = set()
+    states = entry_data.state[state_type]
 
     # First pass: unique_id matches and moves between devices. All
     # moves resolve before any rename so a rename candidate cannot be
@@ -135,6 +136,13 @@ def async_static_info_updated(
         idx = next((i for i, key in enumerate(candidates) if key not in new_infos), 0)
         old_info = current_infos.pop(candidates.pop(idx))
 
+        # A foreign cached state at the mover's destination key must
+        # not be adopted when the mover is re-added
+        if (
+            cached_state := states.get(info.key)
+        ) is not None and cached_state.device_id != old_info.device_id:
+            del states[info.key]
+
         # Entity has switched devices, need to migrate unique_id
         # and handle state subscriptions
         old_unique_id = build_device_unique_id(mac, old_info)
@@ -156,9 +164,16 @@ def async_static_info_updated(
 
         updates: dict[str, Any] = {}
 
-        # Update unique_id if it changed
+        # Update unique_id if it changed and the new one is not claimed
         if old_unique_id != unique_id:
-            updates["new_unique_id"] = unique_id
+            if ent_reg.async_get_entity_id(platform.domain, DOMAIN, unique_id):
+                _LOGGER.debug(
+                    "Cannot migrate unique_id %s -> %s: already claimed",
+                    old_unique_id,
+                    unique_id,
+                )
+            else:
+                updates["new_unique_id"] = unique_id
 
         # Update device assignment in registry
         if info.device_id:
@@ -236,7 +251,6 @@ def async_static_info_updated(
     # occupied by the same entity; anything else is stale and must not
     # be adopted by another entity through a reused key
     if rekeys or current_infos or new_entity_slots:
-        states = entry_data.state[state_type]
         for cached_key, cached_state in list(states.items()):
             slot = (cached_state.device_id, cached_key)
             if slot not in new_infos or slot in new_entity_slots:
