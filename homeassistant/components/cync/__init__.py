@@ -21,6 +21,8 @@ from .coordinator import CyncConfigEntry, CyncCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
+_MESH_UNIQUE_IDS_MIGRATED = "mesh_unique_ids_migrated"
+
 
 def _migrate_unique_ids(
     hass: HomeAssistant, entry: CyncConfigEntry, coordinator: CyncCoordinator
@@ -42,19 +44,27 @@ def _migrate_unique_ids(
         return
 
     entity_registry = er.async_get(hass)
+    migrated_device_ids = set()
     for entity_entry in er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
     ):
-        if new_unique_id := id_map.get(entity_entry.unique_id):
+        if (
+            entity_entry.platform == DOMAIN
+            and entity_entry.domain == Platform.LIGHT
+            and (new_unique_id := id_map.get(entity_entry.unique_id))
+        ):
             entity_registry.async_update_entity(
                 entity_entry.entity_id,
                 new_unique_id=new_unique_id,
             )
+            if entity_entry.device_id is not None:
+                migrated_device_ids.add(entity_entry.device_id)
 
     device_registry = dr.async_get(hass)
-    for device_entry in dr.async_entries_for_config_entry(
-        device_registry, entry.entry_id
-    ):
+    for device_id in migrated_device_ids:
+        device_entry = device_registry.async_get(device_id)
+        if device_entry is None:
+            continue
         for domain, identifier in device_entry.identifiers:
             if domain == DOMAIN and (new_identifier := id_map.get(identifier)):
                 device_registry.async_update_device(
@@ -94,7 +104,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
     await devices_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = devices_coordinator
 
-    _migrate_unique_ids(hass, entry, devices_coordinator)
+    if not entry.data.get(_MESH_UNIQUE_IDS_MIGRATED):
+        _migrate_unique_ids(hass, entry, devices_coordinator)
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, _MESH_UNIQUE_IDS_MIGRATED: True},
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
