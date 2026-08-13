@@ -60,6 +60,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vol.Required("type"): "search/related",
         vol.Required("item_type"): vol.Coerce(ItemType),
         vol.Required("item_id"): str,
+        vol.Optional("include_disabled_entities", default=False): bool,
     }
 )
 @callback
@@ -69,7 +70,11 @@ def websocket_search_related(
     msg: dict[str, Any],
 ) -> None:
     """Handle search."""
-    searcher = Searcher(hass, get_entity_sources(hass))
+    searcher = Searcher(
+        hass,
+        get_entity_sources(hass),
+        include_disabled_entities=msg["include_disabled_entities"],
+    )
     connection.send_result(
         msg["id"], searcher.async_search(msg["item_type"], msg["item_id"])
     )
@@ -84,6 +89,8 @@ class Searcher:
         self,
         hass: HomeAssistant,
         entity_sources: dict[str, EntityInfo],
+        *,
+        include_disabled_entities: bool = False,
     ) -> None:
         """Search results."""
         self.hass = hass
@@ -91,6 +98,7 @@ class Searcher:
         self._device_registry = dr.async_get(hass)
         self._entity_registry = er.async_get(hass)
         self._entity_sources = entity_sources
+        self._include_disabled_entities = include_disabled_entities
         self.results: defaultdict[ItemType, set[str]] = defaultdict(set)
 
     @callback
@@ -152,7 +160,9 @@ class Searcher:
 
             # Entities of this device
             for entity_entry in er.async_entries_for_device(
-                self._entity_registry, device.id
+                self._entity_registry,
+                device.id,
+                include_disabled_entities=self._include_disabled_entities,
             ):
                 # Skip the entity if it's in a different area
                 if entity_entry.area_id is not None:
@@ -317,7 +327,9 @@ class Searcher:
 
         # Entities of this device
         for entity_entry in er.async_entries_for_device(
-            self._entity_registry, device_id
+            self._entity_registry,
+            device_id,
+            include_disabled_entities=self._include_disabled_entities,
         ):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
             # Add all entity information as well
