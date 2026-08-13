@@ -52,8 +52,8 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         self.coordinator = coordinator
         self.service = service
 
-        # The platform is only set up when a wake service exists.
-        wake_service = service.info.wake[0]
+        # The platform is only set up when an installed wake service exists.
+        wake_service = next(wake for wake in service.info.wake if wake.installed)
         self._supported_wake_words: list[wake_word.WakeWord] = []
         self._rebuild_wake_words(wake_service)
 

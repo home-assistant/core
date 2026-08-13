@@ -68,11 +68,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         # The platform is only set up when an installed TTS service exists.
         self._tts_service = next(tts for tts in service.info.tts if tts.installed)
         self._voices: dict[str, list[tts.Voice]] = {}
-        self._supported_languages: list[str] = []
         self._rebuild_voices(self._tts_service)
-
-        if self._supported_languages:
-            self._attr_default_language = self._supported_languages[0]
 
         self._attr_name = self._tts_service.name
         self._attr_unique_id = f"{config_entry.entry_id}-tts"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
@@ -121,13 +117,13 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
             language_voices.sort(key=lambda v: v.name)
 
         self._voices = voices
-        self._supported_languages = list(voice_languages)
+        self._attr_supported_languages = sorted(voice_languages)
 
-    @property
-    @override
-    def supported_languages(self) -> list[str]:
-        """Return a list of supported languages."""
-        return self._supported_languages
+        # Only move the default when the current one is gone so that installing
+        # an unrelated voice cannot change it.
+        current_default = getattr(self, "_attr_default_language", None)
+        if voice_languages and current_default not in voice_languages:
+            self._attr_default_language = self._attr_supported_languages[0]
 
     @callback
     @override

@@ -100,6 +100,28 @@ TTS_INFO_NEW_VOICE = Info(
         )
     ]
 )
+TTS_INFO_LANGUAGE_REPLACED = Info(
+    tts=[
+        TtsProgram(
+            name="Test TTS",
+            description="Test TTS",
+            installed=True,
+            attribution=TEST_ATTR,
+            voices=[
+                TtsVoice(
+                    name="New Voice",
+                    description="New Voice",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["de-DE"],
+                    speakers=None,
+                    version=None,
+                )
+            ],
+            version=None,
+        )
+    ]
+)
 TTS_STREAMING_INFO = Info(
     tts=[
         TtsProgram(
