@@ -635,11 +635,6 @@ async def async_setup_stream(
 ) -> None:
     """Set up the stream for a vehicle."""
     await vehicle.stream_vehicle.get_config()
-    entry.async_create_background_task(
-        hass,
-        vehicle.stream_vehicle.prefer_typed(True),
-        f"Prefer typed for {vehicle.vin}",
-    )
 
     entry.async_on_unload(
         vehicle.stream_vehicle.listen_Version(
