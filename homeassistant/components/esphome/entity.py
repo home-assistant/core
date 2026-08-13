@@ -108,8 +108,9 @@ def async_static_info_updated(
     )
     rekeys: list[tuple[EntityInfo, EntityInfo]] = []
     deferred: list[tuple[EntityInfo, str]] = []
-    # Slots of brand new entities; movers re-added in the first pass
-    # keep their own cached state and are deliberately not tracked
+    # Slots of brand new entities; movers are deliberately not
+    # tracked, though a mover's cached state under its old slot is
+    # still dropped whenever the sweep below runs
     new_entity_slots: set[DeviceEntityKey] = set()
     states = entry_data.state[state_type]
 

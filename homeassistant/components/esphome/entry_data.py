@@ -56,6 +56,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow, entity_registry as er
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.storage import Store
 
@@ -187,9 +188,9 @@ class RuntimeEntryData:
     original_options: dict[str, Any] = field(default_factory=dict)
     # Keyed by the entity object so cleanup can never touch another
     # entity's entry and never-added entities self clean via GC
-    media_player_formats: WeakKeyDictionary[Any, list[MediaPlayerSupportedFormat]] = (
-        field(default_factory=WeakKeyDictionary)
-    )
+    media_player_formats: WeakKeyDictionary[
+        Entity, list[MediaPlayerSupportedFormat]
+    ] = field(default_factory=WeakKeyDictionary)
     assist_satellite_config_update_callbacks: list[
         Callable[[AssistSatelliteConfiguration], None]
     ] = field(default_factory=list)
