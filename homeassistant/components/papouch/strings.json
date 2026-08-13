@@ -218,6 +218,17 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to device {name} ({location})."
+    },
+    "command_failed": {
+      "message": "Failed to execute command {cmd} on {name}."
+    },
+    "invalid_auth": {
+      "message": "Invalid password of device {name}"
+    }
+  },
   "options": {
     "step": {
       "init": {

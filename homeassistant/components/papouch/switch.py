@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+import aiopapouch.exceptions as aiopapouch_exceptions
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
@@ -10,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import PapouchConfigEntry
 from .coordinator import PapouchDataUpdateCoordinator
 from .entity import PapouchEntity
+from .exceptions import PapouchAuthError, PapouchCommandError, PapouchConnectionError
 
 PARALLEL_UPDATES = 0
 
@@ -68,7 +71,27 @@ class PapouchSwitch(PapouchEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.device.turn_on_switch(self.item_id)
+
+        try:
+            await self.coordinator.device.turn_on_switch(self.item_id)
+        except aiopapouch_exceptions.DeviceAuthError as err:
+            raise PapouchAuthError(
+                translation_placeholders={"name": self.coordinator.device.name}
+            ) from err
+        except aiopapouch_exceptions.DeviceConnectionError as err:
+            raise PapouchConnectionError(
+                translation_placeholders={
+                    "name": self.coordinator.device.name,
+                    "location": self.coordinator.device.location,
+                }
+            ) from err
+        except aiopapouch_exceptions.DeviceError as err:
+            raise PapouchCommandError(
+                translation_placeholders={
+                    "cmd": f"turn_on_switch_{self.item_id}",
+                    "name": self.coordinator.device.name,
+                }
+            ) from err
 
         if self.coordinator.data and "switch" in self.coordinator.data:
             self.coordinator.data["switch"][self.item_id] = True
@@ -78,7 +101,28 @@ class PapouchSwitch(PapouchEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.device.turn_off_switch(self.item_id)
+
+        try:
+            await self.coordinator.device.turn_off_switch(self.item_id)
+
+        except aiopapouch_exceptions.DeviceAuthError as err:
+            raise PapouchAuthError(
+                translation_placeholders={"name": self.coordinator.device.name}
+            ) from err
+        except aiopapouch_exceptions.DeviceConnectionError as err:
+            raise PapouchConnectionError(
+                translation_placeholders={
+                    "name": self.coordinator.device.name,
+                    "location": self.coordinator.device.location or "Unknown",
+                }
+            ) from err
+        except aiopapouch_exceptions.DeviceError as err:
+            raise PapouchCommandError(
+                translation_placeholders={
+                    "cmd": f"turn_off_switch_{self.item_id}",
+                    "name": self.coordinator.device.name,
+                }
+            ) from err
 
         if self.coordinator.data and "switch" in self.coordinator.data:
             self.coordinator.data["switch"][self.item_id] = False

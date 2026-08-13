@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+import aiopapouch.exceptions as aiopapouch_exceptions
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
@@ -10,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import PapouchConfigEntry
 from .coordinator import PapouchDataUpdateCoordinator
 from .entity import PapouchEntity
+from .exceptions import PapouchAuthError, PapouchCommandError, PapouchConnectionError
 
 PARALLEL_UPDATES = 0
 
@@ -71,7 +74,28 @@ class PapouchSelectEntity(PapouchEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option on the device."""
-        await self.coordinator.device.set_select_option(
-            self.category, self.item_id, option
-        )
+
+        try:
+            await self.coordinator.device.set_select_option(
+                self.category, self.item_id, option
+            )
+        except aiopapouch_exceptions.DeviceAuthError as err:
+            raise PapouchAuthError(
+                translation_placeholders={"name": self.coordinator.device.name}
+            ) from err
+        except aiopapouch_exceptions.DeviceConnectionError as err:
+            raise PapouchConnectionError(
+                translation_placeholders={
+                    "name": self.coordinator.device.name,
+                    "location": self.coordinator.device.location,
+                }
+            ) from err
+        except aiopapouch_exceptions.DeviceError as err:
+            raise PapouchCommandError(
+                translation_placeholders={
+                    "cmd": f"select_{self.category}",
+                    "name": self.coordinator.device.name,
+                }
+            ) from err
+
         self.coordinator.async_set_updated_data(self.coordinator.data)

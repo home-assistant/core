@@ -588,6 +588,33 @@ async def test_user_step_connection_success(
     assert result2["data"]["password"] == "password"
 
 
+async def test_user_step_mac_auth_error(
+    hass: HomeAssistant,
+    mock_discover_none,
+    mock_api_client,
+) -> None:
+    """Test auth error gracefully failing when retrieving MAC address."""
+    _, mock_mode, _, mock_mac = mock_api_client
+    mock_mode.return_value = 3
+    mock_mac.side_effect = DeviceAuthError("Bad password")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            "ip_address": "192.168.1.50",
+            "password": "wrong_password",
+            "refresh_rate": 60,
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
 async def test_user_step_mode_missing(
     hass: HomeAssistant, mock_discover_found, mock_api_client
 ) -> None:

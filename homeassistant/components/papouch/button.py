@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+import aiopapouch.exceptions as aiopapouch_exceptions
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
@@ -10,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import PapouchConfigEntry
 from .coordinator import PapouchDataUpdateCoordinator
 from .entity import PapouchEntity
+from .exceptions import PapouchAuthError, PapouchCommandError, PapouchConnectionError
 
 PARALLEL_UPDATES = 0
 
@@ -62,5 +65,28 @@ class PapouchCommandButton(PapouchEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Execute the command."""
-        await self.coordinator.device.execute_button_command(self.cmd_type)
-        self.coordinator.async_set_updated_data(self.coordinator.data)
+
+        try:
+            await self.coordinator.device.execute_button_command(self.cmd_type)
+            self.coordinator.async_set_updated_data(self.coordinator.data)
+
+        except aiopapouch_exceptions.DeviceAuthError as err:
+            raise PapouchAuthError(
+                translation_placeholders={"name": self.coordinator.device.name}
+            ) from err
+
+        except aiopapouch_exceptions.DeviceConnectionError as err:
+            raise PapouchConnectionError(
+                translation_placeholders={
+                    "name": self.coordinator.device.name,
+                    "location": self.coordinator.device.location,
+                }
+            ) from err
+
+        except aiopapouch_exceptions.DeviceError as err:
+            raise PapouchCommandError(
+                translation_placeholders={
+                    "cmd": self.cmd_type,
+                    "name": self.coordinator.device.name,
+                }
+            ) from err

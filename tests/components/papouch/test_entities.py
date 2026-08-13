@@ -1,11 +1,15 @@
 """Tests for all Papouch entity platforms."""
 
+import aiopapouch.exceptions as aiopapouch_exceptions
+import pytest
+
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.papouch.const import DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 
@@ -82,3 +86,75 @@ async def test_all_entities(
         blocking=True,
     )
     mock_device.set_select_option.assert_called_once_with("mode", "1", "B")
+
+
+@pytest.mark.parametrize(
+    ("domain", "service", "entity_suffix", "service_data", "mock_method"),
+    [
+        (SWITCH_DOMAIN, "turn_on", "switch_1", {}, "turn_on_switch"),
+        (SWITCH_DOMAIN, "turn_off", "switch_1", {}, "turn_off_switch"),
+        (BUTTON_DOMAIN, "press", "btn_reset", {}, "execute_button_command"),
+        (NUMBER_DOMAIN, "set_value", "limit_1", {"value": 50}, "set_number_value"),
+        (
+            SELECT_DOMAIN,
+            "select_option",
+            "mode_1",
+            {"option": "B"},
+            "set_select_option",
+        ),
+    ],
+)
+async def test_entity_exceptions(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_papouch_client,
+    domain: str,
+    service: str,
+    entity_suffix: str,
+    service_data: dict,
+    mock_method: str,
+) -> None:
+    """Test that all entities handle all types of device errors gracefully."""
+    _, _, mock_device = mock_papouch_client
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    mac = "00:11:22:33:44:55"
+    entity_id = registry.async_get_entity_id(domain, DOMAIN, f"{mac}_{entity_suffix}")
+    assert entity_id
+
+    getattr(
+        mock_device, mock_method
+    ).side_effect = aiopapouch_exceptions.DeviceAuthError("Auth failed")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            domain, service, {"entity_id": entity_id, **service_data}, blocking=True
+        )
+    assert exc_info.value.translation_key == "invalid_auth"
+    assert exc_info.value.translation_placeholders["name"] == "Test Papouch"
+
+    getattr(
+        mock_device, mock_method
+    ).side_effect = aiopapouch_exceptions.DeviceConnectionError("Offline")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            domain, service, {"entity_id": entity_id, **service_data}, blocking=True
+        )
+    assert exc_info.value.translation_key == "cannot_connect"
+    assert exc_info.value.translation_placeholders["name"] == "Test Papouch"
+
+    getattr(mock_device, mock_method).side_effect = aiopapouch_exceptions.DeviceError(
+        "Logic failed"
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            domain, service, {"entity_id": entity_id, **service_data}, blocking=True
+        )
+    assert exc_info.value.translation_key == "command_failed"
+    assert "cmd" in exc_info.value.translation_placeholders
