@@ -151,10 +151,16 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=user_input,
                 )
 
+        suggested_values = {
+            key: val
+            for key, val in (user_input or reconfigure_entry.data).items()
+            if key not in (CONF_PASSWORD, CONF_TOKEN)
+        }
+
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input or reconfigure_entry.data
+                STEP_USER_DATA_SCHEMA, suggested_values
             ),
             errors=errors,
         )
@@ -211,11 +217,15 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
+        suggested_values = {
+            key: val
+            for key, val in (user_input or reauth_entry.data).items()
+            if key not in (CONF_PASSWORD, CONF_TOKEN)
+        }
+
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=self.add_suggested_values_to_schema(
-                schema, user_input or reauth_entry.data
-            ),
+            data_schema=self.add_suggested_values_to_schema(schema, suggested_values),
             errors=errors,
         )
 
