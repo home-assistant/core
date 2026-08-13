@@ -184,12 +184,18 @@ async def test_hmip_full_flush_door_controller_button(
     assert state.state == now.isoformat()
 
 
-async def test_hmip_full_flush_lock_controller_pull_latch_with_pin(
+@pytest.mark.parametrize(
+    ("service_data", "expected_pin"),
+    [({ATTR_PIN: "1234"}, "1234"), ({}, None)],
+)
+async def test_hmip_full_flush_lock_controller_pull_latch(
     hass: HomeAssistant,
     default_mock_hap_factory: HomeFactory,
     full_flush_lock_controller_device_data: dict[str, Any],
+    service_data: dict[str, str],
+    expected_pin: str | None,
 ) -> None:
-    """The pull_latch action forwards the PIN the button press cannot carry."""
+    """The pull_latch action forwards the PIN a button press cannot carry."""
     entity_id = "button.universal_motorschloss_controller_door_opener"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Universal Motorschloss Controller"],
@@ -210,44 +216,11 @@ async def test_hmip_full_flush_lock_controller_pull_latch_with_pin(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PULL_LATCH,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PIN: "1234"},
+            {ATTR_ENTITY_ID: entity_id} | service_data,
             blocking=True,
         )
 
-    mock_pull_latch.assert_awaited_once_with("1234")
-
-
-async def test_hmip_full_flush_lock_controller_pull_latch_without_pin(
-    hass: HomeAssistant,
-    default_mock_hap_factory: HomeFactory,
-    full_flush_lock_controller_device_data: dict[str, Any],
-) -> None:
-    """Without a PIN the action behaves like a plain button press."""
-    entity_id = "button.universal_motorschloss_controller_door_opener"
-    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=["Universal Motorschloss Controller"],
-        extra_devices=[full_flush_lock_controller_device_data],
-    )
-
-    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
-    auth_channel = next(
-        ch
-        for ch in hmip_device.functionalChannels
-        if ch.functionalChannelType.name == "ACCESS_AUTHORIZATION_CHANNEL"
-        and ch.channelRole == "DOOR_OPENER_ACTUATOR"
-    )
-
-    with patch.object(
-        auth_channel, "async_pull_latch", new_callable=AsyncMock
-    ) as mock_pull_latch:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PULL_LATCH,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
-
-    mock_pull_latch.assert_awaited_once_with(None)
+    mock_pull_latch.assert_awaited_once_with(expected_pin)
 
 
 async def test_hmip_pull_latch_on_non_opener_button(

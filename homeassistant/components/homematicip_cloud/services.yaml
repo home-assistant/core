@@ -120,3 +120,4 @@ pull_latch:
       example: "1234"
       selector:
         text:
+          type: password
