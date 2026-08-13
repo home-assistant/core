@@ -32,6 +32,58 @@
       }
     }
   },
+  "config_subentries": {
+    "trackable": {
+      "abort": {
+        "too_many_trackables": "A maximum of 50 trackables can be tracked."
+      },
+      "entry_type": "Trackable",
+      "error": {
+        "already_configured": "This trackable is already configured.",
+        "invalid_trackable_code": "Enter a valid TB code."
+      },
+      "initiate_flow": {
+        "user": "Add trackable"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "code": "TB code"
+          },
+          "data_description": {
+            "code": "Enter one TB code, for example TB12345."
+          },
+          "description": "Add one trackable to track by entering its TB code.",
+          "title": "Add trackable"
+        }
+      }
+    },
+    "tracked_cache": {
+      "abort": {
+        "too_many_caches": "A maximum of 50 caches can be tracked."
+      },
+      "entry_type": "Tracked cache",
+      "error": {
+        "already_configured": "This cache is already configured.",
+        "invalid_cache_code": "Enter a valid GC code."
+      },
+      "initiate_flow": {
+        "user": "Add tracked cache"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "code": "GC code"
+          },
+          "data_description": {
+            "code": "Enter one GC code, for example GC12345."
+          },
+          "description": "Add one geocache to track by entering its GC code.",
+          "title": "Add tracked cache"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "awarded_favorite_points": {
@@ -72,28 +124,6 @@
   "exceptions": {
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    }
-  },
-  "options": {
-    "error": {
-      "invalid_cache_code": "Enter valid cache codes starting with GC.",
-      "invalid_trackable_code": "Enter valid trackable codes starting with TB.",
-      "too_many_caches": "A maximum of 50 caches can be tracked.",
-      "too_many_trackables": "A maximum of 50 trackables can be tracked."
-    },
-    "step": {
-      "init": {
-        "data": {
-          "cache_codes": "Cache codes",
-          "trackable_codes": "Trackable codes"
-        },
-        "data_description": {
-          "cache_codes": "Enter the GC codes of the caches to track, separated by commas or new lines. A maximum of 50 caches can be tracked.",
-          "trackable_codes": "Enter the TB codes of the trackables to track, separated by commas or new lines. A maximum of 50 trackables can be tracked."
-        },
-        "description": "Select which caches and trackables you want to track.",
-        "title": "Tracked caches and trackables."
-      }
     }
   }
 }

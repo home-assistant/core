@@ -11,19 +11,21 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlowResult,
-    OptionsFlowWithReload,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
 )
+from homeassistant.const import CONF_CODE
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .const import (
-    CONF_CACHE_CODES,
-    CONF_TRACKABLE_CODES,
     DOMAIN,
     ENVIRONMENT,
     MAX_TRACKED_CACHES,
     MAX_TRACKED_TRACKABLES,
+    SUBENTRY_TYPE_TRACKABLE,
+    SUBENTRY_TYPE_TRACKED_CACHE,
 )
 
 
@@ -33,14 +35,17 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
     VERSION = 1
 
-    @staticmethod
+    @classmethod
     @callback
     @override
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlowWithReload:
-        """Create the options flow."""
-        return GeocachingOptionsFlow()
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {
+            SUBENTRY_TYPE_TRACKED_CACHE: TrackedCacheSubentryFlow,
+            SUBENTRY_TYPE_TRACKABLE: TrackableSubentryFlow,
+        }
 
     @property
     @override
@@ -83,76 +88,63 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return self.async_create_entry(title=status.user.username, data=data)
 
 
-class GeocachingOptionsFlow(OptionsFlowWithReload):
-    """Handle Geocaching options."""
+class GeocachingCodeSubentryFlow(ConfigSubentryFlow):
+    """Handle a Geocaching code subentry flow."""
 
-    async def async_step_init(
+    code_pattern: str
+    invalid_code_error: str
+    max_subentries: int
+    max_subentries_abort: str
+
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage Geocaching options."""
+    ) -> SubentryFlowResult:
+        """Add a Geocaching code subentry."""
+        entry = self._get_entry()
+        if (
+            len(entry.get_subentries_of_type(self._subentry_type))
+            >= self.max_subentries
+        ):
+            return self.async_abort(reason=self.max_subentries_abort)
+
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            raw_codes = user_input.get(CONF_CACHE_CODES, "")
-
-            cache_codes = [
-                code.strip().upper()
-                for code in raw_codes.replace(",", "\n").splitlines()
-                if code.strip()
-            ]
-
-            # Remove duplicates while preserving the entered order.
-            cache_codes = list(dict.fromkeys(cache_codes))
-
-            raw_trackable_codes = user_input.get(CONF_TRACKABLE_CODES, "")
-
-            trackable_codes = [
-                code.strip().upper()
-                for code in raw_trackable_codes.replace(",", "\n").splitlines()
-                if code.strip()
-            ]
-
-            # Remove duplicates while preserving the entered order.
-            trackable_codes = list(dict.fromkeys(trackable_codes))
-
-            if len(cache_codes) > MAX_TRACKED_CACHES:
-                errors["base"] = "too_many_caches"
-            elif any(
-                re.fullmatch(r"GC[A-Z0-9]+", code) is None for code in cache_codes
-            ):
-                errors["base"] = "invalid_cache_code"
-            elif len(trackable_codes) > MAX_TRACKED_TRACKABLES:
-                errors["base"] = "too_many_trackables"
-            elif any(
-                re.fullmatch(r"TB[A-Z0-9]+", code) is None for code in trackable_codes
-            ):
-                errors["base"] = "invalid_trackable_code"
+            code = user_input[CONF_CODE].strip().upper()
+            if re.fullmatch(self.code_pattern, code) is None:
+                errors[CONF_CODE] = self.invalid_code_error
+            elif code in {
+                subentry.unique_id
+                for subentry in entry.get_subentries_of_type(self._subentry_type)
+            }:
+                errors[CONF_CODE] = "already_configured"
             else:
                 return self.async_create_entry(
-                    data={
-                        CONF_CACHE_CODES: cache_codes,
-                        CONF_TRACKABLE_CODES: trackable_codes,
-                    }
+                    title=code,
+                    data={CONF_CODE: code},
+                    unique_id=code,
                 )
 
-        current_codes = self.config_entry.options.get(CONF_CACHE_CODES, [])
-        current_trackable_codes = self.config_entry.options.get(
-            CONF_TRACKABLE_CODES, []
-        )
-
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_CACHE_CODES,
-                        default=", ".join(current_codes),
-                    ): str,
-                    vol.Optional(
-                        CONF_TRACKABLE_CODES,
-                        default=", ".join(current_trackable_codes),
-                    ): str,
-                }
-            ),
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_CODE): str}),
             errors=errors,
         )
+
+
+class TrackedCacheSubentryFlow(GeocachingCodeSubentryFlow):
+    """Handle a tracked cache subentry flow."""
+
+    code_pattern = r"GC[A-Z0-9]+"
+    invalid_code_error = "invalid_cache_code"
+    max_subentries = MAX_TRACKED_CACHES
+    max_subentries_abort = "too_many_caches"
+
+
+class TrackableSubentryFlow(GeocachingCodeSubentryFlow):
+    """Handle a trackable subentry flow."""
+
+    code_pattern = r"TB[A-Z0-9]+"
+    invalid_code_error = "invalid_trackable_code"
+    max_subentries = MAX_TRACKED_TRACKABLES
+    max_subentries_abort = "too_many_trackables"

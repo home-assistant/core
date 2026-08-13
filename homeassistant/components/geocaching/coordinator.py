@@ -7,17 +7,18 @@ from geocachingapi.geocachingapi import GeocachingApi
 from geocachingapi.models import GeocachingSettings, GeocachingStatus
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_CACHE_CODES,
-    CONF_TRACKABLE_CODES,
     DOMAIN,
     ENVIRONMENT,
     LOGGER,
+    SUBENTRY_TYPE_TRACKABLE,
+    SUBENTRY_TYPE_TRACKED_CACHE,
     UPDATE_INTERVAL,
 )
 
@@ -46,9 +47,19 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
 
         client_session = async_get_clientsession(hass)
         settings = GeocachingSettings()
-        settings.set_tracked_caches(set(entry.options.get(CONF_CACHE_CODES, [])))
+        settings.set_tracked_caches(
+            {
+                subentry.data[CONF_CODE]
+                for subentry in entry.get_subentries_of_type(
+                    SUBENTRY_TYPE_TRACKED_CACHE
+                )
+            }
+        )
         settings.set_tracked_trackables(
-            set(entry.options.get(CONF_TRACKABLE_CODES, []))
+            {
+                subentry.data[CONF_CODE]
+                for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_TRACKABLE)
+            }
         )
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,
