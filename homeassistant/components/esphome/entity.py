@@ -136,11 +136,12 @@ def async_static_info_updated(
         idx = next((i for i, key in enumerate(candidates) if key not in new_infos), 0)
         old_info = current_infos.pop(candidates.pop(idx))
 
-        # A foreign cached state at the mover's destination key must
-        # not be adopted when the mover is re-added
-        if (
-            cached_state := states.get(info.key)
-        ) is not None and cached_state.device_id != old_info.device_id:
+        # A cached state at the mover's destination key is only the
+        # mover's own if it was written from the mover's old slot;
+        # anything else is foreign and must not be adopted on re-add
+        if (cached_state := states.get(info.key)) is not None and (
+            cached_state.device_id != old_info.device_id or info.key != old_info.key
+        ):
             del states[info.key]
 
         # Entity has switched devices, need to migrate unique_id

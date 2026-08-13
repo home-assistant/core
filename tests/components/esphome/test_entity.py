@@ -3032,7 +3032,6 @@ async def test_entity_renamed_while_same_named_sibling_moves(
 
 async def test_new_entities_reusing_retired_keys_do_not_adopt_stale_states(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
@@ -3345,3 +3344,55 @@ async def test_entity_move_with_claimed_unique_id(
     # The update completed: the sibling still processes states
     assert hass.states.get("binary_sensor.test_other").state == STATE_OFF
     assert entity_registry.async_get(orphan.entity_id) is not None
+
+
+async def test_mover_does_not_adopt_other_movers_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test two movers from one device cannot adopt each other's state.
+
+    A mover landing on another mover's old key must start unknown; the
+    cached state under that key was written from a different slot.
+    """
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="sub_two", area_id=0),
+    ]
+    device_info = {
+        "devices": sub_devices,
+    }
+    entity_info, states = _two_binary_sensor_setup()
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert hass.states.get("binary_sensor.test_sensor_one").state == STATE_ON
+    assert hass.states.get("binary_sensor.test_sensor_two").state == STATE_ON
+
+    # Both entities move to sub devices while a firmware rebuild
+    # re-derives keys; Sensor Two lands on Sensor One's old key and
+    # no states are streamed
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=5,
+            name="Sensor One",
+            device_id=11111111,
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=1,
+            name="Sensor Two",
+            device_id=22222222,
+        ),
+    ]
+    await reconnect_with_updated_entity_info(
+        hass, device, updated_entity_info, states=[]
+    )
+
+    assert hass.states.get("binary_sensor.test_sensor_one").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.test_sensor_two").state == STATE_UNKNOWN

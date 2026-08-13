@@ -51,6 +51,10 @@ from .conftest import (
 from tests.common import mock_platform
 from tests.typing import WebSocketGenerator
 
+# PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
+# VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+PROXY_FEATURE_FLAGS = 1200653
+
 
 async def test_media_player_entity(
     hass: HomeAssistant,
@@ -321,9 +325,7 @@ async def test_media_player_entity_with_source(
             key=1,
             name="my media_player",
             supports_pause=True,
-            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
-            # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
-            feature_flags=1200653,
+            feature_flags=PROXY_FEATURE_FLAGS,
         )
     ]
     states = [
@@ -441,7 +443,7 @@ async def test_media_player_proxy(
                 supports_pause=True,
                 # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
                 # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
-                feature_flags=1200653,
+                feature_flags=PROXY_FEATURE_FLAGS,
                 supported_formats=[
                     MediaPlayerSupportedFormat(
                         format="flac",
@@ -603,7 +605,7 @@ async def test_media_player_formats_reload_preserves_data(
                 supports_pause=True,
                 # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
                 # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
-                feature_flags=1200653,
+                feature_flags=PROXY_FEATURE_FLAGS,
                 supported_formats=supported_formats,
             )
         ],
@@ -709,9 +711,7 @@ async def test_media_player_formats_survive_rekey_onto_removed_entity_key(
             key=1,
             name="Player One",
             supports_pause=True,
-            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
-            # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
-            feature_flags=1200653,
+            feature_flags=PROXY_FEATURE_FLAGS,
             supported_formats=formats_one,
         ),
         MediaPlayerInfo(
@@ -748,9 +748,7 @@ async def test_media_player_formats_survive_rekey_onto_removed_entity_key(
             key=2,
             name="Player One",
             supports_pause=True,
-            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
-            # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
-            feature_flags=1200653,
+            feature_flags=PROXY_FEATURE_FLAGS,
             supported_formats=formats_one,
         ),
     ]
@@ -829,9 +827,7 @@ async def test_media_player_formats_not_shared_with_sibling_taking_old_name(
             key=1,
             name="Alpha",
             supports_pause=True,
-            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
-            # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
-            feature_flags=1200653,
+            feature_flags=PROXY_FEATURE_FLAGS,
             supported_formats=default_formats,
         ),
     ]
@@ -854,7 +850,7 @@ async def test_media_player_formats_not_shared_with_sibling_taking_old_name(
         key=1,
         name="Beta",
         supports_pause=True,
-        feature_flags=1200653,
+        feature_flags=PROXY_FEATURE_FLAGS,
         supported_formats=default_formats,
     )
     new_player = MediaPlayerInfo(
@@ -862,7 +858,7 @@ async def test_media_player_formats_not_shared_with_sibling_taking_old_name(
         key=2,
         name="Alpha",
         supports_pause=True,
-        feature_flags=1200653,
+        feature_flags=PROXY_FEATURE_FLAGS,
         supported_formats=announcement_formats,
     )
     await reconnect_with_updated_entity_info(hass, device, [renamed])
