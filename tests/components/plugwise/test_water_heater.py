@@ -67,6 +67,18 @@ async def test_adam_water_heater_setpoint_change(
         55.0,
     )
 
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
+                ATTR_TEMPERATURE: 65,
+            },
+            blocking=True,
+        )
+    assert mock_smile_adam_jip.set_number.call_count == 1
+
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -82,6 +94,18 @@ async def test_adam_water_heater_setpoint_change(
         "boiler_temperature",
         85.0,
     )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "water_heater.opentherm_boiler",
+                ATTR_TEMPERATURE: 25,
+            },
+            blocking=True,
+        )
+    assert mock_smile_adam_jip.set_number.call_count == 2
 
     with pytest.raises(ServiceNotSupported):
         await hass.services.async_call(
