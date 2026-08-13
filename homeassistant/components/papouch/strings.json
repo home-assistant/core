@@ -5,17 +5,18 @@
       "cannot_connect": "Home Assistant can't connect to the device.",
       "mode_is_missing": "The device didn't provide its current mode",
       "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Device reconfiguration was successful.",
       "unsupported_device": "This device is unsupported.",
       "web_mode_required": "The integration requires the device to be in web mode to function."
     },
     "create_entry": {
-      "default": "The Papouch device has been successfully configured.",
+      "default": "The device has been successfully configured.",
       "web_mode_success": "The device was successfully switched to WEB mode. Please wait 10 seconds while the device restarts."
     },
     "error": {
       "cannot_connect": "Failed to connect to the device.",
       "invalid_auth": "The password you provided is invalid, try a different one.",
-      "invalid_ip_format": "Invalid IP address format."
+      "invalid_ip_format": "Invalid IPv4 address format."
     },
     "flow_title": "{name}",
     "step": {
@@ -38,7 +39,7 @@
           "refresh_rate": "Scan interval (seconds)"
         },
         "data_description": {
-          "ip_address": "Enter the IP address of your Papouch device.",
+          "ip_address": "Enter the IPv4 address of your device.",
           "password": "Leave blank if your device does not require authentication.",
           "refresh_rate": "How often Home Assistant should poll the device for new data."
         },
@@ -53,6 +54,18 @@
         },
         "description": "The password for your device **{name}** is no longer valid. Please enter the new password.",
         "title": "Reauthenticate {name}"
+      },
+      "reconfigure": {
+        "data": {
+          "ip_address": "IPv4 Address",
+          "password": "Password (optional)"
+        },
+        "data_description": {
+          "ip_address": "Enter a new IPv4 address of your device.",
+          "password": "Enter a new admin password of the device (Optional)."
+        },
+        "description": "Update the connection details for your device.",
+        "title": "Reconfigure {name}"
       },
       "user": {
         "data": {

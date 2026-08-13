@@ -189,7 +189,9 @@ async def test_dhcp_already_configured(hass: HomeAssistant, dhcp_info) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_ip_update(hass: HomeAssistant, dhcp_info, mock_setup_entry) -> None:
+async def test_dhcp_ip_update(
+    hass: HomeAssistant, dhcp_info, mock_setup_entry, mock_api_client
+) -> None:
     """Test DHCP updates IP address of an existing entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -787,3 +789,89 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert entry.options == {"refresh_rate": 30}
+
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant, mock_api_client, mock_setup_entry
+) -> None:
+    """Test successful reconfiguration of the integration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Quido (Lab) - 192.168.1.50",
+        data={"ip_address": "192.168.1.50", "password": "old_password"},
+        unique_id="00:11:22:33:44:55",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reconfigure", "entry_id": entry.entry_id},
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"ip_address": "192.168.1.60", "password": "new_password"},
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    assert entry.data["ip_address"] == "192.168.1.60"
+    assert entry.data["password"] == "new_password"
+
+
+async def test_reconfigure_connection_error(
+    hass: HomeAssistant, mock_api_client
+) -> None:
+    """Test reconfiguration flow handles connection errors."""
+    mock_fetch, _, _, _ = mock_api_client
+    mock_fetch.side_effect = aiohttp.ClientError
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Quido (Lab) - 192.168.1.50",
+        data={"ip_address": "192.168.1.50", "password": "old_password"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reconfigure", "entry_id": entry.entry_id},
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"ip_address": "192.168.1.60", "password": "new_password"},
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure_auth_error(hass: HomeAssistant, mock_api_client) -> None:
+    """Test reconfiguration flow handles auth errors."""
+    mock_fetch, _, _, _ = mock_api_client
+    mock_fetch.side_effect = DeviceAuthError("Invalid password")
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Quido (Lab) - 192.168.1.50",
+        data={"ip_address": "192.168.1.50", "password": "old_password"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reconfigure", "entry_id": entry.entry_id},
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"ip_address": "192.168.1.60", "password": "wrong_password"},
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}

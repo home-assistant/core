@@ -9,7 +9,11 @@ from typing import Any, override
 
 import aiohttp
 from aiopapouch import PapouchHTTPClient, create_device, is_device_supported
-from aiopapouch.exceptions import DeviceAuthError, DeviceLogicError
+from aiopapouch.exceptions import (
+    DeviceAuthError,
+    DeviceConnectionError,
+    DeviceLogicError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -55,7 +59,11 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             mode_device = await client.get_device_mode()
         except DeviceAuthError:
             return {"base": "invalid_auth"}, None
-        except aiohttp.ClientError as err:
+        except (
+            aiohttp.ClientError,
+            DeviceConnectionError,
+            TimeoutError,
+        ) as err:
             _LOGGER.error("Failed to connect to the device: %s", err)
             return {"base": "cannot_connect"}, None
         else:
@@ -142,12 +150,10 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries():
             if entry.unique_id == discovered_mac:
                 if entry.data.get("ip_address") != self.discovered_ip:
-                    base_title = (
-                        entry.title.rsplit(" - ", 1)[0]
-                        if " - " in entry.title
-                        else entry.title
+                    new_name = await self._get_device_name(
+                        self.discovered_ip, entry.data.get("password", "")
                     )
-                    new_title = f"{base_title} - {self.discovered_ip}"
+                    new_title = f"{new_name} - {self.discovered_ip}"
 
                     updated_data = {
                         **entry.data,
@@ -433,6 +439,53 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
                 if self._reauth_entry
                 else "",
                 "name": device_name,
+            },
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle integration reconfiguration (e.g. IP address and password change)."""
+        errors: dict[str, str] = {}
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry is not None
+
+        if user_input is not None:
+            errors, _ = await self._test_connection(
+                user_input["ip_address"], user_input.get("password", "")
+            )
+
+            if not errors:
+                new_name = await self._get_device_name(
+                    user_input["ip_address"], user_input.get("password", "")
+                )
+                new_title = f"{new_name} - {user_input['ip_address']}"
+
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={
+                        **entry.data,
+                        "ip_address": user_input["ip_address"],
+                        "password": user_input.get("password", ""),
+                    },
+                    title=new_title,
+                )
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+        schema = vol.Schema(
+            {
+                vol.Required("ip_address", default=entry.data["ip_address"]): str,
+                vol.Optional("password", default=entry.data.get("password", "")): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "name": entry.title,
             },
         )
 
