@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, LOGGER, ZWAVE_TYPES
+from .const import DOMAIN, ZWAVE_TYPES
 from .coordinator import SmConfigEntry, SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
@@ -265,12 +265,12 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                     ):
                         await self.coordinator.async_refresh()
                         await asyncio.sleep(1)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except TimeoutError:
-                LOGGER.warning(
-                    "Timeout waiting for %s to reboot after update",
-                    self.coordinator.data.info.hostname,
-                )
+            except TimeoutError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="reboot_timeout",
+                    translation_placeholders={"device_name": str(self.name)},
+                ) from err
 
             self.coordinator.in_progress = False
             self._finished_event.clear()

@@ -273,15 +273,13 @@ async def test_update_firmware_failed(
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
 
-@patch("homeassistant.components.smlight.const.LOGGER.warning")
 async def test_update_reboot_timeout(
-    mock_warning: MagicMock,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
 ) -> None:
-    """Test firmware updates."""
+    """Test reboot timeout raises a translated user-facing error."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_core_firmware"
     state = hass.states.get(entity_id)
@@ -318,7 +316,16 @@ async def test_update_reboot_timeout(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-        mock_warning.assert_called_once()
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"Timeout waiting for .* to reboot after update\.",
+        ):
+            await hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
 
 
 @pytest.mark.parametrize(
