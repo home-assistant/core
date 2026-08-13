@@ -625,8 +625,8 @@ async def test_async_step_integration_discovery_remote_adapter(
     assert new_entry is not None
     assert new_entry.state is config_entries.ConfigEntryState.LOADED
 
-    ble_device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_BLUETOOTH, scanner.source)}
+    ble_device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, scanner.source), new_entry.entry_id
     )
     assert ble_device_entry is not None
     assert ble_device_entry.via_device_id == device_entry.id

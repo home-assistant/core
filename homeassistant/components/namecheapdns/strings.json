@@ -57,11 +57,5 @@
     "update_failed": {
       "message": "Updating Namecheap DynamicDNS domain {domain} failed"
     }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_error": {
-      "description": "Configuring Namecheap DynamicDNS using YAML is being removed but there was an error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the Namecheap DynamicDNS YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.",
-      "title": "The Namecheap DynamicDNS YAML configuration import failed"
-    }
   }
 }

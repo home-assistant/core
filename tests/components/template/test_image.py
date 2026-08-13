@@ -11,16 +11,26 @@ import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
+from homeassistant.components import image
 from homeassistant.components.input_text import (
     ATTR_VALUE as INPUT_TEXT_ATTR_VALUE,
     DOMAIN as INPUT_TEXT_DOMAIN,
     SERVICE_SET_VALUE as INPUT_TEXT_SERVICE_SET_VALUE,
 )
 from homeassistant.components.template import DOMAIN
+from homeassistant.components.template.image import DEFAULT_NAME
 from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
+
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    assert_extra_template_attributes,
+    make_test_trigger,
+    setup_entity,
+)
 
 from tests.common import MockConfigEntry, assert_setup_component
 from tests.typing import ClientSessionGenerator
@@ -28,6 +38,14 @@ from tests.typing import ClientSessionGenerator
 _DEFAULT = object()
 _TEST_IMAGE = "image.template_image"
 _URL_INPUT_TEXT = "input_text.url"
+
+TEST_STATE_ENTITY_ID = "sensor.test_state"
+
+TEST_IMAGE = TemplatePlatformSetup(
+    image.DOMAIN,
+    "test_template_image",
+    make_test_trigger(TEST_STATE_ENTITY_ID, _TEST_IMAGE, _URL_INPUT_TEXT),
+)
 
 
 @pytest.fixture
@@ -582,3 +600,46 @@ async def test_device_id(
     template_entity = entity_registry.async_get("image.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass,
+        TEST_IMAGE,
+        style,
+        {
+            "url": "{{ 'http://example.com' }}",
+        },
+    )
+
+
+@pytest.mark.parametrize("attribute", list(image.ImageEntityStateAttribute))
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: image.ImageEntityStateAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        0,
+        {
+            "url": "{{ 'http://example.com' }}",
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )

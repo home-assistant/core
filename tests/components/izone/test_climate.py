@@ -1,7 +1,7 @@
 """Tests for iZone climate platform."""
 
 import logging
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pizone import Controller, ControllerCommandError, Zone
@@ -9,7 +9,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HVAC_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -21,9 +23,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.izone.const import DOMAIN
 from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
@@ -33,6 +36,18 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 CONTROLLER_ENTITY = "climate.izone_controller_000000001"
 ZONE_ENTITY = "climate.living_room"
+
+
+def _raise_on_controller_property(
+    mock_controller: Mock, name: str, message: str
+) -> None:
+    """Make a controller property raise ValueError without affecting other mocks."""
+    # Unique type so PropertyMock does not affect other Mock instances.
+    raising_type = type(
+        f"Raising{name.title()}Controller_{id(mock_controller)}", (Mock,), {}
+    )
+    mock_controller.__class__ = raising_type
+    setattr(type(mock_controller), name, PropertyMock(side_effect=ValueError(message)))
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -49,6 +64,24 @@ async def test_climate_entities(
     # used by the rest of this module still resolve after setup.
     assert hass.states.get(CONTROLLER_ENTITY) is not None
     assert hass.states.get(ZONE_ENTITY) is not None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_zone_device_linked_to_controller(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The zone device is linked to the controller device via via_device_id."""
+    controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "000000001"), mock_config_entry.entry_id
+    )
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "000000001", 0),  # type:ignore[arg-type]
+        mock_config_entry.entry_id,
+    )
+    assert controller_device is not None
+    assert zone_device is not None
+    assert zone_device.via_device_id == controller_device.id
 
 
 @pytest.mark.parametrize(
@@ -97,6 +130,55 @@ async def test_set_controller_hvac_and_fan(
         blocking=True,
     )
     mock_controller.set_fan.assert_awaited_once_with(Controller.Fan.HIGH)
+
+
+async def test_unknown_fan_mode_reports_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Unknown SysFan from the library surfaces as display-only fan_mode unknown."""
+    mock_controller.zones = mock_zones
+    _raise_on_controller_property(mock_controller, "fan", "quiet")
+
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(CONTROLLER_ENTITY)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_FAN_MODE] == "unknown"
+    assert "unknown" not in (state.attributes.get(ATTR_FAN_MODES) or [])
+    assert "Unknown SysFan from iZone controller" in caplog.text
+    assert "quiet" in caplog.text
+    assert "attach diagnostics" in caplog.text
+
+
+async def test_unknown_mode_keeps_entity_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Unknown SysMode leaves HVAC state unknown without marking unavailable."""
+    mock_controller.zones = mock_zones
+    _raise_on_controller_property(mock_controller, "mode", "turbo")
+
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(CONTROLLER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == mock_controller.temp_return
+    assert "Unknown SysMode from iZone controller" in caplog.text
+    assert "turbo" in caplog.text
+    assert "attach diagnostics" in caplog.text
 
 
 @pytest.mark.usefixtures("init_integration")
