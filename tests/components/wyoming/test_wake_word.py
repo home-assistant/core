@@ -11,9 +11,13 @@ from wyoming.info import Info, WakeModel, WakeProgram
 from wyoming.wake import Detection
 
 from homeassistant.components import wake_word
+from homeassistant.components.wyoming.coordinator import UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import TEST_ATTR, MockAsyncTcpClient
+
+from tests.common import async_fire_time_changed
 
 
 async def test_support(hass: HomeAssistant, init_wyoming_wake_word) -> None:
@@ -251,12 +255,15 @@ async def test_dynamic_wake_word_info(
         ]
     )
 
-    # Different Wyoming info will be fetched
+    # Different Wyoming info will be fetched on the next refresh
     with patch(
-        "homeassistant.components.wyoming.wake_word.load_wyoming_info",
+        "homeassistant.components.wyoming.coordinator.load_wyoming_info",
         return_value=new_info,
     ):
-        assert (await entity.get_supported_wake_words()) == [
-            wake_word.WakeWord("ww1", "Wake Word 1", "Wake Word Phrase 1"),
-            wake_word.WakeWord("ww2", "Wake Word 2", "Wake Word Phrase 2"),
-        ]
+        async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert (await entity.get_supported_wake_words()) == [
+        wake_word.WakeWord("ww1", "Wake Word 1", "Wake Word Phrase 1"),
+        wake_word.WakeWord("ww2", "Wake Word 2", "Wake Word Phrase 2"),
+    ]
