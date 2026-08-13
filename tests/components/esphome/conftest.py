@@ -234,11 +234,16 @@ class MockESPHomeDevice:
     """Mock an esphome device."""
 
     def __init__(
-        self, entry: MockConfigEntry, client: APIClient, device_info: DeviceInfo
+        self,
+        entry: MockConfigEntry,
+        client: APIClient,
+        device_info: DeviceInfo,
+        states: list[EntityState],
     ) -> None:
         """Init the mock."""
         self.entry = entry
         self.client = client
+        self.states = states
         self.state_callback: Callable[[EntityState], None]
         self.service_call_callback: Callable[[HomeassistantServiceCall], None]
         self.on_disconnect: Callable[[bool], None]
@@ -272,7 +277,6 @@ class MockESPHomeDevice:
         self.on_log_message: Callable[[SubscribeLogsResponse], None]
         self.device_info = device_info
         self.current_log_level = LogLevel.LOG_LEVEL_NONE
-        self.states: list[EntityState] = []
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -450,14 +454,7 @@ async def _mock_generic_device_entry(
             },
         }
 
-    mock_device = MockESPHomeDevice(entry, mock_client, device_info)
-    mock_device.states = states
-
-    def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
-        """Subscribe to state."""
-        mock_device.set_state_callback(callback)
-        for state in mock_device.states:
-            callback(state)
+    mock_device = MockESPHomeDevice(entry, mock_client, device_info, states)
 
     def _subscribe_service_calls(
         callback: Callable[[HomeassistantServiceCall], None],

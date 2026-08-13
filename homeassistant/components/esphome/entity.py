@@ -87,7 +87,9 @@ def async_static_info_updated(
     device_info = entry_data.device_info
     if TYPE_CHECKING:
         assert device_info is not None
-    new_infos: dict[DeviceEntityKey, EntityInfo] = {}
+    new_infos: dict[DeviceEntityKey, EntityInfo] = {
+        (info.device_id, info.key): info for info in infos
+    }
     add_entities: list[_EntityT] = []
 
     ent_reg = er.async_get(hass)
@@ -97,8 +99,6 @@ def async_static_info_updated(
     mac = device_info.mac_address
     unique_ids = [build_device_unique_id(mac, info) for info in infos]
     new_unique_ids = set(unique_ids)
-    for info in infos:
-        new_infos[(info.device_id, info.key)] = info
     old_info_by_unique_id, movable_by_name = _build_identity_indexes(
         current_infos, mac, new_unique_ids
     )
@@ -122,18 +122,11 @@ def async_static_info_updated(
         # Name match: the entity moved between devices. Prefer a
         # candidate whose (device_id, key) slot has no incoming info,
         # since that slot's info is an in place rename of the candidate
-        old_info: EntityInfo | None = None
-        if candidates := movable_by_name.get(info.name):
-            for idx, move_dict_key in enumerate(candidates):
-                if move_dict_key not in new_infos:
-                    old_info = current_infos.pop(candidates.pop(idx))
-                    break
-            else:
-                old_info = current_infos.pop(candidates.pop(0))
-
-        if old_info is None:
+        if not (candidates := movable_by_name.get(info.name)):
             deferred.append((info, unique_id))
             continue
+        idx = next((i for i, key in enumerate(candidates) if key not in new_infos), 0)
+        old_info = current_infos.pop(candidates.pop(idx))
 
         # Entity has switched devices, need to migrate unique_id
         # and handle state subscriptions
@@ -226,19 +219,25 @@ def async_static_info_updated(
 
     if rekeys:
         entry_data.async_update_entity_keys(info_type, rekeys)
-        # Prune states cached under retired keys
-        states = entry_data.state[state_type]
-        live_keys = {key for _, key in new_infos}
-        for rekeyed_info, _ in rekeys:
-            if (old_key := rekeyed_info.key) not in live_keys:
-                states.pop(old_key, None)
-                entry_data.stale_state.discard(
-                    (state_type, rekeyed_info.device_id, old_key)
-                )
 
     # Anything still in current_infos is now gone
     if current_infos:
         entry_data.async_remove_entities(hass, current_infos.values(), mac)
+
+    # The state cache holds only live keys so a future entity that
+    # reuses a retired key cannot adopt a stale state
+    if rekeys or current_infos:
+        live_keys = {key for _, key in new_infos}
+        states = entry_data.state[state_type]
+        for cached_key in list(states):
+            if cached_key not in live_keys:
+                del states[cached_key]
+        entry_data.stale_state -= {
+            stale_key
+            for stale_key in entry_data.stale_state
+            if stale_key[0] is state_type
+            and (stale_key[1], stale_key[2]) not in new_infos
+        }
 
     # Then update the actual info
     entry_data.info[info_type] = new_infos
