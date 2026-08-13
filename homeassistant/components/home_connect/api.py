@@ -20,7 +20,12 @@ class AsyncConfigEntryAuth(AbstractAuth):
     ) -> None:
         """Initialize Home Connect Auth."""
         self.hass = hass
-        super().__init__(get_async_client(hass), host=API_ENDPOINT)
+        super().__init__(
+            get_async_client(hass),
+            host=API_ENDPOINT
+            if hass.config.country != "CN"
+            else API_ENDPOINT.replace(".com", ".cn"),
+        )
         self.session = oauth_session
 
     @override

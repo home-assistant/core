@@ -8,9 +8,16 @@ from homeassistant.core import HomeAssistant
 
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:
     """Return authorization server."""
-    return AuthorizationServer(
-        authorize_url=OAUTH2_AUTHORIZE,
-        token_url=OAUTH2_TOKEN,
+    return (
+        AuthorizationServer(
+            authorize_url=OAUTH2_AUTHORIZE,
+            token_url=OAUTH2_TOKEN,
+        )
+        if hass.config.country != "CN"
+        else AuthorizationServer(
+            authorize_url=OAUTH2_AUTHORIZE.replace(".com", ".cn"),
+            token_url=OAUTH2_TOKEN.replace(".com", ".cn"),
+        )
     )
 
 
