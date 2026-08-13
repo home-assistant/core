@@ -334,8 +334,8 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             # also update the bridge device
             dev_reg = dr.async_get(self.hass)
-            if bridge_device := dev_reg.async_get_device(
-                identifiers={(DOMAIN, old_bridge_id)}
+            if bridge_device := dev_reg.async_get_device_by_identifier(
+                (DOMAIN, old_bridge_id), conf_entry.entry_id
             ):
                 dev_reg.async_update_device(
                     bridge_device.id,

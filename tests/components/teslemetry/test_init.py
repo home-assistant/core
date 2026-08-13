@@ -19,6 +19,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
+from homeassistant.components.teslemetry import _get_access_token
 from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
 
 # Coordinator constants
@@ -31,6 +32,7 @@ from homeassistant.components.teslemetry.coordinator import (
     VEHICLE_INTERVAL,
 )
 from homeassistant.components.teslemetry.models import TeslemetryData
+from homeassistant.components.teslemetry.oauth import TeslemetryImplementation
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     STATE_OFF,
@@ -40,10 +42,17 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import setup_platform
+from . import mock_config_entry, setup_platform
 from .const import (
     CONFIG_V1,
     ENERGY_HISTORY,
@@ -296,8 +305,8 @@ async def test_stale_device_removal(
 
         # Verify the device itself has been completely removed from the registry
         # since it had no other config entries
-        updated_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, "stale-vin")}
+        updated_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "stale-vin"), entry.entry_id
         )
         assert updated_device is None
 
@@ -329,7 +338,9 @@ async def test_skipped_energy_site_is_removed_as_stale_device(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
 
-    updated_device = device_registry.async_get_device(identifiers={(DOMAIN, "98765")})
+    updated_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "98765"), entry.entry_id
+    )
     assert updated_device is None
 
 
@@ -753,7 +764,9 @@ async def test_vehicle_streaming_version_update(
 
     # Check initial device sw_version
     vin = "LRW3F7EK4NC700000"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.0.0"
 
@@ -763,7 +776,9 @@ async def test_vehicle_streaming_version_update(
     await hass.async_block_till_done()
 
     # Check device sw_version was updated (build hash removed)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.1.0"
 
@@ -787,7 +802,9 @@ async def test_vehicle_streaming_version_update_ignores_none(
         assert entry.state is ConfigEntryState.LOADED
 
     vin = "LRW3F7EK4NC700000"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     original_version = device.sw_version
 
@@ -797,7 +814,9 @@ async def test_vehicle_streaming_version_update_ignores_none(
     await hass.async_block_till_done()
 
     # Check device sw_version was not changed
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == original_version
 
@@ -814,7 +833,9 @@ async def test_vehicle_polling_version_update(
     assert entry.state is ConfigEntryState.LOADED
 
     vin = "LRW3F7EK4NC700000"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.0.0"
 
@@ -829,7 +850,9 @@ async def test_vehicle_polling_version_update(
     await hass.async_block_till_done()
 
     # Check device sw_version was updated (build hash removed)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.2.0"
 
@@ -845,7 +868,9 @@ async def test_energy_site_version_update(
     assert entry.state is ConfigEntryState.LOADED
 
     site_id = "123456"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, site_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, site_id), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "23.44.0 eb113390"
 
@@ -860,7 +885,9 @@ async def test_energy_site_version_update(
     await hass.async_block_till_done()
 
     # Check device sw_version was updated
-    device = device_registry.async_get_device(identifiers={(DOMAIN, site_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, site_id), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "24.1.0 abc123"
 
@@ -1040,3 +1067,115 @@ async def test_insufficient_credits_backs_off_polling(
     coordinator = entry.runtime_data.vehicles[0].coordinator
     assert isinstance(coordinator.last_exception, UpdateFailed)
     assert coordinator.last_exception.retry_after == INSUFFICIENT_CREDITS_RETRY_AFTER
+
+
+def _oauth_session(hass: HomeAssistant, entry: MockConfigEntry) -> OAuth2Session:
+    """Build an OAuth2Session for directly exercising _get_access_token."""
+    return OAuth2Session(hass, entry, TeslemetryImplementation(hass, DOMAIN, CLIENT_ID))
+
+
+async def test_get_access_token_dead_token_during_setup_triggers_auth_failed(
+    hass: HomeAssistant,
+) -> None:
+    """A dead/revoked refresh token during setup must raise ConfigEntryAuthFailed.
+
+    OAuth servers commonly report a dead refresh token with a non-401 status
+    (e.g. 400 invalid_grant). Only recognizing status 401 let this fall
+    through to ConfigEntryNotReady, which retries setup indefinitely without
+    ever prompting the user to reauthenticate.
+    """
+    mock_entry = mock_config_entry()
+    mock_entry.add_to_hass(hass)
+    mock_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
+    session = _oauth_session(hass, mock_entry)
+
+    with (
+        patch.object(
+            OAuth2Session,
+            "async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestReauthError(
+                request_info=MagicMock(), status=400, domain=DOMAIN
+            ),
+        ),
+        pytest.raises(ConfigEntryAuthFailed),
+    ):
+        await _get_access_token(session)
+
+
+async def test_get_access_token_rate_limited_during_setup_is_not_fatal(
+    hass: HomeAssistant,
+) -> None:
+    """A 429 from the token endpoint during setup should back off, not be fatal."""
+    mock_entry = mock_config_entry()
+    mock_entry.add_to_hass(hass)
+    mock_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
+    session = _oauth_session(hass, mock_entry)
+
+    with (
+        patch.object(
+            OAuth2Session,
+            "async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestTransientError(
+                request_info=MagicMock(), status=429, domain=DOMAIN
+            ),
+        ),
+        pytest.raises(ConfigEntryNotReady),
+    ):
+        await _get_access_token(session)
+
+
+async def test_get_access_token_dead_token_after_setup_starts_reauth(
+    hass: HomeAssistant,
+) -> None:
+    """Test a token dying after setup (re)starts reauth without tearing down.
+
+    The coordinator handles the rest once the exception is re-raised.
+    """
+    mock_entry = mock_config_entry()
+    mock_entry.add_to_hass(hass)
+    mock_entry.mock_state(hass, ConfigEntryState.LOADED)
+    session = _oauth_session(hass, mock_entry)
+
+    with (
+        patch.object(
+            OAuth2Session,
+            "async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestReauthError(
+                request_info=MagicMock(), status=400, domain=DOMAIN
+            ),
+        ),
+        pytest.raises(OAuth2TokenRequestReauthError),
+    ):
+        await _get_access_token(session)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["handler"] == DOMAIN and flow["context"].get("source") == "reauth"
+        for flow in flows
+    )
+
+
+async def test_get_access_token_rate_limited_after_setup_is_not_fatal(
+    hass: HomeAssistant,
+) -> None:
+    """A transient token-refresh error after setup must not force reauth."""
+    mock_entry = mock_config_entry()
+    mock_entry.add_to_hass(hass)
+    mock_entry.mock_state(hass, ConfigEntryState.LOADED)
+    session = _oauth_session(hass, mock_entry)
+
+    with (
+        patch.object(
+            OAuth2Session,
+            "async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestTransientError(
+                request_info=MagicMock(), status=429, domain=DOMAIN
+            ),
+        ),
+        pytest.raises(OAuth2TokenRequestTransientError),
+    ):
+        await _get_access_token(session)
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.flow.async_progress()

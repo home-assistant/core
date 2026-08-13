@@ -354,8 +354,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     # uiClass is Generic (not mapped to cover as this is a Generic device class)
     OverkizCoverDescription(
         key=UIWidget.RTS_GENERIC,
-        open_command=OverkizCommand.OPEN,
-        close_command=OverkizCommand.CLOSE,
+        open_command=OverkizCommand.UP,
+        close_command=OverkizCommand.DOWN,
         stop_command=OverkizCommand.STOP,
     ),
     ##
@@ -521,6 +521,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
 ]
 
 SUPPORTED_DEVICES = {description.key: description for description in COVER_DESCRIPTIONS}
+
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(

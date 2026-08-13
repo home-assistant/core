@@ -215,8 +215,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/azure_service_bus/ @hfurubotten
 /homeassistant/components/azure_storage/ @zweckj
 /tests/components/azure_storage/ @zweckj
-/homeassistant/components/backblaze_b2/ @hugo-vrijswijk @ElCruncharino
-/tests/components/backblaze_b2/ @hugo-vrijswijk @ElCruncharino
+/homeassistant/components/backblaze_b2/ @ElCruncharino
+/tests/components/backblaze_b2/ @ElCruncharino
 /homeassistant/components/backup/ @home-assistant/core
 /tests/components/backup/ @home-assistant/core
 /homeassistant/components/baf/ @bdraco @jfroy
@@ -441,6 +441,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/dwd_weather_warnings/ @runningman84 @stephan192
 /homeassistant/components/dynalite/ @ziv1234
 /tests/components/dynalite/ @ziv1234
+/homeassistant/components/dyson_infrared/ @elax46
+/tests/components/dyson_infrared/ @elax46
 /homeassistant/components/eafm/ @Jc2k
 /tests/components/eafm/ @Jc2k
 /homeassistant/components/earn_e_p1/ @Miggets7
@@ -607,6 +609,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/frontend/ @home-assistant/frontend
 /homeassistant/components/frontier_silicon/ @wlcrs
 /tests/components/frontier_silicon/ @wlcrs
+/homeassistant/components/fuelprices_dk/ @MTrab
+/tests/components/fuelprices_dk/ @MTrab
 /homeassistant/components/fujitsu_fglair/ @crevetor
 /tests/components/fujitsu_fglair/ @crevetor
 /homeassistant/components/fully_kiosk/ @cgarwood
@@ -623,6 +627,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/gardena_bluetooth/ @elupus
 /homeassistant/components/gate/ @home-assistant/core
 /tests/components/gate/ @home-assistant/core
+/homeassistant/components/gatus/ @TN-1
+/tests/components/gatus/ @TN-1
 /homeassistant/components/gdacs/ @exxamalte
 /tests/components/gdacs/ @exxamalte
 /homeassistant/components/generic/ @davet2001
@@ -645,6 +651,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/geonetnz_quakes/ @exxamalte
 /homeassistant/components/geonetnz_volcano/ @exxamalte
 /tests/components/geonetnz_volcano/ @exxamalte
+/homeassistant/components/geosphere_austria_warnings/ @tklecka
+/tests/components/geosphere_austria_warnings/ @tklecka
 /homeassistant/components/ghost/ @johnonolan
 /tests/components/ghost/ @johnonolan
 /homeassistant/components/gios/ @bieniu
@@ -715,10 +723,14 @@ CLAUDE.md @home-assistant/core
 /tests/components/habitica/ @tr4nt0r
 /homeassistant/components/hanna/ @bestycame
 /tests/components/hanna/ @bestycame
+/homeassistant/components/harbor/ @Lash-L @afgarcia86
+/tests/components/harbor/ @Lash-L @afgarcia86
 /homeassistant/components/hardkernel/ @home-assistant/core
 /tests/components/hardkernel/ @home-assistant/core
 /homeassistant/components/hardware/ @home-assistant/core
 /tests/components/hardware/ @home-assistant/core
+/homeassistant/components/harman_luxury/ @sbesh91
+/tests/components/harman_luxury/ @sbesh91
 /homeassistant/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
 /tests/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
@@ -785,6 +797,10 @@ CLAUDE.md @home-assistant/core
 /tests/components/honeywell/ @mkmer
 /homeassistant/components/honeywell_string_lights/ @balloob
 /tests/components/honeywell_string_lights/ @balloob
+/homeassistant/components/hortimax/ @wildekek
+/tests/components/hortimax/ @wildekek
+/homeassistant/components/hotspring/ @Moustachauve
+/tests/components/hotspring/ @Moustachauve
 /homeassistant/components/hr_energy_qube/ @MattieGit
 /tests/components/hr_energy_qube/ @MattieGit
 /homeassistant/components/html5/ @alexyao2015 @tr4nt0r
@@ -878,8 +894,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/input_select/ @home-assistant/core
 /homeassistant/components/input_text/ @home-assistant/core
 /tests/components/input_text/ @home-assistant/core
-/homeassistant/components/insteon/ @teharris1 @ssyrell
-/tests/components/insteon/ @teharris1 @ssyrell
+/homeassistant/components/insteon/ @teharris1 @ssyrell @connorgallopo
+/tests/components/insteon/ @teharris1 @ssyrell @connorgallopo
 /homeassistant/components/integration/ @dgomes
 /tests/components/integration/ @dgomes
 /homeassistant/components/intelliclima/ @dvdinth
@@ -891,6 +907,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/intent_script/ @arturpragacz
 /tests/components/intent_script/ @arturpragacz
 /homeassistant/components/intesishome/ @jnimmo
+/tests/components/intesishome/ @jnimmo
 /homeassistant/components/iometer/ @jukrebs
 /tests/components/iometer/ @jukrebs
 /homeassistant/components/ios/ @robbiet480
@@ -940,6 +957,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
+/homeassistant/components/karakeep/ @sli-cka
+/tests/components/karakeep/ @sli-cka
 /homeassistant/components/keba/ @dannerph
 /homeassistant/components/keenetic_ndms2/ @foxel
 /tests/components/keenetic_ndms2/ @foxel
@@ -995,6 +1014,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/leaone/ @bdraco
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
+/homeassistant/components/led_infrared/ @tr4nt0r
+/tests/components/led_infrared/ @tr4nt0r
 /homeassistant/components/lektrico/ @lektrico
 /tests/components/lektrico/ @lektrico
 /homeassistant/components/letpot/ @jpelgrom
@@ -1024,6 +1045,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff
 /homeassistant/components/litejet/ @joncar
 /tests/components/litejet/ @joncar
+/homeassistant/components/litellm/ @luismalves
+/tests/components/litellm/ @luismalves
 /homeassistant/components/litterrobot/ @natekspencer @tkdrob
 /tests/components/litterrobot/ @natekspencer @tkdrob
 /homeassistant/components/livisi/ @StefanIacobLivisi @planbnet
@@ -1066,6 +1089,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/lutron/ @cdheiser @wilburCForce
 /homeassistant/components/lutron_caseta/ @swails @danaues @eclair4151
 /tests/components/lutron_caseta/ @swails @danaues @eclair4151
+/homeassistant/components/lyngdorf/ @fishloa
+/tests/components/lyngdorf/ @fishloa
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/madvr/ @iloveicedgreentea
@@ -1118,6 +1143,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
+/homeassistant/components/midea/ @chemelli74 @rokam @wuwentao @caibinqing
+/tests/components/midea/ @chemelli74 @rokam @wuwentao @caibinqing
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
 /homeassistant/components/mikrotik/ @engrbm87 @chemelli74
@@ -1136,8 +1163,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
-/homeassistant/components/modbus_connection/ @home-assistant/core
-/tests/components/modbus_connection/ @home-assistant/core
 /homeassistant/components/modem_callerid/ @tkdrob
 /tests/components/modem_callerid/ @tkdrob
 /homeassistant/components/modern_forms/ @wonderslug
@@ -1347,8 +1372,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/ourgroceries/ @OnFreund
 /homeassistant/components/overkiz/ @imicknl
 /tests/components/overkiz/ @imicknl
-/homeassistant/components/overseerr/ @joostlek @AmGarera
-/tests/components/overseerr/ @joostlek @AmGarera
+/homeassistant/components/overseerr/ @joostlek @AmGarera @felixschndr
+/tests/components/overseerr/ @joostlek @AmGarera @felixschndr
 /homeassistant/components/ovhcloud_ai_endpoints/ @Crocmagnon
 /tests/components/ovhcloud_ai_endpoints/ @Crocmagnon
 /homeassistant/components/ovo_energy/ @timmo001
@@ -1369,8 +1394,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/peco/ @IceBotYT
 /homeassistant/components/pegel_online/ @mib1185
 /tests/components/pegel_online/ @mib1185
-/homeassistant/components/permobil/ @IsakNyberg
-/tests/components/permobil/ @IsakNyberg
 /homeassistant/components/persistent_notification/ @home-assistant/core
 /tests/components/persistent_notification/ @home-assistant/core
 /homeassistant/components/pglab/ @pglab-electronics
@@ -1586,6 +1609,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/schlage/ @dknowles2
 /tests/components/schlage/ @dknowles2
 /homeassistant/components/schluter/ @prairieapps
+/homeassistant/components/scorpiontrack/ @Herbertmt978
+/tests/components/scorpiontrack/ @Herbertmt978
 /homeassistant/components/scrape/ @fabaff @gjohansson-ST
 /tests/components/scrape/ @fabaff @gjohansson-ST
 /homeassistant/components/screenlogic/ @dieselrabbit @bdraco
@@ -1701,12 +1726,14 @@ CLAUDE.md @home-assistant/core
 /tests/components/solax/ @squishykid @Darsstar
 /homeassistant/components/soma/ @ratsept
 /tests/components/soma/ @ratsept
+/homeassistant/components/somfy_mylink/ @sslivins
+/tests/components/somfy_mylink/ @sslivins
 /homeassistant/components/sonarr/ @ctalkington
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn
 /tests/components/songpal/ @rytilahti @shenxn
-/homeassistant/components/sonos/ @jjlawren @peterager
-/tests/components/sonos/ @jjlawren @peterager
+/homeassistant/components/sonos/ @peterager @jjlawren
+/tests/components/sonos/ @peterager @jjlawren
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
@@ -1727,8 +1754,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/starline/ @anonym-tsk
 /homeassistant/components/statistics/ @ThomDietrich @gjohansson-ST
 /tests/components/statistics/ @ThomDietrich @gjohansson-ST
-/homeassistant/components/steam_online/ @tkdrob
-/tests/components/steam_online/ @tkdrob
+/homeassistant/components/steam_online/ @tr4nt0r @tkdrob
+/tests/components/steam_online/ @tr4nt0r @tkdrob
 /homeassistant/components/steamist/ @bdraco
 /tests/components/steamist/ @bdraco
 /homeassistant/components/stiebel_eltron/ @fucm @ThyMYthOS
@@ -1955,6 +1982,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak @sapuseven
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak @sapuseven
+/homeassistant/components/vibration/ @home-assistant/core
+/tests/components/vibration/ @home-assistant/core
 /homeassistant/components/vicare/ @CFenner @lackas
 /tests/components/vicare/ @CFenner @lackas
 /homeassistant/components/victron_ble/ @rajlaud
@@ -1981,8 +2010,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvo/ @thomasddn
 /tests/components/volvo/ @thomasddn
-/homeassistant/components/volvooncall/ @molobrakos @svrooij
-/tests/components/volvooncall/ @molobrakos @svrooij
 /homeassistant/components/wake_on_lan/ @ntilley905
 /tests/components/wake_on_lan/ @ntilley905
 /homeassistant/components/wake_word/ @home-assistant/core @synesthesiam
@@ -2042,6 +2069,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/window/ @home-assistant/core
 /tests/components/window/ @home-assistant/core
 /homeassistant/components/wirelesstag/ @sergeymaysak
+/tests/components/wirelesstag/ @sergeymaysak
 /homeassistant/components/withings/ @joostlek
 /tests/components/withings/ @joostlek
 /homeassistant/components/wiz/ @sbidy @arturpragacz
@@ -2110,6 +2138,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/zeversolar/ @kvanzuijlen @mhuiskes
 /homeassistant/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /tests/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
+/homeassistant/components/zhong_hong/ @crhan
 /homeassistant/components/zimi/ @markhannon
 /tests/components/zimi/ @markhannon
 /homeassistant/components/zinvolt/ @joostlek

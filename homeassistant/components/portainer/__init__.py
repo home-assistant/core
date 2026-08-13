@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pyportainer import Portainer, PortainerImageWatcher
 from pyportainer.exceptions import PortainerError
@@ -89,6 +90,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     entry.async_on_unload(async_at_started(hass, _defer_docker_disk_space_refresh))
 
     entry.runtime_data = coordinator
+
+    # Register the endpoint and stack devices up front so that container, stack and
+    # volume entities can deterministically resolve them as their via device when
+    # their platforms are set up below, regardless of platform/entity add order.
+    coordinator.async_register_endpoint_and_stack_devices(
+        coordinator.data,
+        set(coordinator.data),
+        {
+            (endpoint_id, stack_name, stack_data.stack.id)
+            for endpoint_id, endpoint_data in coordinator.data.items()
+            for stack_name, stack_data in endpoint_data.stacks.items()
+        },
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     @callback
@@ -146,7 +161,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
                 continue
 
             parent_devices = device_registry.async_get(device.via_device_id)
-            assert parent_devices
+            if TYPE_CHECKING:
+                assert parent_devices is not None
             for parent_device in parent_devices.identifiers:
                 if parent_device[0] == DOMAIN:
                     parent_device_identifiers = parent_device

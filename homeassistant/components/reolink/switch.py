@@ -102,6 +102,16 @@ SWITCH_ENTITIES = (
         method=lambda api, ch, value: api.set_audio_alarm(ch, value),
     ),
     ReolinkSwitchEntityDescription(
+        key="pre_siren_on_event",
+        cmd_key="GetAudioCfg",
+        cmd_id=264,
+        translation_key="pre_siren_on_event",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "pre_siren"),
+        value=lambda api, ch: api.pre_alarm_enabled(ch),
+        method=lambda api, ch, value: api.set_pre_alarm(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
         key="auto_tracking",
         cmd_key="GetAiCfg",
         translation_key="auto_tracking",
@@ -248,6 +258,7 @@ SWITCH_ENTITIES = (
         key="privacy_mask",
         cmd_key="GetMask",
         translation_key="privacy_mask",
+        lens_entity=True,
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "privacy_mask"),
         value=lambda api, ch: api.privacy_mask_enabled(ch),
@@ -348,7 +359,7 @@ async def async_setup_entry(
     entities: list[SwitchEntity] = [
         ReolinkSwitchEntity(reolink_data, channel, entity_description)
         for entity_description in SWITCH_ENTITIES
-        for channel in reolink_data.host.api.channels
+        for channel in reolink_data.host.api.stream_channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
@@ -391,6 +402,11 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         """Initialize Reolink switch entity."""
         self.entity_description = entity_description
         super().__init__(reolink_data, channel)
+        if self.entity_description.lens_entity and self._host.api.is_dual_lens:
+            self._attr_translation_key = f"{entity_description.translation_key}_lens"
+            self._attr_translation_placeholders = {
+                "channel": str(self._channel),
+            }
 
     @property
     @override

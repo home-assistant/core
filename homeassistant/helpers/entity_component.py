@@ -225,6 +225,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         *,
+        admin_only: bool = False,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register an entity service."""
@@ -232,6 +233,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             self.hass,
             self.domain,
             name,
+            admin_only=admin_only,
             entities=self._entities,
             func=func,
             job_type=HassJobType.Coroutinefunction,

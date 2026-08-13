@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -56,8 +56,8 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         self._attr_unique_id = f"{station.id}_status"
         if coordinator.show_on_map:
             self._attr_extra_state_attributes = {
-                ATTR_LATITUDE: station.lat,
-                ATTR_LONGITUDE: station.lng,
+                EntityStateAttribute.LATITUDE: station.lat,
+                EntityStateAttribute.LONGITUDE: station.lng,
             }
 
     @property
