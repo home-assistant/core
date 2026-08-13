@@ -18,7 +18,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.network import get_url
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    async_load_json_object_fixture,
+)
 from tests.typing import ClientSessionGenerator
 
 
@@ -80,10 +85,9 @@ async def test_webhook_prefers_internal_url(
         external_url="https://this-is-external-url.hass.nabu.casa",
     )
 
-    config: dict[str, Any] = {DOMAIN: {}}
     config_entry.add_to_hass(hass)
 
-    lock_status = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
 
     webhooks_fixture = json.loads(
         await async_load_fixture(hass, "get_all_webhooks.json", DOMAIN)
@@ -98,7 +102,7 @@ async def test_webhook_prefers_internal_url(
             "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
         ),
     ):
-        await async_setup_component(hass, DOMAIN, config)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     lock.registerWebhook.assert_called_with(
@@ -115,11 +119,10 @@ async def test_ensure_webhooks_removes_stale_webhooks(
         external_url="https://this-is-external-url.hass.nabu.casa",
     )
 
-    config: dict[str, Any] = {DOMAIN: {}}
     config_entry.add_to_hass(hass)
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
-    lock_status = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
 
     stale_webhook = {
         "id": 14,
@@ -147,7 +150,7 @@ async def test_ensure_webhooks_removes_stale_webhooks(
             "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
         ),
     ):
-        await async_setup_component(hass, DOMAIN, config)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     lock.registerWebhook.assert_called_once()
@@ -164,11 +167,10 @@ async def test_ensure_webhooks_handles_bridge_error_on_cleanup(
     """Test that stale webhook cleanup handles bridge connection errors smoothly."""
     await hass.config.async_update(internal_url="http://192.168.1.10:8123")
 
-    config: dict[str, Any] = {DOMAIN: {}}
     config_entry.add_to_hass(hass)
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
-    lock_status = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
 
     stale_webhook = {
         "id": 14,
@@ -191,7 +193,7 @@ async def test_ensure_webhooks_handles_bridge_error_on_cleanup(
             "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
         ),
     ):
-        await async_setup_component(hass, DOMAIN, config)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     lock.deleteWebhook.assert_called_once_with(14)
