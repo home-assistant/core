@@ -1,0 +1,324 @@
+{
+  "entity": {
+    "button": {
+      "statistics_cleanup": {
+        "default": "mdi:database-remove"
+      },
+      "migration_rollback": {
+        "default": "mdi:backup-restore"
+      },
+      "system_refresh": {
+        "default": "mdi:refresh"
+      },
+      "scrub_run": {
+        "default": "mdi:broom"
+      },
+      "snapshottask_run": {
+        "default": "mdi:play-circle-outline"
+      },
+      "rsync_run": {
+        "default": "mdi:play-circle-outline"
+      },
+      "replication_run": {
+        "default": "mdi:play-circle-outline"
+      },
+      "cloudsync_run": {
+        "default": "mdi:play-circle-outline"
+      },
+      "cronjob_run": {
+        "default": "mdi:play-circle-outline"
+      }
+    },
+    "sensor": {
+      "alerts": {
+        "default": "mdi:alert"
+      },
+      "system_smb_connections": {
+        "default": "mdi:folder-network"
+      },
+      "system_uptime": {
+        "default": "mdi:clock-outline"
+      },
+      "system_cpu_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "system_load_shortterm": {
+        "default": "mdi:gauge"
+      },
+      "system_load_midterm": {
+        "default": "mdi:gauge"
+      },
+      "system_load_longterm": {
+        "default": "mdi:gauge"
+      },
+      "system_cpu_usage": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "system_memory_usage": {
+        "default": "mdi:memory"
+      },
+      "system_cache_size_arc_value": {
+        "default": "mdi:memory"
+      },
+      "system_memory_total": {
+        "default": "mdi:memory"
+      },
+      "system_memory_free": {
+        "default": "mdi:memory"
+      },
+      "dataset": {
+        "default": "mdi:database"
+      },
+      "pool_free": {
+        "default": "mdi:database-settings"
+      },
+      "pool_size": {
+        "default": "mdi:database-settings"
+      },
+      "pool_allocated": {
+        "default": "mdi:database-settings"
+      },
+      "pool_errors": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "pool_fragmentation": {
+        "default": "mdi:chart-pie"
+      },
+      "pool_scrub_start": {
+        "default": "mdi:broom"
+      },
+      "pool_scrub_end": {
+        "default": "mdi:broom-clock"
+      },
+      "pool_scrub_state": {
+        "default": "mdi:broom"
+      },
+      "cloudsync": {
+        "default": "mdi:cloud-upload"
+      },
+      "replication": {
+        "default": "mdi:transfer"
+      },
+      "rsynctask": {
+        "default": "mdi:folder-sync"
+      },
+      "snapshottask": {
+        "default": "mdi:checkbox-marked-circle-plus-outline"
+      },
+      "traffic_rx": {
+        "default": "mdi:download-network-outline"
+      },
+      "traffic_tx": {
+        "default": "mdi:upload-network-outline"
+      },
+      "ups_charge": {
+        "default": "mdi:battery-charging"
+      },
+      "ups_runtime": {
+        "default": "mdi:timer-outline"
+      },
+      "ups_load": {
+        "default": "mdi:gauge"
+      },
+      "ups_voltage": {
+        "default": "mdi:sine-wave"
+      },
+      "ups_current": {
+        "default": "mdi:current-ac"
+      },
+      "ups_frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "ups_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "directoryservices": {
+        "default": "mdi:domain"
+      },
+      "certificate_expiry": {
+        "default": "mdi:certificate"
+      },
+      "certificate_expiration_time": {
+        "default": "mdi:certificate"
+      },
+      "arc_data_hit_percent": {
+        "default": "mdi:memory"
+      },
+      "arc_metadata_hit_percent": {
+        "default": "mdi:memory"
+      },
+      "arc_l2_hit_percent": {
+        "default": "mdi:memory"
+      },
+      "app_stats_cpu": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "app_stats_memory": {
+        "default": "mdi:memory"
+      },
+      "app_stats_network_rx": {
+        "default": "mdi:download-network-outline"
+      },
+      "app_stats_network_tx": {
+        "default": "mdi:upload-network-outline"
+      },
+      "app_stats_blkio_read": {
+        "default": "mdi:database-arrow-right"
+      },
+      "app_stats_blkio_write": {
+        "default": "mdi:database-arrow-left"
+      }
+    },
+    "binary_sensor": {
+      "pool_healthy": {
+        "default": "mdi:database-off",
+        "state": {
+          "on": "mdi:database",
+          "off": "mdi:database-off"
+        }
+      },
+      "vm": {
+        "default": "mdi:server-off",
+        "state": {
+          "on": "mdi:server",
+          "off": "mdi:server-off"
+        }
+      },
+      "container": {
+        "default": "mdi:cube-off-outline",
+        "state": {
+          "on": "mdi:cube-outline",
+          "off": "mdi:cube-off-outline"
+        }
+      },
+      "service": {
+        "default": "mdi:cog-off",
+        "state": {
+          "on": "mdi:cog",
+          "off": "mdi:cog-off"
+        }
+      },
+      "app": {
+        "default": "mdi:server-off",
+        "state": {
+          "on": "mdi:server",
+          "off": "mdi:server-off"
+        }
+      },
+      "directoryservices": {
+        "default": "mdi:account-group-outline",
+        "state": {
+          "on": "mdi:account-group",
+          "off": "mdi:account-group-outline"
+        }
+      },
+      "certificate_expired": {
+        "default": "mdi:certificate-check",
+        "state": {
+          "on": "mdi:certificate-alert",
+          "off": "mdi:certificate-check"
+        }
+      }
+    },
+    "switch": {
+      "service_switch": {
+        "default": "mdi:cog"
+      },
+      "cloudsync_switch": {
+        "default": "mdi:calendar-check"
+      },
+      "cronjob_switch": {
+        "default": "mdi:calendar-check"
+      }
+    }
+  },
+  "services": {
+    "cloudsync_run": {
+      "service": "mdi:play-circle-outline"
+    },
+    "cloudsync_abort": {
+      "service": "mdi:stop-circle-outline"
+    },
+    "rsync_run": {
+      "service": "mdi:play-circle-outline"
+    },
+    "replication_run": {
+      "service": "mdi:play-circle-outline"
+    },
+    "snapshottask_run": {
+      "service": "mdi:play-circle-outline"
+    },
+    "dataset_snapshot": {
+      "service": "mdi:camera-outline"
+    },
+    "system_reboot": {
+      "service": "mdi:restart"
+    },
+    "system_shutdown": {
+      "service": "mdi:power"
+    },
+    "system_refresh": {
+      "service": "mdi:refresh"
+    },
+    "service_start": {
+      "service": "mdi:play"
+    },
+    "service_stop": {
+      "service": "mdi:stop"
+    },
+    "service_restart": {
+      "service": "mdi:restart"
+    },
+    "service_reload": {
+      "service": "mdi:reload"
+    },
+    "vm_start": {
+      "service": "mdi:play"
+    },
+    "vm_stop": {
+      "service": "mdi:stop"
+    },
+    "vm_restart": {
+      "service": "mdi:restart"
+    },
+    "container_start": {
+      "service": "mdi:play"
+    },
+    "container_stop": {
+      "service": "mdi:stop"
+    },
+    "container_restart": {
+      "service": "mdi:restart"
+    },
+    "app_start": {
+      "service": "mdi:play"
+    },
+    "app_stop": {
+      "service": "mdi:stop"
+    },
+    "dataset_lock": {
+      "service": "mdi:lock"
+    },
+    "dataset_unlock": {
+      "service": "mdi:lock-open-variant"
+    },
+    "passphrase_set": {
+      "service": "mdi:key-plus"
+    },
+    "passphrase_remove": {
+      "service": "mdi:key-remove"
+    },
+    "passphrase_list": {
+      "service": "mdi:key-outline"
+    },
+    "alert_dismiss": {
+      "service": "mdi:alert-remove"
+    },
+    "alert_restore": {
+      "service": "mdi:alert-plus"
+    },
+    "alert_list": {
+      "service": "mdi:format-list-bulleted"
+    }
+  }
+}
