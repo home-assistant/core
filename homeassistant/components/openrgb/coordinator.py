@@ -19,11 +19,20 @@ from .const import (
     DOMAIN,
     SCAN_INTERVAL,
     UID_SEPARATOR,
+    UNSTABLE_LOCATIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 type OpenRGBConfigEntry = ConfigEntry[OpenRGBCoordinator]
+
+
+def stable_location(location: str) -> str:
+    """Return the location with any unstable connection path replaced."""
+    for prefix, replacement in UNSTABLE_LOCATIONS.items():
+        if location.startswith(prefix):
+            return replacement
+    return location
 
 
 class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
@@ -108,14 +117,31 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         Note: the OpenRGB device.id is intentionally not used because it is just
         a positional index that can change when devices are added or removed.
+
+        For HID and USB devices the location holds the current connection path,
+        for example "HID: /dev/hidraw14". Those paths are reassigned when a
+        device reconnects and on every reboot, so a device that reports a serial
+        is identified by that serial and its location is replaced with a
+        constant. Locations on other buses are kept as they are.
         """
+        # Devices that cannot report a serial may return padding instead, and
+        # "none" is the value written for a serial the device did not report, so
+        # it cannot also act as one
+        serial = (device.metadata.serial or "").strip()
+        if serial == "none":
+            serial = ""
+        location = device.metadata.location or "none"
+
+        if serial:
+            location = stable_location(location)
+
         parts = (
             self.entry_id,
             device.type.name,
             device.metadata.vendor or "none",
             device.metadata.description or "none",
-            device.metadata.serial or "none",
-            device.metadata.location or "none",
+            serial or "none",
+            location,
         )
         # Double pipe is readable and is unlikely to appear in metadata
         return UID_SEPARATOR.join(parts)
