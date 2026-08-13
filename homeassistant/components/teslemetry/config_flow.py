@@ -337,6 +337,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         try:
             result = await self._energy_site.find_authorized_clients()
         except (ClientError, TeslaFleetError) as err:
+            # Gateway returned no usable client list; raise so the caller aborts
+            # rather than mistaking a failed lookup for an unregistered key and
+            # re-registering it (which would reset an already pending key).
             LOGGER.debug("find_authorized_clients failed: %s", err)
             raise PowerwallLookupError from err
         return next(
@@ -360,6 +363,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         ) as client:
             await client.connect()
             try:
+                # connect() already passed the password login, so a failure here
+                # is the unapproved RSA key rejecting the signed read, not a bad
+                # password.
                 await client.get_status()
             except PowerwallAuthenticationError as err:
                 raise PowerwallKeyRejectedError from err

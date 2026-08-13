@@ -295,6 +295,9 @@ def _prune_energy_subentries(
     """Remove energy-site subentries whose site is no longer on the account."""
     if Scope.ENERGY_DEVICE_DATA not in scopes:
         return
+    # Prune against the raw product inventory, not the access-filtered energysites
+    # list: a site can report access:false transiently while still on the account,
+    # and pruning on that flag would delete a live gateway's paired credentials.
     product_site_ids = {
         str(product["energy_site_id"])
         for product in products
@@ -334,6 +337,8 @@ async def _async_resolve_local_control(
     cloud_energy_site: EnergySite,
 ) -> tuple[bool, str | None, EnergySite | EnergySiteRouter]:
     """Resolve opt-in local control for an energy site."""
+    # Only a battery/Powerwall (TEDAPI) gateway can pair for local control;
+    # solar-only and wall-connector-only sites cannot.
     if not battery:
         return False, None, cloud_energy_site
     subentry_id = _find_energy_subentry_id(entry, site_id)
