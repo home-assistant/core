@@ -2256,7 +2256,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         else:
             connections = _normalize_connections(connections)
 
-        # A child is referenced via parent_device_id, not adopted by a device info
+        # We do not allow registering a device without parent_device_id if the
+        # identifiers match an existing child.
         if (
             matched_child_device := self.child_devices.get_entry(
                 identifiers=identifiers, config_entry_id=config_entry_id
