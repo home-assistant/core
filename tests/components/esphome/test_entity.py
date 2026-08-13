@@ -2528,6 +2528,11 @@ async def test_entities_with_duplicate_names_not_removed_on_reconnect(
             key=2,
             name="Duplicate",
         ),
+        BinarySensorInfo(
+            object_id="duplicate",
+            key=3,
+            name="Duplicate",
+        ),
     ]
     states = [
         BinarySensorState(key=1, state=True, missing_state=False),
@@ -2552,3 +2557,121 @@ async def test_entities_with_duplicate_names_not_removed_on_reconnect(
     device.set_state(BinarySensorState(key=1, state=False, missing_state=False))
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.test_duplicate").state == STATE_OFF
+
+
+async def test_entities_with_same_name_moved_between_devices(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test same named entities moving between devices at the same time.
+
+    The name is ambiguous so the moves are resolved by the key, which
+    migrates each entity to its own new device.
+    """
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="sub_two", area_id=0),
+        SubDeviceInfo(device_id=33333333, name="sub_three", area_id=0),
+        SubDeviceInfo(device_id=44444444, name="sub_four", area_id=0),
+        SubDeviceInfo(device_id=55555555, name="sub_five", area_id=0),
+    ]
+    device_info = {
+        "devices": sub_devices,
+    }
+    entity_info = [
+        BinarySensorInfo(
+            object_id="battery",
+            key=1,
+            name="Battery",
+            device_id=11111111,
+        ),
+        BinarySensorInfo(
+            object_id="battery",
+            key=2,
+            name="Battery",
+            device_id=22222222,
+        ),
+        BinarySensorInfo(
+            object_id="battery",
+            key=5,
+            name="Battery",
+            device_id=55555555,
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=11111111),
+        BinarySensorState(key=2, state=True, missing_state=False, device_id=22222222),
+        BinarySensorState(key=5, state=True, missing_state=False, device_id=55555555),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+    entry_one = entity_registry.async_get("binary_sensor.sub_one_battery")
+    entry_two = entity_registry.async_get("binary_sensor.sub_two_battery")
+    assert entry_one is not None
+    assert entry_two is not None
+    assert entity_registry.async_get("binary_sensor.sub_five_battery") is not None
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.sub_one_battery")
+    actions_two = track_entity_registry_actions(hass, "binary_sensor.sub_two_battery")
+    actions_five = track_entity_registry_actions(hass, "binary_sensor.sub_five_battery")
+
+    # Two of the same named entities move to new sub devices with
+    # stable keys while the third is removed
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="battery",
+            key=1,
+            name="Battery",
+            device_id=33333333,
+        ),
+        BinarySensorInfo(
+            object_id="battery",
+            key=2,
+            name="Battery",
+            device_id=44444444,
+        ),
+    ]
+    await _reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
+    )
+
+    new_entry_one = entity_registry.async_get("binary_sensor.sub_one_battery")
+    new_entry_two = entity_registry.async_get("binary_sensor.sub_two_battery")
+    assert new_entry_one is not None
+    assert new_entry_two is not None
+    assert new_entry_one.id == entry_one.id
+    assert new_entry_two.id == entry_two.id
+    assert "remove" not in actions_one
+    assert "remove" not in actions_two
+    assert entity_registry.async_get("binary_sensor.sub_five_battery") is None
+    assert actions_five == ["remove"]
+
+    mac = device.device_info.mac_address
+    sub_three = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mac}_33333333"), device.entry.entry_id
+    )
+    sub_four = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mac}_44444444"), device.entry.entry_id
+    )
+    assert sub_three is not None
+    assert sub_four is not None
+    assert new_entry_one.device_id == sub_three.id
+    assert new_entry_two.device_id == sub_four.id
+
+    # Each entity must follow its key on the new device
+    device.set_state(
+        BinarySensorState(key=1, state=False, missing_state=False, device_id=33333333)
+    )
+    device.set_state(
+        BinarySensorState(key=2, state=True, missing_state=False, device_id=44444444)
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.sub_one_battery").state == STATE_OFF
+    assert hass.states.get("binary_sensor.sub_two_battery").state == STATE_ON
