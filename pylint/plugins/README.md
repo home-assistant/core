@@ -135,6 +135,7 @@ Every check has a code following the
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
 | `W7430` | [`home-assistant-serial-port-selector-usb-dependency`](#w7430-home-assistant-serial-port-selector-usb-dependency) | Config flow using `SerialPortSelector` must declare `usb` in `dependencies` |
 | `W7433` | [`home-assistant-missing-test-before-configure`](#w7433-home-assistant-missing-test-before-configure) | Config flow should test the connection before creating an entry |
+| `W7434` | [`home-assistant-executor-job-in-loop`](#w7434-home-assistant-executor-job-in-loop) | `async_add_executor_job` call inside a loop should be grouped |
 
 
 ## `home_assistant_logger` checker
@@ -837,8 +838,9 @@ Integration's `__init__.py` should implement `async_unload_entry`.
 
 ## `home_assistant_sequential_executor_jobs` checker
 
-Detects consecutive `async_add_executor_job` calls in integration modules
-that could be grouped into a single executor job.
+Detects `async_add_executor_job` calls in integration modules that could
+be grouped into a single executor job, either because they are consecutive
+or because they run inside a loop.
 
 ### `W7415`: `home-assistant-sequential-executor-jobs`
 
@@ -847,6 +849,14 @@ statements (uninterrupted by control flow such as `if`/`try`/`with`/`for`)
 should be combined into a single executor job that performs all the work,
 avoiding unnecessary context switches back to the event loop between
 blocking calls. The rule applies to integration modules only.
+
+### `W7434`: `home-assistant-executor-job-in-loop`
+
+An `async_add_executor_job` call inside a loop body (`for`/`async for`/
+`while`) causes a context switch back to the event loop on every
+iteration. Move the loop into a single function and call
+`async_add_executor_job` once with that function. The rule applies to
+integration modules only.
 
 
 ## `home_assistant_has_entity_name` checker

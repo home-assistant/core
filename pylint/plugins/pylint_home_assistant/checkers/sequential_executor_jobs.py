@@ -51,6 +51,14 @@ class SequentialExecutorJobsChecker(BaseChecker):
             "appear in sequence. Group the blocking operations into a "
             "single function and call async_add_executor_job once.",
         ),
+        "W7434": (
+            "`async_add_executor_job` call inside a loop should be grouped "
+            "into a single executor job",
+            "home-assistant-executor-job-in-loop",
+            "Used when an await hass.async_add_executor_job() call appears "
+            "inside a loop body. Move the loop into a single function and "
+            "call async_add_executor_job once.",
+        ),
     }
     options = ()
 
@@ -69,7 +77,7 @@ class SequentialExecutorJobsChecker(BaseChecker):
 
     visit_asyncfunctiondef = visit_functiondef
 
-    def _check_body(self, body: list[nodes.NodeNG]) -> None:
+    def _check_body(self, body: list[nodes.NodeNG], in_loop: bool = False) -> None:
         """Check a list of statements for sequential executor job calls."""
         prev_was_executor = False
 
@@ -80,20 +88,25 @@ class SequentialExecutorJobsChecker(BaseChecker):
                         "home-assistant-sequential-executor-jobs",
                         node=stmt,
                     )
+                elif in_loop:
+                    self.add_message(
+                        "home-assistant-executor-job-in-loop",
+                        node=stmt,
+                    )
                 prev_was_executor = True
             else:
                 prev_was_executor = False
 
                 # Recurse into control flow blocks (but not nested functions)
                 if isinstance(stmt, nodes.If):
-                    self._check_body(stmt.body)
-                    self._check_body(stmt.orelse)
+                    self._check_body(stmt.body, in_loop)
+                    self._check_body(stmt.orelse, in_loop)
                 elif isinstance(stmt, nodes.Try):
-                    self._check_body(stmt.body)
+                    self._check_body(stmt.body, in_loop)
                     for handler in stmt.handlers:
-                        self._check_body(handler.body)
-                    self._check_body(stmt.orelse)
-                    self._check_body(stmt.finalbody)
+                        self._check_body(handler.body, in_loop)
+                    self._check_body(stmt.orelse, in_loop)
+                    self._check_body(stmt.finalbody, in_loop)
                 elif isinstance(
                     stmt,
                     (
@@ -101,7 +114,7 @@ class SequentialExecutorJobsChecker(BaseChecker):
                         nodes.AsyncWith,
                     ),
                 ):
-                    self._check_body(stmt.body)
+                    self._check_body(stmt.body, in_loop)
                 elif isinstance(
                     stmt,
                     (
@@ -110,8 +123,8 @@ class SequentialExecutorJobsChecker(BaseChecker):
                         nodes.While,
                     ),
                 ):
-                    self._check_body(stmt.body)
-                    self._check_body(stmt.orelse)
+                    self._check_body(stmt.body, in_loop=True)
+                    self._check_body(stmt.orelse, in_loop)
 
 
 def register(linter: PyLinter) -> None:
