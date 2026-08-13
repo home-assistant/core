@@ -799,6 +799,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/honeywell_string_lights/ @balloob
 /homeassistant/components/hortimax/ @wildekek
 /tests/components/hortimax/ @wildekek
+/homeassistant/components/hotspring/ @Moustachauve
+/tests/components/hotspring/ @Moustachauve
 /homeassistant/components/hr_energy_qube/ @MattieGit
 /tests/components/hr_energy_qube/ @MattieGit
 /homeassistant/components/html5/ @alexyao2015 @tr4nt0r
@@ -1724,6 +1726,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/solax/ @squishykid @Darsstar
 /homeassistant/components/soma/ @ratsept
 /tests/components/soma/ @ratsept
+/homeassistant/components/somfy_mylink/ @sslivins
+/tests/components/somfy_mylink/ @sslivins
 /homeassistant/components/sonarr/ @ctalkington
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn

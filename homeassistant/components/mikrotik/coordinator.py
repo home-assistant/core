@@ -39,6 +39,7 @@ from .const import (
     LOGGER,
     MIKROTIK_SERVICES,
     NAME,
+    PING,
     POE,
     RESOURCE,
     ROUTERBOARD,
@@ -308,8 +309,7 @@ class MikrotikData:
             "interface": interface,
             "address": ip_address,
         }
-        cmd = "/ping"
-        data = self.command(cmd, params)
+        data = self.command(MIKROTIK_SERVICES[PING], params)
         if data:
             status = 0
             for result in data:
