@@ -11,8 +11,9 @@ from vizaio import (
     SettingType,
     VizioAuthError,
     VizioConnectionError,
+    VizioNotFoundError,
 )
-from vizaio.profiles import SOUNDBAR_PROFILE
+from vizaio.profiles import SOUNDBAR_PROFILE, TV_KEYS, TV_PROFILE
 
 from homeassistant.components.vizio.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -33,6 +34,7 @@ from .const import (
     UNIQUE_ID,
     VERSION,
     audio_setting,
+    state_extended,
 )
 
 from tests.common import MockConfigEntry
@@ -204,6 +206,10 @@ def vizio_bypass_update_fixture() -> Generator[None]:
     """Mock component update with minimal data."""
     with (
         patch(
+            "homeassistant.components.vizio.Vizio.get_state_extended",
+            side_effect=VizioNotFoundError("not supported"),
+        ),
+        patch(
             "homeassistant.components.vizio.Vizio.get_power_state",
             return_value=True,
         ),
@@ -245,6 +251,46 @@ def vizio_detect_tv_fixture() -> Generator[None]:
         yield
 
 
+@pytest.fixture(name="mock_vizio")
+def mock_vizio_fixture() -> Generator[AsyncMock]:
+    """Mock the Vizio device the integration talks to.
+
+    Yields the device instance the coordinator receives, preloaded with a
+    modern TV firmware response set. Tests override individual return values
+    or side effects instead of stacking per-method patches.
+    """
+    with patch(
+        "homeassistant.components.vizio.Vizio", autospec=True
+    ) as mock_vizio_class:
+        device = mock_vizio_class.return_value
+        # Properties on the real class; autospec leaves them as bare mocks
+        device.profile = TV_PROFILE
+        device.available_keys = TV_KEYS
+        device.get_state_extended.return_value = state_extended(
+            current_input=CURRENT_INPUT
+        )
+        device.get_power_state.return_value = True
+        device.get_current_input.return_value = CURRENT_INPUT
+        device.get_current_app_config.return_value = None
+        device.get_inputs.return_value = get_mock_inputs(INPUT_LIST)
+        device.get_settings.return_value = {
+            "volume": audio_setting("volume", int(TV_PROFILE.max_volume / 2)),
+            "eq": audio_setting("eq", CURRENT_EQ),
+            "mute": audio_setting("mute", "Off"),
+        }
+        device.get_setting.return_value = SettingInfo(
+            setting_type="audio",
+            name="eq",
+            value=CURRENT_EQ,
+            hashval=0,
+            type=SettingType.LIST,
+            options=tuple(EQ_LIST),
+        )
+        device.get_model_name.return_value = MODEL
+        device.get_version.return_value = VERSION
+        yield device
+
+
 @pytest.fixture(name="vizio_guess_device_type")
 def vizio_guess_device_type_fixture() -> Generator[None]:
     """Mock vizio device type probe to report a speaker."""
@@ -284,6 +330,10 @@ def vizio_cant_connect_fixture() -> Generator[None]:
             side_effect=VizioConnectionError("cannot connect"),
         ),
         patch(
+            "homeassistant.components.vizio.Vizio.get_state_extended",
+            side_effect=VizioConnectionError("cannot connect"),
+        ),
+        patch(
             "homeassistant.components.vizio.Vizio.get_power_state",
             side_effect=VizioConnectionError("cannot connect"),
         ),
@@ -303,6 +353,10 @@ def vizio_cant_connect_fixture() -> Generator[None]:
 def vizio_update_fixture() -> Generator[None]:
     """Mock valid updates to vizio device."""
     with (
+        patch(
+            "homeassistant.components.vizio.Vizio.get_state_extended",
+            side_effect=VizioNotFoundError("not supported"),
+        ),
         patch(
             "homeassistant.components.vizio.Vizio.get_settings",
             return_value={

@@ -453,7 +453,7 @@ aiotedee==0.3.0
 aiotractive==1.0.3
 
 # homeassistant.components.unifi
-aiounifi==91
+aiounifi==92
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
@@ -2783,7 +2783,7 @@ python-swisscom-internet-box==0.2.0
 python-tado==0.18.16
 
 # homeassistant.components.technove
-python-technove==2.1.1
+python-technove==2.1.2
 
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==22.7
@@ -3175,7 +3175,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.8.2
+tesla-fleet-api==1.9.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
