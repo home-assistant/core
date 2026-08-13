@@ -18,5 +18,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["aiopapouch==0.1.0"]
+  "requirements": ["aiopapouch==0.1.1"]
 }
