@@ -29,10 +29,6 @@
     "managerFilePatterns": ["/^Dockerfile$/"]
   },
 
-  "npm": {
-    "managerFilePatterns": ["/^tests/e2e/package\\.json$/"]
-  },
-
   "homeassistant-manifest": {
     "managerFilePatterns": [
       "/^homeassistant/components/[^/]+/manifest\\.json$/"
@@ -190,6 +186,7 @@
     {
       "description": "pnpm version pinned in the E2E tests packageManager field (allowlisted)",
       "matchManagers": ["npm"],
+      "matchFileNames": ["tests/e2e/package.json"],
       "matchDepTypes": ["packageManager"],
       "matchPackageNames": ["pnpm"],
       "enabled": true,
