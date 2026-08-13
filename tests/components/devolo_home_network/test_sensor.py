@@ -159,8 +159,8 @@ async def test_update_plc_phyrates(
 
     assert hass.states.get(entity_id_downlink) == snapshot
     assert entity_registry.async_get(entity_id_downlink) == snapshot
-    assert hass.states.get(entity_id_downlink) == snapshot
-    assert entity_registry.async_get(entity_id_downlink) == snapshot
+    assert hass.states.get(entity_id_uplink) == snapshot
+    assert entity_registry.async_get(entity_id_uplink) == snapshot
 
     # Emulate device failure
     mock_device.plcnet.async_get_network_overview = AsyncMock(
