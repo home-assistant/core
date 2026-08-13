@@ -24,9 +24,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_INFO_SCAN_INTERVAL = timedelta(seconds=60)
-DEFAULT_DEVICES_SCAN_INTERVAL = timedelta(seconds=10)
-DEFAULT_SENSORS_SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_INFO_UPDATE_INTERVAL = timedelta(seconds=60)
+DEFAULT_DEVICES_UPDATE_INTERVAL = timedelta(seconds=10)
+DEFAULT_SENSORS_UPDATE_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass
@@ -57,7 +57,7 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
             config_entry=config_entry,
             name=f"{DOMAIN}-info",
             always_update=False,
-            update_interval=DEFAULT_INFO_SCAN_INTERVAL,
+            update_interval=DEFAULT_INFO_UPDATE_INTERVAL,
         )
         self.info_api = info_api
 
@@ -94,7 +94,7 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Devic
             config_entry=config_entry,
             name=f"{DOMAIN}-devices",
             always_update=False,
-            update_interval=DEFAULT_DEVICES_SCAN_INTERVAL,
+            update_interval=DEFAULT_DEVICES_UPDATE_INTERVAL,
         )
         self.devices_api = devices_api
 
@@ -131,7 +131,7 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
             config_entry=config_entry,
             name=f"{DOMAIN}-sensors",
             always_update=False,
-            update_interval=DEFAULT_SENSORS_SCAN_INTERVAL,
+            update_interval=DEFAULT_SENSORS_UPDATE_INTERVAL,
         )
         self.sensors_api = sensors_api
 
