@@ -71,11 +71,14 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
     @callback
     def _handle_info_update(self) -> None:
         """Rebuild the wake word list when the service reports new info."""
-        if not self.coordinator.data.wake:
+        wake_service = next(
+            (wake for wake in self.coordinator.data.wake if wake.installed), None
+        )
+        if wake_service is None:
             # Keep the last known wake words if the service reports none.
             return
 
-        self._rebuild_wake_words(self.coordinator.data.wake[0])
+        self._rebuild_wake_words(wake_service)
 
     @callback
     def _rebuild_wake_words(self, wake_service: WakeProgram) -> None:
