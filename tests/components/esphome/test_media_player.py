@@ -753,9 +753,7 @@ async def test_media_player_formats_survive_rekey_onto_removed_entity_key(
             supported_formats=formats_one,
         ),
     ]
-    await reconnect_with_updated_entity_info(
-        hass, device, mock_client, updated_entity_info
-    )
+    await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
 
     assert (
         entity_registry.async_get_entity_id(
