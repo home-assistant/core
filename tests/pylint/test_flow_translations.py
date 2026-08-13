@@ -835,6 +835,75 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
         walker.walk(root_node)
 
 
+def test_options_flow_with_flow_handler_mixin_base(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """An options flow inheriting a mixin named ``*FlowHandler`` is classified as options."""
+    integration_dir = _make_integration(
+        tmp_path,
+        {"options": {"step": {"init": {"data": {"interval": "Update interval"}}}}},
+    )
+
+    root_node = astroid.parse(
+        """
+class BaseMixinFlowHandler:
+    pass
+
+class MyOptionsFlowHandler(BaseMixinFlowHandler, OptionsFlow):
+    async def async_step_init(self, user_input=None):
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema({
+                vol.Required("interval"): int,
+            }),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+
+    # Translation exists under options.*, so a correct options classification
+    # produces no message. A config misclassification would look under config.*
+    # and emit a false positive.
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
+def test_unknown_schema_helper_call_ignored(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """A schema built by an unresolvable helper call is not inspected."""
+    integration_dir = _make_integration(
+        tmp_path, {"config": {"step": {"user": {"data": {}}}}}
+    )
+
+    root_node = astroid.parse(
+        """
+class MyConfigFlow(ConfigFlow, domain=DOMAIN):
+    async def async_step_user(self, user_input=None):
+        return self.async_show_form(
+            step_id="user",
+            data_schema=data_schema_from_fields(SOME_FIELDS),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
 def test_no_data_schema_no_warning(
     linter: UnittestLinter,
     flow_translations_checker: ConfigFlowTranslationsChecker,

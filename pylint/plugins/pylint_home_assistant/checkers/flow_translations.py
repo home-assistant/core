@@ -109,7 +109,13 @@ def _extract_items_from_node(
                 items.extend(_extract_items_from_node(node.func.expr))
                 items.extend(_extract_items_from_node(node.args[0]))
                 return items
-        return _extract_items_from_node(node.args[0])
+            # vol.Schema({...}) / Schema({...}) - first arg is the schema dict
+            case nodes.Attribute(attrname="Schema") | nodes.Name(name="Schema"):
+                return _extract_items_from_node(node.args[0])
+        # Unknown call (e.g. a helper that builds the schema dynamically); the
+        # resulting structure cannot be resolved statically, so stay
+        # conservative and report nothing to avoid false positives.
+        return items
 
     # Direct dict literal
     if isinstance(node, nodes.Dict):
@@ -225,14 +231,14 @@ def _get_flow_type(class_node: nodes.ClassDef) -> str | None:
                     return "subentry"
                 if "OptionsFlow" in name:
                     return "options"
-                if "ConfigFlow" in name or "FlowHandler" in name:
+                if "ConfigFlow" in name or name == "FlowHandler":
                     return "config"
             case nodes.Attribute(attrname=name):
                 if "SubentryFlow" in name:
                     return "subentry"
                 if "OptionsFlow" in name:
                     return "options"
-                if "ConfigFlow" in name or "FlowHandler" in name:
+                if "ConfigFlow" in name or name == "FlowHandler":
                     return "config"
 
     try:
