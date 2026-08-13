@@ -55,6 +55,7 @@ async def async_setup_entry(
     """Set up Shelly camera entities."""
     if not config_entry.runtime_data.rpc:
         return
+
     async_setup_entry_rpc(
         hass,
         config_entry,
