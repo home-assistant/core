@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from victron_mqtt import AuthenticationError, CannotConnectError, Hub as VictronVenusHub
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -186,6 +186,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if (
             existing_entry is not None
+            and existing_entry.source != SOURCE_IGNORE
             and existing_entry.data[CONF_HOST] != self.hostname
         ):
             # Update the entry with the new host and title, then reload and abort

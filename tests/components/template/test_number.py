@@ -13,9 +13,11 @@ from homeassistant.components.number import (
     ATTR_VALUE as NUMBER_ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
+    NumberEntityCapabilityAttribute,
 )
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.const import CONF_PICTURE
+from homeassistant.components.template.number import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -34,6 +36,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_extra_template_attributes,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -746,4 +749,48 @@ async def test_restore_state(
         TEST_NUMBER,
         "30.0",
         {"step": 3, "min": 3, "max": 60},
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass,
+        TEST_NUMBER,
+        style,
+        TEST_REQUIRED,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    [*list(NumberEntityCapabilityAttribute), "device_class"],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_NUMBER,
+        style,
+        0,
+        {
+            **TEST_REQUIRED,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
     )
