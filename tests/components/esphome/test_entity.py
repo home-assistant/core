@@ -10,7 +10,6 @@ from aioesphomeapi import (
     BinarySensorInfo,
     BinarySensorState,
     DeviceInfo,
-    EntityInfo,
     SensorInfo,
     SensorState,
     SubDeviceInfo,
@@ -40,6 +39,7 @@ from .conftest import (
     MockESPHomeDevice,
     MockESPHomeDeviceType,
     MockGenericDeviceEntryType,
+    reconnect_with_updated_entity_info,
 )
 
 
@@ -57,20 +57,27 @@ def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[s
     return events
 
 
-async def _reconnect_with_updated_entity_info(
-    hass: HomeAssistant,
-    device: MockESPHomeDevice,
-    mock_client: APIClient,
-    entity_info: list[EntityInfo],
-) -> None:
-    """Reconnect the mock device with updated entity info."""
-    mock_client.list_entities_services = AsyncMock(return_value=(entity_info, []))
-    mock_client.device_info_and_list_entities = AsyncMock(
-        return_value=(device.device_info, entity_info, [])
-    )
-    await device.mock_disconnect(expected_disconnect=False)
-    await device.mock_connect()
-    await hass.async_block_till_done()
+def _two_binary_sensor_setup() -> tuple[
+    list[BinarySensorInfo], list[BinarySensorState]
+]:
+    """Return two binary sensors and their states for re-key tests."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=1,
+            name="Sensor One",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=2,
+            name="Sensor Two",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=2, state=True, missing_state=False),
+    ]
+    return entity_info, states
 
 
 async def test_entities_removed(
@@ -1791,22 +1798,7 @@ async def test_entities_rekeyed_after_firmware_update(
     re-derive every key. The registry entries must be preserved so
     helpers pointing at the entities are not deleted.
     """
-    entity_info = [
-        BinarySensorInfo(
-            object_id="sensor_one",
-            key=1,
-            name="Sensor One",
-        ),
-        BinarySensorInfo(
-            object_id="sensor_two",
-            key=2,
-            name="Sensor Two",
-        ),
-    ]
-    states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-        BinarySensorState(key=2, state=True, missing_state=False),
-    ]
+    entity_info, states = _two_binary_sensor_setup()
     device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
@@ -1836,7 +1828,7 @@ async def test_entities_rekeyed_after_firmware_update(
             name="Sensor Two",
         ),
     ]
-    await _reconnect_with_updated_entity_info(
+    await reconnect_with_updated_entity_info(
         hass, device, mock_client, updated_entity_info
     )
 
@@ -1876,7 +1868,7 @@ async def test_entities_rekeyed_after_firmware_update(
             name="Sensor Two",
         ),
     ]
-    await _reconnect_with_updated_entity_info(
+    await reconnect_with_updated_entity_info(
         hass, device, mock_client, updated_entity_info
     )
 
@@ -1900,22 +1892,7 @@ async def test_entities_rekeyed_after_reload(
     Covers the path where entities are created from stored static infos
     with the old keys and the first connect delivers the new keys.
     """
-    entity_info = [
-        BinarySensorInfo(
-            object_id="sensor_one",
-            key=1,
-            name="Sensor One",
-        ),
-        BinarySensorInfo(
-            object_id="sensor_two",
-            key=2,
-            name="Sensor Two",
-        ),
-    ]
-    states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-        BinarySensorState(key=2, state=True, missing_state=False),
-    ]
+    entity_info, states = _two_binary_sensor_setup()
     device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
@@ -1975,22 +1952,7 @@ async def test_entity_rekeyed_and_another_removed(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a key change combined with a genuine entity removal."""
-    entity_info = [
-        BinarySensorInfo(
-            object_id="sensor_one",
-            key=1,
-            name="Sensor One",
-        ),
-        BinarySensorInfo(
-            object_id="sensor_two",
-            key=2,
-            name="Sensor Two",
-        ),
-    ]
-    states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-        BinarySensorState(key=2, state=True, missing_state=False),
-    ]
+    entity_info, states = _two_binary_sensor_setup()
     device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
@@ -2010,7 +1972,7 @@ async def test_entity_rekeyed_and_another_removed(
             name="Sensor One",
         ),
     ]
-    await _reconnect_with_updated_entity_info(
+    await reconnect_with_updated_entity_info(
         hass, device, mock_client, updated_entity_info
     )
 
@@ -2035,22 +1997,7 @@ async def test_entity_rekeyed_to_another_entities_old_key(
     which is removed at the same time. The unique_id match must win so
     the entities do not swap identities.
     """
-    entity_info = [
-        BinarySensorInfo(
-            object_id="sensor_one",
-            key=1,
-            name="Sensor One",
-        ),
-        BinarySensorInfo(
-            object_id="sensor_two",
-            key=2,
-            name="Sensor Two",
-        ),
-    ]
-    states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-        BinarySensorState(key=2, state=True, missing_state=False),
-    ]
+    entity_info, states = _two_binary_sensor_setup()
     device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
@@ -2069,7 +2016,7 @@ async def test_entity_rekeyed_to_another_entities_old_key(
             name="Sensor One",
         ),
     ]
-    await _reconnect_with_updated_entity_info(
+    await reconnect_with_updated_entity_info(
         hass, device, mock_client, updated_entity_info
     )
 
@@ -2128,7 +2075,7 @@ async def test_entity_renamed_with_stable_key(
             name="Sensor One Renamed",
         ),
     ]
-    await _reconnect_with_updated_entity_info(
+    await reconnect_with_updated_entity_info(
         hass, device, mock_client, updated_entity_info
     )
 
@@ -2180,7 +2127,7 @@ async def test_entity_renamed_and_rekeyed(
             name="Sensor One Renamed",
         ),
     ]
-    await _reconnect_with_updated_entity_info(
+    await reconnect_with_updated_entity_info(
         hass, device, mock_client, updated_entity_info
     )
 
@@ -2255,7 +2202,7 @@ async def test_entities_rekeyed_on_sub_devices_with_same_name(
             device_id=22222222,
         ),
     ]
-    await _reconnect_with_updated_entity_info(
+    await reconnect_with_updated_entity_info(
         hass, device, mock_client, updated_entity_info
     )
 
@@ -2292,22 +2239,7 @@ async def test_entities_swap_keys(
     entity's old key to another entity. Each entity must follow its
     own unique_id and never adopt the other's identity.
     """
-    entity_info = [
-        BinarySensorInfo(
-            object_id="sensor_one",
-            key=1,
-            name="Sensor One",
-        ),
-        BinarySensorInfo(
-            object_id="sensor_two",
-            key=2,
-            name="Sensor Two",
-        ),
-    ]
-    states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-        BinarySensorState(key=2, state=True, missing_state=False),
-    ]
+    entity_info, states = _two_binary_sensor_setup()
     device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
@@ -2333,7 +2265,7 @@ async def test_entities_swap_keys(
             name="Sensor Two",
         ),
     ]
-    await _reconnect_with_updated_entity_info(
+    await reconnect_with_updated_entity_info(
         hass, device, mock_client, updated_entity_info
     )
 
@@ -2407,7 +2339,7 @@ async def test_entity_rekeyed_and_moved_between_devices(
             device_id=11111111,
         ),
     ]
-    await _reconnect_with_updated_entity_info(
+    await reconnect_with_updated_entity_info(
         hass, device, mock_client, updated_entity_info
     )
 
@@ -2490,7 +2422,7 @@ async def test_entity_new_key_reuses_removed_entity_key_on_other_device(
             name="Sensor Three",
         ),
     ]
-    await _reconnect_with_updated_entity_info(
+    await reconnect_with_updated_entity_info(
         hass, device, mock_client, updated_entity_info
     )
 
@@ -2547,7 +2479,7 @@ async def test_entities_with_duplicate_names_not_removed_on_reconnect(
 
     actions = track_entity_registry_actions(hass, "binary_sensor.test_duplicate")
 
-    await _reconnect_with_updated_entity_info(hass, device, mock_client, entity_info)
+    await reconnect_with_updated_entity_info(hass, device, mock_client, entity_info)
 
     new_entry = entity_registry.async_get("binary_sensor.test_duplicate")
     assert new_entry is not None
@@ -2638,7 +2570,7 @@ async def test_entities_with_same_name_moved_between_devices(
             device_id=44444444,
         ),
     ]
-    await _reconnect_with_updated_entity_info(
+    await reconnect_with_updated_entity_info(
         hass, device, mock_client, updated_entity_info
     )
 

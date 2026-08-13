@@ -754,3 +754,19 @@ async def mock_esphome_device(
         )
 
     return _mock_device
+
+
+async def reconnect_with_updated_entity_info(
+    hass: HomeAssistant,
+    device: MockESPHomeDevice,
+    mock_client: APIClient,
+    entity_info: list[EntityInfo],
+) -> None:
+    """Reconnect the mock device with updated entity info."""
+    mock_client.list_entities_services = AsyncMock(return_value=(entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, entity_info, [])
+    )
+    await device.mock_disconnect(expected_disconnect=False)
+    await device.mock_connect()
+    await hass.async_block_till_done()

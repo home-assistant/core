@@ -42,7 +42,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
+from .conftest import (
+    MockESPHomeDeviceType,
+    MockGenericDeviceEntryType,
+    reconnect_with_updated_entity_info,
+)
 
 from tests.common import mock_platform
 from tests.typing import WebSocketGenerator
@@ -749,15 +753,9 @@ async def test_media_player_formats_survive_rekey_onto_removed_entity_key(
             supported_formats=formats_one,
         ),
     ]
-    mock_client.list_entities_services = AsyncMock(
-        return_value=(updated_entity_info, [])
+    await reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
     )
-    mock_client.device_info_and_list_entities = AsyncMock(
-        return_value=(device.device_info, updated_entity_info, [])
-    )
-    await device.mock_disconnect(expected_disconnect=False)
-    await device.mock_connect()
-    await hass.async_block_till_done()
 
     assert (
         entity_registry.async_get_entity_id(

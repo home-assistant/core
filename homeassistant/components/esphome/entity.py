@@ -46,7 +46,9 @@ def _build_identity_indexes(
     current_infos: dict[DeviceEntityKey, EntityInfo],
     mac: str,
     new_unique_ids: set[str],
-) -> tuple[dict[str, DeviceEntityKey], dict[str, DeviceEntityKey]]:
+) -> tuple[
+    dict[str, DeviceEntityKey], dict[str, DeviceEntityKey], set[DeviceEntityKey]
+]:
     """Index the old infos by unique_id and by name.
 
     The unique_id (mac/device_id/type/name) is the long term identity
@@ -54,24 +56,32 @@ def _build_identity_indexes(
     independent identity and matches entities that moved between
     devices. Duplicates cannot be matched by identity and are left to
     the key based matching; entities whose unique_id is still present
-    are not move candidates.
+    are not move candidates and are returned separately so the key
+    based matching can skip them as well.
     """
     old_info_by_unique_id: dict[str, DeviceEntityKey] = {}
     duplicate_unique_ids: set[str] = set()
     movable_by_name: dict[str, DeviceEntityKey] = {}
     duplicate_names: set[str] = set()
+    still_present: set[DeviceEntityKey] = set()
     for dict_key, existing_info in current_infos.items():
         old_unique_id = build_device_unique_id(mac, existing_info)
+        name = existing_info.name
+        if old_unique_id in new_unique_ids:
+            still_present.add(dict_key)
         if old_unique_id in duplicate_unique_ids:
             continue
         if old_unique_id in old_info_by_unique_id:
             duplicate_unique_ids.add(old_unique_id)
             del old_info_by_unique_id[old_unique_id]
+            # Duplicate unique_ids share a name, so the earlier
+            # occurrence must not stay name matchable either
+            duplicate_names.add(name)
+            movable_by_name.pop(name, None)
             continue
         old_info_by_unique_id[old_unique_id] = dict_key
         if old_unique_id in new_unique_ids:
             continue
-        name = existing_info.name
         if name in duplicate_names:
             continue
         if name in movable_by_name:
@@ -79,7 +89,7 @@ def _build_identity_indexes(
             del movable_by_name[name]
             continue
         movable_by_name[name] = dict_key
-    return old_info_by_unique_id, movable_by_name
+    return old_info_by_unique_id, movable_by_name, still_present
 
 
 @callback
@@ -107,18 +117,18 @@ def async_static_info_updated(
     # The API key is only stable for a session, so entities are matched
     # by identity first: unique_id, then name for cross device moves
     mac = device_info.mac_address
-    new_unique_ids = {build_device_unique_id(mac, info) for info in infos}
-    old_info_by_unique_id, movable_by_name = _build_identity_indexes(
+    unique_ids = [build_device_unique_id(mac, info) for info in infos]
+    new_unique_ids = set(unique_ids)
+    old_info_by_unique_id, movable_by_name, still_present = _build_identity_indexes(
         current_infos, mac, new_unique_ids
     )
     rekeys: list[tuple[EntityInfo, EntityInfo]] = []
 
     # Track info by (info.device_id, info.key) to properly handle entities
     # moving between devices and support sub-devices with overlapping keys
-    for info in infos:
+    for info, unique_id in zip(infos, unique_ids, strict=True):
         info_key = (info.device_id, info.key)
         new_infos[info_key] = info
-        unique_id = build_device_unique_id(mac, info)
 
         # Identity match by unique_id: same device_id, type and name.
         # Survives the key being re-derived by a firmware update.
@@ -148,11 +158,11 @@ def async_static_info_updated(
         # entities whose identity is still present in the new infos so
         # a reused key cannot steal an unrelated entity
         if old_info is None:
-            for existing_dict_key, existing_info in list(current_infos.items()):
+            for existing_dict_key, existing_info in current_infos.items():
                 if (
                     existing_dict_key[1] == info.key
                     and existing_info.name == info.name
-                    and build_device_unique_id(mac, existing_info) not in new_unique_ids
+                    and existing_dict_key not in still_present
                 ):
                     old_info = current_infos.pop(existing_dict_key)
                     break
