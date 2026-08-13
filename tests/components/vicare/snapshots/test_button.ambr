@@ -132,7 +132,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reboot_gateway',
-    'unique_id': 'gateway0_deviceSerialVitodens300W-reboot_gateway',
+    'unique_id': 'gateway0-reboot_gateway',
     'unit_of_measurement': None,
   })
 # ---

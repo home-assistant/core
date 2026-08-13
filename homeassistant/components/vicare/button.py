@@ -134,6 +134,9 @@ class ViCareRebootGatewayButton(ViCareEntity, ButtonEntity):
     ) -> None:
         """Initialize the button."""
         super().__init__("reboot_gateway", device_serial, device_config, device)
+        # Keyed on the gateway, not on the device it is attached to: only online
+        # devices enter device_list, so the first one behind a gateway can change.
+        self._attr_unique_id = f"{self._gateway_serial}-reboot_gateway"
         self._device = device
 
     @override
