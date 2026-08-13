@@ -2216,9 +2216,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             raise DeviceInfoError(
                 config_entry.domain,
                 device_info,
-                f"identifiers {sorted(identifiers)} belong to child device "
-                f"{matched_child_device.id}; declare it with parent_device_id "
-                "to reference it",
+                f"identifiers {sorted(identifiers)} overlap with those of child device "
+                f"{matched_child_device.id} with identifiers "
+                f"{sorted(matched_child_device.identifiers)}",
             )
 
         device = self.devices.get_entry(
@@ -2555,12 +2555,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         # Identifiers are unique per config entry, so raise if identifiers are
         # owned by another child device.
-        for identifier in identifiers:
+        for identifier in sorted(identifiers):
             if (
                 other_child := self.child_devices.get_entry(
                     identifiers={identifier}, config_entry_id=config_entry_id
                 )
-            ) is not None and other_child is not child_device:
+            ) is not None and (
+                child_device is None or other_child.id != child_device.id
+            ):
                 raise DeviceInfoError(
                     domain,
                     device_info,

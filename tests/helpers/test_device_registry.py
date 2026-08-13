@@ -10501,7 +10501,7 @@ async def test_link_device_info_matching_child_raises(
         device_registry, mock_config_entry.entry_id
     )
 
-    with pytest.raises(dr.DeviceInfoError, match="belong to child device"):
+    with pytest.raises(dr.DeviceInfoError, match="overlap with those of child device"):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             identifiers=identifiers,
@@ -10610,7 +10610,7 @@ async def test_primary_device_info_matching_child_raises(
         device_registry, mock_config_entry.entry_id
     )
 
-    with pytest.raises(dr.DeviceInfoError, match="belong to child device"):
+    with pytest.raises(dr.DeviceInfoError, match="overlap with those of child device"):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             identifiers={("test", "strip_outlet_1")},
@@ -11183,7 +11183,7 @@ async def test_device_info_with_connections_matching_child_raises(
     # A new setup session: the child device is stale, but is still not adopted
     device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
 
-    with pytest.raises(dr.DeviceInfoError, match="belong to child device"):
+    with pytest.raises(dr.DeviceInfoError, match="overlap with those of child device"):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
@@ -11219,7 +11219,7 @@ async def test_live_child_device_identifier_collision_raises(
 
     # A device matched by its own identifier that also claims a live child's identifier
     # collides with the child and is rejected
-    with pytest.raises(dr.DeviceInfoError, match="belong to child device"):
+    with pytest.raises(dr.DeviceInfoError, match="overlap with those of child device"):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             identifiers={("test", "hub"), ("test", "strip_outlet_1")},
@@ -11895,7 +11895,7 @@ async def test_stale_child_device_identifier_collision_raises(
     # A new setup session: every device of the config entry is now stale
     device_registry.async_config_entry_unloaded(mock_config_entry.entry_id)
 
-    with pytest.raises(dr.DeviceInfoError, match="belong to child device"):
+    with pytest.raises(dr.DeviceInfoError, match="overlap with those of child device"):
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             identifiers={("test", "hub"), ("test", "strip_outlet_1")},
