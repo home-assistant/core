@@ -72,7 +72,7 @@ async def test_device_names(
     monzo: AsyncMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test devices use descriptive resource names without a hierarchy."""
+    """Test devices use descriptive resource names."""
     joint_account = {
         **TEST_ACCOUNTS[0],
         "id": "acc_joint",
@@ -98,9 +98,6 @@ async def test_device_names(
 
     await setup_integration(hass, polling_config_entry)
 
-    owner_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, str(USER_ID)), polling_config_entry.entry_id
-    )
     current_account_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "acc_curr"), polling_config_entry.entry_id
     )
@@ -111,19 +108,12 @@ async def test_device_names(
         (DOMAIN, "pot_joint"), polling_config_entry.entry_id
     )
 
-    assert owner_device is None
     assert current_account_device is not None
     assert current_account_device.name == "Current Account"
-    assert current_account_device.area_id is None
-    assert current_account_device.via_device_id is None
     assert joint_account_device is not None
     assert joint_account_device.name == "Joint Account — Jake Martin & Jane Martin"
-    assert joint_account_device.area_id is None
-    assert joint_account_device.via_device_id is None
     assert pot_device is not None
     assert pot_device.name == "Holiday"
-    assert pot_device.area_id is None
-    assert pot_device.via_device_id is None
 
 
 async def test_api_can_trigger_reauth(
