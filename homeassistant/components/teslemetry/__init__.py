@@ -260,17 +260,7 @@ def _setup_vehicle_repairs(
 def _setup_subentry_change_reload(
     hass: HomeAssistant, entry: TeslemetryConfigEntry
 ) -> None:
-    """Reload the entry when a vehicle subentry is added or removed.
-
-    A paired vehicle's BLE address is read from the subentry at setup. The add
-    flow commits its new subentry only after the flow step returns, so the
-    reload that picks up the address must be scheduled here, once the subentry
-    actually exists. Removing a subentry forgets its address and disables local
-    routing (the virtual key stays on the vehicle for re-pairing). Either change
-    only takes effect on the next reload. Only add/remove triggers this;
-    reconfigure pairing reloads itself, and entry-data updates (e.g. token
-    refreshes) must not.
-    """
+    """Reload the entry when a vehicle subentry is added or removed."""
     known = set(entry.subentries)
 
     async def _handle_update(
@@ -292,17 +282,7 @@ def _async_bind_vehicle_subentries(
     entry: TeslemetryConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Bind each added vehicle's existing device and entities to its subentry.
-
-    A vehicle's device and entities are first registered by the parent entry
-    while it is cloud-only; opting it into Bluetooth adds a subentry keyed to its
-    VIN. That subentry must own the same device and entities so it is not left
-    detached, so move them across on every setup, keeping the device ID and entity
-    unique IDs. The entities move first: moving the device re-homes its entities to
-    the device's subentry and would drop any still left on the parent entry.
-    Removing the subentry clears this ownership and the reload it triggers
-    re-registers the device and entities cloud-only.
-    """
+    """Bind each added vehicle's existing device and entities to its subentry."""
     entity_registry = er.async_get(hass)
     for subentry in entry.subentries.values():
         if subentry.subentry_type != SUBENTRY_TYPE_VEHICLE:
@@ -329,12 +309,7 @@ def _async_bind_vehicle_subentries(
 
 
 def _ble_address_for_vin(entry: TeslemetryConfigEntry, vin: str) -> str | None:
-    """Return the paired Bluetooth address for a vehicle, if one was added.
-
-    A vehicle gets a Bluetooth address only after the user opts it in through
-    the "Add Bluetooth vehicle" subentry flow; vehicles without such a subentry
-    stay cloud-only.
-    """
+    """Return the paired Bluetooth address for a vehicle, if one was added."""
     for subentry in entry.subentries.values():
         if (
             subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
@@ -350,16 +325,7 @@ async def _async_resolve_vehicle_api(
     vin: str,
     cloud_vehicle: Vehicle,
 ) -> Vehicle | VehicleRouter:
-    """Return the API a vehicle's platforms should call.
-
-    A vehicle the user has not added over Bluetooth uses the cloud Vehicle. An
-    added vehicle always gets a VehicleRouter, whether or not it is in range
-    right now: the router's health check re-reads Home Assistant's Bluetooth
-    discovery cache on every command, so a vehicle that drives away and comes
-    back resumes local routing on its own. A vehicle out of range is skipped by
-    the health check, sending the command straight to cloud without attempting
-    Bluetooth.
-    """
+    """Return the API a vehicle's platforms should call."""
     address = _ble_address_for_vin(entry, vin)
     if not address:
         return cloud_vehicle

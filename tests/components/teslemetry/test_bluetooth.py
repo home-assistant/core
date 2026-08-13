@@ -111,12 +111,7 @@ async def test_vehicle_cloud_without_bluetooth(hass: HomeAssistant) -> None:
 async def _paired_entry(
     hass: HomeAssistant, ble_lookup: MagicMock
 ) -> AsyncIterator[tuple[VehicleRouter, AsyncMock, AsyncMock]]:
-    """Set up a BLE-paired entry, yielding its router and both backends.
-
-    ``ble_lookup`` stands in for the Bluetooth discovery cache and stays patched
-    for the caller's commands, so a test can move the vehicle in and out of
-    range between them by changing its return value.
-    """
+    """Set up a BLE-paired entry, yielding its router and both backends."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
     bluetooth_vehicle = AsyncMock()
@@ -146,13 +141,7 @@ async def _paired_entry(
 
 
 async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
-    """A paired vehicle out of range still gets a router, and skips Bluetooth.
-
-    Being away is not a reason to bind the vehicle to cloud for the session; it
-    is a reason for this command to go to cloud. The health check reports out of
-    range, so the router skips the Bluetooth backend entirely rather than paying
-    a connect timeout before failing over.
-    """
+    """A paired vehicle out of range still gets a router, and skips Bluetooth."""
     async with _paired_entry(hass, MagicMock(return_value=None)) as (
         router,
         bluetooth_vehicle,
@@ -169,11 +158,7 @@ async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
 async def test_vehicle_router_resumes_bluetooth_when_vehicle_returns(
     hass: HomeAssistant,
 ) -> None:
-    """A vehicle away at setup routes locally again once it comes home.
-
-    No reload and no user action: the router re-reads the discovery cache per
-    command, so the first command after the car returns goes over Bluetooth.
-    """
+    """A vehicle away at setup routes locally again once it comes home."""
     ble_lookup = MagicMock(return_value=None)
 
     async with _paired_entry(hass, ble_lookup) as (router, bluetooth_vehicle, cloud):
@@ -209,12 +194,7 @@ async def test_vehicle_router_falls_back_when_vehicle_leaves(
 
 
 async def test_vehicle_router_refreshes_device_handle(hass: HomeAssistant) -> None:
-    """Each command refreshes the BLE handle from the cache before connecting.
-
-    The library does not pass establish_connection a ble_device_callback, so a
-    handle that went stale between commands is only replaced because the health
-    check sets the current one.
-    """
+    """Each command refreshes the BLE handle from the cache before connecting."""
     first_device = MagicMock()
     second_device = MagicMock()
     ble_lookup = MagicMock(return_value=first_device)
@@ -232,12 +212,7 @@ async def test_vehicle_router_refreshes_device_handle(hass: HomeAssistant) -> No
 async def test_vehicle_router_fails_over_on_stale_cache_hit(
     hass: HomeAssistant,
 ) -> None:
-    """A cache entry outliving the vehicle costs one failed attempt, not a failure.
-
-    The discovery cache keeps returning a device for minutes after a vehicle
-    leaves, so the health check can report in range when it is not. The command
-    still lands, on cloud, via the router's normal per-command failover.
-    """
+    """A cache entry outliving the vehicle costs one failed attempt, not a failure."""
     async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
         router,
         bluetooth_vehicle,
@@ -252,13 +227,7 @@ async def test_vehicle_router_fails_over_on_stale_cache_hit(
 
 
 async def test_vehicle_paired_but_never_seen(hass: HomeAssistant) -> None:
-    """A paired vehicle never seen by Bluetooth is built without a device handle.
-
-    The backend is constructed for every paired vehicle, in range or not, so it
-    starts with no device. Every command is gated to cloud until the cache first
-    returns one, which is what keeps the library's "device has not been set"
-    guard out of reach.
-    """
+    """A paired vehicle never seen by Bluetooth is built without a device handle."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
 
@@ -322,11 +291,7 @@ async def test_unload_disconnects_bluetooth(
 
 
 async def test_unload_never_connected_bluetooth(hass: HomeAssistant) -> None:
-    """Unloading a paired vehicle that was never in range does not raise.
-
-    Every paired vehicle now carries a router, so unload reaches the disconnect
-    even for a backend that never opened a link.
-    """
+    """Unloading a paired vehicle that was never in range does not raise."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
     bluetooth_vehicle = AsyncMock()
@@ -369,11 +334,7 @@ async def test_ble_parent_shared_and_cached(hass: HomeAssistant) -> None:
 
 
 async def test_ble_parent_concurrent_first_init(hass: HomeAssistant) -> None:
-    """Concurrent first-time callers still create and load the key exactly once.
-
-    Without the init lock, callers racing before the parent is cached would
-    each construct their own TeslaBluetooth and generate/overwrite the key.
-    """
+    """Concurrent first-time callers still create and load the key exactly once."""
 
     async def _get_private_key(path: str) -> None:
         await asyncio.sleep(0)
@@ -616,11 +577,7 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
 async def test_subentry_authorize_failure(
     hass: HomeAssistant, error: type[TeslaFleetError], expected: str
 ) -> None:
-    """Each pairing failure surfaces its own error, not a blanket timeout.
-
-    A confirmation timeout, a transport failure, and an explicit key rejection
-    (e.g. whitelist full or valet mode) are reported distinctly.
-    """
+    """Each pairing failure surfaces its own error, not a blanket timeout."""
     entry = await _setup_vehicle_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
     vehicle = _mock_vehicle(on_whitelist=False)
@@ -668,13 +625,7 @@ async def test_subentry_authorize_failure(
 
 
 async def test_subentry_authorize_existing_key_finishes(hass: HomeAssistant) -> None:
-    """Approving the key after a timeout, then retrying, completes the pairing.
-
-    This is the recovery the timeout error asks the user to perform: approve the
-    key on the touchscreen and try again. The retry re-sends the whitelist op,
-    which the vehicle answers with "key already on the whitelist" - a report that
-    the key is installed, so the flow must finish rather than report a failure.
-    """
+    """Approving the key after a timeout, then retrying, completes the pairing."""
     entry = await _setup_vehicle_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
     vehicle = _mock_vehicle(on_whitelist=False)
@@ -836,11 +787,7 @@ async def test_subentry_removal_reloads(hass: HomeAssistant) -> None:
 
 
 async def test_no_subentry_auto_created_at_setup(hass: HomeAssistant) -> None:
-    """Setup never auto-creates a Bluetooth subentry for account vehicles.
-
-    Bluetooth vehicles are opt-in via the "Add Bluetooth vehicle" flow, so an
-    account with vehicles but no user-added subentry must have none after setup.
-    """
+    """Setup never auto-creates a Bluetooth subentry for account vehicles."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
 
@@ -852,12 +799,7 @@ async def test_no_subentry_auto_created_at_setup(hass: HomeAssistant) -> None:
 
 
 async def test_user_subentry_persists_across_reload(hass: HomeAssistant) -> None:
-    """A user-added vehicle subentry is never auto-removed on reload.
-
-    The old forced-sync deleted subentries no longer backed by the account's
-    product list; opt-in subentries must instead persist until the user removes
-    them, even when the account temporarily lists no vehicles.
-    """
+    """A user-added vehicle subentry is never auto-removed on reload."""
     entry = await _setup_vehicle_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
 
@@ -905,13 +847,7 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
 async def test_subentry_scan_finds_device_after_active_scan(
     hass: HomeAssistant,
 ) -> None:
-    """An awake in-range car only in scan responses is found via active scan.
-
-    async_discovered_service_info() is a cache read; a car whose name is
-    still missing from that cache (e.g. an AUTO-mode scanner has not swept
-    recently) must be found once an active scan is requested, not reported
-    as not found.
-    """
+    """An awake in-range car only in scan responses is found via active scan."""
     entry = await _setup_vehicle_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
     vehicle = _mock_vehicle()
@@ -953,15 +889,7 @@ async def test_subentry_add_flow_creates_bound_subentry(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """The add flow lists an account vehicle, pairs it, and binds its device.
-
-    The new subentry is keyed to the vehicle's VIN and no duplicate device is
-    created: the same account device the parent entry already registered stays
-    the one and only device for that VIN. Committing the subentry triggers a real
-    reload that picks up the stored BLE address, so the vehicle comes up routing
-    over Bluetooth with its existing device and entities owned by the created
-    subentry, not left detached from it on the parent entry.
-    """
+    """The add flow lists an account vehicle, pairs it, and binds its device."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

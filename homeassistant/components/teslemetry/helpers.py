@@ -15,13 +15,7 @@ from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_
 
 
 async def async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
-    """Return a shared TeslaBluetooth parent with the private key loaded.
-
-    Cached on ``hass.data`` and guarded by a lock so the key file is created
-    and read exactly once even when vehicle setup and a pairing flow (or
-    several) race to first-time init - two independent parents could otherwise
-    both generate and overwrite the key.
-    """
+    """Return a shared TeslaBluetooth parent with the private key loaded."""
     parent: TeslaBluetooth | None = hass.data.get(BLE_PARENT_KEY)
     if parent is not None:
         return parent

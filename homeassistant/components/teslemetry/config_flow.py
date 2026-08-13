@@ -173,15 +173,7 @@ class OAuth2FlowHandler(
 
 
 class VehicleSubentryFlowHandler(ConfigSubentryFlow):
-    """Add local Bluetooth control to one of the account's vehicles.
-
-    The user opts a specific vehicle into local Bluetooth access from the
-    account config entry. The flow lets them pick an account vehicle that has
-    not been added yet, walks them through adding the integration's virtual key
-    to that vehicle over BLE, and stores the paired address on a new subentry -
-    which enables Bluetooth-first command routing for that vehicle on the next
-    reload. Reconfiguring an existing vehicle subentry re-runs the same pairing.
-    """
+    """Add local Bluetooth control to one of the account's vehicles."""
 
     def __init__(self) -> None:
         """Initialize the vehicle subentry flow."""
@@ -364,16 +356,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_progress_done(next_step_id="pair")
 
     async def _async_finish(self) -> SubentryFlowResult:
-        """Persist the paired BLE address and reload the entry.
-
-        Reconfiguring updates the existing subentry synchronously here, so the
-        address is stored before this schedules the reload. The initial add flow
-        instead returns a create result the subentry flow manager commits only
-        after this step returns, so it must not schedule the reload itself: doing
-        so would start an eager task that could run setup before the new subentry
-        exists, leaving the reloaded entry cloud-only. The parent entry's
-        subentry-change listener schedules that reload once the address lands.
-        """
+        """Persist the paired BLE address, deferring the reload to the subentry-change listener so setup sees the committed address."""
         assert self._address is not None
         assert self._vin is not None
         await self._async_disconnect()
