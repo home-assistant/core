@@ -79,12 +79,7 @@ async def test_event_data_entity_id_without_schedule_api(
     hass_client: ClientSessionGenerator,
     doorbird_mocker: DoorbirdMockerType,
 ) -> None:
-    """Models without the schedule API report no entity_id on their events.
-
-    Those models expose no event descriptions. The image entities are still
-    created, but they match no events, so none of them registers an entity id.
-    The event platform creates no entities at all for the same reason.
-    """
+    """Models without the schedule API report no entity_id on their events."""
     doorbird_entry = await doorbird_mocker(
         schedule_side_effect=mock_not_found_exception()
     )

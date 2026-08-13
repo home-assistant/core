@@ -124,7 +124,6 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         """Unsubscribe from events."""
         event_to_entity_id = self._door_bird_data.event_entity_ids
         for event_name in self._matching_event_names:
-            # If the clear api was called, the events may not be in the dict
             event_to_entity_id.pop(event_name, None)
         await super().async_will_remove_from_hass()
 

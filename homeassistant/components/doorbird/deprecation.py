@@ -24,7 +24,10 @@ def deprecate_entity(
     issue_id: str,
     translation_key: str,
 ) -> bool:
-    """Handle a deprecated entity, returning whether it should still be created."""
+    """Handle a deprecated entity, returning whether it should still be created.
+
+    Only runs during platform setup, so removing a disabled entity takes a reload.
+    """
     entity_id = entity_registry.async_get_entity_id(
         platform_domain, DOMAIN, entity_unique_id
     )
