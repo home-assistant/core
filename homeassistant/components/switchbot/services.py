@@ -119,7 +119,7 @@ async def async_add_password(call: ServiceCall) -> None:
 
 
 async def async_get_keypad_info(call: ServiceCall) -> ServiceResponse:
-    """Get settings and credential counts from a SwitchBot keypad device."""
+    """Get keypad versions and credential counts."""
     device_id = call.data[ATTR_DEVICE_ID]
     coordinator = _async_target(call.hass, device_id)
 
@@ -139,7 +139,10 @@ async def async_get_keypad_info(call: ServiceCall) -> ServiceResponse:
         )
 
     return {
-        "basic_info": basic_info,
+        "basic_info": {
+            "firmware": basic_info["firmware"],
+            "hardware": basic_info["hardware"],
+        },
         "credential_counts": credential_counts,
     }
 

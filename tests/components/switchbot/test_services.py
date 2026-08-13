@@ -117,18 +117,7 @@ async def test_get_keypad_info_service(
     entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
     entry.add_to_hass(hass)
 
-    basic_info = {
-        "battery": 95,
-        "firmware": 2.4,
-        "hardware": 22,
-        "support_fingerprint": 1,
-        "lock_button_enabled": True,
-        "tamper_alarm_enabled": True,
-        "backlight_enabled": True,
-        "backlight_level": 5,
-        "prompt_tone_enabled": True,
-        "battery_charging": sensor_type == "keypad_vision",
-    }
+    basic_info = {"firmware": 2.4, "hardware": 22, "battery": 95}
     get_basic_info = AsyncMock(return_value=basic_info)
     get_password_count = AsyncMock(return_value=credential_counts)
     with patch.multiple(
@@ -153,26 +142,17 @@ async def test_get_keypad_info_service(
         )
 
     assert response == {
-        "basic_info": basic_info,
+        "basic_info": {"firmware": 2.4, "hardware": 22},
         "credential_counts": credential_counts,
     }
     get_basic_info.assert_awaited_once_with()
     get_password_count.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize(
-    ("basic_info", "credential_counts"),
-    [
-        (None, {"pin": 1}),
-        ({"battery": 95}, None),
-    ],
-)
 async def test_get_keypad_info_unavailable(
     hass: HomeAssistant,
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
     device_registry: dr.DeviceRegistry,
-    basic_info: dict[str, int] | None,
-    credential_counts: dict[str, int] | None,
 ) -> None:
     """Test the get_keypad_info service when keypad information is unavailable."""
     inject_bluetooth_service_info(hass, KEYPAD_VISION_INFO)
@@ -183,8 +163,8 @@ async def test_get_keypad_info_unavailable(
     with patch.multiple(
         "homeassistant.components.switchbot.switchbot.SwitchbotKeypadVision",
         update=AsyncMock(return_value=None),
-        get_basic_info=AsyncMock(return_value=basic_info),
-        get_password_count=AsyncMock(return_value=credential_counts),
+        get_basic_info=AsyncMock(return_value=None),
+        get_password_count=AsyncMock(return_value={"pin": 1}),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -206,12 +186,19 @@ async def test_get_keypad_info_unavailable(
     assert err.value.translation_key == "keypad_info_unavailable"
 
 
-@pytest.mark.parametrize("failing_method", ["get_basic_info", "get_password_count"])
+@pytest.mark.parametrize(
+    ("basic_info_error", "credential_counts_error"),
+    [
+        (SwitchbotOperationError("Bluetooth command failed"), None),
+        (None, SwitchbotOperationError("Bluetooth command failed")),
+    ],
+)
 async def test_get_keypad_info_operation_error(
     hass: HomeAssistant,
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
     device_registry: dr.DeviceRegistry,
-    failing_method: str,
+    basic_info_error: SwitchbotOperationError | None,
+    credential_counts_error: SwitchbotOperationError | None,
 ) -> None:
     """Test the get_keypad_info service translates SwitchBot operation errors."""
     inject_bluetooth_service_info(hass, KEYPAD_VISION_INFO)
@@ -219,19 +206,16 @@ async def test_get_keypad_info_operation_error(
     entry = mock_entry_encrypted_factory(sensor_type="keypad_vision")
     entry.add_to_hass(hass)
 
-    get_basic_info = AsyncMock(return_value={"battery": 95})
-    get_password_count = AsyncMock(return_value={"pin": 1})
-    operation_error = SwitchbotOperationError("Bluetooth command failed")
-    if failing_method == "get_basic_info":
-        get_basic_info.side_effect = operation_error
-    else:
-        get_password_count.side_effect = operation_error
-
     with patch.multiple(
         "homeassistant.components.switchbot.switchbot.SwitchbotKeypadVision",
         update=AsyncMock(return_value=None),
-        get_basic_info=get_basic_info,
-        get_password_count=get_password_count,
+        get_basic_info=AsyncMock(
+            return_value={"firmware": 2.4, "hardware": 22},
+            side_effect=basic_info_error,
+        ),
+        get_password_count=AsyncMock(
+            return_value={"pin": 1}, side_effect=credential_counts_error
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
