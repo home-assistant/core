@@ -101,7 +101,7 @@ async def test_adam_water_heater_setpoint_change(
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: "water_heater.opentherm_boiler",
-                ATTR_TEMPERATURE: 25,
+                ATTR_TEMPERATURE: 15,
             },
             blocking=True,
         )
