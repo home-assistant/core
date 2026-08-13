@@ -1,5 +1,6 @@
 """Tests for the SMLIGHT update platform."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -275,7 +276,6 @@ async def test_update_firmware_failed(
 
 async def test_update_reboot_timeout(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
 ) -> None:
@@ -297,35 +297,28 @@ async def test_update_reboot_timeout(
             return_value=None,
         ),
     ):
-        await hass.services.async_call(
-            UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=False,
+        install_task = hass.async_create_task(
+            hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
         )
+        await asyncio.sleep(0)
 
         assert len(mock_smlight_client.fw_update.mock_calls) == 1
 
         event_function = get_mock_event_function(
             mock_smlight_client, SmEvents.FW_UPD_done
         )
-
         event_function(MOCK_FIRMWARE_DONE)
-
-        freezer.tick(timedelta(seconds=5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
 
         with pytest.raises(
             HomeAssistantError,
-            match=r"Timeout waiting for .* to reboot after update\.",
+            match=r"Timeout waiting for .* to reboot after update",
         ):
-            await hass.services.async_call(
-                UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: entity_id},
-                blocking=True,
-            )
+            await install_task
 
 
 @pytest.mark.parametrize(

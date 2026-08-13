@@ -15,7 +15,7 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import CONF_HOST, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -251,26 +251,29 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             self._attr_update_percentage = None
             self.register_callbacks()
 
-            await self.coordinator.client.fw_update(self._firmware, self.idx)
-
-            # block until update finished event received
-            await self._finished_event.wait()
-
-            # allow time for SLZB-06 to reboot before updating coordinator data
             try:
-                async with asyncio.timeout(180):
-                    while (
-                        self.coordinator.in_progress
-                        and self.installed_version != self._firmware.ver
-                    ):
-                        await self.coordinator.async_refresh()
-                        await asyncio.sleep(1)
-            except TimeoutError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="reboot_timeout",
-                    translation_placeholders={"device_name": str(self.name)},
-                ) from err
+                await self.coordinator.client.fw_update(self._firmware, self.idx)
 
-            self.coordinator.in_progress = False
-            self._finished_event.clear()
+                # block until update finished event received
+                await self._finished_event.wait()
+
+                # allow time for SLZB-06 to reboot before updating coordinator data
+                try:
+                    async with asyncio.timeout(180):
+                        while (
+                            self.coordinator.in_progress
+                            and self.installed_version != self._firmware.ver
+                        ):
+                            await self.coordinator.async_refresh()
+                            await asyncio.sleep(1)
+                except TimeoutError as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="reboot_timeout",
+                        translation_placeholders={
+                            "hostname": self.coordinator.config_entry.data[CONF_HOST],
+                        },
+                    ) from err
+            finally:
+                self.coordinator.in_progress = False
+                self._finished_event.clear()
