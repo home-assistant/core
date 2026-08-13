@@ -39,6 +39,7 @@ from .const import (
     LOGGER,
     MIKROTIK_SERVICES,
     NAME,
+    PING,
     POE,
     RESOURCE,
     ROUTERBOARD,
@@ -49,7 +50,7 @@ from .const import (
 )
 from .device import Device
 from .errors import CannotConnect, LoginError
-from .utils import mikrotik_config_entry_errors
+from .utils import calculate_uptime, mikrotik_config_entry_errors, percentage
 
 type MikrotikConfigEntry = ConfigEntry[MikrotikDataUpdateCoordinator]
 
@@ -92,6 +93,43 @@ class MikrotikData:
             )
             or [{}]
         )[0]
+
+    def _get_health_details(self) -> None:
+        """Retrieve health details from Mikrotik API."""
+        health_data = (
+            self.command(MIKROTIK_SERVICES[HEALTH], suppress_errors=True) or []
+        )
+        self.sensors[HEALTH] = {
+            entry["name"]: entry["value"]
+            for entry in health_data
+            if "name" in entry and "value" in entry
+        }
+
+    def _get_resource_details(self) -> None:
+        """Retrieve resource details from Mikrotik API."""
+        resource_data = (
+            self.command(MIKROTIK_SERVICES[RESOURCE], suppress_errors=True) or [{}]
+        )[0]
+        self.sensors[RESOURCE] = (
+            {
+                "cpu-load": resource_data.get("cpu-load"),
+                "memory-usage": percentage(
+                    resource_data.get("total-memory", 0),
+                    resource_data.get("free-memory", 0),
+                ),
+                "disk-usage": percentage(
+                    resource_data.get("total-hdd-space", 0),
+                    resource_data.get("free-hdd-space", 0),
+                ),
+                "uptime": (
+                    calculate_uptime(resource_data["uptime"])
+                    if resource_data.get("uptime")
+                    else None
+                ),
+            }
+            if resource_data
+            else {}
+        )
 
     def _get_interfaces_details(self) -> None:
         """Get interfaces details."""
@@ -229,13 +267,8 @@ class MikrotikData:
                 self.command(MIKROTIK_SERVICES[UPDATE], suppress_errors=True) or [{}]
             )[0]
 
-            self.sensors[HEALTH] = (
-                self.command(MIKROTIK_SERVICES[HEALTH], suppress_errors=True) or []
-            )
-            self.sensors[RESOURCE] = (
-                self.command(MIKROTIK_SERVICES[RESOURCE], suppress_errors=True) or []
-            )
-
+            self._get_health_details()
+            self._get_resource_details()
             self._get_interfaces_details()
 
         if not device_list:
@@ -276,8 +309,7 @@ class MikrotikData:
             "interface": interface,
             "address": ip_address,
         }
-        cmd = "/ping"
-        data = self.command(cmd, params)
+        data = self.command(MIKROTIK_SERVICES[PING], params)
         if data:
             status = 0
             for result in data:
