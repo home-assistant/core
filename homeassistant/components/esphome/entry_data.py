@@ -48,6 +48,7 @@ from aioesphomeapi import (
     build_device_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
+from aioesphomeapi.model_conversions import STATE_TYPE_TO_INFO_TYPE
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
 from homeassistant import config_entries
@@ -68,6 +69,19 @@ type EntityInfoKey = tuple[type[EntityInfo], int, int]  # (info_type, device_id,
 type DeviceEntityKey = tuple[int, int]  # (device_id, key)
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
+
+# CameraState holds raw image bytes (not JSON-serializable, too large to store)
+# and Event is momentary (restoring one would replay a stale event), so both
+# are excluded from what gets persisted for deep-sleep state restore.
+STATE_TYPE_TO_COMPONENT_TYPE: Final[dict[type[EntityState], str]] = {
+    state_type: INFO_TO_COMPONENT_TYPE[info_type]
+    for state_type, info_type in STATE_TYPE_TO_INFO_TYPE.items()
+    if state_type not in (CameraState, Event)
+}
+COMPONENT_TYPE_TO_STATE_TYPE: Final[dict[str, type[EntityState]]] = {
+    component_type: state_type
+    for state_type, component_type in STATE_TYPE_TO_COMPONENT_TYPE.items()
+}
 
 _SENTINEL = object()
 SAVE_DELAY = 120
@@ -109,6 +123,8 @@ class StoreData(TypedDict, total=False):
     device_info: dict[str, Any]
     services: list[dict[str, Any]]
     api_version: dict[str, Any]
+    states: dict[str, list[dict[str, Any]]]
+    expected_disconnect: bool
 
 
 class ESPHomeStorage(Store[StoreData]):
@@ -411,6 +427,21 @@ class RuntimeEntryData:
 
         self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
         self.api_version = APIVersion.from_dict(restored.pop("api_version", {}))
+        # Pop unconditionally so these never leak into the entity-info loop below.
+        restored_states = restored.pop("states", None)
+        expected_disconnect = restored.pop("expected_disconnect", False)
+        if self.device_info.has_deep_sleep:
+            self.expected_disconnect = expected_disconnect
+            for comp_type, states in (restored_states or {}).items():
+                if (state_cls := COMPONENT_TYPE_TO_STATE_TYPE.get(comp_type)) is None:
+                    continue
+                for state in states:
+                    obj = state_cls.from_dict(state)
+                    self.state[state_cls][obj.key] = obj
+                    # Seed stale_state so the first real update after the
+                    # device wakes is always dispatched, even if the value
+                    # is identical to the restored one.
+                    self.stale_state.add((state_cls, obj.device_id, obj.key))
         infos: list[EntityInfo] = []
         for comp_type, restored_infos in restored.items():
             if TYPE_CHECKING:
@@ -441,6 +472,15 @@ class RuntimeEntryData:
         store_data["services"] = [
             service.to_dict() for service in self.services.values()
         ]
+        if self.device_info.has_deep_sleep:
+            store_data["expected_disconnect"] = self.expected_disconnect
+            store_data["states"] = {
+                STATE_TYPE_TO_COMPONENT_TYPE[state_type]: [
+                    state.to_dict() for state in states.values()
+                ]
+                for state_type, states in self.state.items()
+                if state_type in STATE_TYPE_TO_COMPONENT_TYPE
+            }
         if store_data == self._storage_contents:
             return
 

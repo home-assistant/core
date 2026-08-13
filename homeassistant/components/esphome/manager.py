@@ -780,6 +780,11 @@ class ESPHomeManager:
             for state_dict in entry_data.state.values()
             for key, entity_state in state_dict.items()
         }
+        if entry_data.device_info and entry_data.device_info.has_deep_sleep:
+            # States are only known once the device has connected and sent
+            # updates, so this disconnect-time save is what actually
+            # captures them (the _on_connect save happens too early).
+            entry_data.async_save_to_store()
         if not hass.is_stopping:
             # Avoid marking every esphome entity as unavailable on shutdown
             # since it generates a lot of state changed events and database
