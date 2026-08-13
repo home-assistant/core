@@ -43,7 +43,6 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
 async def test_user_device_exists_abort(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_technove: MagicMock,
 ) -> None:
     """Test we abort the config flow if TechnoVE station is already configured."""
     mock_config_entry.add_to_hass(hass)
