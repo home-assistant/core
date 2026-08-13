@@ -1,12 +1,14 @@
 """Test tts."""
 
 import io
+import re
 from unittest.mock import patch
 import wave
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
+from wyoming.error import Error
 from wyoming.tts import SynthesizeStopped
 
 from homeassistant.components import tts, wyoming
@@ -194,6 +196,61 @@ async def test_get_tts_audio_audio_oserror(
                 hass, "Hello world", "tts.test_tts", hass.config.language
             ),
         )
+
+
+@pytest.mark.usefixtures("init_wyoming_tts")
+@pytest.mark.parametrize(
+    ("error_code", "expected_message"),
+    [
+        pytest.param(None, "Error from Wyoming service: Boom!", id="without_code"),
+        pytest.param(
+            "VoiceNotFoundError",
+            "Error from Wyoming service: Boom! (code: VoiceNotFoundError)",
+            id="with_code",
+        ),
+    ],
+)
+async def test_get_tts_audio_error_event(
+    hass: HomeAssistant, error_code: str | None, expected_message: str
+) -> None:
+    """Test that an error event from the service is reported."""
+    with (
+        patch(
+            "homeassistant.components.wyoming.tts.AsyncTcpClient",
+            MockAsyncTcpClient([Error(text="Boom!", code=error_code).event()]),
+        ),
+        pytest.raises(HomeAssistantError, match=re.escape(expected_message)),
+    ):
+        await tts.async_get_media_source_audio(
+            hass,
+            tts.generate_media_source_id(hass, "Hello world", "tts.test_tts", "en-US"),
+        )
+
+
+@pytest.mark.usefixtures("init_wyoming_streaming_tts")
+async def test_get_tts_audio_streaming_error_event(hass: HomeAssistant) -> None:
+    """Test that an error event received while streaming is reported."""
+
+    async def message_gen():
+        yield "Hello world."
+
+    with patch(
+        "homeassistant.components.wyoming.tts.AsyncTcpClient",
+        MockAsyncTcpClient([Error(text="Boom!").event()]),
+    ):
+        stream = tts.async_create_stream(
+            hass,
+            "tts.test_streaming_tts",
+            "en-US",
+            options={tts.ATTR_PREFERRED_FORMAT: "wav"},
+        )
+        stream.async_set_message_stream(message_gen())
+
+        with pytest.raises(
+            HomeAssistantError, match="Error from Wyoming service: Boom!"
+        ):
+            async for _chunk in stream.async_stream_result():
+                pass
 
 
 async def test_voice_speaker(
