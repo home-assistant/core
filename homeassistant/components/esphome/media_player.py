@@ -90,10 +90,8 @@ class EsphomeMediaPlayer(
     """A media player implementation for esphome."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
-    # Stable dict key into entry_data.media_player_formats; the unique_id
-    # is not used since it follows static info updates, which could point
-    # the cleanup in async_will_remove_from_hass at another entity's
-    # entry when keys are reused across a reconnect.
+    # Stable media_player_formats key; unique_id follows static info
+    # updates and could point cleanup at another entity's entry
     _format_key: str | None = None
 
     @callback
@@ -150,11 +148,11 @@ class EsphomeMediaPlayer(
         media_id = async_process_play_media_url(self.hass, media_id)
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
         bypass_proxy = kwargs.get(ATTR_MEDIA_EXTRA, {}).get(ATTR_BYPASS_PROXY)
-        supported_formats: list[MediaPlayerSupportedFormat] | None = (
-            self._entry_data.media_player_formats.get(self._format_key)
-            if self._format_key is not None
-            else None
-        )
+        supported_formats: list[MediaPlayerSupportedFormat] | None = None
+        if self._format_key is not None:
+            supported_formats = self._entry_data.media_player_formats.get(
+                self._format_key
+            )
 
         if (
             not bypass_proxy

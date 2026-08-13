@@ -102,6 +102,26 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
 }
 
 
+@callback
+def async_migrate_unique_id(
+    ent_reg: er.EntityRegistry,
+    platform_domain: str,
+    old_unique_id: str,
+    new_unique_id: str,
+) -> None:
+    """Migrate a registry entry to a new unique_id unless it is claimed."""
+    if (
+        old_unique_id != new_unique_id
+        and (
+            entity_id := ent_reg.async_get_entity_id(
+                platform_domain, DOMAIN, old_unique_id
+            )
+        )
+        and not ent_reg.async_get_entity_id(platform_domain, DOMAIN, new_unique_id)
+    ):
+        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+
 class StoreData(TypedDict, total=False):
     """ESPHome storage data."""
 
@@ -260,17 +280,10 @@ class RuntimeEntryData:
         info_type: type[EntityInfo],
         rekeys: Iterable[tuple[EntityInfo, EntityInfo]],
     ) -> None:
-        """Notify entities registered under their old key that the key changed.
-
-        The API key is only stable for a session; a firmware update may
-        re-derive it. Dispatching the new info through the old key's
-        callbacks lets each entity re-point its key based subscriptions.
-        """
+        """Notify entities registered under their old key that the key changed."""
         callbacks = self.entity_info_key_updated_callbacks
-        # Snapshot every old key's callbacks before dispatching anything:
-        # entities re-subscribe under their new key during dispatch, and a
-        # new key may be another entity's old key, so a live lookup could
-        # deliver an info to the wrong entity when keys are swapped.
+        # Snapshot all old keys' callbacks first: entities re-subscribe
+        # during dispatch and a new key may be another entity's old key
         snapshots = [
             (
                 tuple(callbacks.get((info_type, old_info.device_id, old_info.key), ())),
@@ -322,7 +335,6 @@ class RuntimeEntryData:
             list
         )
         ent_reg = er.async_get(hass)
-        registry_get_entity = ent_reg.async_get_entity_id
         for info in infos:
             info_type = type(info)
             if platform := info_types_to_platform.get(info_type):
@@ -334,18 +346,12 @@ class RuntimeEntryData:
                 # legacy ids collided (the bug this fixes) only one registry
                 # entry exists for it, so the first iterated info claims it and
                 # the rest get fresh version 3 ids.
-                old_unique_id = build_device_unique_id(mac, info, version=1)
-                new_unique_id = build_device_unique_id(mac, info, version=3)
-                if (
-                    old_unique_id != new_unique_id
-                    and (
-                        old_entry := registry_get_entity(
-                            platform, DOMAIN, old_unique_id
-                        )
-                    )
-                    and not registry_get_entity(platform, DOMAIN, new_unique_id)
-                ):
-                    ent_reg.async_update_entity(old_entry, new_unique_id=new_unique_id)
+                async_migrate_unique_id(
+                    ent_reg,
+                    platform,
+                    build_device_unique_id(mac, info, version=1),
+                    build_device_unique_id(mac, info, version=3),
+                )
             else:
                 _LOGGER.warning(
                     "Entity type %s is not supported in this version of Home Assistant",
@@ -393,8 +399,7 @@ class RuntimeEntryData:
 
         @callback
         def _unsubscribe() -> None:
-            # A re-keyed entity may have taken over this slot while the
-            # old subscriber was being removed, so only remove our own.
+            # A re-keyed entity may have taken over this slot
             if self.state_subscriptions.get(subscription_key) is entity_callback:
                 del self.state_subscriptions[subscription_key]
 

@@ -32,7 +32,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 # Import config flow so that it's added to the registry
-from .entry_data import DeviceEntityKey, ESPHomeConfigEntry, RuntimeEntryData
+from .entry_data import (
+    DeviceEntityKey,
+    ESPHomeConfigEntry,
+    RuntimeEntryData,
+    async_migrate_unique_id,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,19 +57,12 @@ def _build_identity_indexes(
     set[DeviceEntityKey],
     set[DeviceEntityKey],
 ]:
-    """Index the old infos by unique_id and by name.
+    """Index old infos by unique_id and by name for identity matching.
 
-    The unique_id (mac/device_id/type/name) is the long term identity
-    and matches entities across key changes; the name is the device
-    independent identity and matches entities that moved between
-    devices. Duplicates cannot be matched by identity and are left to
-    the key based matching; entities whose unique_id is still present
-    are not move candidates and are returned as still_present so the
-    key based matching can skip them as well. Non duplicate entries
-    whose unique_id is claimed by an incoming info are returned as
-    reserved: they are guaranteed a unique_id match, and the key based
-    matches must not consume them, or a reused key could swap two
-    entities' identities.
+    Duplicates are unmatchable by identity and left to key matching.
+    still_present: unique_id also occurs in the new infos (not movable).
+    reserved: guaranteed a unique_id match; key matches must skip these
+    or a reused key could swap two entities' identities.
     """
     old_info_by_unique_id: dict[str, DeviceEntityKey] = {}
     duplicate_unique_ids: set[str] = set()
@@ -84,8 +82,7 @@ def _build_identity_indexes(
             duplicate_unique_ids.add(old_unique_id)
             reserved.discard(old_info_by_unique_id[old_unique_id])
             del old_info_by_unique_id[old_unique_id]
-            # Duplicate unique_ids share a name, so the earlier
-            # occurrence must not stay name matchable either
+            # Duplicate unique_ids share a name
             duplicate_names.add(name)
             movable_by_name.pop(name, None)
             continue
@@ -125,11 +122,11 @@ def async_static_info_updated(
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
-    # The API key is only stable for a session, so entities are matched
-    # by identity first: unique_id, then name for cross device moves
+    # The key is only session stable, so match by identity first
     mac = device_info.mac_address
     unique_ids = [build_device_unique_id(mac, info) for info in infos]
     new_unique_ids = set(unique_ids)
+    new_names = {info.name for info in infos}
     old_info_by_unique_id, movable_by_name, still_present, reserved = (
         _build_identity_indexes(current_infos, mac, new_unique_ids)
     )
@@ -141,51 +138,46 @@ def async_static_info_updated(
         info_key = (info.device_id, info.key)
         new_infos[info_key] = info
 
-        # Identity match by unique_id: same device_id, type and name.
-        # Survives the key being re-derived by a firmware update.
+        # Identity match by unique_id; survives key re-derivation
         if (old_dict_key := old_info_by_unique_id.pop(unique_id, None)) is not None:
             if (matched_info := current_infos.pop(old_dict_key, None)) is not None:
                 if matched_info.key != info.key:
-                    # Same entity with a new key: the live entity re-points
-                    # its key based subscriptions after the loop. The
-                    # registry entry is untouched.
+                    # Same entity, new key: re-point subscriptions after
+                    # the loop; the registry entry is untouched
                     rekeys.append((matched_info, info))
-                # Equal unique_ids imply equal device_ids, no migration needed
+                # Equal unique_ids imply equal device_ids
                 continue
 
-        # Match by name when unambiguous: the entity moved between
-        # devices. Survives the key changing at the same time. This
-        # runs before the key match so a move into a slot vacated by
-        # a removed entity is not mistaken for a rename of that entity.
+        # Unambiguous name match: the entity moved between devices.
+        # Runs before the key match so a move into a vacated key slot
+        # is not mistaken for a rename.
         old_info: EntityInfo | None = None
         if (move_dict_key := movable_by_name.pop(info.name, None)) is not None:
             old_info = current_infos.pop(move_dict_key, None)
 
-        # Same key and device_id: a rename on firmware where the key is
-        # not derived from the name; the entity is updated in place and
-        # its registry entry follows the new name based unique_id
+        # Same key and device_id: a rename with a stable key; the
+        # registry entry follows the new unique_id. Skip candidates a
+        # later info will claim by unique_id or by name move.
         if (
             old_info is None
             and info_key not in reserved
-            and (renamed_info := current_infos.pop(info_key, None)) is not None
+            and (renamed_info := current_infos.get(info_key)) is not None
+            and not (
+                renamed_info.name in new_names
+                and movable_by_name.get(renamed_info.name) == info_key
+            )
         ):
-            old_unique_id = build_device_unique_id(mac, renamed_info)
-            if (
-                old_unique_id != unique_id
-                and (
-                    entity_id := ent_reg.async_get_entity_id(
-                        platform.domain, DOMAIN, old_unique_id
-                    )
-                )
-                and not ent_reg.async_get_entity_id(platform.domain, DOMAIN, unique_id)
-            ):
-                ent_reg.async_update_entity(entity_id, new_unique_id=unique_id)
+            del current_infos[info_key]
+            async_migrate_unique_id(
+                ent_reg,
+                platform.domain,
+                build_device_unique_id(mac, renamed_info),
+                unique_id,
+            )
             continue
 
-        # Search for the same name and key on a different device_id to
-        # resolve moves of entities with ambiguous names, skipping
-        # entities whose identity is still present in the new infos so
-        # a reused key cannot steal an unrelated entity
+        # Same name and key on another device: a move with an
+        # ambiguous name; skip entities a unique_id match will claim
         if old_info is None:
             for existing_dict_key, existing_info in current_infos.items():
                 if (
@@ -282,9 +274,10 @@ def async_static_info_updated(
         removed_infos: list[EntityInfo] = []
         for dict_key, leftover_info in current_infos.items():
             if dict_key in still_present:
-                # The registry entry is claimed by a surviving entity
-                # (duplicate unique_ids), so remove only the stale
-                # entity object and leave the registry entry alone
+                # A surviving entity claims the registry entry
+                # (duplicate unique_ids); remove only the entity object.
+                # Removal is eager and frees the platform slot before
+                # the pending adds run.
                 entry_data.async_signal_entity_removal(
                     info_type, dict_key[0], dict_key[1]
                 )

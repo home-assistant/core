@@ -2801,3 +2801,85 @@ async def test_duplicate_name_entity_rekeyed_and_other_removed(
     device.set_state(BinarySensorState(key=5, state=False, missing_state=False))
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.test_duplicate").state == STATE_OFF
+
+
+async def test_entity_moved_while_new_entity_takes_old_slot_listed_first(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a move where a new entity takes the old slot and is listed first.
+
+    The new entity arrives first and matches the mover's old
+    (device_id, key) slot, but the mover's name is claimed by a later
+    info, so the in place key match must not consume it.
+    """
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
+    ]
+    device_info = {
+        "devices": sub_devices,
+    }
+    entity_info = [
+        BinarySensorInfo(
+            object_id="foo",
+            key=1,
+            name="Foo",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+    entry_foo = entity_registry.async_get("binary_sensor.test_foo")
+    assert entry_foo is not None
+
+    actions_foo = track_entity_registry_actions(hass, "binary_sensor.test_foo")
+
+    # Foo moves to the sub device with a new key while new entity Bar
+    # takes over Foo's old (device_id, key) slot and is listed first
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="bar",
+            key=1,
+            name="Bar",
+        ),
+        BinarySensorInfo(
+            object_id="foo",
+            key=9,
+            name="Foo",
+            device_id=11111111,
+        ),
+    ]
+    await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
+
+    new_entry_foo = entity_registry.async_get("binary_sensor.test_foo")
+    assert new_entry_foo is not None
+    assert new_entry_foo.id == entry_foo.id
+    assert "remove" not in actions_foo
+
+    sub_one = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
+    )
+    assert sub_one is not None
+    assert new_entry_foo.device_id == sub_one.id
+
+    entry_bar = entity_registry.async_get("binary_sensor.test_bar")
+    assert entry_bar is not None
+    assert entry_bar.id != entry_foo.id
+
+    # Each entity must follow its own key
+    device.set_state(
+        BinarySensorState(key=9, state=False, missing_state=False, device_id=11111111)
+    )
+    device.set_state(BinarySensorState(key=1, state=True, missing_state=False))
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_foo").state == STATE_OFF
+    assert hass.states.get("binary_sensor.test_bar").state == STATE_ON
