@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import override
 
 from pysillaprism import PortState, PrismStatus
@@ -19,11 +20,11 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
 
 from .const import PORT
 from .coordinator import PrismConfigEntry, PrismCoordinator
@@ -122,14 +123,6 @@ SENSORS: tuple[PrismSensorEntityDescription, ...] = (
         value_fn=lambda status: status.port(PORT).total_energy,
     ),
     PrismSensorEntityDescription(
-        key="session_time",
-        translation_key="session_time",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda status: status.port(PORT).session_time,
-    ),
-    PrismSensorEntityDescription(
         key="error",
         translation_key="error",
         device_class=SensorDeviceClass.ENUM,
@@ -155,6 +148,19 @@ SENSORS: tuple[PrismSensorEntityDescription, ...] = (
     ),
 )
 
+SESSION_START = PrismSensorEntityDescription(
+    key="session_start",
+    translation_key="session_start",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    value_fn=lambda status: status.port(PORT).session_time,
+)
+
+# Prism reports the elapsed session time once a minute, and its counter runs
+# about a second off the Home Assistant clock, so the derived start time jitters
+# between messages. Deviations below this threshold keep the previous value.
+SESSION_START_DEVIATION = timedelta(seconds=5)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -163,7 +169,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Prism sensors."""
     coordinator = entry.runtime_data
-    async_add_entities(PrismSensor(coordinator, description) for description in SENSORS)
+    entities: list[PrismSensor] = [
+        PrismSensor(coordinator, description) for description in SENSORS
+    ]
+    entities.append(PrismSessionStartSensor(coordinator, SESSION_START))
+    async_add_entities(entities)
 
 
 class PrismSensor(PrismEntity, SensorEntity):
@@ -182,6 +192,43 @@ class PrismSensor(PrismEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the current value from the accumulated status."""
         return self.entity_description.value_fn(self.coordinator.device.status)
+
+
+class PrismSessionStartSensor(PrismSensor):
+    """Reports when the running charging session started.
+
+    Prism only publishes the elapsed session time, which is stale as soon as it
+    is received. Reporting the derived start time instead keeps the value
+    accurate between messages.
+    """
+
+    def __init__(
+        self,
+        coordinator: PrismCoordinator,
+        description: PrismSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, description)
+        self._session_start: datetime | None = None
+
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        """Return the start time derived from the elapsed session time."""
+        elapsed = self.entity_description.value_fn(self.coordinator.device.status)
+        # Prism reports zero while no vehicle is connected.
+        if not elapsed:
+            self._session_start = None
+            return None
+
+        start = utcnow() - timedelta(seconds=float(elapsed))
+        if (
+            self._session_start is None
+            or abs(start - self._session_start) > SESSION_START_DEVIATION
+        ):
+            self._session_start = start
+
+        return self._session_start
