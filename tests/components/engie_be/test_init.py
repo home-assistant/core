@@ -248,11 +248,15 @@ async def test_device_created_for_household_without_prices(
         device.entry_type is dr.DeviceEntryType.SERVICE for device in device_entries
     )
 
-    ban_2_device = device_registry.async_get_device(identifiers={(DOMAIN, BAN_2)})
+    ban_2_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN_2), mock_config_entry.entry_id
+    )
     assert ban_2_device is not None
     assert not er.async_entries_for_device(entity_registry, ban_2_device.id)
 
-    ban_device = device_registry.async_get_device(identifiers={(DOMAIN, BAN)})
+    ban_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
     assert ban_device is not None
     assert er.async_entries_for_device(entity_registry, ban_device.id)
 

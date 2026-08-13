@@ -303,7 +303,9 @@ async def test_device_name_falls_back_to_ban(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    household_device = device_registry.async_get_device(identifiers={(DOMAIN, BAN)})
+    household_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
     assert household_device is not None
     assert household_device.name == BAN
 
@@ -546,7 +548,9 @@ async def test_recovering_ban_adds_entities(
     assert ban_2_entity_id is not None
     entity_entry = entity_registry.async_get(ban_2_entity_id)
     assert entity_entry is not None
-    ban_2_device = device_registry.async_get_device(identifiers={(DOMAIN, BAN_2)})
+    ban_2_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN_2), mock_config_entry.entry_id
+    )
     assert ban_2_device is not None
     assert entity_entry.device_id == ban_2_device.id
 
