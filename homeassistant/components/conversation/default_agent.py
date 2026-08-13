@@ -409,10 +409,13 @@ class DefaultAgent(ConversationEntity):
             }
 
             if successful_match:
+                satellite_area, _ = self._get_satellite_area_and_device(
+                    user_input.satellite_id, user_input.device_id
+                )
                 result_dict["targets"] = {
                     state.entity_id: {"matched": is_matched}
                     for state, is_matched in _get_debug_targets(
-                        self.hass, intent_result
+                        self.hass, intent_result, satellite_area
                     )
                 }
 
@@ -1251,12 +1254,10 @@ class DefaultAgent(ConversationEntity):
             area_id = entity_entry.area_id
             device_id = entity_entry.device_id
 
-        if (
-            area_id is None
-            and device_id is not None
-            and (device_entry := dr.async_get(hass).async_get(device_id)) is not None
-        ):
-            area_id = device_entry.area_id
+        if area_id is None and device_id is not None:
+            device_registry = dr.async_get(hass)
+            if (device_entry := device_registry.async_get(device_id)) is not None:
+                area_id = dr.async_get_effective_area_id(hass, device_entry)
 
         if area_id is None:
             return None, device_id
@@ -1676,12 +1677,14 @@ def _collect_list_references(expression: Expression, list_names: set[str]) -> No
 def _get_debug_targets(
     hass: HomeAssistant,
     result: RecognizeResult,
+    satellite_area: ar.AreaEntry | None = None,
 ) -> Iterable[tuple[State, bool]]:
     """Yield state/is_matched pairs for a hassil recognition."""
     entities = result.entities
 
     name: str | None = None
     area_name: str | None = None
+    floor_name: str | None = None
     domains: set[str] | None = None
     device_classes: set[str] | None = None
     state_names: set[str] | None = None
@@ -1691,6 +1694,9 @@ def _get_debug_targets(
 
     if "area" in entities:
         area_name = str(entities["area"].value)
+
+    if "floor" in entities:
+        floor_name = str(entities["floor"].value)
 
     if "domain" in entities:
         domains = set(cv.ensure_list(entities["domain"].value))
@@ -1702,23 +1708,26 @@ def _get_debug_targets(
         # HassGetState only
         state_names = set(cv.ensure_list(entities["state"].value))
 
-    if (
-        (name is None)
-        and (area_name is None)
-        and (not domains)
-        and (not device_classes)
-        and (not state_names)
-    ):
+    constraints = intent.MatchTargetsConstraints(
+        name=name,
+        area_name=area_name,
+        floor_name=floor_name,
+        domains=domains,
+        device_classes=device_classes,
+        assistant=DOMAIN,
+    )
+
+    if not (constraints.has_constraints or state_names):
         # Avoid "matching" all entities when there is no filter
         return
 
-    states = intent.async_match_states(
-        hass,
-        name=name,
-        area_name=area_name,
-        domains=domains,
-        device_classes=device_classes,
+    # Mirror the preferences used when the intent is actually handled so that
+    # duplicate names are deduplicated the same way.
+    preferences = intent.MatchTargetsPreferences(
+        area_id=satellite_area.id if satellite_area is not None else None
     )
+
+    states = intent.async_match_targets(hass, constraints, preferences).states
 
     for state in states:
         # For queries, a target is "matched" based on its state

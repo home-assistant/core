@@ -3,17 +3,13 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE, PARAM_STATUS
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.imou.const import (
-    PARAM_HEADER_DETECT,
-    PARAM_MOTION_DETECT,
-    PARAM_STATE,
-    PARAM_STATUS,
-)
+from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -169,7 +165,9 @@ async def test_turn_on_service_propagates_api_error(
 
     entity_id = hass.states.async_all("switch")[0].entity_id
 
-    with pytest.raises(HomeAssistantError, match="cloud failure"):
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the switch change: cloud failure"
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
