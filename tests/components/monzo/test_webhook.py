@@ -864,6 +864,45 @@ async def test_cloudhook_creation_failure_is_retried(
     assert "Successfully updated Monzo webhooks after retrying" in caplog.text
 
 
+async def test_retry_is_cancelled_when_callback_url_becomes_unavailable(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a retry is cancelled when there is no callback or previous URL."""
+    caplog.set_level(logging.INFO)
+    with (
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch.object(
+            cloud,
+            "async_get_or_create_cloudhook",
+            side_effect=cloud.CloudNotAvailable,
+        ),
+    ):
+        await setup_integration(hass, polling_config_entry)
+
+    with (
+        patch.object(cloud, "async_active_subscription", return_value=False),
+        patch(
+            "homeassistant.components.monzo.webhook.webhook.async_generate_url",
+            side_effect=NoURLAvailableError,
+        ) as generate_url,
+    ):
+        await hass.config.async_update(external_url=None)
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    generate_url.assert_called_once()
+    monzo.user_account.list_account_webhooks.assert_not_awaited()
+    assert "Successfully updated Monzo webhooks after retrying" not in caplog.text
+
+
 async def test_registration_auth_failure_starts_reauthentication(
     hass: HomeAssistant,
     monzo: AsyncMock,

@@ -217,6 +217,8 @@ class MonzoWebhookManager:
     async def _async_remove_previous_remote_webhooks(self) -> None:
         """Remove remote webhooks when no callback URL is available."""
         if (previous_url := self.entry.data.get(CONF_WEBHOOK_URL)) is None:
+            self._cancel_retry()
+            self._retrying = False
             return
 
         try:
