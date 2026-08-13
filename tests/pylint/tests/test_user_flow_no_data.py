@@ -8,6 +8,18 @@ import pytest
 
 from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
 
+# Preamble giving the parsed snippets real imports so ``safe_infer`` can
+# resolve ``SOURCE_USER`` / ``SOURCE_ZEROCONF`` / ``ConfigFlowContext`` to the
+# actual ``homeassistant.config_entries`` definitions.
+_IMPORTS = (
+    "from homeassistant import config_entries\n"
+    "from homeassistant.config_entries import (\n"
+    "    SOURCE_USER,\n"
+    "    SOURCE_ZEROCONF,\n"
+    "    ConfigFlowContext,\n"
+    ")\n"
+)
+
 
 @pytest.fixture(name="user_flow_no_data_checker")
 def user_flow_no_data_checker_fixture(
@@ -67,12 +79,36 @@ def test_user_flow_with_data_flagged(
 ) -> None:
     """A user flow init with a data argument is flagged."""
     root_node = astroid.parse(
-        f"""
+        _IMPORTS
+        + f"""
 async def test_something(hass) -> None:
     result = await hass.config_entries.{manager}.async_init(
         DOMAIN,
         context={context},
         data={{"host": "127.0.0.1"}},
+    )
+""",
+        "tests.components.test_integration.test_config_flow",
+    )
+    call_node = _find_async_init_call(root_node)
+
+    with assert_adds_messages(linter, _expect_message(call_node)):
+        walk_checker(linter, user_flow_no_data_checker, root_node)
+
+
+def test_user_flow_with_data_none_flagged(
+    linter: UnittestLinter,
+    user_flow_no_data_checker: UserFlowNoDataChecker,
+) -> None:
+    """A user flow init with ``data=None`` is flagged; ``None`` is the default."""
+    root_node = astroid.parse(
+        _IMPORTS
+        + """
+async def test_something(hass) -> None:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=None,
     )
 """,
         "tests.components.test_integration.test_config_flow",
@@ -189,7 +225,7 @@ def test_no_warning(
     module_name: str,
 ) -> None:
     """Cases that should not produce a warning."""
-    root_node = astroid.parse(code, module_name)
+    root_node = astroid.parse(_IMPORTS + code, module_name)
 
     with assert_no_messages(linter):
         walk_checker(linter, user_flow_no_data_checker, root_node)

@@ -22,26 +22,26 @@ dict literal or a ``ConfigFlowContext(source=...)`` call.
 """
 
 from astroid import nodes
-from pylint.checkers import BaseChecker
+from pylint.checkers import BaseChecker, utils
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.module_info import is_test_module
 
-_SOURCE_USER = "SOURCE_USER"
 _USER = "user"
 _FLOW_MANAGERS = frozenset({"flow", "subentries"})
 _CONFIG_FLOW_CONTEXT = "ConfigFlowContext"
 
 
 def _source_value_is_user(value: nodes.NodeNG) -> bool:
-    """Return True when a ``source`` value refers to the user source."""
-    if isinstance(value, nodes.Const):
-        return bool(value.value == _USER)
-    if isinstance(value, nodes.Name):
-        return bool(value.name == _SOURCE_USER)
-    if isinstance(value, nodes.Attribute):
-        return bool(value.attrname == _SOURCE_USER)
-    return False
+    """Return True when a ``source`` value refers to the user source.
+
+    The value may be the literal ``"user"``, the ``SOURCE_USER`` constant,
+    or ``config_entries.SOURCE_USER``. Inference resolves all of these to
+    the underlying ``"user"`` string, so a plain string comparison on the
+    inferred value covers every spelling without hardcoding constant names.
+    """
+    inferred = utils.safe_infer(value)
+    return isinstance(inferred, nodes.Const) and inferred.value == _USER
 
 
 def _context_source_is_user(context: nodes.NodeNG) -> bool:
