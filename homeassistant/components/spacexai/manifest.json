@@ -1,0 +1,13 @@
+{
+  "domain": "spacexai",
+  "name": "SpaceXAI",
+  "after_dependencies": ["assist_pipeline", "intent"],
+  "codeowners": ["@jeffglousher"],
+  "config_flow": true,
+  "dependencies": ["application_credentials", "conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/spacexai",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "silver",
+  "requirements": ["openai==2.45.0"]
+}

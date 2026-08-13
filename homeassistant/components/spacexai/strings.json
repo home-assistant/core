@@ -1,0 +1,194 @@
+{
+  "config": {
+    "abort": {
+      "account_mismatch": "The signed-in account does not match the account configured in Home Assistant. Sign in with the original SpaceXAI account.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "malformed_provider_response": "SpaceXAI returned an unexpected response while validating the account. Try again later.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "model_not_entitled": "The configured Grok model is no longer available to this account.",
+      "no_conversation_models": "This SpaceXAI account has no entitled text/conversation models available.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "quota_limited": "SpaceXAI reported an account quota or billing limitation. Review the account in SpaceXAI before trying again.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "subscription_not_entitled": "This SpaceXAI account is not eligible for subscription-backed third-party Grok access.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "conversation": {
+        "data": {
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+          "max_output_tokens": "Maximum response tokens",
+          "model": "[%key:common::generic::model%]",
+          "prompt": "[%key:common::config_flow::data::prompt%]"
+        },
+        "data_description": {
+          "llm_hass_api": "Home Assistant APIs that Grok may use. Only explicitly exposed entities and tools are available.",
+          "max_output_tokens": "Maximum number of tokens Grok may generate for one response.",
+          "model": "Grok model discovered for the signed-in subscription.",
+          "prompt": "Instructions that define how Grok should respond. This can be a template."
+        },
+        "description": "Configure the Grok conversation agent for this SpaceXAI account."
+      },
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The SpaceXAI integration needs you to sign in again.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "description": "Sign in with a SpaceXAI subscription account using Authorization Code + PKCE."
+      },
+      "validate": {
+        "description": "Home Assistant could not validate the SpaceXAI account. Submit to try again."
+      }
+    }
+  },
+  "config_subentries": {
+    "conversation": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The SpaceXAI account must be loaded before conversation agents can be configured.",
+        "malformed_provider_response": "[%key:component::spacexai::config::abort::malformed_provider_response%]",
+        "model_not_entitled": "[%key:component::spacexai::config::abort::model_not_entitled%]",
+        "no_conversation_models": "[%key:component::spacexai::config::abort::no_conversation_models%]",
+        "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+        "quota_limited": "[%key:component::spacexai::config::abort::quota_limited%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+        "subscription_not_entitled": "[%key:component::spacexai::config::abort::subscription_not_entitled%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "max_output_tokens": "[%key:component::spacexai::config::step::conversation::data::max_output_tokens%]",
+            "model": "[%key:common::generic::model%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]"
+          },
+          "data_description": {
+            "llm_hass_api": "[%key:component::spacexai::config::step::conversation::data_description::llm_hass_api%]",
+            "max_output_tokens": "[%key:component::spacexai::config::step::conversation::data_description::max_output_tokens%]",
+            "model": "[%key:component::spacexai::config::step::conversation::data_description::model%]",
+            "prompt": "[%key:component::spacexai::config::step::conversation::data_description::prompt%]"
+          }
+        },
+        "user": {
+          "data": {
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "max_output_tokens": "[%key:component::spacexai::config::step::conversation::data::max_output_tokens%]",
+            "model": "[%key:common::generic::model%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]"
+          },
+          "data_description": {
+            "llm_hass_api": "[%key:component::spacexai::config::step::conversation::data_description::llm_hass_api%]",
+            "max_output_tokens": "[%key:component::spacexai::config::step::conversation::data_description::max_output_tokens%]",
+            "model": "[%key:component::spacexai::config::step::conversation::data_description::model%]",
+            "prompt": "[%key:component::spacexai::config::step::conversation::data_description::prompt%]"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "account_mismatch": {
+      "message": "The SpaceXAI account does not match the account configured in Home Assistant."
+    },
+    "authentication_rejected": {
+      "message": "SpaceXAI rejected authentication. Reauthenticate the integration."
+    },
+    "connection_failure": {
+      "message": "Home Assistant could not connect to SpaceXAI while using {model}."
+    },
+    "home_assistant_tool_failure": {
+      "message": "A Home Assistant tool requested by {model} failed."
+    },
+    "invalid_model_tool_request": {
+      "message": "{model} requested a Home Assistant tool with invalid arguments."
+    },
+    "malformed_provider_response": {
+      "message": "SpaceXAI returned an unexpected response from {model}."
+    },
+    "model_not_entitled": {
+      "message": "The SpaceXAI account is not entitled to use {model}."
+    },
+    "no_conversation_models": {
+      "message": "This SpaceXAI account has no entitled text/conversation models available."
+    },
+    "oauth_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "output_limit": {
+      "message": "SpaceXAI reached the configured output-token limit for {model}."
+    },
+    "permanent_provider_failure": {
+      "message": "SpaceXAI rejected the request to {model}."
+    },
+    "provider_unavailable": {
+      "message": "SpaceXAI is temporarily unavailable."
+    },
+    "quota_limited": {
+      "message": "SpaceXAI reported an account quota or billing limitation for {model}."
+    },
+    "rate_limited": {
+      "message": "SpaceXAI is rate limiting requests to {model}. Try again later."
+    },
+    "reauthentication_required": {
+      "message": "The SpaceXAI session is no longer valid. Reauthenticate the integration."
+    },
+    "refresh_rejected": {
+      "message": "SpaceXAI rejected the session refresh. Reauthenticate the integration."
+    },
+    "subscription_not_entitled": {
+      "message": "This SpaceXAI account is not eligible for subscription-backed Grok access."
+    },
+    "timeout": {
+      "message": "SpaceXAI did not finish the response from {model} in time."
+    },
+    "tool_loop_limit": {
+      "message": "{model} reached the Home Assistant tool-call limit."
+    },
+    "transient_provider_failure": {
+      "message": "SpaceXAI encountered a temporary error while using {model}. Try again later."
+    },
+    "unexpected_provider_failure": {
+      "message": "An unexpected error occurred while communicating with SpaceXAI using {model}."
+    }
+  },
+  "issues": {
+    "model_not_entitled": {
+      "description": "The conversation agent is configured to use `{model}`, which is not available to this SpaceXAI account. Assist cannot use this agent until a currently entitled model is selected.\n\n1. Open the conversation agent settings for this SpaceXAI entry.\n2. Choose a replacement from the models currently entitled to the account.\n3. Save the conversation agent.\n\nThe agent becomes available after a currently entitled model is saved.",
+      "title": "Configured SpaceXAI model is unavailable"
+    },
+    "subscription_not_entitled": {
+      "description": "The SpaceXAI account connected to Home Assistant is not eligible for subscription-backed third-party Grok access, so conversation agents for this account cannot be used.\n\n1. Open the SpaceXAI console (link below) and confirm the signed-in account has an active eligible subscription.\n2. If the subscription belongs to a different account, remove this integration entry and add it again with the eligible account.\n3. After the subscription is eligible, reload the integration or sign in again.\n\nConversation agents for this account become available once SpaceXAI accepts the account.",
+      "title": "SpaceXAI subscription access is unavailable"
+    }
+  }
+}

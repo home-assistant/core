@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_continuation_reuses_history_and_prompt_cache_key
+  list([
+    dict({
+      'content': 'Hello',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Hello from Grok',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Remember me?',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Welcome back',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_lifecycle_stream_errors_are_translated[error]
+  dict({
+    'plain': dict({
+      'extra_data': None,
+      'speech': 'SpaceXAI rejected the request to grok-4.5',
+    }),
+  })
+# ---
+# name: test_lifecycle_stream_errors_are_translated[failed]
+  dict({
+    'plain': dict({
+      'extra_data': None,
+      'speech': 'SpaceXAI encountered a temporary error while using grok-4.5. Try again later',
+    }),
+  })
+# ---
+# name: test_lifecycle_stream_errors_are_translated[incomplete-unknown]
+  dict({
+    'plain': dict({
+      'extra_data': None,
+      'speech': 'SpaceXAI rejected the request to grok-4.5',
+    }),
+  })
+# ---
+# name: test_lifecycle_stream_errors_are_translated[max-output-tokens]
+  dict({
+    'plain': dict({
+      'extra_data': None,
+      'speech': 'SpaceXAI reached the configured output-token limit for grok-4.5',
+    }),
+  })
+# ---
+# name: test_lifecycle_stream_errors_are_translated[rate-limit]
+  dict({
+    'plain': dict({
+      'extra_data': None,
+      'speech': 'SpaceXAI is rate limiting requests to grok-4.5. Try again later',
+    }),
+  })
+# ---
+# name: test_lifecycle_stream_errors_are_translated[refusal]
+  dict({
+    'plain': dict({
+      'extra_data': None,
+      'speech': 'SpaceXAI rejected the request to grok-4.5',
+    }),
+  })
+# ---
+# name: test_lifecycle_stream_errors_are_translated[vector-store-timeout]
+  dict({
+    'plain': dict({
+      'extra_data': None,
+      'speech': 'SpaceXAI encountered a temporary error while using grok-4.5. Try again later',
+    }),
+  })
+# ---
+# name: test_system_prompt_includes_runtime_identity
+  '''
+  You are a voice assistant for Home Assistant.
+  Answer questions about the world truthfully.
+  Answer in plain text. Keep it simple and to the point.
+  
+  
+  Runtime identity (answer truthfully when asked about versions):
+  - Home Assistant Core: 2026.9.0.dev0
+  - Provider: SpaceXAI (Grok)
+  - Conversation model: grok-4.5
+  Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+  '''
+# ---
