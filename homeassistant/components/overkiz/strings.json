@@ -91,6 +91,20 @@
     }
   },
   "entity": {
+    "button": {
+      "go_to_alias_favorite1": {
+        "name": "My position"
+      },
+      "go_to_alias_partial": {
+        "name": "Partial position"
+      },
+      "go_to_alias_pedestrian": {
+        "name": "Pedestrian position"
+      },
+      "go_to_alias_ventilation": {
+        "name": "Ventilation position"
+      }
+    },
     "climate": {
       "overkiz": {
         "state_attributes": {

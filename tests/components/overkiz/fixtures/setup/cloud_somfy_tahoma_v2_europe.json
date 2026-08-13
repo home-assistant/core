@@ -7650,12 +7650,20 @@
             "nparams": 0
           },
           {
+            "commandName": "goToAlias",
+            "nparams": 1
+          },
+          {
             "commandName": "identify",
             "nparams": 0
           },
           {
             "commandName": "open",
             "nparams": 0
+          },
+          {
+            "commandName": "saveAlias",
+            "nparams": 1
           },
           {
             "commandName": "stop",
@@ -7697,6 +7705,17 @@
           "name": "core:Manufacturer",
           "type": 3,
           "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedAliases",
+          "type": 10,
+          "value": [
+            {
+              "features": ["openClose"],
+              "id": "55305",
+              "type": "partial"
+            }
+          ]
         }
       ],
       "available": true,

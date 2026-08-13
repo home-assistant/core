@@ -13,6 +13,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestError,
@@ -141,6 +142,54 @@ async def test_setup_rexel_local_uses_local_client(
     )
     mock_create_rexel_client.assert_not_called()
     assert mock_rexel_local_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_go_to_alias_button_unique_id_migration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Test migration of the legacy goToAlias button unique_id.
+
+    Devices without core:SupportedAliases lose their legacy button; devices
+    with an alias keep it, renamed to the per-alias unique_id.
+    """
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=2,
+    )
+    mock_entry.add_to_hass(hass)
+
+    pergola_button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        "ogp://1234-1234-6233/10943109-goToAlias",
+        config_entry=mock_entry,
+    )
+    venetian_blind_button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        "ogp://1234-1234-6233/16730100-goToAlias",
+        config_entry=mock_entry,
+    )
+
+    mock_client.set_setup_fixture("setup/cloud_somfy_tahoma_v2_europe.json")
+
+    with patch(
+        "homeassistant.components.overkiz.create_cloud_client",
+        return_value=mock_client,
+    ):
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get(pergola_button.entity_id) is None
+    assert (
+        entry := entity_registry.async_get(venetian_blind_button.entity_id)
+    ) is not None
+    assert entry.unique_id == "ogp://1234-1234-6233/16730100-goToAlias_1"
+    assert mock_entry.minor_version == 3
 
 
 async def test_setup_token_reauth_error_starts_reauth(

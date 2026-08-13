@@ -2407,9 +2407,9 @@
           "type": 10,
           "value": [
             {
-              "features": ["openClosePosition"],
-              "id": "55299",
-              "type": "ventilation"
+              "features": ["openClose"],
+              "type": "favorite1",
+              "id": "1"
             }
           ]
         },
