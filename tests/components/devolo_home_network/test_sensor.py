@@ -216,8 +216,8 @@ async def test_update_plc_phyrates_missing_data_rate(
 
     assert hass.states.get(entity_id_downlink) == snapshot
     assert entity_registry.async_get(entity_id_downlink) == snapshot
-    assert hass.states.get(entity_id_downlink) == snapshot
-    assert entity_registry.async_get(entity_id_downlink) == snapshot
+    assert hass.states.get(entity_id_uplink) == snapshot
+    assert entity_registry.async_get(entity_id_uplink) == snapshot
 
     # Emulate the PLC link to the peer getting lost
     mock_device.plcnet.async_get_network_overview = AsyncMock(
