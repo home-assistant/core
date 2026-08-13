@@ -1254,12 +1254,10 @@ class DefaultAgent(ConversationEntity):
             area_id = entity_entry.area_id
             device_id = entity_entry.device_id
 
-        if (
-            area_id is None
-            and device_id is not None
-            and (device_entry := dr.async_get(hass).async_get(device_id)) is not None
-        ):
-            area_id = device_entry.area_id
+        if area_id is None and device_id is not None:
+            device_registry = dr.async_get(hass)
+            if (device_entry := device_registry.async_get(device_id)) is not None:
+                area_id = dr.async_get_effective_area_id(hass, device_entry)
 
         if area_id is None:
             return None, device_id

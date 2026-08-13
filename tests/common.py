@@ -761,6 +761,8 @@ def mock_device_registry(
     registry = dr.DeviceRegistry(hass)
     registry.devices = dr.ActiveDeviceRegistryItems()
     registry._device_data = registry.devices.data
+    registry.child_devices = dr.ChildDeviceRegistryItems()
+    registry._child_device_data = registry.child_devices.data
     if mock_entries is None:
         mock_entries = {}
     for key, entry in mock_entries.items():
