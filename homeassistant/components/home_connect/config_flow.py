@@ -37,7 +37,10 @@ class OAuth2FlowHandler(
     @override
     def extra_authorize_data(self) -> dict[str, str]:
         return {
-            "scope": f"Control Monitor Settings IdentifyAppliance{' Images' if self.images_scope else ''}",
+            "scope": (
+                "Control Monitor Settings"
+                f" IdentifyAppliance{' Images' if self.images_scope else ''}"
+            ),
         }
 
     @override
