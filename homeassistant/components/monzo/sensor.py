@@ -39,6 +39,13 @@ ACCOUNT_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=2,
     ),
+    MonzoSensorEntityDescription(
+        key="spend_today",
+        translation_key="spend_today",
+        value_fn=lambda data: abs(data["balance"]["spend_today"]) / 100,
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+    ),
 )
 
 POT_SENSORS = (

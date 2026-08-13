@@ -27,13 +27,23 @@ TEST_ACCOUNTS = [
         "id": "acc_curr",
         "name": "Current Account",
         "type": "uk_retail",
-        "balance": {"balance": 123, "total_balance": 321, "currency": "GBP"},
+        "balance": {
+            "balance": 123,
+            "total_balance": 321,
+            "spend_today": -45,
+            "currency": "GBP",
+        },
     },
     {
         "id": "acc_flex",
         "name": "Flex",
         "type": "uk_monzo_flex",
-        "balance": {"balance": 123, "total_balance": 321, "currency": "EUR"},
+        "balance": {
+            "balance": 123,
+            "total_balance": 321,
+            "spend_today": -67,
+            "currency": "EUR",
+        },
     },
 ]
 TEST_POTS = [
