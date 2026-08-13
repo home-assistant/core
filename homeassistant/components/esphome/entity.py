@@ -58,11 +58,14 @@ def _build_identity_indexes(
 ]:
     """Index old infos by unique_id and by name for identity matching.
 
-    Names are unique per device_id, so unique_ids are unique; the same
-    name may exist on multiple devices, and such names are ambiguous
-    move candidates left to key matching. reserved: guaranteed a
-    unique_id match; key matches must skip these or a reused key could
-    swap two entities' identities.
+    ESPHome validates that names are unique per device_id, so
+    unique_ids are unique. The key derives from the name (hash of the
+    name, or of the object_id which derives from the name), so a key
+    can never disambiguate entities the name cannot. The same name may
+    exist on multiple devices; such names are ambiguous move
+    candidates. reserved: guaranteed a unique_id match; key matches
+    must skip these or a reused key could swap two entities'
+    identities.
     """
     old_info_by_unique_id: dict[str, DeviceEntityKey] = {}
     movable_by_name: dict[str, DeviceEntityKey] = {}
@@ -161,13 +164,13 @@ def async_static_info_updated(
             )
             continue
 
-        # Same name and key on another device: a move with an
-        # ambiguous name; skip entities a unique_id match will claim
+        # Same name on another device: an ambiguous move. Same named
+        # entities share one key, so the key cannot disambiguate; take
+        # the first candidate a unique_id match will not claim.
         if old_info is None:
             for existing_dict_key, existing_info in current_infos.items():
                 if (
-                    existing_dict_key[1] == info.key
-                    and existing_info.name == info.name
+                    existing_info.name == info.name
                     and existing_dict_key not in reserved
                 ):
                     old_info = current_infos.pop(existing_dict_key)
