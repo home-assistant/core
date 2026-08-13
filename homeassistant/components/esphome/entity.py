@@ -17,7 +17,7 @@ from aioesphomeapi import (
 import voluptuous as vol
 
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -64,37 +64,57 @@ def async_static_info_updated(
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
+    # The API key is only stable for a session; the unique_id
+    # (mac/device_id/type/name) is the long term identity, so index the
+    # old infos by unique_id to match entities across key changes.
+    mac = device_info.mac_address
+    old_info_by_unique_id: dict[str, DeviceEntityKey] = {
+        build_device_unique_id(mac, old_info): dict_key
+        for dict_key, old_info in current_infos.items()
+    }
+    rekeys: list[tuple[EntityInfo, EntityInfo]] = []
+
     # Track info by (info.device_id, info.key) to properly handle entities
     # moving between devices and support sub-devices with overlapping keys
     for info in infos:
         info_key = (info.device_id, info.key)
         new_infos[info_key] = info
+        unique_id = build_device_unique_id(mac, info)
 
-        # Try to find existing entity - first with current device_id
-        old_info = current_infos.pop(info_key, None)
-
-        # If not found, search for entity with same key but different device_id
-        # This handles the case where entity moved between devices
-        if not old_info:
-            for existing_device_id, existing_key in list(current_infos):
-                if existing_key == info.key:
-                    # Found entity with same key but different device_id
-                    old_info = current_infos.pop((existing_device_id, existing_key))
-                    break
-
-        # Create new entity if it doesn't exist
-        if not old_info:
-            entity = entity_type(entry_data, info, state_type)
-            add_entities.append(entity)
+        # Identity match by unique_id: same device_id, type and name.
+        # Survives the key being re-derived by a firmware update.
+        if (
+            old_dict_key := old_info_by_unique_id.pop(unique_id, None)
+        ) is not None and (
+            old_info := current_infos.pop(old_dict_key, None)
+        ) is not None:
+            if old_info.key != info.key:
+                # Same entity with a new key: the live entity re-points
+                # its key based subscriptions after the loop. The
+                # registry entry is untouched.
+                rekeys.append((old_info, info))
+            # Equal unique_ids imply equal device_ids, so no migration needed
             continue
 
-        # Entity exists - check if device_id has changed
-        if old_info.device_id == info.device_id:
+        # Same key and device_id: a rename on firmware where the key is
+        # not derived from the name; the entity is updated in place
+        if current_infos.pop(info_key, None) is not None:
+            continue
+
+        # Search for the same key on a different device_id
+        # This handles the case where entity moved between devices
+        for existing_device_id, existing_key in list(current_infos):
+            if existing_key == info.key:
+                old_info = current_infos.pop((existing_device_id, existing_key))
+                break
+        else:
+            # Create new entity if it doesn't exist
+            add_entities.append(entity_type(entry_data, info, state_type))
             continue
 
         # Entity has switched devices, need to migrate unique_id
         # and handle state subscriptions
-        old_unique_id = build_device_unique_id(device_info.mac_address, old_info)
+        old_unique_id = build_device_unique_id(mac, old_info)
         entity_id = ent_reg.async_get_entity_id(platform.domain, DOMAIN, old_unique_id)
 
         # If entity not found in registry, re-add it
@@ -112,23 +132,22 @@ def async_static_info_updated(
             continue
 
         updates: dict[str, Any] = {}
-        new_unique_id = build_device_unique_id(device_info.mac_address, info)
 
         # Update unique_id if it changed
-        if old_unique_id != new_unique_id:
-            updates["new_unique_id"] = new_unique_id
+        if old_unique_id != unique_id:
+            updates["new_unique_id"] = unique_id
 
         # Update device assignment in registry
         if info.device_id:
             # Entity now belongs to a sub device
             new_device = dev_reg.async_get_device_by_identifier(
-                (DOMAIN, f"{device_info.mac_address}_{info.device_id}"),
+                (DOMAIN, f"{mac}_{info.device_id}"),
                 entry_data.entry_id,
             )
         else:
             # Entity now belongs to the main device
             new_device = dev_reg.async_get_device_by_connection(
-                (dr.CONNECTION_NETWORK_MAC, device_info.mac_address),
+                (dr.CONNECTION_NETWORK_MAC, mac),
                 entry_data.entry_id,
             )
 
@@ -163,11 +182,12 @@ def async_static_info_updated(
         # Create new entity with the new device_id
         add_entities.append(entity_type(entry_data, info, state_type))
 
+    if rekeys:
+        entry_data.async_update_entity_keys(info_type, rekeys)
+
     # Anything still in current_infos is now gone
     if current_infos:
-        entry_data.async_remove_entities(
-            hass, current_infos.values(), device_info.mac_address
-        )
+        entry_data.async_remove_entities(hass, current_infos.values(), mac)
 
     # Then update the actual info
     entry_data.info[info_type] = new_infos
@@ -357,6 +377,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
         self._on_entry_data_changed()
         self._key = entity_info.key
         self._state_type = state_type
+        self._key_unsubs: list[CALLBACK_TYPE] = []
         self._on_static_info_update(entity_info)
 
         # Determine the device connection based on whether this
@@ -383,30 +404,41 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
                 self._on_device_update,
             )
         )
-        self.async_on_remove(
+        self._subscribe_key_updates()
+        self.async_on_remove(self._unsubscribe_key_updates)
+        self._update_state_from_entry_data()
+
+    @callback
+    def _subscribe_key_updates(self) -> None:
+        """Subscribe to updates that are keyed by the session stable key."""
+        entry_data = self._entry_data
+        static_info = self._static_info
+        self._key_unsubs = [
             entry_data.async_subscribe_state_update(
-                self._static_info.device_id,
+                static_info.device_id,
                 self._state_type,
                 self._key,
                 self._on_state_update,
-            )
-        )
-        self.async_on_remove(
+            ),
             entry_data.async_register_key_static_info_updated_callback(
-                self._static_info, self._on_static_info_update
-            )
-        )
-        # Register to be notified when this entity should remove itself
-        # This happens when the entity moves to a different device
-        self.async_on_remove(
+                static_info, self._on_static_info_update
+            ),
+            # Register to be notified when this entity should remove itself
+            # This happens when the entity moves to a different device
             entry_data.async_register_entity_removal_callback(
-                type(self._static_info),
-                self._static_info.device_id,
+                type(static_info),
+                static_info.device_id,
                 self._key,
                 self._on_removal_signal,
-            )
-        )
-        self._update_state_from_entry_data()
+            ),
+        ]
+
+    @callback
+    def _unsubscribe_key_updates(self) -> None:
+        """Unsubscribe from updates that are keyed by the session stable key."""
+        for unsub in self._key_unsubs:
+            unsub()
+        self._key_unsubs = []
 
     @callback
     def _on_removal_signal(self) -> None:
@@ -430,10 +462,23 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
         if TYPE_CHECKING:
             static_info = cast(_InfoT, static_info)
             assert device_info
+        unique_id = build_device_unique_id(device_info.mac_address, static_info)
+        if (
+            new_key := static_info.key
+        ) != self._key and unique_id != self._attr_unique_id:
+            # A key change is only valid for this entity's unique_id; keys
+            # are not collision safe, so never adopt an info that belongs
+            # to a different entity.
+            return
         self._static_info = static_info
-        self._attr_unique_id = build_device_unique_id(
-            device_info.mac_address, static_info
-        )
+        if new_key != self._key:
+            # The key is only stable for a session; a firmware update may
+            # re-derive it. Move the key based subscriptions to the new key.
+            self._key = new_key
+            if self._key_unsubs:
+                self._unsubscribe_key_updates()
+                self._subscribe_key_updates()
+        self._attr_unique_id = unique_id
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
         # https://github.com/home-assistant/core/issues/132532
         # If the name is "", we need to set it to None since otherwise

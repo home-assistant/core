@@ -6,7 +6,6 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
 import logging
-from operator import delitem
 from typing import TYPE_CHECKING, Any, Final, TypedDict, cast
 
 from aioesphomeapi import (
@@ -255,6 +254,34 @@ class RuntimeEntryData:
             ):
                 callback_(static_info)
 
+    @callback
+    def async_update_entity_keys(
+        self,
+        info_type: type[EntityInfo],
+        rekeys: Iterable[tuple[EntityInfo, EntityInfo]],
+    ) -> None:
+        """Notify entities registered under their old key that the key changed.
+
+        The API key is only stable for a session; a firmware update may
+        re-derive it. Dispatching the new info through the old key's
+        callbacks lets each entity re-point its key based subscriptions.
+        """
+        callbacks = self.entity_info_key_updated_callbacks
+        # Snapshot every old key's callbacks before dispatching anything:
+        # entities re-subscribe under their new key during dispatch, and a
+        # new key may be another entity's old key, so a live lookup could
+        # deliver an info to the wrong entity when keys are swapped.
+        snapshots = [
+            (
+                tuple(callbacks.get((info_type, old_info.device_id, old_info.key), ())),
+                new_info,
+            )
+            for old_info, new_info in rekeys
+        ]
+        for entity_callbacks, new_info in snapshots:
+            for callback_ in entity_callbacks:
+                callback_(new_info)
+
     async def _ensure_platforms_loaded(
         self,
         hass: HomeAssistant,
@@ -363,7 +390,15 @@ class RuntimeEntryData:
         """Subscribe to state updates."""
         subscription_key = (state_type, device_id, state_key)
         self.state_subscriptions[subscription_key] = entity_callback
-        return partial(delitem, self.state_subscriptions, subscription_key)
+
+        @callback
+        def _unsubscribe() -> None:
+            # A re-keyed entity may have taken over this slot while the
+            # old subscriber was being removed, so only remove our own.
+            if self.state_subscriptions.get(subscription_key) is entity_callback:
+                del self.state_subscriptions[subscription_key]
+
+        return _unsubscribe
 
     @callback
     def async_update_state(self, state: EntityState) -> None:

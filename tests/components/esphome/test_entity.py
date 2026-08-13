@@ -10,6 +10,7 @@ from aioesphomeapi import (
     BinarySensorInfo,
     BinarySensorState,
     DeviceInfo,
+    EntityInfo,
     SensorInfo,
     SensorState,
     SubDeviceInfo,
@@ -20,6 +21,7 @@ import pytest
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_RESTORED,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
@@ -29,13 +31,46 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_entity_registry_updated_event,
+    async_track_state_change_event,
+)
 
 from .conftest import (
     MockESPHomeDevice,
     MockESPHomeDeviceType,
     MockGenericDeviceEntryType,
 )
+
+
+def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Track entity registry actions for an entity."""
+    events: list[str] = []
+
+    @callback
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data["action"])
+
+    async_track_entity_registry_updated_event(hass, entity_id, add_event)
+
+    return events
+
+
+async def _reconnect_with_updated_entity_info(
+    hass: HomeAssistant,
+    device: MockESPHomeDevice,
+    mock_client: APIClient,
+    entity_info: list[EntityInfo],
+) -> None:
+    """Reconnect the mock device with updated entity info."""
+    mock_client.list_entities_services = AsyncMock(return_value=(entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, entity_info, [])
+    )
+    await device.mock_disconnect(expected_disconnect=False)
+    await device.mock_connect()
+    await hass.async_block_till_done()
 
 
 async def test_entities_removed(
@@ -1742,3 +1777,585 @@ async def test_entity_without_name_uses_device_name_only(
     state = hass.states.get(expected_entity_id)
     assert state is not None, f"Entity {expected_entity_id} should exist"
     assert state.state == STATE_ON
+
+
+async def test_entities_rekeyed_after_firmware_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test entities survive the key changing when the name stays the same.
+
+    The API key is only stable for a session; a firmware update may
+    re-derive every key. The registry entries must be preserved so
+    helpers pointing at the entities are not deleted.
+    """
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=1,
+            name="Sensor One",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=2,
+            name="Sensor Two",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=2, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert hass.states.get("binary_sensor.test_sensor_one").state == STATE_ON
+    assert hass.states.get("binary_sensor.test_sensor_two").state == STATE_ON
+
+    entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    entry_two = entity_registry.async_get("binary_sensor.test_sensor_two")
+    assert entry_one is not None
+    assert entry_two is not None
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.test_sensor_one")
+    actions_two = track_entity_registry_actions(hass, "binary_sensor.test_sensor_two")
+
+    # Firmware update re-derives every key, names unchanged
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=101,
+            name="Sensor One",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=102,
+            name="Sensor Two",
+        ),
+    ]
+    await _reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
+    )
+
+    new_entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    new_entry_two = entity_registry.async_get("binary_sensor.test_sensor_two")
+    assert new_entry_one is not None
+    assert new_entry_two is not None
+    assert new_entry_one.id == entry_one.id
+    assert new_entry_two.id == entry_two.id
+    assert new_entry_one.unique_id == entry_one.unique_id
+    assert new_entry_two.unique_id == entry_two.unique_id
+    assert actions_one == []
+    assert actions_two == []
+
+    # State updates must follow the new key
+    device.set_state(BinarySensorState(key=101, state=False, missing_state=False))
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_sensor_one").state == STATE_OFF
+
+    # The old key must be ignored
+    device.set_state(BinarySensorState(key=1, state=True, missing_state=False))
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_sensor_one").state == STATE_OFF
+
+    # Reconnect again with stable keys, static info updates must
+    # reach the entity under the new key
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=101,
+            name="Sensor One",
+            icon="mdi:motion-sensor",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=102,
+            name="Sensor Two",
+        ),
+    ]
+    await _reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
+    )
+
+    device.set_state(BinarySensorState(key=101, state=True, missing_state=False))
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_sensor_one")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_ICON] == "mdi:motion-sensor"
+    assert actions_one == []
+    assert actions_two == []
+
+
+async def test_entities_rekeyed_after_reload(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test entities restored from storage survive a key change on connect.
+
+    Covers the path where entities are created from stored static infos
+    with the old keys and the first connect delivers the new keys.
+    """
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=1,
+            name="Sensor One",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=2,
+            name="Sensor Two",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=2, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    entry = device.entry
+    entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    entry_two = entity_registry.async_get("binary_sensor.test_sensor_two")
+    assert entry_one is not None
+    assert entry_two is not None
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.test_sensor_one")
+    actions_two = track_entity_registry_actions(hass, "binary_sensor.test_sensor_two")
+
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=101,
+            name="Sensor One",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=102,
+            name="Sensor Two",
+        ),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=updated_entity_info,
+        entry=entry,
+    )
+    await hass.async_block_till_done()
+
+    new_entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    new_entry_two = entity_registry.async_get("binary_sensor.test_sensor_two")
+    assert new_entry_one is not None
+    assert new_entry_two is not None
+    assert new_entry_one.id == entry_one.id
+    assert new_entry_two.id == entry_two.id
+    assert "remove" not in actions_one
+    assert "remove" not in actions_two
+
+    device.set_state(BinarySensorState(key=101, state=True, missing_state=False))
+    device.set_state(BinarySensorState(key=102, state=False, missing_state=False))
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_sensor_one").state == STATE_ON
+    assert hass.states.get("binary_sensor.test_sensor_two").state == STATE_OFF
+
+
+async def test_entity_rekeyed_and_another_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a key change combined with a genuine entity removal."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=1,
+            name="Sensor One",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=2,
+            name="Sensor Two",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=2, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    assert entry_one is not None
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.test_sensor_one")
+    actions_two = track_entity_registry_actions(hass, "binary_sensor.test_sensor_two")
+
+    # Sensor One is re-keyed, Sensor Two is gone from the config
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=101,
+            name="Sensor One",
+        ),
+    ]
+    await _reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
+    )
+
+    new_entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    assert new_entry_one is not None
+    assert new_entry_one.id == entry_one.id
+    assert actions_one == []
+
+    assert entity_registry.async_get("binary_sensor.test_sensor_two") is None
+    assert actions_two == ["remove"]
+
+
+async def test_entity_rekeyed_to_another_entities_old_key(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a re-key that collides with an unrelated entity's old key.
+
+    Sensor One takes over the key that used to belong to Sensor Two,
+    which is removed at the same time. The unique_id match must win so
+    the entities do not swap identities.
+    """
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=1,
+            name="Sensor One",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=2,
+            name="Sensor Two",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=2, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    assert entry_one is not None
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.test_sensor_one")
+    actions_two = track_entity_registry_actions(hass, "binary_sensor.test_sensor_two")
+
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=2,
+            name="Sensor One",
+        ),
+    ]
+    await _reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
+    )
+
+    new_entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    assert new_entry_one is not None
+    assert new_entry_one.id == entry_one.id
+    assert new_entry_one.unique_id == entry_one.unique_id
+    assert actions_one == []
+
+    assert entity_registry.async_get("binary_sensor.test_sensor_two") is None
+    assert actions_two == ["remove"]
+
+    # Sensor One must follow its new key and keep its own identity
+    device.set_state(BinarySensorState(key=2, state=False, missing_state=False))
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_sensor_one")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Sensor One"
+
+
+async def test_entity_renamed_with_stable_key(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a rename on firmware where the key is not name derived.
+
+    The key stays the same so the entity is updated in place without
+    touching the registry.
+    """
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=1,
+            name="Sensor One",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    assert entry_one is not None
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.test_sensor_one")
+
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=1,
+            name="Sensor One Renamed",
+        ),
+    ]
+    await _reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
+    )
+
+    new_entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    assert new_entry_one is not None
+    assert new_entry_one.id == entry_one.id
+    assert "remove" not in actions_one
+
+    device.set_state(BinarySensorState(key=1, state=False, missing_state=False))
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_sensor_one")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Sensor One Renamed"
+
+
+async def test_entity_renamed_and_rekeyed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a rename on firmware where the key is derived from the name.
+
+    Both the name and the key change so this is treated as a new entity.
+    """
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=1,
+            name="Sensor One",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert entity_registry.async_get("binary_sensor.test_sensor_one") is not None
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.test_sensor_one")
+
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one_renamed",
+            key=101,
+            name="Sensor One Renamed",
+        ),
+    ]
+    await _reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
+    )
+
+    assert entity_registry.async_get("binary_sensor.test_sensor_one") is None
+    assert actions_one == ["remove"]
+    assert (
+        entity_registry.async_get("binary_sensor.test_sensor_one_renamed") is not None
+    )
+
+    device.set_state(BinarySensorState(key=101, state=False, missing_state=False))
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_sensor_one_renamed").state == STATE_OFF
+
+
+async def test_entities_rekeyed_on_sub_devices_with_same_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test re-keying entities with the same name on different sub devices."""
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="sub_one", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="sub_two", area_id=0),
+    ]
+    device_info = {
+        "devices": sub_devices,
+    }
+    entity_info = [
+        BinarySensorInfo(
+            object_id="battery",
+            key=1,
+            name="Battery",
+            device_id=11111111,
+        ),
+        BinarySensorInfo(
+            object_id="battery",
+            key=2,
+            name="Battery",
+            device_id=22222222,
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=11111111),
+        BinarySensorState(key=2, state=True, missing_state=False, device_id=22222222),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+    entry_one = entity_registry.async_get("binary_sensor.sub_one_battery")
+    entry_two = entity_registry.async_get("binary_sensor.sub_two_battery")
+    assert entry_one is not None
+    assert entry_two is not None
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.sub_one_battery")
+    actions_two = track_entity_registry_actions(hass, "binary_sensor.sub_two_battery")
+
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="battery",
+            key=101,
+            name="Battery",
+            device_id=11111111,
+        ),
+        BinarySensorInfo(
+            object_id="battery",
+            key=102,
+            name="Battery",
+            device_id=22222222,
+        ),
+    ]
+    await _reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
+    )
+
+    new_entry_one = entity_registry.async_get("binary_sensor.sub_one_battery")
+    new_entry_two = entity_registry.async_get("binary_sensor.sub_two_battery")
+    assert new_entry_one is not None
+    assert new_entry_two is not None
+    assert new_entry_one.id == entry_one.id
+    assert new_entry_two.id == entry_two.id
+    assert actions_one == []
+    assert actions_two == []
+
+    # Each entity must follow its own new key
+    device.set_state(
+        BinarySensorState(key=101, state=False, missing_state=False, device_id=11111111)
+    )
+    device.set_state(
+        BinarySensorState(key=102, state=True, missing_state=False, device_id=22222222)
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.sub_one_battery").state == STATE_OFF
+    assert hass.states.get("binary_sensor.sub_two_battery").state == STATE_ON
+
+
+async def test_entities_swap_keys(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test two entities swapping keys in the same update.
+
+    Keys are not collision safe; a firmware update may hand one
+    entity's old key to another entity. Each entity must follow its
+    own unique_id and never adopt the other's identity.
+    """
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=1,
+            name="Sensor One",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=2,
+            name="Sensor Two",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=2, state=True, missing_state=False),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    entry_two = entity_registry.async_get("binary_sensor.test_sensor_two")
+    assert entry_one is not None
+    assert entry_two is not None
+
+    actions_one = track_entity_registry_actions(hass, "binary_sensor.test_sensor_one")
+    actions_two = track_entity_registry_actions(hass, "binary_sensor.test_sensor_two")
+
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor_one",
+            key=2,
+            name="Sensor One",
+        ),
+        BinarySensorInfo(
+            object_id="sensor_two",
+            key=1,
+            name="Sensor Two",
+        ),
+    ]
+    await _reconnect_with_updated_entity_info(
+        hass, device, mock_client, updated_entity_info
+    )
+
+    new_entry_one = entity_registry.async_get("binary_sensor.test_sensor_one")
+    new_entry_two = entity_registry.async_get("binary_sensor.test_sensor_two")
+    assert new_entry_one is not None
+    assert new_entry_two is not None
+    assert new_entry_one.id == entry_one.id
+    assert new_entry_two.id == entry_two.id
+    assert new_entry_one.unique_id == entry_one.unique_id
+    assert new_entry_two.unique_id == entry_two.unique_id
+    assert actions_one == []
+    assert actions_two == []
+
+    # Each entity must follow its swapped key with its own identity
+    device.set_state(BinarySensorState(key=2, state=False, missing_state=False))
+    device.set_state(BinarySensorState(key=1, state=True, missing_state=False))
+    await hass.async_block_till_done()
+    state_one = hass.states.get("binary_sensor.test_sensor_one")
+    state_two = hass.states.get("binary_sensor.test_sensor_two")
+    assert state_one.state == STATE_OFF
+    assert state_two.state == STATE_ON
+    assert state_one.attributes[ATTR_FRIENDLY_NAME] == "Test Sensor One"
+    assert state_two.attributes[ATTR_FRIENDLY_NAME] == "Test Sensor Two"
