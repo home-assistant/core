@@ -347,25 +347,10 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
-        key="screen_extinction_timeout",
-        translation_key="screen_extinction_timeout",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    MideaSensorEntityDescription(
         key="top_compartment_temperature",
         translation_key="top_compartment_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    MideaSensorEntityDescription(
-        key="top_compartment_remaining",
-        translation_key="top_compartment_remaining_time",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
@@ -376,24 +361,10 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
-        key="middle_compartment_remaining",
-        translation_key="middle_compartment_remaining_time",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    MideaSensorEntityDescription(
         key="bottom_compartment_temperature",
         translation_key="bottom_compartment_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    MideaSensorEntityDescription(
-        key="bottom_compartment_remaining",
-        translation_key="bottom_compartment_remaining_time",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
@@ -532,21 +503,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         translation_key="dirty_degree",
     ),
     MideaSensorEntityDescription(
-        key="program",
-        translation_key="program_da",
-        models=[DeviceType.DA],
-    ),
-    MideaSensorEntityDescription(
-        key="program",
-        translation_key="program_db",
-        models=[DeviceType.DB],
-    ),
-    MideaSensorEntityDescription(
-        key="program",
-        translation_key="program_dc",
-        models=[DeviceType.DC],
-    ),
-    MideaSensorEntityDescription(
         key="dry_temperature",
         translation_key="dry_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -560,13 +516,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     MideaSensorEntityDescription(
         key="dryness_level",
         translation_key="dryness_level",
-    ),
-    MideaSensorEntityDescription(
-        key="heating_time_remaining",
-        translation_key="heating_time_remaining",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
         key="heating_power",
@@ -594,20 +543,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         translation_key="bathing_leaving_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    MideaSensorEntityDescription(
-        key="keep_warm_remaining",
-        translation_key="keep_warm_remaining_time",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    MideaSensorEntityDescription(
-        key="working_time",
-        translation_key="working_time",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
