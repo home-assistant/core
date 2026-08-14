@@ -1,37 +1,13 @@
 {
   "entity": {
     "sensor": {
-      "ai_switch": {
-        "default": "mdi:toggle-switch"
-      },
-      "bottom_compartment_status": {
-        "default": "mdi:information"
-      },
-      "bright_level": {
-        "default": "mdi:star-four-points"
-      },
-      "dehydration_speed": {
-        "default": "mdi:speedometer"
-      },
-      "detergent": {
-        "default": "mdi:spray-bottle"
-      },
-      "dirty_degree": {
-        "default": "mdi:water-outline"
-      },
-      "door_warn": {
+      "error_ed": {
         "default": "mdi:alert-box"
-      },
-      "dryness_level": {
-        "default": "mdi:spirit-level"
-      },
-      "error_code": {
-        "default": "mdi:alert-box"
-      },
-      "fan_level": {
-        "default": "mdi:fan"
       },
       "filter_life": {
+        "default": "mdi:toilet"
+      },
+      "filter_life_level": {
         "default": "mdi:toilet"
       },
       "hcho": {
@@ -43,15 +19,6 @@
       "indoor_fan_speed": {
         "default": "mdi:fan"
       },
-      "intensity": {
-        "default": "mdi:waves-arrow-up"
-      },
-      "material": {
-        "default": "mdi:material-design"
-      },
-      "middle_compartment_status": {
-        "default": "mdi:information"
-      },
       "mode": {
         "default": "mdi:auto-mode"
       },
@@ -61,65 +28,11 @@
       "pmv": {
         "default": "mdi:thermometer-lines"
       },
-      "program_da": {
-        "default": "mdi:progress-wrench"
-      },
-      "program_db": {
-        "default": "mdi:washing-machine"
-      },
-      "program_dc": {
-        "default": "mdi:washing-machine"
-      },
-      "progress": {
-        "default": "mdi:rotate-360"
-      },
-      "rinse_count": {
-        "default": "mdi:water-sync"
-      },
-      "rinse_level": {
-        "default": "mdi:hydraulic-oil-level"
-      },
-      "salt_setting": {
-        "default": "mdi:shaker-outline"
-      },
-      "softener": {
-        "default": "mdi:tshirt-crew"
-      },
-      "softwater_level": {
-        "default": "mdi:shaker-outline"
-      },
-      "stains": {
-        "default": "mdi:water-outline"
-      },
-      "status": {
-        "default": "mdi:information"
-      },
-      "storage_remaining": {
-        "default": "mdi:progress-clock"
-      },
       "tank_level": {
         "default": "mdi:cup-water"
       },
       "target_indoor_fan_speed": {
         "default": "mdi:fan-clock"
-      },
-      "top_compartment_status": {
-        "default": "mdi:information"
-      },
-      "variable_mode": {
-        "default": "mdi:nut"
-      },
-      "wash_level": {
-        "default": "mdi:hydraulic-oil-level"
-      },
-      "wash_strength": {
-        "default": "mdi:network-strength-4-cog"
-      },
-      "water_box": {
-        "default": "mdi:cup-water"
-      },
-      "working_mode": {
-        "default": "mdi:dishwasher"
       }
     }
   }
