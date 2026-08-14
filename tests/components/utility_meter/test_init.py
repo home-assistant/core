@@ -600,15 +600,12 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     sensor_device = device_registry.async_get(sensor_device.id)
     assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
 
-    # Remove the source sensor's config entry from the device, this removes the
-    # source sensor
+    # Remove the source device, this removes the source sensor
     with patch(
         "homeassistant.components.utility_meter.async_unload_entry",
         wraps=utility_meter.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            sensor_device.id, remove_config_entry_id=sensor_config_entry.entry_id
-        )
+        device_registry.async_remove_device(sensor_device.id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()

@@ -318,7 +318,7 @@ async def test_update_device(
     await hass.async_block_till_done()
     assert len(device_registry.devices) == 1
 
-    device = device_registry.async_get_device(
+    [device] = device_registry.async_get_devices(
         identifiers={("bridgeid", "0123")},
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
     )
@@ -370,7 +370,7 @@ async def test_update_device_labels(
     await hass.async_block_till_done()
     assert len(device_registry.devices) == 1
 
-    device = device_registry.async_get_device(
+    [device] = device_registry.async_get_devices(
         identifiers={("bridgeid", "0123")},
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
     )
