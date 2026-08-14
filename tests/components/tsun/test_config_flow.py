@@ -63,11 +63,48 @@ async def test_manual_logger_sn_fallback(
 
 
 @pytest.mark.parametrize(
+    "metadata_error",
+    [
+        pytest.param(
+            TsunConnectionError("status page unavailable"), id="unavailable"
+        ),
+        pytest.param(TsunProtocolError("invalid status page"), id="invalid"),
+    ],
+)
+async def test_manual_logger_sn_bypasses_metadata_error(
+    hass: HomeAssistant,
+    mock_tsun_client: AsyncMock,
+    metadata_error: Exception,
+) -> None:
+    """Test manual SN input when metadata discovery raises an error."""
+    config_flow.async_read_logger_metadata.side_effect = metadata_error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_detect_logger_sn"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**USER_INPUT, CONF_LOGGER_SN: LOGGER_SN}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
-        (TsunConnectionError("cannot connect"), "cannot_connect"),
-        (TsunProtocolError("invalid response"), "invalid_response"),
-        (RuntimeError("unexpected"), "unknown"),
+        pytest.param(
+            TsunConnectionError("cannot connect"), "cannot_connect", id="connection"
+        ),
+        pytest.param(
+            TsunProtocolError("invalid response"),
+            "invalid_response",
+            id="protocol",
+        ),
+        pytest.param(RuntimeError("unexpected"), "unknown", id="unexpected"),
     ],
 )
 async def test_user_flow_errors(
