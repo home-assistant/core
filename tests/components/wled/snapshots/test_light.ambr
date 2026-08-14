@@ -425,7 +425,6 @@
         175,
         106,
       ),
-      <LightEntityStateAttribute.RGBW_COLOR: 'rgbw_color'>: None,
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -2704,7 +2703,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -2758,7 +2757,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -2819,7 +2817,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -2847,7 +2844,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -2856,7 +2852,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -2866,7 +2861,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -2874,9 +2868,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -2893,9 +2884,9 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'max_color_temp_kelvin': 6535,
-      'min_color_temp_kelvin': 2000,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGBWW: 'rgbww'>,
       ]),
@@ -2933,11 +2924,11 @@
 # name: test_snapshots[rgbww][light.wled_rgbww_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.RGBWW: 'rgbww'>,
-      'color_temp_kelvin': None,
-      'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGBWW: 'rgbww'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -2991,7 +2982,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -3052,7 +3042,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -3080,7 +3069,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -3089,7 +3077,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -3099,7 +3086,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -3107,9 +3093,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -3126,31 +3109,31 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'friendly_name': 'WLED RGBWW Light',
-      'hs_color': tuple(
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGBWW Light',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         6.419,
         84.314,
       ),
-      'max_color_temp_kelvin': 6535,
-      'min_color_temp_kelvin': 2000,
-      'rgb_color': tuple(
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         63,
         40,
       ),
-      'rgbww_color': tuple(
+      <LightEntityStateAttribute.RGBWW_COLOR: 'rgbww_color'>: tuple(
         255,
         0,
         0,
         139,
         139,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGBWW: 'rgbww'>,
       ]),
-      'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 36>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.663,
         0.312,
       ),
@@ -3170,7 +3153,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -3224,7 +3207,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -3285,7 +3267,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -3313,7 +3294,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -3322,7 +3302,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -3332,7 +3311,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -3340,9 +3318,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -3359,9 +3334,9 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'max_color_temp_kelvin': 6535,
-      'min_color_temp_kelvin': 2000,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGB: 'rgb'>,
       ]),
@@ -3399,11 +3374,11 @@
 # name: test_snapshots[rgb_cct][light.wled_rgb_cct_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'color_temp_kelvin': None,
-      'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -3457,7 +3432,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -3518,7 +3492,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -3546,7 +3519,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -3555,7 +3527,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -3565,7 +3536,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -3573,9 +3543,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -3592,24 +3559,24 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'friendly_name': 'WLED RGB CCT Light',
-      'hs_color': tuple(
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB CCT Light',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         0.0,
         100.0,
       ),
-      'max_color_temp_kelvin': 6535,
-      'min_color_temp_kelvin': 2000,
-      'rgb_color': tuple(
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         0,
         0,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 36>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.701,
         0.299,
       ),
