@@ -9,7 +9,7 @@ import roborock
 from roborock import RoborockCommand, RoborockException
 from roborock.data import RoborockDockTypeCode, RoborockStateCode
 from roborock.device_features import RoborockDockFeatures
-from roborock.roborock_message import RoborockZeoProtocol
+from roborock.roborock_message import RoborockDataProtocol, RoborockZeoProtocol
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
@@ -95,6 +95,7 @@ async def test_update_success(
 
 
 DOCK_SWITCH_ENTITY_IDS = {
+    "switch.roborock_s7_maxv_dock_empty_dustbin",
     "switch.roborock_s7_maxv_dock_mop_wash",
     "switch.roborock_s7_maxv_dock_mop_drying",
 }
@@ -103,6 +104,18 @@ DOCK_SWITCH_ENTITY_IDS = {
 @pytest.mark.parametrize(
     ("entity_id", "service", "expected_command", "expected_params"),
     [
+        (
+            "switch.roborock_s7_maxv_dock_empty_dustbin",
+            SERVICE_TURN_ON,
+            RoborockCommand.APP_START_COLLECT_DUST,
+            None,
+        ),
+        (
+            "switch.roborock_s7_maxv_dock_empty_dustbin",
+            SERVICE_TURN_OFF,
+            RoborockCommand.APP_STOP_COLLECT_DUST,
+            None,
+        ),
         (
             "switch.roborock_s7_maxv_dock_mop_wash",
             SERVICE_TURN_ON,
@@ -194,6 +207,34 @@ async def test_dock_switch_reflects_status(
     assert hass.states.get(entity_id).state == "on"
 
 
+async def test_dock_switch_follows_pushed_dps(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test a dock switch follows the state pushed over MQTT, without polling.
+
+    Emptying only lasts a few seconds, so the switch relies on the device
+    pushing the state rather than on the next refresh.
+    """
+    entity_id = "switch.roborock_s7_maxv_dock_empty_dustbin"
+    assert hass.states.get(entity_id).state == "off"
+
+    fake_vacuum.v1_properties.status.update_from_dps(
+        {RoborockDataProtocol.STATE: RoborockStateCode.emptying_the_bin}
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "on"
+
+    fake_vacuum.v1_properties.status.update_from_dps(
+        {RoborockDataProtocol.STATE: RoborockStateCode.charging}
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "off"
+
+
 async def test_mop_wash_ignores_going_to_wash_state(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -266,7 +307,11 @@ def dock_type(request: pytest.FixtureRequest, fake_vacuum: FakeDevice) -> None:
 @pytest.mark.parametrize(
     ("dock_type", "expected_entity_ids"),
     [
-        pytest.param(RoborockDockTypeCode.o1_dock, set(), id="collect-only"),
+        pytest.param(
+            RoborockDockTypeCode.o1_dock,
+            {"switch.roborock_s7_maxv_dock_empty_dustbin"},
+            id="collect-only",
+        ),
         pytest.param(
             RoborockDockTypeCode.o2_dock,
             {"switch.roborock_s7_maxv_dock_mop_wash"},
@@ -274,7 +319,10 @@ def dock_type(request: pytest.FixtureRequest, fake_vacuum: FakeDevice) -> None:
         ),
         pytest.param(
             RoborockDockTypeCode.o3_dock,
-            {"switch.roborock_s7_maxv_dock_mop_wash"},
+            {
+                "switch.roborock_s7_maxv_dock_empty_dustbin",
+                "switch.roborock_s7_maxv_dock_mop_wash",
+            },
             id="collect-and-wash-no-dry",
         ),
         pytest.param(

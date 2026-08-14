@@ -140,6 +140,9 @@
       "dust_collection": {
         "default": "mdi:delete"
       },
+      "empty_dustbin": {
+        "default": "mdi:delete-empty"
+      },
       "mop_drying": {
         "default": "mdi:heat-wave"
       },

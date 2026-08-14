@@ -623,6 +623,9 @@
       "dust_collection": {
         "name": "Dust collection"
       },
+      "empty_dustbin": {
+        "name": "[%key:component::roborock::entity::button::empty_dustbin::name%]"
+      },
       "mop_drying": {
         "name": "Mop drying"
       },
