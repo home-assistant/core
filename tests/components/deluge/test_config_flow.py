@@ -57,7 +57,7 @@ def deluge_setup_fixture():
 
 async def test_flow_user(hass: HomeAssistant, api) -> None:
     """Test user initialized flow."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=CONF_DATA,

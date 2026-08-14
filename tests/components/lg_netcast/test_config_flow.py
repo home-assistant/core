@@ -38,7 +38,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 async def test_user_invalid_host(hass: HomeAssistant) -> None:
     """Test that errors are shown when the host is invalid."""
     with _patch_lg_netcast():
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "invalid/host"}
         )
 
@@ -48,7 +48,7 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
 async def test_manual_host(hass: HomeAssistant) -> None:
     """Test manual host configuration."""
     with _patch_lg_netcast():
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
         )
 
@@ -80,7 +80,7 @@ async def test_manual_host(hass: HomeAssistant) -> None:
 async def test_manual_host_no_connection_during_authorize(hass: HomeAssistant) -> None:
     """Test manual host configuration."""
     with _patch_lg_netcast(fail_connection=True):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
         )
 
@@ -93,7 +93,7 @@ async def test_manual_host_invalid_details_during_authorize(
 ) -> None:
     """Test manual host configuration."""
     with _patch_lg_netcast(invalid_details=True):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
         )
 
@@ -104,7 +104,7 @@ async def test_manual_host_invalid_details_during_authorize(
 async def test_manual_host_unsuccessful_details_response(hass: HomeAssistant) -> None:
     """Test manual host configuration."""
     with _patch_lg_netcast(always_404=True):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
         )
 
@@ -115,7 +115,7 @@ async def test_manual_host_unsuccessful_details_response(hass: HomeAssistant) ->
 async def test_manual_host_no_unique_id_response(hass: HomeAssistant) -> None:
     """Test manual host configuration."""
     with _patch_lg_netcast(no_unique_id=True):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
         )
 
@@ -126,7 +126,7 @@ async def test_manual_host_no_unique_id_response(hass: HomeAssistant) -> None:
 async def test_invalid_session_id(hass: HomeAssistant) -> None:
     """Test Invalid Session ID."""
     with _patch_lg_netcast(session_error=True):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
         )
 
@@ -165,7 +165,7 @@ async def test_display_access_token_aborted(hass: HomeAssistant) -> None:
         ) as mock_interval,
     ):
         mock_interval.side_effect = _async_track_time_interval
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
         )
 

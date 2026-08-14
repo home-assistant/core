@@ -109,7 +109,7 @@ async def test_duplicate_error(
     hass: HomeAssistant, config_entry, setup_config_entry
 ) -> None:
     """Test that the proper error is shown when adding a duplicate config entry."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data={"api_key": TEST_API_KEY}
     )
     assert result["type"] is FlowResultType.ABORT

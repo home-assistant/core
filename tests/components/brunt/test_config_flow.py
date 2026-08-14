@@ -21,7 +21,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
     assert result["type"] is FlowResultType.FORM
@@ -56,7 +56,7 @@ async def test_form_duplicate_login(hass: HomeAssistant) -> None:
         "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
         return_value=None,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG
         )
         assert result["type"] is FlowResultType.ABORT
@@ -78,7 +78,7 @@ async def test_form_error(hass: HomeAssistant, side_effect, error_message) -> No
         "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
         side_effect=side_effect,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG
         )
 

@@ -143,7 +143,7 @@ async def start_config_flow(hass: HomeAssistant, mocked_cloud: MagicMock):
         "homeassistant.components.crownstone.config_flow.CrownstoneCloud",
         return_value=mocked_cloud,
     ):
-        return await hass.config_entries.flow.async_init(
+        return await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": "user"}, data=mocked_login_input
         )
 

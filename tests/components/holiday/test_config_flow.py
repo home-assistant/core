@@ -112,7 +112,7 @@ async def test_single_combination_country_province(hass: HomeAssistant) -> None:
     MockConfigEntry(domain=DOMAIN, data=data_al).add_to_hass(hass)
 
     # Test for country without subdivisions
-    result_al = await hass.config_entries.flow.async_init(
+    result_al = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=data_al,
@@ -121,7 +121,7 @@ async def test_single_combination_country_province(hass: HomeAssistant) -> None:
     assert result_al["reason"] == "already_configured"
 
     # Test for country with subdivisions
-    result_de_step1 = await hass.config_entries.flow.async_init(
+    result_de_step1 = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=data_de,

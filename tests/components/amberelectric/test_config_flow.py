@@ -160,7 +160,7 @@ async def test_single_pending_site(
     assert initial_result.get("step_id") == "user"
 
     # Test filling in API key
-    enter_api_key_result = await hass.config_entries.flow.async_init(
+    enter_api_key_result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_API_TOKEN: API_KEY},
@@ -191,7 +191,7 @@ async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
     assert initial_result.get("step_id") == "user"
 
     # Test filling in API key
-    enter_api_key_result = await hass.config_entries.flow.async_init(
+    enter_api_key_result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_API_TOKEN: API_KEY},
@@ -217,7 +217,7 @@ async def test_single_closed_site_no_closed_date(
     hass: HomeAssistant, single_site_closed_no_close_date_api: Mock
 ) -> None:
     """Test single closed site with no closed date is filtered out."""
-    enter_api_key_result = await hass.config_entries.flow.async_init(
+    enter_api_key_result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_API_TOKEN: API_KEY},
@@ -238,7 +238,7 @@ async def test_single_site_rejoin(
     assert initial_result.get("step_id") == "user"
 
     # Test filling in API key
-    enter_api_key_result = await hass.config_entries.flow.async_init(
+    enter_api_key_result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_API_TOKEN: API_KEY},
@@ -262,7 +262,7 @@ async def test_single_site_rejoin(
 
 async def test_no_site(hass: HomeAssistant, no_site_api: Mock) -> None:
     """Test no site."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_API_TOKEN: "psk_123456789"},
@@ -283,7 +283,7 @@ async def test_invalid_key(hass: HomeAssistant, invalid_key_api: Mock) -> None:
     assert result.get("step_id") == "user"
 
     # Test filling in API key
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_API_TOKEN: "psk_123456789"},
@@ -303,7 +303,7 @@ async def test_unknown_error(hass: HomeAssistant, api_error: Mock) -> None:
     assert result.get("step_id") == "user"
 
     # Test filling in API key
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_API_TOKEN: "psk_123456789"},

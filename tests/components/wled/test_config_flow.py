@@ -226,7 +226,7 @@ async def test_form_submission_errors(
 ) -> None:
     """Test errors during form submission."""
     mock_wled.update.side_effect = exception
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=CONFIG,
@@ -296,7 +296,7 @@ async def test_user_device_exists_abort(
     """Test we abort zeroconf flow if WLED device already configured."""
     mock_wled.update.return_value.info.mac_address = device_mac
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: "192.168.1.123"},

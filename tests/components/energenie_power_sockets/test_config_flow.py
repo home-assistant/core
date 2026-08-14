@@ -46,7 +46,7 @@ async def test_user_flow_already_exists(
     """Test the flow when device has been already configured."""
     valid_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_DEVICE_API_ID: valid_config_entry.data[CONF_DEVICE_API_ID]},
@@ -67,7 +67,7 @@ async def test_user_flow_no_new_device(
     """Test the flow when the found device has been already included."""
     valid_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=None,

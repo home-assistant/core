@@ -63,7 +63,7 @@ async def test_create_entry(
 
 async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) -> None:
     """Test that errors are shown when duplicate entries are added."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config
     )
     assert result["type"] is FlowResultType.ABORT

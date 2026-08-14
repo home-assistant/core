@@ -154,7 +154,7 @@ async def test_form_wrong_host(
 ) -> None:
     """Test we handle wrong host errors."""
     mock_is_valid_host.return_value = False
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={

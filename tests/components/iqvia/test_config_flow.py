@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResultType
 @pytest.mark.usefixtures("config_entry")
 async def test_duplicate_error(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that errors are shown when duplicates are added."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=config
     )
     assert result["type"] is FlowResultType.ABORT
@@ -22,7 +22,7 @@ async def test_duplicate_error(hass: HomeAssistant, config: dict[str, Any]) -> N
 
 async def test_invalid_zip_code(hass: HomeAssistant) -> None:
     """Test that an invalid ZIP code key throws an error."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_ZIP_CODE: "bad"}
     )
     assert result["type"] is FlowResultType.FORM
@@ -41,7 +41,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_iqvia")
 async def test_step_user(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that the user step works (without MFA)."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=config
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY

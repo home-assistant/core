@@ -99,7 +99,7 @@ async def test_user_flow_all_fields(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
 async def test_speaker_options_flow(hass: HomeAssistant) -> None:
     """Test options config flow for speaker."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_SPEAKER_CONFIG
     )
     await hass.async_block_till_done()
@@ -124,7 +124,7 @@ async def test_speaker_options_flow(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
 async def test_tv_options_flow_no_apps(hass: HomeAssistant) -> None:
     """Test options config flow for TV without providing apps option."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
     await hass.async_block_till_done()
@@ -152,7 +152,7 @@ async def test_tv_options_flow_no_apps(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
 async def test_tv_options_flow_apps_fallback(hass: HomeAssistant) -> None:
     """Test options config flow falls back to default APPS when coordinator absent."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
     await hass.async_block_till_done()
@@ -182,7 +182,7 @@ async def test_tv_options_flow_apps_fallback(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
 async def test_tv_options_flow_with_apps(hass: HomeAssistant) -> None:
     """Test options config flow for TV with providing apps option."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
     await hass.async_block_till_done()
@@ -211,7 +211,7 @@ async def test_tv_options_flow_with_apps(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
 async def test_tv_options_flow_start_with_volume(hass: HomeAssistant) -> None:
     """Test options flow for TV with apps option after volume step."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
     await hass.async_block_till_done()
@@ -260,7 +260,7 @@ async def test_user_host_already_configured(hass: HomeAssistant) -> None:
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
     fail_entry[CONF_NAME] = "newtestname"
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
     )
 
@@ -281,7 +281,7 @@ async def test_user_serial_number_already_exists(hass: HomeAssistant) -> None:
     fail_entry[CONF_HOST] = HOST2
     fail_entry[CONF_NAME] = NAME2
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
     )
 
@@ -292,7 +292,7 @@ async def test_user_serial_number_already_exists(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("vizio_no_unique_id")
 async def test_user_error_on_could_not_connect(hass: HomeAssistant) -> None:
     """Test with could_not_connect during user setup due to no connectivity."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
 
@@ -305,7 +305,7 @@ async def test_user_error_on_could_not_connect_invalid_token(
     hass: HomeAssistant,
 ) -> None:
     """Test with could_not_connect during user setup due to invalid token."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
 
@@ -318,7 +318,7 @@ async def test_user_error_on_could_not_connect_invalid_token(
 )
 async def test_user_tv_pairing_no_apps(hass: HomeAssistant) -> None:
     """Test pairing flow when no access token for TV and no apps configured."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_CONFIG_NO_TOKEN
     )
 
@@ -347,7 +347,7 @@ async def test_user_tv_pairing_no_apps(hass: HomeAssistant) -> None:
 )
 async def test_user_start_pairing_failure(hass: HomeAssistant) -> None:
     """Test failure to start pairing from user config flow."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_CONFIG_NO_TOKEN
     )
 
@@ -361,7 +361,7 @@ async def test_user_start_pairing_failure(hass: HomeAssistant) -> None:
 )
 async def test_user_invalid_pin(hass: HomeAssistant) -> None:
     """Test failure to complete pairing from user config flow."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_CONFIG_NO_TOKEN
     )
 
@@ -388,7 +388,7 @@ async def test_user_ignore(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_SPEAKER_CONFIG
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -625,7 +625,7 @@ async def test_user_flow_resolves_host_without_port(hass: HomeAssistant) -> None
         "homeassistant.components.vizio.config_flow.async_resolve_host",
         AsyncMock(return_value=HOST),
     ) as mock_resolve:
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={**MOCK_SPEAKER_CONFIG, CONF_HOST: PORTLESS_HOST},
@@ -643,7 +643,7 @@ async def test_user_flow_unresolvable_host_errors(hass: HomeAssistant) -> None:
         "homeassistant.components.vizio.config_flow.async_resolve_host",
         AsyncMock(side_effect=VizioConnectionError("no SmartCast API")),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={**MOCK_SPEAKER_CONFIG, CONF_HOST: PORTLESS_HOST},

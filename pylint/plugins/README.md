@@ -105,6 +105,7 @@ Every check has a code following the
 | `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
 | `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
 | `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
+| `R7405` | [`home-assistant-tests-user-flow-no-data`](#r7405-home-assistant-tests-user-flow-no-data) | User config flow init in tests must not pass `data` |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -773,6 +774,39 @@ Only aliases imported from `homeassistant.helpers` are tracked. The
 checker is scoped to test modules; `conftest.py` files (where the
 fixtures themselves are defined) and `tests.helpers` (which exercises the
 registry helpers directly) are exempt.
+
+
+## `home_assistant_tests_user_flow_no_data` checker
+
+Detects tests that pass a `data` argument when initializing a user config
+flow. In production a user flow is always started without data — only
+discovery flows (zeroconf, dhcp, ssdp, ...) receive `data`. Passing `data`
+to a user flow init therefore exercises a code path that cannot happen in
+reality.
+
+### `R7405`: `home-assistant-tests-user-flow-no-data`
+
+A `hass.config_entries.flow.async_init(...)` or
+`hass.config_entries.subentries.async_init(...)` call passes a `data`
+keyword argument while its `context` sets the source to the user source.
+The user source is recognized as `SOURCE_USER`, `config_entries.SOURCE_USER`,
+or the literal `"user"`, and the `context` may be a dict literal or a
+`ConfigFlowContext(source=...)` call:
+
+```python
+result = await hass.config_entries.flow.async_init(
+    DOMAIN,
+    context={"source": SOURCE_USER},
+    data={CONF_HOST: "127.0.0.1"},  # <-- flagged
+)
+```
+
+Only the config-entry flow managers (`config_entries.flow` and
+`config_entries.subentries`) are checked, so unrelated `async_init` methods
+are not flagged. Discovery flows (e.g. `SOURCE_ZEROCONF`, `SOURCE_DHCP`),
+dynamic source values (a variable rather than a known user source), and user
+flows without
+`data` are not flagged. The checker is scoped to test modules.
 
 
 ## `home_assistant_test_determinism` checker

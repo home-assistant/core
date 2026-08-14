@@ -68,7 +68,7 @@ async def test_connection_error(
     mock_ipp_config_flow.printer.side_effect = IPPConnectionError
 
     user_input = MOCK_USER_INPUT.copy()
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=user_input,
@@ -121,7 +121,7 @@ async def test_user_connection_upgrade_required(
     mock_ipp_config_flow.printer.side_effect = IPPConnectionUpgradeRequired
 
     user_input = MOCK_USER_INPUT.copy()
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=user_input,
@@ -158,7 +158,7 @@ async def test_user_parse_error(
     mock_ipp_config_flow.printer.side_effect = IPPParseError
 
     user_input = MOCK_USER_INPUT.copy()
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=user_input,
@@ -194,7 +194,7 @@ async def test_user_ipp_error(
     mock_ipp_config_flow.printer.side_effect = IPPError
 
     user_input = MOCK_USER_INPUT.copy()
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=user_input,
@@ -230,7 +230,7 @@ async def test_user_ipp_version_error(
     mock_ipp_config_flow.printer.side_effect = IPPVersionNotSupportedError
 
     user_input = {**MOCK_USER_INPUT}
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=user_input,
@@ -267,7 +267,7 @@ async def test_user_device_exists_abort(
     mock_config_entry.add_to_hass(hass)
 
     user_input = MOCK_USER_INPUT.copy()
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=user_input,

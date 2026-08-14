@@ -58,7 +58,7 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
 
     MockConfigEntry(domain=DOMAIN, unique_id="test", data=conf).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
     )
 

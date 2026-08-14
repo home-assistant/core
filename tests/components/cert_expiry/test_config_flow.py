@@ -71,7 +71,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         unique_id=f"{HOST}:{PORT}",
     ).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: HOST, CONF_PORT: PORT},

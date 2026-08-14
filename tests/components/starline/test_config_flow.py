@@ -86,7 +86,7 @@ async def test_step_auth_app_code_falls(hass: HomeAssistant) -> None:
         mock.get(
             "https://id.starline.ru/apiV3/application/getCode/", text='{"state": 0}}'
         )
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
@@ -109,7 +109,7 @@ async def test_step_auth_app_token_falls(hass: HomeAssistant) -> None:
         mock.get(
             "https://id.starline.ru/apiV3/application/getToken/", text='{"state": 0}'
         )
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={

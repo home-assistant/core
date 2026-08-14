@@ -23,7 +23,7 @@ from .const import BASE_CONFIG
 
 async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
     assert result["type"] is data_entry_flow.FlowResultType.FORM
@@ -56,7 +56,7 @@ async def test_config_flow_errors(
     mock_execute_query: MagicMock,
 ) -> None:
     """Test we handle connection KustoServiceError."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=None,

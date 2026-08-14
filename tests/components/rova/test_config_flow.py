@@ -31,7 +31,7 @@ async def test_user(hass: HomeAssistant, mock_rova: MagicMock) -> None:
     assert result.get("step_id") == "user"
 
     # test with all information provided
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -105,7 +105,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         },
     ).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={

@@ -79,7 +79,7 @@ async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -
         "homeassistant.components.blue_current.config_flow.Client.validate_api_token",
         side_effect=error,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={"api_token": "123"},

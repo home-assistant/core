@@ -50,7 +50,7 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     # test with all provided
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
@@ -76,7 +76,7 @@ async def internal_test_link(hass: HomeAssistant) -> None:
         "homeassistant.components.freebox.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
@@ -106,7 +106,7 @@ async def test_link_bridge_mode_error(
     hass: HomeAssistant, mock_router_bridge_mode_error: Mock
 ) -> None:
     """Test linking for a freebox in bridge mode, unknown error received from API."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
@@ -125,7 +125,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     # Should fail, same MOCK_HOST (flow)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
@@ -136,7 +136,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
 
 async def test_on_link_failed(hass: HomeAssistant) -> None:
     """Test when we have errors during linking the router."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},

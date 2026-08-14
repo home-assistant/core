@@ -129,7 +129,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
             side_effect=InvalidMethod,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
@@ -176,7 +176,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
     )
 
@@ -191,7 +191,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.validate",
         side_effect=AirzoneError,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 

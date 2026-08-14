@@ -24,7 +24,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 async def test_flow_works(hass: HomeAssistant) -> None:
     """Test that config flow works."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={"name": "Emulated Roku Test", "listen_port": 8060},
@@ -41,7 +41,7 @@ async def test_flow_already_registered_entry(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={"name": "Emulated Roku Test", "listen_port": 8062}
     ).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={"name": "Emulated Roku Test", "listen_port": 8062},

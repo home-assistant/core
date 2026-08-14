@@ -70,7 +70,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test user initialized flow with invalid authentication."""
     with patch_config_flow_tautulli(AsyncMock()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliAuthenticationException
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
     assert result["type"] is FlowResultType.FORM
@@ -124,7 +124,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch_config_flow_tautulli(AsyncMock()):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=CONF_DATA,

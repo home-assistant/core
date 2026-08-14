@@ -66,7 +66,7 @@ async def test_user(hass: HomeAssistant, mock_daikin) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST},
@@ -80,7 +80,7 @@ async def test_user(hass: HomeAssistant, mock_daikin) -> None:
 async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
     """Test we abort if Daikin is already setup."""
     MockConfigEntry(domain="daikin", unique_id=MAC).add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, KEY_MAC: MAC},
@@ -105,7 +105,7 @@ async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) 
     """Test device abort."""
     mock_daikin.side_effect = s_effect
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, KEY_MAC: MAC},
@@ -117,7 +117,7 @@ async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) 
 
 async def test_api_password_abort(hass: HomeAssistant) -> None:
     """Test device abort."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: HOST, CONF_API_KEY: "aa", CONF_PASSWORD: "aa"},
@@ -158,7 +158,7 @@ async def test_discovery_zeroconf(
     assert result["step_id"] == "user"
 
     MockConfigEntry(domain="daikin", unique_id=unique_id).add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER, "unique_id": unique_id},
         data={CONF_HOST: HOST},

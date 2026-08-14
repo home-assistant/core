@@ -85,7 +85,7 @@ async def test_form_fail(
 ) -> None:
     """Test to handle exceptions."""
     discovergy.meters.side_effect = error
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={

@@ -135,7 +135,7 @@ async def test_form_duplicated_id(
         )
         entry.add_to_hass(hass)
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
@@ -152,7 +152,7 @@ async def test_form_auth_error(hass: HomeAssistant) -> None:
         "homeassistant.components.aemet.config_flow.AEMET",
         return_value=mocked_aemet,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 

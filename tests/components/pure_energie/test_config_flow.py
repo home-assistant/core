@@ -83,7 +83,7 @@ async def test_connection_error(
 ) -> None:
     """Test we show user form on Pure Energie connection error."""
     mock_pure_energie_config_flow.device.side_effect = GridNetConnectionError
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_HOST: "example.com"},

@@ -54,7 +54,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
     )
 
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
 
@@ -65,7 +65,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
 async def test_flow_user_cannot_connect(hass: HomeAssistant, skybell_mock) -> None:
     """Test user initialized flow with unreachable server."""
     skybell_mock.async_initialize.side_effect = exceptions.SkybellException(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
     assert result["type"] is FlowResultType.FORM
@@ -78,7 +78,7 @@ async def test_invalid_credentials(hass: HomeAssistant, skybell_mock) -> None:
     skybell_mock.async_initialize.side_effect = (
         exceptions.SkybellAuthenticationException(hass)
     )
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
 
@@ -90,7 +90,7 @@ async def test_invalid_credentials(hass: HomeAssistant, skybell_mock) -> None:
 async def test_flow_user_unknown_error(hass: HomeAssistant, skybell_mock) -> None:
     """Test user initialized flow with unreachable server."""
     skybell_mock.async_initialize.side_effect = Exception
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
     )
     assert result["type"] is FlowResultType.FORM

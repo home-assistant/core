@@ -29,7 +29,7 @@ async def test_user(hass: HomeAssistant) -> None:
 async def test_user_confirm(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data={}
     )
 

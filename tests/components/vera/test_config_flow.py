@@ -72,7 +72,7 @@ async def test_async_step_finish_error(hass: HomeAssistant) -> None:
         controller.refresh_data = MagicMock(side_effect=RequestException())
         vera_controller_class_mock.return_value = controller
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_CONTROLLER: "http://127.0.0.1:123/"},

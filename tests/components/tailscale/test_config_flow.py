@@ -104,7 +104,7 @@ async def test_connection_error(
     """Test API connection error."""
     mock_tailscale_config_flow.devices.side_effect = TailscaleConnectionError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={

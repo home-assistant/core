@@ -18,7 +18,7 @@ DUNEHD_STATE = {"protocol_version": "4", "player_state": "navigator"}
 
 async def test_user_invalid_host(hass: HomeAssistant) -> None:
     """Test that errors are shown when the host is invalid."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "invalid/host"}
     )
 
@@ -33,7 +33,7 @@ async def test_user_very_long_host(hass: HomeAssistant) -> None:
         "host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_"
         "host_very_long_host_very_long_host"
     )
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: long_host}
     )
 
@@ -43,7 +43,7 @@ async def test_user_very_long_host(hass: HomeAssistant) -> None:
 async def test_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test that errors are shown when cannot connect to the host."""
     with patch("pdunehd.DuneHDPlayer.update_state", return_value={}):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_IP
         )
 
@@ -60,7 +60,7 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_HOSTNAME
         )
 
@@ -73,7 +73,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         patch("homeassistant.components.dunehd.async_setup_entry"),
         patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_HOSTNAME
         )
 
@@ -88,7 +88,7 @@ async def test_create_entry_with_ipv6_address(hass: HomeAssistant) -> None:
         patch("homeassistant.components.dunehd.async_setup_entry"),
         patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_HOST: "2001:db8::1428:57ab"},

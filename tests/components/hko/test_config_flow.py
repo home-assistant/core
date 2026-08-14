@@ -36,7 +36,7 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test user config flow without connection to the API."""
     with patch("homeassistant.components.hko.config_flow.HKO.weather") as client_mock:
         client_mock.side_effect = HKOError()
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_LOCATION: DEFAULT_LOCATION},
@@ -47,7 +47,7 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
 
         client_mock.side_effect = None
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_LOCATION: DEFAULT_LOCATION},
@@ -62,7 +62,7 @@ async def test_config_flow_timeout(hass: HomeAssistant) -> None:
     """Test user config flow with timedout connection to the API."""
     with patch("homeassistant.components.hko.config_flow.HKO.weather") as client_mock:
         client_mock.side_effect = TimeoutError()
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_LOCATION: DEFAULT_LOCATION},
@@ -73,7 +73,7 @@ async def test_config_flow_timeout(hass: HomeAssistant) -> None:
 
         client_mock.side_effect = None
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_LOCATION: DEFAULT_LOCATION},

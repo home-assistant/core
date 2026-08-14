@@ -170,7 +170,7 @@ async def test_lat_lon_not_specified(hass: HomeAssistant) -> None:
         fake_config = dict(FAKE_CONFIG)
         del fake_config[CONF_LATITUDE]
         del fake_config[CONF_LONGITUDE]
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=fake_config
         )
         await hass.async_block_till_done()

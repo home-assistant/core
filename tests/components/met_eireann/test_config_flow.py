@@ -63,7 +63,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         CONF_ELEVATION: 0,
     }
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
@@ -85,13 +85,13 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     }
 
     # Create the first entry and assert that it is created successfully
-    result1 = await hass.config_entries.flow.async_init(
+    result1 = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
     assert result1["type"] is FlowResultType.CREATE_ENTRY
 
     # Create the second entry and assert that it is aborted
-    result2 = await hass.config_entries.flow.async_init(
+    result2 = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
     assert result2["type"] is FlowResultType.ABORT

@@ -22,7 +22,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> None:
     """Test that errors are shown when duplicates are added."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config
     )
     assert result["type"] is FlowResultType.ABORT
@@ -32,7 +32,7 @@ async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> Non
 async def test_invalid_password(hass: HomeAssistant, config) -> None:
     """Test that an invalid password throws an error."""
     with patch("regenmaschine.client.Client.load_local", side_effect=RainMachineError):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config
         )
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
@@ -128,7 +128,7 @@ async def test_options_flow(hass: HomeAssistant, config, config_entry) -> None:
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=None,
@@ -139,7 +139,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
 async def test_step_user(hass: HomeAssistant, config, setup_rainmachine) -> None:
     """Test that the user step works."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=config,

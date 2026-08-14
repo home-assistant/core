@@ -44,7 +44,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection to host error."""
     with patch("socket.socket", side_effect=OSError):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "nonexistent.local", CONF_PORT: 1234},

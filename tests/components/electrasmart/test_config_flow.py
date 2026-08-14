@@ -27,7 +27,7 @@ async def test_form(hass: HomeAssistant) -> None:
         return_value=mock_generate_token,
     ):
         # test with required
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=None,
@@ -36,7 +36,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
 
         # test with required
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_PHONE_NUMBER: "0521234567"},
@@ -69,7 +69,7 @@ async def test_one_time_password(hass: HomeAssistant) -> None:
             return_value=[],
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_PHONE_NUMBER: "0521234567", CONF_OTP: "1234"},
@@ -97,7 +97,7 @@ async def test_one_time_password_api_error(hass: HomeAssistant) -> None:
             side_effect=ElectraApiError,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_PHONE_NUMBER: "0521234567"},
@@ -118,7 +118,7 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
         side_effect=ElectraApiError,
     ):
         # test with required
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_PHONE_NUMBER: "0521234567"},
@@ -140,7 +140,7 @@ async def test_invalid_phone_number(hass: HomeAssistant) -> None:
         return_value=mock_invalid_phone_number_response,
     ):
         # test with required
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_PHONE_NUMBER: "0521234567"},
@@ -172,7 +172,7 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
         ),
     ):
         # test with required
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_PHONE_NUMBER: "0521234567", CONF_OTP: "1234"},

@@ -69,7 +69,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
         patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
     ):
         data = CONNECTION_DATA.copy()
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=data
         )
 
@@ -90,7 +90,7 @@ async def test_step_user_existing_host(
 
     with patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"):
         config_data = entry.data.copy()
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_data
         )
 
@@ -117,7 +117,7 @@ async def test_step_user_error(
     ):
         data = CONNECTION_DATA.copy()
         data.update({CONF_HOST: "pchk"})
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=data
         )
 

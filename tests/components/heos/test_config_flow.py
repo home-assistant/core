@@ -61,7 +61,7 @@ async def test_cannot_connect_shows_error_form(
 ) -> None:
     """Test form is shown with error when cannot connect."""
     controller.connect.side_effect = HeosError()
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "127.0.0.1"}
     )
     assert result["type"] is FlowResultType.FORM
@@ -79,7 +79,7 @@ async def test_create_entry_when_host_valid(
     """Test result type is create entry when host is valid."""
     data = {CONF_HOST: "127.0.0.1"}
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=data
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY

@@ -46,7 +46,7 @@ async def test_import_failure(hass: HomeAssistant, side_effect) -> None:
 async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     with patch("asyncsleepiq.AsyncSleepIQ.login"):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
         )
 
@@ -67,7 +67,7 @@ async def test_login_failure(hass: HomeAssistant, side_effect, error) -> None:
         "asyncsleepiq.AsyncSleepIQ.login",
         side_effect=side_effect,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=SLEEPIQ_CONFIG
         )
 

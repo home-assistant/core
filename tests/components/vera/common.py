@@ -140,7 +140,7 @@ class ComponentFactory:
 
         # Setup component through config flow.
         if controller_config.config_source == ConfigSource.CONFIG_FLOW:
-            await hass.config_entries.flow.async_init(
+            await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
                 DOMAIN,
                 context={"source": config_entries.SOURCE_USER},
                 data=component_config,

@@ -4275,7 +4275,7 @@ async def test_finish_flow_aborts_progress(
         assert result["type"] is data_entry_flow.FlowResultType.FORM
 
         # Will finish and cancel other one.
-        result2 = await manager.flow.async_init(
+        result2 = await manager.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             "comp", context={"source": config_entries.SOURCE_USER}, data={}
         )
 

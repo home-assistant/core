@@ -52,7 +52,7 @@ async def test_config_flow_invalid_pat(
     hass: HomeAssistant, mock_invalid_thinq_api: AsyncMock
 ) -> None:
     """Test that an thinq flow should be aborted with an invalid PAT."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
@@ -70,7 +70,7 @@ async def test_config_flow_already_configured(
     """Test that thinq flow should be aborted when already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},

@@ -172,7 +172,7 @@ async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         side_effect=AuthFailedError("Authorization has failed"),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=VALID_CONFIG,
@@ -208,7 +208,7 @@ async def test_form_errors(hass: HomeAssistant, error) -> None:
         "homeassistant.components.nam.NettigoAirMonitor.initialize",
         side_effect=exc,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=VALID_CONFIG,
@@ -225,7 +225,7 @@ async def test_form_abort(hass: HomeAssistant) -> None:
             side_effect=CannotGetMacError("Cannot get MAC address from device"),
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=VALID_CONFIG,

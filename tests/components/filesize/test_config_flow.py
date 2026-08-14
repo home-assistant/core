@@ -49,7 +49,7 @@ async def test_unique_path(
     hass.config.allowlist_external_dirs = {tmp_path}
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_FILE_PATH: test_file}
     )
 

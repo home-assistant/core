@@ -59,7 +59,7 @@ async def test_form_duplicate_error(hass: HomeAssistant) -> None:
         "moehlenhoff_alpha2.Alpha2Base.update_data",
         partialmethod(mock_update_data, hass),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             data={"host": MOCK_BASE_HOST},
             context={"source": config_entries.SOURCE_USER},

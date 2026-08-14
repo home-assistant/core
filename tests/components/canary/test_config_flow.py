@@ -95,7 +95,7 @@ async def test_user_form_single_instance_allowed(
     """Test that configuring more than one instance is rejected."""
     await init_integration(hass, skip_entry_setup=True)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=USER_INPUT,

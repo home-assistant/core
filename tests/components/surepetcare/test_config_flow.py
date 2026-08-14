@@ -134,7 +134,7 @@ async def test_flow_entry_already_exists(
         "homeassistant.components.surepetcare.async_setup_entry",
         return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={

@@ -35,7 +35,7 @@ async def test_flow_successful(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": "user"},
             data=MOCK_ENTRY,
@@ -53,7 +53,7 @@ async def test_flow_already_configured(
 ) -> None:
     """Test the server ID is already configured."""
     with patch("aiosyncthing.system.System.status", return_value={"myID": SERVER_ID}):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": "user"},
             data=MOCK_ENTRY,
@@ -67,7 +67,7 @@ async def test_flow_invalid_auth(hass: HomeAssistant) -> None:
     """Test invalid auth."""
 
     with patch("aiosyncthing.system.System.status", side_effect=UnauthorizedError):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": "user"},
             data=MOCK_ENTRY,
@@ -81,7 +81,7 @@ async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test cannot connect."""
 
     with patch("aiosyncthing.system.System.status", side_effect=Exception):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": "user"},
             data=MOCK_ENTRY,

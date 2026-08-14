@@ -48,7 +48,7 @@ async def test_api_error(hass: HomeAssistant) -> None:
         "homeassistant.components.p1_monitor.coordinator.P1Monitor.settings",
         side_effect=P1MonitorError,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={CONF_HOST: "example.com", CONF_PORT: 80},

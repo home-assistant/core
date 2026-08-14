@@ -157,7 +157,7 @@ async def test_abort_if_already_setup(
     ).add_to_hass(hass)
 
     # Should fail, same SITE_ID
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -181,7 +181,7 @@ async def test_ignored_entry_does_not_cause_error(
     ).add_to_hass(hass)
 
     # Should not fail, same SITE_ID
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
@@ -237,7 +237,7 @@ async def test_api_key_errors(
         CONF_SITE_ID: SITE_ID,
         CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
     }
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=user_input,

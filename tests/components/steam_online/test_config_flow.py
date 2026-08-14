@@ -290,7 +290,7 @@ async def test_add_friend_flow_already_configured(hass: HomeAssistant) -> None:
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    result = await hass.config_entries.subentries.async_init(
+    result = await hass.config_entries.subentries.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         (config_entry.entry_id, SUBENTRY_TYPE_FRIEND),
         context={"source": SOURCE_USER},
     )

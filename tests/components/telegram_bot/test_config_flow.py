@@ -785,7 +785,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     ):
         # test: import first entry success
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=data,
@@ -800,7 +800,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
 
         # test: import 2nd entry failed due to duplicate
 
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=data,

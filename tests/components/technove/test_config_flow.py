@@ -46,7 +46,7 @@ async def test_user_device_exists_abort(
 ) -> None:
     """Test we abort the config flow if TechnoVE station is already configured."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
     )
@@ -65,7 +65,7 @@ async def test_user_device_exists_abort(
 async def test_connection_error(hass: HomeAssistant, mock_technove: MagicMock) -> None:
     """Test we show user form on TechnoVE connection error."""
     mock_technove.update.side_effect = TechnoVEConnectionError
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
     )
@@ -216,7 +216,7 @@ async def test_user_station_exists_abort(
 ) -> None:
     """Test we abort user flow if TechnoVE station already configured."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
     )

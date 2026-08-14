@@ -49,7 +49,7 @@ async def test_create_entry(
         "homeassistant.components.notion.config_flow.async_get_client_with_credentials",
         get_client_with_exception,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data={
@@ -78,7 +78,7 @@ async def test_create_entry(
 
 async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> None:
     """Test that errors are shown when duplicates are added."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=config
     )
     assert result["type"] is FlowResultType.ABORT

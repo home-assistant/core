@@ -40,7 +40,7 @@ async def test_invalid_api_key(
         "Invalid API key"
     )
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=VALID_CONFIG,
@@ -57,7 +57,7 @@ async def test_api_error(
         "Invalid response from AccuWeather API"
     )
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=VALID_CONFIG,
@@ -74,7 +74,7 @@ async def test_requests_exceeded_error(
         "The allowed number of requests has been exceeded"
     )
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=VALID_CONFIG,
@@ -93,7 +93,7 @@ async def test_integration_already_exists(
         data=VALID_CONFIG,
     ).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=VALID_CONFIG,
@@ -107,7 +107,7 @@ async def test_create_entry(
     hass: HomeAssistant, mock_accuweather_client: AsyncMock
 ) -> None:
     """Test that the user step works."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data=VALID_CONFIG,

@@ -53,7 +53,7 @@ async def test_flow_user_invalid_auth(
 ) -> None:
     """Test user initialized flow with invalid token."""
     mock_connection(aioclient_mock, "invalid_auth")
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=CONF_DATA,
@@ -68,7 +68,7 @@ async def test_flow_user_cannot_connect(
 ) -> None:
     """Test user initialized flow with unreachable server."""
     mock_connection(aioclient_mock, "cannot_connect")
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=CONF_DATA,
@@ -84,7 +84,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
         "homeassistant.components.slack.config_flow.AsyncWebClient.auth_test"
     ) as mock:
         mock.side_effect = Exception
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=CONF_DATA,

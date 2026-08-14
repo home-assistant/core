@@ -130,7 +130,7 @@ async def test_unload(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"
     ) as mock_forward:
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
         )
 
@@ -167,7 +167,7 @@ async def test_with_cloud_sub(hass: HomeAssistant) -> None:
             return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
         )
 
@@ -196,7 +196,7 @@ async def test_with_cloud_sub_not_connected(hass: HomeAssistant) -> None:
             return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
         )
 

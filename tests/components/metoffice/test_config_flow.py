@@ -85,7 +85,7 @@ async def test_form_already_configured(
         data=METOFFICE_CONFIG_WAVERTREE,
     ).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=METOFFICE_CONFIG_WAVERTREE,

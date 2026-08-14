@@ -81,7 +81,7 @@ async def test_retrieve_encryption_key_from_storage_with_device_mac(
         ),
     ]
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -239,7 +239,7 @@ async def test_user_connection_updates_host(hass: HomeAssistant) -> None:
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=None,
@@ -299,7 +299,7 @@ async def test_user_sets_unique_id(hass: HomeAssistant) -> None:
         CONF_DEVICE_NAME: "test",
     }
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=None,
@@ -330,7 +330,7 @@ async def test_user_resolve_error(hass: HomeAssistant, mock_client: APIClient) -
         new_callable=lambda: ResolveAPIError,
     ) as exc:
         mock_client.device_info.side_effect = exc
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -387,7 +387,7 @@ async def test_user_causes_zeroconf_to_abort(hass: HomeAssistant) -> None:
         "name": "test8266",
     }
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=None,
@@ -420,7 +420,7 @@ async def test_user_connection_error(
     """Test user step with connection error."""
     mock_client.device_info.side_effect = APIConnectionError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -461,7 +461,7 @@ async def test_user_with_password(
     """Test user step with password."""
     mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -493,7 +493,7 @@ async def test_user_invalid_password(
     """Test user step with invalid password."""
     mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -551,7 +551,7 @@ async def test_user_dashboard_has_wrong_key(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=WRONG_NOISE_PSK,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -606,7 +606,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -658,7 +658,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         side_effect=dashboard_exception,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -713,7 +713,7 @@ async def test_user_discovers_name_and_dashboard_is_unavailable(
         side_effect=TimeoutError,
     ):
         await dashboard.async_get_dashboard(hass).async_refresh()
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -746,7 +746,7 @@ async def test_login_connection_error(
     """Test user step with connection error on login attempt."""
     mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -1073,7 +1073,7 @@ async def test_user_requires_psk(hass: HomeAssistant, mock_client: APIClient) ->
     """Test user step with requiring encryption key."""
     mock_client.device_info.side_effect = RequiresEncryptionAPIError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -1119,7 +1119,7 @@ async def test_encryption_key_valid_psk(
 
     mock_client.device_info.side_effect = RequiresEncryptionAPIError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -1158,7 +1158,7 @@ async def test_encryption_key_invalid_psk(
 
     mock_client.device_info.side_effect = RequiresEncryptionAPIError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -1532,7 +1532,7 @@ async def test_user_flow_stale_storage_key_falls_back_to_dashboard(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -1622,7 +1622,7 @@ async def test_user_flow_offline_device_stops_candidate_probing(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -1656,7 +1656,7 @@ async def test_user_flow_manual_key_repairs_stale_storage(
         DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:AA"),
     ]
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -2584,7 +2584,7 @@ async def test_user_discovers_name_no_dashboard(
         ),
     ]
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -2706,7 +2706,7 @@ async def test_user_flow_name_conflict_migrate(
         return_value=(device_info, [], [])
     )
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -2759,7 +2759,7 @@ async def test_user_flow_name_conflict_overwrite(
         return_value=(device_info, [], [])
     )
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -3228,7 +3228,7 @@ async def test_user_flow_starts_zwave_discovery(
         ),
         patch.object(hass.config_entries.flow, "async_get", side_effect=mock_async_get),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "192.168.1.100", CONF_PORT: 6053},
@@ -3295,7 +3295,7 @@ async def test_user_flow_no_zwave_discovery_without_home_id(
     with patch.object(
         hass.config_entries.flow, "async_init", side_effect=track_async_init
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "192.168.1.103", CONF_PORT: 6053},
@@ -3345,7 +3345,7 @@ async def test_user_flow_no_zwave_discovery_without_capabilities(
     with patch.object(
         hass.config_entries.flow, "async_init", side_effect=track_async_init
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "192.168.1.101", CONF_PORT: 6053},
@@ -3397,7 +3397,7 @@ async def test_user_flow_zwave_discovery_aborts(
     with patch.object(
         hass.config_entries.flow, "async_init", side_effect=track_async_init
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={CONF_HOST: "192.168.1.102", CONF_PORT: 6053},

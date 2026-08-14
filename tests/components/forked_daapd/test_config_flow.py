@@ -84,7 +84,7 @@ async def test_config_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
         mock_get_request.return_value = SAMPLE_CONFIG
         mock_test_connection.return_value = ["ok", "My Music on myhost"]
         config_data = config_entry.data
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=config_data
         )
         await hass.async_block_till_done()
@@ -95,7 +95,7 @@ async def test_config_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
         assert result["data"][CONF_PASSWORD] == config_data[CONF_PASSWORD]
 
         # Also test that creating a new entry with the same host aborts
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": SOURCE_USER},
             data=config_entry.data,
@@ -139,7 +139,7 @@ async def test_config_flow_no_websocket(
     ) as mock_test_connection:
         # test invalid config data
         mock_test_connection.return_value = ["websocket_not_enabled"]
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=config_entry.data
         )
         assert result["type"] is FlowResultType.FORM

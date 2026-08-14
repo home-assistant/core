@@ -102,7 +102,7 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
         "homeassistant.components.osoenergy.config_flow.OSOEnergy.get_user_email",
         return_value=TEST_USER_EMAIL,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={

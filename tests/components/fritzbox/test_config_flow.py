@@ -89,7 +89,7 @@ async def test_user_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a flow by user with authentication failure."""
     fritz().login.side_effect = [LoginError("Boom"), mock.DEFAULT]
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
     )
     assert result["type"] is FlowResultType.FORM
@@ -101,7 +101,7 @@ async def test_user_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a flow by user but no connection found."""
     fritz().login.side_effect = OSError("Boom")
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
     )
     assert result["type"] is FlowResultType.ABORT
@@ -110,13 +110,13 @@ async def test_user_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
 
 async def test_user_already_configured(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a flow by user when already configured."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert not result["result"].unique_id
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
     )
     assert result["type"] is FlowResultType.ABORT
@@ -409,7 +409,7 @@ async def test_ssdp_already_in_progress_host(hass: HomeAssistant, fritz: Mock) -
 
 async def test_ssdp_already_configured(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a flow from discovery when already configured."""
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY

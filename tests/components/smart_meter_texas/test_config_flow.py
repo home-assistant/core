@@ -118,7 +118,7 @@ async def test_form_duplicate_account(hass: HomeAssistant) -> None:
         "smart_meter_texas.Client.authenticate",
         return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={"username": "user123", "password": "password123"},

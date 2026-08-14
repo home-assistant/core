@@ -25,7 +25,7 @@ async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
     conf = {CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25}
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
     )
     assert result["type"] is FlowResultType.ABORT
@@ -93,7 +93,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
             "homeassistant.components.geonetnz_quakes.async_setup", return_value=True
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY

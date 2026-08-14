@@ -75,7 +75,7 @@ async def test_flow_fails(
 ) -> None:
     """Test user initialized flow with invalid username."""
     with patch("pylast.User", return_value=MockUser(thrown_error=error)):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA
         )
         assert result["type"] is FlowResultType.FORM

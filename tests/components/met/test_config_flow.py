@@ -71,7 +71,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         CONF_ELEVATION: 0,
     }
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
@@ -99,7 +99,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
         CONF_ELEVATION: 0,
     }
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 

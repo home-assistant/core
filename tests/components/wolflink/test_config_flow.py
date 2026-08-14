@@ -44,7 +44,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         ),
         patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
         )
 
@@ -70,7 +70,7 @@ async def test_user_flow_errors(
         "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
         side_effect=side_effect,
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
         )
 
@@ -84,7 +84,7 @@ async def test_no_devices_abort(hass: HomeAssistant) -> None:
         "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
         return_value=[],
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
         )
 
@@ -98,7 +98,7 @@ async def test_already_configured_aborts(
     """Test entries with the same username can't be configured twice."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
     )
 

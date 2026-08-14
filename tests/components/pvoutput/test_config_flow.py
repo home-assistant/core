@@ -103,7 +103,7 @@ async def test_connection_error(hass: HomeAssistant, mock_pvoutput: MagicMock) -
     """Test API connection error."""
     mock_pvoutput.system.side_effect = PVOutputConnectionError
 
-    result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
         DOMAIN,
         context={"source": SOURCE_USER},
         data={

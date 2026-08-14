@@ -121,7 +121,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
         "opengarage.OpenGarage.update_state",
         return_value={"name": "Name of the device", "mac": "unique"},
     ):
-        result = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(  # pylint: disable=home-assistant-tests-user-flow-no-data
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
