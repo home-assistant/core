@@ -99,21 +99,21 @@ UNSUPPORTED_DEVICE_ID = "LCC-AABBCC000003"
 
 LIVING_ROOM_JSON = {
     "id": 0,
-    "roomName": "Living Room",
-    "roomAvgTemp": 22,
-    "roomAvgHumidity": 50,
+    "name": "Living Room",
+    "avgTemperature": 22,
+    "avgHumidity": 50,
     "accessories": [
-        {"id": 0, "type": "IndoorAirSensor", "temperature": 22.5, "status": "Ok"}
+        {"id": 0, "sensorType": "IndoorAirSensor", "temperature": 22.5, "status": "Ok"}
     ],
 }
 
 OFFICE_ROOM_JSON = {
     "id": 0,
-    "roomName": "Office",
-    "roomAvgTemp": 24,
-    "roomAvgHumidity": 40,
+    "name": "Office",
+    "avgTemperature": 24,
+    "avgHumidity": 40,
     "accessories": [
-        {"id": 0, "type": "IndoorAirSensor", "temperature": 24.5, "status": "Ok"}
+        {"id": 0, "sensorType": "IndoorAirSensor", "temperature": 24.5, "status": "Ok"}
     ],
 }
 
