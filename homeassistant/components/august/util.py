@@ -1,6 +1,6 @@
 """August util functions."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from functools import partial
 
 import aiohttp
@@ -11,6 +11,7 @@ from yalexs.manager.const import ACTIVITY_UPDATE_INTERVAL
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.util import dt as dt_util
 
 from . import AugustData
 
@@ -61,7 +62,9 @@ def _activity_time_based(latest: Activity) -> Activity | None:
     """Get the latest state of the sensor."""
     start = latest.activity_start_time
     end = latest.activity_end_time + TIME_TO_DECLARE_DETECTION
-    if start <= datetime.now() <= end:  # pylint: disable=home-assistant-enforce-naive-now
+    # yalexs builds these from datetime.fromtimestamp without a tzinfo, so they
+    # are naive local times and have to be compared against one.
+    if start <= dt_util.naive_now() <= end:
         return latest
     return None
 
