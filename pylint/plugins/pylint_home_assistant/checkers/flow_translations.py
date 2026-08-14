@@ -102,15 +102,19 @@ def _extract_items_from_node(
     """Recursively extract fields and sections from a schema node."""
     items: list[_Field | _Section] = []
 
-    # schema.extend({...}) - extract fields from both base and extension
     if isinstance(node, nodes.Call) and node.args:
         match node.func:
+            # schema.extend({...}) - extract fields from both base and extension
             case nodes.Attribute(attrname="extend"):
                 items.extend(_extract_items_from_node(node.func.expr))
                 items.extend(_extract_items_from_node(node.args[0]))
                 return items
             # vol.Schema({...}) / Schema({...}) - first arg is the schema dict
             case nodes.Attribute(attrname="Schema") | nodes.Name(name="Schema"):
+                return _extract_items_from_node(node.args[0])
+            # self.add_suggested_values_to_schema(schema, ...) - first arg is
+            # the schema
+            case nodes.Attribute(attrname="add_suggested_values_to_schema"):
                 return _extract_items_from_node(node.args[0])
         # Unknown call (e.g. a helper that builds the schema dynamically); the
         # resulting structure cannot be resolved statically, so stay

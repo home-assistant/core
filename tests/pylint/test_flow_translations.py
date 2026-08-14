@@ -451,6 +451,82 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
         walker.walk(root_node)
 
 
+def test_add_suggested_values_to_schema_missing_field_flagged(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """Warning for untranslated field wrapped in add_suggested_values_to_schema."""
+    integration_dir = _make_integration(
+        tmp_path,
+        {"options": {"step": {"init": {"data": {"interval": "Update interval"}}}}},
+    )
+
+    root_node = astroid.parse(
+        """
+OPTIONS_SCHEMA = vol.Schema({
+    vol.Required("interval"): int,
+    vol.Required("missing"): str,
+})
+
+class MyOptionsFlow(OptionsFlow):
+    async def async_step_init(self, user_input=None):
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-options-flow-field-not-translated"
+    assert messages[0].args[0] == "missing"
+
+
+def test_add_suggested_values_to_schema_translated_ok(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """No warning when fields wrapped in add_suggested_values_to_schema are translated."""
+    integration_dir = _make_integration(
+        tmp_path,
+        {"options": {"step": {"init": {"data": {"interval": "Update interval"}}}}},
+    )
+
+    root_node = astroid.parse(
+        """
+OPTIONS_SCHEMA = vol.Schema({vol.Required("interval"): int})
+
+class MyOptionsFlow(OptionsFlow):
+    async def async_step_init(self, user_input=None):
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
 # --- Inference tests ---
 
 
