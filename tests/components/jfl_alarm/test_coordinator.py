@@ -29,10 +29,10 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 from .conftest import LOOPBACK, make_entry, wait_until
 from .panel_sim import FakePanel
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_the_snapshot_is_never_none(hass: HomeAssistant, setup_entry) -> None:

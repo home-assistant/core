@@ -21,14 +21,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
+from .panel_sim import FakePanel
+
 from tests.common import get_system_health_info
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
 from tests.typing import ClientSessionGenerator
-
-from .panel_sim import FakePanel
 
 
 async def test_the_dump_carries_state_but_no_identity(

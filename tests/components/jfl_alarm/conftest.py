@@ -36,9 +36,9 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
-
 from .panel_sim import FakePanel
+
+from tests.common import MockConfigEntry
 
 LOOPBACK = "127.0.0.1"
 

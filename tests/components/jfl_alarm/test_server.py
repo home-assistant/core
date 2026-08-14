@@ -328,7 +328,9 @@ async def test_a_rejected_panel_gets_result_zero(
         await hass.async_block_till_done()
 
 
-async def test_ignore_discovery_is_a_silent_no_op(caplog: pytest.LogCaptureFixture) -> None:
+async def test_ignore_discovery_is_a_silent_no_op(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """`_ignore_discovery` itself — the callback registered for the *hold* and *reject* policies.
 
     `pyjfl.JflServer.notify_connected` only ever calls the registered discovery callback when the
