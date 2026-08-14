@@ -12,7 +12,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.melcloud_home.const import DOMAIN
-from homeassistant.components.melcloud_home.coordinator import UPDATE_INTERVAL
+from homeassistant.components.melcloud_home.coordinator import (
+    ENERGY_UPDATE_INTERVAL,
+    UPDATE_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -198,6 +201,7 @@ async def test_new_atw_unit_callback(
 @pytest.mark.parametrize(
     "exception",
     [
+        pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
         pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
         pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
     ],
@@ -211,24 +215,51 @@ async def test_energy_update_cycle_fails(
 ) -> None:
     """Test that a failing energy fetch clears the value without unloading the entry."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
+    energy_coordinator = mock_config_entry.runtime_data.energy_coordinator
 
-    assert coordinator.ata_energy["ata-unit-uuid-1"] is not None
-    assert coordinator.atw_energy["atw-unit-uuid-1"] is not None
+    assert energy_coordinator.data["ata-unit-uuid-1"] is not None
+    assert energy_coordinator.data["atw-unit-uuid-1"] is not None
 
     mock_melcloud_client.get_energy_telemetry.side_effect = exception
-    freezer.tick(UPDATE_INTERVAL)
+    freezer.tick(ENERGY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert coordinator.ata_energy["ata-unit-uuid-1"] is None
-    assert coordinator.atw_energy["atw-unit-uuid-1"] is None
+    assert energy_coordinator.data["ata-unit-uuid-1"] is None
+    assert energy_coordinator.data["atw-unit-uuid-1"] is None
 
     # Demonstrate a recovery
     mock_melcloud_client.get_energy_telemetry.side_effect = None
-    freezer.tick(UPDATE_INTERVAL)
+    freezer.tick(ENERGY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert coordinator.ata_energy["ata-unit-uuid-1"] is not None
-    assert coordinator.atw_energy["atw-unit-uuid-1"] is not None
+    assert energy_coordinator.data["ata-unit-uuid-1"] is not None
+    assert energy_coordinator.data["atw-unit-uuid-1"] is not None
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
+        pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
+        pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+    ],
+)
+async def test_energy_coordinator_context_fetch_failure(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test that a failing energy coordinator refresh doesn't affect the main coordinator."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data.coordinator
+    energy_coordinator = mock_config_entry.runtime_data.energy_coordinator
+
+    mock_melcloud_client.get_context.side_effect = exception
+    await energy_coordinator.async_refresh()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert energy_coordinator.last_update_success is False
+    assert coordinator.last_update_success is True
