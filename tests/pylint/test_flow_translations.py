@@ -532,6 +532,47 @@ class MyOptionsFlow(OptionsFlow):
     assert messages[0].args[0] == "missing"
 
 
+def test_add_suggested_values_to_schema_keyword_flagged(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """Warning when the schema is passed via the data_schema keyword."""
+    integration_dir = _make_integration(
+        tmp_path,
+        {"config": {"step": {"user": {"data": {"host": "Host"}}}}},
+    )
+
+    root_node = astroid.parse(
+        """
+USER_SCHEMA = vol.Schema({
+    vol.Required("host"): str,
+    vol.Required("missing"): str,
+})
+
+class MyConfigFlow(ConfigFlow, domain=DOMAIN):
+    async def async_step_user(self, user_input=None):
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=USER_SCHEMA, suggested_values=user_input
+            ),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-config-flow-field-not-translated"
+    assert messages[0].args[0] == "missing"
+
+
 def test_add_suggested_values_to_schema_translated_ok(
     linter: UnittestLinter,
     flow_translations_checker: ConfigFlowTranslationsChecker,

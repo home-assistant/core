@@ -102,24 +102,10 @@ def _extract_items_from_node(
     """Recursively extract fields and sections from a schema node."""
     items: list[_Field | _Section] = []
 
-    if isinstance(node, nodes.Call) and node.args:
-        match node.func:
-            # schema.extend({...}) - extract fields from both base and extension
-            case nodes.Attribute(attrname="extend"):
-                items.extend(_extract_items_from_node(node.func.expr))
-                items.extend(_extract_items_from_node(node.args[0]))
-                return items
-            # vol.Schema({...}) / Schema({...}) - first arg is the schema dict
-            case nodes.Attribute(attrname="Schema") | nodes.Name(name="Schema"):
-                return _extract_items_from_node(node.args[0])
-            # self.add_suggested_values_to_schema(schema, ...) - first arg is
-            # the schema
-            case nodes.Attribute(attrname="add_suggested_values_to_schema"):
-                return _extract_items_from_node(node.args[0])
-        # Unknown call (e.g. a helper that builds the schema dynamically); the
-        # resulting structure cannot be resolved statically, so stay
-        # conservative and report nothing to avoid false positives.
-        return items
+    if isinstance(node, nodes.Call):
+        call_items = _extract_items_from_call(node)
+        if call_items is not None:
+            return call_items
 
     # Direct dict literal
     if isinstance(node, nodes.Dict):
@@ -172,6 +158,45 @@ def _extract_items_from_node(
         pass
 
     return items
+
+
+def _extract_items_from_call(node: nodes.Call) -> list[_Field | _Section] | None:
+    """Extract fields and sections from a schema-building call.
+
+    Returns None when the call is not recognized and inference should be
+    attempted instead.
+    """
+    if node.args:
+        match node.func:
+            # schema.extend({...}) - extract fields from both base and extension
+            case nodes.Attribute(attrname="extend"):
+                return [
+                    *_extract_items_from_node(node.func.expr),
+                    *_extract_items_from_node(node.args[0]),
+                ]
+            # vol.Schema({...}) / Schema({...}) - first arg is the schema dict
+            case nodes.Attribute(attrname="Schema") | nodes.Name(name="Schema"):
+                return _extract_items_from_node(node.args[0])
+            # self.add_suggested_values_to_schema(schema, ...) - first arg is
+            # the schema
+            case nodes.Attribute(attrname="add_suggested_values_to_schema"):
+                return _extract_items_from_node(node.args[0])
+        # Unknown call (e.g. a helper that builds the schema dynamically); the
+        # resulting structure cannot be resolved statically, so stay
+        # conservative and report nothing to avoid false positives.
+        return []
+
+    # add_suggested_values_to_schema(data_schema=..., ...) - keyword-only call
+    if (
+        isinstance(node.func, nodes.Attribute)
+        and node.func.attrname == "add_suggested_values_to_schema"
+    ):
+        for kw in node.keywords:
+            if kw.arg == "data_schema":
+                return _extract_items_from_node(kw.value)
+        return []
+
+    return None
 
 
 def _extract_section_fields(node: nodes.NodeNG) -> list[str] | None:
