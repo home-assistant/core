@@ -5,7 +5,7 @@ To update, run python3 -m script.hassfest
 
 from typing import Final
 
-FRONTEND_VERSION: Final[str] = "20260729.6"
+FRONTEND_VERSION: Final[str] = "20260729.7"
 
 MDI_ICONS: Final[set[str]] = {
     "ab-testing",
