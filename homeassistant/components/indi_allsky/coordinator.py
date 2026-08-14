@@ -43,9 +43,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         )
         self.latest_exposure: ExposureData | None = None
 
-        self.client.register_callback(
+        unsub = self.client.register_callback(
             "exposure_complete", self._handle_exposure_complete
         )
+        entry.async_on_unload(unsub)
+        entry.async_on_unload(self.client.disconnect)
 
         super().__init__(
             hass,
