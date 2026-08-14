@@ -462,18 +462,22 @@ class ThermostatEntity(ClimateEntity):
         self._clear_unconfirmed_temperature()
         self._unconfirmed_temperature = expected
 
+        cancel_timer: CALLBACK_TYPE | None = None
+
         @callback
         def clear_unconfirmed_temperature(_now: datetime) -> None:
-            self._cancel_temperature_confirmation_timer = None
+            if self._cancel_temperature_confirmation_timer is cancel_timer:
+                self._cancel_temperature_confirmation_timer = None
             if self._unconfirmed_temperature is expected:
                 self._unconfirmed_temperature = None
                 self.async_write_ha_state()
 
-        self._cancel_temperature_confirmation_timer = async_call_later(
+        cancel_timer = async_call_later(
             self.hass,
             TEMPERATURE_CONFIRMATION_TIMEOUT_SECONDS,
             clear_unconfirmed_temperature,
         )
+        self._cancel_temperature_confirmation_timer = cancel_timer
 
     async def _async_flush_pending_temperature(self) -> None:
         """Immediately send pending temperature while holding the command lock."""

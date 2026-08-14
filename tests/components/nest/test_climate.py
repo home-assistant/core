@@ -875,6 +875,63 @@ async def test_unconfirmed_temperature_times_out(
     assert thermostat.attributes[ATTR_TEMPERATURE] == 19.0
 
 
+async def test_stale_confirmation_callback_preserves_new_timer(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+    create_event: CreateEvent,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a stale confirmation callback does not orphan a newer timer."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+            },
+        }
+    )
+    await setup_platform()
+
+    confirmation_callbacks: list[Callable[[datetime], None]] = []
+    confirmation_cancel_timers: list[Mock] = []
+    real_async_call_later = nest_climate.async_call_later
+
+    def async_call_later(
+        timer_hass: HomeAssistant,
+        delay: float,
+        action: Callable[[datetime], None],
+    ) -> Mock:
+        if delay != nest_climate.TEMPERATURE_CONFIRMATION_TIMEOUT_SECONDS:
+            return real_async_call_later(timer_hass, delay, action)
+        confirmation_callbacks.append(action)
+        cancel_timer = Mock()
+        confirmation_cancel_timers.append(cancel_timer)
+        return cancel_timer
+
+    monkeypatch.setattr(nest_climate, "async_call_later", async_call_later)
+
+    await common.async_set_temperature(hass, temperature=20.0)
+    await async_fire_temperature_debounce(hass)
+    await common.async_set_temperature(hass, temperature=21.0)
+    await async_fire_temperature_debounce(hass)
+
+    confirmation_callbacks[0](dt_util.utcnow())
+    await create_event(
+        {
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 21.0,
+            }
+        }
+    )
+
+    confirmation_cancel_timers[1].assert_called_once_with()
+
+
 async def test_unconfirmed_temperature_clears_on_mode_update(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
