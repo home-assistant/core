@@ -10,6 +10,8 @@ from aioengiebelgium import (
     PricePeriod,
     PriceSlot,
     PricesResponse,
+    ServicePoint,
+    bare_ean,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -250,3 +252,55 @@ async def test_recovery_after_all_bans_fail(
     assert state_ban_2 is not None
     assert state_ban.state == "0.4"
     assert state_ban_2.state == "0.5"
+
+
+async def test_service_point_transient_failure_is_retried(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed service-point fetch is retried on the next refresh cycle."""
+    mock_engie_client.return_value.async_get_prices.return_value = _build_prices(0.1)
+    mock_engie_client.return_value.async_get_service_point.side_effect = [
+        EngieBeCommunicationError("boom"),
+        ServicePoint(ean_energy_types={bare_ean(OFFTAKE_ONLY_EAN): "GAS"}),
+    ]
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    assert bare_ean(OFFTAKE_ONLY_EAN) not in coordinator.ean_energy_types
+
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_engie_client.return_value.async_get_service_point.call_count == 2
+    assert coordinator.ean_energy_types[bare_ean(OFFTAKE_ONLY_EAN)] == "GAS"
+
+
+async def test_service_point_success_without_ean_is_cached_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a successful fetch omitting the EAN is cached once and not retried."""
+    mock_engie_client.return_value.async_get_prices.return_value = _build_prices(0.1)
+    mock_engie_client.return_value.async_get_service_point.side_effect = lambda ean: (
+        ServicePoint(ean_energy_types={})
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    assert coordinator.ean_energy_types[bare_ean(OFFTAKE_ONLY_EAN)] is None
+
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_engie_client.return_value.async_get_service_point.call_count == 1

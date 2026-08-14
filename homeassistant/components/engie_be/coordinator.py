@@ -139,10 +139,10 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]])
                         _mask(ean),
                         service_point_result,
                     )
-                    self.ean_energy_types.setdefault(bare_ean(ean), None)
                     continue
                 if isinstance(service_point_result, BaseException):
                     raise service_point_result
                 self.ean_energy_types.update(service_point_result.ean_energy_types)
+                self.ean_energy_types.setdefault(bare_ean(ean), None)
 
         return data
