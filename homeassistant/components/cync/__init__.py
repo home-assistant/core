@@ -38,20 +38,21 @@ def _migrate_unique_ids(
 
     entity_registry = er.async_get(hass)
     migrated_device_ids = set()
+    migrated_unique_ids = set(id_map.values())
     for entity_entry in er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
     ):
-        if (
-            entity_entry.platform == DOMAIN
-            and entity_entry.domain == Platform.LIGHT
-            and (new_unique_id := id_map.get(entity_entry.unique_id))
-        ):
+        if entity_entry.platform != DOMAIN or entity_entry.domain != Platform.LIGHT:
+            continue
+        if new_unique_id := id_map.get(entity_entry.unique_id):
             entity_registry.async_update_entity(
                 entity_entry.entity_id,
                 new_unique_id=new_unique_id,
             )
-            if entity_entry.device_id is not None:
-                migrated_device_ids.add(entity_entry.device_id)
+        elif entity_entry.unique_id not in migrated_unique_ids:
+            continue
+        if entity_entry.device_id is not None:
+            migrated_device_ids.add(entity_entry.device_id)
 
     device_registry = dr.async_get(hass)
     for device_id in migrated_device_ids:

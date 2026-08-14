@@ -122,3 +122,40 @@ async def test_migrate_unique_ids(
         entity_registry.async_get(colliding_mesh_entry.entity_id)
         == colliding_mesh_entry
     )
+
+
+async def test_resume_partial_unique_id_migration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test retry migrates a device after its entity was already migrated."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            "mesh_unique_ids_migration_pending": True,
+        },
+    )
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "1000-1101")},
+    )
+    entity_registry.async_get_or_create(
+        Platform.LIGHT,
+        DOMAIN,
+        "1000-1",
+        config_entry=mock_config_entry,
+        device_id=device_entry.id,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_device = device_registry.async_get(device_entry.id)
+    assert migrated_device is not None
+    assert (DOMAIN, "1000-1") in migrated_device.identifiers
+    assert (DOMAIN, "1000-1101") not in migrated_device.identifiers
+    assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
