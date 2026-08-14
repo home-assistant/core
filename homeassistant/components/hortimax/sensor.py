@@ -55,31 +55,6 @@ from .entity import HortimaxEntity
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: HortimaxConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up one sensor per readout, adding new ones as they appear."""
-    coordinator = entry.runtime_data
-    known: set[tuple[str, str]] = set()
-
-    @callback
-    def _add_new_entities() -> None:
-        new_entities: list[HortimaxReadoutSensor] = []
-        for device_id, device_data in coordinator.data.items():
-            for key in device_data.readouts:
-                if (device_id, key) in known:
-                    continue
-                known.add((device_id, key))
-                new_entities.append(HortimaxReadoutSensor(coordinator, device_id, key))
-        if new_entities:
-            async_add_entities(new_entities)
-
-    _add_new_entities()
-    entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
-
-
 # Everything that follows from the unit alone. Device classes that also need
 # the readout identifier or its source (humidity, CO2, wind, gas) are set
 # below in `_describe`. Precision is display only, and needs a default
@@ -140,6 +115,31 @@ UNIT_DESCRIPTIONS: Final[dict[str, SensorEntityDescription]] = {
         key="pH", device_class=SensorDeviceClass.PH, suggested_display_precision=1
     )
 }
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: HortimaxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up one sensor per readout, adding new ones as they appear."""
+    coordinator = entry.runtime_data
+    known: set[tuple[str, str]] = set()
+
+    @callback
+    def _add_new_entities() -> None:
+        new_entities: list[HortimaxReadoutSensor] = []
+        for device_id, device_data in coordinator.data.items():
+            for key in device_data.readouts:
+                if (device_id, key) in known:
+                    continue
+                known.add((device_id, key))
+                new_entities.append(HortimaxReadoutSensor(coordinator, device_id, key))
+        if new_entities:
+            async_add_entities(new_entities)
+
+    _add_new_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
 
 
 def _describe(readout: Readout) -> SensorEntityDescription:
