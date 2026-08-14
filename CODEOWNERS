@@ -1145,8 +1145,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
-/homeassistant/components/midea/ @chemelli74 @rokam @wuwentao @caibinqing
-/tests/components/midea/ @chemelli74 @rokam @wuwentao @caibinqing
+/homeassistant/components/midea/ @chemelli74 @rokam @caibinqing
+/tests/components/midea/ @chemelli74 @rokam @caibinqing
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
 /homeassistant/components/mikrotik/ @engrbm87 @chemelli74
