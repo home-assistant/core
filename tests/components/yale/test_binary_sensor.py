@@ -309,9 +309,11 @@ async def test_doorbell_device_registry(
 ) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
-    await _create_yale_with_devices(hass, [doorbell_one])
+    config_entry, _ = await _create_yale_with_devices(hass, [doorbell_one])
 
-    reg_device = device_registry.async_get_device(identifiers={("yale", "tmt100")})
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("yale", "tmt100"), config_entry.entry_id
+    )
     assert reg_device == snapshot
 
 

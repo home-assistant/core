@@ -39,7 +39,11 @@ from ..const import (
     DOMAIN,
     EVENT_VALUE_UPDATED,
 )
-from ..helpers import async_get_nodes_from_targets, get_device_id
+from ..helpers import (
+    async_get_config_entry_from_node,
+    async_get_nodes_from_targets,
+    get_device_id,
+)
 from .trigger_helpers import async_bypass_dynamic_config_validation
 
 # Relative platform type should be <SUBMODULE_NAME>
@@ -172,8 +176,11 @@ async def async_attach_trigger(
             driver = node.client.driver
             assert driver is not None  # The node comes from the driver.
             drivers.add(driver)
+            entry = async_get_config_entry_from_node(hass, node)
             device_identifier = get_device_id(driver, node)
-            device = dev_reg.async_get_device(identifiers={device_identifier})
+            device = dev_reg.async_get_device_by_identifier(
+                device_identifier, entry.entry_id
+            )
             assert device
             value_id = get_value_id_str(
                 node, command_class, property_, endpoint, property_key

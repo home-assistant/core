@@ -2036,6 +2036,91 @@ async def test_acknowledge(
     assert has_acknowledge_override
 
 
+@pytest.mark.parametrize(("use_satellite_entity"), [True, False])
+async def test_acknowledge_child_device_inherits_area(
+    hass: HomeAssistant,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    mock_chat_session: chat_session.ChatSession,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    use_satellite_entity: bool,
+) -> None:
+    """Test acknowledge works when satellite and target inherit area from a parent."""
+    area_1 = area_registry.async_get_or_create("area_1")
+
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    # Parent device carries the area; its children have no area of their own and
+    # inherit the parent's.
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "parent")},
+    )
+    device_registry.async_update_device(parent_device.id, area_id=area_1.id)
+
+    satellite_device = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("demo", "satellite-child")},
+        parent_device_id=parent_device.id,
+    )
+    satellite = entity_registry.async_get_or_create(
+        "assist_satellite", "test", "1234", device_id=satellite_device.id
+    )
+
+    light_device = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={("demo", "light-child")},
+        parent_device_id=parent_device.id,
+    )
+    light_1 = entity_registry.async_get_or_create(
+        "light", "demo", "1234", original_name="light 1", device_id=light_device.id
+    )
+    hass.states.async_set(light_1.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 1"})
+
+    turn_on = async_mock_service(hass, "light", "turn_on")
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    async def _run(text: str) -> None:
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            intent_input=text,
+            session=mock_chat_session,
+            satellite_id=satellite.entity_id if use_satellite_entity else None,
+            device_id=satellite_device.id if not use_satellite_entity else None,
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.INTENT,
+                end_stage=assist_pipeline.PipelineStage.TTS,
+                event_callback=events.append,
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+    with patch(
+        "homeassistant.components.assist_pipeline.PipelineRun.text_to_speech"
+    ) as text_to_speech:
+        await _run("turn on light 1")
+
+        # Acknowledgment sound is played: the satellite and the light both inherit
+        # area_1 from their parent device, so all targets are in the satellite area.
+        text_to_speech.assert_called_once()
+        assert (
+            text_to_speech.call_args.kwargs["override_media_path"] == ACKNOWLEDGE_PATH
+        )
+        assert len(turn_on) == 1
+
+
 async def test_acknowledge_other_agents(
     hass: HomeAssistant,
     init_components,

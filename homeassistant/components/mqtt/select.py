@@ -7,7 +7,10 @@ from typing import override
 import voluptuous as vol
 
 from homeassistant.components import select
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import (
+    SelectEntity,
+    SelectEntityCapabilityAttribute,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
@@ -42,7 +45,7 @@ DEFAULT_NAME = "MQTT Select"
 
 MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
     {
-        select.ATTR_OPTIONS,
+        SelectEntityCapabilityAttribute.OPTIONS,
     }
 )
 

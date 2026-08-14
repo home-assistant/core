@@ -6,8 +6,8 @@
   "documentation": "https://www.home-assistant.io/integrations/energieleser",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "quality_scale": "silver",
-  "requirements": ["energieleser==0.1.5"],
+  "quality_scale": "platinum",
+  "requirements": ["energieleser==0.1.6"],
   "zeroconf": [
     {
       "type": "_stromleser._tcp.local."
