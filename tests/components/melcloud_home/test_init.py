@@ -246,20 +246,55 @@ async def test_energy_update_cycle_fails(
         pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
     ],
 )
+async def test_energy_telemetry_fetch_failure(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test that a failing energy telemetry fetch doesn't affect anything else."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_melcloud_client.get_energy_telemetry.side_effect = exception
+    freezer.tick(ENERGY_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.runtime_data.energy_coordinator.last_update_success is True
+    assert mock_config_entry.runtime_data.coordinator.last_update_success is True
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
+        pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
+        pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+    ],
+)
 async def test_energy_coordinator_context_fetch_failure(
     hass: HomeAssistant,
     mock_melcloud_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
     """Test that a failing energy coordinator refresh doesn't affect the main coordinator."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data.coordinator
-    energy_coordinator = mock_config_entry.runtime_data.energy_coordinator
+
+    # Split the margin so the main coordinator's rescheduled refresh doesn't land
+    # exactly on the energy coordinator's, which would make both fail below.
+    freezer.tick(ENERGY_UPDATE_INTERVAL - UPDATE_INTERVAL / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     mock_melcloud_client.get_context.side_effect = exception
-    await energy_coordinator.async_refresh()
+    freezer.tick(UPDATE_INTERVAL / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert energy_coordinator.last_update_success is False
-    assert coordinator.last_update_success is True
+    assert (
+        mock_config_entry.runtime_data.energy_coordinator.last_update_success is False
+    )
+    assert mock_config_entry.runtime_data.coordinator.last_update_success is True
