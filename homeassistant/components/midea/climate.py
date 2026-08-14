@@ -207,7 +207,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
         for key, value in self._protocol_hvac_modes.items():
             if value == hvac_mode:
                 return key
-        raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
+        raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")  # pragma: no cover
 
     @property
     @override
