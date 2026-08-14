@@ -835,6 +835,36 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
         walker.walk(root_node)
 
 
+def test_unclassifiable_flow_class_skipped(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """A class whose flow type cannot be determined is not checked."""
+    integration_dir = _make_integration(
+        tmp_path, {"config": {"step": {"user": {"data": {}}}}}
+    )
+
+    root_node = astroid.parse(
+        """
+class MyFlowMixin(SomeUnresolvableBase):
+    async def async_step_user(self, user_input=None):
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required("host"): str}),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
 def test_options_flow_with_flow_handler_mixin_base(
     linter: UnittestLinter,
     flow_translations_checker: ConfigFlowTranslationsChecker,

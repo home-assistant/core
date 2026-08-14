@@ -350,7 +350,7 @@ class ConfigFlowTranslationsChecker(BaseChecker):
         if class_node is None:
             return
 
-        flow_type = _get_flow_type(class_node) or "config"
+        flow_type = _get_flow_type(class_node)
 
         if flow_type == "config":
             self._check_flow(
