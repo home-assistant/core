@@ -1,6 +1,6 @@
 """Support for INDI Allsky camera."""
 
-from typing import Any, cast, override
+from typing import Any, override
 
 from aioindiallsky import IndiAllSkyError
 
@@ -45,9 +45,12 @@ class IndiAllSkyCamera(IndiAllSkyEntity, Camera):
     ) -> bytes | None:
         """Return bytes of current camera image."""
         try:
-            return cast(bytes, await self.coordinator.client.fetch_image("latestimage"))
+            image: bytes = await self.coordinator.client.fetch_image("latestimage")
         except IndiAllSkyError:
-            return self.coordinator.data.get("image_bytes")
+            fallback: bytes | None = self.coordinator.data.get("image_bytes")
+            return fallback
+        else:
+            return image
 
     @property
     @override

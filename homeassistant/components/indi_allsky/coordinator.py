@@ -51,7 +51,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _handle_exposure_complete(self, exposure: ExposureData) -> None:
         """Handle new exposure_complete event from WebSocket stream."""
         self.latest_exposure = exposure
-        self.hass.async_create_task(self.async_request_refresh())
+        current_data = self.data if self.data is not None else {"image_bytes": None}
+        self.async_set_updated_data({**current_data, "exposure": exposure})
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:

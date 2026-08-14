@@ -31,5 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.client.disconnect()
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    if unload_ok:
+        await entry.runtime_data.client.disconnect()
+    return unload_ok
