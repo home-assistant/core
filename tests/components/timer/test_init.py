@@ -52,6 +52,7 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import StoredState, async_get
 from homeassistant.setup import async_setup_component
+from homeassistant.util.async_ import get_scheduled_timer_handles
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
@@ -1415,3 +1416,139 @@ async def test_restore_active_finished_outside_grace(
         ATTR_RESTORE: True,
     }
     assert len(events) == 1
+
+
+# A consumer that answers the timer's own idle -> active transition with
+# another timer.start. `from`/`to` are spelled out so that `match_all` is
+# False and the trigger ignores the attribute-only churn of a restart.
+RESTART_ON_OWN_START = {
+    "automation": [
+        {
+            "alias": "Restart the timer when it starts",
+            "trigger": {
+                "platform": "state",
+                "entity_id": "timer.test1",
+                "from": None,
+                "to": None,
+            },
+            "action": {
+                "service": "timer.start",
+                "target": {"entity_id": "timer.test1"},
+            },
+        }
+    ]
+}
+
+
+def _scheduled_expiries(hass: HomeAssistant, entity_id: str) -> list[Any]:
+    """Return every live scheduled expiry callback belonging to one timer."""
+    expiries = []
+    for handle in get_scheduled_timer_handles(hass.loop):
+        if handle.cancelled():
+            continue
+        # The handle is scheduled with the event helper's tracker as its
+        # callback, and the tracker carries the HassJob whose target is the
+        # entity-bound _async_finished.
+        job = getattr(handle._callback, "job", None)
+        target = getattr(job, "target", None)
+        if (
+            getattr(target, "__func__", None) is Timer._async_finished
+            and target.__self__.entity_id == entity_id
+        ):
+            expiries.append(handle)
+    return expiries
+
+
+async def test_reentrant_start_does_not_orphan_the_expiry_callback(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """One active timer has exactly one live expiry callback."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 100}}}
+    )
+    assert await async_setup_component(hass, "automation", RESTART_ON_OWN_START)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("timer.test1").state == STATUS_ACTIVE
+    assert len(_scheduled_expiries(hass, "timer.test1")) == 1
+
+
+async def test_timer_kept_alive_by_restarts_never_finishes(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A timer restarted well inside its duration never expires."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 100}}}
+    )
+    assert await async_setup_component(hass, "automation", RESTART_ON_OWN_START)
+    finished = async_capture_events(hass, EVENT_TIMER_FINISHED)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    for _ in range(6):
+        freezer.tick(20)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get("timer.test1").state == STATUS_ACTIVE
+
+    assert not finished
+
+
+# The same shape against async_change. `mode: parallel` matters: in single mode
+# the automation is still running when its own action rewrites the state, so the
+# reentrant run is dropped and the window never opens.
+REARM_ON_DEADLINE_MOVE = {
+    "automation": [
+        {
+            "alias": "Re-arm the timer when its deadline moves",
+            "trigger": {
+                "platform": "state",
+                "entity_id": "timer.test1",
+                "attribute": "finishes_at",
+            },
+            "mode": "parallel",
+            "action": {
+                "service": "timer.start",
+                "target": {"entity_id": "timer.test1"},
+            },
+        }
+    ]
+}
+
+
+async def test_change_does_not_orphan_the_expiry_callback(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Changing a timer a consumer answers with a start leaves one callback."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 100}}}
+    )
+    assert await async_setup_component(hass, "automation", REARM_ON_DEADLINE_MOVE)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert len(_scheduled_expiries(hass, "timer.test1")) == 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHANGE,
+        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -5},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("timer.test1").state == STATUS_ACTIVE
+    assert len(_scheduled_expiries(hass, "timer.test1")) == 1
