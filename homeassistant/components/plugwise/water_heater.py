@@ -92,6 +92,7 @@ async def async_setup_entry(
 class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     """Representation of a Plugwise water heater."""
 
+    _attr_name = None
     entity_description: PlugwiseWaterHeaterEntityDescription
 
     def __init__(
