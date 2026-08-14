@@ -175,7 +175,7 @@ class ThermostatEntity(ClimateEntity):
             self._pending_temperature
             and ATTR_TEMPERATURE in self._pending_temperature.kwargs
         ):
-            return self._pending_temperature.kwargs[ATTR_TEMPERATURE]
+            return cast(float, self._pending_temperature.kwargs[ATTR_TEMPERATURE])
         if not (trait := self._target_temperature_trait):
             return None
         if self.hvac_mode == HVACMode.HEAT:
@@ -192,7 +192,7 @@ class ThermostatEntity(ClimateEntity):
             self._pending_temperature
             and ATTR_TARGET_TEMP_HIGH in self._pending_temperature.kwargs
         ):
-            return self._pending_temperature.kwargs[ATTR_TARGET_TEMP_HIGH]
+            return cast(float, self._pending_temperature.kwargs[ATTR_TARGET_TEMP_HIGH])
         if self.hvac_mode != HVACMode.HEAT_COOL:
             return None
         if not (trait := self._target_temperature_trait):
@@ -207,7 +207,7 @@ class ThermostatEntity(ClimateEntity):
             self._pending_temperature
             and ATTR_TARGET_TEMP_LOW in self._pending_temperature.kwargs
         ):
-            return self._pending_temperature.kwargs[ATTR_TARGET_TEMP_LOW]
+            return cast(float, self._pending_temperature.kwargs[ATTR_TARGET_TEMP_LOW])
         if self.hvac_mode != HVACMode.HEAT_COOL:
             return None
         if not (trait := self._target_temperature_trait):
