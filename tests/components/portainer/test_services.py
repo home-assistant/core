@@ -49,8 +49,8 @@ async def test_services(
     """Tests that the services are correct."""
 
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert device is not None
     await hass.services.async_call(
@@ -94,8 +94,8 @@ async def test_service_prune_images(
     """Test prune images service with the variants."""
 
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert device is not None
     await hass.services.async_call(
@@ -137,8 +137,8 @@ async def test_service_recreate_container(
     """Test recreate container service with the variants."""
 
     await setup_integration(hass, mock_config_entry)
-    container = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER)}
+    container = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert container is not None
     await hass.services.async_call(
@@ -186,8 +186,8 @@ async def test_service_recreate_container_portainer_exceptions(
 ) -> None:
     """Test recreate container service handles Portainer exceptions."""
     await setup_integration(hass, mock_config_entry)
-    container = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER)}
+    container = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert container is not None
 
@@ -213,12 +213,12 @@ async def test_service_validation_errors(
     """Tests that the Portainer services handle bad data."""
 
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert device is not None
-    container = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER)}
+    container = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
     assert container is not None
 
@@ -335,8 +335,8 @@ async def test_service_portainer_exceptions(
 ) -> None:
     """Test service handles Portainer exceptions."""
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
     )
 
     mock_portainer_client.images_prune.side_effect = exception

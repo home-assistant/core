@@ -152,11 +152,15 @@ async def test_keypad_integer_migration(
     await hass.async_block_till_done()
 
     # Verify the device identifier has been updated
-    device = device_registry.async_get_device(identifiers={(DOMAIN, cast(Any, 1))})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, cast(Any, 1)), mock_config_entry.entry_id
+    )
     assert device is None
 
     new_unique_id = f"{controller_guid}_{keypad.legacy_uuid}"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, new_unique_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_unique_id), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.name == "Test Keypad"
 
@@ -192,13 +196,13 @@ async def test_keypad_uuid_migration(
     await hass.async_block_till_done()
 
     # Verify the device identifier has been updated to use the proper UUID
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{controller_guid}_{legacy_uuid}")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{controller_guid}_{legacy_uuid}"), mock_config_entry.entry_id
     )
     assert device is None
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{controller_guid}_{proper_uuid}")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{controller_guid}_{proper_uuid}"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.name == "Test Keypad"
@@ -232,11 +236,15 @@ async def test_keypad_integer_to_uuid_migration(
     await hass.async_block_till_done()
 
     # Verify the device identifier has been updated to the proper UUID
-    device = device_registry.async_get_device(identifiers={(DOMAIN, cast(Any, 1))})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, cast(Any, 1)), mock_config_entry.entry_id
+    )
     assert device is None
 
     new_unique_id = f"{controller_guid}_{keypad.uuid}"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, new_unique_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_unique_id), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.name == "Test Keypad"
 

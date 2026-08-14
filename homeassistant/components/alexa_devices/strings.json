@@ -22,6 +22,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{username}",
+    "progress": {
+      "login": "Logging in and scanning for Alexa devices. This can take several minutes if you have many devices linked to your Amazon account."
+    },
     "step": {
       "reauth_confirm": {
         "data": {

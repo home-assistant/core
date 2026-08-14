@@ -335,6 +335,8 @@ FLOWS = {
         "homeworks",
         "honeywell",
         "honeywell_string_lights",
+        "hortimax",
+        "hotspring",
         "hr_energy_qube",
         "html5",
         "huawei_lte",

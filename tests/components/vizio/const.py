@@ -2,7 +2,14 @@
 
 from ipaddress import ip_address
 
-from vizaio import AppConfig, AppRecord, PairChallenge, SettingInfo, SettingType
+from vizaio import (
+    AppConfig,
+    AppRecord,
+    PairChallenge,
+    SettingInfo,
+    SettingType,
+    StateExtended,
+)
 from vizaio.profiles import SOUNDBAR_PROFILE, TV_PROFILE
 
 from homeassistant.components.media_player import (
@@ -23,7 +30,6 @@ from homeassistant.components.vizio.const import (
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
-    CONF_EXCLUDE,
     CONF_HOST,
     CONF_INCLUDE,
     CONF_NAME,
@@ -36,6 +42,7 @@ NAME = "Vizio"
 NAME2 = "Vizio2"
 HOST = "192.168.1.1:9000"
 HOST2 = "192.168.1.2:9000"
+PORTLESS_HOST = "192.168.1.1"
 ACCESS_TOKEN = "deadbeef"
 VOLUME_STEP = 2
 UNIQUE_ID = "testid"
@@ -63,6 +70,26 @@ def audio_setting(
         hashval=0,
         type=SettingType.SLIDER if isinstance(value, int) else SettingType.LIST,
         options=options,
+    )
+
+
+def state_extended(
+    *,
+    power_on: bool = True,
+    current_input: str = "HDMI",
+    current_app: AppConfig | None = None,
+) -> StateExtended:
+    """Build a StateExtended payload for mock device responses."""
+    return StateExtended(
+        power_on=power_on,
+        power_mode="Eco Mode" if not power_on else "Quick Start",
+        current_input=current_input,
+        current_input_hashval=None,
+        current_app=current_app,
+        screen_mode="Full screen",
+        media_state="MediaState::Stopped",
+        device_name=NAME,
+        raw={},
     )
 
 
@@ -120,39 +147,12 @@ MOCK_OPTIONS = {
     CONF_VOLUME_STEP: VOLUME_STEP,
 }
 
-MOCK_TV_WITH_INCLUDE_CONFIG = {
-    CONF_NAME: NAME,
-    CONF_HOST: HOST,
-    CONF_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
-    CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-    CONF_VOLUME_STEP: VOLUME_STEP,
-    CONF_APPS: {CONF_INCLUDE: [CURRENT_APP]},
-}
-
-MOCK_TV_WITH_EXCLUDE_CONFIG = {
-    CONF_NAME: NAME,
-    CONF_HOST: HOST,
-    CONF_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
-    CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-    CONF_VOLUME_STEP: VOLUME_STEP,
-    CONF_APPS: {CONF_EXCLUDE: ["Netflix"]},
-}
-
 MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG = {
     CONF_NAME: NAME,
     CONF_HOST: HOST,
     CONF_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
     CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-    CONF_VOLUME_STEP: VOLUME_STEP,
     CONF_APPS: {CONF_ADDITIONAL_CONFIGS: [ADDITIONAL_APP_CONFIG]},
-}
-
-
-MOCK_TV_APPS_WITH_VALID_APPS_CONFIG = {
-    CONF_HOST: HOST,
-    CONF_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
-    CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-    CONF_APPS: {CONF_INCLUDE: [CURRENT_APP]},
 }
 
 MOCK_TV_CONFIG_NO_TOKEN = {
