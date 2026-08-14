@@ -570,6 +570,8 @@ async def test_migrate_handle_exceptions(
     assert entry.state is state
     assert log_message in caplog.text
 
+    assert hass.config_entries.flow.async_progress_by_handler("comp") == []
+
 
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (2, 2)])
 async def test_call_async_migrate_entry_failure_not_supported(
