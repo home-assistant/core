@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_sensor_setup_and_states[sensor.indi_allsky_camera-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'connected',
+        'disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.indi_allsky_camera',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Camera',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Camera',
+    'platform': 'indi_allsky',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'camera',
+    'unique_id': '1234567890abcdef1234567890abcdef_camera',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup_and_states[sensor.indi_allsky_camera-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INDI Allsky Camera',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'connected',
+        'disconnected',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.indi_allsky_camera',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'connected',
+  })
+# ---
