@@ -955,6 +955,10 @@ async def _send_program_event(
             "Favorite 001",
         ),
         (
+            "LaundryCare.WasherDryer.Program.WashAndDry.60",
+            "Wash And Dry 60",
+        ),
+        (
             "ConsumerProducts.CoffeeMaker.Program.Beverage.XLCoffee",
             "XL Coffee",
         ),
@@ -978,11 +982,11 @@ async def test_program_key_sensor_states(
     """Test the program sensors format the raw program key into a readable name.
 
     Regardless of whether the program is known to aiohomeconnect or not, only
-    the last segment of the key is used, except for favorites - reported as
-    an opaque "Favorite.NNN" key - where the "Favorite" segment is kept too,
-    since the trailing number alone would not be descriptive. Acronyms and
-    dimensions are kept as one word. The raw value is always exposed as-is
-    via the raw_value attribute.
+    the last segment of the key is used, except for keys ending in a number -
+    such as favorites, reported as an opaque "Favorite.NNN" key - where the
+    segment before it is kept too, since the number alone would not be
+    descriptive. Acronyms and dimensions are kept as one word. The raw value
+    is always exposed as-is via the raw_value attribute.
     """
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED

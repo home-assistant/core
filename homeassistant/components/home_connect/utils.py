@@ -4,11 +4,13 @@ import re
 
 from aiohomeconnect.model.error import HomeConnectError
 
+# Splits before every uppercase letter and every digit group. Its output makes
+# up the translation keys stored in strings.json, e.g. `x_l_coffee`, so it has
+# to stay as it is for those translations to keep resolving.
 RE_CAMEL_CASE = re.compile(r"(?<!^)(?=[A-Z])|(?=\d)(?<=\D)")
 
-# Unlike RE_CAMEL_CASE, this keeps acronyms and dimensions together, so that
-# `XLCoffee` and `3DHotAir` become `XL Coffee` and `3D Hot Air` instead of
-# `X L Coffee` and `3 D Hot Air`.
+# Splits into display words, keeping acronyms and dimensions in one word, e.g.
+# `XLCoffee` and `3DHotAir` become `XL Coffee` and `3D Hot Air`.
 RE_ACRONYM_AWARE_CAMEL_CASE = re.compile(
     r"(?<=[a-z])(?=[A-Z])|(?<=[A-Za-z\d])(?=[A-Z][a-z])|(?<=[A-Za-z])(?=\d)"
 )
@@ -40,15 +42,17 @@ def program_key_to_readable_name(program_key: str) -> str:
     `ConsumerProducts.CoffeeMaker.Program.Beverage.Ristretto`, and converts its
     last segment into a human-readable string, such as `Ristretto`.
 
-    Favorites, such as `BSH.Common.Program.Favorite.001`, keep the `Favorite`
-    segment too, e.g. `Favorite 001`, since the trailing number alone would
-    not be descriptive.
+    Keys ending in a purely numeric segment, such as
+    `BSH.Common.Program.Favorite.001` or
+    `LaundryCare.WasherDryer.Program.WashAndDry.60`, keep the segment before it
+    too, e.g. `Favorite 001` and `Wash And Dry 60`, since the number alone
+    would not be descriptive.
 
     Acronyms and dimensions are kept as one word, so `XLCoffee` becomes
     `XL Coffee` and `3DHotAir` becomes `3D Hot Air`.
     """
     segments = program_key.split(".")
-    name_segments = segments[-2:] if segments[-2:-1] == ["Favorite"] else segments[-1:]
+    name_segments = segments[-2:] if segments[-1].isdigit() else segments[-1:]
     return " ".join(
         RE_ACRONYM_AWARE_CAMEL_CASE.sub(" ", segment) for segment in name_segments
     )
