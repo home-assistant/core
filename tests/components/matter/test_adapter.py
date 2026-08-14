@@ -468,3 +468,31 @@ async def test_bad_node_not_crash_integration(
     assert hass.states.get("light.mock_onoff_light") is not None
     assert len(hass.states.async_all("light")) == 1
     assert "Error setting up node" in caplog.text
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["mock_composed_bridge"])
+@pytest.mark.parametrize("attributes", [{"2/57/15": "MB-1234"}], ids=["bridge_serial"])
+async def test_composed_bridged_device_with_bridge_serial_number(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a composed bridged device reporting the serial number of the bridge."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    bridge_entry = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert bridge_entry is not None
+
+    # the part endpoints 3 and 4 are represented by the device of their compose parent
+    identifier = identifier_for(matter_client, matter_node, 2)
+    assert identifier_for(matter_client, matter_node, 3) == identifier
+    assert identifier_for(matter_client, matter_node, 4) == identifier
+
+    device_entry = device_registry.async_get_device_by_identifier(identifier, entry_id)
+    assert device_entry is not None
+    assert device_entry.id != bridge_entry.id
+    assert device_entry.via_device_id == bridge_entry.id
+    assert (DOMAIN, "serial_MB-1234") not in device_entry.identifiers
