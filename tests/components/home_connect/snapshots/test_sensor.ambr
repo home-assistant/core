@@ -1975,254 +1975,6 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[sensor.dishwasher-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.dishwasher',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'home_connect',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'program_blocked_salt_lack',
-    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.ProgramBlockedSaltLack',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.dishwasher-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.dishwasher',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[sensor.dishwasher_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.dishwasher_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'home_connect',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'salt_lack',
-    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.SaltLack',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.dishwasher_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[sensor.dishwasher_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.dishwasher_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'home_connect',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rinse_aid_lack',
-    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.RinseAidLack',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.dishwasher_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[sensor.dishwasher_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.dishwasher_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'home_connect',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'smart_filter_cleaning_reminder',
-    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.SmartFilterCleaningReminder',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.dishwasher_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_all_entities[sensor.dishwasher_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2607,6 +2359,68 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[sensor.dishwasher_program_blocked_salt_lack-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_program_blocked_salt_lack',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program blocked - salt lack',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program blocked - salt lack',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_blocked_salt_lack',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.ProgramBlockedSaltLack',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_program_blocked_salt_lack-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Program blocked - salt lack',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_program_blocked_salt_lack',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[sensor.dishwasher_program_finish_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2771,6 +2585,68 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_all_entities[sensor.dishwasher_rinse_aid_lack-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_rinse_aid_lack',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rinse aid lack',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Rinse aid lack',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rinse_aid_lack',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.RinseAidLack',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_rinse_aid_lack-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Rinse aid lack',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_rinse_aid_lack',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[sensor.dishwasher_rinse_aid_nearly_empty-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2833,6 +2709,68 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[sensor.dishwasher_salt_lack-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_salt_lack',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt lack',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Salt lack',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_lack',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.SaltLack',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_salt_lack-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Salt lack',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_salt_lack',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[sensor.dishwasher_salt_nearly_empty-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2889,6 +2827,68 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dishwasher_salt_nearly_empty',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_smart_filter_cleaning_reminder-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dishwasher_smart_filter_cleaning_reminder',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Smart filter cleaning reminder',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Smart filter cleaning reminder',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_filter_cleaning_reminder',
+    'unique_id': 'SIEMENS-HCS02DWH1-6BE58C26DCC1-Dishcare.Dishwasher.Event.SmartFilterCleaningReminder',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dishwasher_smart_filter_cleaning_reminder-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Smart filter cleaning reminder',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_smart_filter_cleaning_reminder',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4111,130 +4111,6 @@
     'state': 'ready',
   })
 # ---
-# name: test_all_entities[sensor.hood-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.hood',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'home_connect',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'favorite_short_press',
-    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Event.Favorite.001.ExternalTrigger',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.hood-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.hood',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[sensor.hood_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.hood_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'home_connect',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'favorite_long_press',
-    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Event.Favorite.002.ExternalTrigger',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.hood_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'confirmed',
-        'off',
-        'present',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.hood_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_all_entities[sensor.hood_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4295,6 +4171,130 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
+  })
+# ---
+# name: test_all_entities[sensor.hood_favorite_long_press-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_favorite_long_press',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Favorite long press',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Favorite long press',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'favorite_long_press',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Event.Favorite.002.ExternalTrigger',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hood_favorite_long_press-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Favorite long press',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_favorite_long_press',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[sensor.hood_favorite_short_press-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hood_favorite_short_press',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Favorite short press',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Favorite short press',
+    'platform': 'home_connect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'favorite_short_press',
+    'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Event.Favorite.001.ExternalTrigger',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.hood_favorite_short_press-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Favorite short press',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'confirmed',
+        'off',
+        'present',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hood_favorite_short_press',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[sensor.hood_grease_filter_max_saturation_nearly_reached-entry]
