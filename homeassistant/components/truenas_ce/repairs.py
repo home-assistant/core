@@ -160,5 +160,7 @@ async def async_create_fix_flow(
     if issue_id.startswith(f"{ISSUE_MIGRATION_ROLLBACK}_"):
         entry_id = issue_id.removeprefix(f"{ISSUE_MIGRATION_ROLLBACK}_")
         return MigrationRollbackRepairFlow(entry_id)
-    entry_id = issue_id.removeprefix(f"{ISSUE_STATISTICS_ORPHANED}_")
-    return StatisticsCleanupRepairFlow(entry_id)
+    if issue_id.startswith(f"{ISSUE_STATISTICS_ORPHANED}_"):
+        entry_id = issue_id.removeprefix(f"{ISSUE_STATISTICS_ORPHANED}_")
+        return StatisticsCleanupRepairFlow(entry_id)
+    raise ValueError(f"Unknown TrueNAS repair issue id: {issue_id}")

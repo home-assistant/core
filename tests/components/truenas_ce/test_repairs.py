@@ -5,6 +5,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant.components.truenas_ce.const import (
     CONF_STATISTICS_CLEANUP_IGNORED,
     MIGRATION_RECORDS,
@@ -51,6 +53,12 @@ async def test_create_fix_flow_routes_migration_rollback_issue() -> None:
     )
     assert isinstance(flow, MigrationRollbackRepairFlow)
     assert flow._entry_id == "entry2"
+
+
+async def test_create_fix_flow_raises_on_unknown_issue_id() -> None:
+    """An unrecognized issue id raises instead of being misrouted to the statistics flow."""
+    with pytest.raises(ValueError, match="Unknown TrueNAS repair issue id"):
+        await async_create_fix_flow(SimpleNamespace(), "some_other_issue_entry3", None)
 
 
 async def test_statistics_cleanup_init_lists_ids_when_data_remains() -> None:

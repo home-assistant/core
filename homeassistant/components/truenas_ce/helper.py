@@ -60,6 +60,9 @@ def format_attribute(attr: str) -> str:
     attr = attr.replace("_", " ")
     attr = attr.replace("-", " ")
     attr = attr.capitalize()
+    # capitalize() only preserves "zfs" lowercase mid-string; a leading "zfs"
+    # becomes "Zfs", so both cases need replacing to always yield "ZFS".
+    attr = attr.replace("Zfs", "ZFS")
     attr = attr.replace("zfs", "ZFS")
     attr = attr.replace(" gib", " GiB")
     attr = attr.replace("Cpu ", "CPU ")
