@@ -18,6 +18,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, webhook
+from homeassistant.components.cloud import SIGNAL_CLOUD_CONNECTION_STATE
 from homeassistant.components.netatmo import DOMAIN, coordinator
 from homeassistant.components.netatmo.coordinator import ACCOUNT
 from homeassistant.config_entries import ConfigEntryState
@@ -42,6 +43,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1428,3 +1430,91 @@ async def test_log_when_unavailable(
         await data_handler.async_fetch_data(ACCOUNT)
 
         assert caplog.text.count("recovered") == 1
+
+
+@contextmanager
+def _cloud_subscribed(hass: HomeAssistant) -> Iterator[None]:
+    """Make netatmo's webhook setup take the cloud-subscribed path.
+
+    Needed so the config entry gets a CONF_CLOUDHOOK_URL, the same way a real
+    cloud-based install does when it registers its webhook.
+    """
+    with (
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            return_value="https://hooks.nabu.casa/ABCD",
+        ),
+    ):
+        yield
+
+
+@pytest.mark.parametrize(
+    ("reconnect_after", "expected_registrations"),
+    [
+        pytest.param(10, 1, id="reconnect_inside_the_retry_window"),
+        # The reconnect cannot cancel a retry that already ran, so it registers a
+        # second time. Harmless now that registering is idempotent, where it used
+        # to raise "Handler is already defined!"
+        pytest.param(60, 2, id="retry_fires_before_the_reconnect"),
+    ],
+)
+async def test_a_cloud_reconnect_registers_the_webhook_once(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    reconnect_after: int,
+    expected_registrations: int,
+) -> None:
+    """Test that a disconnect and reconnect never registers the webhook twice."""
+    with (
+        _cloud_subscribed(hass),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+        # Spy, not a stub: the real one is what raises on a double registration
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_register",
+            side_effect=webhook.async_register,
+        ) as mock_register,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_register.reset_mock()
+
+        async_dispatcher_send(
+            hass,
+            SIGNAL_CLOUD_CONNECTION_STATE,
+            cloud.CloudConnectionState.CLOUD_DISCONNECTED,
+        )
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(seconds=reconnect_after))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        async_dispatcher_send(
+            hass,
+            SIGNAL_CLOUD_CONNECTION_STATE,
+            cloud.CloudConnectionState.CLOUD_CONNECTED,
+        )
+        await hass.async_block_till_done()
+
+        # Long enough for a retry the reconnect should have cancelled to fire
+        freezer.tick(timedelta(seconds=60))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_register.call_count == expected_registrations

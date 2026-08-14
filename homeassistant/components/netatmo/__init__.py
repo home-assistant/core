@@ -9,7 +9,7 @@ import pyatmo
 from homeassistant.components import cloud
 from homeassistant.components.webhook import async_unregister as webhook_unregister
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -96,13 +96,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     async def unregister_webhook(_: Any = None) -> None:
         await async_unregister_webhook(hass, entry)
 
+    cancel_retry: CALLBACK_TYPE | None = None
+
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
+        nonlocal cancel_retry
+
         if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
+            # Reconnecting inside the retry window would register twice
+            if cancel_retry is not None:
+                cancel_retry()
+                cancel_retry = None
             await register_webhook()
 
         if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
             await unregister_webhook()
-            entry.async_on_unload(async_call_later(hass, 30, register_webhook))
+            cancel_retry = async_call_later(hass, 30, register_webhook)
+            entry.async_on_unload(cancel_retry)
 
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):

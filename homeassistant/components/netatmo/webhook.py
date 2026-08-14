@@ -185,6 +185,9 @@ async def async_register_webhook(
         )
         return
 
+    # Registering twice raises. Cloud connection changes can land in an order that
+    # asks for a second registration, so drop any handler we already hold first.
+    webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     webhook_register(
         hass,
         DOMAIN,
