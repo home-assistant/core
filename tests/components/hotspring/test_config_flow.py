@@ -132,3 +132,64 @@ async def test_form_no_mac_address(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: "192.168.1.100"}
     assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hotspring: MagicMock,
+) -> None:
+    """Test the full reconfigure flow from start to finish."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+
+
+async def test_full_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hotspring: MagicMock,
+    device_fixture: Spa,
+) -> None:
+    """Test reconfiguration failure when the unique ID changes."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Change mac address by changing root topic on device info
+    device_fixture.info = SpaInfo(
+        hostname="ConnectedSpa_112233",
+        root_topic="mySpa112233445566",
+        sna_ready=True,
+        brand=SpaBrand.HOTSPRING,
+        brand_name="Hot Spring",
+        collection="Highlife",
+        model_name="Relay",
+        brand_id="1",
+        collection_id="1",
+        model_id="1",
+        volume=335,
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
