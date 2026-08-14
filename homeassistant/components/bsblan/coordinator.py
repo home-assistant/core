@@ -188,7 +188,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         self._dhw_schedule_refresh_pending = True
         self._dhw_schedule_refresh_generation = 0
         self._heating_schedule_refresh_pending = set(circuits)
-        self._retry_heating_schedule_errors: set[int] = set()
+        self._heating_schedule_refresh_generations = dict.fromkeys(circuits, 0)
 
     @override
     async def _async_update_data(self) -> BSBLanSlowData:
@@ -233,15 +233,23 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
 
         heating_schedule = dict(previous.heating_schedule)
         for circuit in self._heating_schedule_refresh_pending.copy():
+            refresh_generation = self._heating_schedule_refresh_generations[circuit]
             (
                 refreshed_heating_schedule,
                 retryable,
             ) = await self._async_fetch_heating_schedule(circuit)
             if refreshed_heating_schedule is not None:
                 heating_schedule[circuit] = refreshed_heating_schedule
-                self._heating_schedule_refresh_pending.discard(circuit)
-                self._retry_heating_schedule_errors.discard(circuit)
-            elif not retryable and circuit not in self._retry_heating_schedule_errors:
+                if (
+                    refresh_generation
+                    == self._heating_schedule_refresh_generations[circuit]
+                ):
+                    self._heating_schedule_refresh_pending.discard(circuit)
+            elif (
+                refresh_generation
+                == self._heating_schedule_refresh_generations[circuit]
+                and not retryable
+            ):
                 self._heating_schedule_refresh_pending.discard(circuit)
 
         return BSBLanSlowData(
@@ -259,7 +267,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
     async def async_refresh_heating_schedule_after_write(self, circuit: int) -> None:
         """Refresh a heating schedule after a successful write."""
         self._heating_schedule_refresh_pending.add(circuit)
-        self._retry_heating_schedule_errors.add(circuit)
+        self._heating_schedule_refresh_generations[circuit] += 1
         await self.async_refresh()
 
     async def _async_fetch_dhw_schedule(
@@ -292,7 +300,12 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         """Fetch a heating schedule, returning None if unavailable."""
         try:
             return await self.client.heating_schedule(circuit=circuit), False
-        except BSBLANConnectionError, BSBLANAuthError, TimeoutError:
+        except (
+            BSBLANConnectionError,
+            BSBLANAuthError,
+            BSBLANMalformedResponseError,
+            TimeoutError,
+        ):
             LOGGER.debug(
                 "Heating schedule not available for circuit %d on device at %s",
                 circuit,
