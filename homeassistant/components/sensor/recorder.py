@@ -362,6 +362,28 @@ def _normalize_states(
     last_unit: str | UndefinedType | None = UNDEFINED
     valid_units = converter.VALID_UNITS
 
+    if statistics_unit not in valid_units:
+        # The unit the statistics were compiled with is no longer one this
+        # converter knows. Converting into it raises, and the exception would
+        # travel up and abandon the whole compilation run, so every other
+        # sensor would lose this period too.
+        if WARN_UNSUPPORTED_UNIT not in hass.data:
+            hass.data[WARN_UNSUPPORTED_UNIT] = set()
+        if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
+            hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
+            _LOGGER.warning(
+                (
+                    "The unit of the statistics of %s (%s) is not a valid %s unit."
+                    " Generation of long term statistics will be suppressed unless"
+                    " the unit is changed to a valid one. Go to %s to fix this"
+                ),
+                entity_id,
+                statistics_unit,
+                unit_class,
+                LINK_DEV_STATISTICS,
+            )
+        return None, None, []
+
     for fstate, state in fstates:
         state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         # Exclude states with unsupported unit from statistics
