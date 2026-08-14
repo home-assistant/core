@@ -43,7 +43,9 @@ async def test_ram_sensors(
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device == snapshot(name="ram-device")
 
@@ -61,7 +63,9 @@ async def test_cam_entities(
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_CAM_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_CAM_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device == snapshot(name="cam-device")
 
