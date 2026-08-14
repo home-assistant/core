@@ -905,9 +905,8 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
 def test_no_event_sensor_removed(snapshot: SnapshotAssertion) -> None:
     """Ensure no event sensor is accidentally removed.
 
-    Event sensors all share the same logic and only differ by their event key,
-    so rather than testing each one individually the full set of registered
-    event keys is snapshotted to guard against a sensor being dropped
-    unintentionally.
+    Event sensors all share the same state-handling logic, so rather than
+    testing each one individually the full set of registered event keys is
+    snapshotted to guard against a sensor being dropped unintentionally.
     """
     assert sorted(desc.key.value for desc in EVENT_SENSORS) == snapshot
