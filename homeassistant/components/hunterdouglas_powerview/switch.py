@@ -91,3 +91,10 @@ class PowerViewScheduleSwitch(HDEntity, SwitchEntity):
         """Disable the schedule."""
         await self._automation.set_state(False)
         self.async_write_ha_state()
+
+    @override
+    async def async_update(self) -> None:
+        """Refresh automation state."""
+        async with self.coordinator.radio_operation_lock:
+            await self._automation.refresh()
+        self.async_write_ha_state()
