@@ -866,12 +866,13 @@ async def test_sync_time_service_entry_not_loaded(
 @pytest.mark.usefixtures("setup_integration")
 async def test_set_heating_schedule(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test setting the heating schedule for a circuit sub-device."""
-    circuit_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1")}
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1"), mock_config_entry.entry_id
     )
     assert circuit_device is not None
 
@@ -921,8 +922,9 @@ async def test_set_heating_schedule_circuit_2(
     await hass.config_entries.async_setup(mock_config_entry_dual_circuit.entry_id)
     await hass.async_block_till_done()
 
-    circuit_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_MAC}-circuit-2")}
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-2"),
+        mock_config_entry_dual_circuit.entry_id,
     )
     assert circuit_device is not None
 
@@ -939,6 +941,105 @@ async def test_set_heating_schedule_circuit_2(
     )
 
     assert mock_bsblan.set_heating_schedule.call_args.kwargs["circuit"] == 2
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_overlapping_heating_schedule_writes_preserve_latest_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an in-flight heating refresh does not consume a newer write."""
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1"), mock_config_entry.entry_id
+    )
+    assert circuit_device is not None
+
+    first_fetch_started = asyncio.Event()
+    release_first_fetch = asyncio.Event()
+    stale_schedule = MagicMock()
+    refreshed_schedule = MagicMock()
+    fetch_count = 0
+
+    async def _schedule(*, circuit: int) -> MagicMock:
+        nonlocal fetch_count
+        assert circuit == 1
+        fetch_count += 1
+        if fetch_count == 1:
+            first_fetch_started.set()
+            await release_first_fetch.wait()
+            return stale_schedule
+        return refreshed_schedule
+
+    mock_bsblan.heating_schedule.reset_mock()
+    mock_bsblan.heating_schedule.side_effect = _schedule
+    service_data = {
+        "device_id": circuit_device.id,
+        "monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}],
+    }
+
+    first_write = asyncio.create_task(
+        hass.services.async_call(
+            DOMAIN, "set_heating_schedule", service_data, blocking=True
+        )
+    )
+    await first_fetch_started.wait()
+    second_write = asyncio.create_task(
+        hass.services.async_call(
+            DOMAIN, "set_heating_schedule", service_data, blocking=True
+        )
+    )
+    await asyncio.sleep(0)
+    release_first_fetch.set()
+    await asyncio.gather(first_write, second_write)
+
+    assert mock_bsblan.heating_schedule.await_count == 2
+    assert (
+        mock_config_entry.runtime_data.slow_coordinator.data.heating_schedule[1]
+        is refreshed_schedule
+    )
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_set_heating_schedule_retries_malformed_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a malformed post-write heating refresh is retried."""
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1"), mock_config_entry.entry_id
+    )
+    assert circuit_device is not None
+
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    old_schedule = slow_coordinator.data.heating_schedule[1]
+    refreshed_schedule = MagicMock()
+    mock_bsblan.heating_schedule.side_effect = [
+        BSBLANMalformedResponseError("Invalid response"),
+        refreshed_schedule,
+    ]
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_heating_schedule",
+        {
+            "device_id": circuit_device.id,
+            "monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}],
+        },
+        blocking=True,
+    )
+
+    assert slow_coordinator.data.heating_schedule[1] is old_schedule
+
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert slow_coordinator.data.heating_schedule[1] is refreshed_schedule
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -995,11 +1096,12 @@ async def test_set_heating_schedule_rejects_zero_circuit_device(
 @pytest.mark.usefixtures("setup_integration")
 async def test_set_heating_schedule_time_validation_error(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test validation error when a heating schedule slot ends before it starts."""
-    circuit_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1")}
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1"), mock_config_entry.entry_id
     )
     assert circuit_device is not None
 
@@ -1022,12 +1124,13 @@ async def test_set_heating_schedule_time_validation_error(
 @pytest.mark.usefixtures("setup_integration")
 async def test_set_heating_schedule_api_error(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test error when the heating schedule API call fails."""
-    circuit_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1")}
+    circuit_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_MAC}-circuit-1"), mock_config_entry.entry_id
     )
     assert circuit_device is not None
     mock_bsblan.set_heating_schedule.side_effect = BSBLANError("API Error")
