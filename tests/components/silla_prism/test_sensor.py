@@ -16,6 +16,9 @@ from tests.common import MockConfigEntry, async_fire_mqtt_message, snapshot_plat
 from tests.typing import MqttMockHAClient
 
 ERROR_ENTITY_ID = "sensor.silla_prism_error"
+ERROR_TOPIC = "prism/1/error"
+POWER_ENTITY_ID = "sensor.silla_prism_power"
+POWER_TOPIC = "prism/1/w"
 SESSION_START_ENTITY_ID = "sensor.silla_prism_session_start"
 SESSION_TIME_TOPIC = "prism/1/session_time"
 
@@ -40,15 +43,29 @@ async def test_sensors(
 async def test_undocumented_error_code(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that an error code outside the documented ones reads as unknown."""
     await setup_integration(hass, mock_config_entry)
     await fire_burst(hass)
 
-    async_fire_mqtt_message(hass, "prism/1/error", "12")
+    async_fire_mqtt_message(hass, ERROR_TOPIC, "12")
     await hass.async_block_till_done()
 
     assert hass.states.get(ERROR_ENTITY_ID).state == STATE_UNKNOWN
+    assert caplog.text.count("Unknown error code: 12") == 1
+
+    async_fire_mqtt_message(hass, ERROR_TOPIC, "12")
+    await hass.async_block_till_done()
+
+    assert caplog.text.count("Unknown error code: 12") == 1
+
+    async_fire_mqtt_message(hass, ERROR_TOPIC, "0")
+    async_fire_mqtt_message(hass, POWER_TOPIC, "2000.0")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ERROR_ENTITY_ID).state == "none"
+    assert hass.states.get(POWER_ENTITY_ID).state == "2000.0"
 
 
 @pytest.mark.usefixtures("mqtt_mock")
