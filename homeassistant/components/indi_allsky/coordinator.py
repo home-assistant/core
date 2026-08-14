@@ -1,7 +1,6 @@
 """DataUpdateCoordinator for INDI Allsky integration."""
 
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 from typing import override
 
@@ -53,7 +52,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=None,
         )
 
     def _handle_exposure_complete(self, exposure: ExposureData) -> None:

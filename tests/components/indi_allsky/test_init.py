@@ -3,9 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aioindiallsky import IndiAllSkyConnectionError
-import pytest
 
-from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -14,10 +12,10 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_indi_allsky_client")
 async def test_setup_and_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_indi_allsky_client: AsyncMock,
 ) -> None:
     """Test successful setup and unload of entry."""
     await setup_integration(hass, mock_config_entry)
@@ -28,7 +26,7 @@ async def test_setup_and_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)
+    mock_indi_allsky_client.disconnect.assert_awaited_once()
 
 
 async def test_setup_failure_retry(
