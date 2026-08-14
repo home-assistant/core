@@ -891,11 +891,11 @@ fields).
 ### `W7432`: `home-assistant-subentry-flow-field-not-translated`
 
 A subentry flow form field is missing its translation in `strings.json`.
-The expected path is
-`config_subentries.<type>.step.<step_id>.data.<field_name>`. The checker
-resolves the subentry type by finding the `ConfigFlow` class's
-`async_get_supported_subentry_types` method and mapping subentry handler
-class names to their type keys.
+The expected path is `config_subentries.<type>.step.<step_id>.data.<field_name>`
+(or `config_subentries.<type>.step.<step_id>.sections.<key>.data.<field_name>`
+for section fields). The checker resolves the subentry type by finding the
+`ConfigFlow` class's `async_get_supported_subentry_types` method and mapping
+subentry handler class names to their type keys.
 
 ## `home_assistant_test_before_configure` checker
 
