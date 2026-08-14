@@ -38,13 +38,6 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
-def mock_room_priority_retry_delay() -> Generator[None]:
-    """Skip the real delay between GetPriorityFailed retries in the coordinator."""
-    with patch("homeassistant.components.lyric.coordinator.asyncio.sleep"):
-        yield
-
-
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a Lyric config entry with a valid OAuth2 token."""
