@@ -1362,7 +1362,7 @@ imeon_inverter_api==0.4.0
 imgw_pib==2.5.1
 
 # homeassistant.components.incomfort
-incomfort-client==0.7.0
+incomfort-client==0.7.1
 
 # homeassistant.components.indevolt
 indevolt-api==1.8.7
@@ -1613,7 +1613,7 @@ moehlenhoff-alpha2==1.4.0
 momonga==0.3.0
 
 # homeassistant.components.monarch_money
-monarchmoneycommunity==1.5.1
+monarchmoneycommunity==1.5.2
 
 # homeassistant.components.monzo
 monzopy==1.8.0
@@ -1956,7 +1956,7 @@ py-nextbusnext==2.3.0
 py-nightscout==1.2.2
 
 # homeassistant.components.mta
-py-nymta==0.4.0
+py-nymta==0.4.1
 
 # homeassistant.components.opendisplay
 py-opendisplay==7.15.0
