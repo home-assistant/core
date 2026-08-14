@@ -61,7 +61,9 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             software_version = await self.client.get_firmware_version()
             self.device_name = (await self.client.get_details())[DEV_NAME]
         except (TimeoutError, ClientError) as exception:
-            raise UpdateFailed from exception
+            raise UpdateFailed(
+                f"Error setting up {self.config_entry.title}: {exception!r}"
+            ) from exception
         self.software_version = software_version["version"]
         self.supports_effects = AwesomeVersion(self.software_version) >= AwesomeVersion(
             MIN_EFFECT_VERSION
@@ -75,18 +77,22 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
         try:
             device_info = await self.client.get_details()
             brightness = await self.client.get_brightness()
-            is_on = await self.client.is_on()
             mode_data = await self.client.get_mode()
             current_mode = mode_data.get("mode")
             if self.supports_effects:
                 movies = (await self.client.get_saved_movies())["movies"]
         except (TimeoutError, ClientError) as exception:
-            raise UpdateFailed from exception
+            raise UpdateFailed(
+                f"Error communicating with {self.config_entry.title}: {exception!r}"
+            ) from exception
         if self.supports_effects:
             try:
                 current_movie = await self.client.get_current_movie()
             except (TwinklyError, TimeoutError, ClientError) as exception:
                 _LOGGER.debug("Error fetching current movie: %s", exception)
+        # Twinkly.is_on() issues a second GET of led/mode, so derive it from the
+        # mode already fetched above rather than asking the device twice.
+        is_on = (current_mode or "off") != "off"
         brightness = (
             int(brightness["value"]) if brightness["mode"] == "enabled" else 100
         )
