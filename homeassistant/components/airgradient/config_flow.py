@@ -102,12 +102,17 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            await self.set_configuration_source()
-            return self.async_create_entry(
-                title=self.data[CONF_MODEL],
-                data={CONF_HOST: self.data[CONF_HOST]},
-            )
+            try:
+                await self.set_configuration_source()
+            except AirGradientError:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title=self.data[CONF_MODEL],
+                    data={CONF_HOST: self.data[CONF_HOST]},
+                )
 
         self._set_confirm_only()
         return self.async_show_form(
@@ -115,6 +120,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "model": self.data[CONF_MODEL],
             },
+            errors=errors,
         )
 
     @override
@@ -142,16 +148,20 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
                 if self.source == SOURCE_RECONFIGURE:
                     self._abort_if_unique_id_mismatch()
-                await self.set_configuration_source()
-                if self.source == SOURCE_USER:
-                    return self.async_create_entry(
-                        title=current_measures.model,
+                try:
+                    await self.set_configuration_source()
+                except AirGradientError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    if self.source == SOURCE_USER:
+                        return self.async_create_entry(
+                            title=current_measures.model,
+                            data={CONF_HOST: user_input[CONF_HOST]},
+                        )
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
                         data={CONF_HOST: user_input[CONF_HOST]},
                     )
-                return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
-                    data={CONF_HOST: user_input[CONF_HOST]},
-                )
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),

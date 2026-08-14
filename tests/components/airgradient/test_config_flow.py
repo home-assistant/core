@@ -5,7 +5,9 @@ from ipaddress import ip_address
 from unittest.mock import ANY, AsyncMock, patch
 
 from airgradient import (
+    AirGradientBusyError,
     AirGradientConnectionError,
+    AirGradientError,
     AirGradientParseError,
     ApiVersion,
     ConfigurationControl,
@@ -140,6 +142,48 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("method", "exception"),
+    [
+        ("get_config", AirGradientConnectionError()),
+        (
+            "set_configuration_control",
+            AirGradientBusyError(status=503, code="busy"),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_config_source_errors(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    method: str,
+    exception: AirGradientError,
+) -> None:
+    """Test errors while setting the configuration source."""
+    getattr(mock_v1_airgradient_client, method).side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.131"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    getattr(mock_v1_airgradient_client, method).side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.131"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_old_firmware_version(
     hass: HomeAssistant, mock_airgradient_client: AsyncMock
@@ -241,6 +285,32 @@ async def test_zeroconf_flow_cloud_device(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     mock_cloud_airgradient_client.set_configuration_control.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow_config_source_error(
+    hass: HomeAssistant, mock_new_airgradient_client: AsyncMock
+) -> None:
+    """Test errors while setting the discovered device configuration source."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    mock_new_airgradient_client.set_configuration_control.side_effect = (
+        AirGradientBusyError(status=503, code="busy")
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_new_airgradient_client.set_configuration_control.side_effect = None
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_flow_abort_old_firmware(
