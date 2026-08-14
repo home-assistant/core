@@ -1197,3 +1197,56 @@ async def test_failed_updates_are_retried_with_escalating_backoff(
     # scheduled update), the delay then doubles per consecutive error until the
     # patched cap of 600s is reached
     assert gaps == [180, 300, 600, 600]
+
+
+async def _drive_scheduled_updates(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, seconds: int
+) -> None:
+    """Fire every scheduled update falling in the given span."""
+    for _ in range(seconds // 30):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_the_startup_burst_does_not_throttle_the_poll_schedule(
+    hass: HomeAssistant, config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that the calls made while subscribing cannot breach the rate limit."""
+    request_times: list[float] = []
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        if (
+            kwargs.get("endpoint", "").endswith("homestatus")
+            and kwargs.get("params", {}).get("home_id") == HOME_ID
+        ):
+            request_times.append(time())
+        return await fake_post_request(hass, *args, **kwargs)
+
+    # Comfortably above the handful of calls subscribing makes, but far below what
+    # those same calls extrapolate to when spread over only the first minute
+    with patch.object(coordinator, "CLOUD_LIMIT", 10):
+        await _setup_switch_platform(hass, config_entry, fake_post)
+        await _drive_scheduled_updates(hass, freezer, 600)
+
+    gaps = [round(later - earlier) for earlier, later in pairwise(request_times)]
+
+    # Throttling adds 60s to every publisher on every scheduled update, so any
+    # would stretch these gaps well past the base cadence
+    assert len(gaps) >= 2
+    assert set(gaps) == {180}
+
+
+async def test_calls_stop_counting_once_they_leave_the_window(
+    hass: HomeAssistant, config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that the counter only reports the calls made in the trailing hour."""
+    await _setup_switch_platform(hass, config_entry, partial(fake_post_request, hass))
+    data_handler = config_entry.runtime_data
+
+    assert data_handler._calls_in_the_last_hour() > 0
+
+    # Advanced without firing the scheduled updates, so nothing is added back
+    freezer.tick(timedelta(seconds=coordinator.RATE_LIMIT_WINDOW + 1))
+
+    assert data_handler._calls_in_the_last_hour() == 0
