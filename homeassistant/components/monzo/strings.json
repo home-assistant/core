@@ -45,6 +45,11 @@
     }
   },
   "entity": {
+    "event": {
+      "transaction": {
+        "name": "Transaction"
+      }
+    },
     "sensor": {
       "balance": {
         "name": "Balance"

@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType, UndefinedType
 
@@ -32,7 +32,7 @@ async def async_setup_entry(
         "2_ch_power_strip",
     )
 
-    via_device_id = dr.async_get_device_id_by_identifier(
+    parent_device_id = dr.async_get_device_id_by_identifier(
         hass, (DOMAIN, "2_ch_power_strip"), config_entry_id=config_entry.entry_id
     )
 
@@ -47,7 +47,7 @@ async def async_setup_entry(
                 device_class=SensorDeviceClass.POWER,
                 state_class=SensorStateClass.MEASUREMENT,
                 unit_of_measurement=UnitOfPower.WATT,
-                via_device_id=via_device_id,
+                parent_device_id=parent_device_id,
             ),
             DemoSensor(
                 device_unique_id="outlet_2",
@@ -58,7 +58,7 @@ async def async_setup_entry(
                 device_class=SensorDeviceClass.POWER,
                 state_class=SensorStateClass.MEASUREMENT,
                 unit_of_measurement=UnitOfPower.WATT,
-                via_device_id=via_device_id,
+                parent_device_id=parent_device_id,
             ),
             DemoSensor(
                 device_unique_id="statistics_issues",
@@ -128,6 +128,7 @@ class DemoSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_device_info: DeviceInfo | ChildDeviceInfo
 
     def __init__(
         self,
@@ -140,7 +141,7 @@ class DemoSensor(SensorEntity):
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
-        via_device_id: str | None = None,
+        parent_device_id: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._attr_device_class = device_class
@@ -151,9 +152,14 @@ class DemoSensor(SensorEntity):
         self._attr_state_class = state_class
         self._attr_unique_id = unique_id
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_unique_id)},
-            name=device_name,
-        )
-        if via_device_id:
-            self._attr_device_info["via_device_id"] = via_device_id
+        if parent_device_id is not None:
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={(DOMAIN, device_unique_id)},
+                name=device_name,
+                parent_device_id=parent_device_id,
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, device_unique_id)},
+                name=device_name,
+            )
