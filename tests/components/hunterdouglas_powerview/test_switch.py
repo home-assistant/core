@@ -96,7 +96,7 @@ async def test_switch_enable(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {"entity_id": f"switch.powerview_generation_{api_version}_37484_schedule"},
+            {"entity_id": f"switch.powerview_generation_{api_version}_38971_schedule"},
             blocking=True,
         )
         await hass.async_block_till_done()
