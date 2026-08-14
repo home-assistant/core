@@ -206,6 +206,12 @@ class OAuth2FlowHandler(
             if self._async_home_id_configured(home_id):
                 return self.async_abort(reason="already_configured")
             data[CONF_HOME_ID] = home_id
+        elif self._async_other_entry_configured():
+            # Only UAC entries can be left here, and any of them may manage the
+            # home of this account. An unknown home cannot be told apart from
+            # theirs, so setup would record it on two entries instead of the
+            # flow refusing the duplicate.
+            return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="YoLink", data=data)
 
@@ -219,6 +225,13 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="oauth_unauthorized")
 
         if not home_id:
+            if self._async_other_entry_configured(
+                ignore_entry_id=reauth_entry.entry_id
+            ):
+                # As in async_oauth_create_entry: the home another entry manages
+                # cannot be ruled out without the home id, so the token is left
+                # unwritten rather than bypassing the duplicate check.
+                return self.async_abort(reason="cannot_connect")
             # The account may have changed, so the recorded home id can no
             # longer be trusted. Dropping it lets setup record the home again,
             # which a merge of data updates could not do.
@@ -266,6 +279,12 @@ class OAuth2FlowHandler(
             entry.data.get(CONF_HOME_ID) == home_id
             for entry in self._async_current_entries()
             if entry.entry_id != ignore_entry_id
+        )
+
+    def _async_other_entry_configured(self, ignore_entry_id: str | None = None) -> bool:
+        """Return if an entry other than ignore_entry_id is configured."""
+        return any(
+            entry.entry_id != ignore_entry_id for entry in self._async_current_entries()
         )
 
     def _async_oauth_entry_exists(self) -> bool:

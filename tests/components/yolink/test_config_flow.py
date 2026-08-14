@@ -47,19 +47,23 @@ def _validation_error() -> ValidationError:
     return err.value
 
 
-# Everything the home lookup can fail with, other than a refused token.
-HOME_LOOKUP_FAILURES = [
-    pytest.param(YoLinkClientError("-1003", "Request failed"), id="client_error"),
-    pytest.param(TimeoutError(), id="timeout"),
-    pytest.param(_validation_error(), id="validation_error"),
-    pytest.param(AttributeError("'NoneType' object has no attribute 'get'"), id="bug"),
-]
-
-# Responses that are accepted but do not name a home.
-UNUSABLE_HOME_INFO = [
-    pytest.param(BRDP(code="000000"), id="response_without_data"),
+# Everything that leaves the home of an accepted account unknown, as the mock
+# configuration of the API call the lookup makes: a request that fails with
+# anything other than a refused token, and a response that names no home.
+UNKNOWN_HOME_LOOKUPS = [
     pytest.param(
-        BRDP(code="000000", data={"name": TEST_HOME_NAME}), id="response_without_id"
+        {"side_effect": YoLinkClientError("-1003", "Request failed")}, id="client_error"
+    ),
+    pytest.param({"side_effect": TimeoutError()}, id="timeout"),
+    pytest.param({"side_effect": _validation_error()}, id="validation_error"),
+    pytest.param(
+        {"side_effect": AttributeError("'NoneType' object has no attribute 'get'")},
+        id="bug",
+    ),
+    pytest.param({"return_value": BRDP(code="000000")}, id="response_without_data"),
+    pytest.param(
+        {"return_value": BRDP(code="000000", data={"name": TEST_HOME_NAME})},
+        id="response_without_id",
     ),
 ]
 
@@ -383,19 +387,19 @@ async def test_oauth_flow_uses_resolved_token_for_home_lookup(
     )
 
 
-@pytest.mark.parametrize("exception", HOME_LOOKUP_FAILURES)
+@pytest.mark.parametrize("home_lookup", UNKNOWN_HOME_LOOKUPS)
 @pytest.mark.usefixtures(
     "setup_credentials", "current_request_with_host", "mock_setup_entry"
 )
-async def test_oauth_flow_creates_entry_when_home_lookup_fails(
+async def test_oauth_flow_creates_entry_when_home_is_unknown(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_yolink_client: AsyncMock,
-    exception: Exception,
+    home_lookup: dict[str, Any],
 ) -> None:
-    """Test a failing home lookup does not block OAuth2 setup."""
-    mock_yolink_client.return_value.execute.side_effect = exception
+    """Test a home that stays unknown does not block the first entry."""
+    mock_yolink_client.return_value.execute.configure_mock(**home_lookup)
 
     result = await _async_complete_oauth_flow(hass, hass_client_no_auth, aioclient_mock)
 
@@ -403,24 +407,28 @@ async def test_oauth_flow_creates_entry_when_home_lookup_fails(
     assert CONF_HOME_ID not in result["data"]
 
 
-@pytest.mark.parametrize("home_info", UNUSABLE_HOME_INFO)
+@pytest.mark.parametrize("home_lookup", UNKNOWN_HOME_LOOKUPS)
 @pytest.mark.usefixtures(
-    "setup_credentials", "current_request_with_host", "mock_setup_entry"
+    "setup_credentials",
+    "current_request_with_host",
+    "mock_setup_entry",
+    "mock_uac_config_entry",
 )
-async def test_oauth_flow_creates_entry_without_home_id_in_response(
+async def test_oauth_flow_aborts_when_home_is_unknown_and_entry_exists(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_yolink_client: AsyncMock,
-    home_info: BRDP,
+    home_lookup: dict[str, Any],
 ) -> None:
-    """Test an unusable home lookup response does not block OAuth2 setup."""
-    mock_yolink_client.return_value.execute.return_value = home_info
+    """Test OAuth2 is refused while the home cannot be checked for duplicates."""
+    mock_yolink_client.return_value.execute.configure_mock(**home_lookup)
 
     result = await _async_complete_oauth_flow(hass, hass_client_no_auth, aioclient_mock)
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert CONF_HOME_ID not in result["data"]
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.usefixtures(
@@ -593,7 +601,7 @@ async def test_oauth_reauthentication_aborts_when_token_is_rejected(
     assert old_entry.data["token"]["access_token"] == "outdated-access-token"
 
 
-@pytest.mark.parametrize("exception", HOME_LOOKUP_FAILURES)
+@pytest.mark.parametrize("home_lookup", UNKNOWN_HOME_LOOKUPS)
 @pytest.mark.usefixtures(
     "setup_credentials", "current_request_with_host", "mock_setup_entry"
 )
@@ -602,13 +610,13 @@ async def test_oauth_reauthentication_drops_stale_home_id(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_yolink_client: AsyncMock,
-    exception: Exception,
+    home_lookup: dict[str, Any],
 ) -> None:
-    """Test a failing home lookup forgets the home of the previous account."""
+    """Test a home that stays unknown forgets the home of the previous account."""
     old_entry = _mock_oauth_entry(
         hass, {CONF_AUTH_TYPE: AUTH_TYPE_OAUTH, CONF_HOME_ID: TEST_HOME_ID}
     )
-    mock_yolink_client.return_value.execute.side_effect = exception
+    mock_yolink_client.return_value.execute.configure_mock(**home_lookup)
 
     result = await _async_complete_oauth_reauth_flow(
         hass, hass_client_no_auth, aioclient_mock, old_entry
@@ -621,30 +629,33 @@ async def test_oauth_reauthentication_drops_stale_home_id(
     assert old_entry.data["token"]["access_token"] == "mock-access-token"
 
 
-@pytest.mark.parametrize("home_info", UNUSABLE_HOME_INFO)
+@pytest.mark.parametrize("home_lookup", UNKNOWN_HOME_LOOKUPS)
 @pytest.mark.usefixtures(
-    "setup_credentials", "current_request_with_host", "mock_setup_entry"
+    "setup_credentials", "current_request_with_host", "mock_uac_config_entry"
 )
-async def test_oauth_reauthentication_drops_home_id_without_home_info(
+async def test_oauth_reauthentication_aborts_when_home_is_unknown(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_yolink_client: AsyncMock,
-    home_info: BRDP,
+    mock_setup_entry: AsyncMock,
+    home_lookup: dict[str, Any],
 ) -> None:
-    """Test an unusable home lookup response forgets the recorded home."""
+    """Test reauthentication is refused while another entry may own the home."""
     old_entry = _mock_oauth_entry(
-        hass, {CONF_AUTH_TYPE: AUTH_TYPE_OAUTH, CONF_HOME_ID: TEST_HOME_ID}
+        hass, {CONF_AUTH_TYPE: AUTH_TYPE_OAUTH, CONF_HOME_ID: "home_99999"}
     )
-    mock_yolink_client.return_value.execute.return_value = home_info
+    mock_yolink_client.return_value.execute.configure_mock(**home_lookup)
 
     result = await _async_complete_oauth_reauth_flow(
         hass, hass_client_no_auth, aioclient_mock, old_entry
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert CONF_HOME_ID not in old_entry.data
+    assert result["reason"] == "cannot_connect"
+    assert old_entry.data[CONF_HOME_ID] == "home_99999"
+    assert old_entry.data["token"]["access_token"] == "outdated-access-token"
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_uac_flow(
