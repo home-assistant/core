@@ -1,25 +1,15 @@
 {
-    "domain": "truenas_ce",
-    "name": "TrueNAS CE",
-    "after_dependencies": [
-        "recorder"
-    ],
-    "codeowners": [
-        "@kayl-codes"
-    ],
-    "config_flow": true,
-    "dependencies": [],
-    "documentation": "https://www.home-assistant.io/integrations/truenas_ce",
-    "integration_type": "device",
-    "iot_class": "local_polling",
-    "loggers": [
-        "aiotruenas"
-    ],
-    "quality_scale": "platinum",
-    "requirements": [
-        "aiotruenas==1.1.0"
-    ],
-    "zeroconf": [
-        "_http._tcp.local."
-    ]
+  "domain": "truenas_ce",
+  "name": "TrueNAS CE",
+  "after_dependencies": ["diagnostics", "recorder"],
+  "codeowners": ["@kayl-codes"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/truenas_ce",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["aiotruenas"],
+  "quality_scale": "platinum",
+  "requirements": ["aiotruenas==1.1.0"],
+  "zeroconf": ["_http._tcp.local."]
 }

@@ -4,122 +4,11 @@
       "alerts": {
         "default": "mdi:alert"
       },
-      "system_smb_connections": {
-        "default": "mdi:folder-network"
+      "app_stats_blkio_read": {
+        "default": "mdi:database-arrow-right"
       },
-      "system_uptime": {
-        "default": "mdi:clock-outline"
-      },
-      "system_cpu_temperature": {
-        "default": "mdi:thermometer"
-      },
-      "system_load_shortterm": {
-        "default": "mdi:gauge"
-      },
-      "system_load_midterm": {
-        "default": "mdi:gauge"
-      },
-      "system_load_longterm": {
-        "default": "mdi:gauge"
-      },
-      "system_cpu_usage": {
-        "default": "mdi:cpu-64-bit"
-      },
-      "system_memory_usage": {
-        "default": "mdi:memory"
-      },
-      "system_cache_size_arc_value": {
-        "default": "mdi:memory"
-      },
-      "system_memory_total": {
-        "default": "mdi:memory"
-      },
-      "system_memory_free": {
-        "default": "mdi:memory"
-      },
-      "dataset": {
-        "default": "mdi:database"
-      },
-      "pool_free": {
-        "default": "mdi:database-settings"
-      },
-      "pool_size": {
-        "default": "mdi:database-settings"
-      },
-      "pool_allocated": {
-        "default": "mdi:database-settings"
-      },
-      "pool_errors": {
-        "default": "mdi:alert-circle-outline"
-      },
-      "pool_fragmentation": {
-        "default": "mdi:chart-pie"
-      },
-      "pool_scrub_start": {
-        "default": "mdi:broom"
-      },
-      "pool_scrub_end": {
-        "default": "mdi:broom-clock"
-      },
-      "pool_scrub_state": {
-        "default": "mdi:broom"
-      },
-      "cloudsync": {
-        "default": "mdi:cloud-upload"
-      },
-      "replication": {
-        "default": "mdi:transfer"
-      },
-      "rsynctask": {
-        "default": "mdi:folder-sync"
-      },
-      "snapshottask": {
-        "default": "mdi:checkbox-marked-circle-plus-outline"
-      },
-      "traffic_rx": {
-        "default": "mdi:download-network-outline"
-      },
-      "traffic_tx": {
-        "default": "mdi:upload-network-outline"
-      },
-      "ups_charge": {
-        "default": "mdi:battery-charging"
-      },
-      "ups_runtime": {
-        "default": "mdi:timer-outline"
-      },
-      "ups_load": {
-        "default": "mdi:gauge"
-      },
-      "ups_voltage": {
-        "default": "mdi:sine-wave"
-      },
-      "ups_current": {
-        "default": "mdi:current-ac"
-      },
-      "ups_frequency": {
-        "default": "mdi:sine-wave"
-      },
-      "ups_temperature": {
-        "default": "mdi:thermometer"
-      },
-      "directoryservices": {
-        "default": "mdi:domain"
-      },
-      "certificate_expiry": {
-        "default": "mdi:certificate"
-      },
-      "certificate_expiration_time": {
-        "default": "mdi:certificate"
-      },
-      "arc_data_hit_percent": {
-        "default": "mdi:memory"
-      },
-      "arc_metadata_hit_percent": {
-        "default": "mdi:memory"
-      },
-      "arc_l2_hit_percent": {
-        "default": "mdi:memory"
+      "app_stats_blkio_write": {
+        "default": "mdi:database-arrow-left"
       },
       "app_stats_cpu": {
         "default": "mdi:cpu-64-bit"
@@ -133,65 +22,176 @@
       "app_stats_network_tx": {
         "default": "mdi:upload-network-outline"
       },
-      "app_stats_blkio_read": {
-        "default": "mdi:database-arrow-right"
+      "arc_data_hit_percent": {
+        "default": "mdi:memory"
       },
-      "app_stats_blkio_write": {
-        "default": "mdi:database-arrow-left"
+      "arc_l2_hit_percent": {
+        "default": "mdi:memory"
+      },
+      "arc_metadata_hit_percent": {
+        "default": "mdi:memory"
+      },
+      "certificate_expiration_time": {
+        "default": "mdi:certificate"
+      },
+      "certificate_expiry": {
+        "default": "mdi:certificate"
+      },
+      "cloudsync": {
+        "default": "mdi:cloud-upload"
+      },
+      "dataset": {
+        "default": "mdi:database"
+      },
+      "directoryservices": {
+        "default": "mdi:domain"
+      },
+      "pool_allocated": {
+        "default": "mdi:database-settings"
+      },
+      "pool_errors": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "pool_fragmentation": {
+        "default": "mdi:chart-pie"
+      },
+      "pool_free": {
+        "default": "mdi:database-settings"
+      },
+      "pool_scrub_end": {
+        "default": "mdi:broom-clock"
+      },
+      "pool_scrub_start": {
+        "default": "mdi:broom"
+      },
+      "pool_scrub_state": {
+        "default": "mdi:broom"
+      },
+      "pool_size": {
+        "default": "mdi:database-settings"
+      },
+      "replication": {
+        "default": "mdi:transfer"
+      },
+      "rsynctask": {
+        "default": "mdi:folder-sync"
+      },
+      "snapshottask": {
+        "default": "mdi:checkbox-marked-circle-plus-outline"
+      },
+      "system_cache_size_arc_value": {
+        "default": "mdi:memory"
+      },
+      "system_cpu_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "system_cpu_usage": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "system_load_longterm": {
+        "default": "mdi:gauge"
+      },
+      "system_load_midterm": {
+        "default": "mdi:gauge"
+      },
+      "system_load_shortterm": {
+        "default": "mdi:gauge"
+      },
+      "system_memory_free": {
+        "default": "mdi:memory"
+      },
+      "system_memory_total": {
+        "default": "mdi:memory"
+      },
+      "system_memory_usage": {
+        "default": "mdi:memory"
+      },
+      "system_smb_connections": {
+        "default": "mdi:folder-network"
+      },
+      "system_uptime": {
+        "default": "mdi:clock-outline"
+      },
+      "traffic_rx": {
+        "default": "mdi:download-network-outline"
+      },
+      "traffic_tx": {
+        "default": "mdi:upload-network-outline"
+      },
+      "ups_charge": {
+        "default": "mdi:battery-charging"
+      },
+      "ups_current": {
+        "default": "mdi:current-ac"
+      },
+      "ups_frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "ups_load": {
+        "default": "mdi:gauge"
+      },
+      "ups_runtime": {
+        "default": "mdi:timer-outline"
+      },
+      "ups_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "ups_voltage": {
+        "default": "mdi:sine-wave"
       }
     }
   },
   "services": {
-    "cloudsync_run": {
-      "service": "mdi:play-circle-outline"
+    "alert_dismiss": {
+      "service": "mdi:alert-remove"
+    },
+    "alert_list": {
+      "service": "mdi:format-list-bulleted"
+    },
+    "alert_restore": {
+      "service": "mdi:alert-plus"
     },
     "cloudsync_abort": {
       "service": "mdi:stop-circle-outline"
     },
-    "rsync_run": {
+    "cloudsync_run": {
       "service": "mdi:play-circle-outline"
     },
+    "dataset_lock": {
+      "service": "mdi:lock"
+    },
+    "dataset_snapshot": {
+      "service": "mdi:camera-outline"
+    },
+    "dataset_unlock": {
+      "service": "mdi:lock-open-variant"
+    },
+    "passphrase_list": {
+      "service": "mdi:key-outline"
+    },
+    "passphrase_remove": {
+      "service": "mdi:key-remove"
+    },
+    "passphrase_set": {
+      "service": "mdi:key-plus"
+    },
     "replication_run": {
+      "service": "mdi:play-circle-outline"
+    },
+    "rsync_run": {
       "service": "mdi:play-circle-outline"
     },
     "snapshottask_run": {
       "service": "mdi:play-circle-outline"
     },
-    "dataset_snapshot": {
-      "service": "mdi:camera-outline"
-    },
     "system_reboot": {
       "service": "mdi:restart"
-    },
-    "system_shutdown": {
-      "service": "mdi:power"
     },
     "system_refresh": {
       "service": "mdi:refresh"
     },
-    "dataset_lock": {
-      "service": "mdi:lock"
-    },
-    "dataset_unlock": {
-      "service": "mdi:lock-open-variant"
-    },
-    "passphrase_set": {
-      "service": "mdi:key-plus"
-    },
-    "passphrase_remove": {
-      "service": "mdi:key-remove"
-    },
-    "passphrase_list": {
-      "service": "mdi:key-outline"
-    },
-    "alert_dismiss": {
-      "service": "mdi:alert-remove"
-    },
-    "alert_restore": {
-      "service": "mdi:alert-plus"
-    },
-    "alert_list": {
-      "service": "mdi:format-list-bulleted"
+    "system_shutdown": {
+      "service": "mdi:power"
     }
   }
 }

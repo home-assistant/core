@@ -1,481 +1,481 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "description": "Set up TrueNAS integration.",
-                "data": {
-                    "host": "Host",
-                    "api_key": "API key",
-                    "verify_ssl": "Verify SSL certificate",
-                    "cronjob_skip_disabled": "Skip disabled cronjobs on manual run",
-                    "data_unit": "Data size unit (GB or GiB)"
-                },
-                "data_description": {
-                    "host": "The hostname or IP address of your TrueNAS instance, without \"https://\", path or trailing slash.",
-                    "api_key": "An API key generated in TrueNAS under Credentials > API Keys.",
-                    "verify_ssl": "Verify the TrueNAS instance's SSL certificate. Disable only if you use a self-signed certificate you cannot otherwise validate.",
-                    "cronjob_skip_disabled": "Skip cron jobs that are disabled in TrueNAS when running the manual run action.",
-                    "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units."
-                }
-            },
-            "reconfigure": {
-                "description": "Reconfigure TrueNAS integration.",
-                "data": {
-                    "host": "Host",
-                    "api_key": "API key",
-                    "verify_ssl": "Verify SSL certificate",
-                    "cronjob_skip_disabled": "Skip disabled cronjobs on manual run",
-                    "data_unit": "Data size unit (GB or GiB)",
-                    "dataset_passphrases": "Add/update dataset passphrases"
-                },
-                "data_description": {
-                    "host": "The hostname or IP address of your TrueNAS instance, without \"https://\", path or trailing slash.",
-                    "api_key": "An API key generated in TrueNAS under Credentials > API Keys.",
-                    "verify_ssl": "Verify the TrueNAS instance's SSL certificate. Disable only if you use a self-signed certificate you cannot otherwise validate.",
-                    "cronjob_skip_disabled": "Skip cron jobs that are disabled in TrueNAS when running the manual run action.",
-                    "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units.",
-                    "dataset_passphrases": "Enter DatasetName#PassPhrase pairs (one per line, e.g. tank/encrypted#MySecret) to add or update stored passphrases. Leave empty to keep existing passphrases unchanged. Use the passphrase_remove action to delete a stored passphrase by its dataset path."
-                }
-            },
-            "reauth_confirm": {
-                "title": "Reauthenticate TrueNAS",
-                "description": "The API key for \"{name}\" is no longer valid. Enter a new API key to restore the connection.",
-                "data": {
-                    "api_key": "API key"
-                },
-                "data_description": {
-                    "api_key": "The new API key generated in TrueNAS under Credentials > API Keys."
-                }
-            },
-            "migrate": {
-                "title": "Existing TrueNAS configuration found",
-                "description": "A previous TrueNAS integration was detected. You can take over its settings (host, API key and options) so you don't have to enter them again — your existing entities and their history are preserved. Or set up TrueNAS CE from scratch.",
-                "menu_options": {
-                    "migrate_import": "Take over existing configuration",
-                    "migrate_manual": "Set up from scratch"
-                }
-            },
-            "zeroconf_confirm": {
-                "title": "Discovered TrueNAS",
-                "description": "A TrueNAS instance was discovered at {host}. Do you want to set it up?"
-            }
-        },
-        "error": {
-            "name_exists": "Name already exists.",
-            "certificate_verify_failed": "Certificate verification failed.",
-            "http_used": "The plain HTTP request was sent to HTTPS port. Reverse proxy?",
-            "tlsv1_not_supported": "TLSv1 not supported. Reverse proxy?",
-            "websocket_not_supported": "WebSocket not supported. Reverse proxy?",
-            "invalid_key": "Login failed, invalid API key.",
-            "proxy_intercepted": "Connection intercepted by a reverse proxy or SSO portal (e.g. Cloudflare Access). Point the integration at the TrueNAS host directly over your LAN/VPN, or exempt the WebSocket endpoint from the proxy's authentication.",
-            "invalid_hostname": "Invalid host. Enter only the hostname or IP address — without \"https://\", path or trailing slash.",
-            "unknown_hostname": "Unknown hostname, check DNS.",
-            "connection_refused": "Connection failed, connection refused.",
-            "handshake_timeout": "Connection failed, timed out while waiting for handshake response.",
-            "api_not_found": "Connection failed, API not found.",
-            "cannot_connect": "Failed to connect to host (TCP port {port} closed or timeout).",
-            "malformed_result": "API response is malformed.",
-            "unknown": "Unknown error occurred.",
-            "unknown_dataset": "Unknown dataset path(s): {datasets}. Verify the spelling and try again.",
-            "passphrase_malformed_line": "Malformed passphrase entry (missing '#') on line: {line}. Each line must be in the format: DatasetName#Passphrase.",
-            "passphrase_empty_value": "Empty passphrase is not allowed. Offending line: {line}. Each line must be in the format: DatasetName#Passphrase.",
-            "passphrase_empty_name": "Empty dataset name is not allowed on line: {line}. Each line must be in the format: DatasetName#Passphrase."
-        },
-        "abort": {
-            "already_configured": "This TrueNAS host is already configured.",
-            "reconfigure_successful": "Reconfigure successful.",
-            "reauth_successful": "Reauthentication successful.",
-            "not_truenas": "The discovered device does not appear to be a TrueNAS instance."
-        }
+  "config": {
+    "abort": {
+      "already_configured": "This TrueNAS host is already configured.",
+      "not_truenas": "The discovered device does not appear to be a TrueNAS instance.",
+      "reauth_successful": "Reauthentication successful.",
+      "reconfigure_successful": "Reconfigure successful."
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "TrueNAS Options",
-                "data": {
-                    "data_unit": "Data size unit",
-                    "behaviors": "Behaviour",
-                    "monitored_groups": "Monitored groups"
-                },
-                "data_description": {
-                    "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units.",
-                    "behaviors": "Select which behaviours are active",
-                    "monitored_groups": "Deselect groups you do not use to reduce sensor count"
-                }
-            }
-        }
+    "error": {
+      "api_not_found": "Connection failed, API not found.",
+      "cannot_connect": "Failed to connect to host (TCP port {port} closed or timeout).",
+      "certificate_verify_failed": "Certificate verification failed.",
+      "connection_refused": "Connection failed, connection refused.",
+      "handshake_timeout": "Connection failed, timed out while waiting for handshake response.",
+      "http_used": "The plain HTTP request was sent to HTTPS port. Reverse proxy?",
+      "invalid_hostname": "Invalid host. Enter only the hostname or IP address — without \"https://\", path or trailing slash.",
+      "invalid_key": "Login failed, invalid API key.",
+      "malformed_result": "API response is malformed.",
+      "name_exists": "Name already exists.",
+      "passphrase_empty_name": "Empty dataset name is not allowed on line: {line}. Each line must be in the format: DatasetName#Passphrase.",
+      "passphrase_empty_value": "Empty passphrase is not allowed. Offending line: {line}. Each line must be in the format: DatasetName#Passphrase.",
+      "passphrase_malformed_line": "Malformed passphrase entry (missing '#') on line: {line}. Each line must be in the format: DatasetName#Passphrase.",
+      "proxy_intercepted": "Connection intercepted by a reverse proxy or SSO portal (e.g. Cloudflare Access). Point the integration at the TrueNAS host directly over your LAN/VPN, or exempt the WebSocket endpoint from the proxy's authentication.",
+      "tlsv1_not_supported": "TLSv1 not supported. Reverse proxy?",
+      "unknown": "Unknown error occurred.",
+      "unknown_dataset": "Unknown dataset path(s): {datasets}. Verify the spelling and try again.",
+      "unknown_hostname": "Unknown hostname, check DNS.",
+      "websocket_not_supported": "WebSocket not supported. Reverse proxy?"
     },
-    "issues": {
-        "statistics_orphaned": {
-            "title": "Orphaned TrueNAS statistics",
-            "fix_flow": {
-                "step": {
-                    "init": {
-                        "title": "Clean up orphaned TrueNAS statistics",
-                        "description": "{count} long-term statistic(s) belong to TrueNAS entities that no longer exist. {with_data} of them still hold recorded data, which you can inspect under Developer Tools > Statistics before deleting.\n\n{entities}\n\nChoose what to do.",
-                        "menu_options": {
-                            "fix": "Delete the orphaned statistics",
-                            "ignore": "Ignore (don't notify again)"
-                        }
-                    },
-                    "init_metadata_only": {
-                        "title": "Clean up orphaned TrueNAS statistics",
-                        "description": "{count} long-term statistic(s) belong to TrueNAS entities that no longer exist. None of them hold recorded data any more — their data points were purged long ago and only empty metadata rows remain, which is why you will not find them under Developer Tools > Statistics.\n\n{entities}\n\nChoose what to do.",
-                        "menu_options": {
-                            "fix": "Delete the orphaned statistics",
-                            "ignore": "Ignore (don't notify again)"
-                        }
-                    }
-                }
-            }
+    "step": {
+      "migrate": {
+        "description": "A previous TrueNAS integration was detected. You can take over its settings (host, API key and options) so you don't have to enter them again — your existing entities and their history are preserved. Or set up TrueNAS CE from scratch.",
+        "menu_options": {
+          "migrate_import": "Take over existing configuration",
+          "migrate_manual": "Set up from scratch"
         },
-        "migration_rollback_available": {
-            "title": "TrueNAS CE migration — rollback available",
-            "fix_flow": {
-                "step": {
-                    "init": {
-                        "title": "Roll back the TrueNAS CE migration?",
-                        "description": "TrueNAS Community Edition adopted {count} entity(ies) and their history from your previous TrueNAS integration, which is now disabled (not deleted). Keep TrueNAS CE, or roll back to hand the entities and history back to the old integration. Rolling back removes the TrueNAS CE integration. This is only possible while the old integration still exists.",
-                        "menu_options": {
-                            "rollback": "Roll back to the previous integration",
-                            "ignore": "Keep TrueNAS CE (dismiss)"
-                        }
-                    }
-                }
-            }
-        }
-    },
-    "exceptions": {
-        "unsupported_action": {
-            "message": "The {action} action is not supported by this TrueNAS entity ({entity_id})"
+        "title": "Existing TrueNAS configuration found"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "API key"
         },
-        "action_failed": {
-            "message": "TrueNAS action {action} failed on {host}: {error}"
+        "data_description": {
+          "api_key": "The new API key generated in TrueNAS under Credentials > API Keys."
         },
-        "run_task_failed": {
-            "message": "TrueNAS action failed on {host}: {error}"
+        "description": "The API key for \"{name}\" is no longer valid. Enter a new API key to restore the connection.",
+        "title": "Reauthenticate TrueNAS"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "API key",
+          "cronjob_skip_disabled": "Skip disabled cronjobs on manual run",
+          "data_unit": "Data size unit (GB or GiB)",
+          "dataset_passphrases": "Add/update dataset passphrases",
+          "host": "Host",
+          "verify_ssl": "Verify SSL certificate"
         },
-        "scrub_failed": {
-            "message": "TrueNAS scrub failed for pool {pool} on {host}: {error}"
+        "data_description": {
+          "api_key": "An API key generated in TrueNAS under Credentials > API Keys.",
+          "cronjob_skip_disabled": "Skip cron jobs that are disabled in TrueNAS when running the manual run action.",
+          "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units.",
+          "dataset_passphrases": "Enter DatasetName#PassPhrase pairs (one per line, e.g. tank/encrypted#MySecret) to add or update stored passphrases. Leave empty to keep existing passphrases unchanged. Use the passphrase_remove action to delete a stored passphrase by its dataset path.",
+          "host": "The hostname or IP address of your TrueNAS instance, without \"https://\", path or trailing slash.",
+          "verify_ssl": "Verify the TrueNAS instance's SSL certificate. Disable only if you use a self-signed certificate you cannot otherwise validate."
         },
-        "alert_action_failed": {
-            "message": "Failed to {action} alert {uuid} on {host}: {error}"
+        "description": "Reconfigure TrueNAS integration."
+      },
+      "user": {
+        "data": {
+          "api_key": "API key",
+          "cronjob_skip_disabled": "Skip disabled cronjobs on manual run",
+          "data_unit": "Data size unit (GB or GiB)",
+          "host": "Host",
+          "verify_ssl": "Verify SSL certificate"
         },
-        "system_update_failed": {
-            "message": "Failed to start TrueNAS system update on {host}: {error}"
+        "data_description": {
+          "api_key": "An API key generated in TrueNAS under Credentials > API Keys.",
+          "cronjob_skip_disabled": "Skip cron jobs that are disabled in TrueNAS when running the manual run action.",
+          "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units.",
+          "host": "The hostname or IP address of your TrueNAS instance, without \"https://\", path or trailing slash.",
+          "verify_ssl": "Verify the TrueNAS instance's SSL certificate. Disable only if you use a self-signed certificate you cannot otherwise validate."
         },
-        "app_update_failed": {
-            "message": "Failed to start TrueNAS app update for {app} on {host}: {error}"
-        },
-        "missing_uuid": {
-            "message": "Missing required parameter: uuid"
-        },
-        "dataset_action_failed": {
-            "message": "Failed to {action} dataset {dataset} on {host}: {reason}"
-        },
-        "dataset_not_encrypted": {
-            "message": "Dataset {dataset} is not encrypted and cannot be {action}ed"
-        },
-        "missing_passphrase": {
-            "message": "No passphrase provided or stored for dataset {dataset}. Call passphrase_set first or supply the passphrase in the action call."
-        },
-        "unknown_dataset_name": {
-            "message": "Cannot store passphrase: dataset name is unknown"
-        },
-        "config_entry_not_loaded": {
-            "message": "TrueNAS instance {entry_id} is not loaded (state: {state})"
-        },
-        "config_entry_not_found": {
-            "message": "TrueNAS instance {entry_id} not found"
-        },
-        "no_config_entries": {
-            "message": "No TrueNAS instances configured"
-        },
-        "multiple_config_entries": {
-            "message": "Multiple TrueNAS instances ({count}); please specify config_entry"
-        },
-        "missing_alert_uuid": {
-            "message": "Alert UUID is required for the {action} action"
-        },
-        "missing_dataset_path": {
-            "message": "dataset_path is required"
-        },
-        "passphrase_not_found": {
-            "message": "No stored passphrase found for dataset {dataset}"
-        }
-    },
-    "entity": {
-        "sensor": {
-            "alerts": {
-                "name": "Alerts",
-                "state_attributes": {
-                    "uuids": {
-                        "name": "Alert UUIDs"
-                    }
-                }
-            },
-            "system_smb_connections": {
-                "name": "SMB connections"
-            },
-            "system_uptime": {
-                "name": "Uptime"
-            },
-            "system_cpu_temperature": {
-                "name": "Temperature"
-            },
-            "system_load_shortterm": {
-                "name": "CPU load shortterm"
-            },
-            "system_load_midterm": {
-                "name": "CPU load midterm"
-            },
-            "system_load_longterm": {
-                "name": "CPU load longterm"
-            },
-            "system_cpu_usage": {
-                "name": "CPU usage"
-            },
-            "system_memory_usage": {
-                "name": "Memory usage"
-            },
-            "system_cache_size_arc_value": {
-                "name": "ARC size"
-            },
-            "system_memory_total": {
-                "name": "Memory total"
-            },
-            "system_memory_free": {
-                "name": "Memory free"
-            },
-            "pool_free": {
-                "name": "free"
-            },
-            "pool_size": {
-                "name": "size"
-            },
-            "pool_allocated": {
-                "name": "allocated"
-            },
-            "pool_errors": {
-                "name": "errors"
-            },
-            "pool_fragmentation": {
-                "name": "fragmentation"
-            },
-            "pool_scrub_start": {
-                "name": "Scrub started"
-            },
-            "pool_scrub_end": {
-                "name": "Scrub finished"
-            },
-            "pool_scrub_state": {
-                "name": "Scrub state"
-            },
-            "traffic_rx": {
-                "name": "RX"
-            },
-            "traffic_tx": {
-                "name": "TX"
-            },
-            "ups_charge": {
-                "name": "Charge"
-            },
-            "ups_runtime": {
-                "name": "Runtime"
-            },
-            "ups_load": {
-                "name": "Load"
-            },
-            "ups_voltage": {
-                "name": "Voltage"
-            },
-            "ups_current": {
-                "name": "Current"
-            },
-            "ups_frequency": {
-                "name": "Frequency"
-            },
-            "ups_temperature": {
-                "name": "Temperature"
-            },
-            "directoryservices": {
-                "name": "Status"
-            },
-            "certificate_expiry": {
-                "name": "Time until expiry"
-            },
-            "certificate_expiration_time": {
-                "name": "Expiration time"
-            },
-            "arc_data_hit_percent": {
-                "name": "Data hit ratio"
-            },
-            "arc_metadata_hit_percent": {
-                "name": "Metadata hit ratio"
-            },
-            "arc_l2_hit_percent": {
-                "name": "L2 ARC hit ratio"
-            },
-            "app_stats_cpu": {
-                "name": "CPU"
-            },
-            "app_stats_memory": {
-                "name": "RAM"
-            },
-            "app_stats_network_rx": {
-                "name": "Network RX"
-            },
-            "app_stats_network_tx": {
-                "name": "Network TX"
-            },
-            "app_stats_blkio_read": {
-                "name": "Block I/O Read"
-            },
-            "app_stats_blkio_write": {
-                "name": "Block I/O Write"
-            }
-        }
-    },
-    "services": {
-        "cloudsync_run": {
-            "name": "Cloudsync run",
-            "description": "Start a cloudsync job (target the cloudsync sensor)."
-        },
-        "cloudsync_abort": {
-            "name": "Cloudsync abort",
-            "description": "Abort a running cloudsync job (target the cloudsync sensor)."
-        },
-        "rsync_run": {
-            "name": "Rsync run",
-            "description": "Start an rsync task on demand (target the rsync task sensor)."
-        },
-        "replication_run": {
-            "name": "Replication run",
-            "description": "Start a replication task on demand (target the replication sensor)."
-        },
-        "snapshottask_run": {
-            "name": "Snapshot task run",
-            "description": "Run a periodic snapshot task now (target the snapshot task sensor). Note: if the task's naming schema only has minute resolution (e.g. auto-%Y-%m-%d_%H-%M), running it twice within the same minute fails on TrueNAS because the snapshot name already exists."
-        },
-        "dataset_snapshot": {
-            "name": "Create dataset snapshot",
-            "description": "Create an on-demand ZFS snapshot of the targeted dataset. The snapshot is taken immediately and named \"custom-\" followed by a timestamp, independent of any periodic snapshot task (target a dataset sensor)."
-        },
-        "system_reboot": {
-            "name": "Reboot TrueNAS",
-            "description": "Reboot the TrueNAS system (target the Uptime sensor)."
-        },
-        "system_shutdown": {
-            "name": "Shut down TrueNAS",
-            "description": "Shut down the TrueNAS system (target the Uptime sensor)."
-        },
-        "system_refresh": {
-            "name": "Refresh TrueNAS data",
-            "description": "Force an immediate re-poll of TrueNAS so automations can act on current data without waiting for the next poll (target the Uptime sensor)."
-        },
-        "dataset_lock": {
-            "name": "Lock dataset",
-            "description": "Lock an encrypted dataset (target the dataset sensor).",
-            "fields": {
-                "force_umount": {
-                    "name": "Force umount",
-                    "description": "Force unmounting of the dataset before locking."
-                }
-            }
-        },
-        "dataset_unlock": {
-            "name": "Unlock dataset",
-            "description": "Unlock an encrypted dataset (target the dataset sensor). If passphrase is omitted, the passphrase stored via passphrase_set (or the ReConfigure flow) is used. Raises an error when neither is available.",
-            "fields": {
-                "passphrase": {
-                    "name": "Passphrase",
-                    "description": "Passphrase for this dataset. Leave empty to fall back to the stored passphrase. Note: when supplied here, the value appears once in debug logs and automation traces."
-                },
-                "recursive": {
-                    "name": "Recursive",
-                    "description": "Apply the key or passphrase to all encrypted children."
-                },
-                "force": {
-                    "name": "Force",
-                    "description": "Force unlock even if the mount path already exists and is not empty."
-                }
-            }
-        },
-        "passphrase_set": {
-            "name": "Store dataset passphrase",
-            "description": "Persist a passphrase for the targeted dataset in the config entry so that dataset_unlock can be called without supplying the passphrase each time. The passphrase is stored in plain text alongside the API key in HA's config storage. Note: the passphrase value appears once in debug logs when this action is called.",
-            "fields": {
-                "passphrase": {
-                    "name": "Passphrase",
-                    "description": "The passphrase to store for this dataset."
-                }
-            }
-        },
-        "passphrase_remove": {
-            "name": "Remove stored dataset passphrase",
-            "description": "Delete a stored dataset passphrase by its full dataset path. Works for both active datasets and orphaned entries left by a typo. After calling this, dataset_unlock will again require the passphrase field for that dataset.",
-            "fields": {
-                "dataset_path": {
-                    "name": "Dataset path",
-                    "description": "Full dataset path as stored, e.g. tank/encrypted or Backup/PP-Test. Must match the key used when the passphrase was stored."
-                },
-                "config_entry": {
-                    "name": "TrueNAS instance",
-                    "description": "TrueNAS instance (optional, defaults to the only/first instance)."
-                }
-            }
-        },
-        "passphrase_list": {
-            "name": "List stored dataset passphrases",
-            "description": "Return the dataset names for which a passphrase is stored. The passphrases themselves are never included in the response.",
-            "fields": {
-                "config_entry": {
-                    "name": "TrueNAS instance",
-                    "description": "TrueNAS instance (optional, defaults to the only/first instance)."
-                }
-            }
-        },
-        "alert_dismiss": {
-            "name": "Dismiss alert",
-            "description": "Dismiss a TrueNAS alert by UUID.",
-            "fields": {
-                "config_entry": {
-                    "name": "TrueNAS instance",
-                    "description": "TrueNAS instance (optional, defaults to the only/first instance)."
-                },
-                "uuid": {
-                    "name": "Alert UUID",
-                    "description": "UUID of the alert to dismiss (visible in the alert_list response)."
-                }
-            }
-        },
-        "alert_restore": {
-            "name": "Restore alert",
-            "description": "Restore (un-dismiss) a TrueNAS alert by UUID.",
-            "fields": {
-                "config_entry": {
-                    "name": "TrueNAS instance",
-                    "description": "TrueNAS instance (optional, defaults to the only/first instance)."
-                },
-                "uuid": {
-                    "name": "Alert UUID",
-                    "description": "UUID of the previously dismissed alert to restore."
-                }
-            }
-        },
-        "alert_list": {
-            "name": "List alerts",
-            "description": "List all TrueNAS alerts with UUIDs and formatted messages.",
-            "fields": {
-                "config_entry": {
-                    "name": "TrueNAS instance",
-                    "description": "TrueNAS instance (optional, defaults to the only/first instance)."
-                },
-                "properties": {
-                    "name": "Properties to include",
-                    "description": "Comma-separated list of properties (e.g. \"uuid,formatted,level\"). Use \"*\" for all properties."
-                }
-            }
-        }
+        "description": "Set up TrueNAS integration."
+      },
+      "zeroconf_confirm": {
+        "description": "A TrueNAS instance was discovered at {host}. Do you want to set it up?",
+        "title": "Discovered TrueNAS"
+      }
     }
+  },
+  "entity": {
+    "sensor": {
+      "alerts": {
+        "name": "Alerts",
+        "state_attributes": {
+          "uuids": {
+            "name": "Alert UUIDs"
+          }
+        }
+      },
+      "app_stats_blkio_read": {
+        "name": "Block I/O Read"
+      },
+      "app_stats_blkio_write": {
+        "name": "Block I/O Write"
+      },
+      "app_stats_cpu": {
+        "name": "CPU"
+      },
+      "app_stats_memory": {
+        "name": "RAM"
+      },
+      "app_stats_network_rx": {
+        "name": "Network RX"
+      },
+      "app_stats_network_tx": {
+        "name": "Network TX"
+      },
+      "arc_data_hit_percent": {
+        "name": "Data hit ratio"
+      },
+      "arc_l2_hit_percent": {
+        "name": "L2 ARC hit ratio"
+      },
+      "arc_metadata_hit_percent": {
+        "name": "Metadata hit ratio"
+      },
+      "certificate_expiration_time": {
+        "name": "Expiration time"
+      },
+      "certificate_expiry": {
+        "name": "Time until expiry"
+      },
+      "directoryservices": {
+        "name": "Status"
+      },
+      "pool_allocated": {
+        "name": "allocated"
+      },
+      "pool_errors": {
+        "name": "errors"
+      },
+      "pool_fragmentation": {
+        "name": "fragmentation"
+      },
+      "pool_free": {
+        "name": "free"
+      },
+      "pool_scrub_end": {
+        "name": "Scrub finished"
+      },
+      "pool_scrub_start": {
+        "name": "Scrub started"
+      },
+      "pool_scrub_state": {
+        "name": "Scrub state"
+      },
+      "pool_size": {
+        "name": "size"
+      },
+      "system_cache_size_arc_value": {
+        "name": "ARC size"
+      },
+      "system_cpu_temperature": {
+        "name": "Temperature"
+      },
+      "system_cpu_usage": {
+        "name": "CPU usage"
+      },
+      "system_load_longterm": {
+        "name": "CPU load longterm"
+      },
+      "system_load_midterm": {
+        "name": "CPU load midterm"
+      },
+      "system_load_shortterm": {
+        "name": "CPU load shortterm"
+      },
+      "system_memory_free": {
+        "name": "Memory free"
+      },
+      "system_memory_total": {
+        "name": "Memory total"
+      },
+      "system_memory_usage": {
+        "name": "Memory usage"
+      },
+      "system_smb_connections": {
+        "name": "SMB connections"
+      },
+      "system_uptime": {
+        "name": "Uptime"
+      },
+      "traffic_rx": {
+        "name": "RX"
+      },
+      "traffic_tx": {
+        "name": "TX"
+      },
+      "ups_charge": {
+        "name": "Charge"
+      },
+      "ups_current": {
+        "name": "Current"
+      },
+      "ups_frequency": {
+        "name": "Frequency"
+      },
+      "ups_load": {
+        "name": "Load"
+      },
+      "ups_runtime": {
+        "name": "Runtime"
+      },
+      "ups_temperature": {
+        "name": "Temperature"
+      },
+      "ups_voltage": {
+        "name": "Voltage"
+      }
+    }
+  },
+  "exceptions": {
+    "action_failed": {
+      "message": "TrueNAS action {action} failed on {host}: {error}"
+    },
+    "alert_action_failed": {
+      "message": "Failed to {action} alert {uuid} on {host}: {error}"
+    },
+    "app_update_failed": {
+      "message": "Failed to start TrueNAS app update for {app} on {host}: {error}"
+    },
+    "config_entry_not_found": {
+      "message": "TrueNAS instance {entry_id} not found"
+    },
+    "config_entry_not_loaded": {
+      "message": "TrueNAS instance {entry_id} is not loaded (state: {state})"
+    },
+    "dataset_action_failed": {
+      "message": "Failed to {action} dataset {dataset} on {host}: {reason}"
+    },
+    "dataset_not_encrypted": {
+      "message": "Dataset {dataset} is not encrypted and cannot be {action}ed"
+    },
+    "missing_alert_uuid": {
+      "message": "Alert UUID is required for the {action} action"
+    },
+    "missing_dataset_path": {
+      "message": "dataset_path is required"
+    },
+    "missing_passphrase": {
+      "message": "No passphrase provided or stored for dataset {dataset}. Call passphrase_set first or supply the passphrase in the action call."
+    },
+    "missing_uuid": {
+      "message": "Missing required parameter: uuid"
+    },
+    "multiple_config_entries": {
+      "message": "Multiple TrueNAS instances ({count}); please specify config_entry"
+    },
+    "no_config_entries": {
+      "message": "No TrueNAS instances configured"
+    },
+    "passphrase_not_found": {
+      "message": "No stored passphrase found for dataset {dataset}"
+    },
+    "run_task_failed": {
+      "message": "TrueNAS action failed on {host}: {error}"
+    },
+    "scrub_failed": {
+      "message": "TrueNAS scrub failed for pool {pool} on {host}: {error}"
+    },
+    "system_update_failed": {
+      "message": "Failed to start TrueNAS system update on {host}: {error}"
+    },
+    "unknown_dataset_name": {
+      "message": "Cannot store passphrase: dataset name is unknown"
+    },
+    "unsupported_action": {
+      "message": "The {action} action is not supported by this TrueNAS entity ({entity_id})"
+    }
+  },
+  "issues": {
+    "migration_rollback_available": {
+      "fix_flow": {
+        "step": {
+          "init": {
+            "description": "TrueNAS Community Edition adopted {count} entity(ies) and their history from your previous TrueNAS integration, which is now disabled (not deleted). Keep TrueNAS CE, or roll back to hand the entities and history back to the old integration. Rolling back removes the TrueNAS CE integration. This is only possible while the old integration still exists.",
+            "menu_options": {
+              "ignore": "Keep TrueNAS CE (dismiss)",
+              "rollback": "Roll back to the previous integration"
+            },
+            "title": "Roll back the TrueNAS CE migration?"
+          }
+        }
+      },
+      "title": "TrueNAS CE migration — rollback available"
+    },
+    "statistics_orphaned": {
+      "fix_flow": {
+        "step": {
+          "init": {
+            "description": "{count} long-term statistic(s) belong to TrueNAS entities that no longer exist. {with_data} of them still hold recorded data, which you can inspect under Developer Tools > Statistics before deleting.\n\n{entities}\n\nChoose what to do.",
+            "menu_options": {
+              "fix": "Delete the orphaned statistics",
+              "ignore": "Ignore (don't notify again)"
+            },
+            "title": "Clean up orphaned TrueNAS statistics"
+          },
+          "init_metadata_only": {
+            "description": "{count} long-term statistic(s) belong to TrueNAS entities that no longer exist. None of them hold recorded data any more — their data points were purged long ago and only empty metadata rows remain, which is why you will not find them under Developer Tools > Statistics.\n\n{entities}\n\nChoose what to do.",
+            "menu_options": {
+              "fix": "Delete the orphaned statistics",
+              "ignore": "Ignore (don't notify again)"
+            },
+            "title": "Clean up orphaned TrueNAS statistics"
+          }
+        }
+      },
+      "title": "Orphaned TrueNAS statistics"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "behaviors": "Behaviour",
+          "data_unit": "Data size unit",
+          "monitored_groups": "Monitored groups"
+        },
+        "data_description": {
+          "behaviors": "Select which behaviours are active",
+          "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units.",
+          "monitored_groups": "Deselect groups you do not use to reduce sensor count"
+        },
+        "title": "TrueNAS Options"
+      }
+    }
+  },
+  "services": {
+    "alert_dismiss": {
+      "description": "Dismiss a TrueNAS alert by UUID.",
+      "fields": {
+        "config_entry": {
+          "description": "TrueNAS instance (optional, defaults to the only/first instance).",
+          "name": "TrueNAS instance"
+        },
+        "uuid": {
+          "description": "UUID of the alert to dismiss (visible in the alert_list response).",
+          "name": "Alert UUID"
+        }
+      },
+      "name": "Dismiss alert"
+    },
+    "alert_list": {
+      "description": "List all TrueNAS alerts with UUIDs and formatted messages.",
+      "fields": {
+        "config_entry": {
+          "description": "TrueNAS instance (optional, defaults to the only/first instance).",
+          "name": "TrueNAS instance"
+        },
+        "properties": {
+          "description": "Comma-separated list of properties (e.g. \"uuid,formatted,level\"). Use \"*\" for all properties.",
+          "name": "Properties to include"
+        }
+      },
+      "name": "List alerts"
+    },
+    "alert_restore": {
+      "description": "Restore (un-dismiss) a TrueNAS alert by UUID.",
+      "fields": {
+        "config_entry": {
+          "description": "TrueNAS instance (optional, defaults to the only/first instance).",
+          "name": "TrueNAS instance"
+        },
+        "uuid": {
+          "description": "UUID of the previously dismissed alert to restore.",
+          "name": "Alert UUID"
+        }
+      },
+      "name": "Restore alert"
+    },
+    "cloudsync_abort": {
+      "description": "Abort a running cloudsync job (target the cloudsync sensor).",
+      "name": "Cloudsync abort"
+    },
+    "cloudsync_run": {
+      "description": "Start a cloudsync job (target the cloudsync sensor).",
+      "name": "Cloudsync run"
+    },
+    "dataset_lock": {
+      "description": "Lock an encrypted dataset (target the dataset sensor).",
+      "fields": {
+        "force_umount": {
+          "description": "Force unmounting of the dataset before locking.",
+          "name": "Force umount"
+        }
+      },
+      "name": "Lock dataset"
+    },
+    "dataset_snapshot": {
+      "description": "Create an on-demand ZFS snapshot of the targeted dataset. The snapshot is taken immediately and named \"custom-\" followed by a timestamp, independent of any periodic snapshot task (target a dataset sensor).",
+      "name": "Create dataset snapshot"
+    },
+    "dataset_unlock": {
+      "description": "Unlock an encrypted dataset (target the dataset sensor). If passphrase is omitted, the passphrase stored via passphrase_set (or the ReConfigure flow) is used. Raises an error when neither is available.",
+      "fields": {
+        "force": {
+          "description": "Force unlock even if the mount path already exists and is not empty.",
+          "name": "Force"
+        },
+        "passphrase": {
+          "description": "Passphrase for this dataset. Leave empty to fall back to the stored passphrase. Note: when supplied here, the value appears once in debug logs and automation traces.",
+          "name": "Passphrase"
+        },
+        "recursive": {
+          "description": "Apply the key or passphrase to all encrypted children.",
+          "name": "Recursive"
+        }
+      },
+      "name": "Unlock dataset"
+    },
+    "passphrase_list": {
+      "description": "Return the dataset names for which a passphrase is stored. The passphrases themselves are never included in the response.",
+      "fields": {
+        "config_entry": {
+          "description": "TrueNAS instance (optional, defaults to the only/first instance).",
+          "name": "TrueNAS instance"
+        }
+      },
+      "name": "List stored dataset passphrases"
+    },
+    "passphrase_remove": {
+      "description": "Delete a stored dataset passphrase by its full dataset path. Works for both active datasets and orphaned entries left by a typo. After calling this, dataset_unlock will again require the passphrase field for that dataset.",
+      "fields": {
+        "config_entry": {
+          "description": "TrueNAS instance (optional, defaults to the only/first instance).",
+          "name": "TrueNAS instance"
+        },
+        "dataset_path": {
+          "description": "Full dataset path as stored, e.g. tank/encrypted or Backup/PP-Test. Must match the key used when the passphrase was stored.",
+          "name": "Dataset path"
+        }
+      },
+      "name": "Remove stored dataset passphrase"
+    },
+    "passphrase_set": {
+      "description": "Persist a passphrase for the targeted dataset in the config entry so that dataset_unlock can be called without supplying the passphrase each time. The passphrase is stored in plain text alongside the API key in HA's config storage. Note: the passphrase value appears once in debug logs when this action is called.",
+      "fields": {
+        "passphrase": {
+          "description": "The passphrase to store for this dataset.",
+          "name": "Passphrase"
+        }
+      },
+      "name": "Store dataset passphrase"
+    },
+    "replication_run": {
+      "description": "Start a replication task on demand (target the replication sensor).",
+      "name": "Replication run"
+    },
+    "rsync_run": {
+      "description": "Start an rsync task on demand (target the rsync task sensor).",
+      "name": "Rsync run"
+    },
+    "snapshottask_run": {
+      "description": "Run a periodic snapshot task now (target the snapshot task sensor). Note: if the task's naming schema only has minute resolution (e.g. auto-%Y-%m-%d_%H-%M), running it twice within the same minute fails on TrueNAS because the snapshot name already exists.",
+      "name": "Snapshot task run"
+    },
+    "system_reboot": {
+      "description": "Reboot the TrueNAS system (target the Uptime sensor).",
+      "name": "Reboot TrueNAS"
+    },
+    "system_refresh": {
+      "description": "Force an immediate re-poll of TrueNAS so automations can act on current data without waiting for the next poll (target the Uptime sensor).",
+      "name": "Refresh TrueNAS data"
+    },
+    "system_shutdown": {
+      "description": "Shut down the TrueNAS system (target the Uptime sensor).",
+      "name": "Shut down TrueNAS"
+    }
+  }
 }
