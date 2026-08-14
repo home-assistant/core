@@ -503,13 +503,13 @@ async def test_migrate_from_higher_version_not_supported(
     [
         (
             ConfigEntryError,
-            config_entries.ConfigEntryState.SETUP_ERROR,
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Error setting up entry Mock Title for comp during config entry migration",
         ),
         (
             ConfigEntryAuthFailed,
             config_entries.ConfigEntryState.MIGRATION_ERROR,
-            "Error migrating entry Mock Title for comp",
+            "Config entry 'Mock Title' for comp integration could not authenticate",
         ),
         (
             ConfigEntryNotReady,

@@ -1280,12 +1280,10 @@ class ConfigEntry[_DataT = Any]:
                 return False
             if result:
                 hass.config_entries._async_schedule_save()  # noqa: SLF001
-        except ConfigEntryError, ConfigEntryNotReady:
+        except ConfigEntryNotReady:
             raise
-        except Exception:
-            self.logger.exception(
-                "Error migrating entry %s for %s", self.title, self.domain
-            )
+        except Exception as exc:  # noqa: BLE001
+            self.__async_handle_config_entry_setup_error(hass, integration, exc, True)
             return False
         return result
 
