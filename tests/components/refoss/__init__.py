@@ -23,6 +23,7 @@ class FakeDiscovery:
         self.last_mock_infos = {}
         self._listeners = []
         self.sock = None
+        self.last_host = None
 
     def add_listener(self, listener: Listener) -> None:
         """Add an event listener."""
@@ -32,8 +33,10 @@ class FakeDiscovery:
         """Initialize socket server."""
         self.sock = Mock()
 
-    async def broadcast_msg(self, wait_for: int = 0):
+    async def broadcast_msg(self, wait_for: int = 0, host: str | None = None):
         """Search for devices, return mocked data."""
+
+        self.last_host = host
 
         mock_infos = self.mock_devices
         last_mock_infos = self.last_mock_infos

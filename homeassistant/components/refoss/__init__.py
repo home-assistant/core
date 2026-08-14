@@ -3,7 +3,7 @@
 from datetime import timedelta
 from typing import Final
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_scan_update(_=None):
-        await refoss_discovery.discovery.broadcast_msg()
+        await refoss_discovery.discovery.broadcast_msg(host=entry.data.get(CONF_HOST))
 
     await _async_scan_update()
 

@@ -1,12 +1,32 @@
 {
   "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_ipv4_address": "Enter a valid IPv4 address"
+    },
     "abort": {
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "reconfigure": {
+        "description": "Update how Home Assistant discovers Refoss devices.",
+        "data": {
+          "host": "IP address"
+        },
+        "data_description": {
+          "host": "The IPv4 address of a Refoss device on another network or VLAN. Leave blank to use automatic discovery."
+        }
+      },
+      "user": {
+        "description": "Leave the IP address blank to discover Refoss devices automatically.",
+        "data": {
+          "host": "IP address"
+        },
+        "data_description": {
+          "host": "The IPv4 address of a Refoss device on another network or VLAN."
+        }
       }
     }
   },

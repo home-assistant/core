@@ -4,10 +4,13 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.refoss.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import FakeDiscovery, build_base_device_mock
+
+from tests.common import MockConfigEntry
 
 
 @patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
@@ -33,10 +36,11 @@ async def test_creating_entry_sets_up(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        # Confirmation form
         assert result["type"] is FlowResultType.FORM
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: ""}
+        )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -60,12 +64,123 @@ async def test_creating_entry_has_no_devices(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        # Confirmation form
         assert result["type"] is FlowResultType.FORM
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: ""}
+        )
         assert result["type"] is FlowResultType.ABORT
 
         await hass.async_block_till_done()
 
         assert len(mock_setup_entry.mock_calls) == 0
+
+
+@patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
+async def test_creating_entry_with_host(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test setting up Refoss using a configured host."""
+    discovery = FakeDiscovery()
+    discovery.mock_devices["abc"].inner_ip = "192.0.2.10"
+
+    with patch(
+        "homeassistant.components.refoss.util.Discovery", return_value=discovery
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.0.2.10"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: "192.0.2.10"}
+    assert discovery.last_host == "192.0.2.10"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
+async def test_creating_entry_with_unreachable_host(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test setting up Refoss using an unreachable host."""
+    discovery = FakeDiscovery()
+
+    with patch(
+        "homeassistant.components.refoss.util.Discovery", return_value=discovery
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.0.2.20"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert discovery.last_host == "192.0.2.20"
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_invalid_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test rejecting an invalid host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "not-an-ip-address"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_HOST: "invalid_ipv4_address"}
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+@patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
+async def test_reconfigure_host(hass: HomeAssistant) -> None:
+    """Test changing from automatic discovery to a configured host."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    discovery = FakeDiscovery()
+    discovery.mock_devices["abc"].inner_ip = "192.0.2.10"
+
+    with (
+        patch("homeassistant.components.refoss.util.Discovery", return_value=discovery),
+        patch.object(hass.config_entries, "async_reload") as mock_reload,
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.0.2.10"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_HOST: "192.0.2.10"}
+    assert discovery.last_host == "192.0.2.10"
+    mock_reload.assert_awaited_once_with(entry.entry_id)
+
+
+@patch("homeassistant.components.refoss.config_flow.DISCOVERY_TIMEOUT", 0)
+async def test_reconfigure_automatic_discovery(hass: HomeAssistant) -> None:
+    """Test changing from a configured host to automatic discovery."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.0.2.10"})
+    entry.add_to_hass(hass)
+    discovery = FakeDiscovery()
+
+    with (
+        patch("homeassistant.components.refoss.util.Discovery", return_value=discovery),
+        patch.object(hass.config_entries, "async_reload") as mock_reload,
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: ""}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {}
+    assert discovery.last_host is None
+    mock_reload.assert_awaited_once_with(entry.entry_id)
