@@ -45,9 +45,6 @@ def test_format_last_reset_elapsed_seconds(
     result = sensor.format_last_reset_elapsed_seconds(value)
 
     assert result is not None
-    # last_reset feeds long term statistics, which convert it with
-    # dt_util.as_utc, so a naive value would be read in the configured
-    # time zone rather than the host one.
     assert result.tzinfo is not None
     assert result.microsecond == 0
     assert result == dt_util.utcnow().replace(microsecond=0) - expected_elapsed
