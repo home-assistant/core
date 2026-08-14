@@ -77,37 +77,45 @@ class TsunConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             data = dict(user_input)
             automatically_detected = CONF_LOGGER_SN not in data
+            metadata = LoggerMetadata()
             try:
                 metadata = await async_read_logger_metadata(
                     async_get_clientsession(self.hass),
                     str(data[CONF_HOST]),
                     port=int(data[CONF_PORT]),
                 )
-                if CONF_LOGGER_SN not in data:
-                    if metadata.logger_sn is None:
-                        self._request_logger_sn = True
-                        errors["base"] = "cannot_detect_logger_sn"
-                    else:
-                        data[CONF_LOGGER_SN] = metadata.logger_sn
-                if CONF_LOGGER_SN in data:
-                    metadata = LoggerMetadata(
-                        logger_sn=int(data[CONF_LOGGER_SN]),
-                        inverter_serial_number=metadata.inverter_serial_number,
-                        firmware_version=metadata.firmware_version,
-                        mac_address=metadata.mac_address,
-                    )
-                    model = await _async_validate(self.hass, data, metadata)
-            except TsunConnectionError:
-                errors["base"] = "cannot_connect"
             except TsunError:
                 if automatically_detected:
                     self._request_logger_sn = True
-                errors["base"] = "invalid_response"
+                    errors["base"] = "cannot_detect_logger_sn"
             except Exception:
                 _LOGGER.exception("Unexpected exception while connecting to TSUN")
                 errors["base"] = "unknown"
-            else:
-                if not errors:
+
+            if not errors and automatically_detected:
+                if metadata.logger_sn is None:
+                    self._request_logger_sn = True
+                    errors["base"] = "cannot_detect_logger_sn"
+                else:
+                    data[CONF_LOGGER_SN] = metadata.logger_sn
+
+            if not errors:
+                metadata = LoggerMetadata(
+                    logger_sn=int(data[CONF_LOGGER_SN]),
+                    inverter_serial_number=metadata.inverter_serial_number,
+                    firmware_version=metadata.firmware_version,
+                    mac_address=metadata.mac_address,
+                )
+                try:
+                    model = await _async_validate(self.hass, data, metadata)
+                except TsunConnectionError:
+                    errors["base"] = "cannot_connect"
+                except TsunError:
+                    errors["base"] = "invalid_response"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception while connecting to TSUN")
+                    errors["base"] = "unknown"
+                else:
                     unique_id = str(data[CONF_LOGGER_SN])
                     await self.async_set_unique_id(unique_id)
                     metadata_updates = {
