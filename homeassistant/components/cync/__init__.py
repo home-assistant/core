@@ -59,11 +59,12 @@ def _migrate_unique_ids(
     entity_registry = er.async_get(hass)
 
     def get_entity_entries() -> list[er.RegistryEntry]:
+        all_entity_entries = er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        )
         return [
             entity_entry
-            for entity_entry in er.async_entries_for_config_entry(
-                entity_registry, entry.entry_id
-            )
+            for entity_entry in all_entity_entries
             if entity_entry.platform == DOMAIN and entity_entry.domain == Platform.LIGHT
         ]
 
@@ -94,6 +95,16 @@ def _migrate_unique_ids(
 
     entity_entries = get_entity_entries()
     migrated_unique_ids = id_map.keys() | id_map.values() | temporary_id_map.keys()
+    all_entity_entries = er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    )
+    nonlight_device_ids = {
+        entity_entry.device_id
+        for entity_entry in all_entity_entries
+        if entity_entry.platform == DOMAIN
+        and entity_entry.domain != Platform.LIGHT
+        and entity_entry.device_id is not None
+    }
     migrated_device_ids = {
         entity_entry.device_id
         for entity_entry in entity_entries
@@ -101,6 +112,17 @@ def _migrate_unique_ids(
         and entity_entry.device_id is not None
     }
     device_registry = dr.async_get(hass)
+    migrated_device_ids.update(
+        device_entry.id
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        )
+        if device_entry.id not in nonlight_device_ids
+        and any(
+            domain == DOMAIN and identifier in migrated_unique_ids
+            for domain, identifier in device_entry.identifiers
+        )
+    )
 
     if stage == _MIGRATE_DEVICES_TO_TEMPORARY:
         for device_id in migrated_device_ids:
