@@ -107,26 +107,14 @@
       }
     },
     "sensor": {
-      "ai_switch": {
-        "name": "AI Switch"
-      },
       "bathing_leaving_temperature": {
         "name": "Bathing Leaving Temperature"
-      },
-      "bottom_compartment_remaining_time": {
-        "name": "Bottom Compartment Remaining Time"
-      },
-      "bottom_compartment_status": {
-        "name": "Bottom Compartment Status"
       },
       "bottom_compartment_temperature": {
         "name": "Bottom Compartment Temperature"
       },
       "bottom_temperature": {
         "name": "Bottom Temperature"
-      },
-      "bright_level": {
-        "name": "Bright Level"
       },
       "compressor_current": {
         "name": "Compressor Current"
@@ -149,38 +137,20 @@
       "current_energy_consumption": {
         "name": "Current Energy Consumption"
       },
-      "dehydration_speed": {
-        "name": "Dehydration Speed"
-      },
       "dehydration_time": {
         "name": "Dehydration Time"
       },
       "dehydration_time_value": {
         "name": "Dehydration Time Value"
       },
-      "detergent": {
-        "name": "Detergent"
-      },
-      "dirty_degree": {
-        "name": "Dirty Degree"
-      },
       "discharge_pipe_temperature": {
         "name": "Discharge Pipe Temperature"
-      },
-      "door_warn": {
-        "name": "Door Warning"
       },
       "dry_temperature": {
         "name": "Dry Temperature"
       },
-      "dryness_level": {
-        "name": "Dryness Level"
-      },
       "energy_consumption": {
         "name": "Energy Consumption"
-      },
-      "error_code": {
-        "name": "Error Code"
       },
       "error_ed": {
         "name": "Error",
@@ -198,9 +168,6 @@
       },
       "evaporator_temperature": {
         "name": "Evaporator Temperature"
-      },
-      "fan_level": {
-        "name": "Fan Level"
       },
       "filter_available_days": {
         "name": "Filter {filter_number} Available Days"
@@ -235,9 +202,6 @@
       "heating_power": {
         "name": "Heating Power"
       },
-      "heating_time_remaining": {
-        "name": "Heating Time Remaining"
-      },
       "humidity_compensate": {
         "name": "Humidity Compensate"
       },
@@ -259,26 +223,8 @@
       "indoor_temperature": {
         "name": "Indoor Temperature"
       },
-      "intensity": {
-        "name": "Intensity"
-      },
-      "keep_warm_remaining_time": {
-        "name": "Keep Warm Remaining Time"
-      },
       "keep_warm_time": {
         "name": "Keep Warm Time"
-      },
-      "material": {
-        "name": "Material"
-      },
-      "middle_compartment_remaining_time": {
-        "name": "Middle Compartment Remaining Time"
-      },
-      "middle_compartment_status": {
-        "name": "Middle Compartment Status"
-      },
-      "middle_compartment_temperature": {
-        "name": "Middle Compartment Temperature"
       },
       "mode": {
         "name": "Mode",
@@ -389,17 +335,11 @@
       "out_tds": {
         "name": "Out TDS"
       },
-      "outdoor_ambient_temperature": {
-        "name": "Outdoor Ambient Temperature"
-      },
       "outdoor_temperature": {
         "name": "Outdoor Temperature"
       },
       "pmv": {
         "name": "Predicted Mean Vote"
-      },
-      "progress": {
-        "name": "Progress"
       },
       "realtime_power": {
         "name": "Realtime Power"
@@ -410,9 +350,6 @@
       "refrigerator_setting_temp": {
         "name": "Refrigerator Setting Temperature"
       },
-      "regeneration_left_seconds": {
-        "name": "Regeneration Left Seconds"
-      },
       "remaining_days": {
         "name": "Remaining Days"
       },
@@ -422,20 +359,8 @@
       "right_flex_zone_setting_temp": {
         "name": "Right Flex Zone Setting Temperature"
       },
-      "rinse_count": {
-        "name": "Rinse Count"
-      },
-      "rinse_level": {
-        "name": "Rinse Level"
-      },
       "salt_available": {
         "name": "Salt Available"
-      },
-      "salt_setting": {
-        "name": "Salt Setting"
-      },
-      "screen_extinction_timeout": {
-        "name": "Screen Extinction Timeout"
       },
       "seat_temperature": {
         "name": "Seat Temperature"
@@ -443,26 +368,8 @@
       "soak_time": {
         "name": "Soak Time"
       },
-      "softener": {
-        "name": "Softener"
-      },
       "softwater_available": {
         "name": "Softwater Available"
-      },
-      "softwater_level": {
-        "name": "Softwater Level"
-      },
-      "stains": {
-        "name": "Stains"
-      },
-      "status": {
-        "name": "Status"
-      },
-      "storage_remaining": {
-        "name": "Storage Remaining"
-      },
-      "tank_actual_temperature": {
-        "name": "Tank Actual Temperature"
       },
       "tank_level": {
         "name": "Tank Level"
@@ -487,12 +394,6 @@
       },
       "temperature_raw": {
         "name": "Temperature Raw"
-      },
-      "top_compartment_remaining_time": {
-        "name": "Top Compartment Remaining Time"
-      },
-      "top_compartment_status": {
-        "name": "Top Compartment Status"
       },
       "top_compartment_temperature": {
         "name": "Top Compartment Temperature"
@@ -525,20 +426,11 @@
           "zero_fresh": "Zero Fresh"
         }
       },
-      "wash_level": {
-        "name": "Wash Level"
-      },
-      "wash_strength": {
-        "name": "Wash Strength"
-      },
       "wash_time": {
         "name": "Wash Time"
       },
       "wash_time_value": {
         "name": "Wash Time Value"
-      },
-      "water_box": {
-        "name": "Water Box"
       },
       "water_consumption": {
         "name": "Water Consumption"
@@ -548,12 +440,6 @@
       },
       "water_temperature": {
         "name": "Water Temperature"
-      },
-      "working_mode": {
-        "name": "Working Mode"
-      },
-      "working_time": {
-        "name": "Working Time"
       }
     }
   },
