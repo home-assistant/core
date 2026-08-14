@@ -1,11 +1,30 @@
 """Tests for the Cync integration setup."""
 
+from unittest.mock import patch
+
+from pycync.exceptions import CyncError
+
 from homeassistant.components.cync.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
+
+
+async def test_migrate_entry_does_not_connect(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test config entry migration does not require cloud access."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, version=1)
+
+    with patch("homeassistant.components.cync.Cync.create", side_effect=CyncError):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.version == 2
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_migrate_unique_ids(
