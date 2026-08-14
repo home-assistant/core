@@ -1,8 +1,9 @@
 """DataUpdateCoordinator for INDI Allsky integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, override
+from typing import override
 
 from aioindiallsky import ExposureData, IndiAllSkyClient, IndiAllSkyError
 
@@ -20,7 +21,14 @@ _LOGGER = logging.getLogger(__name__)
 type IndiAllSkyConfigEntry = ConfigEntry[IndiAllSkyDataUpdateCoordinator]
 
 
-class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+@dataclass
+class IndiAllSkyData:
+    """Data model for INDI Allsky coordinator data."""
+
+    exposure: ExposureData | None = None
+
+
+class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     """Class to manage fetching INDI Allsky data from the API."""
 
     def __init__(self, hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> None:
@@ -51,21 +59,17 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _handle_exposure_complete(self, exposure: ExposureData) -> None:
         """Handle new exposure_complete event from WebSocket stream."""
         self.latest_exposure = exposure
-        current_data = self.data if self.data is not None else {"image_bytes": None}
-        self.async_set_updated_data({**current_data, "exposure": exposure})
+        self.async_set_updated_data(IndiAllSkyData(exposure=exposure))
 
     @override
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch image bytes from INDI Allsky camera."""
+    async def _async_update_data(self) -> IndiAllSkyData:
+        """Fetch INDI Allsky metadata and verify connection."""
         try:
-            image_bytes = await self.client.fetch_image("latestimage")
+            await self.client.fetch_image("latestimage")
         except IndiAllSkyError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
 
-        return {
-            "image_bytes": image_bytes,
-            "exposure": self.latest_exposure,
-        }
+        return IndiAllSkyData(exposure=self.latest_exposure)

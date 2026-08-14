@@ -47,8 +47,7 @@ class IndiAllSkyCamera(IndiAllSkyEntity, Camera):
         try:
             image: bytes = await self.coordinator.client.fetch_image("latestimage")
         except IndiAllSkyError:
-            fallback: bytes | None = self.coordinator.data.get("image_bytes")
-            return fallback
+            return None
         else:
             return image
 
@@ -56,7 +55,7 @@ class IndiAllSkyCamera(IndiAllSkyEntity, Camera):
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return camera extra state attributes."""
-        exposure = self.coordinator.data["exposure"]
+        exposure = self.coordinator.data.exposure
         if exposure is None:
             return None
 
