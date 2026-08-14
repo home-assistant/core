@@ -3306,6 +3306,8 @@ async def test_entity_move_with_claimed_unique_id(
         states=states,
     )
     assert hass.states.get("binary_sensor.test_foo").state == STATE_ON
+    entry_foo = entity_registry.async_get("binary_sensor.test_foo")
+    assert entry_foo is not None
 
     # An orphaned registry entry already claims Foo's post move unique_id
     moved_info = BinarySensorInfo(
@@ -3343,7 +3345,15 @@ async def test_entity_move_with_claimed_unique_id(
 
     # The update completed: the sibling still processes states
     assert hass.states.get("binary_sensor.test_other").state == STATE_OFF
+    # The blocked migration leaves the original entry untouched; the
+    # moved entity binds to the orphan
+    original = entity_registry.async_get("binary_sensor.test_foo")
+    assert original is not None
+    assert original.unique_id == entry_foo.unique_id
+    assert original.device_id == entry_foo.device_id
+    assert hass.states.get("binary_sensor.test_foo").state == STATE_UNAVAILABLE
     assert entity_registry.async_get(orphan.entity_id) is not None
+    assert hass.states.get(orphan.entity_id).state == STATE_ON
 
 
 async def test_mover_does_not_adopt_other_movers_state(

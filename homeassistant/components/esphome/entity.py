@@ -134,7 +134,14 @@ def async_static_info_updated(
         if not (candidates := movable_by_name.get(info.name or info.object_id)):
             deferred.append((info, unique_id))
             continue
-        idx = next((i for i, key in enumerate(candidates) if key not in new_infos), 0)
+        idx = next((i for i, key in enumerate(candidates) if key not in new_infos), -1)
+        if idx == -1:
+            idx = 0
+            _LOGGER.debug(
+                "Ambiguous move for %s: every candidate slot is occupied, "
+                "taking the first candidate",
+                info.name or info.object_id,
+            )
         old_info = current_infos.pop(candidates.pop(idx))
 
         # A cached state at the mover's destination key is only the
@@ -164,39 +171,41 @@ def async_static_info_updated(
             add_entities.append(entity)
             continue
 
-        updates: dict[str, Any] = {}
-
-        # Update unique_id if it changed and the new one is not claimed
-        if old_unique_id != unique_id:
-            if ent_reg.async_get_entity_id(platform.domain, DOMAIN, unique_id):
-                _LOGGER.debug(
-                    "Cannot migrate unique_id %s -> %s: already claimed",
-                    old_unique_id,
-                    unique_id,
-                )
-            else:
-                updates["new_unique_id"] = unique_id
-
-        # Update device assignment in registry
-        if info.device_id:
-            # Entity now belongs to a sub device
-            new_device = dev_reg.async_get_device_by_identifier(
-                (DOMAIN, f"{mac}_{info.device_id}"),
-                entry_data.entry_id,
+        # Leave the entry untouched when the new unique_id is claimed;
+        # it cannot follow the move, so a partial update helps nothing
+        if old_unique_id != unique_id and ent_reg.async_get_entity_id(
+            platform.domain, DOMAIN, unique_id
+        ):
+            _LOGGER.warning(
+                "Cannot migrate unique_id %s -> %s: already claimed",
+                old_unique_id,
+                unique_id,
             )
         else:
-            # Entity now belongs to the main device
-            new_device = dev_reg.async_get_device_by_connection(
-                (dr.CONNECTION_NETWORK_MAC, mac),
-                entry_data.entry_id,
-            )
+            updates: dict[str, Any] = {}
+            if old_unique_id != unique_id:
+                updates["new_unique_id"] = unique_id
 
-        if new_device:
-            updates["device_id"] = new_device.id
+            # Update device assignment in registry
+            if info.device_id:
+                # Entity now belongs to a sub device
+                new_device = dev_reg.async_get_device_by_identifier(
+                    (DOMAIN, f"{mac}_{info.device_id}"),
+                    entry_data.entry_id,
+                )
+            else:
+                # Entity now belongs to the main device
+                new_device = dev_reg.async_get_device_by_connection(
+                    (dr.CONNECTION_NETWORK_MAC, mac),
+                    entry_data.entry_id,
+                )
 
-        # Apply all registry updates at once
-        if updates:
-            ent_reg.async_update_entity(entity_id, **updates)
+            if new_device:
+                updates["device_id"] = new_device.id
+
+            # Apply all registry updates at once
+            if updates:
+                ent_reg.async_update_entity(entity_id, **updates)
 
         # IMPORTANT: The entity's device assignment in Home
         # Assistant is only read when the entity is first added.
