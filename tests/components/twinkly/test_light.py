@@ -50,6 +50,23 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_update_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the entity becomes unavailable when the device stops answering."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_twinkly_client.get_details.side_effect = TimeoutError
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.tree_1").state == STATE_UNAVAILABLE
+
+
 async def test_turn_on_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
