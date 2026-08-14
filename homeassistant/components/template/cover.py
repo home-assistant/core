@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
     ENTITY_ID_FORMAT,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -37,7 +38,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -98,7 +99,12 @@ COVER_YAML_SCHEMA = vol.All(
     .extend(COVER_COMMON_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA)
     .extend(
-        make_template_entity_common_modern_schema(COVER_DOMAIN, DEFAULT_NAME).schema
+        make_template_entity_common_schema(
+            COVER_DOMAIN,
+            DEFAULT_NAME,
+            CoverEntityStateAttribute,
+            block_device_class=True,
+        ).schema
     ),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
@@ -175,14 +181,17 @@ class CoverExtraStoredData(ExtraStoredData):
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> Self:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored cover state from a dict."""
-        return cls(
-            current_cover_position=restored["current_cover_position"],
-            current_cover_tilt_position=restored["current_cover_tilt_position"],
-            is_opening=restored["is_opening"],
-            is_closing=restored["is_closing"],
-        )
+        try:
+            return cls(
+                current_cover_position=restored["current_cover_position"],
+                current_cover_tilt_position=restored["current_cover_tilt_position"],
+                is_opening=restored["is_opening"],
+                is_closing=restored["is_closing"],
+            )
+        except KeyError:
+            return None
 
 
 class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):

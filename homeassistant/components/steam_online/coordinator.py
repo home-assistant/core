@@ -45,6 +45,8 @@ class PlayerData:
     loccityid: int | None = None
     gameextrainfo: str | None = None
     gameid: str | None = None
+    lobbysteamid: str | None = None
+    gameserverip: str | None = None
     level: int | None = None
 
 

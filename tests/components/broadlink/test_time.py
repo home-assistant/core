@@ -25,8 +25,8 @@ async def test_time(
     device = get_device("Guest room")
     mock_setup = await device.setup_entry(hass)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     times = [entry for entry in entries if entry.domain == Platform.TIME]

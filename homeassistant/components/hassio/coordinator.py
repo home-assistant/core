@@ -91,6 +91,7 @@ from .const import (
     HASSIO_ISSUES_UPDATE_INTERVAL,
     HASSIO_MAIN_UPDATE_INTERVAL,
     HASSIO_STATS_UPDATE_INTERVAL,
+    ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
@@ -102,6 +103,7 @@ from .const import (
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
     PLACEHOLDER_KEY_FREE_SPACE,
+    PLACEHOLDER_KEY_PORT,
     PLACEHOLDER_KEY_REASON,
     PLACEHOLDER_KEY_REFERENCE,
     REQUEST_REFRESH_DELAY,
@@ -131,6 +133,7 @@ UNSUPPORTED_SKIP_REPAIR = {"privileged"}
 
 # Keys (type + context) of issues that when found should be made into a repair.
 ISSUE_KEYS_FOR_REPAIRS = {
+    ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_MOUNT_MOUNT_FAILED,
     "issue_system_multiple_data_disks",
@@ -346,6 +349,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             placeholders[PLACEHOLDER_KEY_REFERENCE] = issue.reference
 
             if issue.key in {
+                ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
                 ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
                 ISSUE_KEY_ADDON_PWNED,
             }:
@@ -358,6 +362,14 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
                     if addon[ATTR_SLUG] == issue.reference:
                         placeholders[PLACEHOLDER_KEY_ADDON] = addon[ATTR_NAME]
                         break
+
+                if (
+                    issue.key == ISSUE_KEY_ADDON_APP_PORT_CONFLICT
+                    and issue.reference_extra
+                ):
+                    placeholders[PLACEHOLDER_KEY_PORT] = str(
+                        issue.reference_extra["port"]
+                    )
 
         elif issue.key == ISSUE_KEY_SYSTEM_FREE_SPACE:
             host_info = get_host_info(self.hass)
@@ -447,12 +459,14 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             type=str(data.type),
             context=data.context,
             reference=data.reference,
+            reference_extra=data.reference_extra,
             suggestions=[
                 Suggestion(
                     uuid=suggestion.uuid,
                     type=str(suggestion.type),
                     context=suggestion.context,
                     reference=suggestion.reference,
+                    reference_extra=suggestion.reference_extra,
                 )
                 for suggestion in suggestions
             ],
@@ -1122,11 +1136,11 @@ def async_register_supervisor_in_dev_reg(
 
 @callback
 def async_remove_devices_from_dev_reg(
-    dev_reg: dr.DeviceRegistry, devices: set[str]
+    entry_id: str, dev_reg: dr.DeviceRegistry, devices: set[str]
 ) -> None:
     """Remove devices from the device registry."""
     for device in devices:
-        if dev := dev_reg.async_get_device(identifiers={(DOMAIN, device)}):
+        if dev := dev_reg.async_get_device_by_identifier((DOMAIN, device), entry_id):
             dev_reg.async_remove_device(dev.id)
 
 
@@ -1339,7 +1353,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             if device.model == SupervisorEntityModel.ADDON
         }
         if stale_addons := supervisor_addon_devices - set(new_data.addons):
-            async_remove_devices_from_dev_reg(self.dev_reg, stale_addons)
+            async_remove_devices_from_dev_reg(self.entry_id, self.dev_reg, stale_addons)
 
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return the new data because
@@ -1410,6 +1424,11 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         await super()._async_refresh(
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
+
+    async def async_refresh_after_store_reload(self) -> None:
+        """Refresh addon data when the store was already reloaded externally."""
+        async with self._debounced_refresh.async_lock():
+            await super()._async_refresh(log_failures=True)
 
     async def force_addon_info_data_refresh(self, addon_slug: str) -> None:
         """Force refresh of addon info data for a specific addon."""
@@ -1557,11 +1576,15 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         }
         if stale_mounts := supervisor_mount_devices - set(new_data.mounts):
             async_remove_devices_from_dev_reg(
-                self.dev_reg, {f"mount_{stale_mount}" for stale_mount in stale_mounts}
+                self.entry_id,
+                self.dev_reg,
+                {f"mount_{stale_mount}" for stale_mount in stale_mounts},
             )
 
         if not self.is_hass_os and (
-            dev := self.dev_reg.async_get_device(identifiers={(DOMAIN, "OS")})
+            dev := self.dev_reg.async_get_device_by_identifier(
+                (DOMAIN, "OS"), self.entry_id
+            )
         ):
             # Remove the OS device if it exists and the installation is not hassos
             self.dev_reg.async_remove_device(dev.id)

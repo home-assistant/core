@@ -1,6 +1,9 @@
 """Constants used in the Mikrotik components."""
 
+import logging
 from typing import Final
+
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN: Final = "mikrotik"
 DEFAULT_NAME: Final = "Mikrotik"
@@ -9,7 +12,8 @@ DEFAULT_DETECTION_TIME: Final = 300
 
 ATTR_MANUFACTURER: Final = "Mikrotik"
 ATTR_SERIAL_NUMBER: Final = "serial-number"
-ATTR_FIRMWARE: Final = "current-firmware"
+ATTR_ROUTERBOARD_FIRMWARE: Final = "current-firmware"
+ATTR_SYSTEM_FIRMWARE: Final = "installed-version"
 
 CONF_ARP_PING: Final = "arp_ping"
 CONF_FORCE_DHCP: Final = "force_dhcp"
@@ -18,16 +22,25 @@ CONF_DETECTION_TIME: Final = "detection_time"
 NAME: Final = "name"
 
 ARP: Final = "arp"
+BACKUP: Final = "backup"
 CAPSMAN: Final = "capsman"
 DHCP: Final = "dhcp"
+FIRMWARE_UPDATE: Final = "fw-update"
 HEALTH: Final = "health"
 IDENTITY: Final = "identity"
-INFO: Final = "info"
+INTERFACE: Final = "interface"
 IS_CAPSMAN: Final = "is_capsman"
 IS_WIFI: Final = "is_wifi"
 IS_WIFIWAVE2: Final = "is_wifiwave2"
 IS_WIRELESS: Final = "is_wireless"
-SYSTEM: Final = "system"
+POE: Final = "poe"
+PING: Final = "ping"
+REBOOT: Final = "reboot"
+RESOURCE: Final = "resource"
+ROUTERBOARD_UPDATE: Final = "routerboard-update"
+ROUTERBOARD: Final = "routerboard"
+SHUTDOWN: Final = "shutdown"
+UPDATE: Final = "update"
 WIFI: Final = "wifi"
 WIFIWAVE2: Final = "wifiwave2"
 WIRELESS: Final = "wireless"
@@ -35,16 +48,25 @@ WIRELESS: Final = "wireless"
 
 MIKROTIK_SERVICES: Final = {
     ARP: "/ip/arp/getall",
+    BACKUP: "/system/backup/save",
     CAPSMAN: "/caps-man/registration-table/getall",
     DHCP: "/ip/dhcp-server/lease/getall",
+    FIRMWARE_UPDATE: "/system/package/update/install",
     HEALTH: "/system/health/print",
     IDENTITY: "/system/identity/getall",
-    INFO: "/system/routerboard/getall",
+    INTERFACE: "/interface/print",
     IS_CAPSMAN: "/caps-man/interface/print",
     IS_WIFI: "/interface/wifi/print",
     IS_WIFIWAVE2: "/interface/wifiwave2/print",
     IS_WIRELESS: "/interface/wireless/print",
-    SYSTEM: "/system/resource/print",
+    POE: "/interface/ethernet/poe/print",
+    PING: "/ping",
+    REBOOT: "/system/reboot",
+    RESOURCE: "/system/resource/print",
+    ROUTERBOARD_UPDATE: "/system/routerboard/upgrade",
+    ROUTERBOARD: "/system/routerboard/getall",
+    SHUTDOWN: "/system/shutdown",
+    UPDATE: "/system/package/update/print",
     WIFI: "/interface/wifi/registration-table/print",
     WIFIWAVE2: "/interface/wifiwave2/registration-table/print",
     WIRELESS: "/interface/wireless/registration-table/getall",
