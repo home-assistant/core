@@ -272,7 +272,7 @@ def _sanitize_host(host: str) -> str:
 # ---------------------------
 def _guess_ip() -> str:
     """Try to guess the TrueNAS IP from common local hostnames."""
-    for domain in ["", *KNOWN_DOMAINS]:
+    for domain in ("", *KNOWN_DOMAINS):
         test_host = f"truenas.{domain}" if domain else "truenas"
         with contextlib.suppress(OSError):
             return socket.gethostbyname(test_host)
@@ -589,7 +589,13 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         host = discovery_info.host
         self._async_abort_entries_match({CONF_HOST: host})
-        await self.async_set_unique_id(host)
+        # Provisional only, to dedupe concurrent zeroconf events for this host
+        # before the box's stable system_id is known; the shared finish step
+        # (see async_step_user's system_id handling) re-keys the unique_id to
+        # that stable id once the probe below succeeds.
+        await self.async_set_unique_id(  # pylint: disable=home-assistant-unique-id-ip-based
+            host
+        )
         self._abort_if_unique_id_configured()
 
         # The probe reports back which endpoint actually answered, so a box

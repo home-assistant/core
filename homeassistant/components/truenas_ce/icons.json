@@ -59,7 +59,7 @@
         "default": "mdi:database-settings"
       },
       "pool_scrub_end": {
-        "default": "mdi:broom-clock"
+        "default": "mdi:clock-end"
       },
       "pool_scrub_start": {
         "default": "mdi:broom"

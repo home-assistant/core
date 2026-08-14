@@ -1595,6 +1595,7 @@ async def test_async_ensure_connected_noop_when_already_connected() -> None:
 async def test_async_ensure_connected_raises_update_failed_on_exception() -> None:
     """A connect() exception is translated into UpdateFailed."""
     coord = _bare_coordinator()
+    coord.host = "truenas.local"
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
     coord.api.connect = AsyncMock(side_effect=Exception("boom"))
@@ -1694,6 +1695,7 @@ async def test_async_update_data_runs_jobs_when_connected() -> None:
 async def test_async_update_data_skips_jobs_when_disconnected() -> None:
     """A still-disconnected API raises UpdateFailed and skips running any jobs."""
     coord = _bare_coordinator()
+    coord.host = "truenas.local"
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
     coord._async_ensure_connected = AsyncMock()

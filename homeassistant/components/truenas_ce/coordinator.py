@@ -389,7 +389,7 @@ def _unwrap_app_stats_message(msg: dict[str, Any]) -> dict[str, Any] | None:
 class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """TrueNASCoordinator Class."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize TrueNASCoordinator."""
         self.hass = hass
         self.config_entry: ConfigEntry = config_entry
@@ -548,13 +548,25 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             connected = await self.api.connect()
         except Exception as e:
-            raise UpdateFailed(f"Error connecting to TrueNAS: {e}") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"host": self.host, "error": str(e)},
+            ) from e
 
         if not connected:
             if self.api.error == ERR_INVALID_KEY:
-                raise ConfigEntryAuthFailed("Invalid TrueNAS API key")
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_api_key",
+                    translation_placeholders={"host": self.host},
+                )
             _LOGGER.error("TrueNAS connection failed (error code: %s)", self.api.error)
-            raise UpdateFailed(f"Error connecting to TrueNAS: {self.api.error}")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"host": self.host, "error": str(self.api.error)},
+            )
 
     # ---------------------------
     #   _async_update_data
@@ -611,14 +623,18 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if self.api.connected():
                 await _run_job(self.get_pool)
 
-        now = datetime.now(UTC).replace(microsecond=0)
+        now = dt_util.utcnow().replace(microsecond=0)
         delta = now - self.last_updatecheck_update
         if self.api.connected() and delta.total_seconds() > 60 * 60 * 12:
             await self.get_updatecheck()
             self.last_updatecheck_update = now
 
         if not self.api.connected():
-            raise UpdateFailed("TrueNAS disconnected")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="disconnected",
+                translation_placeholders={"host": self.host},
+            )
 
         # Re-check orphaned recorder statistics each poll so the diagnostic
         # button and Repairs issue track the current state automatically.
@@ -954,7 +970,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if uptime_seconds <= 0:
             return
 
-        now = datetime.now(UTC).replace(microsecond=0)
+        now = dt_util.utcnow().replace(microsecond=0)
         now_epoch = int(now.timestamp())
         new_uptime_epoch = now_epoch - int(uptime_seconds)
 
@@ -1096,7 +1112,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     # ---------------------------
     async def get_systemstats(self) -> None:
         """Get system statistics."""
-        report_epoch = int(datetime.now(UTC).replace(microsecond=0).timestamp())
+        report_epoch = int(dt_util.utcnow().replace(microsecond=0).timestamp())
         graph_names = self._select_stat_graph_names()
         if not graph_names:
             return
@@ -1134,7 +1150,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._is_virtual and "cputemp" in graph_names:
             graph_names.remove("cputemp")
 
-        now = datetime.now(UTC)
+        now = dt_util.utcnow()
         self._systemstats_errored = {
             name: ts
             for name, ts in self._systemstats_errored.items()
@@ -1177,7 +1193,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # already in _systemstats_errored), to avoid spamming the log on every
         # coordinator update while the graph remains broken.
         newly_failed_graphs: list[str] = []
-        now = datetime.now(UTC)
+        now = dt_util.utcnow()
         for graph_name in failed_graphs:
             if graph_name not in self._systemstats_errored:
                 newly_failed_graphs.append(graph_name)
@@ -1829,7 +1845,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self._disk_temp_graph:
             return None
 
-        report_epoch = int(datetime.now(UTC).replace(microsecond=0).timestamp())
+        report_epoch = int(dt_util.utcnow().replace(microsecond=0).timestamp())
         graph_query = {
             "start": report_epoch - 90,
             "end": report_epoch - 30,
@@ -2137,7 +2153,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def get_arc(self) -> None:
         """Get ZFS ARC hit ratio from netdata graphs."""
         self.ds["arc"] = {}
-        report_epoch = int(datetime.now(UTC).replace(microsecond=0).timestamp())
+        report_epoch = int(dt_util.utcnow().replace(microsecond=0).timestamp())
         graph_query = {
             "start": report_epoch - 300,
             "end": report_epoch,
@@ -2189,7 +2205,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self._ups_graphs:
             return
 
-        report_epoch = int(datetime.now(UTC).replace(microsecond=0).timestamp())
+        report_epoch = int(dt_util.utcnow().replace(microsecond=0).timestamp())
         graph_query = {
             "start": report_epoch - 90,
             "end": report_epoch - 30,

@@ -6,7 +6,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from logging import getLogger
 import re
-from typing import Any, NoReturn, override
+from typing import Any, NoReturn, cast, override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, UnitOfInformation, UnitOfTime
@@ -14,9 +14,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform as ep
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util.dt import naive_now, utc_from_timestamp
 
 from .const import (
     API_CLOUDSYNC_SYNC,
@@ -59,7 +62,7 @@ JOB_MAX_MISSING_POLLS = 5
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TrueNASConfigEntry,
-    _async_add_entities: AddEntitiesCallback,
+    _async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry for TrueNAS component."""
     coordinator: TrueNASCoordinator | None = get_truenas_coordinator(config_entry)
@@ -572,7 +575,7 @@ class TrueNASDatasetSensor(TrueNASSensor):
     @override
     async def snapshot(self) -> None:
         """Create dataset snapshot."""
-        ts = datetime.now().isoformat(sep="_", timespec="microseconds")
+        ts = naive_now().isoformat(sep="_", timespec="microseconds")
         payload = {"dataset": f"{self._data['name']}", "name": f"custom-{ts}"}
         result = await self.coordinator.api.query("pool.snapshot.create", payload)
         if result is None:
@@ -1053,7 +1056,7 @@ class TrueNASAppStatsSensor(TrueNASEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the state of the sensor."""
         if not self._data:
             return None
@@ -1080,7 +1083,7 @@ class TrueNASAppStatsSensor(TrueNASEntity, SensorEntity):
                 # Returning None keeps the state consistent with the declared unit.
                 return None
 
-        return val
+        return cast("StateType | date | datetime | Decimal", val)
 
     @property
     @override

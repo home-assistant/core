@@ -236,11 +236,20 @@
     "config_entry_not_loaded": {
       "message": "TrueNAS instance {entry_id} is not loaded (state: {state})"
     },
+    "connection_error": {
+      "message": "Error connecting to TrueNAS ({host}): {error}"
+    },
     "dataset_action_failed": {
       "message": "Failed to {action} dataset {dataset} on {host}: {reason}"
     },
     "dataset_not_encrypted": {
       "message": "Dataset {dataset} is not encrypted and cannot be {action}ed"
+    },
+    "disconnected": {
+      "message": "TrueNAS instance {host} disconnected"
+    },
+    "invalid_api_key": {
+      "message": "Invalid TrueNAS API key for {host}"
     },
     "missing_alert_uuid": {
       "message": "Alert UUID is required for the {action} action"
