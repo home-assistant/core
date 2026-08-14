@@ -48,7 +48,6 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
     """Poll the latest readout values of every controller."""
 
     config_entry: HortimaxConfigEntry
-    devices: list[Device]
 
     def __init__(
         self,
@@ -65,7 +64,6 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.client = client
-        self.devices = []
 
     @override
     async def _async_update_data(self) -> dict[str, HortimaxDeviceData]:
@@ -74,9 +72,8 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
         try:
             # Read the controller list every cycle, so a controller added in
             # HortiMaX Pro is picked up without reloading the entry.
-            self.devices = await self.client.get_devices()
-            self._register_controllers()
-            for device in self.devices:
+            devices = await self.client.get_devices()
+            for device in devices:
                 device_data = HortimaxDeviceData(device=device)
                 sources: dict[str, tuple[str, str, str]] = {}
                 for readout in await self.client.get_latest_readouts(device.name):
@@ -91,6 +88,9 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
                 device_data.source_names = disambiguate_source_names(sources)
                 data[device.name] = device_data
                 self._rename_changed_sources(device.name, device_data)
+            # Only once the whole poll succeeded, so a readout failure does not
+            # leave a registered controller behind for an update that is rejected.
+            self._register_controllers(devices)
         except HortosAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
@@ -104,7 +104,7 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
         return data
 
     @callback
-    def _register_controllers(self) -> None:
+    def _register_controllers(self, devices: list[Device]) -> None:
         """Register every controller, so its sources can point at it.
 
         Sources resolve their ``via_device_id`` from the registry when their
@@ -113,7 +113,7 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
         entities of its own, so nothing else would create it.
         """
         registry = dr.async_get(self.hass)
-        for device in self.devices:
+        for device in devices:
             registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
                 identifiers={(DOMAIN, device.name)},

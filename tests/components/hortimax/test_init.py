@@ -162,6 +162,30 @@ async def test_readout_auth_error_sets_error_state(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+async def test_failed_poll_registers_no_controller(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hortos_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a poll that fails part way through registers no controller.
+
+    Controllers are discovered before their readouts are read, so registering
+    them early would leave devices behind for an update that is rejected.
+    """
+    mock_hortos_client.get_latest_readouts.side_effect = HortosConnectionError("boom")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, DEVICE), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+
 @pytest.mark.usefixtures("mock_hortos_client")
 async def test_renamed_source_follows(
     hass: HomeAssistant,
