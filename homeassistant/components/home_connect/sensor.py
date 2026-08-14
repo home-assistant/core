@@ -21,6 +21,7 @@ from homeassistant.util import dt as dt_util, slugify
 from .common import setup_home_connect_entry
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
+    ATTR_RAW_VALUE,
     BSH_OPERATION_STATE_DELAYED_START,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
@@ -29,6 +30,7 @@ from .const import (
 )
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, constraint_fetcher
+from .utils import program_key_to_readable_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +71,14 @@ BSH_PROGRAM_SENSORS = (
         key=EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key="program_progress",
+        appliance_types=APPLIANCES_WITH_PROGRAMS,
+    ),
+)
+
+ACTIVE_PROGRAM_SENSORS = (
+    HomeConnectSensorEntityDescription(
+        key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        translation_key="active_program",
         appliance_types=APPLIANCES_WITH_PROGRAMS,
     ),
 )
@@ -601,6 +611,12 @@ def _get_entities_for_appliance(
             and appliance_coordinator.data.info.type in desc.appliance_types
         ],
         *[
+            HomeConnectActiveProgramSensor(appliance_coordinator, desc)
+            for desc in ACTIVE_PROGRAM_SENSORS
+            if desc.appliance_types
+            and appliance_coordinator.data.info.type in desc.appliance_types
+        ],
+        *[
             HomeConnectSensor(appliance_coordinator, description)
             for description in SENSORS
             if description.key in appliance_coordinator.data.status
@@ -722,6 +738,39 @@ class HomeConnectProgramSensor(HomeConnectSensor):
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         if event:
             self._update_native_value(event.value)
+
+
+class HomeConnectActiveProgramSensor(HomeConnectEntity, SensorEntity):
+    """Sensor class for the Home Connect active program, including non-selectable ones.
+
+    Unlike the active program select entity, this reports every program the
+    appliance sends back, even those that cannot be selected by the user,
+    such as an auto-started rinse or cleaning cycle.
+    """
+
+    entity_description: HomeConnectSensorEntityDescription
+    _attr_entity_registry_enabled_default = False
+    _raw_value: str | None = None
+
+    @override
+    def update_native_value(self) -> None:
+        """Update the sensor's value from the active program event."""
+        event = self.appliance.events.get(EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM)
+        value = event.value if event else None
+        if not isinstance(value, str):
+            self._raw_value = None
+            self._attr_native_value = None
+            return
+        self._raw_value = value
+        self._attr_native_value = program_key_to_readable_name(value)
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return the raw program key as reported by the API."""
+        if self._raw_value is None:
+            return None
+        return {ATTR_RAW_VALUE: self._raw_value}
 
 
 class HomeConnectEventSensor(HomeConnectSensor):

@@ -69,6 +69,7 @@ SERVICE_START_SELECTED_PROGRAM = "start_selected_program"
 ATTR_AFFECTS_TO = "affects_to"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
+ATTR_RAW_VALUE = "raw_value"
 ATTR_VALUE = "value"
 
 AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
