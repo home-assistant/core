@@ -30,7 +30,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
@@ -80,6 +80,7 @@ MAX_TEMP = 32
 MIN_TEMP_RANGE = 1.66667
 # Avoid Google's aggressive API rate limits when making incremental adjustments.
 TEMPERATURE_DEBOUNCE_SECONDS = 10
+TEMPERATURE_CONFIRMATION_TIMEOUT_SECONDS = 30
 
 
 @dataclass(frozen=True)
@@ -126,8 +127,10 @@ class ThermostatEntity(ClimateEntity):
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._command_lock = Lock()
         self._cancel_temperature_timer: CALLBACK_TYPE | None = None
+        self._cancel_temperature_confirmation_timer: CALLBACK_TYPE | None = None
         self._pending_temperature: _PendingTemperature | None = None
         self._executing_temperature: _PendingTemperature | None = None
+        self._unconfirmed_temperature: _PendingTemperature | None = None
         if mode_trait := device.traits.get(ThermostatModeTrait.NAME):
             self._attr_hvac_modes = [
                 THERMOSTAT_MODE_MAP[mode]
@@ -148,7 +151,7 @@ class ThermostatEntity(ClimateEntity):
         """Run when entity is added to register update signal handler."""
         self._attr_supported_features = self._get_supported_features()
         self.async_on_remove(
-            self._device.add_update_listener(self.async_write_ha_state)
+            self._device.add_update_listener(self._handle_device_update)
         )
         self.async_on_remove(self._async_cancel_pending_temperature)
 
@@ -217,7 +220,11 @@ class ThermostatEntity(ClimateEntity):
     @property
     def _optimistic_temperature(self) -> _PendingTemperature | None:
         """Return the newest queued or in-flight temperature command."""
-        return self._pending_temperature or self._executing_temperature
+        return (
+            self._pending_temperature
+            or self._executing_temperature
+            or self._unconfirmed_temperature
+        )
 
     @property
     def _target_temperature_trait(
@@ -366,13 +373,17 @@ class ThermostatEntity(ClimateEntity):
             pending_kwargs[ATTR_TARGET_TEMP_HIGH] = high_temp
 
         self._cancel_scheduled_temperature()
+        self._clear_unconfirmed_temperature()
         pending = self._pending_temperature = _PendingTemperature(
             pending_kwargs, hvac_mode
         )
         self.async_write_ha_state()
 
+        cancel_timer: CALLBACK_TYPE | None = None
+
         async def async_send_temperature(_now: datetime) -> None:
-            self._cancel_temperature_timer = None
+            if self._cancel_temperature_timer is cancel_timer:
+                self._cancel_temperature_timer = None
             try:
                 await self._async_execute_pending_temperature(pending)
             except HomeAssistantError:
@@ -381,9 +392,10 @@ class ThermostatEntity(ClimateEntity):
                     self.entity_id,
                 )
 
-        self._cancel_temperature_timer = async_call_later(
+        cancel_timer = async_call_later(
             self.hass, TEMPERATURE_DEBOUNCE_SECONDS, async_send_temperature
         )
+        self._cancel_temperature_timer = cancel_timer
 
     def _cancel_scheduled_temperature(self) -> None:
         """Cancel the scheduled temperature callback, if any."""
@@ -394,9 +406,72 @@ class ThermostatEntity(ClimateEntity):
     def _async_cancel_pending_temperature(self) -> None:
         """Cancel and discard the pending temperature command, if any."""
         self._cancel_scheduled_temperature()
+        self._clear_unconfirmed_temperature()
         if self._pending_temperature:
             self._pending_temperature = None
             self.async_write_ha_state()
+
+    def _clear_unconfirmed_temperature(self) -> None:
+        """Clear a temperature command awaiting device confirmation."""
+        if self._cancel_temperature_confirmation_timer:
+            self._cancel_temperature_confirmation_timer()
+            self._cancel_temperature_confirmation_timer = None
+        self._unconfirmed_temperature = None
+
+    @callback
+    def _handle_device_update(self) -> None:
+        """Reconcile optimistic temperature state with a device update."""
+        if self._unconfirmed_temperature and self._temperature_matches_device(
+            self._unconfirmed_temperature
+        ):
+            self._clear_unconfirmed_temperature()
+        self.async_write_ha_state()
+
+    def _temperature_matches_device(self, expected: _PendingTemperature) -> bool:
+        """Return whether the device traits confirm a temperature command."""
+        trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
+        low_temp = expected.kwargs.get(ATTR_TARGET_TEMP_LOW)
+        high_temp = expected.kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        if low_temp is not None and high_temp is not None:
+            return (
+                trait.heat_celsius is not None
+                and trait.cool_celsius is not None
+                and abs(trait.heat_celsius - low_temp) < 0.01
+                and abs(trait.cool_celsius - high_temp) < 0.01
+            )
+        temperature = expected.kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return False
+        if expected.hvac_mode == HVACMode.HEAT:
+            actual_temperature = trait.heat_celsius
+        elif expected.hvac_mode == HVACMode.COOL:
+            actual_temperature = trait.cool_celsius
+        else:
+            return False
+        return (
+            actual_temperature is not None
+            and abs(actual_temperature - temperature) < 0.01
+        )
+
+    def _await_temperature_confirmation(self, expected: _PendingTemperature) -> None:
+        """Retain optimistic state until confirmed or timed out."""
+        if self._pending_temperature:
+            return
+        self._clear_unconfirmed_temperature()
+        self._unconfirmed_temperature = expected
+
+        @callback
+        def clear_unconfirmed_temperature(_now: datetime) -> None:
+            self._cancel_temperature_confirmation_timer = None
+            if self._unconfirmed_temperature is expected:
+                self._unconfirmed_temperature = None
+                self.async_write_ha_state()
+
+        self._cancel_temperature_confirmation_timer = async_call_later(
+            self.hass,
+            TEMPERATURE_CONFIRMATION_TIMEOUT_SECONDS,
+            clear_unconfirmed_temperature,
+        )
 
     async def _async_flush_pending_temperature(self) -> None:
         """Immediately send pending temperature while holding the command lock."""
@@ -434,11 +509,15 @@ class ThermostatEntity(ClimateEntity):
         # cannot execute it a second time.
         self._pending_temperature = None
         self._executing_temperature = expected
+        succeeded = False
         try:
             await self._async_execute_temperature(expected.kwargs, expected.hvac_mode)
+            succeeded = True
         finally:
             if self._executing_temperature is expected:
                 self._executing_temperature = None
+                if succeeded:
+                    self._await_temperature_confirmation(expected)
                 self.async_write_ha_state()
 
     async def _async_execute_temperature(

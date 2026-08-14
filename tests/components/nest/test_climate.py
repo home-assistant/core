@@ -6,10 +6,10 @@ pubsub subscriber.
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import aiohttp
 import pytest
@@ -727,6 +727,7 @@ async def test_thermostat_temperature_changes_use_trailing_debounce(
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
+    create_event: CreateEvent,
 ) -> None:
     """Test only the final temperature is sent after the debounce period."""
     create_device.create(
@@ -760,6 +761,118 @@ async def test_thermostat_temperature_changes_use_trailing_debounce(
         "command": "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
         "params": {"heatCelsius": 22.0},
     }
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 22.0
+
+    await create_event(
+        {
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 21.0,
+            }
+        }
+    )
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 22.0
+
+    await create_event(
+        {
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 22.0,
+            }
+        }
+    )
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 22.0
+
+
+async def test_stale_temperature_callback_preserves_new_timer(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a stale callback does not clear a newer timer's cancel handle."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+            },
+        }
+    )
+    await setup_platform()
+
+    callbacks: list[Callable[[datetime], Awaitable[None]]] = []
+    cancel_timers: list[Mock] = []
+
+    def async_call_later(
+        _hass: HomeAssistant,
+        delay: float,
+        action: Callable[[datetime], Awaitable[None]],
+    ) -> Mock:
+        assert delay == nest_climate.TEMPERATURE_DEBOUNCE_SECONDS
+        callbacks.append(action)
+        cancel_timer = Mock()
+        cancel_timers.append(cancel_timer)
+        return cancel_timer
+
+    monkeypatch.setattr(nest_climate, "async_call_later", async_call_later)
+
+    await common.async_set_temperature(hass, temperature=20.0)
+    await common.async_set_temperature(hass, temperature=21.0)
+    cancel_timers[0].assert_called_once_with()
+
+    await callbacks[0](dt_util.utcnow())
+    await common.async_set_temperature(hass, temperature=22.0)
+
+    cancel_timers[1].assert_called_once_with()
+
+
+async def test_unconfirmed_temperature_times_out(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+) -> None:
+    """Test optimistic temperature expires without a matching device update."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+            },
+        }
+    )
+    await setup_platform()
+
+    await common.async_set_temperature(hass, temperature=20.0)
+    await async_fire_temperature_debounce(hass)
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 20.0
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow()
+        + timedelta(seconds=nest_climate.TEMPERATURE_CONFIRMATION_TIMEOUT_SECONDS),
+    )
+    await hass.async_block_till_done()
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 19.0
 
 
 async def test_temperature_and_mode_commands_are_serialized(
