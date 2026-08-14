@@ -107,7 +107,7 @@ async def async_setup_entry(
         )
         and (existing_entry := ent_reg.async_get(existing_entity_id))
         and (device_id := existing_entry.device_id)
-        and (device_entry := dev_reg.async_get(device_id))
+        and (device_entry := dev_reg.async_get(device_id, include_child_devices=False))
         and (dr.CONNECTION_UPNP, udn) not in device_entry.connections
     ):
         # If the existing device is missing the udn connection, add it
@@ -115,7 +115,7 @@ async def async_setup_entry(
         # the correct device.
         dev_reg.async_update_device(
             device_id,
-            merge_connections={(dr.CONNECTION_UPNP, udn)},
+            new_connections=device_entry.connections | {(dr.CONNECTION_UPNP, udn)},
         )
 
     # Create our own device-wrapping entity

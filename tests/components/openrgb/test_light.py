@@ -69,22 +69,21 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Ensure entities are correctly assigned to device
-    device_entry = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                UID_SEPARATOR.join(
-                    [
-                        mock_config_entry.entry_id,
-                        "DRAM",
-                        "ENE",
-                        "ENE SMBus Device",
-                        "none",
-                        "I2C: PIIX4, address 0x70",
-                    ]
-                ),
-            )
-        }
+    device_entry = device_registry.async_get_device_by_identifier(
+        (
+            DOMAIN,
+            UID_SEPARATOR.join(
+                [
+                    mock_config_entry.entry_id,
+                    "DRAM",
+                    "ENE",
+                    "ENE SMBus Device",
+                    "none",
+                    "I2C: PIIX4, address 0x70",
+                ]
+            ),
+        ),
+        mock_config_entry.entry_id,
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -852,11 +851,11 @@ async def test_duplicate_device_names(
     )
 
     # Verify devices exist with correct names (suffix based on device.id position)
-    device1_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, device1_key)}
+    device1_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device1_key), mock_config_entry.entry_id
     )
-    device2_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, device2_key)}
+    device2_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device2_key), mock_config_entry.entry_id
     )
 
     assert device1_entry

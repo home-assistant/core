@@ -1,11 +1,13 @@
 """The tests for the Template device_tracker platform."""
 
+from itertools import chain
 from typing import Any
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import device_tracker, template, zone
+from homeassistant.components.template.device_tracker import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_ICON,
@@ -21,6 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_extra_template_attributes,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -786,3 +789,50 @@ async def test_restore_state(
     assert state.attributes["latitude"] == 32.88
     assert state.attributes["longitude"] == 117.24
     assert state.attributes["gps_accuracy"] == 20.0
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_TRACKER, style, TEST_MINIMUM_REQUIREMENTS
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(
+        chain(
+            device_tracker.DeviceTrackerEntityCapabilityAttribute,
+            device_tracker.DeviceTrackerEntityStateAttribute,
+            device_tracker.TrackerEntityStateAttribute,
+        )
+    ),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_TRACKER,
+        style,
+        0,
+        {
+            **TEST_MINIMUM_REQUIREMENTS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
