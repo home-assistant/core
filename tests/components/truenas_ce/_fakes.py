@@ -50,8 +50,8 @@ def make_coordinator(
 ) -> SimpleNamespace:
     """Build a minimal stand-in for TrueNASCoordinator.
 
-    Only the attributes actually touched by entity.py/sensor.py/binary_sensor.py/
-    switch.py/button.py/update.py are provided; add more as new tests need them.
+    Only the attributes actually touched by entity.py/sensor.py are provided;
+    add more as new tests need them.
     """
     ds = {"system_info": dict(DEFAULT_SYSTEM_INFO), **(data or {})}
     entry = config_entry or make_config_entry(host=host)

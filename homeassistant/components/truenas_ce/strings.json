@@ -209,35 +209,6 @@
         }
     },
     "entity": {
-        "button": {
-            "statistics_cleanup": {
-                "name": "Clean up orphaned statistics"
-            },
-            "migration_rollback": {
-                "name": "Roll back migration"
-            },
-            "system_refresh": {
-                "name": "Refresh data"
-            },
-            "scrub_run": {
-                "name": "Run scrub"
-            },
-            "snapshottask_run": {
-                "name": "Run"
-            },
-            "rsync_run": {
-                "name": "Run"
-            },
-            "replication_run": {
-                "name": "Run"
-            },
-            "cloudsync_run": {
-                "name": "Run"
-            },
-            "cronjob_run": {
-                "name": "Run"
-            }
-        },
         "sensor": {
             "alerts": {
                 "name": "Alerts",
@@ -367,28 +338,6 @@
             "app_stats_blkio_write": {
                 "name": "Block I/O Write"
             }
-        },
-        "binary_sensor": {
-            "disk_issues": {
-                "name": "Disk/Pool issues"
-            },
-            "pool_healthy": {
-                "name": "healthy"
-            },
-            "interface": {
-                "name": "Link"
-            },
-            "certificate_expired": {
-                "name": "Expired"
-            }
-        },
-        "switch": {
-            "cloudsync_switch": {
-                "name": "Enabled"
-            },
-            "cronjob_switch": {
-                "name": "Enabled"
-            }
         }
     },
     "services": {
@@ -427,60 +376,6 @@
         "system_refresh": {
             "name": "Refresh TrueNAS data",
             "description": "Force an immediate re-poll of TrueNAS so automations can act on current data without waiting for the next poll (target the Uptime sensor)."
-        },
-        "service_start": {
-            "name": "Service start",
-            "description": "Start a TrueNAS service (target the service binary sensor)."
-        },
-        "service_stop": {
-            "name": "Service stop",
-            "description": "Stop a TrueNAS service (target the service binary sensor)."
-        },
-        "service_restart": {
-            "name": "Service restart",
-            "description": "Restart a TrueNAS service (target the service binary sensor)."
-        },
-        "service_reload": {
-            "name": "Service reload",
-            "description": "Reload a TrueNAS service (target the service binary sensor)."
-        },
-        "vm_start": {
-            "name": "VM start",
-            "description": "Start a virtual machine (target the VM binary sensor).",
-            "fields": {
-                "overcommit": {
-                    "name": "Overcommit memory",
-                    "description": "Allow the VM to launch even when there is insufficient free memory."
-                }
-            }
-        },
-        "vm_stop": {
-            "name": "VM stop",
-            "description": "Stop a virtual machine (target the VM binary sensor)."
-        },
-        "vm_restart": {
-            "name": "VM restart",
-            "description": "Restart a virtual machine (target the VM binary sensor)."
-        },
-        "container_start": {
-            "name": "Container start",
-            "description": "Start a container (Incus instance; target the container binary sensor)."
-        },
-        "container_stop": {
-            "name": "Container stop",
-            "description": "Stop a container (Incus instance; target the container binary sensor)."
-        },
-        "container_restart": {
-            "name": "Container restart",
-            "description": "Restart a container (Incus instance; target the container binary sensor)."
-        },
-        "app_start": {
-            "name": "App start",
-            "description": "Start an app (target the app binary sensor)."
-        },
-        "app_stop": {
-            "name": "App stop",
-            "description": "Stop an app (target the app binary sensor)."
         },
         "dataset_lock": {
             "name": "Lock dataset",

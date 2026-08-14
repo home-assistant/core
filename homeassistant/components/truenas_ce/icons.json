@@ -1,34 +1,5 @@
 {
   "entity": {
-    "button": {
-      "statistics_cleanup": {
-        "default": "mdi:database-remove"
-      },
-      "migration_rollback": {
-        "default": "mdi:backup-restore"
-      },
-      "system_refresh": {
-        "default": "mdi:refresh"
-      },
-      "scrub_run": {
-        "default": "mdi:broom"
-      },
-      "snapshottask_run": {
-        "default": "mdi:play-circle-outline"
-      },
-      "rsync_run": {
-        "default": "mdi:play-circle-outline"
-      },
-      "replication_run": {
-        "default": "mdi:play-circle-outline"
-      },
-      "cloudsync_run": {
-        "default": "mdi:play-circle-outline"
-      },
-      "cronjob_run": {
-        "default": "mdi:play-circle-outline"
-      }
-    },
     "sensor": {
       "alerts": {
         "default": "mdi:alert"
@@ -168,68 +139,6 @@
       "app_stats_blkio_write": {
         "default": "mdi:database-arrow-left"
       }
-    },
-    "binary_sensor": {
-      "pool_healthy": {
-        "default": "mdi:database-off",
-        "state": {
-          "on": "mdi:database",
-          "off": "mdi:database-off"
-        }
-      },
-      "vm": {
-        "default": "mdi:server-off",
-        "state": {
-          "on": "mdi:server",
-          "off": "mdi:server-off"
-        }
-      },
-      "container": {
-        "default": "mdi:cube-off-outline",
-        "state": {
-          "on": "mdi:cube-outline",
-          "off": "mdi:cube-off-outline"
-        }
-      },
-      "service": {
-        "default": "mdi:cog-off",
-        "state": {
-          "on": "mdi:cog",
-          "off": "mdi:cog-off"
-        }
-      },
-      "app": {
-        "default": "mdi:server-off",
-        "state": {
-          "on": "mdi:server",
-          "off": "mdi:server-off"
-        }
-      },
-      "directoryservices": {
-        "default": "mdi:account-group-outline",
-        "state": {
-          "on": "mdi:account-group",
-          "off": "mdi:account-group-outline"
-        }
-      },
-      "certificate_expired": {
-        "default": "mdi:certificate-check",
-        "state": {
-          "on": "mdi:certificate-alert",
-          "off": "mdi:certificate-check"
-        }
-      }
-    },
-    "switch": {
-      "service_switch": {
-        "default": "mdi:cog"
-      },
-      "cloudsync_switch": {
-        "default": "mdi:calendar-check"
-      },
-      "cronjob_switch": {
-        "default": "mdi:calendar-check"
-      }
     }
   },
   "services": {
@@ -259,42 +168,6 @@
     },
     "system_refresh": {
       "service": "mdi:refresh"
-    },
-    "service_start": {
-      "service": "mdi:play"
-    },
-    "service_stop": {
-      "service": "mdi:stop"
-    },
-    "service_restart": {
-      "service": "mdi:restart"
-    },
-    "service_reload": {
-      "service": "mdi:reload"
-    },
-    "vm_start": {
-      "service": "mdi:play"
-    },
-    "vm_stop": {
-      "service": "mdi:stop"
-    },
-    "vm_restart": {
-      "service": "mdi:restart"
-    },
-    "container_start": {
-      "service": "mdi:play"
-    },
-    "container_stop": {
-      "service": "mdi:stop"
-    },
-    "container_restart": {
-      "service": "mdi:restart"
-    },
-    "app_start": {
-      "service": "mdi:play"
-    },
-    "app_stop": {
-      "service": "mdi:stop"
     },
     "dataset_lock": {
       "service": "mdi:lock"

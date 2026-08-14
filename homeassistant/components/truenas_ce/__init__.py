@@ -21,7 +21,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-from .binary_sensor_types import SENSOR_TYPES as BINARY_SENSOR_TYPES
 from .const import (
     BEHAVIOR_REMOVE_INACTIVE_NIC,
     CONF_BEHAVIORS,
@@ -68,8 +67,6 @@ from .migration import (
     finalize_legacy_adoption,
 )
 from .sensor_types import SENSOR_TYPES, TrueNASSensorEntityDescription
-from .switch_types import SENSOR_TYPES as SWITCH_SENSOR_TYPES
-from .update_types import SENSOR_TYPES as UPDATE_SENSOR_TYPES
 
 _LOGGER = getLogger(__name__)
 
@@ -78,12 +75,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 # All entity descriptions across platforms, used to compute the set of unique_ids
 # that legitimately exist for the current TrueNAS objects (orphan cleanup).
-_ALL_DESCRIPTIONS = (
-    *SENSOR_TYPES,
-    *BINARY_SENSOR_TYPES,
-    *SWITCH_SENSOR_TYPES,
-    *UPDATE_SENSOR_TYPES,
-)
+_ALL_DESCRIPTIONS = SENSOR_TYPES
 
 
 # ---------------------------

@@ -2,7 +2,7 @@
 # Home Assistant reads action/service names+descriptions from strings.json
 # (services.<id>); this file defines only the schema (fields/target/selectors).
 # Keep it in sync with the services registered via SENSOR_SERVICES in
-# sensor_types.py / binary_sensor_types.py.
+# sensor_types.py.
 
 cloudsync_run:
   target:
@@ -49,72 +49,6 @@ system_refresh:
     entity:
       integration: truenas_ce
       domain: sensor
-service_start:
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
-service_stop:
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
-service_restart:
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
-service_reload:
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
-vm_start:
-  fields:
-    overcommit:
-      required: false
-      default: false
-      selector:
-        boolean: null
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
-vm_stop:
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
-vm_restart:
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
-container_start:
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
-container_stop:
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
-container_restart:
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
-app_start:
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
-app_stop:
-  target:
-    entity:
-      integration: truenas_ce
-      domain: binary_sensor
 dataset_lock:
   fields:
     force_umount:
