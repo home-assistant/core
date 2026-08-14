@@ -152,7 +152,9 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
-                entry=self._get_reauth_entry(), title=user_email, data=config_data
+                entry=self._get_reauth_entry(),
+                title=user_email,
+                data_updates=config_data,
             )
 
         self._abort_if_unique_id_configured()

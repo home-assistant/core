@@ -50,6 +50,10 @@ async def test_migrate_unique_ids(
             ("another_domain", "external-id"),
         },
     )
+    entityless_device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "1000-1111")},
+    )
     light_entry = entity_registry.async_get_or_create(
         Platform.LIGHT,
         DOMAIN,
@@ -96,6 +100,11 @@ async def test_migrate_unique_ids(
     assert (DOMAIN, "10000-1101") not in migrated_device.identifiers
     assert (DOMAIN, "10000-1112") not in migrated_device.identifiers
     assert ("another_domain", "external-id") in migrated_device.identifiers
+    migrated_entityless_device = device_registry.async_get(entityless_device_entry.id)
+    assert migrated_entityless_device is not None
+    assert migrated_entityless_device.id == entityless_device_entry.id
+    assert (DOMAIN, "1000-2") in migrated_entityless_device.identifiers
+    assert (DOMAIN, "1000-1111") not in migrated_entityless_device.identifiers
 
     migrated_offline_entity = entity_registry.async_get(offline_entity_id)
     assert migrated_offline_entity is not None
@@ -127,6 +136,29 @@ async def test_migrate_unique_ids(
         entity_registry.async_get(colliding_mesh_entry.entity_id)
         == colliding_mesh_entry
     )
+
+
+async def test_migration_without_lights_clears_marker(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    cync_client: MagicMock,
+) -> None:
+    """Test an empty migration still clears its pending marker."""
+    cync_client.get_homes.return_value = []
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            "mesh_unique_ids_migration_pending": "entities_to_temporary",
+        },
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
 
 
 async def test_resume_partial_unique_id_migration(
