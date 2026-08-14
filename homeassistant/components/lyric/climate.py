@@ -137,6 +137,7 @@ async def async_setup_entry(
             )
             for location in coordinator.data.locations
             for device in location.devices
+            if device.device_class == "Thermostat"
         ),
         True,
     )
