@@ -1,6 +1,6 @@
 """Test the HAVEN IAQ config flow."""
 
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 from haveniaq import (
     DeviceInfo,
@@ -10,7 +10,6 @@ from haveniaq import (
 )
 import pytest
 
-from homeassistant.components.haven.config_flow import HavenConfigFlow
 from homeassistant.components.haven.const import DEFAULT_PATH, DEFAULT_PORT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
@@ -30,22 +29,10 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-def _mock_client(info: dict) -> AsyncMock:
-    client = AsyncMock()
-    client.get_info.return_value = DeviceInfo.from_dict(info)
-    return client
-
-
-async def test_discovery_confirm_without_discovery() -> None:
-    """Test an invalid discovery confirmation is aborted."""
-    result = await HavenConfigFlow().async_step_discovery_confirm()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
-
-
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_flow_success(hass: HomeAssistant) -> None:
+async def test_user_flow_success(
+    hass: HomeAssistant, mock_haven_client: AsyncMock
+) -> None:
     """Test manual setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -53,13 +40,9 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=_mock_client(TEST_INFO),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Room Air Monitor {TEST_SERIAL}"
@@ -72,30 +55,27 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_flow_cannot_connect_then_recovers(hass: HomeAssistant) -> None:
+async def test_user_flow_cannot_connect_then_recovers(
+    hass: HomeAssistant, mock_haven_client: AsyncMock
+) -> None:
     """Test manual setup recovers from a connection failure."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    client = _mock_client(TEST_INFO)
-    client.get_info.side_effect = [
-        HavenApiError,
+    mock_haven_client.get_info.side_effect = [
+        HavenApiError("Unable to connect"),
         DeviceInfo.from_dict(TEST_INFO),
     ]
 
-    with patch(
-        "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=client,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -108,80 +88,74 @@ async def test_user_flow_cannot_connect_then_recovers(hass: HomeAssistant) -> No
     ],
 )
 async def test_user_flow_rejects_unsupported_device(
-    hass: HomeAssistant, error: type[Exception], expected: str
+    hass: HomeAssistant,
+    mock_haven_client: AsyncMock,
+    error: type[Exception],
+    expected: str,
 ) -> None:
     """Test unsupported API and product errors remain actionable."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    client = _mock_client(TEST_INFO)
-    client.get_info.side_effect = error
-    with patch(
-        "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=client,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST}
-        )
+    mock_haven_client.get_info.side_effect = error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
     assert result["errors"] == {"base": expected}
 
 
-async def test_user_flow_rejects_controller(hass: HomeAssistant) -> None:
+async def test_user_flow_rejects_controller(
+    hass: HomeAssistant, mock_haven_client: AsyncMock
+) -> None:
     """Test the initial integration rejects products without air-quality data."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    with patch(
-        "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=_mock_client(TEST_UNSUPPORTED_CONTROLLER_INFO),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST}
-        )
+    mock_haven_client.get_info.return_value = DeviceInfo.from_dict(
+        TEST_UNSUPPORTED_CONTROLLER_INFO
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unsupported_product"}
 
 
-async def test_user_flow_aborts_duplicate(hass: HomeAssistant) -> None:
+async def test_user_flow_aborts_duplicate(
+    hass: HomeAssistant,
+    mock_haven_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test manual setup rejects an already configured device."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_SERIAL,
-        data={CONF_HOST: "192.0.2.2"},
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=_mock_client(TEST_INFO),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
+async def test_zeroconf_flow_success(
+    hass: HomeAssistant,
+    mock_haven_client: AsyncMock,
+    mock_haven_client_class: MagicMock,
+) -> None:
     """Test zeroconf discovery."""
-    with patch(
-        "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=_mock_client(TEST_INFO),
-    ) as client_class:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZEROCONF_DISCOVERY,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
 
-    client_class.assert_called_once_with(
+    mock_haven_client_class.assert_called_once_with(
         TEST_HOST,
         session=ANY,
         port=TEST_PORT,
@@ -203,7 +177,9 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == TEST_SERIAL
 
 
-async def test_zeroconf_updates_existing_entry(hass: HomeAssistant) -> None:
+async def test_zeroconf_updates_existing_entry(
+    hass: HomeAssistant, mock_haven_client: AsyncMock
+) -> None:
     """Test rediscovery updates the host on an existing entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -212,15 +188,11 @@ async def test_zeroconf_updates_existing_entry(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=_mock_client(TEST_INFO),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZEROCONF_DISCOVERY,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -240,19 +212,17 @@ async def test_zeroconf_updates_existing_entry(hass: HomeAssistant) -> None:
     ],
 )
 async def test_zeroconf_aborts_on_device_errors(
-    hass: HomeAssistant, error: type[Exception], expected: str
+    hass: HomeAssistant,
+    mock_haven_client: AsyncMock,
+    error: type[Exception],
+    expected: str,
 ) -> None:
     """Test discovery failures abort with specific reasons."""
-    client = _mock_client(TEST_INFO)
-    client.get_info.side_effect = error
-    with patch(
-        "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=client,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZEROCONF_DISCOVERY,
-        )
+    mock_haven_client.get_info.side_effect = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected

@@ -1,107 +1,83 @@
 """Test HAVEN IAQ sensors."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from haveniaq import DeviceInfo, SensorData
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.haven.const import DOMAIN
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_HOST,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import TEST_CAM_INFO, TEST_CAM_SENSORS, TEST_HOST, TEST_INFO, TEST_SENSORS
+from . import (
+    TEST_CAM_INFO,
+    TEST_CAM_SENSORS,
+    TEST_CAM_SERIAL,
+    TEST_SENSORS,
+    TEST_SERIAL,
+    setup_integration,
+)
 
-from tests.common import MockConfigEntry
-
-
-async def _setup_entry(
-    hass: HomeAssistant,
-    info: dict,
-    sensors: dict | None,
-) -> None:
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: TEST_HOST},
-    )
-    entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.haven.HavenClient") as client_class:
-        client = AsyncMock()
-        client.get_info.return_value = DeviceInfo.from_dict(info)
-        if sensors is not None:
-            client.get_sensors.return_value = SensorData.from_dict(sensors)
-        client_class.return_value = client
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.fixture
+def mock_cam_haven_client(mock_haven_client: AsyncMock) -> None:
+    """Configure the mocked client as a Central Air Monitor."""
+    mock_haven_client.get_info.return_value = DeviceInfo.from_dict(TEST_CAM_INFO)
+    mock_haven_client.get_sensors.return_value = SensorData.from_dict(TEST_CAM_SENSORS)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_haven_client")
 async def test_ram_sensors(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test RAM entities and device metadata."""
-    await _setup_entry(hass, TEST_INFO, TEST_SENSORS)
+    await setup_integration(hass, mock_config_entry)
 
-    assert len(hass.states.async_all("sensor")) == 15
-    temp_entity = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "TEST-RAM-0001_temperature_c"
-    )
-    assert temp_entity is not None
-    temp_state = hass.states.get(temp_entity)
-    assert temp_state is not None
-    assert temp_state.state == "22.5"
-    assert temp_state.attributes[ATTR_FRIENDLY_NAME] == (
-        "Room Air Monitor TEST-RAM-0001 Temperature"
-    )
-    assert temp_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    entity = entity_registry.async_get(temp_entity)
-    assert entity is not None
-    device = device_registry.async_get(entity.device_id)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_SERIAL)})
     assert device is not None
-    assert device.manufacturer == "HAVEN IAQ"
-    assert device.model == "Room Air Monitor"
-    assert device.sw_version == "test-firmware"
-    assert device.hw_version == "test-hardware"
-    assert device.serial_number == "TEST-RAM-0001"
+    assert device == snapshot(name="ram-device")
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_cam_haven_client")
 async def test_cam_entities(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test CAM-specific entities replace RAM-only entities."""
-    await _setup_entry(hass, TEST_CAM_INFO, TEST_CAM_SENSORS)
+    await setup_integration(hass, mock_config_entry)
 
-    assert len(hass.states.async_all("sensor")) == 11
-    assert entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "TEST-CAM-0001_airflow_mps"
-    )
-    assert entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "TEST-CAM-0001_pressure_kpa"
-    )
-    assert (
-        entity_registry.async_get_entity_id("sensor", DOMAIN, "TEST-CAM-0001_nox_index")
-        is None
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_CAM_SERIAL)})
+    assert device is not None
+    assert device == snapshot(name="cam-device")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_measurement_sensors_unavailable_when_not_ready(
     hass: HomeAssistant,
+    mock_haven_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test measurements are unavailable before sensor data is ready."""
-    await _setup_entry(hass, TEST_INFO, {**TEST_SENSORS, "sensor_ready": False})
+    mock_haven_client.get_sensors.return_value = SensorData.from_dict(
+        {**TEST_SENSORS, "sensor_ready": False}
+    )
+    await setup_integration(hass, mock_config_entry)
 
     temp_entity = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST-RAM-0001_temperature_c"
@@ -115,11 +91,15 @@ async def test_measurement_sensors_unavailable_when_not_ready(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_missing_measurement_is_unknown(
     hass: HomeAssistant,
+    mock_haven_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a missing measurement is unknown while the sensor remains ready."""
-    sensors = {**TEST_SENSORS, "temperature_c": None}
-    await _setup_entry(hass, TEST_INFO, sensors)
+    mock_haven_client.get_sensors.return_value = SensorData.from_dict(
+        {**TEST_SENSORS, "temperature_c": None}
+    )
+    await setup_integration(hass, mock_config_entry)
 
     temp_entity = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST-RAM-0001_temperature_c"

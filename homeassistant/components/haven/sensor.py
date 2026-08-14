@@ -19,6 +19,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -31,7 +32,7 @@ from .coordinator import (
 )
 from .entity import HavenEntity
 
-UNIT_PARTICLES_CM3 = "#/cm³"
+CONCENTRATION_PARTICLES_PER_MILLILITER = f"particles/{UnitOfVolume.MILLILITERS}"
 AIR_QUALITY_PRODUCTS = frozenset(
     {ProductType.ROOM_AIR_MONITOR, ProductType.CENTRAL_AIR_MONITOR}
 )
@@ -170,7 +171,7 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
     HavenSensorEntityDescription(
         key="pm05_count_cm3",
         translation_key="pm05_count",
-        native_unit_of_measurement=UNIT_PARTICLES_CM3,
+        native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_MILLILITER,
         state_class=SensorStateClass.MEASUREMENT,
         products=RAM_ONLY,
         requires_sensor_ready=True,
@@ -179,7 +180,7 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
     HavenSensorEntityDescription(
         key="pm1_count_cm3",
         translation_key="pm1_count",
-        native_unit_of_measurement=UNIT_PARTICLES_CM3,
+        native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_MILLILITER,
         state_class=SensorStateClass.MEASUREMENT,
         products=RAM_ONLY,
         requires_sensor_ready=True,
@@ -188,7 +189,7 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
     HavenSensorEntityDescription(
         key="pm25_count_cm3",
         translation_key="pm25_count",
-        native_unit_of_measurement=UNIT_PARTICLES_CM3,
+        native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_MILLILITER,
         state_class=SensorStateClass.MEASUREMENT,
         products=AIR_QUALITY_PRODUCTS,
         requires_sensor_ready=True,
@@ -197,7 +198,7 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
     HavenSensorEntityDescription(
         key="pm4_count_cm3",
         translation_key="pm4_count",
-        native_unit_of_measurement=UNIT_PARTICLES_CM3,
+        native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_MILLILITER,
         state_class=SensorStateClass.MEASUREMENT,
         products=RAM_ONLY,
         requires_sensor_ready=True,
@@ -206,7 +207,7 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
     HavenSensorEntityDescription(
         key="pm10_count_cm3",
         translation_key="pm10_count",
-        native_unit_of_measurement=UNIT_PARTICLES_CM3,
+        native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_MILLILITER,
         state_class=SensorStateClass.MEASUREMENT,
         products=AIR_QUALITY_PRODUCTS,
         requires_sensor_ready=True,

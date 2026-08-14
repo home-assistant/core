@@ -23,8 +23,6 @@ from .const import DEFAULT_MODEL, DEFAULT_PATH, DEFAULT_PORT, DOMAIN
 class HavenConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a HAVEN IAQ config flow."""
 
-    VERSION = 1
-
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}

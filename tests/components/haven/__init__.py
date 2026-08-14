@@ -2,12 +2,16 @@
 
 from ipaddress import ip_address
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+from tests.common import MockConfigEntry
 
 TEST_HOST = "192.0.2.1"
 TEST_PORT = 8080
 TEST_PATH = "/haven/api/v1"
 TEST_SERIAL = "TEST-RAM-0001"
+TEST_CAM_SERIAL = "TEST-CAM-0001"
 
 TEST_INFO = {
     "api_version": 1,
@@ -23,7 +27,7 @@ TEST_INFO = {
 
 TEST_CAM_INFO = {
     **TEST_INFO,
-    "serial_number": "TEST-CAM-0001",
+    "serial_number": TEST_CAM_SERIAL,
     "device_id": "TEST-DEVICE-CAM",
     "model": "Central Air Monitor",
     "product_type": "cam",
@@ -89,3 +93,10 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     },
     type="_haven._tcp.local.",
 )
+
+
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Set up the HAVEN integration for tests."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()

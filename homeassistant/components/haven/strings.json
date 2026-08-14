@@ -59,7 +59,7 @@
       "message": "The HAVEN device reported an unsupported product type"
     },
     "update_error": {
-      "message": "An error occurred while communicating with the HAVEN device: {error}"
+      "message": "An error occurred while communicating with the HAVEN device"
     }
   }
 }
