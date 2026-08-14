@@ -565,7 +565,10 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
-                translation_placeholders={"host": self.host, "error": str(self.api.error)},
+                translation_placeholders={
+                    "host": self.host,
+                    "error": str(self.api.error),
+                },
             )
 
     # ---------------------------
