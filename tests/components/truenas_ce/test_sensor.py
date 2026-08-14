@@ -60,6 +60,7 @@ def _make_sensor(
 #   _parse_app_network_uid / _compose_app_network_uid / _resolve_app_network_data
 # ---------------------------
 def test_compose_and_parse_roundtrip() -> None:
+    """Composing then parsing an app/interface uid returns the original parts."""
     uid = _compose_app_network_uid("plex", "eth0")
     assert uid == "plex::eth0"
     assert _parse_app_network_uid(uid) == ("plex", "eth0")
@@ -67,28 +68,34 @@ def test_compose_and_parse_roundtrip() -> None:
 
 @pytest.mark.parametrize("uid", ["no-separator", "::eth0", "plex::", "::"])
 def test_parse_app_network_uid_malformed_returns_none_none(uid: str) -> None:
+    """Uids missing a proper `base::interface` split parse to (None, None)."""
     assert _parse_app_network_uid(uid) == (None, None)
 
 
 def test_resolve_app_network_data_malformed_uid_returns_none() -> None:
+    """A malformed uid resolves to no network data."""
     assert _resolve_app_network_data("bad-uid", {}) is None
 
 
 def test_resolve_app_network_data_unknown_base_returns_none() -> None:
+    """A uid whose base app is not present in app_stats resolves to None."""
     assert _resolve_app_network_data("plex::eth0", {}) is None
 
 
 def test_resolve_app_network_data_networks_not_list_returns_none() -> None:
+    """A non-list `networks` value resolves to None instead of raising."""
     app_stats = {"plex": {"networks": "not-a-list"}}
     assert _resolve_app_network_data("plex::eth0", app_stats) is None
 
 
 def test_resolve_app_network_data_no_matching_interface_returns_none() -> None:
+    """No matching interface_name in the networks list resolves to None."""
     app_stats = {"plex": {"networks": [{"interface_name": "eth1"}]}}
     assert _resolve_app_network_data("plex::eth0", app_stats) is None
 
 
 def test_resolve_app_network_data_returns_merged_payload() -> None:
+    """A matching interface merges the app and interface fields into one dict."""
     app_stats = {
         "plex": {"app_name": "plex", "networks": [{"interface_name": "eth0", "rx": 5}]}
     }
@@ -110,6 +117,7 @@ def _net_desc(key: str = "app_stats_network_rx") -> TrueNASSensorEntityDescripti
 
 
 def test_discover_network_sensors_ignores_non_list_networks() -> None:
+    """A non-list `networks` value produces no discovered entities."""
     entities: list = []
     _discover_network_sensors(
         _net_desc(), "plex", {"networks": "bad"}, "inst", set(), entities, MagicMock()
@@ -118,6 +126,7 @@ def test_discover_network_sensors_ignores_non_list_networks() -> None:
 
 
 def test_discover_network_sensors_ignores_non_dict_and_missing_name() -> None:
+    """Non-dict network entries and ones missing interface_name are skipped."""
     entities: list = []
     app_data = {"networks": ["not-a-dict", {}, {"interface_name": ""}]}
     _discover_network_sensors(
@@ -127,6 +136,7 @@ def test_discover_network_sensors_ignores_non_dict_and_missing_name() -> None:
 
 
 def test_discover_network_sensors_creates_entity_and_skips_loaded() -> None:
+    """A new interface creates one entity; a second pass skips the loaded one."""
     entities: list = []
     app_data = {"networks": [{"interface_name": "eth0"}]}
     coord = make_coordinator()
@@ -144,6 +154,7 @@ def test_discover_network_sensors_creates_entity_and_skips_loaded() -> None:
 
 
 def test_discover_standard_sensor_creates_and_skips_loaded() -> None:
+    """A new app creates one entity; a second pass skips the already-loaded one."""
     desc = TrueNASSensorEntityDescription(
         key="app_stats_cpu", name="CPU", data_path="app_stats"
     )
@@ -159,6 +170,7 @@ def test_discover_standard_sensor_creates_and_skips_loaded() -> None:
 
 
 def test_maybe_discover_app_stats_sensor_skips_empty_app_data() -> None:
+    """Empty app data produces no discovered entities."""
     entities: list = []
     _maybe_discover_app_stats_sensor(
         _net_desc(), "plex", {}, "inst", set(), entities, MagicMock()
@@ -167,6 +179,7 @@ def test_maybe_discover_app_stats_sensor_skips_empty_app_data() -> None:
 
 
 def test_maybe_discover_app_stats_sensor_routes_network_key() -> None:
+    """A network-keyed description routes to the composite app::interface uid."""
     entities: list = []
     coord = make_coordinator()
     app_data = {"networks": [{"interface_name": "eth0"}]}
@@ -178,6 +191,7 @@ def test_maybe_discover_app_stats_sensor_routes_network_key() -> None:
 
 
 def test_maybe_discover_app_stats_sensor_routes_standard_key() -> None:
+    """A standard-keyed description routes to a plain app-name uid."""
     desc = TrueNASSensorEntityDescription(
         key="app_stats_cpu", name="CPU", data_path="app_stats"
     )
@@ -191,6 +205,7 @@ def test_maybe_discover_app_stats_sensor_routes_standard_key() -> None:
 
 
 def test_discover_app_stats_adds_new_entities_via_callback() -> None:
+    """New app-stats entities are discovered and passed to the add_entities callback."""
     coord = make_coordinator(data={"app_stats": {"plex": {"cpu": 1}}})
     platform = SimpleNamespace(entities={})
     add_entities = MagicMock()
@@ -209,6 +224,7 @@ def test_discover_app_stats_adds_new_entities_via_callback() -> None:
 
 
 def test_discover_app_stats_no_entities_skips_callback() -> None:
+    """No app-stats data means the add_entities callback is never invoked."""
     coord = make_coordinator(data={"app_stats": {}})
     platform = SimpleNamespace(entities={})
     add_entities = MagicMock()
@@ -220,11 +236,13 @@ def test_discover_app_stats_no_entities_skips_callback() -> None:
 #   TrueNASSensor
 # ---------------------------
 def test_native_value_returns_data_attribute() -> None:
+    """native_value returns the raw value of the configured data attribute."""
     sensor = _make_sensor(TrueNASSensor, {"value": 42})
     assert sensor.native_value == 42
 
 
 def test_native_unit_of_measurement_plain() -> None:
+    """A plain, non-`data_`-prefixed unit is returned unchanged."""
     desc = TrueNASSensorEntityDescription(
         key="k",
         name="N",
@@ -237,11 +255,13 @@ def test_native_unit_of_measurement_plain() -> None:
 
 
 def test_native_unit_of_measurement_none_when_not_configured() -> None:
+    """No configured unit yields native_unit_of_measurement of None."""
     sensor = _make_sensor(TrueNASSensor, {"value": 1})
     assert sensor.native_unit_of_measurement is None
 
 
 def test_native_unit_of_measurement_data_prefixed_present() -> None:
+    """A `data__field` unit resolves to that field's value when present."""
     desc = TrueNASSensorEntityDescription(
         key="k",
         name="N",
@@ -254,6 +274,7 @@ def test_native_unit_of_measurement_data_prefixed_present() -> None:
 
 
 def test_native_unit_of_measurement_data_prefixed_missing_falls_back() -> None:
+    """A `data__field` unit falls back to the raw spec string when field is absent."""
     desc = TrueNASSensorEntityDescription(
         key="k",
         name="N",
@@ -266,6 +287,7 @@ def test_native_unit_of_measurement_data_prefixed_missing_falls_back() -> None:
 
 
 def test_init_scales_gib_suggested_unit_from_options() -> None:
+    """A GiB data-unit option keeps the suggested unit at GIBIBYTES."""
     desc = TrueNASSensorEntityDescription(
         key="k",
         name="N",
@@ -282,6 +304,7 @@ def test_init_scales_gib_suggested_unit_from_options() -> None:
 
 
 def test_init_scales_gb_suggested_unit_from_entry_data_fallback() -> None:
+    """A GB data-unit entry falls back from entry.data, scaling the suggested unit."""
     desc = TrueNASSensorEntityDescription(
         key="k",
         name="N",
@@ -298,6 +321,7 @@ def test_init_scales_gb_suggested_unit_from_entry_data_fallback() -> None:
 
 
 def test_init_does_not_scale_non_gb_suggested_unit() -> None:
+    """A non-data-size suggested unit (e.g. MB/s) is left untouched."""
     desc = TrueNASSensorEntityDescription(
         key="k",
         name="N",
@@ -313,17 +337,20 @@ def test_init_does_not_scale_non_gb_suggested_unit() -> None:
 #   TrueNASCertExpirySensor
 # ---------------------------
 def test_cert_expiry_none_when_missing() -> None:
+    """A missing expiry value yields native_value of None."""
     sensor = _make_sensor(TrueNASCertExpirySensor, {})
     assert sensor.native_value is None
 
 
 def test_cert_expiry_days_when_under_a_year() -> None:
+    """An expiry under a year is reported in days."""
     sensor = _make_sensor(TrueNASCertExpirySensor, {"value": 100})
     assert sensor.native_value == 100
     assert sensor.native_unit_of_measurement.value == "d"
 
 
 def test_cert_expiry_years_when_over_a_year() -> None:
+    """An expiry over a year is converted to and reported in years."""
     sensor = _make_sensor(TrueNASCertExpirySensor, {"value": 730})
     assert sensor.native_value == 2.0
     assert sensor.native_unit_of_measurement.value == "y"
@@ -343,6 +370,7 @@ def test_cert_expiry_years_when_over_a_year() -> None:
     ],
 )
 def test_disk_sensor_icon(devname: str, disk_type: str, expected: str) -> None:
+    """The disk icon depends on device name (NVMe) and disk type."""
     sensor = _make_sensor(TrueNASDiskSensor, {"devname": devname, "type": disk_type})
     assert sensor.icon == expected
 
@@ -351,16 +379,19 @@ def test_disk_sensor_icon(devname: str, disk_type: str, expected: str) -> None:
 #   TrueNASUptimeSensor
 # ---------------------------
 def test_uptime_native_value_positive() -> None:
+    """A positive uptime timestamp is returned as a datetime."""
     sensor = _make_sensor(TrueNASUptimeSensor, {"value": 1735689600})
     assert isinstance(sensor.native_value, datetime)
 
 
 def test_uptime_native_value_zero_is_none() -> None:
+    """An uptime value of zero yields native_value of None."""
     sensor = _make_sensor(TrueNASUptimeSensor, {"value": 0})
     assert sensor.native_value is None
 
 
 async def test_uptime_restart_calls_reboot() -> None:
+    """restart() calls system.reboot with the integration's reason string."""
     sensor = _make_sensor(TrueNASUptimeSensor, {})
     await sensor.restart()
     sensor.coordinator.api.query.assert_awaited_once_with(
@@ -369,6 +400,7 @@ async def test_uptime_restart_calls_reboot() -> None:
 
 
 async def test_uptime_stop_calls_shutdown() -> None:
+    """stop() calls system.shutdown with the integration's reason string."""
     sensor = _make_sensor(TrueNASUptimeSensor, {})
     await sensor.stop()
     sensor.coordinator.api.query.assert_awaited_once_with(
@@ -377,6 +409,7 @@ async def test_uptime_stop_calls_shutdown() -> None:
 
 
 async def test_uptime_refresh_calls_coordinator_refresh() -> None:
+    """refresh() triggers a coordinator refresh."""
     sensor = _make_sensor(TrueNASUptimeSensor, {})
     await sensor.refresh()
     sensor.coordinator.async_refresh.assert_awaited_once()
@@ -386,6 +419,7 @@ async def test_uptime_refresh_calls_coordinator_refresh() -> None:
 #   TrueNASAlertSensor
 # ---------------------------
 async def test_alert_dismiss_without_uuid_raises() -> None:
+    """dismiss() without a uuid raises ServiceValidationError(missing_uuid)."""
     sensor = _make_sensor(TrueNASAlertSensor, {})
     with pytest.raises(ServiceValidationError) as exc_info:
         await sensor.dismiss()
@@ -393,6 +427,7 @@ async def test_alert_dismiss_without_uuid_raises() -> None:
 
 
 async def test_alert_dismiss_with_uuid_calls_query_and_refreshes() -> None:
+    """dismiss() with a uuid calls alert.dismiss and refreshes the coordinator."""
     sensor = _make_sensor(TrueNASAlertSensor, {})
     await sensor.dismiss(uuid="u1")
     sensor.coordinator.api.query.assert_awaited_once_with("alert.dismiss", ["u1"])
@@ -400,6 +435,7 @@ async def test_alert_dismiss_with_uuid_calls_query_and_refreshes() -> None:
 
 
 async def test_alert_restore_without_uuid_raises() -> None:
+    """restore() without a uuid raises ServiceValidationError(missing_uuid)."""
     sensor = _make_sensor(TrueNASAlertSensor, {})
     with pytest.raises(ServiceValidationError) as exc_info:
         await sensor.restore()
@@ -407,6 +443,7 @@ async def test_alert_restore_without_uuid_raises() -> None:
 
 
 async def test_alert_restore_with_uuid_calls_query_and_refreshes() -> None:
+    """restore() with a uuid calls alert.restore and refreshes the coordinator."""
     sensor = _make_sensor(TrueNASAlertSensor, {})
     await sensor.restore(uuid="u2")
     sensor.coordinator.api.query.assert_awaited_once_with("alert.restore", ["u2"])
@@ -417,12 +454,14 @@ async def test_alert_restore_with_uuid_calls_query_and_refreshes() -> None:
 #   TrueNASRsyncSensor / TrueNASReplicationSensor / TrueNASSnapshotTaskSensor
 # ---------------------------
 async def test_rsync_start_skips_when_running() -> None:
+    """start() does not run a new task when the rsync task is already running."""
     sensor = _make_sensor(TrueNASRsyncSensor, {"state": "RUNNING", "id": 1})
     await sensor.start()
     sensor.coordinator.async_run_task.assert_not_awaited()
 
 
 async def test_rsync_start_runs_task() -> None:
+    """start() runs rsynctask.run when the rsync task is not already running."""
     sensor = _make_sensor(TrueNASRsyncSensor, {"state": "FINISHED", "id": 1})
     await sensor.start()
     sensor.coordinator.async_run_task.assert_awaited_once_with(
@@ -431,12 +470,14 @@ async def test_rsync_start_runs_task() -> None:
 
 
 async def test_replication_start_skips_when_waiting() -> None:
+    """start() does not run a new task when the replication task is waiting."""
     sensor = _make_sensor(TrueNASReplicationSensor, {"state": "WAITING", "id": 2})
     await sensor.start()
     sensor.coordinator.async_run_task.assert_not_awaited()
 
 
 async def test_replication_start_runs_task() -> None:
+    """start() runs replication.run when the replication task is not waiting."""
     sensor = _make_sensor(TrueNASReplicationSensor, {"state": "FINISHED", "id": 2})
     await sensor.start()
     sensor.coordinator.async_run_task.assert_awaited_once_with(
@@ -445,12 +486,14 @@ async def test_replication_start_runs_task() -> None:
 
 
 async def test_snapshottask_start_skips_when_running() -> None:
+    """start() does not run a new task when the snapshot task is already running."""
     sensor = _make_sensor(TrueNASSnapshotTaskSensor, {"state": "RUNNING", "id": 3})
     await sensor.start()
     sensor.coordinator.async_run_task.assert_not_awaited()
 
 
 async def test_snapshottask_start_runs_task() -> None:
+    """start() runs pool.snapshottask.run when the snapshot task is not running."""
     sensor = _make_sensor(TrueNASSnapshotTaskSensor, {"state": "FINISHED", "id": 3})
     await sensor.start()
     sensor.coordinator.async_run_task.assert_awaited_once_with(
@@ -479,6 +522,7 @@ _SNAPSHOTTASK_DESC = TrueNASSensorEntityDescription(
 def test_snapshottask_name_uses_naming_schema_suffix(
     naming_schema: str, expected_name: str
 ) -> None:
+    """The entity name appends a period suffix parsed from the naming schema."""
     sensor = _make_sensor(
         TrueNASSnapshotTaskSensor,
         {"id": 3, "dataset": "tank/data", "naming_schema": naming_schema},
@@ -569,6 +613,7 @@ def test_snapshottask_name_uses_naming_schema_suffix(
 def test_snapshottask_name_falls_back_to_schedule(
     schedule: dict | str, expected_name: str
 ) -> None:
+    """When the naming schema has no known suffix, the cron schedule is classified."""
     sensor = _make_sensor(
         TrueNASSnapshotTaskSensor,
         {
@@ -584,6 +629,7 @@ def test_snapshottask_name_falls_back_to_schedule(
 
 
 def test_snapshottask_name_naming_schema_suffix_wins_over_schedule() -> None:
+    """A recognized naming-schema suffix takes priority over schedule classification."""
     sensor = _make_sensor(
         TrueNASSnapshotTaskSensor,
         {
@@ -616,6 +662,7 @@ def _make_cloudsync(data: dict | None = None) -> TrueNASCloudsyncSensor:
 
 
 async def test_cloudsync_start_invalid_job_logs_and_returns() -> None:
+    """start() does not run a task when the job status query returns no jobs."""
     sensor = _make_cloudsync()
     sensor.coordinator.api.query.return_value = []
     await sensor.start()
@@ -623,6 +670,7 @@ async def test_cloudsync_start_invalid_job_logs_and_returns() -> None:
 
 
 async def test_cloudsync_start_already_running_skips() -> None:
+    """start() does not run a task when the latest job is already RUNNING."""
     sensor = _make_cloudsync()
     sensor.coordinator.api.query.return_value = [{"job": {"state": "RUNNING"}}]
     await sensor.start()
@@ -630,6 +678,7 @@ async def test_cloudsync_start_already_running_skips() -> None:
 
 
 async def test_cloudsync_start_success() -> None:
+    """start() runs cloudsync.sync when the latest job is not running."""
     sensor = _make_cloudsync()
     sensor.coordinator.api.query.return_value = [{"job": {"state": "FINISHED"}}]
     await sensor.start()
@@ -639,6 +688,7 @@ async def test_cloudsync_start_success() -> None:
 
 
 async def test_cloudsync_stop_invalid_job_returns() -> None:
+    """stop() only issues the job-status query when there is no job to abort."""
     sensor = _make_cloudsync()
     sensor.coordinator.api.query.return_value = []
     await sensor.stop()
@@ -646,6 +696,7 @@ async def test_cloudsync_stop_invalid_job_returns() -> None:
 
 
 async def test_cloudsync_stop_not_running_returns() -> None:
+    """stop() does not call cloudsync.abort when the job is not RUNNING."""
     sensor = _make_cloudsync()
     sensor.coordinator.api.query.return_value = [{"job": {"state": "FINISHED"}}]
     await sensor.stop()
@@ -653,6 +704,7 @@ async def test_cloudsync_stop_not_running_returns() -> None:
 
 
 async def test_cloudsync_stop_success() -> None:
+    """stop() calls cloudsync.abort with the job id when the job is RUNNING."""
     sensor = _make_cloudsync()
     sensor.coordinator.api.query.side_effect = [[{"job": {"state": "RUNNING"}}], None]
     await sensor.stop()
@@ -671,6 +723,7 @@ def _make_dataset(data: dict | None = None) -> TrueNASDatasetSensor:
 
 
 async def test_dataset_snapshot_success_uses_pool_snapshot() -> None:
+    """snapshot() calls pool.snapshot.create and succeeds when it returns an id."""
     sensor = _make_dataset()
     sensor.coordinator.api.query.return_value = {"id": 1}
     await sensor.snapshot()
@@ -679,6 +732,7 @@ async def test_dataset_snapshot_success_uses_pool_snapshot() -> None:
 
 
 async def test_dataset_snapshot_falls_back_to_zfs_snapshot() -> None:
+    """snapshot() retries via zfs.snapshot.create when pool.snapshot.create fails."""
     sensor = _make_dataset()
     sensor.coordinator.api.query.side_effect = [None, {"id": 1}]
     await sensor.snapshot()
@@ -687,6 +741,7 @@ async def test_dataset_snapshot_falls_back_to_zfs_snapshot() -> None:
 
 
 async def test_dataset_snapshot_both_fail_raises() -> None:
+    """snapshot() raises HomeAssistantError with the API error when both calls fail."""
     sensor = _make_dataset()
     sensor.coordinator.api.query.side_effect = [None, None]
     sensor.coordinator.api.error = "no permission"
@@ -702,6 +757,7 @@ async def test_dataset_snapshot_both_fail_raises() -> None:
 
 
 async def test_dataset_lock_rejects_unencrypted() -> None:
+    """lock() on an unencrypted dataset raises ServiceValidationError."""
     sensor = _make_dataset({"encrypted": False})
     with pytest.raises(ServiceValidationError) as exc_info:
         await sensor.lock()
@@ -713,6 +769,7 @@ async def test_dataset_lock_rejects_unencrypted() -> None:
 
 
 async def test_dataset_lock_already_locked_returns_early() -> None:
+    """lock() on an already-locked dataset just refreshes without querying the API."""
     sensor = _make_dataset({"encrypted": True, "locked": True})
     await sensor.lock()
     sensor.coordinator.async_refresh.assert_awaited_once()
@@ -720,6 +777,7 @@ async def test_dataset_lock_already_locked_returns_early() -> None:
 
 
 async def test_dataset_lock_runs_job_to_success() -> None:
+    """lock() runs the lock job to completion and refreshes twice on success."""
     sensor = _make_dataset({"encrypted": True, "locked": False})
     sensor.coordinator.api.query.side_effect = [
         42,
@@ -730,6 +788,7 @@ async def test_dataset_lock_runs_job_to_success() -> None:
 
 
 async def test_dataset_unlock_rejects_unencrypted() -> None:
+    """unlock() on an unencrypted dataset raises ServiceValidationError."""
     sensor = _make_dataset({"encrypted": False})
     with pytest.raises(ServiceValidationError) as exc_info:
         await sensor.unlock(passphrase="secret")
@@ -741,6 +800,7 @@ async def test_dataset_unlock_rejects_unencrypted() -> None:
 
 
 async def test_dataset_unlock_no_passphrase_raises() -> None:
+    """unlock() without a passed-in or stored passphrase raises missing_passphrase."""
     sensor = _make_dataset({"encrypted": True})
     sensor.coordinator.config_entry.data.pop("dataset_passphrases", None)
     with pytest.raises(ServiceValidationError) as exc_info:
@@ -750,6 +810,7 @@ async def test_dataset_unlock_no_passphrase_raises() -> None:
 
 
 async def test_dataset_unlock_already_unlocked_returns_early() -> None:
+    """unlock() on an already-unlocked dataset just refreshes without querying."""
     sensor = _make_dataset({"encrypted": True, "locked": False})
     await sensor.unlock(passphrase="secret")
     sensor.coordinator.async_refresh.assert_awaited_once()
@@ -757,6 +818,7 @@ async def test_dataset_unlock_already_unlocked_returns_early() -> None:
 
 
 async def test_dataset_unlock_uses_stored_passphrase() -> None:
+    """unlock() without an explicit passphrase falls back to the stored one."""
     sensor = _make_dataset({"encrypted": True, "locked": True})
     sensor.coordinator.config_entry.data["dataset_passphrases"] = {
         "tank/data": "stored-secret"
@@ -768,6 +830,7 @@ async def test_dataset_unlock_uses_stored_passphrase() -> None:
 
 
 async def test_dataset_unlock_job_success_with_failed_entries_raises() -> None:
+    """A SUCCESS job result with a failed dataset entry still raises with its error."""
     sensor = _make_dataset({"encrypted": True, "locked": True})
     sensor.coordinator.api.query.side_effect = [
         42,
@@ -788,6 +851,7 @@ async def test_dataset_unlock_job_success_with_failed_entries_raises() -> None:
 
 
 async def test_dataset_unlock_job_failed_state_raises() -> None:
+    """A FAILED job state raises HomeAssistantError with the job's error message."""
     sensor = _make_dataset({"encrypted": True, "locked": True})
     sensor.coordinator.api.query.side_effect = [
         42,
@@ -805,6 +869,7 @@ async def test_dataset_unlock_job_failed_state_raises() -> None:
 
 
 async def test_dataset_run_job_invalid_job_id_raises() -> None:
+    """A non-integer job id from the API raises HomeAssistantError."""
     sensor = _make_dataset({"encrypted": True, "locked": True})
     sensor.coordinator.api.query.return_value = None
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -819,6 +884,7 @@ async def test_dataset_run_job_invalid_job_id_raises() -> None:
 
 
 async def test_dataset_wait_for_job_missing_job_exhausts_retries() -> None:
+    """Repeatedly missing job status exhausts retries and raises job-not-found."""
     sensor = _make_dataset({"encrypted": True, "locked": True})
     sensor.coordinator.api.query.side_effect = [42, None, None, None, None, None]
     with (
@@ -838,6 +904,7 @@ async def test_dataset_wait_for_job_missing_job_exhausts_retries() -> None:
 
 
 async def test_dataset_wait_for_job_timeout_raises() -> None:
+    """A TimeoutError while polling raises HomeAssistantError with it as the cause."""
     sensor = _make_dataset({"encrypted": True, "locked": True})
     sensor.coordinator.api.query.side_effect = [42, {"state": "RUNNING"}]
     with (
@@ -859,6 +926,7 @@ async def test_dataset_wait_for_job_timeout_raises() -> None:
 
 
 async def test_dataset_passphrase_set_stores_in_config_entry() -> None:
+    """passphrase_set() persists the passphrase via the config entry update API."""
     sensor = _make_dataset()
     sensor.hass = sensor.coordinator.hass
     await sensor.passphrase_set("new-secret")
@@ -866,6 +934,7 @@ async def test_dataset_passphrase_set_stores_in_config_entry() -> None:
 
 
 async def test_dataset_passphrase_set_no_name_raises() -> None:
+    """passphrase_set() without a known dataset name raises unknown_dataset_name."""
     sensor = _make_dataset({"name": None})
     sensor._data["name"] = None
     with pytest.raises(ServiceValidationError) as exc_info:
@@ -883,6 +952,7 @@ def _app_stats_desc(key: str = "app_stats_cpu") -> TrueNASSensorEntityDescriptio
 
 
 def test_app_stats_standard_native_value_and_name() -> None:
+    """A standard app-stats sensor exposes its value, app-prefixed name and id."""
     coordinator = make_coordinator(
         data={"app_stats": {"plex": {"app_name": "Plex", "cpu": 12.5}}}
     )
@@ -894,8 +964,9 @@ def test_app_stats_standard_native_value_and_name() -> None:
 
 
 def test_app_stats_name_without_literal_name_no_translations() -> None:
-    """Descriptions that only set translation_key (no literal `name`) must not
-    leak HA's UNDEFINED sentinel into the name when no translations are loaded --
+    """Descriptions that only set translation_key (no literal `name`) must not.
+
+    Leak HA's UNDEFINED sentinel into the name when no translations are loaded --
     regression test for the fix in PR #66.
     """
     desc = TrueNASSensorEntityDescription(
@@ -913,6 +984,7 @@ def test_app_stats_name_without_literal_name_no_translations() -> None:
 
 
 def test_app_stats_name_without_literal_name_translated() -> None:
+    """A translation_key-only description resolves to the loaded translation."""
     desc = TrueNASSensorEntityDescription(
         key="app_stats_cpu",
         translation_key="app_stats_cpu",
@@ -934,12 +1006,14 @@ def test_app_stats_name_without_literal_name_translated() -> None:
 
 
 def test_app_stats_native_value_none_when_no_data() -> None:
+    """No app_stats entry for the app yields native_value of None."""
     coordinator = make_coordinator(data={"app_stats": {}})
     sensor = TrueNASAppStatsSensor(coordinator, _app_stats_desc(), "plex")
     assert sensor.native_value is None
 
 
 def test_app_stats_native_value_none_when_no_data_attribute() -> None:
+    """No configured data_attribute yields native_value of None."""
     desc = TrueNASSensorEntityDescription(
         key="app_stats_cpu", name="CPU", data_path="app_stats"
     )
@@ -949,6 +1023,7 @@ def test_app_stats_native_value_none_when_no_data_attribute() -> None:
 
 
 def test_app_stats_network_native_value_converts_bytes_to_kib() -> None:
+    """A network sensor's byte value is converted to KiB."""
     coordinator = make_coordinator(
         data={
             "app_stats": {
@@ -970,6 +1045,7 @@ def test_app_stats_network_native_value_converts_bytes_to_kib() -> None:
 
 
 def test_app_stats_network_native_value_invalid_conversion_returns_none() -> None:
+    """A non-numeric network byte value yields native_value of None."""
     coordinator = make_coordinator(
         data={
             "app_stats": {
@@ -991,6 +1067,7 @@ def test_app_stats_network_native_value_invalid_conversion_returns_none() -> Non
 
 
 def test_app_stats_network_name_resolved() -> None:
+    """A resolvable network sensor's name includes app name and interface."""
     coordinator = make_coordinator(
         data={
             "app_stats": {
@@ -1006,6 +1083,7 @@ def test_app_stats_network_name_resolved() -> None:
 
 
 def test_app_stats_network_name_unresolved_uses_base_uid() -> None:
+    """An unresolvable network sensor falls back to the uid's base app name."""
     coordinator = make_coordinator(data={"app_stats": {}})
     desc = TrueNASSensorEntityDescription(
         key="app_stats_network_rx", name="RX", data_path="app_stats"
@@ -1015,6 +1093,7 @@ def test_app_stats_network_name_unresolved_uses_base_uid() -> None:
 
 
 def test_app_stats_network_name_malformed_uid_returns_none() -> None:
+    """A malformed uid yields a name of None."""
     coordinator = make_coordinator(data={"app_stats": {}})
     desc = TrueNASSensorEntityDescription(
         key="app_stats_network_rx", name="RX", data_path="app_stats"
@@ -1024,6 +1103,7 @@ def test_app_stats_network_name_malformed_uid_returns_none() -> None:
 
 
 def test_app_stats_extra_state_attributes_network() -> None:
+    """A network sensor's extra state attributes include app_name and interface_name."""
     coordinator = make_coordinator(
         data={
             "app_stats": {
@@ -1041,6 +1121,7 @@ def test_app_stats_extra_state_attributes_network() -> None:
 
 
 def test_app_stats_extra_state_attributes_no_data_returns_attribution_only() -> None:
+    """With no resolvable app data, extra state attributes omit app_name."""
     coordinator = make_coordinator(data={"app_stats": {}})
     sensor = TrueNASAppStatsSensor(coordinator, _app_stats_desc(), "plex")
     attrs = sensor.extra_state_attributes

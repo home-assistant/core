@@ -1,4 +1,3 @@
----
 # Home Assistant reads action/service names+descriptions from strings.json
 # (services.<id>); this file defines only the schema (fields/target/selectors).
 # Keep it in sync with the services registered via SENSOR_SERVICES in

@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def test_valid_static_description() -> None:
+    """A static description with a data_reference is accepted as-is."""
     desc = TrueNASEntityDescription(
         key="test",
         name="Test",
@@ -26,6 +27,7 @@ def test_valid_static_description() -> None:
 
 
 def test_valid_dynamic_description_with_reference() -> None:
+    """A dynamic-keys description with a data_reference is accepted as-is."""
     desc = TrueNASEntityDescription(
         key="test_dynamic",
         name="Test Dynamic",
@@ -37,6 +39,7 @@ def test_valid_dynamic_description_with_reference() -> None:
 
 
 def test_valid_dynamic_description_with_composite() -> None:
+    """A dynamic-keys description with composite references is accepted as-is."""
     desc = TrueNASEntityDescription(
         key="test_net",
         name="Test Net",
@@ -50,6 +53,7 @@ def test_valid_dynamic_description_with_composite() -> None:
 def test_composite_references_require_dynamic_keys(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """Composite references without data_dynamic_keys=True log a single warning."""
     with caplog.at_level(logging.WARNING, logger=_LOGGER.name):
         TrueNASEntityDescription(
             key="test_bad",
@@ -64,6 +68,7 @@ def test_composite_references_require_dynamic_keys(
 def test_composite_references_too_few_segments(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A composite reference with only one segment logs a single warning."""
     with caplog.at_level(logging.WARNING, logger=_LOGGER.name):
         TrueNASEntityDescription(
             key="test_bad",
@@ -79,6 +84,7 @@ def test_composite_references_too_few_segments(
 def test_composite_references_too_many_segments(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A composite reference with more than two segments logs a single warning."""
     with caplog.at_level(logging.WARNING, logger=_LOGGER.name):
         TrueNASEntityDescription(
             key="test_bad",
@@ -94,6 +100,7 @@ def test_composite_references_too_many_segments(
 def test_dynamic_keys_without_reference_or_composite(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """Dynamic keys without a reference or composite references log a warning."""
     with caplog.at_level(logging.WARNING, logger=_LOGGER.name):
         TrueNASEntityDescription(
             key="test_bad",
@@ -109,6 +116,7 @@ def test_dynamic_keys_without_reference_or_composite(
 
 
 def test_composite_references_returns_unique_ids() -> None:
+    """Composite references produce one unique id per leaf value across entries."""
     description = TrueNASEntityDescription(
         key="test_net",
         name="Test Net",
@@ -141,6 +149,7 @@ def test_composite_references_returns_unique_ids() -> None:
 
 
 def test_composite_references_ignores_non_list_container() -> None:
+    """A non-list container value at the segment path yields no unique ids."""
     description = TrueNASEntityDescription(
         key="test_net",
         name="Test Net",
@@ -158,6 +167,7 @@ def test_composite_references_ignores_non_list_container() -> None:
 
 
 def test_composite_references_empty_data() -> None:
+    """Empty source data yields no unique ids."""
     description = TrueNASEntityDescription(
         key="test_net",
         name="Test Net",
@@ -170,6 +180,7 @@ def test_composite_references_empty_data() -> None:
 
 
 def test_composite_references_ignores_missing_or_null_leaf_key() -> None:
+    """Entries with a missing or null leaf key are skipped, others still produce ids."""
     description = TrueNASEntityDescription(
         key="test_net",
         name="Test Net",

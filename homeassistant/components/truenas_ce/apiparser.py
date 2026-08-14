@@ -63,7 +63,7 @@ def human_date_to_utc(date_str: Any) -> datetime | None:
         return None
     try:
         return datetime.strptime(date_str, "%a %b %d %H:%M:%S %Y").replace(tzinfo=UTC)
-    except (ValueError, AttributeError):
+    except (ValueError, AttributeError):  # fmt: skip
         _LOGGER.debug("Failed to parse certificate date: %s", date_str)
         return None
 

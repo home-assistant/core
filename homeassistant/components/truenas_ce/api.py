@@ -1,9 +1,9 @@
 """TrueNAS API."""
 
 import asyncio
+from collections.abc import Iterator
 import contextlib
 import contextvars
-from collections.abc import Iterator
 from logging import DEBUG, ERROR, Filter, LogRecord, getLogger
 from typing import Any, override
 
@@ -418,7 +418,7 @@ class TrueNASAPI:
                 subscription_id,
                 exc,
             )
-            _LOGGER.exception(ERROR_API_FORMAT, self._host, exc)
+            _LOGGER.exception("TrueNAS %s unsubscribe cleanup failed", self._host)
         except TrueNASError as exc:
             self._error = _classify_exception(exc, during_call=True)
             _LOGGER.warning(
@@ -450,14 +450,6 @@ class TrueNASAPI:
             events = await self._client.get_subscription_events(
                 subscription_id, event_timeout=event_timeout
             )
-            if events:
-                _LOGGER.debug(
-                    "TrueNAS %s get_subscription_events drained %d events: %s",
-                    self._host,
-                    len(events),
-                    _summarize_payload(events),
-                )
-            return events
         except TrueNASCallError as exc:
             self._error = exc.reason or str(exc) or ERR_UNKNOWN
             _log_call_error(self._host, exc)
@@ -471,6 +463,15 @@ class TrueNASAPI:
                 exc,
             )
             return []
+        else:
+            if events:
+                _LOGGER.debug(
+                    "TrueNAS %s get_subscription_events drained %d events: %s",
+                    self._host,
+                    len(events),
+                    _summarize_payload(events),
+                )
+            return events
 
     async def is_subscribed(self, subscription_id: str) -> bool:
         """Check if a subscription is currently active in the client."""

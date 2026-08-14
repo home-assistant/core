@@ -7,13 +7,14 @@ user/migrate/reauth/reconfigure/options steps end to end.
 
 from __future__ import annotations
 
-import ipaddress
 from collections.abc import Iterator
 from contextlib import contextmanager
+import ipaddress
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.truenas_ce import config_flow
 from homeassistant.components.truenas_ce.const import (
@@ -104,6 +105,7 @@ def _mock_connection_failure(errorcode: str) -> Iterator[None]:
 # ---------------------------
 @pytest.mark.usefixtures("_mock_connection_ok")
 async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
+    """The user flow creates a config entry from the submitted host data."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -210,6 +212,7 @@ async def test_user_flow_name_already_exists(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_aborts_on_duplicate_host(hass: HomeAssistant) -> None:
+    """A second entry for the same host is aborted as already configured."""
     existing = MockConfigEntry(domain=DOMAIN, data=_user_input())
     existing.add_to_hass(hass)
 
@@ -224,6 +227,7 @@ async def test_user_flow_aborts_on_duplicate_host(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_connection_error_maps_to_ha_error(hass: HomeAssistant) -> None:
+    """A failed connection surfaces the mapped error code on the host field."""
     with _mock_connection_failure(ERR_INVALID_KEY):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -288,6 +292,7 @@ async def test_async_probe_candidate_false_when_unreachable() -> None:
 
 
 async def test_zeroconf_flow_confirms_and_creates_entry(hass: HomeAssistant) -> None:
+    """A confirmed zeroconf discovery proceeds to the user step and creates an entry."""
     with patch.object(
         config_flow.TrueNASConfigFlow,
         "_probe_is_truenas",
@@ -347,6 +352,7 @@ async def test_zeroconf_flow_keeps_advertised_port(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf_flow_aborts_when_not_truenas(hass: HomeAssistant) -> None:
+    """The zeroconf flow aborts when the probe cannot confirm a TrueNAS box."""
     with patch.object(
         config_flow.TrueNASConfigFlow,
         "_probe_is_truenas",
@@ -364,6 +370,7 @@ async def test_zeroconf_flow_aborts_when_not_truenas(hass: HomeAssistant) -> Non
 async def test_zeroconf_flow_aborts_on_already_configured_host(
     hass: HomeAssistant,
 ) -> None:
+    """A zeroconf discovery matching an existing entry's host is aborted."""
     existing = MockConfigEntry(
         domain=DOMAIN, data=_user_input(**{CONF_HOST: "192.168.1.50"})
     )
@@ -381,6 +388,7 @@ async def test_zeroconf_flow_aborts_on_already_configured_host(
 async def test_zeroconf_flow_updates_rediscovered_entry_host(
     hass: HomeAssistant,
 ) -> None:
+    """Rediscovering a known box by system_id updates its entry's host and id."""
     entry = MockConfigEntry(
         domain=DOMAIN, data=_user_input(**{CONF_HOST: "old-host.example.com"})
     )
@@ -411,6 +419,7 @@ async def test_zeroconf_flow_updates_rediscovered_entry_host(
 async def test_zeroconf_flow_ignores_entry_with_mismatched_system_id(
     hass: HomeAssistant,
 ) -> None:
+    """A rediscovered host is not merged into an entry with a different system_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=_user_input(
@@ -460,6 +469,7 @@ def _legacy_entry() -> MockConfigEntry:
 async def test_user_flow_offers_migration_when_legacy_exists(
     hass: HomeAssistant,
 ) -> None:
+    """A legacy entry present at setup offers a migrate menu with both options."""
     _legacy_entry().add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -472,6 +482,7 @@ async def test_user_flow_offers_migration_when_legacy_exists(
 
 @pytest.mark.usefixtures("_mock_connection_ok")
 async def test_migrate_import_prefills_and_creates_entry(hass: HomeAssistant) -> None:
+    """Migrate-import prefills the form from the legacy entry and creates a new entry."""
     _legacy_entry().add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -500,6 +511,7 @@ async def test_migrate_import_prefills_and_creates_entry(hass: HomeAssistant) ->
 
 
 async def test_migrate_manual_skips_takeover(hass: HomeAssistant) -> None:
+    """Migrate-manual leaves the legacy entry untouched and shows a blank user form."""
     _legacy_entry().add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -517,6 +529,7 @@ async def test_migrate_manual_skips_takeover(hass: HomeAssistant) -> None:
 # ---------------------------
 @pytest.mark.usefixtures("_mock_connection_ok")
 async def test_reauth_flow_updates_api_key(hass: HomeAssistant) -> None:
+    """Reauth with a valid new API key updates the entry and aborts as successful."""
     entry = MockConfigEntry(domain=DOMAIN, data=_user_input())
     entry.add_to_hass(hass)
 
@@ -594,6 +607,7 @@ async def test_reauth_flow_succeeds_without_system_id_when_lookup_fails(
 async def test_reauth_flow_shows_error_on_failed_connection(
     hass: HomeAssistant,
 ) -> None:
+    """A failed reauth connection shows the mapped error on the host field."""
     entry = MockConfigEntry(domain=DOMAIN, data=_user_input())
     entry.add_to_hass(hass)
 
@@ -618,6 +632,7 @@ async def test_reauth_flow_shows_error_on_failed_connection(
 # ---------------------------
 @pytest.mark.usefixtures("_mock_connection_ok")
 async def test_reconfigure_flow_updates_host(hass: HomeAssistant) -> None:
+    """Reconfigure updates the entry's host and SSL setting and aborts as successful."""
     entry = MockConfigEntry(domain=DOMAIN, data=_user_input())
     entry.add_to_hass(hass)
 
@@ -643,6 +658,7 @@ async def test_reconfigure_flow_updates_host(hass: HomeAssistant) -> None:
 async def test_reconfigure_flow_rejects_unknown_dataset_passphrase(
     hass: HomeAssistant,
 ) -> None:
+    """A passphrase entry for an unknown dataset is rejected with its name listed."""
     entry = MockConfigEntry(domain=DOMAIN, data=_user_input())
     entry.runtime_data = SimpleNamespace(ds={"dataset": {"1": {"name": "tank/data"}}})
     entry.add_to_hass(hass)
@@ -671,6 +687,7 @@ async def test_reconfigure_flow_rejects_unknown_dataset_passphrase(
 #   options flow
 # ---------------------------
 async def test_options_flow_updates_entry(hass: HomeAssistant) -> None:
+    """The options flow persists the submitted options onto the config entry."""
     entry = MockConfigEntry(domain=DOMAIN, data=_user_input(), options={})
     entry.add_to_hass(hass)
 

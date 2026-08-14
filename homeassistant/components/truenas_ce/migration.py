@@ -20,10 +20,8 @@ rename. Forward adoption runs in two phases around the platform setup:
 :func:`async_rollback_to_legacy` reverses the whole operation.
 """
 
-from __future__ import annotations
-
-import os
 from logging import getLogger
+import os
 from typing import Any
 
 from homeassistant.components import persistent_notification
@@ -259,7 +257,7 @@ def _remove_legacy_entities(
     """Free the recorded entity_ids for adoption.
 
     Removing the registry entry frees its entity_id and any user overrides but
-    leaves the long-term statistics in the recorder DB untouched, so re-using
+    leaves the long-term statistics in the recorder DB untouched, so reusing
     the same entity_id later reconnects state + history.
     """
     for record in records:

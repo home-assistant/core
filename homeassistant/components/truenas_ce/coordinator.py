@@ -1,33 +1,24 @@
 """TrueNAS Controller."""
 
-from __future__ import annotations
-
 import asyncio
-import logging
-import re
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any, override, TypeGuard
+import logging
+import re
+from typing import Any, TypeGuard, override
 
 from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     list_statistic_ids,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.recorder import get_instance
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from .api import TrueNASAPI, _summarize_payload
 from .apiparser import ApiValueSpec, parse_api
@@ -212,7 +203,7 @@ def _to_int(value: Any, default: int = 0) -> int:
     """Parse value into an int (also from strings like "48"), else default."""
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError):  # fmt: skip
         return default
 
 
@@ -602,11 +593,9 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             async def _run_job(job: Callable[[], Awaitable[None]]) -> None:
                 try:
                     await job()
-                except Exception as err:
+                except Exception:
                     _LOGGER.exception(
-                        "Error running TrueNAS job %s: %s",
-                        getattr(job, "__name__", job),
-                        err,
+                        "Error running TrueNAS job %s", getattr(job, "__name__", job)
                     )
 
             # get_systeminfo populates ds["interface"] and _is_virtual, which
@@ -671,7 +660,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             stat_ids = await get_instance(self.hass).async_add_executor_job(
                 list_statistic_ids, self.hass
             )
-        except Exception:  # noqa: BLE001 - never let detection break a poll
+        except Exception:
             _LOGGER.debug(
                 "Could not list statistic ids for orphan detection", exc_info=True
             )
@@ -722,7 +711,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return await get_instance(self.hass).async_add_executor_job(
                 _count_statistics_with_data, self.hass, list(self.orphaned_statistics)
             )
-        except Exception:  # noqa: BLE001 - the dialog must open regardless
+        except Exception:
             _LOGGER.debug(
                 "Could not probe orphaned statistics for data points", exc_info=True
             )
@@ -2416,7 +2405,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ],
         )
 
-        for uid, vals in self.ds["app"].items():
+        for vals in self.ds["app"].values():
             vals["running"] = vals["state"] == "RUNNING"
             # Catalog apps report updates via upgrade_available (the chart
             # upgrade, matching TrueNAS' "Update available"). Custom/compose
@@ -2525,7 +2514,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL
                 )
             )
-        except (ValueError, TypeError):
+        except (ValueError, TypeError):  # fmt: skip
             poll = DEFAULT_POLL_INTERVAL
         interval = max(poll, 2)
         return f'app.stats:{{"interval": {interval}}}'
@@ -2555,8 +2544,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 _LOGGER.debug(
                     "TrueNAS app.stats subscription failed: no sub_id/queue returned"
                 )
-        except Exception as err:
-            _LOGGER.exception("Failed to establish app.stats subscription: %s", err)
+        except Exception:
+            _LOGGER.exception("Failed to establish app.stats subscription")
 
     # ---------------------------
     #   get_app_stats
@@ -2630,7 +2619,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return None
         try:
             return float(value)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError):  # fmt: skip
             return None
 
     def _upsert_app_stats_entry(self, app: object) -> None:
@@ -2704,7 +2693,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._app_stats_sub_id and self.api.connected():
             try:
                 await self.api.unsubscribe_events(self._app_stats_sub_id)
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - unload cleanup must never raise
                 _LOGGER.debug(
                     "TrueNAS failed to unsubscribe app.stats %s (%s)",
                     self._app_stats_sub_id,

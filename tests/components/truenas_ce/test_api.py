@@ -79,36 +79,44 @@ async def closed_api(api: TrueNASAPI) -> TrueNASAPI:
 #   _summarize_payload
 # ---------------------------
 def test_summarize_payload_lists_shape() -> None:
+    """A list payload's summary starts with its item count."""
     assert _summarize_payload([1, 2, 3]).startswith("list[3]")
 
 
 def test_summarize_payload_empty_list_shape() -> None:
+    """An empty list payload's summary reports zero items."""
     assert _summarize_payload([]).startswith("list[0]")
 
 
 def test_summarize_payload_dict_shape() -> None:
+    """A dict payload's summary starts with its key count."""
     assert _summarize_payload({"a": 1, "b": 2}).startswith("dict[2 keys]")
 
 
 def test_summarize_payload_empty_dict_shape() -> None:
+    """An empty dict payload's summary reports zero keys."""
     assert _summarize_payload({}).startswith("dict[0 keys]")
 
 
 def test_summarize_payload_other_type_shape() -> None:
+    """A scalar payload's summary starts with its type name."""
     assert _summarize_payload("hello").startswith("str ")
 
 
 def test_summarize_payload_none_shape() -> None:
+    """A None payload summarizes as NoneType None."""
     assert _summarize_payload(None) == "NoneType None"
 
 
 def test_summarize_payload_truncates_long_text() -> None:
+    """A payload summary longer than the limit is truncated."""
     result = _summarize_payload(list(range(1000)), limit=20)
     assert "truncated" in result
     assert result.index("truncated") < len(result)
 
 
 def test_summarize_payload_does_not_truncate_short_text() -> None:
+    """A payload summary within the limit is not truncated."""
     result = _summarize_payload([1, 2], limit=500)
     assert "truncated" not in result
 
@@ -117,16 +125,19 @@ def test_summarize_payload_does_not_truncate_short_text() -> None:
 #   _classify_exception
 # ---------------------------
 def test_classify_exception_connection_closed_during_call() -> None:
+    """A connection closed during a call classifies as a lost query."""
     exc = TrueNASConnectionClosedError("closed", phase="call")
     assert _classify_exception(exc, during_call=True) == ERR_LOST_QUERY
 
 
 def test_classify_exception_connection_closed_not_during_call() -> None:
+    """A connection closed outside a call classifies as a lost login."""
     exc = TrueNASConnectionClosedError("closed", phase="login")
     assert _classify_exception(exc, during_call=False) == ERR_LOST_LOGIN
 
 
 def test_classify_exception_maps_known_types() -> None:
+    """Each known TrueNASError subclass maps to its corresponding ERR_* code."""
     assert (
         _classify_exception(TrueNASCertificateVerificationError(), during_call=False)
         == ERR_CERT_VERIFY_FAILED
@@ -154,6 +165,7 @@ def test_classify_exception_maps_known_types() -> None:
 
 
 def test_classify_exception_falls_back_to_unknown() -> None:
+    """An unrecognized TrueNASCallError falls back to ERR_UNKNOWN."""
     exc = TrueNASCallError("boom")
     assert _classify_exception(exc, during_call=True) == ERR_UNKNOWN
 
@@ -162,16 +174,19 @@ def test_classify_exception_falls_back_to_unknown() -> None:
 #   TrueNASAPI.__init__
 # ---------------------------
 def test_init_defaults_to_wss(api: TrueNASAPI) -> None:
+    """The default WebSocket scheme is wss."""
     assert api.scheme == "wss"
 
 
 def test_init_accepts_ws_scheme() -> None:
+    """An explicit ws scheme is accepted and normalized to lowercase."""
     with patch.object(api_module, "TrueNASClient", return_value=MagicMock()):
         api = TrueNASAPI("truenas.local", "key", scheme="WS")
     assert api.scheme == "ws"
 
 
 def test_init_rejects_invalid_scheme() -> None:
+    """An invalid scheme raises a ValueError."""
     with pytest.raises(ValueError, match="Invalid WebSocket scheme"):
         TrueNASAPI("truenas.local", "key", scheme="http")
 
@@ -180,6 +195,7 @@ def test_init_rejects_invalid_scheme() -> None:
 #   connect
 # ---------------------------
 async def test_connect_fails_when_permanently_closed(closed_api: TrueNASAPI) -> None:
+    """A permanently closed API refuses to reconnect."""
     assert await closed_api.connect() is False
     assert closed_api.error == ERR_UNKNOWN
     closed_api._client.connect.assert_not_awaited()
@@ -188,17 +204,20 @@ async def test_connect_fails_when_permanently_closed(closed_api: TrueNASAPI) -> 
 async def test_connect_returns_true_when_already_connected(
     connected_api: TrueNASAPI,
 ) -> None:
+    """An already-connected API reports connected without reconnecting."""
     assert await connected_api.connect() is True
     connected_api._client.connect.assert_not_awaited()
 
 
 async def test_connect_success_clears_error(api: TrueNASAPI) -> None:
+    """A successful connect clears any stale error."""
     api._error = "stale error"
     assert await api.connect() is True
     assert api.error == ""
 
 
 async def test_connect_maps_exception_and_returns_false(api: TrueNASAPI) -> None:
+    """A connect failure maps the raised exception to its error code and returns False."""
     api._client.connect.side_effect = TrueNASHostUnknownError("nope")
     assert await api.connect() is False
     assert api.error == ERR_UNKNOWN_HOSTNAME
@@ -208,6 +227,7 @@ async def test_connect_failure_logs_error_by_default(
     api: TrueNASAPI,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A connect failure logs an ERROR with traceback by default."""
     api._client.connect.side_effect = TrueNASConnectionRefusedError("refused")
     with caplog.at_level("DEBUG", logger=api_module.__name__):
         assert await api.connect() is False
@@ -220,9 +240,9 @@ async def test_connect_quiet_logs_debug_not_error(
     api: TrueNASAPI,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Zeroconf discovery probes many non-TrueNAS devices (issue #46 follow-
+    """Zeroconf discovery probes many non-TrueNAS devices (issue #46 follow-up).
 
-    up): a failed probe connection must stay quiet -- DEBUG, no traceback --
+    A failed probe connection must stay quiet -- DEBUG, no traceback --
     instead of flooding the log with an ERROR per candidate.
     """
     api._client.connect.side_effect = TrueNASConnectionRefusedError("refused")
@@ -294,12 +314,14 @@ async def test_connect_non_quiet_keeps_insecure_tls_warning(
 async def test_disconnect_closes_client_but_stays_reconnectable(
     api: TrueNASAPI,
 ) -> None:
+    """disconnect() closes the client but leaves the API able to reconnect."""
     await api.disconnect()
     api._client.close.assert_awaited_once()
     assert await api.connect() is True
 
 
 async def test_close_prevents_reconnecting(api: TrueNASAPI) -> None:
+    """close() closes the client and permanently prevents reconnecting."""
     await api.close()
     api._client.close.assert_awaited_once()
     assert await api.connect() is False
@@ -310,6 +332,7 @@ async def test_close_prevents_reconnecting(api: TrueNASAPI) -> None:
 #   connected
 # ---------------------------
 def test_connected_reflects_client_state(api: TrueNASAPI) -> None:
+    """connected() reflects the underlying client's connected state."""
     api._client.connected = True
     assert api.connected() is True
     api._client.connected = False
@@ -322,12 +345,14 @@ def test_connected_reflects_client_state(api: TrueNASAPI) -> None:
 async def test_connection_test_fails_when_permanently_closed(
     closed_api: TrueNASAPI,
 ) -> None:
+    """connection_test fails on a permanently closed API."""
     ok, error = await closed_api.connection_test()
     assert ok is False
     assert error == ERR_UNKNOWN
 
 
 async def test_connection_test_fails_when_connect_raises(api: TrueNASAPI) -> None:
+    """connection_test fails when connect() raises."""
     api._client.connect.side_effect = TrueNASConnectionRefusedError("refused")
     ok, error = await api.connection_test()
     assert ok is False
@@ -337,6 +362,7 @@ async def test_connection_test_fails_when_connect_raises(api: TrueNASAPI) -> Non
 async def test_connection_test_fails_when_query_returns_none(
     connected_api: TrueNASAPI,
 ) -> None:
+    """connection_test fails when the query returns no result."""
     connected_api._client.call.return_value = None
     ok, error = await connected_api.connection_test()
     assert ok is False
@@ -359,6 +385,7 @@ async def test_connection_test_connects_before_querying(api: TrueNASAPI) -> None
 
 
 async def test_connection_test_succeeds(connected_api: TrueNASAPI) -> None:
+    """connection_test succeeds and clears the error when the query returns data."""
     connected_api._client.call.return_value = {"version": "25.04"}
     ok, error = await connected_api.connection_test()
     assert ok is True
@@ -369,15 +396,18 @@ async def test_connection_test_succeeds(connected_api: TrueNASAPI) -> None:
 #   query
 # ---------------------------
 async def test_query_returns_none_when_connect_fails(closed_api: TrueNASAPI) -> None:
+    """query() returns None when the connection cannot be established."""
     assert await closed_api.query("system.info") is None
 
 
 async def test_query_returns_data_on_success(connected_api: TrueNASAPI) -> None:
+    """query() returns the raw call result on success."""
     connected_api._client.call.return_value = {"ok": True}
     assert await connected_api.query("system.info") == {"ok": True}
 
 
 async def test_query_call_error_uses_reason(connected_api: TrueNASAPI) -> None:
+    """query() uses the TrueNASCallError's reason as the error message."""
     connected_api._client.call.side_effect = TrueNASCallError(
         "boom", reason="invalid params"
     )
@@ -388,6 +418,7 @@ async def test_query_call_error_uses_reason(connected_api: TrueNASAPI) -> None:
 async def test_query_call_error_falls_back_to_str_then_unknown(
     connected_api: TrueNASAPI,
 ) -> None:
+    """query() falls back to the exception's string form when no reason is set."""
     connected_api._client.call.side_effect = TrueNASCallError("boom")
     assert await connected_api.query("system.info") is None
     assert connected_api.error == "boom"
@@ -396,6 +427,7 @@ async def test_query_call_error_falls_back_to_str_then_unknown(
 async def test_query_other_truenas_error_classifies_during_call(
     connected_api: TrueNASAPI,
 ) -> None:
+    """query() classifies a non-TrueNASCallError exception via _classify_exception."""
     connected_api._client.call.side_effect = TrueNASCallTimeoutError("timeout")
     assert await connected_api.query("system.info") is None
     assert connected_api.error == ERR_TIMEOUT
@@ -420,6 +452,7 @@ async def test_query_logs_summarized_payload_when_debug_enabled(
     connected_api: TrueNASAPI,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """query() logs a summarized payload at DEBUG level."""
     connected_api._client.call.return_value = {"ok": True}
     with caplog.at_level("DEBUG", logger=api_module.__name__):
         assert await connected_api.query("system.info") == {"ok": True}
@@ -430,10 +463,9 @@ async def test_query_permission_denied_logs_debug_not_error(
     connected_api: TrueNASAPI,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A read-only API key's EACCES on an admin-only method (issue #46) must
+    """A read-only API key's EACCES on an admin-only method (issue #46) must stay quiet.
 
-    stay quiet: DEBUG, no traceback -- not an ERROR flooding the log every
-    poll cycle.
+    DEBUG, no traceback -- not an ERROR flooding the log every poll cycle.
     """
     connected_api._client.call.side_effect = TrueNASCallError(
         "Not authorized", code=13, errname="EACCES", reason="[EACCES] Not authorized"
@@ -451,6 +483,7 @@ async def test_query_non_permission_call_error_still_logs_error(
     connected_api: TrueNASAPI,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A non-permission TrueNASCallError still logs an ERROR with traceback."""
     connected_api._client.call.side_effect = TrueNASCallError(
         "boom", code=22, errname="EINVAL", reason="bad params"
     )
@@ -469,6 +502,7 @@ async def test_query_non_permission_call_error_still_logs_error(
 #   error / scheme properties
 # ---------------------------
 def test_error_property_defaults_empty(api: TrueNASAPI) -> None:
+    """The error property defaults to an empty string."""
     assert api.error == ""
 
 
@@ -476,6 +510,7 @@ def test_error_property_defaults_empty(api: TrueNASAPI) -> None:
 #   subscribe_events / unsubscribe_events
 # ---------------------------
 async def test_subscribe_events_returns_queue(connected_api: TrueNASAPI) -> None:
+    """subscribe_events returns the subscription id and queue on success."""
     mock_queue = MagicMock()
     connected_api._client.subscribe = AsyncMock(return_value=("sub-123", mock_queue))
     sub_id, queue = await connected_api.subscribe_events("app.stats")
@@ -486,6 +521,7 @@ async def test_subscribe_events_returns_queue(connected_api: TrueNASAPI) -> None
 async def test_subscribe_events_returns_none_on_failure(
     connected_api: TrueNASAPI,
 ) -> None:
+    """subscribe_events returns None, None and records the error on failure."""
     connected_api._client.subscribe = AsyncMock(
         side_effect=TrueNASCallError("boom", reason="nope")
     )
@@ -499,6 +535,7 @@ async def test_subscribe_events_permission_denied_logs_debug_not_error(
     connected_api: TrueNASAPI,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A permission-denied subscribe failure logs DEBUG, not ERROR."""
     connected_api._client.subscribe = AsyncMock(
         side_effect=TrueNASCallError(
             "Not authorized",
@@ -518,6 +555,7 @@ async def test_subscribe_events_non_permission_call_error_still_logs_error(
     connected_api: TrueNASAPI,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A non-permission subscribe failure still logs an ERROR with traceback."""
     connected_api._client.subscribe = AsyncMock(
         side_effect=TrueNASCallError(
             "boom", code=22, errname="EINVAL", reason="bad params"
@@ -533,12 +571,14 @@ async def test_subscribe_events_non_permission_call_error_still_logs_error(
 
 
 async def test_unsubscribe_events_calls_client(connected_api: TrueNASAPI) -> None:
+    """unsubscribe_events delegates to the underlying client."""
     connected_api._client.unsubscribe = AsyncMock()
     await connected_api.unsubscribe_events("sub-123")
     connected_api._client.unsubscribe.assert_awaited_once_with("sub-123")
 
 
 async def test_unsubscribe_events_handles_call_error(connected_api: TrueNASAPI) -> None:
+    """unsubscribe_events swallows a TrueNASCallError without recording an error."""
     connected_api._client.unsubscribe = AsyncMock(
         side_effect=TrueNASCallError("boom", reason="no such sub")
     )
@@ -549,6 +589,7 @@ async def test_unsubscribe_events_handles_call_error(connected_api: TrueNASAPI) 
 async def test_unsubscribe_events_handles_generic_error(
     connected_api: TrueNASAPI,
 ) -> None:
+    """unsubscribe_events maps a generic TrueNASError to ERR_UNKNOWN."""
     connected_api._client.unsubscribe = AsyncMock(
         side_effect=TrueNASError("boom"),
     )
@@ -557,6 +598,7 @@ async def test_unsubscribe_events_handles_generic_error(
 
 
 async def test_get_subscription_events_success(connected_api: TrueNASAPI) -> None:
+    """get_subscription_events returns the fetched events on success."""
     events = [
         {"id": 1, "name": "app.stats", "data": {"foo": "bar"}},
         {"id": 2, "name": "app.other", "data": {"baz": "qux"}},
@@ -572,6 +614,7 @@ async def test_get_subscription_events_success(connected_api: TrueNASAPI) -> Non
 
 
 async def test_get_subscription_events_call_error(connected_api: TrueNASAPI) -> None:
+    """get_subscription_events returns [] and records the error on TrueNASCallError."""
     connected_api._client.get_subscription_events = AsyncMock(
         side_effect=TrueNASCallError("boom", reason="nope")
     )
@@ -584,6 +627,7 @@ async def test_get_subscription_events_permission_denied_logs_debug_not_error(
     connected_api: TrueNASAPI,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A permission-denied fetch failure logs DEBUG, not ERROR."""
     connected_api._client.get_subscription_events = AsyncMock(
         side_effect=TrueNASCallError(
             "Not authorized",
@@ -602,6 +646,7 @@ async def test_get_subscription_events_non_permission_call_error_still_logs_erro
     connected_api: TrueNASAPI,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A non-permission fetch failure still logs an ERROR with traceback."""
     connected_api._client.get_subscription_events = AsyncMock(
         side_effect=TrueNASCallError(
             "boom", code=22, errname="EINVAL", reason="bad params"
@@ -616,6 +661,7 @@ async def test_get_subscription_events_non_permission_call_error_still_logs_erro
 
 
 async def test_get_subscription_events_generic_error(connected_api: TrueNASAPI) -> None:
+    """get_subscription_events maps a generic TrueNASError to ERR_UNKNOWN."""
     connected_api._client.get_subscription_events = AsyncMock(
         side_effect=TrueNASError("boom"),
     )
@@ -648,6 +694,7 @@ async def test_get_subscription_events_connect_returns_false(api: TrueNASAPI) ->
 
 
 async def test_is_subscribed_returns_false_when_not_connected(api: TrueNASAPI) -> None:
+    """is_subscribed returns False when there is no client."""
     api._client = None
     assert await api.is_subscribed("sub-123") is False
 
@@ -655,6 +702,7 @@ async def test_is_subscribed_returns_false_when_not_connected(api: TrueNASAPI) -
 async def test_is_subscribed_delegates_when_connected(
     connected_api: TrueNASAPI,
 ) -> None:
+    """is_subscribed delegates to the underlying client when connected."""
     connected_api._client.is_subscribed = AsyncMock(return_value=True)
     assert await connected_api.is_subscribed("sub-123") is True
     connected_api._client.is_subscribed.assert_called_once_with("sub-123")
@@ -663,6 +711,7 @@ async def test_is_subscribed_delegates_when_connected(
 async def test_subscribe_events_clears_previous_error_on_success(
     connected_api: TrueNASAPI,
 ) -> None:
+    """A successful subscribe clears any previously recorded error."""
     connected_api._error = "previous error"
     mock_queue = MagicMock()
     connected_api._client.subscribe = AsyncMock(return_value=("sub-123", mock_queue))
@@ -677,6 +726,7 @@ async def test_subscribe_events_clears_previous_error_on_success(
 async def test_get_subscription_events_passes_timeout(
     connected_api: TrueNASAPI,
 ) -> None:
+    """get_subscription_events forwards the event_timeout to the client call."""
     events = [{"id": 1}]
     connected_api._client.get_subscription_events = AsyncMock(return_value=events)
 
@@ -692,6 +742,7 @@ async def test_get_subscription_events_passes_timeout(
 async def test_get_subscription_events_truenas_call_error(
     connected_api: TrueNASAPI,
 ) -> None:
+    """get_subscription_events records the stringified TrueNASCallError as the error."""
     error = TrueNASCallError("boom")
     connected_api._client.get_subscription_events = AsyncMock(side_effect=error)
 

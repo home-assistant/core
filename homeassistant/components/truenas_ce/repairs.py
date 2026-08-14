@@ -1,7 +1,5 @@
 """Repairs for the TrueNAS integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.repairs import RepairsFlow

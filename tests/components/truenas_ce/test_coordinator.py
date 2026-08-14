@@ -1,5 +1,4 @@
-"""Unit tests for the pure/self-contained helpers and mockable logic in
-coordinator.py.
+"""Unit tests for the pure/self-contained helpers and mockable logic in coordinator.py.
 
 Like ``config_flow.py``, this module uses relative imports and must be loaded
 as a real package module. ``TrueNASCoordinator`` normally requires a running
@@ -56,6 +55,7 @@ from homeassistant.components.truenas_ce.coordinator import (
     _netdata_mean_value,
     _stat_name_similar,
     _to_int,
+    _unwrap_app_stats_message,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
@@ -81,11 +81,16 @@ def _bare_coordinator() -> TrueNASCoordinator:
         ("arc_size", "arcsize", True),
         ("cputemp", "cpu", True),
         ("cpu", "cputemp", True),
-        ("memroy", "memory", True),
+        (
+            "memroy",  # codespell:ignore memroy -- deliberate typo under test
+            "memory",
+            True,
+        ),
         ("load", "interface", False),
     ],
 )
 def test_stat_name_similar(a: str, b: str, expected: bool) -> None:
+    """Two stat names are flagged similar when they share a common substem."""
     assert _stat_name_similar(a, b) == expected
 
 
@@ -93,21 +98,26 @@ def test_stat_name_similar(a: str, b: str, expected: bool) -> None:
 #   _median
 # ---------------------------
 def test_median_odd_count() -> None:
+    """The median of an odd-length list is its middle value."""
     assert _median([3.0, 1.0, 2.0]) == pytest.approx(2.0)
 
 
 def test_median_even_count() -> None:
+    """The median of an even-length list is the mean of its two middle values."""
     assert _median([1.0, 2.0, 3.0, 4.0]) == pytest.approx(2.5)
 
 
 def test_median_single_value() -> None:
+    """The median of a single-value list is that value."""
     assert _median([42.0]) == pytest.approx(42.0)
 
 
 def test_median_empty_list_raises_index_error() -> None:
-    """Empty input is outside _median's contract (docstring: non-empty list);
-    its only caller guards with a non-empty check. Lock in the current
-    fail-loud behaviour instead of silently returning a value."""
+    """Empty input is outside _median's contract (docstring: non-empty list).
+
+    Its only caller guards with a non-empty check. Lock in the current
+    fail-loud behaviour instead of silently returning a value.
+    """
     with pytest.raises(IndexError):
         _median([])
 
@@ -116,20 +126,24 @@ def test_median_empty_list_raises_index_error() -> None:
 #   _as_int / _to_int
 # ---------------------------
 def test_as_int_returns_int_unchanged() -> None:
+    """An int value passes through _as_int unchanged."""
     assert _as_int(5) == 5
 
 
 def test_as_int_returns_zero_for_non_int() -> None:
+    """Non-int values (str, None, float) fall back to zero."""
     assert _as_int("5") == 0
     assert _as_int(None) == 0
     assert _as_int(1.5) == 0
 
 
 def test_to_int_parses_numeric_string() -> None:
+    """A numeric string is parsed into its int value."""
     assert _to_int("48") == 48
 
 
 def test_to_int_falls_back_to_default_on_invalid() -> None:
+    """An unparsable value falls back to the given default."""
     assert _to_int("not-a-number", default=7) == 7
     assert _to_int(None, default=7) == 7
 
@@ -138,6 +152,7 @@ def test_to_int_falls_back_to_default_on_invalid() -> None:
 #   _accumulate_vdev_errors / _aggregate_topology_errors
 # ---------------------------
 def test_accumulate_vdev_errors_leaf_disk() -> None:
+    """A leaf disk vdev's error counts are added to the running totals."""
     totals = {"read": 0, "write": 0, "checksum": 0}
     vdev = {"stats": {"read_errors": 1, "write_errors": 2, "checksum_errors": 3}}
     _accumulate_vdev_errors(vdev, totals)
@@ -159,12 +174,14 @@ def test_accumulate_vdev_errors_recurses_into_children_only() -> None:
 
 
 def test_accumulate_vdev_errors_ignores_non_dict() -> None:
+    """A non-dict vdev leaves the running totals untouched."""
     totals = {"read": 0, "write": 0, "checksum": 0}
     _accumulate_vdev_errors("not-a-dict", totals)
     assert totals == {"read": 0, "write": 0, "checksum": 0}
 
 
 def test_aggregate_topology_errors_sums_all_categories() -> None:
+    """Errors from every topology category (data, cache, ...) are summed."""
     topology = {
         "data": [
             {"stats": {"read_errors": 1, "write_errors": 0, "checksum_errors": 0}}
@@ -177,6 +194,7 @@ def test_aggregate_topology_errors_sums_all_categories() -> None:
 
 
 def test_aggregate_topology_errors_non_dict_returns_zeros() -> None:
+    """A non-dict topology yields an all-zero error tuple."""
     assert _aggregate_topology_errors(None) == (0, 0, 0)
 
 
@@ -184,21 +202,25 @@ def test_aggregate_topology_errors_non_dict_returns_zeros() -> None:
 #   _netdata_mean_value / _arc_value / _ups_value
 # ---------------------------
 def test_netdata_mean_value_computes_mean() -> None:
+    """The mean of all per-series values in a netdata graph point is returned."""
     graph_data = [{"aggregations": {"mean": {"a": 1.0, "b": 3.0}}}]
     assert _netdata_mean_value(graph_data) == pytest.approx(2.0)
 
 
 def test_netdata_mean_value_returns_none_for_empty_list() -> None:
+    """An empty graph-data list yields None."""
     assert _netdata_mean_value([]) is None
 
 
 def test_netdata_mean_value_returns_none_for_malformed_item() -> None:
+    """Malformed graph-data entries (wrong type/missing keys/empty mean) yield None."""
     assert _netdata_mean_value(["not-a-dict"]) is None
     assert _netdata_mean_value([{"aggregations": {"mean": "not-a-dict"}}]) is None
     assert _netdata_mean_value([{"aggregations": {"mean": {}}}]) is None
 
 
 def test_arc_value_delegates_to_netdata_mean_value() -> None:
+    """_arc_value returns the same mean _netdata_mean_value would compute."""
     graph_data = [{"aggregations": {"mean": {"a": 10.0}}}]
     assert _arc_value(graph_data) == pytest.approx(10.0)
 
@@ -207,6 +229,7 @@ def test_arc_value_delegates_to_netdata_mean_value() -> None:
 #   _first_ipv4
 # ---------------------------
 def test_first_ipv4_returns_first_inet_address() -> None:
+    """The first INET (IPv4) alias address is returned, skipping INET6 entries."""
     aliases = [
         {"type": "INET6", "address": "2001:db8::1"},
         {"type": "INET", "address": "192.0.2.5"},
@@ -216,6 +239,7 @@ def test_first_ipv4_returns_first_inet_address() -> None:
 
 
 def test_first_ipv4_returns_unknown_when_no_inet() -> None:
+    """Missing, empty, or IPv6-only alias lists all fall back to "unknown"."""
     assert _first_ipv4([{"type": "INET6", "address": "2001:db8::1"}]) == "unknown"
     assert _first_ipv4(None) == "unknown"
     assert _first_ipv4([]) == "unknown"
@@ -225,6 +249,7 @@ def test_first_ipv4_returns_unknown_when_no_inet() -> None:
 #   _is_truenas_sensor_id
 # ---------------------------
 def test_is_truenas_sensor_id_matches_device_slug_token() -> None:
+    """A sensor entity id containing the device slug anywhere is matched."""
     slug = slugify(DEFAULT_DEVICE_NAME)
     assert _is_truenas_sensor_id(f"sensor.{slug}_cpu_usage", slug) is True
     assert _is_truenas_sensor_id(f"sensor.system_{slug}_uptime", slug) is True
@@ -232,11 +257,13 @@ def test_is_truenas_sensor_id_matches_device_slug_token() -> None:
 
 
 def test_is_truenas_sensor_id_rejects_other_domains() -> None:
+    """A sensor id whose text does not contain the device slug is rejected."""
     slug = slugify(DEFAULT_DEVICE_NAME)
     assert _is_truenas_sensor_id("sensor.unrelated_integration_temp", slug) is False
 
 
 def test_is_truenas_sensor_id_rejects_non_sensor_entities() -> None:
+    """Entities outside the sensor domain (e.g. binary_sensor) are rejected."""
     slug = slugify(DEFAULT_DEVICE_NAME)
     assert _is_truenas_sensor_id(f"binary_sensor.{slug}_online", slug) is False
 
@@ -244,8 +271,9 @@ def test_is_truenas_sensor_id_rejects_non_sensor_entities() -> None:
 def test_is_truenas_sensor_id_unaffected_by_domain_changes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Regression: matching used to depend on DOMAIN/LEGACY_DOMAIN, which broke
-    since the 2.0.0 CE rename because DOMAIN ("truenas_ce") contains an
+    """Regression: matching used to depend on DOMAIN/LEGACY_DOMAIN.
+
+    That broke since the 2.0.0 CE rename because DOMAIN ("truenas_ce") contains an
     underscore and can never appear whole inside an underscore-split token.
     The fix matches the device-name slug instead -- the same string real
     entity ids are slugged from -- so behavior no longer depends on
@@ -258,8 +286,10 @@ def test_is_truenas_sensor_id_unaffected_by_domain_changes(
 
 
 def test_is_truenas_sensor_id_scoped_to_this_entrys_device_slug() -> None:
-    """Regression (#61): a global slug match flagged every entry's orphans on
-    multi-entry installs. Each entry must only match its own device slug.
+    """Regression (#61): a global slug match flagged every entry's orphans.
+
+    That happened on multi-entry installs. Each entry must only match its
+    own device slug.
     """
     assert (
         _is_truenas_sensor_id("sensor.truenas_nuc13_cpu_usage", "truenas_nuc13") is True
@@ -279,6 +309,7 @@ def test_is_truenas_sensor_id_rejects_empty_device_slug() -> None:
 #   _is_group_monitored
 # ---------------------------
 def test_is_group_monitored_true_when_in_options() -> None:
+    """A group present in the monitored-groups option is reported as monitored."""
     coord = _bare_coordinator()
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_VMS]}
@@ -286,6 +317,7 @@ def test_is_group_monitored_true_when_in_options() -> None:
 
 
 def test_is_group_monitored_false_when_absent() -> None:
+    """A group missing from the monitored-groups option is not monitored."""
     coord = _bare_coordinator()
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
@@ -296,6 +328,7 @@ def test_is_group_monitored_false_when_absent() -> None:
 #   set_optimistic_running
 # ---------------------------
 def test_set_optimistic_running_sets_state_and_notifies() -> None:
+    """Setting optimistic running state flips it to RUNNING and notifies listeners."""
     coord = _bare_coordinator()
     coord.ds = {"vm": {"1": {"state": "STOPPED"}}}
     coord.async_update_listeners = MagicMock()
@@ -305,6 +338,7 @@ def test_set_optimistic_running_sets_state_and_notifies() -> None:
 
 
 def test_set_optimistic_running_noop_for_unknown_object_id() -> None:
+    """An unknown object id leaves state untouched and does not notify."""
     coord = _bare_coordinator()
     coord.ds = {"vm": {"1": {"state": "STOPPED"}}}
     coord.async_update_listeners = MagicMock()
@@ -317,6 +351,7 @@ def test_set_optimistic_running_noop_for_unknown_object_id() -> None:
 #   async_run_task
 # ---------------------------
 async def test_async_run_task_marks_running_on_success() -> None:
+    """A successful task query optimistically marks the object as RUNNING."""
     coord = _bare_coordinator()
     coord.ds = {"rsynctask": {"1": {"state": "STOPPED"}}}
     coord.api = MagicMock()
@@ -328,6 +363,7 @@ async def test_async_run_task_marks_running_on_success() -> None:
 
 
 async def test_async_run_task_raises_and_skips_optimistic_state_on_failure() -> None:
+    """A failed task query raises HomeAssistantError and leaves state unchanged."""
     coord = _bare_coordinator()
     coord.ds = {"rsynctask": {"1": {"state": "STOPPED"}}}
     coord.host = "truenas.local"
@@ -351,6 +387,7 @@ async def test_async_run_task_raises_and_skips_optimistic_state_on_failure() -> 
 #   _parse_version
 # ---------------------------
 def test_parse_version_extracts_major_minor() -> None:
+    """The major/minor version numbers are parsed out of the version string."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"version": "TrueNAS-SCALE-25.04.1"}}
     coord._parse_version()
@@ -359,6 +396,7 @@ def test_parse_version_extracts_major_minor() -> None:
 
 
 def test_parse_version_leaves_unset_on_no_match() -> None:
+    """A version string that does not match the expected pattern leaves fields unset."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"version": "not-a-version-string"}}
     coord._version_major = 0
@@ -372,6 +410,7 @@ def test_parse_version_leaves_unset_on_no_match() -> None:
 #   _detect_virtualization
 # ---------------------------
 def test_detect_virtualization_true_for_known_manufacturer() -> None:
+    """A known hypervisor manufacturer string is detected as virtual."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"system_manufacturer": "QEMU", "system_product": ""}}
     coord._detect_virtualization()
@@ -379,6 +418,7 @@ def test_detect_virtualization_true_for_known_manufacturer() -> None:
 
 
 def test_detect_virtualization_true_for_known_product() -> None:
+    """A known hypervisor product string is detected as virtual."""
     coord = _bare_coordinator()
     coord.ds = {
         "system_info": {"system_manufacturer": "", "system_product": "VirtualBox"}
@@ -388,6 +428,7 @@ def test_detect_virtualization_true_for_known_product() -> None:
 
 
 def test_detect_virtualization_false_for_physical_hardware() -> None:
+    """Physical hardware manufacturer/product strings are not detected as virtual."""
     coord = _bare_coordinator()
     coord.ds = {
         "system_info": {"system_manufacturer": "Dell Inc.", "system_product": "R730"}
@@ -400,6 +441,7 @@ def test_detect_virtualization_false_for_physical_hardware() -> None:
 #   _update_uptime
 # ---------------------------
 def test_update_uptime_sets_epoch_on_first_run() -> None:
+    """A zero uptimeEpoch is populated from the current uptime on first run."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"uptime_seconds": 3600, "uptimeEpoch": 0}}
     coord._update_uptime()
@@ -407,6 +449,7 @@ def test_update_uptime_sets_epoch_on_first_run() -> None:
 
 
 def test_update_uptime_keeps_old_epoch_within_tolerance() -> None:
+    """An epoch close enough to the freshly computed value is left unchanged."""
     coord = _bare_coordinator()
     now_epoch = int(datetime.now(UTC).timestamp())
     old_epoch = now_epoch - 3600 + 5  # within the 300s tolerance of a fresh reading
@@ -416,6 +459,7 @@ def test_update_uptime_keeps_old_epoch_within_tolerance() -> None:
 
 
 def test_update_uptime_replaces_stale_epoch_outside_tolerance() -> None:
+    """An epoch drifted well past tolerance is replaced with a freshly computed one."""
     coord = _bare_coordinator()
     now_epoch = int(datetime.now(UTC).timestamp())
     old_epoch = now_epoch - 3600 - 600  # 600s drift, well beyond the 300s tolerance
@@ -428,6 +472,7 @@ def test_update_uptime_replaces_stale_epoch_outside_tolerance() -> None:
 
 
 def test_update_uptime_skips_when_uptime_not_positive() -> None:
+    """A non-positive uptime_seconds leaves the existing uptimeEpoch untouched."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"uptime_seconds": 0, "uptimeEpoch": 123}}
     coord._update_uptime()
@@ -438,6 +483,7 @@ def test_update_uptime_skips_when_uptime_not_positive() -> None:
 #   _apply_pool_capacity
 # ---------------------------
 def test_apply_pool_capacity_uses_root_dataset_when_available() -> None:
+    """Pool capacity is computed from the root dataset when one is provided."""
     coord = _bare_coordinator()
     coord.ds = {"pool": {"p1": {}}}
     root_dataset = {"available": 40, "used": 60}
@@ -448,6 +494,7 @@ def test_apply_pool_capacity_uses_root_dataset_when_available() -> None:
 
 
 def test_apply_pool_capacity_falls_back_to_pool_fields_without_root_dataset() -> None:
+    """Without a root dataset, capacity falls back to the pool's own free/size fields."""
     coord = _bare_coordinator()
     coord.ds = {"pool": {"p1": {}}}
     vals = {"free": 30, "size": 100}
@@ -458,6 +505,7 @@ def test_apply_pool_capacity_falls_back_to_pool_fields_without_root_dataset() ->
 
 
 def test_apply_pool_capacity_zero_total_yields_zero_usage() -> None:
+    """A zero-sized pool reports zero usage instead of dividing by zero."""
     coord = _bare_coordinator()
     coord.ds = {"pool": {"p1": {}}}
     coord._apply_pool_capacity("p1", {"free": 0, "size": 0, "allocated": 0}, None)
@@ -468,6 +516,7 @@ def test_apply_pool_capacity_zero_total_yields_zero_usage() -> None:
 #   _apply_pool_errors
 # ---------------------------
 def test_apply_pool_errors_aggregates_into_matching_pool() -> None:
+    """Vdev error counts from a matching-guid raw pool are aggregated in."""
     coord = _bare_coordinator()
     coord.ds = {"pool": {"guid1": {}}}
     raw_pools = [
@@ -497,6 +546,7 @@ def test_apply_pool_errors_aggregates_into_matching_pool() -> None:
 
 
 def test_apply_pool_errors_skips_unknown_guid_and_non_dict_entries() -> None:
+    """Entries with an unknown guid or a non-dict shape are skipped."""
     coord = _bare_coordinator()
     coord.ds = {"pool": {"guid1": {}}}
     coord._apply_pool_errors([{"guid": "unknown-guid", "topology": {}}, "not-a-dict"])
@@ -504,6 +554,7 @@ def test_apply_pool_errors_skips_unknown_guid_and_non_dict_entries() -> None:
 
 
 def test_apply_pool_errors_noop_for_non_list_input() -> None:
+    """A non-list raw_pools argument leaves the pool data untouched."""
     coord = _bare_coordinator()
     coord.ds = {"pool": {"guid1": {}}}
     coord._apply_pool_errors(None)
@@ -514,6 +565,7 @@ def test_apply_pool_errors_noop_for_non_list_input() -> None:
 #   _systemstats_process / _store_stat_value / _store_stat_defaults
 # ---------------------------
 def test_systemstats_process_stores_matching_legend_values() -> None:
+    """Each legend var's mean value is stored, missing means falling back to 0.0."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     graph = {
@@ -529,6 +581,7 @@ def test_systemstats_process_stores_matching_legend_values() -> None:
 
 
 def test_systemstats_process_falls_back_to_defaults_without_aggregations() -> None:
+    """A graph with no aggregations stores default (0.0) values for each var."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord._systemstats_process("cpu", {}, "cpu")
@@ -536,6 +589,7 @@ def test_systemstats_process_falls_back_to_defaults_without_aggregations() -> No
 
 
 def test_systemstats_process_skips_legend_var_not_in_arr() -> None:
+    """A legend var absent from the vars tuple is not stored."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     graph = {
@@ -548,6 +602,7 @@ def test_systemstats_process_skips_legend_var_not_in_arr() -> None:
 
 
 def test_store_stat_value_arcsize_uses_dedicated_key() -> None:
+    """The arcsize/size stat is rounded and stored under its dedicated key."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord._store_stat_value("arcsize", "size", 12.345)
@@ -555,6 +610,7 @@ def test_store_stat_value_arcsize_uses_dedicated_key() -> None:
 
 
 def test_store_stat_value_cpu_uses_prefixed_key() -> None:
+    """The cpu stat is stored under a "<type>_<var>" prefixed key."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord._store_stat_value("cpu", "cpu", 12.345)
@@ -562,6 +618,7 @@ def test_store_stat_value_cpu_uses_prefixed_key() -> None:
 
 
 def test_store_stat_value_memory_only_stores_available() -> None:
+    """Only the memory "available" var is stored; other memory vars are ignored."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord._store_stat_value("memory", "available", 100.0)
@@ -571,6 +628,7 @@ def test_store_stat_value_memory_only_stores_available() -> None:
 
 
 def test_store_stat_value_unknown_type_stores_raw_key() -> None:
+    """An unrecognized stat type falls back to storing under the raw var name."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord._store_stat_value("diskstats", "reads", 12.345)
@@ -583,12 +641,14 @@ def test_store_stat_value_unknown_type_stores_raw_key() -> None:
 def test_rollback_possible_false_when_domain_is_legacy(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Rollback is impossible once the integration is already running as legacy."""
     coord = _bare_coordinator()
     monkeypatch.setattr(coordinator_module, "DOMAIN", LEGACY_DOMAIN)
     assert coord._rollback_possible() is False
 
 
 def test_rollback_possible_true_when_legacy_entry_exists() -> None:
+    """Rollback is possible when a recorded legacy entry id still resolves."""
     coord = _bare_coordinator()
     coord.config_entry = MagicMock()
     coord.config_entry.data = {MIGRATION_LEGACY_ENTRY_ID: "legacy-id-1"}
@@ -598,6 +658,7 @@ def test_rollback_possible_true_when_legacy_entry_exists() -> None:
 
 
 def test_rollback_possible_false_when_no_legacy_id_recorded() -> None:
+    """Rollback is impossible when no legacy entry id was ever recorded."""
     coord = _bare_coordinator()
     coord.config_entry = MagicMock()
     coord.config_entry.data = {}
@@ -606,6 +667,7 @@ def test_rollback_possible_false_when_no_legacy_id_recorded() -> None:
 
 
 def test_statistics_issue_id_includes_entry_id() -> None:
+    """The orphaned-statistics issue id is scoped by config entry id."""
     coord = _bare_coordinator()
     coord.config_entry = MagicMock()
     coord.config_entry.entry_id = "entry123"
@@ -613,6 +675,7 @@ def test_statistics_issue_id_includes_entry_id() -> None:
 
 
 def test_migration_rollback_issue_id_includes_entry_id() -> None:
+    """The migration-rollback issue id is scoped by config entry id."""
     coord = _bare_coordinator()
     coord.config_entry = MagicMock()
     coord.config_entry.entry_id = "entry123"
@@ -625,6 +688,7 @@ def test_migration_rollback_issue_id_includes_entry_id() -> None:
 #   get_alerts
 # ---------------------------
 async def test_get_alerts_malformed_response_resets_to_defaults() -> None:
+    """A non-list alerts response resets the alerts dict to its defaults."""
     coord = _bare_coordinator()
     coord.ds = {"alerts": {}}
     coord.api = MagicMock()
@@ -641,6 +705,7 @@ async def test_get_alerts_malformed_response_resets_to_defaults() -> None:
 
 
 async def test_get_alerts_filters_dismissed_and_counts_levels() -> None:
+    """Dismissed alerts are excluded and remaining alerts are counted per level."""
     coord = _bare_coordinator()
     coord.ds = {"alerts": {}}
     coord.api = MagicMock()
@@ -688,6 +753,7 @@ async def test_get_alerts_filters_dismissed_and_counts_levels() -> None:
 
 
 async def test_get_alerts_no_disk_issues_when_unrelated() -> None:
+    """An alert from an unrelated class does not set the disk_issues flag."""
     coord = _bare_coordinator()
     coord.ds = {"alerts": {}}
     coord.api = MagicMock()
@@ -710,6 +776,7 @@ async def test_get_alerts_no_disk_issues_when_unrelated() -> None:
 #   get_smb
 # ---------------------------
 async def test_get_smb_counts_list_response() -> None:
+    """A list SMB response's length becomes the connection count."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord.api = MagicMock()
@@ -719,6 +786,7 @@ async def test_get_smb_counts_list_response() -> None:
 
 
 async def test_get_smb_counts_dict_with_sessions() -> None:
+    """A dict SMB response's "sessions" list length becomes the connection count."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord.api = MagicMock()
@@ -728,6 +796,7 @@ async def test_get_smb_counts_dict_with_sessions() -> None:
 
 
 async def test_get_smb_defaults_to_zero_for_unexpected_shape() -> None:
+    """An unexpected (non-list, non-dict) SMB response defaults the count to zero."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord.api = MagicMock()
@@ -740,6 +809,7 @@ async def test_get_smb_defaults_to_zero_for_unexpected_shape() -> None:
 #   get_updatecheck
 # ---------------------------
 async def test_get_updatecheck_malformed_response_resets_idle() -> None:
+    """A non-dict update-check response resets to no-update-available."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"version": "25.04.1"}}
     coord.api = MagicMock()
@@ -751,6 +821,7 @@ async def test_get_updatecheck_malformed_response_resets_idle() -> None:
 
 
 async def test_start_app_stats_stops_when_containers_not_monitored() -> None:
+    """Stats subscription is stopped and cleared when containers are unmonitored."""
     coord = _bare_coordinator()
     coord.ds = {
         "app": {"test-app": {}},
@@ -841,6 +912,7 @@ async def test_start_app_stats_defaults_when_monitored_groups_missing() -> None:
 
 
 async def test_start_app_stats_noops_when_api_not_connected() -> None:
+    """A disconnected API skips subscribing and leaves existing stats untouched."""
     coord = _bare_coordinator()
     coord.ds = {
         "app": {"test-app": {}},
@@ -890,6 +962,7 @@ async def test_start_app_stats_keeps_existing_sub_when_no_apps() -> None:
 
 
 async def test_get_app_stats_clears_when_containers_not_monitored() -> None:
+    """get_app_stats clears stale app stats once containers are unmonitored."""
     coord = _bare_coordinator()
     coord.ds = {"app_stats": {"stale-app": {"cpu": 1}}}
     coord.config_entry = MagicMock()
@@ -905,6 +978,7 @@ async def test_get_app_stats_clears_when_containers_not_monitored() -> None:
 
 
 async def test_get_app_stats_does_nothing_when_disconnected_mid_call() -> None:
+    """A disconnected API leaves the stats dict and subscription id unchanged."""
     coord = _bare_coordinator()
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
@@ -946,6 +1020,7 @@ async def test_get_app_stats_does_nothing_when_no_apps() -> None:
 
 
 async def test_get_app_stats_re_subscribes_when_sub_id_missing() -> None:
+    """A missing subscription id triggers a call to start_app_stats to resubscribe."""
     coord = _bare_coordinator()
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
@@ -985,6 +1060,7 @@ async def test_get_app_stats_re_subscribes_when_existing_sub_not_active() -> Non
 
 
 async def test_get_app_stats_skips_malformed_app_name() -> None:
+    """Events with a non-string or empty app_name are skipped, valid ones are kept."""
     coord = _bare_coordinator()
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
@@ -1013,6 +1089,7 @@ async def test_get_app_stats_skips_malformed_app_name() -> None:
 #   start_app_stats / get_app_stats / stop_app_stats
 # ---------------------------
 async def test_start_app_stats_subscribes_once() -> None:
+    """start_app_stats subscribes and records the returned subscription id."""
     coord = _bare_coordinator()
     coord.ds = {"app": {"test-app": {}}}
     coord.api = MagicMock()
@@ -1029,6 +1106,7 @@ async def test_start_app_stats_subscribes_once() -> None:
 
 
 async def test_start_app_stats_clears_stale_subscription() -> None:
+    """A stale subscription is unsubscribed before a new one is established."""
     coord = _bare_coordinator()
     coord.ds = {"app": {"test-app": {}}}
     coord.api = MagicMock()
@@ -1048,6 +1126,7 @@ async def test_start_app_stats_clears_stale_subscription() -> None:
 
 
 async def test_start_app_stats_handles_subscribe_failure() -> None:
+    """A subscribe_events exception is swallowed, leaving the subscription id unset."""
     coord = _bare_coordinator()
     coord.ds = {"app": {"test-app": {}}}
     coord.api = MagicMock()
@@ -1063,6 +1142,7 @@ async def test_start_app_stats_handles_subscribe_failure() -> None:
 
 
 async def test_get_app_stats_processes_and_updates_state() -> None:
+    """A subscription event's fields are normalized into per-app stats state."""
     coord = _bare_coordinator()
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
@@ -1107,6 +1187,7 @@ async def test_get_app_stats_processes_and_updates_state() -> None:
 
 
 async def test_get_app_stats_removes_missing_apps() -> None:
+    """Stats for apps no longer in coord.ds["app"] are dropped."""
     coord = _bare_coordinator()
     coord.ds = {
         "app": {
@@ -1130,6 +1211,7 @@ async def test_get_app_stats_removes_missing_apps() -> None:
 
 
 async def test_get_app_stats_skips_malformed_fields() -> None:
+    """Malformed fields entries are skipped while well-formed ones are processed."""
     coord = _bare_coordinator()
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
@@ -1154,6 +1236,7 @@ async def test_get_app_stats_skips_malformed_fields() -> None:
 
 
 async def test_stop_app_stats_unsubscribes_events() -> None:
+    """stop_app_stats unsubscribes and clears the tracked subscription state."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -1168,6 +1251,7 @@ async def test_stop_app_stats_unsubscribes_events() -> None:
 
 
 async def test_stop_app_stats_default_clears_even_when_disconnected() -> None:
+    """A disconnected API skips the unsubscribe call but still clears local state."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -1183,6 +1267,7 @@ async def test_stop_app_stats_default_clears_even_when_disconnected() -> None:
 
 
 async def test_get_updatecheck_empty_response_resets_status() -> None:
+    """An empty update-check response resets the update status."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"version": "25.04.1"}}
     coord.api = MagicMock()
@@ -1194,6 +1279,7 @@ async def test_get_updatecheck_empty_response_resets_status() -> None:
 
 
 async def test_get_updatecheck_new_version_available() -> None:
+    """An AVAILABLE update-check response populates the new-version fields."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"version": "25.04.1"}}
     coord.api = MagicMock()
@@ -1223,6 +1309,7 @@ async def test_get_updatecheck_new_version_available() -> None:
 
 
 async def test_get_app_stats_unwraps_collection_update_envelope() -> None:
+    """A collection_update-wrapped event's params.fields are still processed."""
     coord = _bare_coordinator()
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
@@ -1270,6 +1357,7 @@ async def test_get_app_stats_unwraps_collection_update_envelope() -> None:
 
 
 async def test_get_app_stats_handles_missing_blkio_and_networks() -> None:
+    """Malformed blkio/networks fields fall back to None/empty-list defaults."""
     coord = _bare_coordinator()
     coord.ds = {
         "app": {"test-app": {"name": "test-app"}},
@@ -1405,28 +1493,19 @@ async def test_get_app_stats_normalizes_invalid_app_stats_to_none() -> None:
 
 
 def test_unwrap_app_stats_message_accepts_collection_update() -> None:
-    from homeassistant.components.truenas_ce.coordinator import (
-        _unwrap_app_stats_message,
-    )
-
+    """A collection_update-wrapped message's params.fields are unwrapped."""
     msg = {"method": "collection_update", "params": {"fields": [{"app_name": "x"}]}}
     assert _unwrap_app_stats_message(msg) == {"fields": [{"app_name": "x"}]}
 
 
 def test_unwrap_app_stats_message_accepts_top_level_fields() -> None:
-    from homeassistant.components.truenas_ce.coordinator import (
-        _unwrap_app_stats_message,
-    )
-
+    """A message with top-level fields is returned unchanged."""
     msg = {"fields": [{"app_name": "x"}]}
     assert _unwrap_app_stats_message(msg) == msg
 
 
 def test_unwrap_app_stats_message_rejects_missing_fields() -> None:
-    from homeassistant.components.truenas_ce.coordinator import (
-        _unwrap_app_stats_message,
-    )
-
+    """Messages missing a usable fields key all unwrap to None."""
     assert (
         _unwrap_app_stats_message({"method": "collection_update", "params": {}}) is None
     )
@@ -1441,10 +1520,7 @@ def test_unwrap_app_stats_message_rejects_missing_fields() -> None:
 
 
 def test_unwrap_app_stats_message_rejects_non_dict_params() -> None:
-    from homeassistant.components.truenas_ce.coordinator import (
-        _unwrap_app_stats_message,
-    )
-
+    """A non-dict params value unwraps to None instead of raising."""
     assert (
         _unwrap_app_stats_message({"method": "collection_update", "params": "bad"})
         is None
@@ -1452,6 +1528,7 @@ def test_unwrap_app_stats_message_rejects_non_dict_params() -> None:
 
 
 async def test_start_app_stats_falls_back_on_invalid_poll_interval() -> None:
+    """A non-numeric poll interval option falls back to the default interval."""
     coord = _bare_coordinator()
     coord.ds = {"app": {"test-app": {}}}
     coord.api = MagicMock()
@@ -1472,6 +1549,7 @@ async def test_start_app_stats_falls_back_on_invalid_poll_interval() -> None:
 
 
 async def test_get_updatecheck_no_new_version_resets_status() -> None:
+    """An IDLE state with no new_version resets update_available to False."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"version": "25.04.1", "update_available": True}}
     coord.api = MagicMock()
@@ -1493,6 +1571,7 @@ async def test_get_updatecheck_no_new_version_resets_status() -> None:
 # (unavailable via pytest-homeassistant-custom-component on this Windows dev
 # machine). It is exercised by CI's hass-fixture-based integration tests.
 def test_connected_delegates_to_api() -> None:
+    """coord.connected() delegates directly to the API's connected() call."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -1504,6 +1583,7 @@ def test_connected_delegates_to_api() -> None:
 #   _async_ensure_connected
 # ---------------------------
 async def test_async_ensure_connected_noop_when_already_connected() -> None:
+    """An already-connected API is not asked to connect again."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -1513,6 +1593,7 @@ async def test_async_ensure_connected_noop_when_already_connected() -> None:
 
 
 async def test_async_ensure_connected_raises_update_failed_on_exception() -> None:
+    """A connect() exception is translated into UpdateFailed."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -1522,6 +1603,7 @@ async def test_async_ensure_connected_raises_update_failed_on_exception() -> Non
 
 
 async def test_async_ensure_connected_raises_auth_failed_on_invalid_key() -> None:
+    """An ERR_INVALID_KEY connect failure is translated into ConfigEntryAuthFailed."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -1536,6 +1618,7 @@ async def test_async_ensure_connected_raises_auth_failed_on_invalid_key() -> Non
 
 
 async def test_async_ensure_connected_raises_update_failed_on_other_error() -> None:
+    """A non-auth connect failure is translated into UpdateFailed."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -1547,6 +1630,7 @@ async def test_async_ensure_connected_raises_update_failed_on_other_error() -> N
 
 
 async def test_async_ensure_connected_succeeds() -> None:
+    """A successful connect() call completes without raising."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -1588,6 +1672,7 @@ def _stub_all_jobs(coord: TrueNASCoordinator) -> None:
 
 
 async def test_async_update_data_runs_jobs_when_connected() -> None:
+    """All get_* jobs run and the coordinator's ds dict is returned when connected."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -1607,6 +1692,7 @@ async def test_async_update_data_runs_jobs_when_connected() -> None:
 
 
 async def test_async_update_data_skips_jobs_when_disconnected() -> None:
+    """A still-disconnected API raises UpdateFailed and skips running any jobs."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -1622,6 +1708,7 @@ async def test_async_update_data_skips_jobs_when_disconnected() -> None:
 
 
 async def test_async_update_data_swallows_job_exceptions() -> None:
+    """A single job raising an exception does not abort the overall update."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -1642,6 +1729,7 @@ async def test_async_update_data_swallows_job_exceptions() -> None:
 #   Orphaned statistics / migration rollback lifecycle
 # ---------------------------
 async def test_async_detect_orphaned_statistics_skips_without_recorder() -> None:
+    """Without the recorder component loaded, no orphan detection is attempted."""
     coord = _bare_coordinator()
     coord.hass = MagicMock()
     coord.hass.config.components = set()
@@ -1650,6 +1738,7 @@ async def test_async_detect_orphaned_statistics_skips_without_recorder() -> None
 
 
 async def test_async_detect_orphaned_statistics_handles_listing_exception() -> None:
+    """An exception while listing statistics is swallowed, leaving no orphans."""
     coord = _bare_coordinator()
     coord.hass = MagicMock()
     coord.hass.config.components = {"recorder"}
@@ -1703,11 +1792,12 @@ async def test_async_detect_orphaned_statistics_filters_matching_ids() -> None:
 
 
 async def test_async_detect_orphaned_statistics_ignores_other_entrys_device() -> None:
-    """Regression (#61): with two TrueNAS config entries, detection used to
-    match a fixed global slug, so each entry's coordinator flagged the *other*
-    entry's orphaned statistics too and both raised their own duplicate
-    Repairs issue for the same global list. Each entry must only see
-    statistics whose id matches its own device-name slug.
+    """Regression (#61): with two TrueNAS config entries, detection used to match a fixed global slug.
+
+    So each entry's coordinator flagged the *other* entry's orphaned
+    statistics too and both raised their own duplicate Repairs issue for the
+    same global list. Each entry must only see statistics whose id matches
+    its own device-name slug.
     """
     coord = _bare_coordinator()
     coord.hass = MagicMock()
@@ -1783,6 +1873,7 @@ async def test_async_detect_orphaned_statistics_logs_ids_on_change(
 
 
 def test_count_statistics_with_data_counts_only_ids_with_rows() -> None:
+    """Only statistic ids whose lookup returns rows are counted."""
     hass = MagicMock()
     with patch.object(
         coordinator_module,
@@ -1802,6 +1893,7 @@ def test_count_statistics_with_data_counts_only_ids_with_rows() -> None:
 
 
 async def test_async_count_orphans_with_data_returns_zero_without_orphans() -> None:
+    """With no orphaned statistics recorded, the count is zero without probing."""
     coord = _bare_coordinator()
     coord.hass = MagicMock()
     coord.orphaned_statistics = []
@@ -1809,6 +1901,7 @@ async def test_async_count_orphans_with_data_returns_zero_without_orphans() -> N
 
 
 async def test_async_count_orphans_with_data_probes_recorder() -> None:
+    """With the recorder loaded, the count comes from probing actual statistics."""
     coord = _bare_coordinator()
     coord.hass = MagicMock()
     coord.hass.config.components = {"recorder"}
@@ -1831,6 +1924,7 @@ async def test_async_count_orphans_with_data_assumes_all_without_recorder() -> N
 
 
 async def test_async_count_orphans_with_data_falls_back_on_error() -> None:
+    """A probing error assumes every recorded orphan still has data."""
     coord = _bare_coordinator()
     coord.hass = MagicMock()
     coord.hass.config.components = {"recorder"}
@@ -1846,6 +1940,7 @@ async def test_async_count_orphans_with_data_falls_back_on_error() -> None:
 
 
 def test_update_statistics_issue_deletes_when_no_orphans() -> None:
+    """No orphaned statistics deletes any existing Repairs issue."""
     coord = _bare_coordinator()
     coord.hass = MagicMock()
     coord.config_entry = MagicMock()
@@ -1858,6 +1953,7 @@ def test_update_statistics_issue_deletes_when_no_orphans() -> None:
 
 
 def test_update_statistics_issue_skips_creation_when_ignored() -> None:
+    """An ignored statistics-cleanup option skips (re-)creating the issue."""
     coord = _bare_coordinator()
     coord.hass = MagicMock()
     coord.config_entry = MagicMock()
@@ -1870,6 +1966,7 @@ def test_update_statistics_issue_skips_creation_when_ignored() -> None:
 
 
 def test_raise_migration_rollback_issue_noop_when_not_possible() -> None:
+    """No rollback-eligible legacy entry means no issue is created."""
     coord = _bare_coordinator()
     coord.config_entry = MagicMock()
     coord.config_entry.data = {}
@@ -1880,6 +1977,7 @@ def test_raise_migration_rollback_issue_noop_when_not_possible() -> None:
 
 
 def test_raise_migration_rollback_issue_creates_when_possible() -> None:
+    """A rollback-eligible legacy entry causes the Repairs issue to be created."""
     coord = _bare_coordinator()
     coord.config_entry = MagicMock()
     coord.config_entry.entry_id = "entry1"
@@ -1897,6 +1995,7 @@ def test_raise_migration_rollback_issue_creates_when_possible() -> None:
 def test_clear_stale_migration_rollback_issue_inert_for_legacy_domain(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Running as the legacy domain never deletes the migration-rollback issue."""
     monkeypatch.setattr(coordinator_module, "DOMAIN", LEGACY_DOMAIN)
     coord = _bare_coordinator()
     with patch.object(coordinator_module.ir, "async_delete_issue") as delete_mock:
@@ -1907,6 +2006,7 @@ def test_clear_stale_migration_rollback_issue_inert_for_legacy_domain(
 def test_clear_stale_migration_rollback_issue_deletes_when_rollback_impossible() -> (
     None
 ):
+    """Once rollback is no longer possible, any stale issue is deleted."""
     coord = _bare_coordinator()
     coord.config_entry = MagicMock()
     coord.config_entry.entry_id = "entry1"
@@ -1918,6 +2018,7 @@ def test_clear_stale_migration_rollback_issue_deletes_when_rollback_impossible()
 
 
 async def test_async_clear_orphaned_statistics_noop_when_empty() -> None:
+    """No orphaned statistics means the clear routine does nothing."""
     coord = _bare_coordinator()
     coord.orphaned_statistics = []
     coord.hass = MagicMock()
@@ -1926,6 +2027,7 @@ async def test_async_clear_orphaned_statistics_noop_when_empty() -> None:
 
 
 async def test_async_clear_orphaned_statistics_clears_and_refreshes() -> None:
+    """Orphaned statistics are cleared, the issue deleted, and listeners refreshed."""
     coord = _bare_coordinator()
     coord.orphaned_statistics = ["sensor.truenas_x"]
     coord.hass = MagicMock()
@@ -1951,6 +2053,7 @@ async def test_async_clear_orphaned_statistics_clears_and_refreshes() -> None:
 #   get_systeminfo / _handle_update_job / _query_interfaces
 # ---------------------------
 async def test_get_systeminfo_parses_valid_response_and_runs_pipeline() -> None:
+    """A valid system-info response is parsed and the update-job pipeline runs."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}, "interface": {}}
     coord.api = MagicMock()
@@ -1974,6 +2077,7 @@ async def test_get_systeminfo_parses_valid_response_and_runs_pipeline() -> None:
 
 
 async def test_get_systeminfo_skips_parse_on_invalid_response() -> None:
+    """A None system-info response skips parsing but still runs the update job."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}, "interface": {}}
     coord.api = MagicMock()
@@ -1987,6 +2091,7 @@ async def test_get_systeminfo_skips_parse_on_invalid_response() -> None:
 
 
 async def test_get_systeminfo_returns_early_when_disconnected_after_parse() -> None:
+    """Disconnection after parsing returns early before the update-job pipeline."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}, "interface": {}}
     coord.api = MagicMock()
@@ -2000,6 +2105,7 @@ async def test_get_systeminfo_returns_early_when_disconnected_after_parse() -> N
 
 
 async def test_get_systeminfo_returns_early_disconnected_after_update_job() -> None:
+    """Disconnection right after the update job skips further version parsing."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}, "interface": {}}
     coord.api = MagicMock()
@@ -2016,6 +2122,7 @@ async def test_get_systeminfo_returns_early_disconnected_after_update_job() -> N
 
 
 async def test_handle_update_job_noop_without_jobid() -> None:
+    """A zero update_jobid means no job status query is made."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"update_jobid": 0}}
     coord.api = MagicMock()
@@ -2025,6 +2132,7 @@ async def test_handle_update_job_noop_without_jobid() -> None:
 
 
 async def test_handle_update_job_keeps_progress_while_running() -> None:
+    """A RUNNING update job's progress percentage and state are stored."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"update_jobid": 5, "update_available": True}}
     coord.api = MagicMock()
@@ -2038,6 +2146,7 @@ async def test_handle_update_job_keeps_progress_while_running() -> None:
 
 
 async def test_handle_update_job_resets_when_finished() -> None:
+    """A finished (SUCCESS) update job resets jobid/progress/state to idle defaults."""
     coord = _bare_coordinator()
     coord.ds = {
         "system_info": {
@@ -2058,6 +2167,7 @@ async def test_handle_update_job_resets_when_finished() -> None:
 
 
 async def test_handle_update_job_returns_early_when_disconnected() -> None:
+    """A disconnected API leaves the existing update_jobid untouched."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"update_jobid": 5}}
     coord.api = MagicMock()
@@ -2068,6 +2178,7 @@ async def test_handle_update_job_returns_early_when_disconnected() -> None:
 
 
 async def test_query_interfaces_derives_link_up() -> None:
+    """Each interface's link_up flag is derived from its reported link state."""
     coord = _bare_coordinator()
     coord.ds = {"interface": {}}
     coord.api = MagicMock()
@@ -2086,6 +2197,7 @@ async def test_query_interfaces_derives_link_up() -> None:
 #   get_systemstats family
 # ---------------------------
 def test_select_stat_graph_names_includes_interface_when_present() -> None:
+    """The interface graph is included whenever interfaces exist."""
     coord = _bare_coordinator()
     coord.ds = {"interface": {"eth0": {}}}
     coord._is_virtual = False
@@ -2096,6 +2208,7 @@ def test_select_stat_graph_names_includes_interface_when_present() -> None:
 
 
 def test_select_stat_graph_names_removes_cputemp_for_virtual() -> None:
+    """A virtual machine drops cputemp, and no interfaces drops the interface graph."""
     coord = _bare_coordinator()
     coord.ds = {"interface": {}}
     coord._is_virtual = True
@@ -2106,6 +2219,7 @@ def test_select_stat_graph_names_removes_cputemp_for_virtual() -> None:
 
 
 def test_select_stat_graph_names_filters_cooldown_graphs() -> None:
+    """A graph that recently errored is excluded while still in its cooldown."""
     coord = _bare_coordinator()
     coord.ds = {"interface": {}}
     coord._is_virtual = False
@@ -2116,6 +2230,7 @@ def test_select_stat_graph_names_filters_cooldown_graphs() -> None:
 
 
 async def test_fetch_stat_graphs_collects_and_records_failures() -> None:
+    """Successful graph queries are collected and failed ones are recorded."""
     coord = _bare_coordinator()
     coord.host = "truenas.local"
     coord._systemstats_errored = {}
@@ -2129,6 +2244,7 @@ async def test_fetch_stat_graphs_collects_and_records_failures() -> None:
 def test_record_failed_graphs_logs_only_new_failures(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """Only a graph not already in the errored dict is warned about (new failure)."""
     coord = _bare_coordinator()
     coord.host = "truenas.local"
     coord._systemstats_errored = {"cpu": datetime.now(UTC)}
@@ -2139,6 +2255,7 @@ def test_record_failed_graphs_logs_only_new_failures(
 
 
 def test_record_failed_graphs_noop_for_empty_list() -> None:
+    """An empty failed-graphs list leaves the errored dict untouched."""
     coord = _bare_coordinator()
     coord._systemstats_errored = {}
     coord._record_failed_graphs([])
@@ -2146,6 +2263,7 @@ def test_record_failed_graphs_noop_for_empty_list() -> None:
 
 
 def test_process_system_stat_dispatches_by_name() -> None:
+    """A "load" stat item with no aggregations falls back to storing the bare name."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}, "interface": {}}
     # Missing "aggregations"/"legend" fails the isinstance guard in
@@ -2156,12 +2274,14 @@ def test_process_system_stat_dispatches_by_name() -> None:
 
 
 def test_process_system_stat_ignores_missing_name() -> None:
+    """A stat item without a "name" key is ignored instead of raising."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord._process_system_stat({})  # must not raise
 
 
 def test_process_system_stat_dispatches_cputemp() -> None:
+    """A "cputemp" stat item is dispatched to _process_cputemp."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     item = {"name": "cputemp", "aggregations": {"mean": {"core0": 40.0}}}
@@ -2171,6 +2291,7 @@ def test_process_system_stat_dispatches_cputemp() -> None:
 
 
 def test_process_system_stat_dispatches_cpu_and_rounds_usage() -> None:
+    """A "cpu" stat item derives cpu_usage from the (defaulted) cpu_cpu value."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord._process_system_stat({"name": "cpu"})
@@ -2180,6 +2301,7 @@ def test_process_system_stat_dispatches_cpu_and_rounds_usage() -> None:
 
 
 def test_process_system_stat_dispatches_interface_for_known_identifier() -> None:
+    """An interface stat item for a tracked identifier updates its rx/tx values."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}, "interface": {"eth0": {}}}
     coord._process_system_stat(
@@ -2190,6 +2312,7 @@ def test_process_system_stat_dispatches_interface_for_known_identifier() -> None
 
 
 def test_process_system_stat_ignores_interface_for_unknown_identifier() -> None:
+    """An interface stat item for an untracked identifier is ignored."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}, "interface": {}}
     coord._process_system_stat({"name": "interface", "identifier": "eth99"})
@@ -2197,6 +2320,7 @@ def test_process_system_stat_ignores_interface_for_unknown_identifier() -> None:
 
 
 def test_process_system_stat_dispatches_memory() -> None:
+    """A "memory" stat item is dispatched to the memory-specific processor."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"physmem": 1000}}
     coord._process_system_stat(
@@ -2210,6 +2334,7 @@ def test_process_system_stat_dispatches_memory() -> None:
 
 
 def test_process_system_stat_dispatches_arcsize() -> None:
+    """An "arcsize" stat item is stored under the dedicated ARC cache key."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord._process_system_stat(
@@ -2223,6 +2348,7 @@ def test_process_system_stat_dispatches_arcsize() -> None:
 
 
 def test_process_system_stat_dispatches_unknown_name() -> None:
+    """An unrecognized stat name is recorded in the unknown-stat-names set."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord.host = "truenas.local"
@@ -2232,6 +2358,7 @@ def test_process_system_stat_dispatches_unknown_name() -> None:
 
 
 def test_process_cputemp_stores_max_mean() -> None:
+    """cpu_temperature is set to the highest mean core temperature."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord._process_cputemp({"aggregations": {"mean": {"core0": 40.0, "core1": 45.0}}})
@@ -2239,6 +2366,7 @@ def test_process_cputemp_stores_max_mean() -> None:
 
 
 def test_process_cputemp_none_when_no_valid_means() -> None:
+    """An empty means dict leaves cpu_temperature as None."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {}}
     coord._process_cputemp({"aggregations": {"mean": {}}})
@@ -2246,6 +2374,7 @@ def test_process_cputemp_none_when_no_valid_means() -> None:
 
 
 def test_process_memory_stat_computes_usage_percent() -> None:
+    """Memory total/free/usage-percent are all derived from physmem and available."""
     coord = _bare_coordinator()
     coord.ds = {"system_info": {"physmem": 1000}}
     coord._process_memory_stat(
@@ -2259,6 +2388,7 @@ def test_process_memory_stat_computes_usage_percent() -> None:
 def test_handle_unknown_stat_logs_once_and_detects_near_miss(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A repeated unknown stat name is only logged once, not on every call."""
     coord = _bare_coordinator()
     coord.host = "truenas.local"
     coord._unknown_system_stat_names = set()
@@ -2269,6 +2399,7 @@ def test_handle_unknown_stat_logs_once_and_detects_near_miss(
 
 
 def test_process_system_stat_interface_updates_rx_tx() -> None:
+    """Valid received/sent means update the interface's rx/tx to positive values."""
     coord = _bare_coordinator()
     coord.ds = {"interface": {"eth0": {}}}
     item = {
@@ -2281,6 +2412,7 @@ def test_process_system_stat_interface_updates_rx_tx() -> None:
 
 
 def test_process_system_stat_interface_zeroes_on_invalid_legend() -> None:
+    """A non-list legend zeroes the interface's rx/tx instead of raising."""
     coord = _bare_coordinator()
     coord.ds = {"interface": {"eth0": {}}}
     coord._process_system_stat_interface({"legend": "not-a-list"}, "eth0")
@@ -2289,6 +2421,7 @@ def test_process_system_stat_interface_zeroes_on_invalid_legend() -> None:
 
 
 def test_process_system_stat_interface_zeroes_when_mean_not_dict() -> None:
+    """A non-dict aggregations.mean zeroes the interface's rx/tx instead of raising."""
     coord = _bare_coordinator()
     coord.ds = {"interface": {"eth0": {}}}
     item = {
@@ -2301,6 +2434,7 @@ def test_process_system_stat_interface_zeroes_when_mean_not_dict() -> None:
 
 
 async def test_get_systemstats_returns_early_without_graph_names() -> None:
+    """No selectable graph names (all in cooldown) skips the API query entirely."""
     coord = _bare_coordinator()
     coord.ds = {"interface": {}}
     coord._is_virtual = True
@@ -2317,6 +2451,7 @@ async def test_get_systemstats_returns_early_without_graph_names() -> None:
 
 
 async def test_get_systemstats_returns_when_fetch_yields_no_graphs() -> None:
+    """A None graph-fetch response leaves system_info untouched."""
     coord = _bare_coordinator()
     coord.ds = {"interface": {}, "system_info": {}}
     coord._is_virtual = True
@@ -2331,6 +2466,7 @@ async def test_get_systemstats_returns_when_fetch_yields_no_graphs() -> None:
 
 
 async def test_get_systemstats_processes_returned_graphs() -> None:
+    """Graphs returned by the API are processed into system_info values."""
     coord = _bare_coordinator()
     coord.ds = {"interface": {}, "system_info": {}}
     coord._is_virtual = True
@@ -2347,6 +2483,7 @@ async def test_get_systemstats_processes_returned_graphs() -> None:
 #   get_service
 # ---------------------------
 async def test_get_service_derives_running_and_display_name() -> None:
+    """A service's running flag and display name are derived from raw fields."""
     coord = _bare_coordinator()
     coord.ds = {"service": {}}
     coord.api = MagicMock()
@@ -2378,6 +2515,7 @@ async def test_get_service_derives_running_and_display_name() -> None:
 #   get_pool / _add_boot_pool
 # ---------------------------
 async def test_get_pool_uses_dataset_mountpoint_match() -> None:
+    """A pool's capacity is taken from the dataset matching its mountpoint."""
     coord = _bare_coordinator()
     coord.ds = {
         "pool": {},
@@ -2406,6 +2544,7 @@ async def test_get_pool_uses_dataset_mountpoint_match() -> None:
 
 
 async def test_get_pool_falls_back_to_name_match_when_no_mountpoint() -> None:
+    """Without a mountpoint match, the pool falls back to matching by dataset id."""
     coord = _bare_coordinator()
     coord.ds = {
         "pool": {},
@@ -2435,6 +2574,7 @@ async def test_get_pool_falls_back_to_name_match_when_no_mountpoint() -> None:
 
 
 async def test_get_pool_returns_early_when_disconnected() -> None:
+    """A disconnected API leaves the pool dict empty instead of raising."""
     coord = _bare_coordinator()
     coord.ds = {"pool": {}, "dataset": {}}
     coord.api = MagicMock()
@@ -2445,6 +2585,7 @@ async def test_get_pool_returns_early_when_disconnected() -> None:
 
 
 async def test_add_boot_pool_adds_when_present() -> None:
+    """A present boot pool is added to the pool dict."""
     coord = _bare_coordinator()
     coord.ds = {"pool": {}}
     coord.api = MagicMock()
@@ -2456,6 +2597,7 @@ async def test_add_boot_pool_adds_when_present() -> None:
 
 
 async def test_add_boot_pool_noop_when_absent() -> None:
+    """A None boot-pool response leaves the pool dict empty."""
     coord = _bare_coordinator()
     coord.ds = {"pool": {}}
     coord.api = MagicMock()
@@ -2468,6 +2610,7 @@ async def test_add_boot_pool_noop_when_absent() -> None:
 #   get_dataset
 # ---------------------------
 async def test_get_dataset_empty_when_group_not_monitored() -> None:
+    """An unmonitored datasets group clears the dict without querying the API."""
     coord = _bare_coordinator()
     coord.ds = {"dataset": {"stale": {}}}
     coord.config_entry = MagicMock()
@@ -2480,6 +2623,7 @@ async def test_get_dataset_empty_when_group_not_monitored() -> None:
 
 
 async def test_get_dataset_returns_early_when_no_datasets_found() -> None:
+    """An empty datasets response leaves the dataset dict empty."""
     coord = _bare_coordinator()
     coord.ds = {"dataset": {}}
     coord.config_entry = MagicMock()
@@ -2491,6 +2635,7 @@ async def test_get_dataset_returns_early_when_no_datasets_found() -> None:
 
 
 async def test_get_dataset_parses_when_monitored() -> None:
+    """A monitored datasets group parses the API response into the dataset dict."""
     coord = _bare_coordinator()
     coord.ds = {"dataset": {}}
     coord.config_entry = MagicMock()
@@ -2504,6 +2649,7 @@ async def test_get_dataset_parses_when_monitored() -> None:
 
 
 async def test_update_disk_temperatures_applies_netdata_and_falls_back() -> None:
+    """Disks with netdata readings use them; disks without fall back to SMART."""
     coord = _bare_coordinator()
     coord.ds = {"disk": {"d1": {"temperature": 40}, "d2": {"temperature": None}}}
     coord._disk_temps_from_netdata = AsyncMock(return_value={"sda": 40.0})
@@ -2519,6 +2665,7 @@ async def test_update_disk_temperatures_applies_netdata_and_falls_back() -> None
 
 
 async def test_update_disk_temperatures_falls_back_for_all_without_netdata() -> None:
+    """With no netdata readings, every disk falls back to the SMART lookup."""
     coord = _bare_coordinator()
     coord.ds = {"disk": {"d1": {"temperature": 40}, "d2": {"temperature": None}}}
     coord._disk_temps_from_netdata = AsyncMock(return_value=None)
@@ -2540,6 +2687,7 @@ async def test_update_disk_temperatures_falls_back_for_all_without_netdata() -> 
 #   get_disk and disk-temperature helpers
 # ---------------------------
 async def test_get_disk_populates_and_updates_temperatures() -> None:
+    """get_disk populates the disk dict and triggers a temperature update."""
     coord = _bare_coordinator()
     coord.ds = {"disk": {}}
     coord.api = MagicMock()
@@ -2555,6 +2703,7 @@ async def test_get_disk_populates_and_updates_temperatures() -> None:
 
 
 def test_build_disk_name_map_collects_all_keys() -> None:
+    """The disk name map indexes each disk by both identifier and devname."""
     coord = _bare_coordinator()
     coord.ds = {
         "disk": {"d1": {"identifier": "disk1", "devname": "sda", "name": "sda"}}
@@ -2564,6 +2713,7 @@ def test_build_disk_name_map_collects_all_keys() -> None:
 
 
 def test_build_disk_name_map_logs_collision(caplog: pytest.LogCaptureFixture) -> None:
+    """Two disks sharing the same identifier log a collision warning."""
     coord = _bare_coordinator()
     coord.ds = {
         "disk": {
@@ -2577,6 +2727,7 @@ def test_build_disk_name_map_logs_collision(caplog: pytest.LogCaptureFixture) ->
 
 
 def test_apply_netdata_temps_matches_by_disk_map() -> None:
+    """A netdata reading is applied to the disk resolved through the name map."""
     coord = _bare_coordinator()
     coord.ds = {"disk": {"d1": {"temperature": None}}}
     coord._apply_netdata_temps({"sda": 42.345}, {"sda": "d1"})
@@ -2585,6 +2736,7 @@ def test_apply_netdata_temps_matches_by_disk_map() -> None:
 
 
 async def test_fallback_disk_temperatures_maps_matched_disk() -> None:
+    """A SMART temperature keyed by devname is applied to the matching disk."""
     coord = _bare_coordinator()
     coord.ds = {
         "disk": {"d1": {"name": "sda", "devname": "sda", "identifier": "disk1"}}
@@ -2598,6 +2750,7 @@ async def test_fallback_disk_temperatures_maps_matched_disk() -> None:
 async def test_fallback_disk_temperatures_warns_on_invalid_payload(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A None SMART temperature response logs a warning about the failed update."""
     coord = _bare_coordinator()
     coord.ds = {
         "disk": {"d1": {"name": "sda", "devname": "sda", "identifier": "disk1"}}
@@ -2610,6 +2763,7 @@ async def test_fallback_disk_temperatures_warns_on_invalid_payload(
 
 
 def test_map_single_disk_api_temp_sets_matched_value() -> None:
+    """A matching temperature entry is written to the disk's temperature field."""
     coord = _bare_coordinator()
     coord.ds = {
         "disk": {"d1": {"name": "sda", "devname": "sda", "identifier": "disk1"}}
@@ -2621,6 +2775,7 @@ def test_map_single_disk_api_temp_sets_matched_value() -> None:
 def test_map_single_disk_api_temp_logs_when_no_match(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """No matching temperature entry logs a debug message instead of raising."""
     coord = _bare_coordinator()
     coord.ds = {
         "disk": {"d1": {"name": "sda", "devname": "sda", "identifier": "disk1"}}
@@ -2633,6 +2788,7 @@ def test_map_single_disk_api_temp_logs_when_no_match(
 def test_map_single_disk_api_temp_logs_invalid_value(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A non-numeric temperature value logs a debug message instead of raising."""
     coord = _bare_coordinator()
     coord.ds = {
         "disk": {"d1": {"name": "sda", "devname": "sda", "identifier": "disk1"}}
@@ -2643,6 +2799,7 @@ def test_map_single_disk_api_temp_logs_invalid_value(
 
 
 async def test_disk_temps_from_netdata_returns_none_without_graph() -> None:
+    """No discoverable disk-temp graph name yields None."""
     coord = _bare_coordinator()
     coord._disk_temp_graph = None
     coord.api = MagicMock()
@@ -2652,6 +2809,7 @@ async def test_disk_temps_from_netdata_returns_none_without_graph() -> None:
 
 
 async def test_disk_temps_from_netdata_returns_none_on_invalid_graph_data() -> None:
+    """A None graph-data response yields None."""
     coord = _bare_coordinator()
     coord._disk_temp_graph = "disk_temp"
     coord.api = MagicMock()
@@ -2660,6 +2818,7 @@ async def test_disk_temps_from_netdata_returns_none_on_invalid_graph_data() -> N
 
 
 async def test_disk_temps_from_netdata_collects_temps() -> None:
+    """Valid graph data yields a dict of per-disk temperatures."""
     coord = _bare_coordinator()
     coord._disk_temp_graph = "disk_temp"
     coord.api = MagicMock()
@@ -2671,6 +2830,7 @@ async def test_disk_temps_from_netdata_collects_temps() -> None:
 
 
 async def test_discover_disk_temp_graph_finds_matching_name() -> None:
+    """A graph whose title contains "Disk Temperature" is discovered by name."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.query = AsyncMock(
@@ -2681,6 +2841,7 @@ async def test_discover_disk_temp_graph_finds_matching_name() -> None:
 
 
 async def test_discover_disk_temp_graph_returns_empty_when_not_found() -> None:
+    """A None graphs response yields an empty string."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.query = AsyncMock(return_value=None)
@@ -2688,6 +2849,7 @@ async def test_discover_disk_temp_graph_returns_empty_when_not_found() -> None:
 
 
 async def test_discover_disk_temp_graph_returns_empty_when_no_match() -> None:
+    """No graph title matching disk-temperature yields an empty string."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.query = AsyncMock(
@@ -2697,6 +2859,7 @@ async def test_discover_disk_temp_graph_returns_empty_when_no_match() -> None:
 
 
 def test_collect_disk_temp_uses_median_of_valid_means() -> None:
+    """Out-of-range mean values are discarded before taking the median."""
     coord = _bare_coordinator()
     temps: dict[str, float] = {}
     # 200.0 is outside the 0-100 sane bound and is discarded, leaving [30.0, 32.0]
@@ -2712,6 +2875,7 @@ def test_collect_disk_temp_uses_median_of_valid_means() -> None:
 
 
 def test_collect_disk_temp_ignores_entry_without_identifier() -> None:
+    """An entry without an identifier is skipped, leaving temps unchanged."""
     coord = _bare_coordinator()
     temps: dict[str, float] = {}
     coord._collect_disk_temp({"aggregations": {"mean": {"a": 30.0}}}, temps)
@@ -2722,6 +2886,7 @@ def test_collect_disk_temp_ignores_entry_without_identifier() -> None:
 #   get_vm
 # ---------------------------
 async def test_get_vm_empty_when_not_monitored() -> None:
+    """An unmonitored VMs group clears the dict without querying the API."""
     coord = _bare_coordinator()
     coord.ds = {"vm": {"stale": {}}}
     coord.config_entry = MagicMock()
@@ -2733,6 +2898,7 @@ async def test_get_vm_empty_when_not_monitored() -> None:
 
 
 async def test_get_vm_computes_memory_and_running() -> None:
+    """A VM's memory is converted to GB and its running flag derived from status."""
     coord = _bare_coordinator()
     coord.ds = {"vm": {}}
     coord.config_entry = MagicMock()
@@ -2755,6 +2921,7 @@ async def test_get_vm_computes_memory_and_running() -> None:
 
 
 async def test_get_vm_handles_null_memory() -> None:
+    """A None memory value normalizes to zero instead of raising."""
     coord = _bare_coordinator()
     coord.ds = {"vm": {}}
     coord.config_entry = MagicMock()
@@ -2779,6 +2946,7 @@ async def test_get_vm_handles_null_memory() -> None:
 #   get_container
 # ---------------------------
 async def test_get_container_filters_container_type_and_computes_fields() -> None:
+    """Only CONTAINER-type entries are kept, with cpu/memory/running/ip derived."""
     coord = _bare_coordinator()
     coord.ds = {"container": {}}
     coord.config_entry = MagicMock()
@@ -2808,6 +2976,7 @@ async def test_get_container_filters_container_type_and_computes_fields() -> Non
 
 
 async def test_get_container_normalizes_non_numeric_memory() -> None:
+    """A None memory value normalizes to zero instead of raising."""
     coord = _bare_coordinator()
     coord.ds = {"container": {}}
     coord.config_entry = MagicMock()
@@ -2821,6 +2990,7 @@ async def test_get_container_normalizes_non_numeric_memory() -> None:
 
 
 async def test_get_container_empty_when_not_monitored() -> None:
+    """An unmonitored containers group clears the dict without querying the API."""
     coord = _bare_coordinator()
     coord.ds = {"container": {"stale": {}}}
     coord.config_entry = MagicMock()
@@ -2834,6 +3004,7 @@ async def test_get_container_empty_when_not_monitored() -> None:
 async def test_get_container_logs_when_query_returns_non_list(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """A non-list query response logs a debug message and leaves the dict empty."""
     coord = _bare_coordinator()
     coord.ds = {"container": {}}
     coord.config_entry = MagicMock()
@@ -2849,6 +3020,7 @@ async def test_get_container_logs_when_query_returns_non_list(
 #   get_directoryservices
 # ---------------------------
 async def test_get_directoryservices_empty_when_not_monitored() -> None:
+    """An unmonitored directory-services group clears the dict without querying."""
     coord = _bare_coordinator()
     coord.ds = {"directoryservices": {"stale": {}}}
     coord.config_entry = MagicMock()
@@ -2860,6 +3032,7 @@ async def test_get_directoryservices_empty_when_not_monitored() -> None:
 
 
 async def test_get_directoryservices_empty_when_not_configured() -> None:
+    """A missing service_type leaves the directoryservices dict empty."""
     coord = _bare_coordinator()
     coord.ds = {"directoryservices": {}}
     coord.config_entry = MagicMock()
@@ -2873,6 +3046,7 @@ async def test_get_directoryservices_empty_when_not_configured() -> None:
 
 
 async def test_get_directoryservices_populates_when_enabled() -> None:
+    """A configured directory service's health status is populated."""
     coord = _bare_coordinator()
     coord.ds = {"directoryservices": {}}
     coord.config_entry = MagicMock()
@@ -2902,6 +3076,7 @@ async def test_get_directoryservices_populates_when_enabled() -> None:
 #   get_certificates
 # ---------------------------
 async def test_get_certificates_computes_days_until_expiry() -> None:
+    """A certificate's days_until_expiry is computed from its "until" timestamp."""
     coord = _bare_coordinator()
     coord.ds = {}
     coord.api = MagicMock()
@@ -2921,6 +3096,7 @@ async def test_get_certificates_computes_days_until_expiry() -> None:
 
 
 async def test_get_certificates_none_expiry_when_until_missing() -> None:
+    """A certificate without an "until" field gets a None days_until_expiry."""
     coord = _bare_coordinator()
     coord.ds = {}
     coord.api = MagicMock()
@@ -2933,6 +3109,7 @@ async def test_get_certificates_none_expiry_when_until_missing() -> None:
 #   get_arc
 # ---------------------------
 async def test_get_arc_stores_none_for_missing_graph() -> None:
+    """A None graph response leaves data_hit_percent as None."""
     coord = _bare_coordinator()
     coord.ds = {}
     coord.api = MagicMock()
@@ -2942,6 +3119,7 @@ async def test_get_arc_stores_none_for_missing_graph() -> None:
 
 
 async def test_get_arc_computes_value_for_present_graph() -> None:
+    """A present graph's mean value is stored as data_hit_percent."""
     coord = _bare_coordinator()
     coord.ds = {}
     coord.api = MagicMock()
@@ -2954,6 +3132,7 @@ async def test_get_arc_computes_value_for_present_graph() -> None:
 #   get_ups / _discover_ups_graphs
 # ---------------------------
 async def test_get_ups_empty_when_not_monitored() -> None:
+    """An unmonitored UPS group clears the dict."""
     coord = _bare_coordinator()
     coord.ds = {"ups": {"stale": 1}}
     coord.config_entry = MagicMock()
@@ -2964,6 +3143,7 @@ async def test_get_ups_empty_when_not_monitored() -> None:
 
 
 async def test_get_ups_returns_when_discovery_fails() -> None:
+    """A failed graph-discovery query leaves _ups_graphs as None."""
     coord = _bare_coordinator()
     coord.ds = {"ups": {}}
     coord.config_entry = MagicMock()
@@ -2976,6 +3156,7 @@ async def test_get_ups_returns_when_discovery_fails() -> None:
 
 
 async def test_get_ups_returns_when_no_graphs_discovered() -> None:
+    """An empty set of previously discovered graphs skips the graph-data query."""
     coord = _bare_coordinator()
     coord.ds = {"ups": {}}
     coord.config_entry = MagicMock()
@@ -2988,6 +3169,7 @@ async def test_get_ups_returns_when_no_graphs_discovered() -> None:
 
 
 async def test_get_ups_assigns_discovered_graphs_when_previously_none() -> None:
+    """Freshly discovered UPS graphs are cached and used to populate ups data."""
     coord = _bare_coordinator()
     coord.ds = {"ups": {}}
     coord.config_entry = MagicMock()
@@ -3006,6 +3188,7 @@ async def test_get_ups_assigns_discovered_graphs_when_previously_none() -> None:
 
 
 async def test_get_ups_populates_known_graphs() -> None:
+    """Previously discovered UPS graphs are used directly to populate ups data."""
     coord = _bare_coordinator()
     coord.ds = {"ups": {}}
     coord.config_entry = MagicMock()
@@ -3018,6 +3201,7 @@ async def test_get_ups_populates_known_graphs() -> None:
 
 
 async def test_discover_ups_graphs_returns_none_for_invalid_response() -> None:
+    """A None graphs response yields None instead of an empty set."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.query = AsyncMock(return_value=None)
@@ -3025,6 +3209,7 @@ async def test_discover_ups_graphs_returns_none_for_invalid_response() -> None:
 
 
 async def test_discover_ups_graphs_filters_known_names() -> None:
+    """Only recognized UPS graph names are kept from the discovery response."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.query = AsyncMock(
@@ -3038,6 +3223,7 @@ async def test_discover_ups_graphs_filters_known_names() -> None:
 #   get_cloudsync / get_replication / get_rsync / get_snapshottask / get_scrub
 # ---------------------------
 async def test_get_cloudsync_empty_when_not_monitored() -> None:
+    """An unmonitored cloudsync group clears the dict without querying the API."""
     coord = _bare_coordinator()
     coord.ds = {"cloudsync": {"stale": {}}}
     coord.config_entry = MagicMock()
@@ -3049,6 +3235,7 @@ async def test_get_cloudsync_empty_when_not_monitored() -> None:
 
 
 async def test_get_cloudsync_parses_when_monitored() -> None:
+    """A monitored cloudsync group parses the API response into the dict."""
     coord = _bare_coordinator()
     coord.ds = {"cloudsync": {}}
     coord.config_entry = MagicMock()
@@ -3060,6 +3247,7 @@ async def test_get_cloudsync_parses_when_monitored() -> None:
 
 
 async def test_get_replication_falls_back_to_job_state() -> None:
+    """The nested job.state is flattened onto the entry's own "state" field."""
     coord = _bare_coordinator()
     coord.ds = {"replication": {}}
     coord.config_entry = MagicMock()
@@ -3074,6 +3262,7 @@ async def test_get_replication_falls_back_to_job_state() -> None:
 
 
 async def test_get_replication_empty_when_not_monitored() -> None:
+    """An unmonitored replication group clears the dict without querying the API."""
     coord = _bare_coordinator()
     coord.ds = {"replication": {"stale": {}}}
     coord.config_entry = MagicMock()
@@ -3085,6 +3274,7 @@ async def test_get_replication_empty_when_not_monitored() -> None:
 
 
 async def test_get_rsync_empty_when_not_monitored() -> None:
+    """An unmonitored rsync group clears the dict without querying the API."""
     coord = _bare_coordinator()
     coord.ds = {"rsynctask": {"stale": {}}}
     coord.config_entry = MagicMock()
@@ -3096,6 +3286,7 @@ async def test_get_rsync_empty_when_not_monitored() -> None:
 
 
 async def test_get_rsync_parses_when_monitored() -> None:
+    """A monitored rsync group parses the API response into the dict."""
     coord = _bare_coordinator()
     coord.ds = {"rsynctask": {}}
     coord.config_entry = MagicMock()
@@ -3107,6 +3298,7 @@ async def test_get_rsync_parses_when_monitored() -> None:
 
 
 async def test_get_snapshottask_empty_when_not_monitored() -> None:
+    """An unmonitored snapshots group clears the dict without querying the API."""
     coord = _bare_coordinator()
     coord.ds = {"snapshottask": {"stale": {}}}
     coord.config_entry = MagicMock()
@@ -3118,6 +3310,7 @@ async def test_get_snapshottask_empty_when_not_monitored() -> None:
 
 
 async def test_get_snapshottask_parses_when_monitored() -> None:
+    """A monitored snapshots group parses the entry's schedule into the dict."""
     coord = _bare_coordinator()
     coord.ds = {"snapshottask": {}}
     coord.config_entry = MagicMock()
@@ -3133,6 +3326,7 @@ async def test_get_snapshottask_parses_when_monitored() -> None:
 
 
 async def test_get_snapshottask_defaults_schedule_when_missing() -> None:
+    """A missing schedule field defaults to an empty dict."""
     coord = _bare_coordinator()
     coord.ds = {"snapshottask": {}}
     coord.config_entry = MagicMock()
@@ -3144,6 +3338,7 @@ async def test_get_snapshottask_defaults_schedule_when_missing() -> None:
 
 
 async def test_get_scrub_parses_response() -> None:
+    """A scrub query response is parsed into the scrub dict."""
     coord = _bare_coordinator()
     coord.ds = {"scrub": {}}
     coord.api = MagicMock()
@@ -3156,6 +3351,7 @@ async def test_get_scrub_parses_response() -> None:
 #   get_app / _clear_finished_app_updates
 # ---------------------------
 async def test_get_app_catalog_update_available() -> None:
+    """An app with a newer catalog version is flagged as having an update."""
     coord = _bare_coordinator()
     coord.ds = {"app": {}}
     coord.api = MagicMock()
@@ -3178,6 +3374,7 @@ async def test_get_app_catalog_update_available() -> None:
 
 
 async def test_get_app_custom_app_falls_back_to_image_updates() -> None:
+    """A custom app's update_available comes from image_updates_available."""
     coord = _bare_coordinator()
     coord.ds = {"app": {}}
     coord.api = MagicMock()
@@ -3199,6 +3396,7 @@ async def test_get_app_custom_app_falls_back_to_image_updates() -> None:
 
 
 async def test_get_app_no_update_for_noncustom_without_upgrade() -> None:
+    """A non-custom app without upgrade_available ignores image_updates_available."""
     coord = _bare_coordinator()
     coord.ds = {"app": {}}
     coord.api = MagicMock()
@@ -3220,6 +3418,7 @@ async def test_get_app_no_update_for_noncustom_without_upgrade() -> None:
 
 
 async def test_clear_finished_app_updates_resets_when_not_running() -> None:
+    """A SUCCESS-state update job resets the app's update_jobid to zero."""
     coord = _bare_coordinator()
     coord.ds = {"app": {"app1": {"update_jobid": 5}}}
     coord.api = MagicMock()
@@ -3229,6 +3428,7 @@ async def test_clear_finished_app_updates_resets_when_not_running() -> None:
 
 
 async def test_clear_finished_app_updates_keeps_running_job() -> None:
+    """A RUNNING update job leaves the app's update_jobid untouched."""
     coord = _bare_coordinator()
     coord.ds = {"app": {"app1": {"update_jobid": 5}}}
     coord.api = MagicMock()
@@ -3238,6 +3438,7 @@ async def test_clear_finished_app_updates_keeps_running_job() -> None:
 
 
 async def test_clear_finished_app_updates_skips_without_jobid() -> None:
+    """A zero update_jobid skips the job-status query entirely."""
     coord = _bare_coordinator()
     coord.ds = {"app": {"app1": {"update_jobid": 0}}}
     coord.api = MagicMock()
@@ -3250,21 +3451,25 @@ async def test_clear_finished_app_updates_skips_without_jobid() -> None:
 #   app.stats subscription helpers
 # ---------------------------
 def test_get_app_identifier_prefers_name() -> None:
+    """The "name" field is preferred over the legacy "app_name" field."""
     coord = _bare_coordinator()
     assert coord._get_app_identifier({"name": "app1", "app_name": "legacy"}) == "app1"
 
 
 def test_get_app_identifier_falls_back_to_app_name() -> None:
+    """Without a "name" field, the legacy "app_name" field is used instead."""
     coord = _bare_coordinator()
     assert coord._get_app_identifier({"app_name": "legacy"}) == "legacy"
 
 
 def test_get_app_identifier_returns_none_when_missing() -> None:
+    """With neither "name" nor "app_name" present, None is returned."""
     coord = _bare_coordinator()
     assert coord._get_app_identifier({}) is None
 
 
 def test_resolve_app_stats_event_name_uses_poll_interval() -> None:
+    """The event name embeds the configured poll interval."""
     coord = _bare_coordinator()
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_POLL_INTERVAL: 30}
@@ -3272,6 +3477,7 @@ def test_resolve_app_stats_event_name_uses_poll_interval() -> None:
 
 
 def test_resolve_app_stats_event_name_falls_back_on_invalid_value() -> None:
+    """A non-numeric poll interval falls back to the default interval."""
     coord = _bare_coordinator()
     coord.config_entry = MagicMock()
     coord.config_entry.options = {CONF_POLL_INTERVAL: "bad"}
@@ -3282,6 +3488,7 @@ def test_resolve_app_stats_event_name_falls_back_on_invalid_value() -> None:
 
 
 async def test_stop_app_stats_if_active_stops_when_subscribed() -> None:
+    """An active subscription is force-stopped."""
     coord = _bare_coordinator()
     coord._app_stats_sub_id = "sub-1"
     coord.stop_app_stats = AsyncMock()
@@ -3290,6 +3497,7 @@ async def test_stop_app_stats_if_active_stops_when_subscribed() -> None:
 
 
 async def test_stop_app_stats_if_active_noop_when_not_subscribed() -> None:
+    """No active subscription means stop_app_stats is never called."""
     coord = _bare_coordinator()
     coord._app_stats_sub_id = None
     coord.stop_app_stats = AsyncMock()
@@ -3298,6 +3506,7 @@ async def test_stop_app_stats_if_active_noop_when_not_subscribed() -> None:
 
 
 async def test_maybe_teardown_changed_app_stats_subscription_stops_on_change() -> None:
+    """A changed event name tears down the existing subscription."""
     coord = _bare_coordinator()
     coord._app_stats_event_name = "old"
     coord.stop_app_stats = AsyncMock()
@@ -3308,6 +3517,7 @@ async def test_maybe_teardown_changed_app_stats_subscription_stops_on_change() -
 async def test_maybe_clear_inactive_app_stats_subscription_clears_when_inactive() -> (
     None
 ):
+    """An inactive subscription id (per the API) is cleared locally."""
     coord = _bare_coordinator()
     coord._app_stats_sub_id = "sub-1"
     coord.api = MagicMock()
@@ -3317,6 +3527,7 @@ async def test_maybe_clear_inactive_app_stats_subscription_clears_when_inactive(
 
 
 async def test_subscribe_to_app_stats_handles_missing_sub_id() -> None:
+    """A None subscription id from subscribe_events leaves it unset."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.subscribe_events = AsyncMock(return_value=(None, None))
@@ -3325,6 +3536,7 @@ async def test_subscribe_to_app_stats_handles_missing_sub_id() -> None:
 
 
 async def test_subscribe_to_app_stats_handles_exception() -> None:
+    """A subscribe_events exception is swallowed instead of propagating."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.subscribe_events = AsyncMock(side_effect=Exception("boom"))
@@ -3335,6 +3547,7 @@ async def test_subscribe_to_app_stats_handles_exception() -> None:
 async def test_stop_app_stats_unsubscribe_exception_still_clears_state(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    """An unsubscribe_events exception still clears the local subscription id."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
@@ -3346,6 +3559,7 @@ async def test_stop_app_stats_unsubscribe_exception_still_clears_state(
 
 
 async def test_stop_app_stats_not_connected_no_force_is_noop() -> None:
+    """A disconnected API without force=True leaves the subscription state as-is."""
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -3356,6 +3570,7 @@ async def test_stop_app_stats_not_connected_no_force_is_noop() -> None:
 
 
 def test_coerce_float_handles_invalid_values() -> None:
+    """Unparsable values yield None, a parsable numeric string yields a float."""
     coord = _bare_coordinator()
     assert coord._coerce_float(None) is None
     assert coord._coerce_float("bad") is None
@@ -3363,12 +3578,14 @@ def test_coerce_float_handles_invalid_values() -> None:
 
 
 def test_collect_current_app_names_uses_identifier() -> None:
+    """Only dict app entries contribute their identifier to the name set."""
     coord = _bare_coordinator()
     coord.ds = {"app": {"a": {"name": "app1"}, "b": "not-a-dict"}}
     assert coord._collect_current_app_names() == {"app1"}
 
 
 def test_prune_stale_app_stats_removes_missing_entries() -> None:
+    """Stats for apps outside the given current-names set are removed."""
     coord = _bare_coordinator()
     coord.ds = {"app_stats": {"app1": {}, "stale": {}}}
     coord._prune_stale_app_stats({"app1"})
@@ -3379,6 +3596,7 @@ def test_prune_stale_app_stats_removes_missing_entries() -> None:
 #   get_cronjob
 # ---------------------------
 async def test_get_cronjob_empty_when_not_monitored() -> None:
+    """An unmonitored cronjobs group clears the dict without querying the API."""
     coord = _bare_coordinator()
     coord.ds = {"cronjob": {"stale": {}}}
     coord.config_entry = MagicMock()
@@ -3390,6 +3608,7 @@ async def test_get_cronjob_empty_when_not_monitored() -> None:
 
 
 async def test_get_cronjob_skips_disabled_by_default_behavior() -> None:
+    """With the skip-disabled behavior enabled, disabled cronjobs are excluded."""
     coord = _bare_coordinator()
     coord.ds = {"cronjob": {}}
     coord.config_entry = MagicMock()
@@ -3411,6 +3630,7 @@ async def test_get_cronjob_skips_disabled_by_default_behavior() -> None:
 
 
 async def test_get_cronjob_keeps_disabled_when_behavior_off() -> None:
+    """With the skip-disabled behavior off, disabled cronjobs are still kept."""
     coord = _bare_coordinator()
     coord.ds = {"cronjob": {}}
     coord.config_entry = MagicMock()
@@ -3427,6 +3647,7 @@ async def test_get_cronjob_keeps_disabled_when_behavior_off() -> None:
 
 
 async def test_get_cronjob_falls_back_to_legacy_option_when_behaviors_absent() -> None:
+    """Without CONF_BEHAVIORS set, the legacy cronjob_skip_disabled option is used."""
     coord = _bare_coordinator()
     coord.ds = {"cronjob": {}}
     coord.config_entry = MagicMock()

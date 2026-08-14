@@ -1,15 +1,14 @@
 """Config flow to configure TrueNAS."""
 
-from __future__ import annotations
-
+from collections.abc import Mapping
 import contextlib
+from logging import getLogger
 import re
 import socket
-from collections.abc import Mapping
-from logging import getLogger
 from typing import Any, override
 
 import voluptuous as vol
+
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_POLL,
     ConfigEntry,
@@ -17,12 +16,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -278,7 +272,7 @@ def _sanitize_host(host: str) -> str:
 # ---------------------------
 def _guess_ip() -> str:
     """Try to guess the TrueNAS IP from common local hostnames."""
-    for domain in [""] + KNOWN_DOMAINS:
+    for domain in ["", *KNOWN_DOMAINS]:
         test_host = f"truenas.{domain}" if domain else "truenas"
         with contextlib.suppress(OSError):
             return socket.gethostbyname(test_host)
@@ -300,7 +294,7 @@ async def _async_try_connect(api: TrueNASAPI, host: str, context: str) -> bool:
     """
     try:
         return await api.connect(quiet=True)
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 - must not abort discovery on an unexpected error
         _LOGGER.debug("TrueNAS %s: %s: %s", host, context, err)
         return False
 
@@ -380,7 +374,7 @@ async def _async_get_system_id(api: TrueNASAPI, host: str) -> str | None:
     """
     try:
         system_id = await api.query("system.global.id")
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 - a failed lookup must never block config/rediscovery
         _LOGGER.debug("TrueNAS %s: failed to read system.global.id: %s", host, err)
         return None
 
@@ -411,7 +405,7 @@ async def _async_get_hostname(api: TrueNASAPI, host: str) -> str:
     """
     try:
         info = await api.query("system.info")
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 - a failed lookup must never block setup
         _LOGGER.debug("TrueNAS %s: failed to read system.info: %s", host, err)
         return DEFAULT_DEVICE_NAME
 
@@ -811,8 +805,8 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str],
     ) -> None:
         """Run connection test only when transport-relevant settings changed."""
-        _CONNECTION_KEYS = (CONF_HOST, CONF_API_KEY, CONF_VERIFY_SSL)
-        if any(truenas_config.get(k) != entry_data.get(k) for k in _CONNECTION_KEYS):
+        connection_keys = (CONF_HOST, CONF_API_KEY, CONF_VERIFY_SSL)
+        if any(truenas_config.get(k) != entry_data.get(k) for k in connection_keys):
             await self._validate_connection(truenas_config, errors)
 
     async def async_step_reauth(
@@ -853,6 +847,7 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
         reconfigure_entry = self._get_reconfigure_entry()
         if not self.truenas_config:
             self.truenas_config.update(reconfigure_entry.data)

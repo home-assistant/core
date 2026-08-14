@@ -1,12 +1,10 @@
 """TrueNAS HA shared entity model."""
 
-from __future__ import annotations
-
-import inspect
 from asyncio import Lock
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
+import inspect
 from logging import getLogger
 from typing import Any, cast, override
 
@@ -14,9 +12,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_platform as ep
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_platform as ep,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -331,7 +331,9 @@ def _cleanup_orphaned_entities(
     the corresponding group, and cleanup is skipped unless the last update
     succeeded.
     """
-    from . import _collect_active_unique_ids
+    # Deferred to avoid a circular import: __init__.py imports from entity.py
+    # at module level, so importing back from it here must happen lazily.
+    from . import _collect_active_unique_ids  # noqa: PLC0415
 
     if not coordinator.last_update_success:
         return

@@ -1,13 +1,11 @@
 """TrueNAS sensor platform."""
 
-from __future__ import annotations
-
 import asyncio
-import re
 from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from logging import getLogger
+import re
 from typing import Any, NoReturn, override
 
 from homeassistant.components.sensor import SensorEntity
@@ -66,7 +64,7 @@ async def async_setup_entry(
     """Set up entry for TrueNAS component."""
     coordinator: TrueNASCoordinator | None = get_truenas_coordinator(config_entry)
     if coordinator is None:
-        return None
+        return
 
     platform = ep.async_get_current_platform()
 
@@ -290,6 +288,7 @@ class TrueNASSensor(TrueNASEntity, SensorEntity):
         entity_description: TrueNASSensorEntityDescription,
         uid: str | None = None,
     ) -> None:
+        """Set up the sensor and derive its GB/GiB display unit preference."""
         super().__init__(coordinator, entity_description, uid)
         self._attr_suggested_unit_of_measurement = (
             self.entity_description.suggested_unit_of_measurement
@@ -426,7 +425,7 @@ class TrueNASUptimeSensor(TrueNASSensor):
 
     @override
     async def restart(self) -> None:
-        """Restart TrueNAS systen."""
+        """Restart TrueNAS system."""
         await self.coordinator.api.query(
             "system.reboot", ["Home Assistant Integration"]
         )
@@ -434,7 +433,7 @@ class TrueNASUptimeSensor(TrueNASSensor):
 
     @override
     async def stop(self) -> None:
-        """Shutdown TrueNAS systen."""
+        """Shutdown TrueNAS system."""
         await self.coordinator.api.query(
             "system.shutdown", ["Home Assistant Integration"]
         )
@@ -1076,7 +1075,7 @@ class TrueNASAppStatsSensor(TrueNASEntity, SensorEntity):
                 # Backend provides bytes/sec; convert to KiB/s to match
                 # the declared unit.
                 return float(val) / 1024.0
-            except (ValueError, TypeError):
+            except (ValueError, TypeError):  # fmt: skip
                 # Parsing failed; avoid returning a value with incorrect units.
                 # Returning None keeps the state consistent with the declared unit.
                 return None

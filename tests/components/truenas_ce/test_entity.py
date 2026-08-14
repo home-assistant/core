@@ -45,15 +45,18 @@ _REF_DESC = TrueNASSensorEntityDescription(
 #   format_unique_id / format_device_identifier
 # ---------------------------
 def test_format_unique_id_without_reference() -> None:
+    """A unique id without a reference is just the slugified domain and key."""
     assert format_unique_id("TrueNAS", "system_uptime") == "truenas-system_uptime"
 
 
 def test_format_unique_id_with_reference_slugifies() -> None:
+    """A reference value is slugified and appended to the unique id."""
     result = format_unique_id("TrueNAS", "disk_temp", "Disk One!")
     assert result == "truenas-disk_temp-disk_one"
 
 
 def test_format_device_identifier() -> None:
+    """A device identifier combines the domain name and host."""
     assert format_device_identifier("TrueNAS", "nas.local") == "TrueNAS_nas.local"
 
 
@@ -61,10 +64,12 @@ def test_format_device_identifier() -> None:
 #   _get_composite_container / _extract_composite_ref
 # ---------------------------
 def test_get_composite_container_non_dict_vals_returns_none() -> None:
+    """A non-dict vals object has no composite container to extract."""
     assert _get_composite_container("not-a-dict", "networks") is None
 
 
 def test_extract_composite_ref_non_dict_item_returns_none() -> None:
+    """A non-dict item cannot yield a composite reference."""
     assert (
         _extract_composite_ref(
             "not-a-dict", _REF_DESC, honor_exclude=True, leaf_key="x"
@@ -74,6 +79,7 @@ def test_extract_composite_ref_non_dict_item_returns_none() -> None:
 
 
 def test_extract_composite_ref_excluded_item_returns_none() -> None:
+    """An item matching data_exclude is skipped when honor_exclude is True."""
     desc = TrueNASSensorEntityDescription(
         key="net_rx",
         name="RX",
@@ -90,6 +96,7 @@ def test_extract_composite_ref_excluded_item_returns_none() -> None:
 
 
 def test_extract_composite_ref_honor_exclude_false_ignores_exclude() -> None:
+    """With honor_exclude False, an excluded item's reference is still returned."""
     desc = TrueNASSensorEntityDescription(
         key="net_rx",
         name="RX",
@@ -109,6 +116,7 @@ def test_extract_composite_ref_honor_exclude_false_ignores_exclude() -> None:
 #   _skip_keyless_description
 # ---------------------------
 def test_skip_keyless_description_true_when_attribute_missing() -> None:
+    """A description is skipped when its data_attribute is absent from vals."""
     desc = TrueNASSensorEntityDescription(
         key="k", name="N", data_path="p", data_attribute="value"
     )
@@ -116,6 +124,7 @@ def test_skip_keyless_description_true_when_attribute_missing() -> None:
 
 
 def test_skip_keyless_description_false_when_attribute_present() -> None:
+    """A description is not skipped when its data_attribute is present in vals."""
     desc = TrueNASSensorEntityDescription(
         key="k", name="N", data_path="p", data_attribute="value"
     )
@@ -123,6 +132,7 @@ def test_skip_keyless_description_false_when_attribute_present() -> None:
 
 
 def test_skip_keyless_description_no_attribute_at_all() -> None:
+    """A description without a data_attribute is never skipped as keyless."""
     assert _skip_keyless_description(_STATIC_DESC, {}) is False
 
 
@@ -130,10 +140,12 @@ def test_skip_keyless_description_no_attribute_at_all() -> None:
 #   _is_uid_excluded
 # ---------------------------
 def test_is_uid_excluded_no_data_exclude_configured() -> None:
+    """A description with no data_exclude never marks a uid as excluded."""
     assert _is_uid_excluded(_REF_DESC, {"link_state": "DOWN"}) is False
 
 
 def test_is_uid_excluded_matches() -> None:
+    """A uid whose vals match data_exclude is reported as excluded."""
     desc = TrueNASSensorEntityDescription(
         key="k", name="N", data_path="p", data_exclude=("link_state", "DOWN")
     )
@@ -141,6 +153,7 @@ def test_is_uid_excluded_matches() -> None:
 
 
 def test_is_uid_excluded_non_dict_vals() -> None:
+    """Non-dict vals cannot match data_exclude, so the uid is not excluded."""
     desc = TrueNASSensorEntityDescription(
         key="k", name="N", data_path="p", data_exclude=("link_state", "DOWN")
     )
@@ -155,6 +168,7 @@ def _dispatcher() -> dict[str, type[TrueNASEntity]]:
 
 
 def test_new_referenced_entities_creates_one_per_uid() -> None:
+    """One entity is created for each uid present in the referenced data."""
     coordinator = make_coordinator(
         data={"disk": {"d1": {"guid": "g1"}, "d2": {"guid": "g2"}}}
     )
@@ -165,6 +179,7 @@ def test_new_referenced_entities_creates_one_per_uid() -> None:
 
 
 def test_new_referenced_entities_honors_exclude_behavior() -> None:
+    """A uid matching data_exclude is skipped when the behavior option is set."""
     desc = TrueNASSensorEntityDescription(
         key="disk_temp",
         name="Temperature",
@@ -189,6 +204,7 @@ def test_new_referenced_entities_honors_exclude_behavior() -> None:
 
 
 def test_collect_new_entities_skips_missing_data_path() -> None:
+    """No entities are collected when the description's data_path is absent."""
     desc = TrueNASSensorEntityDescription(key="k", name="N", data_path="nonexistent")
     coordinator = make_coordinator(data={})
     result = _collect_new_entities(coordinator, [desc], _dispatcher(), set())
@@ -196,6 +212,7 @@ def test_collect_new_entities_skips_missing_data_path() -> None:
 
 
 def test_collect_new_entities_skips_app_stats_sensor_descriptions() -> None:
+    """App-stats sensor descriptions are handled elsewhere and skipped here."""
     desc = TrueNASSensorEntityDescription(
         key="k", name="N", data_path="disk", func="TrueNASAppStatsSensor"
     )
@@ -205,6 +222,7 @@ def test_collect_new_entities_skips_app_stats_sensor_descriptions() -> None:
 
 
 def test_collect_new_entities_keyless_description() -> None:
+    """A static (non-referenced) description yields a single uid-less entity."""
     desc = TrueNASSensorEntityDescription(
         key="uptime",
         name="Uptime",
@@ -219,6 +237,7 @@ def test_collect_new_entities_keyless_description() -> None:
 
 
 def test_collect_new_entities_referenced_description() -> None:
+    """A referenced description yields one entity keyed by its uid."""
     coordinator = make_coordinator(data={"disk": {"d1": {"guid": "g1"}}})
     result = _collect_new_entities(coordinator, [_REF_DESC], _dispatcher(), set())
     assert len(result) == 1
@@ -226,6 +245,7 @@ def test_collect_new_entities_referenced_description() -> None:
 
 
 def test_append_if_new_skips_already_seen() -> None:
+    """An entity whose unique id is already in seen is not appended again."""
     coordinator = make_coordinator(data={"disk": {"d1": {"guid": "g1"}}})
     entity = _new_referenced_entities(
         coordinator, _REF_DESC, coordinator.data["disk"], _dispatcher(), set()
@@ -238,6 +258,7 @@ def test_append_if_new_skips_already_seen() -> None:
 
 
 def test_append_if_new_adds_unseen() -> None:
+    """A new entity is appended and its unique id recorded in seen."""
     coordinator = make_coordinator(data={"disk": {"d1": {"guid": "g1"}}})
     entity = _new_referenced_entities(
         coordinator, _REF_DESC, coordinator.data["disk"], _dispatcher(), set()
@@ -268,17 +289,20 @@ def _make_entity(
 
 
 def test_name_static_description_no_uid() -> None:
+    """A static, uid-less entity uses the description's literal name."""
     entity = _make_entity()
     assert entity.name == "Uptime"
 
 
 def test_name_static_description_no_name() -> None:
+    """An entity resolves to no name when the description sets name=None."""
     desc = TrueNASEntityDescription(key="uptime", name=None, data_path="system_info")
     entity = _make_entity(description=desc)
     assert entity.name is None
 
 
 def test_name_referenced_entity_uses_data_name() -> None:
+    """A referenced entity's name is prefixed with the data_name field's value."""
     desc = TrueNASSensorEntityDescription(
         key="disk_temp",
         name="Temperature",
@@ -293,6 +317,7 @@ def test_name_referenced_entity_uses_data_name() -> None:
 
 
 def test_name_referenced_entity_falls_back_to_uid() -> None:
+    """When data_name's field is missing, the entity's uid prefixes the name."""
     desc = TrueNASSensorEntityDescription(
         key="disk_temp",
         name="Temperature",
@@ -305,6 +330,7 @@ def test_name_referenced_entity_falls_back_to_uid() -> None:
 
 
 def test_name_referenced_entity_no_desc_name() -> None:
+    """With no description name, the entity name is just the data_name value."""
     desc = TrueNASSensorEntityDescription(
         key="disk_temp",
         name=None,
@@ -333,6 +359,7 @@ def test_name_referenced_entity_no_desc_name() -> None:
 def test_name_translation_lookup(
     platform_translations: dict[str, str] | None, expected_name: str
 ) -> None:
+    """The name resolves via platform_translations when available, else falls back."""
     desc = TrueNASEntityDescription(
         key="uptime", name="Uptime", translation_key="uptime", data_path="system_info"
     )
@@ -349,9 +376,9 @@ def test_name_translation_lookup(
 
 
 def test_name_translation_lookup_without_literal_name() -> None:
-    """Descriptions that only set translation_key (no literal `name`) must
-    still resolve via platform_translations -- `name` defaults to
-    EntityDescription's UNDEFINED sentinel, not a str or None.
+    """Descriptions that only set translation_key (no literal `name`) must still resolve via platform_translations.
+
+    `name` defaults to EntityDescription's UNDEFINED sentinel, not a str or None.
     """
     desc = TrueNASEntityDescription(
         key="uptime", translation_key="uptime", data_path="system_info"
@@ -368,21 +395,25 @@ def test_name_translation_lookup_without_literal_name() -> None:
 
 
 def test_unique_id_static_description() -> None:
+    """A static entity's unique id is the domain-prefixed description key."""
     entity = _make_entity()
     assert entity.unique_id == "truenas-uptime"
 
 
 def test_unique_id_referenced_uses_data_reference_value() -> None:
+    """A referenced entity's unique id includes the data_reference field's value."""
     entity = _make_entity(uid="d1", data={"guid": "g1"}, description=_REF_DESC)
     assert entity.unique_id == "truenas-disk_temp-g1"
 
 
 def test_unique_id_referenced_falls_back_to_uid_when_reference_missing() -> None:
+    """When the data_reference field is missing, the uid is used instead."""
     entity = _make_entity(uid="d1", data={}, description=_REF_DESC)
     assert entity.unique_id == "truenas-disk_temp-d1"
 
 
 def test_device_info_system_group() -> None:
+    """The System group's device info exposes the model and configuration URL."""
     desc = TrueNASEntityDescription(
         key="uptime", name="Uptime", data_path="system_info", ha_group="System"
     )
@@ -394,6 +425,7 @@ def test_device_info_system_group() -> None:
 
 
 def test_device_info_system_group_https_when_wss() -> None:
+    """A wss:// coordinator connection yields an https:// configuration URL."""
     desc = TrueNASEntityDescription(
         key="uptime", name="Uptime", data_path="system_info", ha_group="System"
     )
@@ -403,6 +435,7 @@ def test_device_info_system_group_https_when_wss() -> None:
 
 
 def test_device_info_non_system_group_uses_via_device_id_when_supported() -> None:
+    """A non-system group links via via_device_id when HA Core supports it."""
     desc = TrueNASEntityDescription(
         key="disk_temp", name="Temperature", data_path="disk", ha_group="Disks"
     )
@@ -418,9 +451,11 @@ def test_device_info_non_system_group_uses_via_device_id_when_supported() -> Non
 
 
 def test_device_info_non_system_group_falls_back_to_via_device() -> None:
-    """Older HA Core (pre-2026.8) doesn't accept via_device_id -- see
-    _supports_via_device_id(); these installs must keep getting the older
-    identifiers-tuple form so device linkage isn't silently lost."""
+    """Older HA Core (pre-2026.8) doesn't accept via_device_id -- see _supports_via_device_id().
+
+    These installs must keep getting the older identifiers-tuple form so
+    device linkage isn't silently lost.
+    """
     desc = TrueNASEntityDescription(
         key="disk_temp", name="Temperature", data_path="disk", ha_group="Disks"
     )
@@ -436,6 +471,7 @@ def test_device_info_non_system_group_falls_back_to_via_device() -> None:
 
 
 def test_device_info_data_group_resolves_group_from_data() -> None:
+    """A data__ ha_group prefix resolves the group name from the entity's data."""
     desc = TrueNASSensorEntityDescription(
         key="disk_temp",
         name="Temperature",
@@ -451,6 +487,7 @@ def test_device_info_data_group_resolves_group_from_data() -> None:
 
 
 def test_device_info_explicit_connection_and_value() -> None:
+    """An explicit ha_connection and ha_connection_value are used verbatim."""
     desc = TrueNASEntityDescription(
         key="disk_temp",
         name="Temperature",
@@ -465,6 +502,7 @@ def test_device_info_explicit_connection_and_value() -> None:
 
 
 def test_device_info_connection_value_from_data() -> None:
+    """A data__ ha_connection_value resolves the connection value from the data."""
     desc = TrueNASSensorEntityDescription(
         key="disk_temp",
         name="Temperature",
@@ -481,6 +519,7 @@ def test_device_info_connection_value_from_data() -> None:
 
 
 def test_extra_state_attributes_includes_attribution_and_listed_fields() -> None:
+    """Extra state attributes include the attribution plus data_attributes_list fields."""
     desc = TrueNASSensorEntityDescription(
         key="disk_temp",
         name="Temperature",
@@ -497,6 +536,7 @@ def test_extra_state_attributes_includes_attribution_and_listed_fields() -> None
 
 
 def test_raise_unsupported_raises_service_validation_error() -> None:
+    """_raise_unsupported raises a ServiceValidationError with the action details."""
     entity = _make_entity()
     with pytest.raises(ServiceValidationError) as exc_info:
         entity._raise_unsupported("start")
@@ -509,11 +549,13 @@ def test_raise_unsupported_raises_service_validation_error() -> None:
 
 
 def test_raise_if_api_error_no_error_is_noop() -> None:
+    """_raise_if_api_error does nothing when the coordinator has no api_error."""
     entity = _make_entity()
     entity._raise_if_api_error("start")
 
 
 def test_raise_if_api_error_raises_when_error_set() -> None:
+    """_raise_if_api_error raises a HomeAssistantError when api_error is set."""
     coordinator = make_coordinator(api_error="boom")
     entity = _make_entity(coordinator=coordinator)
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -531,6 +573,7 @@ def test_raise_if_api_error_raises_when_error_set() -> None:
     ["start", "stop", "restart", "reload", "snapshot", "refresh"],
 )
 async def test_default_action_stubs_raise_unsupported(method_name: str) -> None:
+    """The default start/stop/restart/reload/snapshot/refresh stubs are unsupported."""
     entity = _make_entity()
     method = getattr(entity, method_name)
     with pytest.raises(ServiceValidationError):
@@ -538,24 +581,28 @@ async def test_default_action_stubs_raise_unsupported(method_name: str) -> None:
 
 
 async def test_default_unlock_stub_raises_unsupported() -> None:
+    """The default unlock stub raises ServiceValidationError."""
     entity = _make_entity()
     with pytest.raises(ServiceValidationError):
         await entity.unlock()
 
 
 async def test_default_lock_stub_raises_unsupported() -> None:
+    """The default lock stub raises ServiceValidationError."""
     entity = _make_entity()
     with pytest.raises(ServiceValidationError):
         await entity.lock()
 
 
 async def test_default_passphrase_set_stub_raises_unsupported() -> None:
+    """The default passphrase_set stub raises ServiceValidationError."""
     entity = _make_entity()
     with pytest.raises(ServiceValidationError):
         await entity.passphrase_set("secret")
 
 
 def test_handle_coordinator_update_refreshes_data_and_calls_super() -> None:
+    """The coordinator-update handler refreshes cached data and calls super()."""
     coordinator = make_coordinator(data={"disk": {"d1": {"guid": "g1"}}})
     entity = TrueNASEntity(coordinator, _REF_DESC, "d1")
     coordinator.data["disk"]["d1"]["guid"] = "g2"

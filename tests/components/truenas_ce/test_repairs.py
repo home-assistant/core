@@ -36,6 +36,7 @@ def _make_hass(entry: SimpleNamespace | None) -> SimpleNamespace:
 
 
 async def test_create_fix_flow_routes_statistics_issue() -> None:
+    """A ``statistics_orphaned_*`` issue id routes to the statistics-cleanup flow."""
     flow = await async_create_fix_flow(
         SimpleNamespace(), "statistics_orphaned_entry1", None
     )
@@ -44,6 +45,7 @@ async def test_create_fix_flow_routes_statistics_issue() -> None:
 
 
 async def test_create_fix_flow_routes_migration_rollback_issue() -> None:
+    """A ``migration_rollback_available_*`` issue id routes to the migration-rollback flow."""
     flow = await async_create_fix_flow(
         SimpleNamespace(), "migration_rollback_available_entry2", None
     )
@@ -91,6 +93,7 @@ async def test_statistics_cleanup_init_uses_metadata_only_step() -> None:
 
 
 async def test_statistics_cleanup_init_truncates_long_id_list() -> None:
+    """The rendered id list is capped at ``MAX_LISTED_ORPHANS`` lines plus a "+N" summary."""
     coordinator = make_coordinator()
     coordinator.orphaned_statistics = [
         f"sensor.truenas_{index:02d}" for index in range(MAX_LISTED_ORPHANS + 5)
@@ -107,6 +110,7 @@ async def test_statistics_cleanup_init_truncates_long_id_list() -> None:
 
 
 async def test_statistics_cleanup_init_no_coordinator_zero_count() -> None:
+    """With no runtime coordinator, the init step reports a zero count and an empty id list."""
     entry = SimpleNamespace(runtime_data=None)
     flow = StatisticsCleanupRepairFlow("entry1")
     flow.hass = _make_hass(entry)
@@ -120,6 +124,7 @@ async def test_statistics_cleanup_init_no_coordinator_zero_count() -> None:
 
 
 async def test_statistics_cleanup_fix_clears_statistics() -> None:
+    """The fix step awaits ``async_clear_orphaned_statistics`` and finishes the flow."""
     coordinator = make_coordinator()
     entry = SimpleNamespace(runtime_data=coordinator)
     flow = StatisticsCleanupRepairFlow("entry1")
@@ -131,6 +136,7 @@ async def test_statistics_cleanup_fix_clears_statistics() -> None:
 
 
 async def test_statistics_cleanup_fix_no_coordinator_is_noop() -> None:
+    """With no runtime coordinator, the fix step still finishes the flow without error."""
     entry = SimpleNamespace(runtime_data=None)
     flow = StatisticsCleanupRepairFlow("entry1")
     flow.hass = _make_hass(entry)
@@ -140,6 +146,7 @@ async def test_statistics_cleanup_fix_no_coordinator_is_noop() -> None:
 
 
 async def test_statistics_cleanup_ignore_sets_option_and_deletes_issue() -> None:
+    """Ignoring the issue persists the ignore option on the entry and deletes the issue."""
     entry = SimpleNamespace(options={}, runtime_data=None)
     flow = StatisticsCleanupRepairFlow("entry1")
     flow.hass = _make_hass(entry)
@@ -157,6 +164,7 @@ async def test_statistics_cleanup_ignore_sets_option_and_deletes_issue() -> None
 
 
 async def test_statistics_cleanup_ignore_no_entry_still_deletes_issue() -> None:
+    """With no config entry, ignoring still deletes the issue but skips the option update."""
     flow = StatisticsCleanupRepairFlow("entry1")
     flow.hass = _make_hass(None)
 
@@ -170,6 +178,7 @@ async def test_statistics_cleanup_ignore_no_entry_still_deletes_issue() -> None:
 
 
 async def test_migration_rollback_init_counts_adopted_entities() -> None:
+    """The init step reports how many entities ``MIGRATION_RECORDS`` lists as adopted."""
     entry = SimpleNamespace(data={MIGRATION_RECORDS: ["a", "b", "c"]})
     flow = MigrationRollbackRepairFlow("entry2")
     flow.hass = _make_hass(entry)
@@ -179,6 +188,7 @@ async def test_migration_rollback_init_counts_adopted_entities() -> None:
 
 
 async def test_migration_rollback_init_no_entry_zero_count() -> None:
+    """With no config entry, the init step reports a zero adopted-entity count."""
     flow = MigrationRollbackRepairFlow("entry2")
     flow.hass = _make_hass(None)
 
@@ -187,6 +197,7 @@ async def test_migration_rollback_init_no_entry_zero_count() -> None:
 
 
 async def test_migration_rollback_step_schedules_rollback_task() -> None:
+    """Rolling back schedules the rollback task and deletes the issue."""
     entry = SimpleNamespace(data={})
     flow = MigrationRollbackRepairFlow("entry2")
     flow.hass = _make_hass(entry)
@@ -208,6 +219,7 @@ async def test_migration_rollback_step_schedules_rollback_task() -> None:
 
 
 async def test_migration_rollback_step_no_entry_skips_task() -> None:
+    """With no config entry, the rollback step deletes the issue but schedules no task."""
     flow = MigrationRollbackRepairFlow("entry2")
     flow.hass = _make_hass(None)
 
@@ -221,6 +233,7 @@ async def test_migration_rollback_step_no_entry_skips_task() -> None:
 
 
 async def test_migration_rollback_ignore_deletes_issue() -> None:
+    """Ignoring the migration-rollback issue deletes it and finishes the flow."""
     flow = MigrationRollbackRepairFlow("entry2")
     flow.hass = _make_hass(None)
 

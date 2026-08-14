@@ -28,8 +28,7 @@ from homeassistant.components.truenas_ce.entity import (
 from homeassistant.components.truenas_ce.sensor_types import SENSOR_TYPES
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -40,6 +39,7 @@ from tests.common import MockConfigEntry
 async def test_cleanup_orphaned_entities_removes_stale_entity_and_empty_device(
     hass: HomeAssistant,
 ) -> None:
+    """Cleanup removes the orphaned entity and its now-empty device, keeping active and unrelated entities."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"})
     entry.add_to_hass(hass)
     coordinator = SimpleNamespace(last_update_success=True)
@@ -88,6 +88,7 @@ async def test_cleanup_orphaned_entities_removes_stale_entity_and_empty_device(
 async def test_cleanup_orphaned_entities_noop_after_failed_refresh(
     hass: HomeAssistant,
 ) -> None:
+    """Cleanup is skipped entirely when the last coordinator refresh failed."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"})
     entry.add_to_hass(hass)
     coordinator = SimpleNamespace(last_update_success=False)
@@ -174,8 +175,9 @@ def _fake_api(extra_responses: dict[str, Any] | None = None) -> SimpleNamespace:
 async def test_async_setup_entry_creates_entities_via_real_platform_setup(
     hass: HomeAssistant,
 ) -> None:
-    """A real ``async_setup_entry`` run forwards to every platform, so this
-    exercises ``entity.async_add_entities``'s live wiring (service
+    """A real ``async_setup_entry`` run forwards to every platform.
+
+    This exercises ``entity.async_add_entities``'s live wiring (service
     registration, dispatcher-connect, coordinator-identity check, entity
     creation) exactly as production does -- not reachable via a bare-instance
     coordinator since it needs the real ``entity_platform`` context var.
@@ -244,9 +246,10 @@ async def test_async_setup_entry_keeps_system_device_alive(
 async def test_async_setup_entry_creates_snapshottask_sensor_via_dispatcher(
     hass: HomeAssistant,
 ) -> None:
-    """A description's ``func`` must have a matching dispatcher entry in its
-    platform module -- a missing one raises ``KeyError`` and aborts that
-    platform's entire setup (the ``TrueNASSnapshotTaskSensor`` regression).
+    """A description's ``func`` must have a matching dispatcher entry in its platform module.
+
+    A missing one raises ``KeyError`` and aborts that platform's entire setup
+    (the ``TrueNASSnapshotTaskSensor`` regression).
     """
     snapshottask_row = {"id": 1, "dataset": "tank/data", "state": {"state": "PENDING"}}
     fake_api = _fake_api(
