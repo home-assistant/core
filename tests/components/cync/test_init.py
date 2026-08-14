@@ -52,7 +52,7 @@ async def test_migrate_unique_ids(
     )
     entityless_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1111")},
+        identifiers={(DOMAIN, "10000-1111")},
     )
     light_entry = entity_registry.async_get_or_create(
         Platform.LIGHT,
@@ -70,12 +70,12 @@ async def test_migrate_unique_ids(
     )
     switch_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1006")},
+        identifiers={(DOMAIN, "10000-1501")},
     )
     switch_entry = entity_registry.async_get_or_create(
         Platform.SWITCH,
         DOMAIN,
-        "10000-1101",
+        "10000-1501",
         config_entry=mock_config_entry,
         device_id=switch_device_entry.id,
     )
@@ -103,8 +103,8 @@ async def test_migrate_unique_ids(
     migrated_entityless_device = device_registry.async_get(entityless_device_entry.id)
     assert migrated_entityless_device is not None
     assert migrated_entityless_device.id == entityless_device_entry.id
-    assert (DOMAIN, "1000-2") in migrated_entityless_device.identifiers
-    assert (DOMAIN, "1000-1111") not in migrated_entityless_device.identifiers
+    assert (DOMAIN, "10000-2") in migrated_entityless_device.identifiers
+    assert (DOMAIN, "10000-1111") not in migrated_entityless_device.identifiers
 
     migrated_offline_entity = entity_registry.async_get(offline_entity_id)
     assert migrated_offline_entity is not None
@@ -112,10 +112,10 @@ async def test_migrate_unique_ids(
 
     current_switch = entity_registry.async_get(switch_entry.entity_id)
     assert current_switch is not None
-    assert current_switch.unique_id == "10000-1101"
+    assert current_switch.unique_id == "10000-1501"
     current_switch_device = device_registry.async_get(switch_device_entry.id)
     assert current_switch_device is not None
-    assert (DOMAIN, "1000-1006") in current_switch_device.identifiers
+    assert (DOMAIN, "10000-1501") in current_switch_device.identifiers
 
     colliding_mesh_entry = entity_registry.async_get_or_create(
         Platform.LIGHT,

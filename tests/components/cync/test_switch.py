@@ -164,5 +164,5 @@ async def test_switch(
         blocking=True,
     )
 
-    getattr(test_device, device_method).assert_called_once()
-    getattr(test_device, other_method).assert_not_called()
+    getattr(test_device, device_method).assert_awaited_once()
+    getattr(test_device, other_method).assert_not_awaited()

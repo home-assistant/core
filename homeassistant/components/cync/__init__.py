@@ -60,9 +60,6 @@ def _migrate_unique_ids(
         stage = _MIGRATE_ENTITIES_TO_TEMPORARY
         set_stage(stage)
 
-    if not id_map:
-        return
-
     entity_registry = er.async_get(hass)
 
     def get_entity_entries() -> list[er.RegistryEntry]:
