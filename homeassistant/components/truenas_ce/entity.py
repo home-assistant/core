@@ -20,6 +20,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.service import async_register_platform_entity_service
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
@@ -399,8 +400,16 @@ async def async_add_entities(
     descriptions = getattr(platform.platform, "SENSOR_TYPES", [])
 
     for service in services:
-        platform.async_register_entity_service(
-            service.name, service.schema, service.action
+        if hass.services.has_service(platform.platform_name, service.name):
+            continue
+        async_register_platform_entity_service(
+            hass,
+            platform.platform_name,
+            service.name,
+            admin_only=service.admin_only,
+            entity_domain=platform.domain,
+            func=service.action,
+            schema=service.schema,
         )
 
     add_lock = Lock()
@@ -430,8 +439,6 @@ async def async_add_entities(
         if coordinator is not this_coordinator:
             return
 
-        _cleanup_orphaned_entities(hass, config_entry, coordinator)
-
         async with add_lock:
             loaded = {
                 entity.unique_id
@@ -444,6 +451,11 @@ async def async_add_entities(
             if new_entities:
                 _LOGGER.debug("Adding %d new TrueNAS entities", len(new_entities))
                 await platform.async_add_entities(new_entities)
+
+        # Runs after entities are (re)added so a device that only just gained
+        # its first entity this pass (e.g. the System device on initial setup)
+        # is never misread as empty and deleted out from under them.
+        _cleanup_orphaned_entities(hass, config_entry, coordinator)
 
     await async_update_controller(this_coordinator)
 

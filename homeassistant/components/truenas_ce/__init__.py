@@ -19,6 +19,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -54,7 +55,6 @@ from .const import (
 from .coordinator import TrueNASConfigEntry, TrueNASCoordinator, get_truenas_coordinator
 from .entity import (
     TrueNASEntityDescription,
-    _cleanup_orphaned_entities,
     _composite_references,
     _is_uid_excluded,
     format_unique_id,
@@ -65,6 +65,7 @@ from .migration import (
     async_adopt_legacy_entities,
     async_notify_migration_result,
     finalize_legacy_adoption,
+    pending_legacy_records,
 )
 from .sensor_types import SENSOR_TYPES, TrueNASSensorEntityDescription
 
@@ -531,7 +532,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=SCHEMA_SERVICE_ALERT_LIST,
         supports_response=SupportsResponse.OPTIONAL,
     )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_PASSPHRASE_REMOVE,
         functools.partial(_handle_passphrase_remove, hass),
@@ -567,13 +569,23 @@ async def async_setup_entry(
     adopted = await async_adopt_legacy_entities(hass, config_entry)
 
     _migrate_data_size_units(hass, config_entry, coordinator)
-    _cleanup_orphaned_entities(hass, config_entry, coordinator)
 
+    # Orphaned-entity/empty-device cleanup runs from entity.async_add_entities
+    # instead, *after* each platform's own entities are (re)added -- doing it
+    # here first would see the System device just created above with zero
+    # entities yet and delete it before the platforms below ever attach one.
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    # Re-attach the freed legacy entity_ids now that the new entities exist, then
-    # report the outcome once (validation checks + guide link + rollback hint).
-    finalize_legacy_adoption(hass, adopted)
+    # Re-attach the freed legacy entity_ids now that the new entities exist.
+    # pending_legacy_records() re-derives this from *all* persisted records on
+    # every setup (not just this run's freshly adopted ones), so a record left
+    # pending on an earlier setup -- its entity was disabled or its monitored
+    # group off, so it did not exist yet -- still reclaims its id once that
+    # entity is finally created, without ever re-touching an already-resolved
+    # (or since manually renamed) one.
+    finalize_legacy_adoption(
+        hass, config_entry, pending_legacy_records(hass, config_entry)
+    )
     async_notify_migration_result(hass, config_entry, adopted)
 
     # Re-run entity discovery on every coordinator refresh so entities for newly

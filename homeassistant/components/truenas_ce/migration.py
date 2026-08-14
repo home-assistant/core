@@ -42,6 +42,7 @@ from .const import (
     MIGRATION_LEGACY_CONFIG,
     MIGRATION_LEGACY_ENTRY_ID,
     MIGRATION_RECORDS,
+    MIGRATION_RESOLVED_UNIQUE_IDS,
 )
 
 _LOGGER = getLogger(__name__)
@@ -118,15 +119,42 @@ async def async_adopt_legacy_entities(
     return records
 
 
+def pending_legacy_records(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> list[dict[str, Any]]:
+    """Return the reverse-map records not yet resolved.
+
+    Used to retry :func:`finalize_legacy_adoption` on every setup for a record
+    left pending by an earlier run -- its entity was disabled or its monitored
+    group off, so it did not exist yet. ``MIGRATION_RECORDS`` itself is the
+    complete, never-pruned history (needed intact for a full rollback); a
+    record is excluded here once its unique_id is recorded in
+    ``MIGRATION_RESOLVED_UNIQUE_IDS`` by :func:`_mark_resolved_records`, so an
+    already-resolved (or since manually renamed) record is never retried.
+    """
+    if DOMAIN == LEGACY_DOMAIN:
+        return []
+
+    resolved = set(config_entry.data.get(MIGRATION_RESOLVED_UNIQUE_IDS, []))
+    return [
+        record
+        for record in config_entry.data.get(MIGRATION_RECORDS, [])
+        if record[_R_UNIQUE_ID] not in resolved
+    ]
+
+
 def finalize_legacy_adoption(
-    hass: HomeAssistant, records: list[dict[str, Any]]
+    hass: HomeAssistant, config_entry: ConfigEntry, records: list[dict[str, Any]]
 ) -> None:
     """Re-attach the freed legacy entity_ids to the new entities.
 
     Called after the platforms have been set up so the new (``truenas_ce``)
-    entities already exist in the registry. Only acts on ``records`` freshly
-    returned by :func:`async_adopt_legacy_entities`, so it never overrides a
-    user's later manual rename on subsequent restarts.
+    entities already exist in the registry. The caller must only pass records
+    that are actually safe to (re)attach -- freshly adopted ones from
+    :func:`async_adopt_legacy_entities`, or still-pending ones from
+    :func:`pending_legacy_records`. A record whose entity reclaims its target
+    id this pass is recorded as resolved (see :func:`_mark_resolved_records`),
+    so a later manual rename is never fought by a subsequent retry.
     """
     if DOMAIN == LEGACY_DOMAIN or not records:
         return
@@ -143,19 +171,68 @@ def finalize_legacy_adoption(
         is not None
     ]
     _remap_and_restore(ent_reg, pairs)
+    _mark_resolved_records(hass, config_entry, records)
+
+
+def _mark_resolved_records(
+    hass: HomeAssistant, config_entry: ConfigEntry, attempted: list[dict[str, Any]]
+) -> None:
+    """Record which of ``attempted`` reclaimed their target id, for pending_legacy_records.
+
+    A record must never be retried once resolved -- a later retry could
+    otherwise force back a user's manual rename. ``MIGRATION_RECORDS`` itself
+    is left untouched (rollback needs the complete original history); records
+    still unresolved (entity absent, or a real collision under a different
+    id) are simply not added here, so a future retry can pick them up again.
+    """
+    ent_reg = er.async_get(hass)
+    newly_resolved = {
+        record[_R_UNIQUE_ID]
+        for record in attempted
+        if ent_reg.async_get_entity_id(
+            record[_R_ENTITY_DOMAIN], DOMAIN, record[_R_UNIQUE_ID]
+        )
+        == record[_R_ENTITY_ID]
+    }
+    if not newly_resolved:
+        return
+
+    already_resolved = set(config_entry.data.get(MIGRATION_RESOLVED_UNIQUE_IDS, []))
+    if not newly_resolved <= already_resolved:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                MIGRATION_RESOLVED_UNIQUE_IDS: sorted(
+                    already_resolved | newly_resolved
+                ),
+            },
+        )
 
 
 def _find_legacy_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> ConfigEntry | None:
-    """Find the old ``truenas`` config entry matching this one (by host)."""
-    candidates = hass.config_entries.async_entries(LEGACY_DOMAIN)
+    """Find the old ``truenas`` config entry matching this one (by host).
+
+    Only an exact host match is adopted. A single-legacy-entry fallback used
+    to adopt regardless of host, but that also fired for "migrate manually"
+    and for a plain new entry added while an unrelated legacy entry for a
+    *different* box happened to exist -- disabling and stripping that
+    unrelated entry's entities. ``async_step_migrate_import`` copies the
+    legacy entry's host verbatim into the new entry, so the normal takeover
+    path still matches exactly here as long as the user keeps the pre-filled
+    host.
+    """
     host = config_entry.data.get(CONF_HOST)
-    for entry in candidates:
-        if entry.data.get(CONF_HOST) == host:
-            return entry
-    # Single legacy entry with a differing host (e.g. host was normalized): adopt it.
-    return candidates[0] if len(candidates) == 1 else None
+    return next(
+        (
+            entry
+            for entry in hass.config_entries.async_entries(LEGACY_DOMAIN)
+            if entry.data.get(CONF_HOST) == host
+        ),
+        None,
+    )
 
 
 def _collect_legacy_records(

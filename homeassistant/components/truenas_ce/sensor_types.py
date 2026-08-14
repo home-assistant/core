@@ -973,6 +973,7 @@ class SensorService(NamedTuple):
     name: str
     schema: Any
     action: str
+    admin_only: bool = False
 
 
 SENSOR_SERVICES: tuple[SensorService, ...] = (
@@ -984,12 +985,32 @@ SENSOR_SERVICES: tuple[SensorService, ...] = (
     SensorService(
         SERVICE_DATASET_SNAPSHOT, SCHEMA_SERVICE_DATASET_SNAPSHOT, "snapshot"
     ),
-    SensorService(SERVICE_DATASET_LOCK, SCHEMA_SERVICE_DATASET_LOCK, "lock"),
-    SensorService(SERVICE_DATASET_UNLOCK, SCHEMA_SERVICE_DATASET_UNLOCK, "unlock"),
     SensorService(
-        SERVICE_PASSPHRASE_SET, SCHEMA_SERVICE_PASSPHRASE_SET, "passphrase_set"
+        SERVICE_DATASET_LOCK, SCHEMA_SERVICE_DATASET_LOCK, "lock", admin_only=True
     ),
-    SensorService(SERVICE_SYSTEM_REBOOT, SCHEMA_SERVICE_SYSTEM_REBOOT, "restart"),
-    SensorService(SERVICE_SYSTEM_SHUTDOWN, SCHEMA_SERVICE_SYSTEM_SHUTDOWN, "stop"),
+    SensorService(
+        SERVICE_DATASET_UNLOCK,
+        SCHEMA_SERVICE_DATASET_UNLOCK,
+        "unlock",
+        admin_only=True,
+    ),
+    SensorService(
+        SERVICE_PASSPHRASE_SET,
+        SCHEMA_SERVICE_PASSPHRASE_SET,
+        "passphrase_set",
+        admin_only=True,
+    ),
+    SensorService(
+        SERVICE_SYSTEM_REBOOT,
+        SCHEMA_SERVICE_SYSTEM_REBOOT,
+        "restart",
+        admin_only=True,
+    ),
+    SensorService(
+        SERVICE_SYSTEM_SHUTDOWN,
+        SCHEMA_SERVICE_SYSTEM_SHUTDOWN,
+        "stop",
+        admin_only=True,
+    ),
     SensorService(SERVICE_SYSTEM_REFRESH, SCHEMA_SERVICE_SYSTEM_REFRESH, "refresh"),
 )

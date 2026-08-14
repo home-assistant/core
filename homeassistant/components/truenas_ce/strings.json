@@ -4,7 +4,6 @@
             "user": {
                 "description": "Set up TrueNAS integration.",
                 "data": {
-                    "name": "Name of the integration",
                     "host": "Host",
                     "api_key": "API key",
                     "verify_ssl": "Verify SSL certificate",
@@ -12,7 +11,6 @@
                     "data_unit": "Data size unit (GB or GiB)"
                 },
                 "data_description": {
-                    "name": "A friendly name to tell this TrueNAS instance apart from others, if you set up more than one.",
                     "host": "The hostname or IP address of your TrueNAS instance, without \"https://\", path or trailing slash.",
                     "api_key": "An API key generated in TrueNAS under Credentials > API Keys.",
                     "verify_ssl": "Verify the TrueNAS instance's SSL certificate. Disable only if you use a self-signed certificate you cannot otherwise validate.",
@@ -95,13 +93,11 @@
             "init": {
                 "title": "TrueNAS Options",
                 "data": {
-                    "poll_interval": "Poll interval (seconds)",
                     "data_unit": "Data size unit",
                     "behaviors": "Behaviour",
                     "monitored_groups": "Monitored groups"
                 },
                 "data_description": {
-                    "poll_interval": "How often, in seconds, to poll the TrueNAS instance for updated data.",
                     "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units.",
                     "behaviors": "Select which behaviours are active",
                     "monitored_groups": "Deselect groups you do not use to reduce sensor count"

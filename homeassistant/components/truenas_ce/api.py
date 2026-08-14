@@ -27,6 +27,8 @@ from aiotruenas.exceptions import (
     TrueNASWebSocketUnsupportedError,
 )
 
+from homeassistant.components.diagnostics import async_redact_data
+
 from .const import (
     ERR_API_NOT_FOUND,
     ERR_CERT_VERIFY_FAILED,
@@ -44,6 +46,7 @@ from .const import (
     ERR_UNKNOWN_HOSTNAME,
     ERR_WS_NOT_SUPPORTED,
     ERROR_API_FORMAT,
+    TO_REDACT,
 )
 
 _LOGGER = getLogger(__name__)
@@ -125,6 +128,7 @@ _EXCEPTION_ERR_MAP: tuple[tuple[type[TrueNASError], str], ...] = (
 
 def _summarize_payload(data: Any, limit: int = _LOG_PAYLOAD_LIMIT) -> str:
     """Return a compact, length-bounded description of an API payload."""
+    data = async_redact_data(data, TO_REDACT)
     if isinstance(data, list):
         shape = f"list[{len(data)}]"
     elif isinstance(data, dict):
@@ -317,7 +321,13 @@ class TrueNASAPI:
             return None
 
         self._error = ""
-        _LOGGER.debug("TrueNAS %s query: %s, %s", self._host, service, params)
+        if _LOGGER.isEnabledFor(DEBUG):
+            _LOGGER.debug(
+                "TrueNAS %s query: %s, %s",
+                self._host,
+                service,
+                async_redact_data(params, TO_REDACT),
+            )
 
         try:
             data = await self._client.call(service, params)

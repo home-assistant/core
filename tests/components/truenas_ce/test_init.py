@@ -801,7 +801,6 @@ async def test_async_setup_entry_wires_coordinator_and_platforms() -> None:
             init_module, "async_adopt_legacy_entities", new=AsyncMock(return_value=[])
         ),
         patch.object(init_module, "_migrate_data_size_units") as migrate_mock,
-        patch.object(init_module, "_cleanup_orphaned_entities") as cleanup_mock,
         patch.object(init_module, "finalize_legacy_adoption") as finalize_mock,
         patch.object(init_module, "async_notify_migration_result") as notify_mock,
         patch.object(init_module, "register_system_device") as register_device_mock,
@@ -813,7 +812,6 @@ async def test_async_setup_entry_wires_coordinator_and_platforms() -> None:
     coordinator.async_config_entry_first_refresh.assert_awaited_once()
     hass.config_entries.async_forward_entry_setups.assert_awaited_once()
     migrate_mock.assert_called_once()
-    cleanup_mock.assert_called_once()
     finalize_mock.assert_called_once()
     notify_mock.assert_called_once()
     register_device_mock.assert_called_once_with(hass, entry, coordinator)
@@ -836,7 +834,6 @@ async def test_async_setup_entry_refresh_listener_dispatches_update_signal() -> 
             init_module, "async_adopt_legacy_entities", new=AsyncMock(return_value=[])
         ),
         patch.object(init_module, "_migrate_data_size_units"),
-        patch.object(init_module, "_cleanup_orphaned_entities"),
         patch.object(init_module, "finalize_legacy_adoption"),
         patch.object(init_module, "async_notify_migration_result"),
         patch.object(init_module, "register_system_device"),

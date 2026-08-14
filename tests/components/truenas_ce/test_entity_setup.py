@@ -202,6 +202,45 @@ async def test_async_setup_entry_creates_entities_via_real_platform_setup(
     assert hass.states.async_entity_ids("sensor")
 
 
+async def test_async_setup_entry_keeps_system_device_alive(
+    hass: HomeAssistant,
+) -> None:
+    """Regression test: the System device must survive its own initial setup.
+
+    ``register_system_device`` creates it before the sensor platform attaches
+    any entity to it. Orphaned-entity/empty-device cleanup must only run
+    *after* that attachment, or the empty-device branch deletes it
+    immediately, leaving ``coordinator.system_device_id`` pointing at a
+    device that no longer exists.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "TrueNAS",
+            CONF_HOST: "truenas.local",
+            CONF_API_KEY: "test-key",
+            CONF_VERIFY_SSL: False,
+        },
+        options={CONF_MONITORED_GROUPS: []},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.truenas_ce.coordinator.TrueNASAPI",
+        return_value=_fake_api(),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data
+    dev_reg = dr.async_get(hass)
+    system_device = dev_reg.async_get(coordinator.system_device_id)
+    assert system_device is not None
+    assert er.async_entries_for_device(
+        er.async_get(hass), system_device.id, include_disabled_entities=True
+    )
+
+
 async def test_async_setup_entry_creates_snapshottask_sensor_via_dispatcher(
     hass: HomeAssistant,
 ) -> None:

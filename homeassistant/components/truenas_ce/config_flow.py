@@ -37,7 +37,6 @@ from .const import (
     CONF_DATA_UNIT,
     CONF_DATASET_PASSPHRASES,
     CONF_MONITORED_GROUPS,
-    CONF_POLL_INTERVAL,
     CONF_SYSTEM_ID,
     DEFAULT_BEHAVIORS,
     DEFAULT_CRONJOB_SKIP_DISABLED,
@@ -45,7 +44,6 @@ from .const import (
     DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
     DEFAULT_MONITORED_GROUPS,
-    DEFAULT_POLL_INTERVAL,
     DEFAULT_SSL_VERIFY,
     DOMAIN,
     ERR_API_NOT_FOUND,
@@ -87,9 +85,6 @@ _API_KEY_SELECTOR = selector.TextSelector(
 def _base_schema(truenas_config: Mapping[str, Any]) -> vol.Schema:
     """Generate base schema."""
     base_schema = {
-        vol.Required(
-            CONF_NAME, default=truenas_config.get(CONF_NAME, DEFAULT_DEVICE_NAME)
-        ): str,
         vol.Required(
             CONF_HOST, default=truenas_config.get(CONF_HOST, DEFAULT_HOST)
         ): str,
@@ -164,7 +159,6 @@ def _options_schema(options: Mapping[str, Any]) -> vol.Schema:
     """Generate the options-flow schema."""
     behaviors = options.get(CONF_BEHAVIORS, DEFAULT_BEHAVIORS)
     monitored = options.get(CONF_MONITORED_GROUPS, DEFAULT_MONITORED_GROUPS)
-    poll = str(options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL))
     data_unit = options.get(CONF_DATA_UNIT, DEFAULT_DATA_UNIT)
 
     behavior_options = [
@@ -196,18 +190,6 @@ def _options_schema(options: Mapping[str, Any]) -> vol.Schema:
 
     return vol.Schema(
         {
-            vol.Required(CONF_POLL_INTERVAL, default=poll): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        selector.SelectOptionDict(value="5", label="5 s"),
-                        selector.SelectOptionDict(value="10", label="10 s"),
-                        selector.SelectOptionDict(value="30", label="30 s"),
-                        selector.SelectOptionDict(value="60", label="60 s"),
-                        selector.SelectOptionDict(value="120", label="120 s"),
-                        selector.SelectOptionDict(value="300", label="300 s"),
-                    ]
-                )
-            ),
             vol.Required(CONF_DATA_UNIT, default=data_unit): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
@@ -263,7 +245,8 @@ def _map_error_to_ha(errorcode: str) -> str:
 def configured_instances(hass: HomeAssistant) -> set[str]:
     """Return a set of configured instances."""
     return {
-        entry.data[CONF_NAME] for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data.get(CONF_NAME, DEFAULT_DEVICE_NAME)
+        for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
 
@@ -374,10 +357,11 @@ async def _async_probe_candidate(host: str) -> bool:
     for scheme in ("wss", "ws"):
         api = TrueNASAPI(host, "-", verify_ssl=False, scheme=scheme)
         try:
-            if not await _async_try_connect(
-                api, host, f"probe ({scheme}) is not reachable"
-            ):
-                continue
+            # A rejected bogus key surfaces as connect() returning False with
+            # api.error == ERR_INVALID_KEY, not as a truthy connect() result --
+            # so api.error must be checked regardless of the connect outcome,
+            # or every genuine TrueNAS probe is misread as "not reachable".
+            await _async_try_connect(api, host, f"probe ({scheme}) is not reachable")
             if api.error == ERR_INVALID_KEY:
                 return True
         finally:
@@ -412,6 +396,31 @@ async def _async_get_system_id(api: TrueNASAPI, host: str) -> str | None:
         )
 
     return None
+
+
+# ---------------------------
+#   _async_get_hostname
+# ---------------------------
+async def _async_get_hostname(api: TrueNASAPI, host: str) -> str:
+    """Fetch ``system.info.hostname``, falling back to DEFAULT_DEVICE_NAME.
+
+    Used to auto-generate the config entry's name/title from the device
+    itself instead of asking the user to type one; a failed lookup must
+    never block setup, so any problem here is swallowed and treated the
+    same as "use the generic default".
+    """
+    try:
+        info = await api.query("system.info")
+    except Exception as err:
+        _LOGGER.debug("TrueNAS %s: failed to read system.info: %s", host, err)
+        return DEFAULT_DEVICE_NAME
+
+    if isinstance(info, dict):
+        hostname = info.get("hostname")
+        if isinstance(hostname, str) and hostname:
+            return hostname
+
+    return DEFAULT_DEVICE_NAME
 
 
 # ---------------------------
@@ -467,6 +476,15 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
             system_id = await _async_get_system_id(api, config.get(CONF_HOST, ""))
             if system_id:
                 config[CONF_SYSTEM_ID] = system_id
+            # Only auto-derive the name on a genuinely new entry. A legacy
+            # migration or an existing entry (reauth/reconfigure) pre-seeds
+            # this from data the user never re-enters, and legacy migration
+            # in particular requires keeping the exact original value so
+            # unique_ids still match (see async_step_migrate_import).
+            if not config.get(CONF_NAME):
+                config[CONF_NAME] = await _async_get_hostname(
+                    api, config.get(CONF_HOST, "")
+                )
         await api.disconnect()
 
         if not conn:
@@ -533,12 +551,13 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         # let the same host in again under a different name).
         self._async_abort_entries_match({CONF_HOST: truenas_config[CONF_HOST]})
 
-        # Check if instance with this name already exists
-        if truenas_config[CONF_NAME] in configured_instances(self.hass):
-            errors["base"] = "name_exists"
+        # The name is derived from the device itself (see _validate_connection),
+        # not chosen by the user, so it is only known -- and only worth
+        # checking for a collision -- once a connection attempt succeeds.
+        await self._validate_connection(truenas_config, errors)
 
-        if not errors:
-            await self._validate_connection(truenas_config, errors)
+        if not errors and truenas_config[CONF_NAME] in configured_instances(self.hass):
+            errors["base"] = "name_exists"
 
         # Once the box's stable identity is known, key the entry's unique_id
         # on it rather than on the (zeroconf-set) host, so rediscovery and
@@ -867,7 +886,7 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
-                    title=reconfigure_entry.data[CONF_NAME],
+                    title=reconfigure_entry.data.get(CONF_NAME, DEFAULT_DEVICE_NAME),
                     data_updates=truenas_config,
                 )
 

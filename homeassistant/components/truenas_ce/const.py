@@ -25,7 +25,7 @@ SIGNAL_UPDATE_SENSORS = "update_sensors"
 LINK_STATE_UP = "LINK_STATE_UP"
 LINK_STATE_DOWN = "LINK_STATE_DOWN"
 
-DEFAULT_HOST = "trueas.local"
+DEFAULT_HOST = "truenas.local"
 
 # Conversion factor: kilobits per second to kibibytes per second
 # (1000 / 8192 = ~0.12207)
@@ -226,13 +226,18 @@ BUTTON_MIGRATION_ROLLBACK = "migration_rollback"
 ISSUE_MIGRATION_ROLLBACK = "migration_rollback_available"
 
 # Community-Edition migration state, persisted on the (new) config entry's data.
-# MIGRATION_DONE is the idempotency flag; MIGRATION_RECORDS holds the reverse map
-# (unique_id -> old entity_id + registry overrides) so the adoption can be rolled
-# back; MIGRATION_LEGACY_ENTRY_ID/​_CONFIG remember the disabled legacy entry and
-# a snapshot of its data+options for a clean rollback; MIGRATION_BACKUP_KEY is the
-# .storage key of the standalone safety snapshot. See migration.py.
+# MIGRATION_DONE is the idempotency flag; MIGRATION_RECORDS holds the complete,
+# never-pruned reverse map (unique_id -> old entity_id + registry overrides) so
+# the adoption can always be fully rolled back; MIGRATION_RESOLVED_UNIQUE_IDS
+# tracks which of those records have already reclaimed their id, so retries of
+# the still-pending ones (see pending_legacy_records) never revisit a resolved
+# record and fight a user's later manual rename; MIGRATION_LEGACY_ENTRY_ID/​
+# _CONFIG remember the disabled legacy entry and a snapshot of its data+options
+# for a clean rollback; MIGRATION_BACKUP_KEY is the .storage key of the
+# standalone safety snapshot. See migration.py.
 MIGRATION_DONE = "ce_migration_done"
 MIGRATION_RECORDS = "ce_migration_records"
+MIGRATION_RESOLVED_UNIQUE_IDS = "ce_migration_resolved_unique_ids"
 MIGRATION_LEGACY_ENTRY_ID = "ce_migration_legacy_entry_id"
 MIGRATION_LEGACY_CONFIG = "ce_migration_legacy_config"
 MIGRATION_BACKUP_KEY = "ce_migration_backup_key"

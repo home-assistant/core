@@ -28,6 +28,7 @@ from homeassistant.components.truenas_ce.const import (
     DEFAULT_DATA_UNIT,
     DEFAULT_HOST,
     DOMAIN,
+    ERR_CONNECTION_REFUSED,
     ERR_INVALID_KEY,
     LEGACY_DOMAIN,
 )
@@ -43,7 +44,6 @@ _API_PATH = "homeassistant.components.truenas_ce.config_flow.TrueNASAPI"
 
 def _user_input(**overrides: object) -> dict[str, object]:
     data: dict[str, object] = {
-        CONF_NAME: "TrueNAS",
         CONF_HOST: "truenas.example.com",
         CONF_API_KEY: "test-key",
         CONF_VERIFY_SSL: False,
@@ -154,9 +154,20 @@ async def test_user_flow_aborts_on_duplicate_system_id(hass: HomeAssistant) -> N
     )
     existing.add_to_hass(hass)
 
+    # A distinct hostname (for system.info) so the auto-derived name never
+    # collides with the existing entry's, keeping this test focused on the
+    # system_id-based dedup rather than the unrelated name check.
+    _query_responses = {
+        "system.global.id": "box-guid-123",
+        "system.info": {"hostname": "new-host"},
+    }
+
+    async def _query(method: str, *args: object, **kwargs: object) -> object:
+        return _query_responses.get(method)
+
     with (
         patch(f"{_API_PATH}.connection_test", AsyncMock(return_value=(True, None))),
-        patch(f"{_API_PATH}.query", AsyncMock(return_value="box-guid-123")),
+        patch(f"{_API_PATH}.query", AsyncMock(side_effect=_query)),
         patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -164,16 +175,42 @@ async def test_user_flow_aborts_on_duplicate_system_id(hass: HomeAssistant) -> N
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            _user_input(**{CONF_HOST: "new-host.example.com", CONF_NAME: "New Name"}),
+            _user_input(**{CONF_HOST: "new-host.example.com"}),
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 async def test_user_flow_name_already_exists(hass: HomeAssistant) -> None:
+    """Two different devices whose auto-derived name collides must not both be added.
+
+    The name is no longer user-chosen (see _async_get_hostname), so this
+    exercises the case where system.info carries no usable hostname for
+    either box and both fall back to the same DEFAULT_DEVICE_NAME.
+    """
     existing = MockConfigEntry(
-        domain=DOMAIN, data=_user_input(**{CONF_HOST: "other-host.example.com"})
+        domain=DOMAIN,
+        data=_user_input(**{CONF_HOST: "other-host.example.com", CONF_NAME: "TrueNAS"}),
     )
+    existing.add_to_hass(hass)
+
+    with (
+        patch(f"{_API_PATH}.connection_test", AsyncMock(return_value=(True, None))),
+        patch(f"{_API_PATH}.query", AsyncMock(return_value=None)),
+        patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_input()
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "name_exists"}
+
+
+async def test_user_flow_aborts_on_duplicate_host(hass: HomeAssistant) -> None:
+    existing = MockConfigEntry(domain=DOMAIN, data=_user_input())
     existing.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -181,20 +218,6 @@ async def test_user_flow_name_already_exists(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], _user_input()
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "name_exists"}
-
-
-async def test_user_flow_aborts_on_duplicate_host(hass: HomeAssistant) -> None:
-    existing = MockConfigEntry(domain=DOMAIN, data=_user_input(**{CONF_NAME: "Other"}))
-    existing.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], _user_input(**{CONF_NAME: "New Name"})
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -225,6 +248,43 @@ def _zeroconf_discovery_info(host: str = "192.168.1.50") -> ZeroconfServiceInfo:
         name="truenas._http._tcp.local.",
         properties={},
     )
+
+
+async def test_async_probe_candidate_true_on_rejected_bogus_key() -> None:
+    """A rejected bogus key proves a genuine TrueNAS endpoint.
+
+    Regression test: connect() reports a rejected key as False plus
+    api.error == ERR_INVALID_KEY, not as a truthy return value; the probe
+    must still detect this as "this is TrueNAS" instead of "unreachable".
+    """
+
+    async def _fake_connect(
+        self: config_flow.TrueNASAPI, *, quiet: bool = False
+    ) -> bool:
+        self._error = ERR_INVALID_KEY
+        return False
+
+    with (
+        patch(f"{_API_PATH}.connect", _fake_connect),
+        patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
+    ):
+        assert await config_flow._async_probe_candidate("192.168.1.50") is True
+
+
+async def test_async_probe_candidate_false_when_unreachable() -> None:
+    """A candidate that never completes the handshake is not mistaken for TrueNAS."""
+
+    async def _fake_connect(
+        self: config_flow.TrueNASAPI, *, quiet: bool = False
+    ) -> bool:
+        self._error = ERR_CONNECTION_REFUSED
+        return False
+
+    with (
+        patch(f"{_API_PATH}.connect", _fake_connect),
+        patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
+    ):
+        assert await config_flow._async_probe_candidate("192.168.1.50") is False
 
 
 async def test_zeroconf_flow_confirms_and_creates_entry(hass: HomeAssistant) -> None:
@@ -426,7 +486,6 @@ async def test_migrate_import_prefills_and_creates_entry(hass: HomeAssistant) ->
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "TrueNAS",
             CONF_HOST: "legacy.example.com",
             CONF_API_KEY: "old-key",
             CONF_VERIFY_SSL: True,
@@ -436,6 +495,7 @@ async def test_migrate_import_prefills_and_creates_entry(hass: HomeAssistant) ->
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "legacy.example.com"
+    assert result["data"][CONF_NAME] == "TrueNAS"
     assert result["options"] == {CONF_POLL_INTERVAL: "30"}
 
 
@@ -619,7 +679,6 @@ async def test_options_flow_updates_entry(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
 
     new_options = {
-        CONF_POLL_INTERVAL: "30",
         CONF_DATA_UNIT: "GB",
         CONF_BEHAVIORS: [],
         CONF_MONITORED_GROUPS: [],

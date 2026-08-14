@@ -29,7 +29,9 @@ def test_utc_from_timestamp() -> None:
         (12345, None),
     ],
 )
-def test_human_date_to_utc(date_str, expected) -> None:
+def test_human_date_to_utc(
+    date_str: str | int | None, expected: datetime | None
+) -> None:
     assert ap.human_date_to_utc(date_str) == expected
 
 
@@ -99,7 +101,7 @@ def test_from_entry_round_digits_ignored_for_non_float() -> None:
         ("unrecognized", False),
     ],
 )
-def test_from_entry_bool_coercion(value, expected) -> None:
+def test_from_entry_bool_coercion(value: bool | str, expected: bool) -> None:
     assert ap.from_entry_bool({"a": value}, "a") is expected
 
 
