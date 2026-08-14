@@ -298,7 +298,6 @@ class OllamaBaseLLMEntity(Entity):
             # Keep all messages
             return
 
-        # -1 means keep no previous rounds
         max_rounds = max(max_messages, 0)
 
         # Ignore the in progress user message
