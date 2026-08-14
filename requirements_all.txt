@@ -294,7 +294,7 @@ aiohasupervisor==0.6.0
 aiohomeconnect==0.39.1
 
 # homeassistant.components.homekit_controller
-aiohomekit==4.0.0
+aiohomekit==4.0.1
 
 # homeassistant.components.hortimax
 aiohortos==0.3.1
