@@ -565,7 +565,7 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
-    if SHELLY_WALL_DISPLAY_MODEL_PREFIX in model:
+    if model.startswith(SHELLY_WALL_DISPLAY_MODEL_PREFIX):
         return WALL_DISPLAY_RELEASE_URL
 
     if beta:
