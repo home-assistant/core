@@ -224,10 +224,10 @@ async def test_migrate_overlapping_unique_ids(
     )
     interrupted_chained_entity = entity_registry.async_get(chained_entity.entity_id)
     assert interrupted_chained_entity is not None
-    assert interrupted_chained_entity.unique_id == "1000-1101"
+    assert interrupted_chained_entity.unique_id == "10000-1101"
     interrupted_first_entity = entity_registry.async_get(first_entity.entity_id)
     assert interrupted_first_entity is not None
-    assert interrupted_first_entity.unique_id == "1000-1"
+    assert interrupted_first_entity.unique_id == "10000-1"
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
