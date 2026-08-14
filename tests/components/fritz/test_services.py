@@ -49,8 +49,8 @@ async def test_service_set_guest_wifi_password(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     with patch(
@@ -77,8 +77,8 @@ async def test_service_set_guest_wifi_password_unknown_parameter(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -108,8 +108,8 @@ async def test_service_set_guest_wifi_password_service_not_supported(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -161,8 +161,8 @@ async def test_service_dial(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     with patch(
@@ -193,8 +193,8 @@ async def test_service_dial_unknown_parameter(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -226,8 +226,8 @@ async def test_service_dial_wrong_parameter(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -276,8 +276,8 @@ async def test_service_dial_service_not_supported(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -309,8 +309,8 @@ async def test_service_dial_failed(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 

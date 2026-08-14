@@ -19,6 +19,11 @@ if TYPE_CHECKING:
 DOMAIN: Final = "knx"
 KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
 
+# Prefix of device identifiers created via the `knx/create_device` websocket
+# command (see websocket.py). A YAML `device.id` matching this prefix is
+# assumed to reference such a device verbatim and is not slugified.
+UI_DEVICE_ID_PREFIX: Final = "knx_vdev_"
+
 # Address is used for configuration and services by the
 # same functions so the key has to match
 KNX_ADDRESS: Final = "address"
@@ -90,6 +95,7 @@ CONF_KNX_SECURE_USER_PASSWORD: Final = "user_password"
 CONF_KNX_SECURE_DEVICE_AUTHENTICATION: Final = "device_authentication"
 
 
+CONF_DEFAULT_ENTITY_ID: Final = "default_entity_id"
 CONF_CONTEXT_TIMEOUT: Final = "context_timeout"
 CONF_IGNORE_INTERNAL_STATE: Final = "ignore_internal_state"
 CONF_PAYLOAD_LENGTH: Final = "payload_length"
@@ -200,12 +206,15 @@ SUPPORTED_PLATFORMS_UI: Final = {
     Platform.FAN,
     Platform.DATETIME,
     Platform.LIGHT,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TEXT,
     Platform.TIME,
+    Platform.WEATHER,
 }
 
 # Map KNX controller modes to HA modes. This list might not be complete.
@@ -276,3 +285,16 @@ class SceneConf:
     """Common config keys for scene."""
 
     SCENE_NUMBER: Final = "scene_number"
+
+
+class SelectConf:
+    """Config keys for select."""
+
+    # shared between YAML and UI
+    OPTIONS: Final = "options"
+    OPTION: Final = "option"
+    # UI only
+    OPTIONS_SOURCE: Final = "options_source"
+    GA_ENUM: Final = "ga_enum"
+    GA_CUSTOM: Final = "ga_custom"
+    CUSTOM_OPTIONS: Final = "custom_options"

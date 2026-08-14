@@ -339,7 +339,9 @@ async def test_default_entity_and_device_name(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({("mqtt", "helloworld")})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "helloworld"), entry.entry_id
+    )
     assert device is not None
     assert device.name == device_name
 
@@ -847,7 +849,9 @@ async def test_loading_subentries(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id = next(iter(entry.subentries))
     # Each subentry has one device
-    device = device_registry.async_get_device({("mqtt", subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", subentry_id), entry.entry_id
+    )
     assert device is not None
     for object_id, component in mqtt_config_subentries_data[0]["data"][
         "components"
@@ -899,7 +903,9 @@ async def test_loading_subentry_with_bad_component_schema(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id = next(iter(entry.subentries))
     # Each subentry has one device
-    device = device_registry.async_get_device({("mqtt", subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", subentry_id), entry.entry_id
+    )
     assert device is None
     assert (
         "Schema violation occurred when trying to set up entity from subentry"
@@ -929,7 +935,9 @@ async def test_qos_on_mqtt_device_from_subentry(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry_id = next(iter(entry.subentries))
     # Each subentry has one device
-    device = device_registry.async_get_device({("mqtt", subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", subentry_id), entry.entry_id
+    )
     assert device is not None
     assert hass.states.get("notify.milk_notifier_milkman_alert") is not None
     await hass.services.async_call(

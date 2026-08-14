@@ -56,7 +56,7 @@
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.2,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 22.2,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',
@@ -73,6 +73,10 @@
     'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -93,6 +97,6 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.0.0',
-    'via_device_id': <ANY>,
+    'via_device_id': None,
   })
 # ---

@@ -64,6 +64,9 @@
       "priority_status": {
         "name": "Priority status"
       },
+      "room_average_temperature": {
+        "name": "Room average temperature"
+      },
       "room_humidity": {
         "name": "Room humidity"
       },

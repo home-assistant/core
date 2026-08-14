@@ -17,6 +17,8 @@ from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 from .helpers import technove_exception_handler
 
+PARALLEL_UPDATES = 1
+
 
 async def _set_charging_enabled(
     coordinator: TechnoVEDataUpdateCoordinator, enabled: bool

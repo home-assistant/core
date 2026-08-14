@@ -80,12 +80,12 @@ def product_search(api_client: PicnicAPI, product_name: str | None) -> str | Non
 
     search_result = api_client.search(product_name)
 
-    if not search_result or "items" not in search_result[0]:
+    if not search_result or not search_result.items:
         return None
 
     # Return the first valid result
-    for item in search_result[0]["items"]:
-        if "name" in item:
-            return str(item["id"])
+    for item in search_result.items:
+        if item.name:
+            return str(item.id)
 
     return None

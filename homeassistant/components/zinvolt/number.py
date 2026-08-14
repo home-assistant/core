@@ -44,7 +44,11 @@ NUMBERS: tuple[ZinvoltBatteryStateDescription, ...] = (
             battery_id, value
         ),
         native_min_value=0,
-        max_fn=lambda state: state.battery.global_settings.max_output_limit,
+        max_fn=lambda state: (
+            2000
+            if state.battery.global_settings.max_output_unlocked
+            else state.battery.global_settings.max_output_limit
+        ),
     ),
     ZinvoltBatteryStateDescription(
         key="upper_threshold",

@@ -30,7 +30,7 @@ STEAM_STATUSES = {
     5: STATE_LOOKING_TO_TRADE,
     6: STATE_LOOKING_TO_PLAY,
 }
-STEAM_API_URL = "https://steamcdn-a.akamaihd.net/steam/apps/"
+STEAM_API_URL = "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/"
 STEAM_HEADER_IMAGE_FILE = "header.jpg"
 STEAM_MAIN_IMAGE_FILE = "capsule_616x353.jpg"
 STEAM_ICON_URL = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/"
