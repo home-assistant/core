@@ -690,6 +690,9 @@ ZEROCONF = {
                 "vendor": "tailwind",
             },
         },
+        {
+            "domain": "truenas_ce",
+        },
     ],
     "_hue._tcp.local.": [
         {
