@@ -60,6 +60,16 @@ async def async_setup_entry(
     )
 
 
+def _get_todo_items(calendar: caldav.Calendar) -> list[TodoItem]:
+    """Fetch and parse todo items."""
+    results = calendar.search(todo=True, include_completed=True)
+    return [
+        todo_item
+        for resource in results
+        if (todo_item := _todo_item(resource)) is not None
+    ]
+
+
 def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
     """Convert a caldav Todo into a TodoItem."""
     if (
@@ -108,18 +118,9 @@ class WebDavTodoListEntity(TodoListEntity):
 
     async def async_update(self) -> None:
         """Update To-do list entity state."""
-        results = await self.hass.async_add_executor_job(
-            partial(
-                self._calendar.search,
-                todo=True,
-                include_completed=True,
-            )
+        self._attr_todo_items = await self.hass.async_add_executor_job(
+            _get_todo_items, self._calendar
         )
-        self._attr_todo_items = [
-            todo_item
-            for resource in results
-            if (todo_item := _todo_item(resource)) is not None
-        ]
 
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:

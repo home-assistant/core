@@ -9,9 +9,7 @@ from typing import Any, override
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -22,7 +20,6 @@ from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_ti
 from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
-    DOMAIN,
     KEY_CURRENT_STATUS,
     KEY_CUSTOM_CROP,
     KEY_CUSTOM_SHADE,
@@ -45,7 +42,6 @@ from .const import (
     SCHEDULE_TYPE_FIXED,
     SCHEDULE_TYPE_FLEX,
     SERVICE_SET_ZONE_MOISTURE,
-    SERVICE_START_MULTIPLE_ZONES,
     SERVICE_START_WATERING,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
@@ -80,20 +76,12 @@ ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
 ATTR_SCHEDULE_TYPE = "Type"
-ATTR_SORT_ORDER = "sortOrder"
 ATTR_WATERING_DURATION = "Watering Duration seconds"
 ATTR_ZONE_NUMBER = "Zone number"
 ATTR_ZONE_SHADE = "Shade"
 ATTR_ZONE_SLOPE = "Slope"
 ATTR_ZONE_SUMMARY = "Summary"
 ATTR_ZONE_TYPE = "Type"
-
-START_MULTIPLE_ZONES_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_DURATION): cv.ensure_list_csv,
-    }
-)
 
 
 async def async_setup_entry(
@@ -102,46 +90,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Rachio switches."""
-    zone_entities = []
     has_flex_sched = False
     entities = await hass.async_add_executor_job(_create_entities, hass, config_entry)
     for entity in entities:
-        if isinstance(entity, RachioZone):
-            zone_entities.append(entity)
         if isinstance(entity, RachioSchedule) and entity.type == SCHEDULE_TYPE_FLEX:
             has_flex_sched = True
 
     async_add_entities(entities)
-
-    def start_multiple(service: ServiceCall) -> None:
-        """Service to start multiple zones in sequence."""
-        zones_list = []
-        person = config_entry.runtime_data
-        entity_id = service.data[ATTR_ENTITY_ID]
-        duration = iter(service.data[ATTR_DURATION])
-        default_time = service.data[ATTR_DURATION][0]
-        entity_to_zone_id = {
-            entity.entity_id: entity.zone_id for entity in zone_entities
-        }
-
-        for count, data in enumerate(entity_id):
-            if data in entity_to_zone_id:
-                # Time can be passed as a list per zone,
-                # or one time for all zones
-                time = int(next(duration, default_time)) * 60
-                zones_list.append(
-                    {
-                        ATTR_ID: entity_to_zone_id.get(data),
-                        ATTR_DURATION: time,
-                        ATTR_SORT_ORDER: count,
-                    }
-                )
-
-        if len(zones_list) != 0:
-            person.start_multiple_zones(zones_list)
-            _LOGGER.debug("Starting zone(s) %s", entity_id)
-        else:
-            raise HomeAssistantError("No matching zones found in given entity_ids")
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -150,18 +105,6 @@ async def async_setup_entry(
             vol.Optional(ATTR_DURATION): cv.positive_int,
         },
         "turn_on",
-    )
-
-    # If only hose timers on account, none of these services apply
-    if not zone_entities:
-        return
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_START_MULTIPLE_ZONES,
-        start_multiple,
-        schema=START_MULTIPLE_ZONES_SCHEMA,
     )
 
     if has_flex_sched:

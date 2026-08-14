@@ -7,7 +7,6 @@ import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
     MODE_AWAY,
     MODE_NORMAL,
     PLATFORM_SCHEMA as HUMIDIFIER_PLATFORM_SCHEMA,
@@ -15,11 +14,11 @@ from homeassistant.components.humidifier import (
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
+    HumidifierEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_MODE,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -42,6 +41,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -104,6 +104,7 @@ async def async_setup_entry(
         config_entry.options,
         config_entry.entry_id,
         async_add_entities,
+        device=async_entity_id_to_device(hass, config_entry.options[CONF_HUMIDIFIER]),
     )
 
 
@@ -118,6 +119,7 @@ async def _async_setup_config(
     config: Mapping[str, Any],
     unique_id: str | None,
     async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
+    device: AnyDeviceEntry | None = None,
 ) -> None:
     name: str = config[CONF_NAME]
     switch_entity_id: str = config[CONF_HUMIDIFIER]
@@ -142,7 +144,6 @@ async def _async_setup_config(
     async_add_entities(
         [
             GenericHygrostat(
-                hass,
                 name=name,
                 switch_entity_id=switch_entity_id,
                 sensor_entity_id=sensor_entity_id,
@@ -159,6 +160,7 @@ async def _async_setup_config(
                 away_fixed=away_fixed,
                 sensor_stale_duration=sensor_stale_duration,
                 unique_id=unique_id,
+                device=device,
             )
         ]
     )
@@ -171,7 +173,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         name: str,
         switch_entity_id: str,
@@ -189,15 +190,13 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         away_fixed: bool | None,
         sensor_stale_duration: timedelta | None,
         unique_id: str | None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the hygrostat."""
         self._name = name
         self._switch_entity_id = switch_entity_id
         self._sensor_entity_id = sensor_entity_id
-        self.device_entry = async_entity_id_to_device(
-            hass,
-            switch_entity_id,
-        )
+        self.device_entry = device
         self._device_class = device_class or HumidifierDeviceClass.HUMIDIFIER
         self._min_cycle_duration = min_cycle_duration
         self._dry_tolerance = dry_tolerance
@@ -266,12 +265,17 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
         if (old_state := await self.async_get_last_state()) is not None:
-            if old_state.attributes.get(ATTR_MODE) == MODE_AWAY:
+            if (
+                old_state.attributes.get(HumidifierEntityStateAttribute.MODE)
+                == MODE_AWAY
+            ):
                 self._is_away = True
                 self._saved_target_humidity = self._target_humidity
                 self._target_humidity = self._away_humidity or self._target_humidity
-            if old_state.attributes.get(ATTR_HUMIDITY):
-                self._target_humidity = int(old_state.attributes[ATTR_HUMIDITY])
+            if old_state.attributes.get(HumidifierEntityStateAttribute.HUMIDITY):
+                self._target_humidity = int(
+                    old_state.attributes[HumidifierEntityStateAttribute.HUMIDITY]
+                )
             if old_state.attributes.get(ATTR_SAVED_HUMIDITY):
                 self._saved_target_humidity = int(
                     old_state.attributes[ATTR_SAVED_HUMIDITY]

@@ -118,8 +118,12 @@ async def test_stale_devices_removed(
     fixture = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
     await setup_integration(hass, mock_config_entry)
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "ata-unit-uuid-1")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "atw-unit-uuid-1")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ata-unit-uuid-1"), mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "atw-unit-uuid-1"), mock_config_entry.entry_id
+    )
 
     # Poof, now they're gone
     mock_melcloud_client.get_context.return_value = UserContext.model_validate(
@@ -136,11 +140,15 @@ async def test_stale_devices_removed(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "ata-unit-uuid-1")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "ata-unit-uuid-1"), mock_config_entry.entry_id
+        )
         is None
     )
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "atw-unit-uuid-1")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "atw-unit-uuid-1"), mock_config_entry.entry_id
+        )
         is None
     )
 
@@ -185,3 +193,42 @@ async def test_new_atw_unit_callback(
         if "heat_pump" in entity.entity_id
     ]
     assert atw_entities
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
+        pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+    ],
+)
+async def test_energy_update_cycle_fails(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test that a failing energy fetch clears the value without unloading the entry."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    assert coordinator.ata_energy["ata-unit-uuid-1"] is not None
+    assert coordinator.atw_energy["atw-unit-uuid-1"] is not None
+
+    mock_melcloud_client.get_energy_telemetry.side_effect = exception
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.ata_energy["ata-unit-uuid-1"] is None
+    assert coordinator.atw_energy["atw-unit-uuid-1"] is None
+
+    # Demonstrate a recovery
+    mock_melcloud_client.get_energy_telemetry.side_effect = None
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.ata_energy["ata-unit-uuid-1"] is not None
+    assert coordinator.atw_energy["atw-unit-uuid-1"] is not None

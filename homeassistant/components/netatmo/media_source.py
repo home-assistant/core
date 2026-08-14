@@ -1,5 +1,4 @@
 """Netatmo Media Source Implementation."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import datetime as dt
 import logging
@@ -15,9 +14,11 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DATA_CAMERAS, DATA_EVENTS, DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER
+from .coordinator import NetatmoConfigEntry, NetatmoDataHandler, async_get_loaded_entry
 
 _LOGGER = logging.getLogger(__name__)
 MIME_TYPE = "application/x-mpegURL"
@@ -29,7 +30,7 @@ class IncompatibleMediaSource(MediaSourceError):
 
 async def async_get_media_source(hass: HomeAssistant) -> NetatmoSource:
     """Set up Netatmo media source."""
-    return NetatmoSource(hass)
+    return NetatmoSource(hass, async_get_loaded_entry(hass))
 
 
 class NetatmoSource(MediaSource):
@@ -37,11 +38,24 @@ class NetatmoSource(MediaSource):
 
     name: str = MANUFACTURER
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: NetatmoConfigEntry | None) -> None:
         """Initialize Netatmo source."""
         super().__init__(DOMAIN)
         self.hass = hass
-        self.events = self.hass.data[DOMAIN][DATA_EVENTS]
+        self.entry = entry
+
+    @property
+    def _data_handler(self) -> NetatmoDataHandler | None:
+        """Return the data handler of the config entry, if it is loaded."""
+        if self.entry is None or self.entry.state is not ConfigEntryState.LOADED:
+            return None
+        return self.entry.runtime_data
+
+    @property
+    def events(self) -> dict[str, dict]:
+        """Return the camera events."""
+        data_handler = self._data_handler
+        return data_handler.events if data_handler else {}
 
     @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
@@ -85,7 +99,12 @@ class NetatmoSource(MediaSource):
             )
             title = f"{created} - {message}"
         else:
-            title = self.hass.data[DOMAIN][DATA_CAMERAS].get(camera_id, MANUFACTURER)
+            data_handler = self._data_handler
+            title = (
+                data_handler.cameras.get(camera_id, MANUFACTURER)
+                if data_handler
+                else MANUFACTURER
+            )
             thumbnail = None
 
         if event_id:

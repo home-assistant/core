@@ -919,6 +919,7 @@ async def test_extraction_functions(
         "script.test3",
     }
     assert set(script.entities_in_script(hass, "script.test1")) == {
+        "light.device_in_both",
         "light.in_both",
         "light.in_first",
     }

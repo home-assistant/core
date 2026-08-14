@@ -75,7 +75,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
-        config_entry: config_entries.ConfigEntry | None | UndefinedType = UNDEFINED,
+        config_entry: config_entries.ConfigEntry | UndefinedType | None = UNDEFINED,
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
@@ -101,8 +101,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             frame.report_usage(
                 "relies on ContextVar, but should pass the config entry explicitly.",
                 core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
                 custom_integration_behavior=frame.ReportBehavior.IGNORE,
-                breaks_in_ha_version="2026.8",
             )
 
             self.config_entry = config_entries.current_entry.get()
