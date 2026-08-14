@@ -4,7 +4,13 @@ from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from aiohortos import HortosAuthenticationError, HortosConnectionError
+from aiohortos import (
+    Device,
+    HortosAuthenticationError,
+    HortosConnectionError,
+    Readout,
+    Source,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -61,6 +67,71 @@ async def test_no_controllers_still_loads(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert not hass.states.async_entity_ids("sensor")
+
+
+async def test_new_controller_is_added(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hortos_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a controller that only shows up later is registered with its sources.
+
+    Sources resolve their controller from the registry when their first entity
+    is added, so the controller has to be there by then.
+    """
+    second_device = "HOR00000000.001"
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, second_device), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+    mock_hortos_client.get_devices.return_value = [
+        Device(name=DEVICE, label=DEVICE_LABEL, public_id="public-id"),
+        Device(name=second_device, label="Greenhouse Cabrio", public_id="public-id-2"),
+    ]
+    mock_hortos_client.get_latest_readouts.side_effect = lambda device_name: (
+        load_readouts()
+        if device_name == DEVICE
+        else [
+            Readout(
+                identifier="OutsideTemperature-Measured",
+                name="Outside temperature",
+                unit="DegreeCelsius",
+                source=Source(
+                    name="Weather station 001",
+                    type="WeatherStation",
+                    user_defined_name="Weerstation Cabrio",
+                ),
+                value=21.5,
+            )
+        ]
+    )
+
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    controller = device_registry.async_get_device_by_identifier(
+        (DOMAIN, second_device), mock_config_entry.entry_id
+    )
+    assert controller is not None
+    assert controller.name == "Greenhouse Cabrio"
+
+    source = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{second_device}::WeatherStation::Weather station 001"),
+        mock_config_entry.entry_id,
+    )
+    assert source is not None
+    assert source.via_device_id == controller.id
+
+    state = hass.states.get("sensor.weerstation_cabrio_outside_temperature")
+    assert state is not None
+    assert state.state == "21.5"
 
 
 async def test_auth_error_sets_error_state(

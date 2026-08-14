@@ -19,7 +19,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DOMAIN, LOGGER, MANUFACTURER, SCAN_INTERVAL
 
 type HortimaxConfigEntry = ConfigEntry[HortimaxCoordinator]
 
@@ -65,28 +65,17 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.client = client
-
-    @override
-    async def _async_setup(self) -> None:
-        """Discover the available controllers once."""
-        try:
-            self.devices = await self.client.get_devices()
-        except HortosAuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="invalid_auth"
-            ) from err
-        except HortosError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        self.devices = []
 
     @override
     async def _async_update_data(self) -> dict[str, HortimaxDeviceData]:
         """Fetch the latest value of every readout of every controller."""
         data: dict[str, HortimaxDeviceData] = {}
         try:
+            # Read the controller list every cycle, so a controller added in
+            # HortiMaX Pro is picked up without reloading the entry.
+            self.devices = await self.client.get_devices()
+            self._register_controllers()
             for device in self.devices:
                 device_data = HortimaxDeviceData(device=device)
                 sources: dict[str, tuple[str, str, str]] = {}
@@ -113,6 +102,26 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
                 translation_placeholders={"error": str(err)},
             ) from err
         return data
+
+    @callback
+    def _register_controllers(self) -> None:
+        """Register every controller, so its sources can point at it.
+
+        Sources resolve their ``via_device_id`` from the registry when their
+        first entity is added, so a controller has to be registered before the
+        listeners that build those entities run. A controller carries no
+        entities of its own, so nothing else would create it.
+        """
+        registry = dr.async_get(self.hass)
+        for device in self.devices:
+            registry.async_get_or_create(
+                config_entry_id=self.config_entry.entry_id,
+                identifiers={(DOMAIN, device.name)},
+                manufacturer=MANUFACTURER,
+                name=device.label or device.name,
+                model="HortiMaX Pro",
+                serial_number=device.name,
+            )
 
     @callback
     def _rename_changed_sources(
