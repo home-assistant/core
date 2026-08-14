@@ -6,6 +6,11 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from aioengiebelgium import (
+    AccountRelation,
+    BusinessAgreement,
+    ConsumptionAddress,
+    CustomerAccount,
+    CustomerAccountRelations,
     EanPrices,
     EngieBeCommunicationError,
     PricePeriod,
@@ -154,6 +159,35 @@ def _setup_no_address(mock_engie_client: MagicMock) -> None:
     )
 
 
+def _setup_empty_address(mock_engie_client: MagicMock) -> None:
+    """Set an address with empty street and house number so entity_ids fall back to the BAN."""
+    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
+        CustomerAccountRelations(
+            accounts=(
+                AccountRelation(
+                    id="account-1",
+                    admin=True,
+                    customer_account=CustomerAccount(
+                        customer_account_number="can-1",
+                        business_agreements=(
+                            BusinessAgreement(
+                                business_agreement_number=BAN,
+                                active=True,
+                                consumption_address=ConsumptionAddress(
+                                    street="",
+                                    house_number="",
+                                    postal_code="1000",
+                                    city="Brussels",
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        )
+    )
+
+
 @pytest.mark.parametrize(
     ("setup", "unique_id", "expected_entity_id"),
     [
@@ -186,6 +220,12 @@ def _setup_no_address(mock_engie_client: MagicMock) -> None:
             f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS",
             "sensor.000000000001_gas_offtake_price",
             id="no-address-ban-fallback",
+        ),
+        pytest.param(
+            _setup_empty_address,
+            f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS",
+            "sensor.000000000001_gas_offtake_price",
+            id="empty-address-ban-fallback",
         ),
     ],
 )

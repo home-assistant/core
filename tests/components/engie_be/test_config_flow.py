@@ -228,3 +228,37 @@ async def test_reauth_invalid_auth_recovery(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_setup_entry.called
+
+
+async def test_reauth_mfa_submit_errors_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_flow_client: MagicMock,
+    mock_auth_flow: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reauthentication recovers after an MFA submit error."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: PASSWORD, CONF_MFA_METHOD: "sms"}
+    )
+    assert result["step_id"] == "reauth_mfa"
+
+    mock_auth_flow.async_submit_mfa.side_effect = EngieBeMfaError("bad code")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": "000000"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_mfa"
+    assert result["errors"] == {"base": "invalid_mfa_code"}
+
+    mock_auth_flow.async_submit_mfa.side_effect = None
+    mock_auth_flow.async_submit_mfa.return_value = ("access", "refresh")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": "123456"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_setup_entry.called
