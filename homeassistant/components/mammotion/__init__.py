@@ -37,14 +37,17 @@ type MammotionConfigEntry = ConfigEntry[MammotionDevices]
 async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> bool:
     """Set up Mammotion Luba from a config entry."""
 
-    api = HomeAssistantMowerApi(ha_version="1.0.0", session=async_get_clientsession(hass))
+    api = HomeAssistantMowerApi(
+        ha_version="1.0.0", session=async_get_clientsession(hass)
+    )
     mammotion = api.mammotion
     account = entry.data.get(CONF_ACCOUNTNAME)
     password = entry.data.get(CONF_PASSWORD)
 
     mammotion_mowers: list[MammotionMowerData] = []
     mammotion_devices: MammotionDevices = MammotionDevices([])
-    store = MammotionConfigStore(hass)
+    store = MammotionConfigStore(hass, entry.entry_id)
+    await store.async_load_mower_data()
 
     if account and password:
         session = async_get_clientsession(hass)
@@ -80,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                 hass, entry, device, api, store
             )
 
-            await update_coordinator.async_restore_data()
+            update_coordinator.restore_data()
             await update_coordinator.async_config_entry_first_refresh()
 
             mammotion_mowers.append(
@@ -102,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_mammotion)
     )
     entry.async_on_unload(shutdown_mammotion)
+    entry.async_on_unload(store.async_flush_mower_data)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -144,7 +148,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -
 
 async def async_remove_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> None:
     """Remove a config entry."""
-    store = MammotionConfigStore(hass)
+    store = MammotionConfigStore(hass, entry.entry_id)
     await store.async_remove()
 
 

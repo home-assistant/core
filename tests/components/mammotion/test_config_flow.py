@@ -52,17 +52,14 @@ async def test_bluetooth_discovery_success(hass: HomeAssistant) -> None:
             data=discovery_info,
         )
 
-    # Bluetooth discovery goes to bluetooth_confirm step
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
-    # Confirm bluetooth step
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "wifi"
 
-    # Configure WiFi with credentials
     mock_http = MagicMock()
     mock_http.login_info.userInformation.userAccount = "user123"
     mock_http.login_v2 = AsyncMock(return_value=None)
@@ -389,7 +386,9 @@ async def test_reconfigure_flow_account_mismatch(hass: HomeAssistant) -> None:
     assert entry.data[CONF_ACCOUNTNAME] == "old@example.com"
 
 
-async def test_bluetooth_discovery_update_existing_entry(hass: HomeAssistant) -> None:
+async def test_bluetooth_discovery_update_existing_entry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test bluetooth discovery updates existing entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -399,7 +398,6 @@ async def test_bluetooth_discovery_update_existing_entry(hass: HomeAssistant) ->
     )
     entry.add_to_hass(hass)
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "Luba-ABC123")},
@@ -422,7 +420,6 @@ async def test_bluetooth_discovery_update_existing_entry(hass: HomeAssistant) ->
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    # Verify device registry was updated
     device_entry = device_registry.async_get(device_entry.id)
     assert (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff") in device_entry.connections
 
@@ -441,7 +438,6 @@ async def test_bluetooth_step_no_discovery_info(hass: HomeAssistant) -> None:
 
 async def test_user_step_filtering(hass: HomeAssistant) -> None:
     """Test user step filters discovered devices."""
-    # 1. Device already configured
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="AA:BB:CC:DD:EE:FF",
@@ -483,7 +479,9 @@ async def test_user_step_filtering(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_bluetooth_confirm_race_condition(hass: HomeAssistant) -> None:
+async def test_bluetooth_confirm_race_condition(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test bluetooth confirm step race condition where device is configured during flow."""
     discovery_info = _get_discovery_info()
     device = _get_mock_device()
@@ -495,8 +493,6 @@ async def test_bluetooth_confirm_race_condition(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    # Create a device entry that matches
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "Luba-ABC123")},

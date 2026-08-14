@@ -1,6 +1,5 @@
 """Provides the mammotion DataUpdateCoordinator."""
 
-from collections.abc import Mapping
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, override
 
@@ -10,7 +9,7 @@ from pymammotion.data.model.device import MowingDevice
 from pymammotion.homeassistant import HomeAssistantMowerApi
 
 from homeassistant.const import CONF_PASSWORD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config import MammotionConfigStore
@@ -94,13 +93,11 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
         )
         self.store = store
 
-    async def async_restore_data(self) -> None:
+    @callback
+    def restore_data(self) -> None:
         """Restore saved data."""
-        async with self.store.lock:
-            restored_data: Mapping[str, Any] | None = await self.store.async_load()
-
         mower_state = MowingDevice()
-        if restored_data and (mower_data := restored_data.get(self.device_name)):
+        if mower_data := self.store.mower_data.get(self.device_name):
             try:
                 mower_state = MowingDevice().from_dict(mower_data)
             except InvalidFieldValue:
@@ -110,19 +107,12 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
         if handle := self.api.mammotion.mower(self.device_name):
             handle.restore_device(mower_state)
 
-    async def async_save_data(self, data: MowingDevice) -> None:
-        """Save mower data to the store."""
-        async with self.store.lock:
-            current_store: dict[str, Any] = await self.store.async_load() or {}
-            current_store[self.device_name] = data.to_dict()
-            await self.store.async_save(current_store)
-
     @override
     async def _async_update_data(self) -> MowingDevice:
         """Get data from the device."""
         data = await self.api.update(self.device_name)
         if data is None:
             raise UpdateFailed(f"No data returned for {self.device_name}")
-        await self.async_save_data(data)
+        self.store.async_update_mower_data(self.device_name, data.to_dict())
 
         return data
