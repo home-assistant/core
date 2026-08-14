@@ -422,8 +422,9 @@ class ThermostatEntity(ClimateEntity):
     @callback
     def _handle_device_update(self) -> None:
         """Reconcile optimistic temperature state with a device update."""
-        if self._unconfirmed_temperature and self._temperature_matches_device(
-            self._unconfirmed_temperature
+        if self._unconfirmed_temperature and (
+            self.hvac_mode != self._unconfirmed_temperature.hvac_mode
+            or self._temperature_matches_device(self._unconfirmed_temperature)
         ):
             self._clear_unconfirmed_temperature()
         self.async_write_ha_state()

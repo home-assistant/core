@@ -875,6 +875,53 @@ async def test_unconfirmed_temperature_times_out(
     assert thermostat.attributes[ATTR_TEMPERATURE] == 19.0
 
 
+async def test_unconfirmed_temperature_clears_on_mode_update(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+    create_event: CreateEvent,
+) -> None:
+    """Test a confirmed mode change clears an obsolete optimistic temperature."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+                "coolCelsius": 18.0,
+            },
+        }
+    )
+    await setup_platform()
+
+    await common.async_set_temperature(hass, temperature=20.0)
+    await async_fire_temperature_debounce(hass)
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 20.0
+
+    await create_event(
+        {
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "OFF"],
+                "mode": "COOL",
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+                "coolCelsius": 18.0,
+            },
+        }
+    )
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 18.0
+
+
 async def test_temperature_and_mode_commands_are_serialized(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
