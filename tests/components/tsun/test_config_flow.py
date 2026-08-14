@@ -65,9 +65,7 @@ async def test_manual_logger_sn_fallback(
 @pytest.mark.parametrize(
     "metadata_error",
     [
-        pytest.param(
-            TsunConnectionError("status page unavailable"), id="unavailable"
-        ),
+        pytest.param(TsunConnectionError("status page unavailable"), id="unavailable"),
         pytest.param(TsunProtocolError("invalid status page"), id="invalid"),
     ],
 )
