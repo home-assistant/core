@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientConnectionError
 import pytest
 
+from homeassistant.components import twinkly
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.twinkly.const import DOMAIN
+from homeassistant.components.twinkly.const import DEVICE_TIMEOUT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -16,6 +17,16 @@ from . import setup_integration
 from .const import TEST_MAC, TEST_MODEL
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.usefixtures("mock_twinkly_client")
+async def test_client_is_given_a_longer_timeout(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the client is given a longer timeout than the library default."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert twinkly.Twinkly.call_args.kwargs["timeout"] == DEVICE_TIMEOUT
 
 
 @pytest.mark.usefixtures("mock_twinkly_client")
