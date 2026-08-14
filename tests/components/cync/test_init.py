@@ -249,6 +249,7 @@ async def test_migrate_overlapping_unique_ids(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    cync_client.shut_down.assert_awaited_once()
     assert (
         mock_config_entry.data["mesh_unique_ids_migration_pending"]
         == "devices_to_temporary"
@@ -256,9 +257,11 @@ async def test_migrate_overlapping_unique_ids(
     interrupted_chained_entity = entity_registry.async_get(chained_entity.entity_id)
     assert interrupted_chained_entity is not None
     assert interrupted_chained_entity.unique_id == "1000-1101"
+    assert interrupted_chained_entity.previous_unique_id == "1000-1111"
     interrupted_first_entity = entity_registry.async_get(first_entity.entity_id)
     assert interrupted_first_entity is not None
     assert interrupted_first_entity.unique_id == "1000-1"
+    assert interrupted_first_entity.previous_unique_id == "1000-1101"
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
