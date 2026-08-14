@@ -177,7 +177,7 @@ async def test_migrate_overlapping_unique_ids(
         for device in home.get_flattened_device_list()
         if isinstance(device, CyncLight)
     ]
-    lights[1].mesh_device_id = 1101
+    next(light for light in lights if light.device_id == 1111).mesh_device_id = 1101
 
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
