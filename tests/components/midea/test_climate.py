@@ -1461,7 +1461,7 @@ async def test_climate_state_snapshot(
 ) -> None:
     """Test async_setup_entry creates entities for each device type."""
     config_entry = mock_config_entry(device)
-    with patch("homeassistant.components.midea._PLATFORMS", [Platform.CLIMATE]):
+    with patch("homeassistant.components.midea.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, config_entry, device)
 
         await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

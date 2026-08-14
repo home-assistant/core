@@ -2,8 +2,6 @@
 
 from typing import cast, override
 
-from midealocal.device import MideaDevice
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -111,15 +109,6 @@ async def async_setup_entry(
 
 class MideaBinarySensor(MideaEntity, BinarySensorEntity):
     """Represent a Midea binary sensor."""
-
-    def __init__(
-        self,
-        device: MideaDevice,
-        description: BinarySensorEntityDescription,
-    ) -> None:
-        """Midea Binary sensor entity init."""
-        super().__init__(device, description.key)
-        self.entity_description = description
 
     @property
     @override
