@@ -1,9 +1,10 @@
 """Unit tests for __init__.py (setup/unload, entity cleanup, service handlers).
 
-Follows the same bare-instance / heavy-mock style as test_coordinator.py and
-test_migration.py: real ``homeassistant`` core types are importable without
-``pytest-homeassistant-custom-component``, so hass/entity registries/config
-entries are stood in with ``MagicMock``/``SimpleNamespace``.
+Most helpers here are pure functions tested with bare mocks/``SimpleNamespace``,
+like test_coordinator.py and test_migration.py. ``async_setup``/
+``async_setup_entry``/``async_unload_entry`` go through the real ``hass``
+fixture and ``MockConfigEntry`` instead, since they are HA's own config-entry
+lifecycle entrypoints.
 """
 
 from __future__ import annotations
@@ -32,23 +33,30 @@ from homeassistant.components.truenas_ce import (
     _referenced_unique_ids,
     _require_config_entry,
     _resolve_config_entry,
-    async_setup,
-    async_setup_entry,
-    async_unload_entry,
 )
 from homeassistant.components.truenas_ce.const import (
     CONF_DATASET_PASSPHRASES,
+    DOMAIN,
     MONITOR_GROUP_VMS,
+    SERVICE_ALERT_DISMISS,
+    SERVICE_ALERT_LIST,
     SERVICE_ALERT_PROPERTIES,
+    SERVICE_ALERT_RESTORE,
     SERVICE_ALERT_UUID,
     SERVICE_PASSPHRASE_DATASET_PATH,
+    SERVICE_PASSPHRASE_LIST,
+    SERVICE_PASSPHRASE_REMOVE,
 )
 from homeassistant.components.truenas_ce.helper import scaled_data_unit
 from homeassistant.components.truenas_ce.sensor_types import (
     TrueNASSensorEntityDescription,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 def _desc(**kwargs: Any) -> TrueNASSensorEntityDescription:
@@ -823,23 +831,30 @@ async def test_handle_passphrase_list_error_when_no_entry() -> None:
 # ---------------------------
 #   async_setup
 # ---------------------------
-async def test_async_setup_registers_all_services() -> None:
+async def test_async_setup_registers_all_services(hass: HomeAssistant) -> None:
     """``async_setup`` registers every one of the integration's five services."""
-    hass = MagicMock()
-    result = await async_setup(hass, {})
-    assert result is True
-    assert hass.services.async_register.call_count == 5
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    for service in (
+        SERVICE_ALERT_DISMISS,
+        SERVICE_ALERT_RESTORE,
+        SERVICE_ALERT_LIST,
+        SERVICE_PASSPHRASE_REMOVE,
+        SERVICE_PASSPHRASE_LIST,
+    ):
+        assert hass.services.has_service(DOMAIN, service)
 
 
 # ---------------------------
 #   async_setup_entry / async_unload_entry
 # ---------------------------
-async def test_async_setup_entry_wires_coordinator_and_platforms() -> None:
+async def test_async_setup_entry_wires_coordinator_and_platforms(
+    hass: HomeAssistant,
+) -> None:
     """Entry setup creates the coordinator, forwards platforms, and runs migration/adoption steps."""
-    hass = MagicMock()
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"}, entry_id="e1")
+    entry.add_to_hass(hass)
     hass.config_entries.async_forward_entry_setups = AsyncMock()
-    entry = _config_entry(entry_id="e1")
-    entry.async_on_unload = MagicMock()
 
     coordinator = MagicMock()
     coordinator.async_config_entry_first_refresh = AsyncMock()
@@ -855,7 +870,7 @@ async def test_async_setup_entry_wires_coordinator_and_platforms() -> None:
         patch.object(init_module, "async_notify_migration_result") as notify_mock,
         patch.object(init_module, "register_system_device") as register_device_mock,
     ):
-        result = await async_setup_entry(hass, entry)
+        result = await hass.config_entries.async_setup(entry.entry_id)
 
     assert result is True
     assert entry.runtime_data is coordinator
@@ -868,12 +883,13 @@ async def test_async_setup_entry_wires_coordinator_and_platforms() -> None:
     assert coordinator.system_device_id is register_device_mock.return_value
 
 
-async def test_async_setup_entry_refresh_listener_dispatches_update_signal() -> None:
+async def test_async_setup_entry_refresh_listener_dispatches_update_signal(
+    hass: HomeAssistant,
+) -> None:
     """The coordinator's refresh listener dispatches the update-sensors signal."""
-    hass = MagicMock()
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"}, entry_id="e1")
+    entry.add_to_hass(hass)
     hass.config_entries.async_forward_entry_setups = AsyncMock()
-    entry = _config_entry(entry_id="e1")
-    entry.async_on_unload = MagicMock()
 
     coordinator = MagicMock()
     coordinator.async_config_entry_first_refresh = AsyncMock()
@@ -890,7 +906,7 @@ async def test_async_setup_entry_refresh_listener_dispatches_update_signal() -> 
         patch.object(init_module, "register_system_device"),
         patch.object(init_module, "async_dispatcher_send") as dispatch_mock,
     ):
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
         refresh_callback = coordinator.async_add_listener.call_args.args[0]
         refresh_callback()
 
@@ -899,11 +915,14 @@ async def test_async_setup_entry_refresh_listener_dispatches_update_signal() -> 
     )
 
 
-async def test_async_unload_entry_stops_coordinator_on_success() -> None:
+async def test_async_unload_entry_stops_coordinator_on_success(
+    hass: HomeAssistant,
+) -> None:
     """Unloading stops app-stats polling and closes the API connection on success."""
-    hass = MagicMock()
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"}, entry_id="e1")
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, init_module.ConfigEntryState.LOADED)
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
-    entry = _config_entry(entry_id="e1")
 
     coordinator = SimpleNamespace(
         stop_app_stats=AsyncMock(),
@@ -912,7 +931,7 @@ async def test_async_unload_entry_stops_coordinator_on_success() -> None:
     entry.runtime_data = coordinator
 
     with patch.object(init_module, "get_truenas_coordinator", return_value=coordinator):
-        result = await async_unload_entry(hass, entry)
+        result = await hass.config_entries.async_unload(entry.entry_id)
 
     assert result is True
     coordinator.stop_app_stats.assert_awaited_once()
@@ -920,26 +939,32 @@ async def test_async_unload_entry_stops_coordinator_on_success() -> None:
     assert not hasattr(entry, "runtime_data")
 
 
-async def test_async_unload_entry_noop_when_platform_unload_fails() -> None:
+async def test_async_unload_entry_noop_when_platform_unload_fails(
+    hass: HomeAssistant,
+) -> None:
     """Unload leaves the coordinator's ``runtime_data`` intact when platform unload fails."""
-    hass = MagicMock()
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"}, entry_id="e1")
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, init_module.ConfigEntryState.LOADED)
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=False)
-    entry = _config_entry(entry_id="e1")
     entry.runtime_data = MagicMock()
 
-    result = await async_unload_entry(hass, entry)
+    result = await hass.config_entries.async_unload(entry.entry_id)
 
     assert result is False
     assert hasattr(entry, "runtime_data")
 
 
-async def test_async_unload_entry_handles_missing_coordinator() -> None:
+async def test_async_unload_entry_handles_missing_coordinator(
+    hass: HomeAssistant,
+) -> None:
     """Unload succeeds even when no coordinator is found for the entry."""
-    hass = MagicMock()
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"}, entry_id="e1")
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, init_module.ConfigEntryState.LOADED)
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
-    entry = _config_entry(entry_id="e1")
 
     with patch.object(init_module, "get_truenas_coordinator", return_value=None):
-        result = await async_unload_entry(hass, entry)
+        result = await hass.config_entries.async_unload(entry.entry_id)
 
     assert result is True

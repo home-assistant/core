@@ -69,6 +69,7 @@ def test_find_legacy_entry_ignores_unrelated_host(hass: HomeAssistant) -> None:
 # ---------------------------
 async def test_forward_adoption_frees_and_reattaches_entity_id(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A legacy entity's id is freed on adoption and reclaimed once matched.
 
@@ -76,8 +77,7 @@ async def test_forward_adoption_frees_and_reattaches_entity_id(
     """
     legacy = MockConfigEntry(domain=LEGACY_DOMAIN, data={CONF_HOST: "nas.local"})
     legacy.add_to_hass(hass)
-    ent_reg = er.async_get(hass)
-    legacy_entity = ent_reg.async_get_or_create(
+    legacy_entity = entity_registry.async_get_or_create(
         "sensor", LEGACY_DOMAIN, "uptime-uid", config_entry=legacy
     )
 
@@ -87,13 +87,13 @@ async def test_forward_adoption_frees_and_reattaches_entity_id(
     records = await async_adopt_legacy_entities(hass, new_entry)
 
     assert len(records) == 1
-    assert ent_reg.async_get(legacy_entity.entity_id) is None
+    assert entity_registry.async_get(legacy_entity.entity_id) is None
     assert legacy.disabled_by == ConfigEntryDisabler.USER
     assert new_entry.data[MIGRATION_DONE] is True
 
     # The new platform creates its entity under the same unique_id, but at a
     # fresh, unrelated auto-assigned entity_id.
-    new_entity = ent_reg.async_get_or_create(
+    new_entity = entity_registry.async_get_or_create(
         "sensor", DOMAIN, "uptime-uid", config_entry=new_entry
     )
     assert new_entity.entity_id != legacy_entity.entity_id
@@ -101,17 +101,19 @@ async def test_forward_adoption_frees_and_reattaches_entity_id(
     finalize_legacy_adoption(hass, new_entry, records)
 
     assert (
-        ent_reg.async_get_entity_id("sensor", DOMAIN, "uptime-uid")
+        entity_registry.async_get_entity_id("sensor", DOMAIN, "uptime-uid")
         == legacy_entity.entity_id
     )
 
 
-async def test_second_setup_is_idempotent_noop(hass: HomeAssistant) -> None:
+async def test_second_setup_is_idempotent_noop(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """A second ``async_adopt_legacy_entities`` call must not re-adopt anything."""
     legacy = MockConfigEntry(domain=LEGACY_DOMAIN, data={CONF_HOST: "nas.local"})
     legacy.add_to_hass(hass)
-    ent_reg = er.async_get(hass)
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor", LEGACY_DOMAIN, "uptime-uid", config_entry=legacy
     )
 
@@ -127,6 +129,7 @@ async def test_second_setup_is_idempotent_noop(hass: HomeAssistant) -> None:
 # ---------------------------
 async def test_pending_record_reclaims_id_once_entity_later_appears(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A record whose entity does not exist yet at first setup must retry.
 
@@ -135,8 +138,7 @@ async def test_pending_record_reclaims_id_once_entity_later_appears(
     """
     legacy = MockConfigEntry(domain=LEGACY_DOMAIN, data={CONF_HOST: "nas.local"})
     legacy.add_to_hass(hass)
-    ent_reg = er.async_get(hass)
-    legacy_entity = ent_reg.async_get_or_create(
+    legacy_entity = entity_registry.async_get_or_create(
         "sensor", LEGACY_DOMAIN, "vm-uid", config_entry=legacy
     )
 
@@ -147,16 +149,18 @@ async def test_pending_record_reclaims_id_once_entity_later_appears(
         hass, new_entry, records
     )  # no matching new entity yet -> no-op
 
-    assert ent_reg.async_get_entity_id("sensor", DOMAIN, "vm-uid") is None
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "vm-uid") is None
     assert len(pending_legacy_records(hass, new_entry)) == 1
 
     # The object reappears (or its monitored group is re-enabled) and the
     # platform finally creates the matching entity.
-    ent_reg.async_get_or_create("sensor", DOMAIN, "vm-uid", config_entry=new_entry)
+    entity_registry.async_get_or_create(
+        "sensor", DOMAIN, "vm-uid", config_entry=new_entry
+    )
     finalize_legacy_adoption(hass, new_entry, pending_legacy_records(hass, new_entry))
 
     assert (
-        ent_reg.async_get_entity_id("sensor", DOMAIN, "vm-uid")
+        entity_registry.async_get_entity_id("sensor", DOMAIN, "vm-uid")
         == legacy_entity.entity_id
     )
     assert pending_legacy_records(hass, new_entry) == []
@@ -164,6 +168,7 @@ async def test_pending_record_reclaims_id_once_entity_later_appears(
 
 async def test_pending_legacy_records_excludes_resolved_and_diverged(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """An already-resolved (or since manually renamed) record must not return.
 
@@ -172,22 +177,27 @@ async def test_pending_legacy_records_excludes_resolved_and_diverged(
     """
     legacy = MockConfigEntry(domain=LEGACY_DOMAIN, data={CONF_HOST: "nas.local"})
     legacy.add_to_hass(hass)
-    ent_reg = er.async_get(hass)
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor", LEGACY_DOMAIN, "uptime-uid", config_entry=legacy
     )
 
     new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
     new_entry.add_to_hass(hass)
     records = await async_adopt_legacy_entities(hass, new_entry)
-    ent_reg.async_get_or_create("sensor", DOMAIN, "uptime-uid", config_entry=new_entry)
+    entity_registry.async_get_or_create(
+        "sensor", DOMAIN, "uptime-uid", config_entry=new_entry
+    )
     finalize_legacy_adoption(hass, new_entry, records)
 
     assert pending_legacy_records(hass, new_entry) == []
 
-    resolved_entity_id = ent_reg.async_get_entity_id("sensor", DOMAIN, "uptime-uid")
+    resolved_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "uptime-uid"
+    )
     assert resolved_entity_id is not None
-    ent_reg.async_update_entity(resolved_entity_id, new_entity_id="sensor.custom_name")
+    entity_registry.async_update_entity(
+        resolved_entity_id, new_entity_id="sensor.custom_name"
+    )
 
     assert pending_legacy_records(hass, new_entry) == []
 
@@ -195,23 +205,25 @@ async def test_pending_legacy_records_excludes_resolved_and_diverged(
 # ---------------------------
 #   _remap_and_restore (permutation-safe swap)
 # ---------------------------
-def test_remap_and_restore_handles_swapped_ids(hass: HomeAssistant) -> None:
+def test_remap_and_restore_handles_swapped_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Two entities whose target ids form a swap must both reach their target.
 
     E.g. re-lettered ``sd*`` disks, without a transient collision.
     """
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
     entry.add_to_hass(hass)
-    ent_reg = er.async_get(hass)
 
-    entity_a = ent_reg.async_get_or_create(
+    entity_a = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         "disk-a-uid",
         config_entry=entry,
         suggested_object_id="disk_a",
     )
-    entity_b = ent_reg.async_get_or_create(
+    entity_b = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         "disk-b-uid",
@@ -236,13 +248,15 @@ def test_remap_and_restore_handles_swapped_ids(hass: HomeAssistant) -> None:
         ("sensor.disk_a", "sensor.disk_b", _record("disk-a-uid", "sensor.disk_b")),
         ("sensor.disk_b", "sensor.disk_a", _record("disk-b-uid", "sensor.disk_a")),
     ]
-    _remap_and_restore(ent_reg, pairs)
+    _remap_and_restore(entity_registry, pairs)
 
     assert (
-        ent_reg.async_get_entity_id("sensor", DOMAIN, "disk-a-uid") == "sensor.disk_b"
+        entity_registry.async_get_entity_id("sensor", DOMAIN, "disk-a-uid")
+        == "sensor.disk_b"
     )
     assert (
-        ent_reg.async_get_entity_id("sensor", DOMAIN, "disk-b-uid") == "sensor.disk_a"
+        entity_registry.async_get_entity_id("sensor", DOMAIN, "disk-b-uid")
+        == "sensor.disk_a"
     )
 
 
@@ -259,12 +273,12 @@ async def test_rollback_returns_false_without_a_migration(hass: HomeAssistant) -
 
 async def test_rollback_returns_false_when_legacy_entry_already_gone(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Rollback is impossible once the legacy entry itself was deleted."""
     legacy = MockConfigEntry(domain=LEGACY_DOMAIN, data={CONF_HOST: "nas.local"})
     legacy.add_to_hass(hass)
-    ent_reg = er.async_get(hass)
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor", LEGACY_DOMAIN, "uptime-uid", config_entry=legacy
     )
 
@@ -279,12 +293,12 @@ async def test_rollback_returns_false_when_legacy_entry_already_gone(
 
 async def test_rollback_removes_entry_reenables_legacy_and_restores_id(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A full rollback removes the CE entry, re-enables and restores legacy."""
     legacy = MockConfigEntry(domain=LEGACY_DOMAIN, data={CONF_HOST: "nas.local"})
     legacy.add_to_hass(hass)
-    ent_reg = er.async_get(hass)
-    legacy_entity = ent_reg.async_get_or_create(
+    legacy_entity = entity_registry.async_get_or_create(
         "sensor", LEGACY_DOMAIN, "uptime-uid", config_entry=legacy
     )
     original_legacy_id = legacy_entity.entity_id
@@ -292,17 +306,19 @@ async def test_rollback_removes_entry_reenables_legacy_and_restores_id(
     new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
     new_entry.add_to_hass(hass)
     records = await async_adopt_legacy_entities(hass, new_entry)
-    ent_reg.async_get_or_create("sensor", DOMAIN, "uptime-uid", config_entry=new_entry)
+    entity_registry.async_get_or_create(
+        "sensor", DOMAIN, "uptime-uid", config_entry=new_entry
+    )
     finalize_legacy_adoption(hass, new_entry, records)
     assert (
-        ent_reg.async_get_entity_id("sensor", DOMAIN, "uptime-uid")
+        entity_registry.async_get_entity_id("sensor", DOMAIN, "uptime-uid")
         == original_legacy_id
     )
 
     # Simulate the legacy integration recreating its entity once re-enabled:
     # its original id is still held by the truenas_ce entity at this point, so
     # it lands on a fresh one, exactly like a real platform setup would.
-    recreated = ent_reg.async_get_or_create(
+    recreated = entity_registry.async_get_or_create(
         "sensor", LEGACY_DOMAIN, "uptime-uid", config_entry=legacy
     )
     assert recreated.entity_id != original_legacy_id
@@ -313,6 +329,6 @@ async def test_rollback_removes_entry_reenables_legacy_and_restores_id(
     assert hass.config_entries.async_get_entry(new_entry.entry_id) is None
     assert legacy.disabled_by is None
     assert (
-        ent_reg.async_get_entity_id("sensor", LEGACY_DOMAIN, "uptime-uid")
+        entity_registry.async_get_entity_id("sensor", LEGACY_DOMAIN, "uptime-uid")
         == original_legacy_id
     )

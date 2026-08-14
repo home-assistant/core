@@ -58,7 +58,7 @@ from homeassistant.components.truenas_ce.coordinator import (
     _unwrap_app_stats_message,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 
 def _bare_coordinator() -> TrueNASCoordinator:
@@ -451,7 +451,7 @@ def test_update_uptime_sets_epoch_on_first_run() -> None:
 def test_update_uptime_keeps_old_epoch_within_tolerance() -> None:
     """An epoch close enough to the freshly computed value is left unchanged."""
     coord = _bare_coordinator()
-    now_epoch = int(datetime.now(UTC).timestamp())
+    now_epoch = int(dt_util.utcnow().timestamp())
     old_epoch = now_epoch - 3600 + 5  # within the 300s tolerance of a fresh reading
     coord.ds = {"system_info": {"uptime_seconds": 3600, "uptimeEpoch": old_epoch}}
     coord._update_uptime()
@@ -461,7 +461,7 @@ def test_update_uptime_keeps_old_epoch_within_tolerance() -> None:
 def test_update_uptime_replaces_stale_epoch_outside_tolerance() -> None:
     """An epoch drifted well past tolerance is replaced with a freshly computed one."""
     coord = _bare_coordinator()
-    now_epoch = int(datetime.now(UTC).timestamp())
+    now_epoch = int(dt_util.utcnow().timestamp())
     old_epoch = now_epoch - 3600 - 600  # 600s drift, well beyond the 300s tolerance
     coord.ds = {"system_info": {"uptime_seconds": 3600, "uptimeEpoch": old_epoch}}
     coord._update_uptime()
@@ -1715,7 +1715,7 @@ async def test_async_update_data_swallows_job_exceptions() -> None:
     coord._async_ensure_connected = AsyncMock()
     coord.async_detect_orphaned_statistics = AsyncMock()
     coord._clear_stale_migration_rollback_issue = MagicMock()
-    coord.last_updatecheck_update = datetime.now(UTC)
+    coord.last_updatecheck_update = dt_util.utcnow()
     _stub_all_jobs(coord)
     coord.get_service = AsyncMock(side_effect=Exception("boom"))
     coord.ds = {}
@@ -2223,7 +2223,7 @@ def test_select_stat_graph_names_filters_cooldown_graphs() -> None:
     coord = _bare_coordinator()
     coord.ds = {"interface": {}}
     coord._is_virtual = False
-    coord._systemstats_errored = {"cpu": datetime.now(UTC)}
+    coord._systemstats_errored = {"cpu": dt_util.utcnow()}
     coord._systemstats_error_cooldown = timedelta(minutes=10)
     names = coord._select_stat_graph_names()
     assert "cpu" not in names
@@ -2247,7 +2247,7 @@ def test_record_failed_graphs_logs_only_new_failures(
     """Only a graph not already in the errored dict is warned about (new failure)."""
     coord = _bare_coordinator()
     coord.host = "truenas.local"
-    coord._systemstats_errored = {"cpu": datetime.now(UTC)}
+    coord._systemstats_errored = {"cpu": dt_util.utcnow()}
     with caplog.at_level("WARNING"):
         coord._record_failed_graphs(["cpu", "memory"])
     assert "memory" in caplog.text
@@ -2439,7 +2439,7 @@ async def test_get_systemstats_returns_early_without_graph_names() -> None:
     coord.ds = {"interface": {}}
     coord._is_virtual = True
     coord._systemstats_errored = {
-        name: datetime.now(UTC) for name in ("load", "cpu", "arcsize", "memory")
+        name: dt_util.utcnow() for name in ("load", "cpu", "arcsize", "memory")
     }
     coord._systemstats_error_cooldown = timedelta(minutes=10)
     coord.config_entry = MagicMock()
@@ -3080,7 +3080,7 @@ async def test_get_certificates_computes_days_until_expiry() -> None:
     coord = _bare_coordinator()
     coord.ds = {}
     coord.api = MagicMock()
-    future = datetime.now(UTC) + timedelta(days=10)
+    future = dt_util.utcnow() + timedelta(days=10)
     coord.api.query = AsyncMock(
         return_value=[
             {

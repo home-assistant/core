@@ -38,36 +38,36 @@ from tests.common import MockConfigEntry
 # ---------------------------
 async def test_cleanup_orphaned_entities_removes_stale_entity_and_empty_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Cleanup removes the orphaned entity and its now-empty device, keeping active and unrelated entities."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"})
     entry.add_to_hass(hass)
     coordinator = SimpleNamespace(last_update_success=True)
 
-    dev_reg = dr.async_get(hass)
-    live_device = dev_reg.async_get_or_create(
+    live_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, identifiers={(DOMAIN, "live-device")}
     )
-    empty_device = dev_reg.async_get_or_create(
+    empty_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, identifiers={(DOMAIN, "empty-device")}
     )
 
-    ent_reg = er.async_get(hass)
-    active_entity = ent_reg.async_get_or_create(
+    active_entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         "truenas-active-id",
         config_entry=entry,
         device_id=live_device.id,
     )
-    orphan_entity = ent_reg.async_get_or_create(
+    orphan_entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         "truenas-live-base-orphan",
         config_entry=entry,
         device_id=empty_device.id,
     )
-    unrelated_entity = ent_reg.async_get_or_create(
+    unrelated_entity = entity_registry.async_get_or_create(
         "sensor", DOMAIN, "truenas-unrelated-id", config_entry=entry
     )
 
@@ -78,34 +78,35 @@ async def test_cleanup_orphaned_entities_removes_stale_entity_and_empty_device(
     ):
         _cleanup_orphaned_entities(hass, entry, coordinator)
 
-    assert ent_reg.async_get(active_entity.entity_id) is not None
-    assert ent_reg.async_get(orphan_entity.entity_id) is None
-    assert ent_reg.async_get(unrelated_entity.entity_id) is not None
-    assert dev_reg.async_get(live_device.id) is not None
-    assert dev_reg.async_get(empty_device.id) is None
+    assert entity_registry.async_get(active_entity.entity_id) is not None
+    assert entity_registry.async_get(orphan_entity.entity_id) is None
+    assert entity_registry.async_get(unrelated_entity.entity_id) is not None
+    assert device_registry.async_get(live_device.id) is not None
+    assert device_registry.async_get(empty_device.id) is None
 
 
 async def test_cleanup_orphaned_entities_noop_after_failed_refresh(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Cleanup is skipped entirely when the last coordinator refresh failed."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"})
     entry.add_to_hass(hass)
     coordinator = SimpleNamespace(last_update_success=False)
 
-    ent_reg = er.async_get(hass)
-    stale_entity = ent_reg.async_get_or_create(
+    stale_entity = entity_registry.async_get_or_create(
         "sensor", DOMAIN, "truenas-live-base-orphan", config_entry=entry
     )
 
     with patch.object(init_module, "_collect_active_unique_ids") as collect_mock:
         _cleanup_orphaned_entities(hass, entry, coordinator)
     collect_mock.assert_not_called()
-    assert ent_reg.async_get(stale_entity.entity_id) is not None
+    assert entity_registry.async_get(stale_entity.entity_id) is not None
 
 
 async def test_cleanup_keeps_entities_when_dynamic_domain_is_empty(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """An empty ``app_stats`` payload must not wipe the app-stats entities.
 
@@ -123,8 +124,7 @@ async def test_cleanup_keeps_entities_when_dynamic_domain_is_empty(
         data={"app_stats": {}},
     )
 
-    ent_reg = er.async_get(hass)
-    app_entity = ent_reg.async_get_or_create(
+    app_entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         format_unique_id("TrueNAS", "app_stats_cpu", "myapp"),
@@ -133,7 +133,7 @@ async def test_cleanup_keeps_entities_when_dynamic_domain_is_empty(
 
     _cleanup_orphaned_entities(hass, entry, coordinator)
 
-    assert ent_reg.async_get(app_entity.entity_id) is not None
+    assert entity_registry.async_get(app_entity.entity_id) is not None
 
 
 # ---------------------------
@@ -206,6 +206,8 @@ async def test_async_setup_entry_creates_entities_via_real_platform_setup(
 
 async def test_async_setup_entry_keeps_system_device_alive(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Regression test: the System device must survive its own initial setup.
 
@@ -235,16 +237,16 @@ async def test_async_setup_entry_keeps_system_device_alive(
         await hass.async_block_till_done()
 
     coordinator = entry.runtime_data
-    dev_reg = dr.async_get(hass)
-    system_device = dev_reg.async_get(coordinator.system_device_id)
+    system_device = device_registry.async_get(coordinator.system_device_id)
     assert system_device is not None
     assert er.async_entries_for_device(
-        er.async_get(hass), system_device.id, include_disabled_entities=True
+        entity_registry, system_device.id, include_disabled_entities=True
     )
 
 
 async def test_async_setup_entry_creates_snapshottask_sensor_via_dispatcher(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A description's ``func`` must have a matching dispatcher entry in its platform module.
 
@@ -283,8 +285,7 @@ async def test_async_setup_entry_creates_snapshottask_sensor_via_dispatcher(
     snapshottask_description = next(
         d for d in SENSOR_TYPES if d.data_path == snapshottask_data_path
     )
-    ent_reg = er.async_get(hass)
     unique_id = format_unique_id("TrueNAS", snapshottask_description.key, 1)
-    entity_id = ent_reg.async_get_entity_id("sensor", DOMAIN, unique_id)
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
     assert entity_id is not None
     assert hass.states.get(entity_id) is not None
