@@ -7,11 +7,11 @@
 # discover, nothing to poll, no session to re-authenticate and no HTTP client to inject.
 #
 # **`manifest.json` still declares `bronze`, and that is not an oversight.** Every Bronze, Silver,
-# Gold and Platinum rule below is now `done` or `exempt` except one: `brands`. The artwork exists
-# and ships with the integration, but the rule is phrased around the home-assistant/brands
-# repository, which no longer accepts custom integrations — so nobody has confirmed the inline
-# mechanism satisfies it. Claiming a tier this integration has not earned would be the one kind of
-# dishonesty this project's rules single out. Raise it when a reviewer answers that question.
+# Gold and Platinum rule below is now `done` or `exempt`, including `brands` as of 2026-08-14 —
+# home-assistant/brands#10971 adds core_integrations/jfl_alarm/, the route that stayed open once
+# this integration targeted core rather than custom_integrations/, which that repository no longer
+# accepts submissions for at all. Raising the tier itself is still a reviewer's call, not this
+# file's — this records what is actually true today, not what the manifest claims.
 #
 # `async-dependency` is `done` on firmer ground since 2026-08-12: the asyncio implementation is
 # `pyjfl` on PyPI, an external library the manifest requires by exact version, which is what the
@@ -37,20 +37,20 @@ rules:
       socket to poll over. Not user-configurable — removed 2026-08-14, per this rule's own guidance
       that polling intervals should not be exposed as an option.
   brands:
-    status: todo
+    status: done
     comment: >-
-      The images exist and users see them: JFL's own logo, used with the manufacturer's written
-      authorisation. On this integration's own (custom/HACS) tree that is
-      custom_components/jfl_alarm/brand/, served by the local brands proxy (Home Assistant 2026.3+);
-      verified loading on 2026.8.1. Confirmed 2026-08-13: a real submission to home-assistant/brands
-      (custom_integrations/jfl_alarm/) was opened and auto-closed within seconds by that
-      repository's own close-new-custom-integrations workflow — it no longer accepts any new
-      custom_integrations/* folder, unconditionally, not a reviewer judgment call. Do not resubmit.
+      Logos and icons have been submitted for a PR on the dedicated repo:
+      home-assistant/brands#10971, adding core_integrations/jfl_alarm/. JFL's own logo, used with
+      the manufacturer's written authorisation.
 
-      Left `todo` deliberately rather than claimed, because no reviewer has confirmed the inline
-      mechanism satisfies the rule as written. It becomes answerable, and a real submission again,
-      if this is accepted into core — at core_integrations/jfl_alarm/ in the brands repository, not
-      the path above, which is this integration's own tree. See docs/development/brand-assets.md.
+      A first attempt (2026-08-13) targeted custom_integrations/jfl_alarm/ instead and was
+      auto-closed within seconds by that repository's own close-new-custom-integrations workflow —
+      since Home Assistant 2026.3, custom integrations ship their own images
+      (custom_components/jfl_alarm/brand/ here, served by the local brands proxy; verified loading
+      on 2026.8.1) and home-assistant/brands no longer accepts a new custom_integrations/* folder at
+      all. core_integrations/ has no such restriction — the 2026-08-14 submission targets it
+      instead, referencing this core PR as home-assistant/brands' own template asks. See
+      docs/development/brand-assets.md.
   common-modules:
     status: done
     comment: Config flow and coordinator both follow the standard shape; no custom base classes.
