@@ -145,6 +145,10 @@ def _extract_items_from_node(
                 items.append(_Field(name))
         return items
 
+    # SCHEMA_VAR.schema - the wrapped dict of a voluptuous Schema
+    if isinstance(node, nodes.Attribute) and node.attrname == "schema":
+        return _extract_items_from_node(node.expr)
+
     # Variable reference: resolve via AST assignment lookup
     if isinstance(node, nodes.Name):
         try:

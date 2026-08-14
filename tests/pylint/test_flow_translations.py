@@ -451,6 +451,44 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
         walker.walk(root_node)
 
 
+def test_schema_extend_via_schema_attribute_flagged(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """Warning for untranslated field pulled in via SCHEMA_VAR.schema in extend()."""
+    integration_dir = _make_integration(
+        tmp_path,
+        {"config": {"step": {"user": {"data": {"host": "Host"}}}}},
+    )
+
+    root_node = astroid.parse(
+        """
+BASE_SCHEMA = vol.Schema({vol.Required("missing"): str})
+
+class MyConfigFlow(ConfigFlow, domain=DOMAIN):
+    async def async_step_user(self, user_input=None):
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {vol.Required("host"): str}
+            ).extend(BASE_SCHEMA.schema),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-config-flow-field-not-translated"
+    assert messages[0].args[0] == "missing"
+
+
 def test_add_suggested_values_to_schema_missing_field_flagged(
     linter: UnittestLinter,
     flow_translations_checker: ConfigFlowTranslationsChecker,
