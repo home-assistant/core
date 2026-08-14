@@ -64,8 +64,5 @@ class IndiAllSkyCamera(IndiAllSkyEntity, Camera):
             "exposure": exposure.exposure,
             "filename": exposure.filename,
             "gain": exposure.gain,
-            "night": exposure.night,
-            "sqm": exposure.sqm,
-            "stars": exposure.stars,
             "temperature": exposure.temp,
         }

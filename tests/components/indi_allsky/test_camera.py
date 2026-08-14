@@ -68,7 +68,4 @@ async def test_camera_extra_state_attributes(
     assert state.attributes["exposure"] == 0.185
     assert state.attributes["filename"] == "test.jpg"
     assert state.attributes["gain"] == 0.0
-    assert state.attributes["night"] is False
-    assert state.attributes["sqm"] == 32928.83
-    assert state.attributes["stars"] == 0
     assert state.attributes["temperature"] == -273.15
