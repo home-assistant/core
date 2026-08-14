@@ -33,21 +33,6 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
         models=[DeviceType.AC],
     ),
     MideaSwitchEntityDescription(
-        key="dry",
-        translation_key="dry",
-        models=[DeviceType.AC],
-    ),
-    MideaSwitchEntityDescription(
-        key="indirect_wind",
-        translation_key="indirect_wind",
-        models=[DeviceType.AC],
-    ),
-    MideaSwitchEntityDescription(
-        key="natural_wind",
-        translation_key="natural_wind",
-        models=[DeviceType.AC],
-    ),
-    MideaSwitchEntityDescription(
         key="prompt_tone",
         translation_key="prompt_tone",
         models=[DeviceType.AC],
@@ -55,11 +40,6 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
         key="screen_display",
         translation_key="screen_display",
-        models=[DeviceType.AC],
-    ),
-    MideaSwitchEntityDescription(
-        key="screen_display_alternate",
-        translation_key="screen_display_alternate",
         models=[DeviceType.AC],
     ),
     MideaSwitchEntityDescription(
@@ -90,21 +70,6 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
         key="disinfect",
         translation_key="disinfect",
-        models=[DeviceType.C3],
-    ),
-    MideaSwitchEntityDescription(
-        key="dhw_power",
-        translation_key="dhw_power",
-        models=[DeviceType.C3],
-    ),
-    MideaSwitchEntityDescription(
-        key="eco_mode",
-        translation_key="eco_mode",
-        models=[DeviceType.C3],
-    ),
-    MideaSwitchEntityDescription(
-        key="fast_dhw",
-        translation_key="fast_dhw",
         models=[DeviceType.C3],
     ),
     MideaSwitchEntityDescription(
