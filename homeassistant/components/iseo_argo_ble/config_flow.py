@@ -84,8 +84,6 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick a lock from HA's BLE cache."""
-        errors: dict[str, str] = {}
-
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
 
@@ -140,7 +138,6 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            errors=errors,
         )
 
     @override

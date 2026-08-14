@@ -15,22 +15,8 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(
-    mock_bluetooth_history: None,
-    enable_bluetooth: None,
-) -> None:
-    """Auto mock bluetooth for all tests — ensures history is patched first."""
-    return
-
-
-@pytest.fixture(autouse=True)
-def mock_bluetooth_history() -> Generator[None]:
-    """Patch bluetooth manager to avoid dbus calls on non-Linux platforms."""
-    with patch(
-        "homeassistant.components.bluetooth.manager.async_load_history_from_system",
-        return_value=({}, {}),
-    ):
-        yield
+def mock_bluetooth(enable_bluetooth: None) -> None:
+    """Auto mock bluetooth."""
 
 
 @pytest.fixture
@@ -38,13 +24,13 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock ISEO Argo BLE config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        title="ISEO Lock",
         unique_id=format_mac(MOCK_ADDRESS),
         data={
             CONF_ADDRESS: MOCK_ADDRESS,
             CONF_UUID: MOCK_UUID_HEX,
             CONF_PRIV_SCALAR: MOCK_PRIV_SCALAR,
         },
-        options={},
     )
 
 
@@ -63,7 +49,7 @@ def mock_iseo_client() -> Generator[MagicMock]:
     ):
         client = client_class.return_value
         client.read_state = AsyncMock(
-            return_value=MagicMock(door_closed=None, firmware_info=None)
+            return_value=MagicMock(door_closed=True, firmware_info="FW:  1.2.3")
         )
         client.open_lock = AsyncMock(return_value=None)
         client.gw_open = AsyncMock(return_value=None)
@@ -72,6 +58,23 @@ def mock_iseo_client() -> Generator[MagicMock]:
         client.setup_gateway = AsyncMock(return_value=None)
         client.update_ble_device = MagicMock()
         yield client
+
+
+@pytest.fixture
+def mock_ble_device() -> Generator[MagicMock]:
+    """Make the lock visible in Home Assistant's bluetooth cache."""
+    ble_device = MagicMock()
+    with (
+        patch(
+            "homeassistant.components.iseo_argo_ble.async_ble_device_from_address",
+            return_value=ble_device,
+        ),
+        patch(
+            "homeassistant.components.iseo_argo_ble.lock.async_ble_device_from_address",
+            return_value=ble_device,
+        ),
+    ):
+        yield ble_device
 
 
 @pytest.fixture
