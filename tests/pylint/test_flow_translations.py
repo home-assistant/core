@@ -177,6 +177,7 @@ class MyOptionsFlow(OptionsFlow):
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-options-flow-field-not-translated"
+    assert messages[0].args[0] == "missing"
 
 
 # --- Subentry flow tests ---
@@ -271,6 +272,7 @@ class MySubentryFlow(ConfigSubentryFlow):
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-subentry-flow-field-not-translated"
+    assert messages[0].args[0] == "missing"
 
 
 def test_subentry_shared_handler_missing_in_one_type(
