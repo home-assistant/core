@@ -4,6 +4,7 @@ These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from http import HTTPStatus
@@ -34,6 +35,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.nest import climate as nest_climate
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
@@ -758,6 +760,74 @@ async def test_thermostat_temperature_changes_use_trailing_debounce(
         "command": "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
         "params": {"heatCelsius": 22.0},
     }
+
+
+async def test_temperature_and_mode_commands_are_serialized(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test optimistic state remains while a mode command waits for temperature."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+            },
+        }
+    )
+    await setup_platform()
+
+    temperature_started = asyncio.Event()
+    release_temperature = asyncio.Event()
+    mode_started = asyncio.Event()
+    command_order: list[str] = []
+
+    async def async_set_heat(
+        _trait: nest_climate.ThermostatTemperatureSetpointTrait, temperature: float
+    ) -> None:
+        assert temperature == 20.0
+        command_order.append("temperature_started")
+        temperature_started.set()
+        await release_temperature.wait()
+        command_order.append("temperature_finished")
+
+    async def async_set_mode(
+        _trait: nest_climate.ThermostatModeTrait, mode: str
+    ) -> None:
+        assert mode == "COOL"
+        command_order.append("mode_started")
+        mode_started.set()
+
+    monkeypatch.setattr(
+        nest_climate.ThermostatTemperatureSetpointTrait, "set_heat", async_set_heat
+    )
+    monkeypatch.setattr(nest_climate.ThermostatModeTrait, "set_mode", async_set_mode)
+
+    await common.async_set_temperature(hass, temperature=20.0)
+    temperature_task = asyncio.create_task(async_fire_temperature_debounce(hass))
+    await temperature_started.wait()
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 20.0
+
+    mode_task = asyncio.create_task(common.async_set_hvac_mode(hass, HVACMode.COOL))
+    await asyncio.sleep(0)
+    assert not mode_started.is_set()
+
+    release_temperature.set()
+    await asyncio.gather(temperature_task, mode_task)
+    assert command_order == [
+        "temperature_started",
+        "temperature_finished",
+        "mode_started",
+    ]
 
 
 async def test_thermostat_set_temperature_hvac_mode(
