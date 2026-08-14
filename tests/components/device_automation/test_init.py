@@ -1814,8 +1814,8 @@ async def test_device_automation_resolves_legacy_id(
     await dr.async_load(hass)
     await er.async_load(hass)
     await ar.async_load(hass)
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     by_entry = {
         d.config_entry_id: d.id
         for d in device_registry.async_get_devices_for_composite_device_id(COMPOSITE_ID)

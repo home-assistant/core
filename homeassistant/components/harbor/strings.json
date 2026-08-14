@@ -28,6 +28,16 @@
     }
   },
   "entity": {
+    "select": {
+      "night_mode_preference": {
+        "name": "Night mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      }
+    },
     "sensor": {
       "bitrate": {
         "name": "Bitrate"
@@ -49,11 +59,31 @@
         "name": "Wi-Fi strength",
         "unit_of_measurement": "bars"
       }
+    },
+    "switch": {
+      "camera_on": {
+        "name": "Camera"
+      },
+      "clock_display": {
+        "name": "Clock overlay"
+      },
+      "video_flip": {
+        "name": "Flip image"
+      }
     }
   },
   "exceptions": {
     "cannot_connect": {
       "message": "Could not connect to the Harbor camera. It may be offline or unreachable."
+    },
+    "select_option_failed": {
+      "message": "Failed to select {option} for {select}."
+    },
+    "switch_turn_off_failed": {
+      "message": "Failed to turn off {switch}."
+    },
+    "switch_turn_on_failed": {
+      "message": "Failed to turn on {switch}."
     }
   }
 }

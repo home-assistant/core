@@ -23,8 +23,9 @@ class BleBoxEntity[_FeatureT: Feature](CoordinatorEntity[BleBoxCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, product.unique_id)},
             manufacturer=product.brand,
-            model=product.model,
+            model=product.product,
             name=product.name,
             sw_version=product.firmware_version,
+            hw_version=product.hardware_version,
             configuration_url=f"http://{product.address}",
         )
