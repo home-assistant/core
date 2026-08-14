@@ -133,7 +133,7 @@ WSDiscovery==2.1.2
 accuweather==5.1.0
 
 # homeassistant.components.actron_air
-actron-neo-api==0.5.12
+actron-neo-api==0.5.13
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -390,7 +390,7 @@ aiopulse==0.4.7
 aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==3.4.0
+aiopvapi==3.4.1
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
@@ -453,7 +453,7 @@ aiotedee==0.3.0
 aiotractive==1.0.3
 
 # homeassistant.components.unifi
-aiounifi==91
+aiounifi==92
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
@@ -669,7 +669,7 @@ bleak-smlight==1.1.0
 bleak==3.0.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.6
+blebox-uniapi==2.5.7
 
 # homeassistant.components.blink
 blinkpy==0.25.9
@@ -1589,7 +1589,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==7.0.0
+midea-local==8.0.1
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -2116,7 +2116,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.18.5
+pydaikin==2.19.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2610,6 +2610,9 @@ pysnooz==0.8.6
 # homeassistant.components.soma
 pysoma==0.0.12
 
+# homeassistant.components.somfy_mylink
+pysomfymylink==1.0.0
+
 # homeassistant.components.spc
 pyspcwebgw==0.7.0
 
@@ -2620,7 +2623,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.14.0
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.6.2
+pystiebeleltron==0.6.3
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.7
@@ -2693,6 +2696,9 @@ python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==10.2.0
+
+# homeassistant.components.hotspring
+python-hotspring==1.3.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2777,7 +2783,7 @@ python-swisscom-internet-box==0.2.0
 python-tado==0.18.16
 
 # homeassistant.components.technove
-python-technove==2.1.1
+python-technove==2.1.2
 
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==22.7
@@ -3079,9 +3085,6 @@ solarman-opendata==0.0.3
 # homeassistant.components.solax
 solax==3.2.4
 
-# homeassistant.components.somfy_mylink
-somfy-mylink-synergy==1.0.6
-
 # homeassistant.components.sonos
 sonos-websocket==0.2.0
 
@@ -3172,7 +3175,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.8.2
+tesla-fleet-api==1.9.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3382,7 +3385,7 @@ weheat==2026.4.8
 whirlpool-sixth-sense==1.3.1
 
 # homeassistant.components.whois
-whois==0.9.27
+whoisdomain==2.20260806.3
 
 # homeassistant.components.wiffi
 wiffi==1.1.2
