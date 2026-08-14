@@ -67,6 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LyricConfigEntry) -> boo
     device_registry = dr.async_get(hass)
     for location in coordinator.data.locations:
         for device in location.devices:
+            if device.device_class != "Thermostat":
+                continue
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 **create_thermostat_device_info(device),
