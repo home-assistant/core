@@ -82,12 +82,6 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        # The config flow refuses a key with no controllers, so an entry that
-        # suddenly has none is a change on the HortOS side. Retrying beats
-        # loading an integration with nothing in it.
-        if not self.devices:
-            raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_devices")
-
     @override
     async def _async_update_data(self) -> dict[str, HortimaxDeviceData]:
         """Fetch the latest value of every readout of every controller."""

@@ -45,17 +45,21 @@ async def test_connection_error_retries(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_no_controllers_retries(
+async def test_no_controllers_still_loads(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hortos_client: AsyncMock,
 ) -> None:
-    """Test an entry whose controllers have gone retries instead of loading empty."""
+    """Test an entry whose controllers have gone loads empty instead of retrying.
+
+    A reachable API means setup succeeded, so failing it would retry a working
+    connection forever.
+    """
     mock_hortos_client.get_devices.return_value = []
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert not hass.states.async_entity_ids("sensor")
 
 
