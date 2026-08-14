@@ -170,6 +170,9 @@ async def test_v1_entities(
     with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, mock_config_entry)
 
+    state = hass.states.get("select.airgradient_co2_automatic_baseline_duration")
+    assert state is not None
+    assert state.state == "7"
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -199,7 +202,7 @@ async def test_v1_entities(
             "select.airgradient_co2_automatic_baseline_duration",
             "0",
             "set_co2_automatic_baseline_calibration",
-            -1,
+            0,
         ),
     ],
 )

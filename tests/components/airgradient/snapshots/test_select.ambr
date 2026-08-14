@@ -8,6 +8,7 @@
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
+        '7',
         '8',
         '30',
         '90',
@@ -51,6 +52,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient CO2 automatic baseline duration',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
+        '7',
         '8',
         '30',
         '90',
@@ -443,6 +445,7 @@
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
+        '7',
         '8',
         '30',
         '90',
@@ -486,6 +489,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient CO2 automatic baseline duration',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
+        '7',
         '8',
         '30',
         '90',
@@ -762,6 +766,7 @@
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
+        '7',
         '8',
         '30',
         '90',
@@ -805,6 +810,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient CO2 automatic baseline duration',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
+        '7',
         '8',
         '30',
         '90',
@@ -817,7 +823,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '7',
   })
 # ---
 # name: test_v1_entities[select.airgradient_configuration_source-entry]

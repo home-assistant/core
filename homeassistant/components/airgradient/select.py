@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import override
 
-from airgradient import AirGradientClient, ApiVersion, Config, GpsMode
+from airgradient import AirGradientClient, Config, GpsMode
 from airgradient.models import ConfigurationControl, LedBarMode, TemperatureUnit
 
 from homeassistant.components.select import (
@@ -101,6 +101,7 @@ MEASUREMENT_INTERVAL_OPTIONS = ["3", "10", "30", "60", "300", "900", "3600"]
 
 ABC_DAYS = [
     "1",
+    "7",
     "8",
     "30",
     "90",
@@ -112,18 +113,6 @@ ABC_DAYS = [
 def _get_value(value: int | None, values: list[str]) -> str | None:
     str_value = str(value)
     return str_value if str_value in values else None
-
-
-def _get_abc_value(value: int | None) -> str | None:
-    """Return the Home Assistant ABC option for a device value."""
-    return "0" if value == -1 else _get_value(value, ABC_DAYS)
-
-
-def _set_abc_value(client: AirGradientClient, value: str) -> Awaitable[None]:
-    """Set the device-specific ABC disabled value."""
-    return client.set_co2_automatic_baseline_calibration(
-        -1 if client.api_version is ApiVersion.V1 and value == "0" else int(value)
-    )
 
 
 def _get_led_level(value: int | None, options: list[str]) -> str | None:
@@ -164,10 +153,12 @@ CONTROL_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
         options=ABC_DAYS,
         entity_category=EntityCategory.CONFIG,
         config_key="co2_automatic_baseline_calibration_days",
-        value_fn=lambda config: _get_abc_value(
-            config.co2_automatic_baseline_calibration_days
+        value_fn=lambda config: _get_value(
+            config.co2_automatic_baseline_calibration_days, ABC_DAYS
         ),
-        set_value_fn=_set_abc_value,
+        set_value_fn=lambda client, value: (
+            client.set_co2_automatic_baseline_calibration(int(value))
+        ),
     ),
 )
 
