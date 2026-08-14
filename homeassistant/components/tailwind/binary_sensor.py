@@ -1,9 +1,8 @@
 """Binary sensor entity platform for Tailwind."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from gotailwind import TailwindDoor
 
@@ -59,6 +58,7 @@ class TailwindDoorBinarySensorEntity(TailwindDoorEntity, BinarySensorEntity):
     entity_description: TailwindDoorBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(

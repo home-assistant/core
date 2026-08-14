@@ -168,8 +168,9 @@ async def test_unsupported_inputs(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
     assert log_message in caplog.text
-    ## It's not possible to test a successful config flow because, we need to mock httpx.get here
-    ## and then the exception isn't raised anymore.
+    ## It's not possible to test a successful config flow because,
+    ## we need to mock httpx.get here and then the exception isn't
+    ## raised anymore.
 
 
 @pytest.mark.parametrize(

@@ -1,7 +1,5 @@
 """Helper classes for Google Assistant SDK integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from http import HTTPStatus
 import logging
@@ -139,7 +137,11 @@ def default_language_code(hass: HomeAssistant) -> str:
 def best_matching_language_code(
     hass: HomeAssistant, assist_language: str, agent_language: str | None = None
 ) -> str:
-    """Get the best matching language, based on the preferred assist language and the configured agent language."""
+    """Get the best matching language.
+
+    Based on the preferred assist language and the configured
+    agent language.
+    """
 
     # Use the assist language if supported
     if assist_language in SUPPORTED_LANGUAGE_CODES:

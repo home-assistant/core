@@ -1,7 +1,5 @@
 """Diagnostics support for HomeKit Controller."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohomekit.model.characteristics.characteristic_types import CharacteristicsTypes
@@ -124,7 +122,11 @@ def _async_get_diagnostics(
 
         devices = data["devices"] = []
         for device_id in connection.devices.values():
-            if not (device := device_registry.async_get(device_id)):
+            if not (
+                device := device_registry.async_get(
+                    device_id, include_child_devices=False
+                )
+            ):
                 continue
             devices.append(_async_get_diagnostics_for_device(hass, device))
 

@@ -297,7 +297,10 @@ async def test_service_update_devices(
             "",
             1,
             marks=pytest.mark.xfail(
-                reason="While the code allows for an empty string the schema doesn't allow it",
+                reason=(
+                    "While the code allows for an empty string"
+                    " the schema doesn't allow it"
+                ),
                 raises=vol.MultipleInvalid,
             ),
         ),
@@ -386,7 +389,11 @@ async def test_service_volume_release(
             "",
             101,
             marks=pytest.mark.xfail(
-                reason="The documentation mention it's allowed to pass an empty string, but the schema does not allow this",
+                reason=(
+                    "The documentation mention it's allowed to"
+                    " pass an empty string, but the schema"
+                    " does not allow this"
+                ),
                 raises=vol.MultipleInvalid,
             ),
         ),
@@ -417,7 +424,11 @@ async def test_service_volume_mute(
             {"cmd": "36"},
             "ff:36",
             marks=pytest.mark.xfail(
-                reason="String is converted in hex value, the final result looks like 'ff:24', not what you'd expect."
+                reason=(
+                    "String is converted in hex value, the final"
+                    " result looks like 'ff:24', not what"
+                    " you'd expect."
+                )
             ),
         ),
         ({"cmd": 54}, "ff:36"),
@@ -425,7 +436,11 @@ async def test_service_volume_mute(
             {"cmd": "36", "src": "1", "dst": "0"},
             "10:36",
             marks=pytest.mark.xfail(
-                reason="String is converted in hex value, the final result looks like 'ff:24', not what you'd expect."
+                reason=(
+                    "String is converted in hex value, the final"
+                    " result looks like 'ff:24', not what"
+                    " you'd expect."
+                )
             ),
         ),
         ({"cmd": 54, "src": "1", "dst": "0"}, "10:36"),
@@ -433,7 +448,10 @@ async def test_service_volume_mute(
             {"cmd": "64", "src": "1", "dst": "0", "att": "4f:44"},
             "10:64:4f:44",
             marks=pytest.mark.xfail(
-                reason="`att` only accepts a int or a HEX value, it seems good to allow for raw data here.",
+                reason=(
+                    "`att` only accepts a int or a HEX value,"
+                    " it seems good to allow for raw data here."
+                ),
                 raises=vol.MultipleInvalid,
             ),
         ),
@@ -457,7 +475,11 @@ async def test_service_volume_mute(
             {"cmd": "0A", "src": "1", "dst": "0", "att": ["1B", "44"]},
             "10:0a:1b:44",
             marks=pytest.mark.xfail(
-                reason="While the code shows that it's possible to passthrough a list, the call schema does not allow it.",
+                reason=(
+                    "While the code shows that it's possible to"
+                    " passthrough a list, the call schema does"
+                    " not allow it."
+                ),
                 raises=(vol.MultipleInvalid, TypeError),
             ),
         ),

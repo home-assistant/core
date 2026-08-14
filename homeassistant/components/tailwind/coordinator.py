@@ -1,6 +1,7 @@
 """Data update coordinator for Tailwind."""
 
 from datetime import timedelta
+from typing import override
 
 from gotailwind import (
     Tailwind,
@@ -25,6 +26,8 @@ type TailwindConfigEntry = ConfigEntry[TailwindDataUpdateCoordinator]
 class TailwindDataUpdateCoordinator(DataUpdateCoordinator[TailwindDeviceStatus]):
     """Class to manage fetching Tailwind data."""
 
+    config_entry: TailwindConfigEntry
+
     def __init__(self, hass: HomeAssistant, entry: TailwindConfigEntry) -> None:
         """Initialize the coordinator."""
         self.tailwind = Tailwind(
@@ -40,6 +43,7 @@ class TailwindDataUpdateCoordinator(DataUpdateCoordinator[TailwindDeviceStatus])
             update_interval=timedelta(seconds=5),
         )
 
+    @override
     async def _async_update_data(self) -> TailwindDeviceStatus:
         """Fetch data from the Tailwind device."""
         try:

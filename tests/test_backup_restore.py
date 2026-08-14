@@ -1,5 +1,6 @@
 """Test methods in backup_restore."""
 
+from io import BytesIO
 import json
 from pathlib import Path
 import tarfile
@@ -182,7 +183,8 @@ def test_restoring_backup_that_is_not_a_file(
     restore_file_path.write_text(json.dumps(restore_config), encoding="utf-8")
     assert restore_file_path.exists()
 
-    # Create a directory at the backup file path to simulate the backup file not being a file
+    # Create a directory at the backup file path to simulate
+    # the backup file not being a file
     backup_file_path.mkdir(exist_ok=True)
 
     with (
@@ -227,7 +229,10 @@ def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> Non
     with (
         pytest.raises(
             ValueError,
-            match="You need at least Home Assistant version 9999.99.99 to restore this backup",
+            match=(
+                "You need at least Home Assistant version"
+                " 9999.99.99 to restore this backup"
+            ),
         ),
     ):
         assert backup_restore.restore_backup(tmp_path.as_posix()) is True
@@ -382,8 +387,8 @@ def test_restore_backup(
     }
 
 
-def test_restore_backup_filter_files(tmp_path: Path) -> None:
-    """Test filtering dangerous files when restoring a backup."""
+def test_restore_backup_rejects_unsafe_files(tmp_path: Path) -> None:
+    """Test that a backup with unsafe paths is rejected."""
     backup_file_path = tmp_path / "backups" / "test.tar"
     backup_file_path.parent.mkdir()
     get_fixture_path(
@@ -406,7 +411,55 @@ def test_restore_backup_filter_files(tmp_path: Path) -> None:
             "data/home-assistant_v2.db-wal",
         }
 
-    real_extractone = tarfile.TarFile._extract_one
+    with (
+        mock.patch(
+            "homeassistant.backup_restore.restore_backup_file_content",
+            return_value=backup_restore.RestoreBackupFileContent(
+                backup_file_path=backup_file_path,
+                password=None,
+                remove_after_restore=False,
+                restore_database=True,
+                restore_homeassistant=True,
+            ),
+        ),
+        pytest.raises(tarfile.FilterError),
+    ):
+        backup_restore.restore_backup(tmp_path.as_posix())
+
+    result = restore_result_file_content(tmp_path)
+    assert result is not None
+    assert result["success"] is False
+    assert result["error_type"] in {"AbsolutePathError", "OutsideDestinationError"}
+
+
+def test_restore_backup_rejects_absolute_symlink(tmp_path: Path) -> None:
+    """Test rejection of a symlink whose linkname escapes the destination.
+
+    A SYMTYPE entry followed by a regular file whose name traverses the
+    symlink would otherwise land attacker-controlled bytes outside the
+    extraction directory. The tar filter resolves the path after the
+    symlink and rejects the entry.
+    """
+    backup_file_path = tmp_path / "backups" / "test.tar"
+    backup_file_path.parent.mkdir()
+
+    with tarfile.open(backup_file_path, "w") as tar:
+        backup_json = json.dumps(
+            {"homeassistant": {"version": "0.0.0"}, "compressed": False}
+        ).encode()
+        info = tarfile.TarInfo(name="./backup.json")
+        info.size = len(backup_json)
+        tar.addfile(info, BytesIO(backup_json))
+
+        symlink = tarfile.TarInfo(name="pwn")
+        symlink.type = tarfile.SYMTYPE
+        symlink.linkname = "/tmp"  # noqa: S108
+        tar.addfile(symlink)
+
+        payload = b"pwned"
+        evil = tarfile.TarInfo(name="pwn/ha_escape_target")
+        evil.size = len(payload)
+        tar.addfile(evil, BytesIO(payload))
 
     with (
         mock.patch(
@@ -419,27 +472,11 @@ def test_restore_backup_filter_files(tmp_path: Path) -> None:
                 restore_homeassistant=True,
             ),
         ),
-        mock.patch(
-            "tarfile.TarFile._extract_one", autospec=True, wraps=real_extractone
-        ) as extractone_mock,
+        pytest.raises(tarfile.FilterError),
     ):
-        assert backup_restore.restore_backup(tmp_path.as_posix()) is True
+        backup_restore.restore_backup(tmp_path.as_posix())
 
-    # Check the unsafe files are not extracted, and that the safe files are extracted
-    extracted_files = {call.args[1].name for call in extractone_mock.mock_calls}
-    assert extracted_files == {
-        "./backup.json",  # From the outer tar
-        "homeassistant.tar.gz",  # From the outer tar
-        ".",
-        "data",
-        "data/home-assistant_v2.db",
-        "data/home-assistant_v2.db-wal",
-    }
-    assert restore_result_file_content(tmp_path) == {
-        "error": None,
-        "error_type": None,
-        "success": True,
-    }
+    assert not Path("/tmp/ha_escape_target").exists()  # noqa: S108
 
 
 @pytest.mark.parametrize(("remove_after_restore"), [True, False])

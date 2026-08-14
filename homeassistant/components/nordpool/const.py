@@ -8,7 +8,7 @@ LOGGER = logging.getLogger(__package__)
 
 DEFAULT_SCAN_INTERVAL = 60
 DOMAIN = "nordpool"
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 DEFAULT_NAME = "Nord Pool"
 
 CONF_AREAS = "areas"

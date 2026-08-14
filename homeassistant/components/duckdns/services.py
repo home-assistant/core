@@ -1,7 +1,5 @@
 """Actions for Duck DNS."""
 
-from __future__ import annotations
-
 from aiohttp import ClientError
 import voluptuous as vol
 

@@ -1,10 +1,8 @@
 """Support for ZHA AnalogOutput cluster."""
 
-from __future__ import annotations
-
 import functools
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.number import NumberDeviceClass, NumberMode, RestoreNumber
 from homeassistant.config_entries import ConfigEntry
@@ -53,34 +51,25 @@ class ZhaNumber(ZHAEntity, RestoreNumber):
         entity = entity_data.entity
         if entity.device_class is not None:
             self._attr_device_class = NumberDeviceClass(entity.device_class)
-        self._attr_mode = NumberMode(entity.mode)
+
+    @override
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability attributes from the cached state."""
+        state = self._zha_state
+        self._attr_mode = NumberMode(state.mode)
+        self._attr_native_min_value = state.native_min_value
+        self._attr_native_max_value = state.native_max_value
+        self._attr_native_step = state.native_step
+        self._attr_native_unit_of_measurement = state.native_unit_of_measurement
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
-        return self.entity_data.entity.native_value
+        return self._zha_state.native_value
 
-    @property
-    def native_min_value(self) -> float:
-        """Return the minimum value."""
-        return self.entity_data.entity.native_min_value
-
-    @property
-    def native_max_value(self) -> float:
-        """Return the maximum value."""
-        return self.entity_data.entity.native_max_value
-
-    @property
-    def native_step(self) -> float | None:
-        """Return the value step."""
-        return self.entity_data.entity.native_step
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return self.entity_data.entity.native_unit_of_measurement
-
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         await self.entity_data.entity.async_set_native_value(value=value)

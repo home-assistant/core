@@ -1,7 +1,5 @@
 """Unique ID migration for HomematicIP Cloud entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 import re
@@ -168,6 +166,14 @@ _NOTIFICATION_LIGHT_RE = re.compile(r"^(Top|Bottom)_(.+)$")
 _NOTIFICATION_LIGHT_CHANNEL_MAP = {"Top": 2, "Bottom": 3}
 
 
+def _match_legacy_class_name(old_unique_id: str) -> str | None:
+    """Return the legacy class name that prefixes ``old_unique_id``, if any."""
+    for class_name in _SORTED_CLASS_NAMES:
+        if old_unique_id.startswith(class_name + "_"):
+            return class_name
+    return None
+
+
 def _migrate_unique_id(old_unique_id: str) -> str | None:
     """Convert an old-format unique_id to the new format.
 
@@ -180,14 +186,7 @@ def _migrate_unique_id(old_unique_id: str) -> str | None:
       {device_id}_{channel}_{feature_id}    (device entities)
       {device_id}_{feature_id}              (group/home entities)
     """
-    # Find the matching class name (longest first)
-    matched_class: str | None = None
-    for class_name in _SORTED_CLASS_NAMES:
-        prefix = class_name + "_"
-        if old_unique_id.startswith(prefix):
-            matched_class = class_name
-            break
-
+    matched_class = _match_legacy_class_name(old_unique_id)
     if matched_class is None:
         return None
 

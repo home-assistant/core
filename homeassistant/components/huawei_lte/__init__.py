@@ -1,7 +1,5 @@
 """Support for Huawei LTE routers."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable
 from contextlib import suppress
@@ -266,7 +264,7 @@ class Router:
             ResponseErrorNotSupportedException,
         ):
             pass  # Ok, normal, nothing to do
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.warning("Logout error", exc_info=True)
 
     def cleanup(self, *_: Any) -> None:
@@ -419,7 +417,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
     def _update_router(*_: Any) -> None:
         """Update router data.
 
-        Separate passthrough function because lambdas don't work with track_time_interval.
+        Separate passthrough function because lambdas don't work
+        with track_time_interval.
         """
         router.update()
 

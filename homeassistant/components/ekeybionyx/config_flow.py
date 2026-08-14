@@ -5,7 +5,7 @@ import json
 import logging
 import re
 import secrets
-from typing import Any, NotRequired, TypedDict
+from typing import Any, NotRequired, TypedDict, override
 
 import aiohttp
 import ekey_bionyxpy
@@ -24,7 +24,9 @@ from homeassistant.helpers.selector import SelectOptionDict, SelectSelector
 
 from .const import API_URL, DOMAIN, INTEGRATION_NAME, SCOPE
 
-# Valid webhook name: starts with letter or underscore, contains letters, digits, spaces, dots, and underscores, does not end with space or dot
+# Valid webhook name: starts with letter or underscore,
+# contains letters, digits, spaces, dots, and underscores,
+# does not end with space or dot
 VALID_NAME_PATTERN = re.compile(r"^(?![\d\s])[\w\d \.]*[\w\d]$")
 
 
@@ -45,6 +47,7 @@ class ConfigFlowEkeyApi(ekey_bionyxpy.AbstractAuth):
         super().__init__(websession, API_URL)
         self._token = token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return the token for the Ekey API."""
         return self._token["access_token"]
@@ -73,17 +76,20 @@ class OAuth2FlowHandler(
         self._data: EkeyFlowData = {}
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": SCOPE}
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Start the user facing flow by initializing the API and getting the systems."""
+        """Start the user facing flow by initializing the API."""
         client = ConfigFlowEkeyApi(async_get_clientsession(self.hass), data[CONF_TOKEN])
         ap = ekey_bionyxpy.BionyxAPI(client)
         self._data["api"] = ap

@@ -1,7 +1,5 @@
 """Constants for the BSB-LAN integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Final
@@ -24,4 +22,5 @@ ATTR_OUTSIDE_TEMPERATURE: Final = "outside_temperature"
 CONF_PASSKEY: Final = "passkey"
 CONF_HEATING_CIRCUITS: Final = "heating_circuits"
 
+DEFAULT_HEATING_CIRCUITS: Final = (1,)
 DEFAULT_PORT: Final = 80

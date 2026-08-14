@@ -40,6 +40,9 @@
     "paused": {
       "trigger": "mdi:timer-pause"
     },
+    "remaining_time_reached": {
+      "trigger": "mdi:timer-alert-outline"
+    },
     "restarted": {
       "trigger": "mdi:timer-refresh"
     },

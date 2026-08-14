@@ -1,7 +1,5 @@
 """Auth utilities for the HTTP component."""
 
-from __future__ import annotations
-
 from ipaddress import ip_address
 
 from aiohttp.web import Request

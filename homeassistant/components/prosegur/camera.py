@@ -1,8 +1,7 @@
 """Support for Prosegur cameras."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from pyprosegur.auth import Auth
 from pyprosegur.exceptions import ProsegurException
@@ -74,6 +73,7 @@ class ProsegurCamera(Camera):
             configuration_url="https://smart.prosegur.com",
         )
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -83,6 +83,7 @@ class ProsegurCamera(Camera):
         try:
             return await self._installation.get_image(self._auth, self._camera.id)
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ProsegurException as err:
             _LOGGER.error("Image %s doesn't exist: %s", self._camera.description, err)
 
@@ -95,6 +96,7 @@ class ProsegurCamera(Camera):
         try:
             await self._installation.request_image(self._auth, self._camera.id)
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ProsegurException as err:
             _LOGGER.error(
                 "Could not request image from camera %s: %s",

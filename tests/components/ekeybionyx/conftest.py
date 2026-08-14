@@ -96,8 +96,14 @@ def mock_webhooks(
             {
                 "functionWebhookId": "946DA01F-9ABD-4D9D-80C7-02AF85C822B9",
                 "integrationName": "Home Assistant",
-                "locationName": "A simple string containing 0 to 128 word, space and punctuation characters.",
-                "functionName": "A simple string containing 0 to 50 word, space and punctuation characters.",
+                "locationName": (
+                    "A simple string containing 0 to 128"
+                    " word, space and punctuation characters."
+                ),
+                "functionName": (
+                    "A simple string containing 0 to 50"
+                    " word, space and punctuation characters."
+                ),
                 "expiresAt": "2022-05-16T04:11:28.0000000+00:00",
                 "modificationState": None,
             }
@@ -164,9 +170,13 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={
             "webhooks": [
                 {
-                    "webhook_id": "a2156edca7fb6671e13845314f6fc68622e5dd7c58f17663a487bd28cac247e7",
+                    "webhook_id": (
+                        "a2156edca7fb6671e13845314f6fc68622e5dd7c58f17663a487bd28cac247e7"
+                    ),
                     "name": "Test1",
-                    "auth": "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7",
+                    "auth": (
+                        "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7"
+                    ),
                     "ekey_id": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
                 }
             ]

@@ -1,9 +1,7 @@
 """Switch platform for zcc integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -24,7 +22,9 @@ async def async_setup_entry(
 
     api = config_entry.runtime_data
 
-    outlets = [ZimiSwitch(device, api) for device in api.outlets]
+    outlets = [
+        ZimiSwitch(hass, device, api, config_entry.entry_id) for device in api.outlets
+    ]
 
     async_add_entities(outlets)
 
@@ -33,10 +33,12 @@ class ZimiSwitch(ZimiEntity, SwitchEntity):
     """Representation of an Zimi Switch."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._device.is_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
 
@@ -46,6 +48,7 @@ class ZimiSwitch(ZimiEntity, SwitchEntity):
 
         await self._device.turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
 

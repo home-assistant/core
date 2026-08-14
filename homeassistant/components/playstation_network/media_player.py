@@ -1,7 +1,7 @@
 """Media player entity for the PlayStation Network Integration."""
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from psnawp_api.models.trophies import PlatformType
 
@@ -67,10 +67,9 @@ async def async_setup_entry(
             devices_added |= new_platforms
 
     for platform in SUPPORTED_PLATFORMS:
-        if device_reg.async_get_device(
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.unique_id}_{platform.value}")
-            }
+        if device_reg.async_get_device_by_identifier(
+            (DOMAIN, f"{coordinator.config_entry.unique_id}_{platform.value}"),
+            config_entry.entry_id,
         ):
             entities.append(PsnMediaPlayerEntity(coordinator, platform, trophy_titles))
             devices_added.add(platform)
@@ -110,11 +109,16 @@ class PsnMediaPlayerEntity(
             name=PLATFORM_MAP[platform],
             manufacturer="Sony Interactive Entertainment",
             model=PLATFORM_MAP[platform],
-            via_device=(DOMAIN, coordinator.config_entry.unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.unique_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
         self.trophy_titles = trophy_titles
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Media Player state getter."""
         session = self.coordinator.data.active_sessions.get(self.key)
@@ -128,23 +132,27 @@ class PsnMediaPlayerEntity(
         return MediaPlayerState.OFF
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Media title getter."""
         session = self.coordinator.data.active_sessions.get(self.key)
         return session.title_name if session else None
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         session = self.coordinator.data.active_sessions.get(self.key)
         return session.title_id if session else None
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Media image url getter."""
         session = self.coordinator.data.active_sessions.get(self.key)
         return session.media_image_url if session else None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 

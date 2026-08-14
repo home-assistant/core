@@ -1,7 +1,5 @@
 """Tests for the Anova integration."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 from anova_wifi import APCUpdate, APCUpdateBinary, APCUpdateSensor

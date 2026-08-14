@@ -1,7 +1,5 @@
 """Blebox helpers."""
 
-from __future__ import annotations
-
 import aiohttp
 
 from homeassistant.core import HomeAssistant

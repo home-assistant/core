@@ -1,7 +1,5 @@
 """Time server controller for KNX integration."""
 
-from __future__ import annotations
-
 from typing import Any, TypedDict
 
 import voluptuous as vol

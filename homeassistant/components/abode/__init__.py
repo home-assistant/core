@@ -1,7 +1,5 @@
 """Support for the Abode Security System."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path

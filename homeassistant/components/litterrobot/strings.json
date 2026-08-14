@@ -45,8 +45,20 @@
   },
   "entity": {
     "binary_sensor": {
+      "bonnet_removed": {
+        "name": "Bonnet removed"
+      },
+      "drawer_removed": {
+        "name": "Drawer removed"
+      },
       "hopper_connected": {
         "name": "Hopper connected"
+      },
+      "laser_dirty": {
+        "name": "Laser dirty"
+      },
+      "online": {
+        "name": "Online"
       },
       "power_status": {
         "name": "Power status"
@@ -59,6 +71,9 @@
       }
     },
     "button": {
+      "change_filter": {
+        "name": "Change filter"
+      },
       "give_snack": {
         "name": "Give snack"
       },
@@ -132,8 +147,15 @@
       "next_feeding": {
         "name": "Next feeding"
       },
+      "next_filter_replacement": {
+        "name": "Next filter replacement"
+      },
       "pet_weight": {
         "name": "Pet weight"
+      },
+      "scoops_saved_count": {
+        "name": "Scoops saved",
+        "unit_of_measurement": "scoops"
       },
       "sleep_mode_end_time": {
         "name": "Sleep mode end time"
@@ -192,11 +214,74 @@
       },
       "panel_lockout": {
         "name": "Panel lockout"
+      },
+      "sleep_mode_friday": {
+        "name": "Friday sleep mode"
+      },
+      "sleep_mode_monday": {
+        "name": "Monday sleep mode"
+      },
+      "sleep_mode_saturday": {
+        "name": "Saturday sleep mode"
+      },
+      "sleep_mode_sunday": {
+        "name": "Sunday sleep mode"
+      },
+      "sleep_mode_thursday": {
+        "name": "Thursday sleep mode"
+      },
+      "sleep_mode_tuesday": {
+        "name": "Tuesday sleep mode"
+      },
+      "sleep_mode_wednesday": {
+        "name": "Wednesday sleep mode"
       }
     },
     "time": {
+      "sleep_mode_end_time_friday": {
+        "name": "Friday sleep mode end time"
+      },
+      "sleep_mode_end_time_monday": {
+        "name": "Monday sleep mode end time"
+      },
+      "sleep_mode_end_time_saturday": {
+        "name": "Saturday sleep mode end time"
+      },
+      "sleep_mode_end_time_sunday": {
+        "name": "Sunday sleep mode end time"
+      },
+      "sleep_mode_end_time_thursday": {
+        "name": "Thursday sleep mode end time"
+      },
+      "sleep_mode_end_time_tuesday": {
+        "name": "Tuesday sleep mode end time"
+      },
+      "sleep_mode_end_time_wednesday": {
+        "name": "Wednesday sleep mode end time"
+      },
       "sleep_mode_start_time": {
         "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_start_time::name%]"
+      },
+      "sleep_mode_start_time_friday": {
+        "name": "Friday sleep mode start time"
+      },
+      "sleep_mode_start_time_monday": {
+        "name": "Monday sleep mode start time"
+      },
+      "sleep_mode_start_time_saturday": {
+        "name": "Saturday sleep mode start time"
+      },
+      "sleep_mode_start_time_sunday": {
+        "name": "Sunday sleep mode start time"
+      },
+      "sleep_mode_start_time_thursday": {
+        "name": "Thursday sleep mode start time"
+      },
+      "sleep_mode_start_time_tuesday": {
+        "name": "Tuesday sleep mode start time"
+      },
+      "sleep_mode_start_time_wednesday": {
+        "name": "Wednesday sleep mode start time"
       }
     },
     "vacuum": {
@@ -217,6 +302,9 @@
     },
     "invalid_credentials": {
       "message": "Invalid credentials. Please check your username and password, then try again"
+    },
+    "update_failed": {
+      "message": "Unable to update {entity_id}"
     }
   },
   "services": {

@@ -1,7 +1,5 @@
 """Tests for the NRGkick integration initialization."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from nrgkick_api import (
@@ -73,8 +71,8 @@ async def test_device(
     """Test successful load and unload of entry."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device is not None
     assert device == snapshot

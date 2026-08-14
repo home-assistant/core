@@ -1,10 +1,8 @@
 """Switch platform for Liebherr integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyliebherrhomeapi import ToggleControl, ZonePosition
 from pyliebherrhomeapi.const import (
@@ -181,6 +179,7 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
         return None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         if TYPE_CHECKING:
@@ -188,14 +187,17 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
         return self._toggle_control.value
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._toggle_control is not None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_set_value(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_set_value(False)
@@ -241,6 +243,7 @@ class LiebherrZoneSwitch(LiebherrDeviceSwitch):
             ):
                 self._attr_translation_key = f"{description.translation_key}_{zone_key}"
 
+    @override
     async def _async_call_set_fn(self, value: bool) -> None:
         """Call the set function for this zone switch."""
         await self.entity_description.set_fn(self.coordinator, self._zone_id, value)

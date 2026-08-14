@@ -1,7 +1,5 @@
 """Support for Azure Event Hubs."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Mapping
 from datetime import datetime

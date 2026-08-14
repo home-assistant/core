@@ -486,8 +486,8 @@ async def test_x_forwarded_proto_incorrect_number_of_elements(
 
     assert resp.status == HTTPStatus.BAD_REQUEST
     assert (
-        f"Incorrect number of elements in X-Forward-Proto. Expected 1 or {expected}, got {got}"
-        in caplog.text
+        "Incorrect number of elements in X-Forward-Proto."
+        f" Expected 1 or {expected}, got {got}" in caplog.text
     )
 
 

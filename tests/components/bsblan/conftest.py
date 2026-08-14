@@ -41,7 +41,7 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="00:80:41:19:69:90",
         version=1,
-        minor_version=2,
+        minor_version=3,
     )
 
 
@@ -61,7 +61,7 @@ def mock_config_entry_dual_circuit() -> MockConfigEntry:
         },
         unique_id="00:80:41:19:69:90",
         version=1,
-        minor_version=2,
+        minor_version=3,
     )
 
 
@@ -109,6 +109,9 @@ def mock_bsblan() -> Generator[MagicMock]:
         )
         # mock get_temperature_unit property
         bsblan.get_temperature_unit = "°C"
+        # Default to a modern JSON-API version (>= v2) so setup uses the full
+        # feature set and does not raise the outdated-firmware repair issue.
+        bsblan.json_api_version = "3.0"
         # Default: single circuit (for config flow tests)
         bsblan.get_available_circuits.return_value = [1]
 

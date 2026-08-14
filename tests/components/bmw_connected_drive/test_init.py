@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 async def test_bmw_connected_drive_repair_issue(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test the BMW Connected Drive configuration entry loading/unloading handles the repair."""
+    """Test the BMW Connected Drive config entry loading/unloading handles repair."""
     config_entry_1 = MockConfigEntry(
         title="Example 1",
         domain=DOMAIN,

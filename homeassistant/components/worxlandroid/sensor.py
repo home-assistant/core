@@ -1,9 +1,8 @@
 """Support for Worx Landroid mower."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
+from typing import override
 
 import aiohttp
 import voluptuous as vol
@@ -76,16 +75,19 @@ class WorxLandroidSensor(SensorEntity):
         self.url = f"http://{self.host}/jsondata.cgi"
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return f"worxlandroid-{self.sensor}"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
         if self.sensor == "battery":

@@ -1,7 +1,7 @@
 """Support for VeSync bulbs and wall dimmers."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyvesync.base_devices.bulb_base import VeSyncBulb
 from pyvesync.base_devices.switch_base import VeSyncSwitch
@@ -81,22 +81,26 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if device is on."""
         return self.device.state.device_status == "on"
 
     @property
+    @override
     def brightness(self) -> int:
         """Get light brightness."""
         if self.device.state.brightness is None:
             _LOGGER.debug(
-                "VeSync - received unexpected 'brightness' value from pyvesync api of None"
+                "VeSync - received unexpected 'brightness'"
+                " value from pyvesync api of None"
             )
             return 0
 
         # convert percent brightness to ha expected range
         return round((max(1, self.device.state.brightness) / 100) * 255)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         attribute_adjustment_only = False
@@ -122,7 +126,8 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
             color_temp = max(0, min(color_temp, 100))
             # call pyvesync library api method to set color_temp
             await self.device.set_color_temp(color_temp)
-            # flag attribute_adjustment_only, so it doesn't turn_on the device redundantly
+            # flag attribute_adjustment_only, so it doesn't
+            # turn_on the device redundantly
             attribute_adjustment_only = True
         # set brightness level
         if (
@@ -149,6 +154,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
         await self.device.turn_on()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.device.turn_off()
@@ -172,15 +178,18 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLightHA, LightEntity):
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         if hasattr(self.device.state, "color_temp") is False:
             return None
 
-        # pyvesync v3 provides BulbState.color_temp_kelvin() - possible to use that instead?
+        # pyvesync v3 provides BulbState.color_temp_kelvin()
+        # - possible to use that instead?
         if self.device.state.color_temp is None:
             _LOGGER.debug(
-                "VeSync - received unexpected 'color_temp' value from pyvesync api of None"
+                "VeSync - received unexpected 'color_temp'"
+                " value from pyvesync api of None"
             )
             return 0
 

@@ -1,9 +1,7 @@
 """Base class for TRMNL entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from trmnl.exceptions import TRMNLError
 from trmnl.models import Device
@@ -39,6 +37,7 @@ class TRMNLEntity(CoordinatorEntity[TRMNLCoordinator]):
         return self.coordinator.data[self._device_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return super().available and self._device_id in self.coordinator.data

@@ -1,7 +1,5 @@
 """Test the UniFi Protect global services."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -527,7 +525,7 @@ async def test_ptz_goto_home_preset_client_error(
     ufp: MockUFPFixture,
     ptz_camera: Camera,
 ) -> None:
-    """Test ptz_goto_preset service with home preset when ptz_goto_preset_public raises ClientError."""
+    """Test ptz_goto_preset with home preset when it raises ClientError."""
     ptz_camera.get_ptz_patrols.return_value = []
     await init_entry(hass, ufp, [ptz_camera])
 

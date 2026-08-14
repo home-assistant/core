@@ -1,0 +1,46 @@
+.type: &condition_type
+  required: true
+  default: any
+  selector:
+    select:
+      translation_key: twilight_type
+      options:
+        - any
+        - civil
+        - nautical
+        - astronomical
+
+.elevation_threshold_entity: &condition_elevation_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "°"
+  - domain: number
+    unit_of_measurement: "°"
+  - domain: sensor
+    unit_of_measurement: "°"
+
+.elevation_threshold_number: &condition_elevation_threshold_number
+  min: -90
+  max: 90
+  mode: box
+  unit_of_measurement: "°"
+
+is_up: {}
+is_set: {}
+is_ascending: {}
+is_descending: {}
+is_night: {}
+elevation:
+  fields:
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *condition_elevation_threshold_entity
+          mode: is
+          number: *condition_elevation_threshold_number
+is_morning_twilight:
+  fields:
+    type: *condition_type
+is_evening_twilight:
+  fields:
+    type: *condition_type

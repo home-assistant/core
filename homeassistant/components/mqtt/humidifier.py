@@ -1,10 +1,8 @@
 """Support for MQTT humidifiers."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -19,10 +17,13 @@ from homeassistant.components.humidifier import (
     HumidifierAction,
     HumidifierDeviceClass,
     HumidifierEntity,
+    HumidifierEntityCapabilityAttribute,
     HumidifierEntityFeature,
+    HumidifierEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
@@ -62,7 +63,6 @@ from .util import valid_publish_topic, valid_subscribe_topic
 PARALLEL_UPDATES = 0
 
 CONF_AVAILABLE_MODES_LIST = "modes"
-CONF_DEVICE_CLASS = "device_class"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
 CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
@@ -83,11 +83,11 @@ DEFAULT_PAYLOAD_RESET = "None"
 
 MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED = frozenset(
     {
-        humidifier.ATTR_HUMIDITY,
-        humidifier.ATTR_MAX_HUMIDITY,
-        humidifier.ATTR_MIN_HUMIDITY,
-        humidifier.ATTR_MODE,
-        humidifier.ATTR_AVAILABLE_MODES,
+        HumidifierEntityStateAttribute.HUMIDITY,
+        HumidifierEntityCapabilityAttribute.MAX_HUMIDITY,
+        HumidifierEntityCapabilityAttribute.MIN_HUMIDITY,
+        HumidifierEntityStateAttribute.MODE,
+        HumidifierEntityCapabilityAttribute.AVAILABLE_MODES,
     }
 )
 
@@ -214,10 +214,12 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
     _topic: dict[str, Any]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
@@ -394,6 +396,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         self._attr_mode = mode
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
@@ -414,10 +417,12 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             CONF_MODE_STATE_TOPIC, self._mode_received, {"_attr_mode"}
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity.
 
@@ -431,6 +436,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity.
 
@@ -444,6 +450,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             self._attr_is_on = False
             self.async_write_ha_state()
 
+    @override
     async def async_set_humidity(self, humidity: float) -> None:
         """Set the target humidity of the humidifier.
 
@@ -457,6 +464,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             self._attr_target_humidity = humidity
             self.async_write_ha_state()
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the fan.
 

@@ -1,7 +1,5 @@
 """UniFi Protect Integration views."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from http import HTTPStatus
 import logging
@@ -161,7 +159,9 @@ class ProtectProxyView(HomeAssistantView):
         device_registry = dr.async_get(self.hass)
 
         if (entity := entity_registry.async_get(camera_id)) is None or (
-            device := device_registry.async_get(entity.device_id or "")
+            device := device_registry.async_get(
+                entity.device_id or "", include_child_devices=False
+            )
         ) is None:
             return None
 

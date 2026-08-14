@@ -1,9 +1,7 @@
 """Text-to-speech media source."""
 
-from __future__ import annotations
-
 import json
-from typing import TypedDict
+from typing import TypedDict, override
 
 from yarl import URL
 
@@ -132,6 +130,7 @@ class TTSMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         manager = self.hass.data[DATA_TTS_MANAGER]
@@ -152,8 +151,11 @@ class TTSMediaSource(MediaSource):
         if stream is None:
             raise Unresolvable("Stream not found")
 
-        return PlayMedia(stream.url, stream.content_type)
+        return PlayMedia(
+            stream.url, stream.content_type, path=stream.async_get_media_path()
+        )
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,

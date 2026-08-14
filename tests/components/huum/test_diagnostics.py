@@ -1,7 +1,5 @@
 """Tests for the Huum diagnostics."""
 
-from __future__ import annotations
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

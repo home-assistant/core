@@ -1,7 +1,5 @@
 """Common test tools for the Radio Frequency integration."""
 
-from __future__ import annotations
-
 from typing import NamedTuple, override
 
 from rf_protocols import ModulationType, RadioFrequencyCommand

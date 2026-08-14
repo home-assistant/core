@@ -1,7 +1,5 @@
 """Coordinator for imap integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
@@ -10,7 +8,7 @@ from email.header import decode_header, make_header
 from email.message import Message
 from email.utils import parseaddr, parsedate_to_datetime
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
 
@@ -306,7 +304,8 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                         data | {"text": message.text}, parse_result=True
                     )
                     _LOGGER.debug(
-                        "IMAP custom template (%s) for msguid %s (%s) rendered to: %s, initial: %s",
+                        "IMAP custom template (%s) for msguid"
+                        " %s (%s) rendered to: %s, initial: %s",
                         self.custom_event_template,
                         last_message_uid,
                         message_id,
@@ -338,7 +337,8 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
 
             self.hass.bus.fire(EVENT_IMAP, data)
             _LOGGER.debug(
-                "Message with id %s (%s) processed, sender: %s, subject: %s, initial: %s",
+                "Message with id %s (%s) processed,"
+                " sender: %s, subject: %s, initial: %s",
                 last_message_uid,
                 message_id,
                 message.sender,
@@ -356,7 +356,9 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         )
         if result != "OK":
             raise UpdateFailed(
-                f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
+                "Invalid response for search"
+                f" '{self.config_entry.data[CONF_SEARCH]}':"
+                f" {result} / {lines[0]}"
             )
         # Check we do have returned items.
         #
@@ -435,6 +437,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         )
         super().__init__(hass, imap_client, entry, timedelta(seconds=10))
 
+    @override
     async def _async_update_data(self) -> int | None:
         """Update the number of unread emails."""
         try:
@@ -481,11 +484,13 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
         self._push_wait_task: asyncio.Task[None] | None = None
         self.number_of_messages: int | None = None
 
+    @override
     async def _async_update_data(self) -> int | None:
         """Update the number of unread emails."""
         await self.async_start()
         return self.number_of_messages
 
+    @override
     async def async_start(self) -> None:
         """Start coordinator."""
         self._push_wait_task = self.hass.async_create_background_task(
@@ -563,6 +568,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                     except AioImapException:
                         pass
 
+    @override
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""
         if self._push_wait_task:

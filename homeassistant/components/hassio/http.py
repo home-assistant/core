@@ -1,7 +1,5 @@
 """HTTP Support for Hass.io."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 import os

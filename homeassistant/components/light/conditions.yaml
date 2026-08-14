@@ -9,7 +9,7 @@
       selector:
         automation_behavior:
           mode: condition
-    for:
+    for: &condition_for
       required: true
       default: 00:00:00
       selector:
@@ -36,6 +36,7 @@ is_brightness:
   target: *condition_light_target
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:

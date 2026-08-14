@@ -125,7 +125,7 @@ def mock_imported_config_data(
     monitored_resources: list[str] | None,
     configured_unit_system: str | None,
 ) -> dict[str, Any]:
-    """Fixture for the fitbit sensor platform configuration data in configuration.yaml."""
+    """Fixture for the fitbit sensor platform config data."""
     config = {}
     if monitored_resources is not None:
         config["monitored_resources"] = monitored_resources

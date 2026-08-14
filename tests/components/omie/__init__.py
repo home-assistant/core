@@ -4,12 +4,26 @@ from datetime import date
 
 from pyomie.model import OMIEResults
 
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+
+async def setup_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Set up the OMIE integration."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
 
 def price_enc(country: int, day: int, hour: int, minute: int) -> float:
     """Encode the given data into a price.
 
     Format is CCDDhhmm000. Examples:
-    -  351 15 01 15 000 for CC=351 (Portugal), DD=15 (day of month), hh=01 (1 am), mm=15.
+    -  351 15 01 15 000 for CC=351 (Portugal), DD=15 (day),
+       hh=01 (1 am), mm=15.
     -   34 16 23 00 000 for CC=34 (Spain), DD=16 (day of month), hh=23 (11 pm), mm=00.
 
     This allows us to make assertions in tests without having

@@ -1,6 +1,5 @@
 """The tests for the Template button platform."""
 
-import datetime as dt
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -9,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.template import DOMAIN
+from homeassistant.components.template.button import DEFAULT_NAME
 from homeassistant.components.template.const import CONF_PICTURE
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -24,11 +24,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_extra_template_attributes,
     async_trigger,
     make_test_action,
     setup_and_test_nested_unique_id,
@@ -40,7 +42,7 @@ from tests.common import MockConfigEntry
 
 TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
 TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
-TEST_BUTTON = TemplatePlatformSetup(BUTTON_DOMAIN, None, "template_button", {})
+TEST_BUTTON = TemplatePlatformSetup(BUTTON_DOMAIN, "template_button", {})
 PRESS_ACTION = make_test_action("press")
 
 
@@ -145,7 +147,7 @@ async def test_missing_emtpy_press_action_config(
     """Test: missing optional template is ok."""
     _verify(hass, STATE_UNKNOWN)
 
-    now = dt.datetime.now(dt.UTC)
+    now = dt_util.utcnow()
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -196,7 +198,7 @@ async def test_device_class_option(
         TEST_BUTTON.entity_id,
     )
 
-    now = dt.datetime.now(dt.UTC)
+    now = dt_util.utcnow()
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -252,7 +254,7 @@ async def test_options_that_are_templates(
 
     _verify(hass, STATE_UNKNOWN, expected_attributes)
 
-    now = dt.datetime.now(dt.UTC)
+    now = dt_util.utcnow()
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -381,3 +383,31 @@ async def test_invalid_availability_template_keeps_component_available(
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get(TEST_BUTTON.entity_id).state != STATE_UNAVAILABLE
     assert "UndefinedError: 'x' is undefined" in caplog_setup_text
+
+
+async def test_extra_template_attributes(hass: HomeAssistant) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_BUTTON, ConfigurationStyle.MODERN, {"press": []}
+    )
+
+
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_BUTTON,
+        ConfigurationStyle.MODERN,
+        0,
+        {
+            "press": [],
+            "attributes": {"device_class": "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: device_class"
+        in caplog.text
+    )

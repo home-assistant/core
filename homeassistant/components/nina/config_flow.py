@@ -1,8 +1,6 @@
 """Config flow for Nina integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pynina import ApiError, Nina
 import voluptuous as vol
@@ -20,7 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    _LOGGER,
     ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
     CONF_FILTERS,
@@ -30,6 +27,7 @@ from .const import (
     CONST_REGION_MAPPING,
     CONST_REGIONS,
     DOMAIN,
+    LOGGER,
     NO_MATCH_REGEX,
     SENSOR_SUFFIXES,
 )
@@ -130,6 +128,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
         for name in CONST_REGIONS:
             self.regions[name] = {}
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -147,7 +146,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
             except ApiError:
                 return self.async_abort(reason="no_fetch")
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
@@ -189,6 +188,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
@@ -227,7 +227,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             except ApiError:
                 return self.async_abort(reason="no_fetch")
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)

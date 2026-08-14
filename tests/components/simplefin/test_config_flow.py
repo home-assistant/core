@@ -23,10 +23,9 @@ from .conftest import MOCK_ACCESS_URL
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_successful_claim(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_simplefin_client: AsyncMock,
+    hass: HomeAssistant, mock_simplefin_client: AsyncMock
 ) -> None:
     """Test successful token claim in config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -65,10 +64,9 @@ async def test_already_setup(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_access_url(
-    hass: HomeAssistant,
-    mock_simplefin_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_simplefin_client: AsyncMock
 ) -> None:
     """Test standard config flow."""
     result = await hass.config_entries.flow.async_init(

@@ -6,13 +6,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dynamic',
         'self_use',
         'fast_discharge',
-        'charged',
-        'idle',
         'fast_charge',
+        'connected_solar_panels',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -48,14 +47,13 @@
 # name: test_all_entities[select.zinvolt_batterij_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zinvolt Batterij Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zinvolt Batterij Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dynamic',
         'self_use',
         'fast_discharge',
-        'charged',
-        'idle',
         'fast_charge',
+        'connected_solar_panels',
       ]),
     }),
     'context': <ANY>,
@@ -63,6 +61,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'charged',
+    'state': 'fast_charge',
   })
 # ---

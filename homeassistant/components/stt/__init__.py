@@ -1,12 +1,10 @@
 """Provide functionality to STT."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import AsyncIterable
 from dataclasses import asdict
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from aiohttp import web
 from aiohttp.hdrs import istr
@@ -166,6 +164,7 @@ class SpeechToTextEntity(RestoreEntity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the provider entity."""
         if self.__last_processed is None:
@@ -207,6 +206,7 @@ class SpeechToTextEntity(RestoreEntity):
         """Return required/preferred input audio processing settings."""
         return DEFAULT_AUDIO_PROCESSING
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the provider entity is added to hass."""
         await super().async_internal_added_to_hass()

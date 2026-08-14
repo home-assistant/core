@@ -1,6 +1,6 @@
 """Config flow for OpenWeatherMap."""
 
-from __future__ import annotations
+from typing import override
 
 import voluptuous as vol
 
@@ -67,12 +67,14 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OpenWeatherMapOptionsFlow:
         """Get the options flow for this handler."""
         return OpenWeatherMapOptionsFlow()
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}

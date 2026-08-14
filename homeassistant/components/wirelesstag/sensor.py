@@ -1,8 +1,7 @@
 """Sensor support for Wireless Sensor Tags platform."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 import voluptuous as vol
 from wirelesstagpy import SensorTag
@@ -20,6 +19,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
 from . import WirelessTagPlatform
 from .const import DOMAIN, SIGNAL_TAG_UPDATE, WIRELESSTAG_DATA
@@ -116,9 +116,14 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         # I want to see entity_id as:
         # sensor.wirelesstag_bedroom_temperature
         # and not as sensor.bedroom for temperature and
-        # sensor.bedroom_2 for humidity
-        self.entity_id = f"sensor.{DOMAIN}_{self.underscored_name}_{self._sensor_type}"
+        # sensor.bedroom_2 for humidity.
+        # slugify ensures the entity_id stays valid for tag names containing
+        # accented/international or special characters.
+        self.entity_id = (
+            f"sensor.{slugify(f'{DOMAIN}_{self._tag.name}_{self._sensor_type}')}"
+        )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -130,21 +135,19 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         )
 
     @property
-    def underscored_name(self):
-        """Provide name savvy to be used in entity_id name of self."""
-        return self.name.lower().replace(" ", "_")
-
-    @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor.unit
 
     @property
+    @override
     def principal_value(self):
         """Return sensor current value."""
         return self._sensor.value

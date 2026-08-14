@@ -1,10 +1,9 @@
 """Home Assistant integration for Indevolt device."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+import itertools
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientError
 from indevolt_api import (
@@ -12,7 +11,7 @@ from indevolt_api import (
     IndevoltConfig,
     IndevoltEnergyMode,
     IndevoltRealtimeAction,
-    TimeOutException,
+    IndevoltRealtimeState,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,6 +19,7 @@ from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -31,17 +31,10 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_BATCH_SIZE: Final = 50
 SCAN_INTERVAL: Final = 30
 
 type IndevoltConfigEntry = ConfigEntry[IndevoltCoordinator]
-
-
-class DeviceTimeoutError(HomeAssistantError):
-    """Raised when device push times out."""
-
-
-class DeviceConnectionError(HomeAssistantError):
-    """Raised when device push fails due to connection issues."""
 
 
 class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -50,6 +43,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     friendly_name: str
     config_entry: IndevoltConfigEntry
     firmware_version: str | None
+    mac_address: str | None
     serial_number: str
     device_model: str
     generation: int
@@ -76,37 +70,51 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.device_model: str = entry.data[CONF_MODEL]
         self.generation: int = entry.data[CONF_GENERATION]
 
+    @override
     async def _async_setup(self) -> None:
         """Fetch device info once on boot."""
         try:
             config_data = await self.api.get_config()
-        except TimeOutException as err:
+        except (ClientError, OSError) as err:
             raise ConfigEntryNotReady(
-                f"Device config retrieval timed out: {err}"
+                translation_domain=DOMAIN,
+                translation_key="config_entry_not_ready",
+                translation_placeholders={"error": str(err)},
             ) from err
 
         # Cache device information
         device_data = config_data.get("device", {})
-
         self.firmware_version = device_data.get("fw")
+        raw_mac = device_data.get("mac")
+        self.mac_address = format_mac(raw_mac) if raw_mac else None
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch raw JSON data from the device."""
+        data: dict[str, Any] = {}
         sensor_keys = SENSOR_KEYS[self.generation]
 
         try:
-            return await self.api.fetch_data(sensor_keys)
-        except TimeOutException as err:
-            raise UpdateFailed(f"Device update timed out: {err}") from err
+            for chunk in itertools.batched(sensor_keys, SCAN_BATCH_SIZE, strict=False):
+                data.update(await self.api.fetch_data(list(chunk)))
+
+        except (ClientError, OSError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+        else:
+            return data
 
     async def async_push_data(self, sensor_key: str, value: Any) -> bool:
         """Push/write data values to given key on the device."""
-        try:
-            return await self.api.set_data(sensor_key, value)
-        except TimeOutException as err:
-            raise DeviceTimeoutError(f"Device push timed out: {err}") from err
-        except (ClientError, ConnectionError, OSError) as err:
-            raise DeviceConnectionError(f"Device push failed: {err}") from err
+        return await self.api.set_data(sensor_key, value)
+
+    def async_optimistic_update(self, read_key: str, value: Any) -> None:
+        """Optimistically update coordinator data without fetching from device."""
+        self.async_set_updated_data({**self.data, read_key: value})
 
     async def async_switch_energy_mode(
         self, target_mode: IndevoltEnergyMode, refresh: bool = True
@@ -130,15 +138,9 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Switch energy mode if required
         if current_mode != target_mode:
-            try:
-                success = await self.async_push_data(
-                    IndevoltConfig.WRITE_ENERGY_MODE, target_mode
-                )
-            except (DeviceTimeoutError, DeviceConnectionError) as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="failed_to_switch_energy_mode",
-                ) from err
+            success = await self.async_push_data(
+                IndevoltConfig.WRITE_ENERGY_MODE, target_mode
+            )
 
             if not success:
                 raise HomeAssistantError(
@@ -147,7 +149,9 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
 
             if refresh:
-                await self.async_request_refresh()
+                self.async_optimistic_update(
+                    IndevoltConfig.READ_ENERGY_MODE, target_mode
+                )
 
     async def async_realtime_action(
         self,
@@ -166,10 +170,15 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         match action:
             case IndevoltRealtimeAction.CHARGE:
                 success = await self.api.charge(power, target_soc)
+                state = IndevoltRealtimeState.CHARGING
+
             case IndevoltRealtimeAction.DISCHARGE:
                 success = await self.api.discharge(power, target_soc)
+                state = IndevoltRealtimeState.DISCHARGING
+
             case IndevoltRealtimeAction.STOP:
                 success = await self.api.stop()
+                state = IndevoltRealtimeState.STANDBY
 
         if not success:
             raise HomeAssistantError(
@@ -177,7 +186,15 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="failed_to_execute_realtime_action",
             )
 
-        await self.async_request_refresh()
+        self.async_set_updated_data(
+            {
+                **self.data,
+                IndevoltConfig.READ_ENERGY_MODE: IndevoltEnergyMode.REAL_TIME_CONTROL,
+                IndevoltConfig.READ_REALTIME_STATE: state,
+                IndevoltConfig.READ_REALTIME_TARGET_SOC: target_soc,
+                IndevoltConfig.READ_REALTIME_POWER_LIMIT: power,
+            }
+        )
 
     def get_emergency_soc(self) -> int:
         """Get the emergency SOC value."""

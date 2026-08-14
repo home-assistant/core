@@ -1,7 +1,5 @@
 """Hub for communication with 1-Wire server or mount_dir."""
 
-from __future__ import annotations
-
 import contextlib
 from datetime import datetime, timedelta
 import logging
@@ -12,7 +10,7 @@ from aio_ownet.exceptions import OWServerProtocolError, OWServerReturnError
 from aio_ownet.proxy import OWServerStatelessProxy
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -95,6 +93,16 @@ class OneWireHub:
         device_registry = dr.async_get(self._hass)
         for device in devices:
             device.device_info["sw_version"] = self._version
+            if device.parent_id is not None:
+                # Devices are ordered parents-first, so a device's parent is
+                # already registered by the time we reach the device.
+                device.device_info["via_device_id"] = (
+                    dr.async_get_device_id_by_identifier(
+                        self._hass,
+                        (DOMAIN, device.parent_id),
+                        config_entry_id=self._config_entry.entry_id,
+                    )
+                )
             device_registry.async_get_or_create(
                 config_entry_id=self._config_entry.entry_id,
                 **device.device_info,
@@ -149,14 +157,13 @@ async def _discover_devices(
             name=device_id,
             serial_number=device_id[3:],
         )
-        if parent_id:
-            device_info[ATTR_VIA_DEVICE] = (DOMAIN, parent_id)
         device = OWDeviceDescription(
             device_info=device_info,
             id=device_id,
             family=device_family,
             path=device_path,
             type=device_type,
+            parent_id=parent_id,
         )
         devices.append(device)
         if device_branches := DEVICE_COUPLERS.get(device_family):

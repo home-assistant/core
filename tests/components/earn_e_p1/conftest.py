@@ -1,7 +1,5 @@
 """Shared fixtures for EARN-E P1 Meter tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch

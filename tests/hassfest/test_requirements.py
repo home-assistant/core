@@ -171,7 +171,7 @@ def test_dependency_version_range_prepare_update(
 
 @pytest.mark.usefixtures("mock_forbidden_package_names")
 def test_check_dependency_package_names(integration: Integration) -> None:
-    """Test dependency package names check for forbidden package names is working correctly."""
+    """Test dependency package names check for forbidden names."""
     package = "homeassistant"
     pkg = "my_package"
 

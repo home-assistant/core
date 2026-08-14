@@ -1,11 +1,9 @@
 """Provide models for the Z-Wave integration."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.const import LogLevel
@@ -76,6 +74,7 @@ class FirmwareVersionRange(DataclassMustHaveAtLeastOne):
     min_ver: AwesomeVersion | None = field(default=None, init=False)
     max_ver: AwesomeVersion | None = field(default=None, init=False)
 
+    @override
     def __post_init__(self) -> None:
         """Post dataclass initialization."""
         super().__post_init__()
@@ -192,6 +191,8 @@ class NewZWaveDiscoverySchema:
     device_class_basic: set[str | int] | None = None
     # [optional] the node's generic device class must match ANY of these values
     device_class_generic: set[str | int] | None = None
+    # [optional] the node's or endpoint's generic device class must NOT match ANY of these values
+    not_device_class_generic: set[str | int] | None = None
     # [optional] the node's specific device class must match ANY of these values
     device_class_specific: set[str | int] | None = None
     # [optional] additional values that ALL need to be present

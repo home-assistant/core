@@ -319,7 +319,7 @@ async def test_get_configuration_not_implemented(
     entity: MockAssistSatellite,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test getting stub satellite configuration when the entity doesn't implement the method."""
+    """Test getting stub config when entity lacks the method."""
     ws_client = await hass_ws_client(hass)
 
     with patch.object(

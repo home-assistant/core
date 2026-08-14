@@ -1,7 +1,5 @@
 """Provide common test tools for STT."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable, Callable, Coroutine
 from pathlib import Path
 from typing import Any

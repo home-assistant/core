@@ -1,19 +1,26 @@
 """The Anthem A/V Receivers integration."""
 
-from __future__ import annotations
-
 import logging
 
 import anthemav
 from anthemav.device_error import DeviceError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import ANTHEMAV_UPDATE_SIGNAL, DEVICE_TIMEOUT_SECONDS
+from .const import ANTHEMAV_UPDATE_SIGNAL, DEVICE_TIMEOUT_SECONDS, DOMAIN, MANUFACTURER
 
 type AnthemavConfigEntry = ConfigEntry[anthemav.Connection]
 
@@ -44,6 +51,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
         raise ConfigEntryNotReady from err
 
     entry.runtime_data = avr
+
+    # Register the zone 1 receiver first so higher zones can link to it as a
+    # via device when their entities are created.
+    mac_address = entry.data[CONF_MAC]
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, mac_address)},
+        connections={(CONNECTION_NETWORK_MAC, mac_address)},
+        name=entry.title,
+        manufacturer=MANUFACTURER,
+        model=entry.data[CONF_MODEL],
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

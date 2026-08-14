@@ -1,7 +1,5 @@
 """Web socket API for Zigbee Home Automation devices."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, cast
@@ -31,12 +29,6 @@ from zha.application.const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
-    WARNING_DEVICE_MODE_EMERGENCY,
-    WARNING_DEVICE_SOUND_HIGH,
-    WARNING_DEVICE_SQUAWK_MODE_ARMED,
-    WARNING_DEVICE_STROBE_HIGH,
-    WARNING_DEVICE_STROBE_YES,
-    ZHA_CLUSTER_HANDLER_MSG,
     ZHA_GW_MSG,
 )
 from zha.application.gateway import Gateway
@@ -46,7 +38,14 @@ from zha.application.helpers import (
     get_matched_clusters,
     qr_to_install_code,
 )
-from zha.zigbee.cluster_handlers.const import CLUSTER_HANDLER_IAS_WD
+from zha.application.platforms.siren import (
+    BaseSiren,
+    SirenLevel,
+    SquawkMode,
+    Strobe,
+    StrobeLevel,
+    WarningMode,
+)
 from zha.zigbee.group import GroupMemberReference
 import zigpy.backups
 from zigpy.config import CONF_DEVICE
@@ -61,7 +60,7 @@ import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME
+from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -81,6 +80,7 @@ from .const import (
     GROUP_IDS,
     GROUP_NAME,
     MFG_CLUSTER_ID_START,
+    SIGNAL_DEVICE_RECONFIGURE_EVENT,
     ZHA_ALARM_OPTIONS,
     ZHA_OPTIONS,
 )
@@ -182,13 +182,13 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
         {
             vol.Required(ATTR_IEEE): IEEE_SCHEMA,
             vol.Optional(
-                ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_SQUAWK_MODE_ARMED
+                ATTR_WARNING_DEVICE_MODE, default=SquawkMode.Armed
             ): cv.positive_int,
             vol.Optional(
-                ATTR_WARNING_DEVICE_STROBE, default=WARNING_DEVICE_STROBE_YES
+                ATTR_WARNING_DEVICE_STROBE, default=Strobe.Strobe
             ): cv.positive_int,
             vol.Optional(
-                ATTR_LEVEL, default=WARNING_DEVICE_SOUND_HIGH
+                ATTR_LEVEL, default=SirenLevel.High_level_sound
             ): cv.positive_int,
         }
     ),
@@ -196,20 +196,21 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
         {
             vol.Required(ATTR_IEEE): IEEE_SCHEMA,
             vol.Optional(
-                ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_MODE_EMERGENCY
+                ATTR_WARNING_DEVICE_MODE, default=WarningMode.Emergency
             ): cv.positive_int,
             vol.Optional(
-                ATTR_WARNING_DEVICE_STROBE, default=WARNING_DEVICE_STROBE_YES
+                ATTR_WARNING_DEVICE_STROBE, default=Strobe.Strobe
             ): cv.positive_int,
             vol.Optional(
-                ATTR_LEVEL, default=WARNING_DEVICE_SOUND_HIGH
+                ATTR_LEVEL, default=SirenLevel.High_level_sound
             ): cv.positive_int,
             vol.Optional(ATTR_WARNING_DEVICE_DURATION, default=5): cv.positive_int,
             vol.Optional(
                 ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE, default=0x00
             ): cv.positive_int,
             vol.Optional(
-                ATTR_WARNING_DEVICE_STROBE_INTENSITY, default=WARNING_DEVICE_STROBE_HIGH
+                ATTR_WARNING_DEVICE_STROBE_INTENSITY,
+                default=StrobeLevel.High_level_strobe,
             ): cv.positive_int,
         }
     ),
@@ -426,10 +427,7 @@ async def websocket_get_groupable_devices(
                         ),
                     }
                     for entity_ref in entity_refs
-                    if list(entity_ref.entity_data.entity.cluster_handlers.values())[
-                        0
-                    ].cluster.endpoint.endpoint_id
-                    == ep_id
+                    if entity_ref.entity_data.entity.endpoint.id == ep_id
                 ],
                 "device": device.zha_device_info,
             }
@@ -651,7 +649,7 @@ async def websocket_reconfigure_node(
         connection.send_message(websocket_api.event_message(msg["id"], data))
 
     remove_dispatcher_function = async_dispatcher_connect(
-        hass, ZHA_CLUSTER_HANDLER_MSG, forward_messages
+        hass, SIGNAL_DEVICE_RECONFIGURE_EVENT, forward_messages
     )
 
     @callback
@@ -1482,15 +1480,6 @@ def async_load_api(hass: HomeAssistant) -> None:
         schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND],
     )
 
-    def _get_ias_wd_cluster_handler(zha_device):
-        """Get the IASWD cluster handler for a device."""
-        cluster_handlers = {
-            ch.name: ch
-            for endpoint in zha_device.endpoints.values()
-            for ch in endpoint.claimed_cluster_handlers.values()
-        }
-        return cluster_handlers.get(CLUSTER_HANDLER_IAS_WD)
-
     async def warning_device_squawk(service: ServiceCall) -> None:
         """Issue the squawk command for an IAS warning device."""
         ieee: EUI64 = service.data[ATTR_IEEE]
@@ -1498,30 +1487,10 @@ def async_load_api(hass: HomeAssistant) -> None:
         strobe: int = service.data[ATTR_WARNING_DEVICE_STROBE]
         level: int = service.data[ATTR_LEVEL]
 
-        if (zha_device := zha_gateway.get_device(ieee)) is not None:
-            if cluster_handler := _get_ias_wd_cluster_handler(zha_device):
-                await cluster_handler.issue_squawk(mode, strobe, level)
-            else:
-                _LOGGER.error(
-                    "Squawking IASWD: %s: [%s] is missing the required IASWD cluster handler!",
-                    ATTR_IEEE,
-                    str(ieee),
-                )
-        else:
-            _LOGGER.error(
-                "Squawking IASWD: %s: [%s] could not be found!", ATTR_IEEE, str(ieee)
-            )
-        _LOGGER.debug(
-            "Squawking IASWD: %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
-            ATTR_IEEE,
-            str(ieee),
-            ATTR_WARNING_DEVICE_MODE,
-            mode,
-            ATTR_WARNING_DEVICE_STROBE,
-            strobe,
-            ATTR_LEVEL,
-            level,
-        )
+        device = zha_gateway.get_device(ieee)
+        siren: BaseSiren = device.get_entity(Platform.SIREN, pick_first=True)
+
+        await siren.async_squawk(mode=mode, strobe=strobe, squawk_level=level)
 
     async_register_admin_service(
         hass,
@@ -1541,31 +1510,16 @@ def async_load_api(hass: HomeAssistant) -> None:
         duty_mode: int = service.data[ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE]
         intensity: int = service.data[ATTR_WARNING_DEVICE_STROBE_INTENSITY]
 
-        if (zha_device := zha_gateway.get_device(ieee)) is not None:
-            if cluster_handler := _get_ias_wd_cluster_handler(zha_device):
-                await cluster_handler.issue_start_warning(
-                    mode, strobe, level, duration, duty_mode, intensity
-                )
-            else:
-                _LOGGER.error(
-                    "Warning IASWD: %s: [%s] is missing the required IASWD cluster handler!",
-                    ATTR_IEEE,
-                    str(ieee),
-                )
-        else:
-            _LOGGER.error(
-                "Warning IASWD: %s: [%s] could not be found!", ATTR_IEEE, str(ieee)
-            )
-        _LOGGER.debug(
-            "Warning IASWD: %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
-            ATTR_IEEE,
-            str(ieee),
-            ATTR_WARNING_DEVICE_MODE,
-            mode,
-            ATTR_WARNING_DEVICE_STROBE,
-            strobe,
-            ATTR_LEVEL,
-            level,
+        device = zha_gateway.get_device(ieee)
+        siren: BaseSiren = device.get_entity(Platform.SIREN, pick_first=True)
+
+        await siren.async_turn_on(
+            tone=mode,
+            volume_level=level,
+            duration=duration,
+            strobe=strobe,
+            strobe_duty_cycle=duty_mode,
+            strobe_intensity=intensity,
         )
 
     async_register_admin_service(

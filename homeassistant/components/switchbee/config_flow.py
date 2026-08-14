@@ -1,9 +1,7 @@
 """Config flow for SwitchBee Smart Home integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from switchbee.api.central_unit import SwitchBeeError
 from switchbee.api.polling import CentralUnitPolling
@@ -58,6 +56,7 @@ class SwitchBeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

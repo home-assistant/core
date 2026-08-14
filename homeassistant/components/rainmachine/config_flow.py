@@ -1,8 +1,6 @@
 """Config flow to configure the RainMachine component."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -59,18 +57,21 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> RainMachineOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RainMachineOptionsFlowHandler()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by homekit discovery."""
         return await self.async_step_homekit_zeroconf(discovery_info)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -105,7 +106,7 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
         # from being shown in discovery.
         # Uses the discovered IP address as a temporary unique ID for
         # discovery de-duplication until the MAC address is available.
-        # pylint: disable-next=hass-unique-id-ip-based
+        # pylint: disable-next=home-assistant-unique-id-ip-based
         await self.async_set_unique_id(ip_address)
         self._abort_if_unique_id_configured()
         self.discovered_ip_address = ip_address
@@ -122,6 +123,7 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,10 +1,8 @@
 """Config flow to configure homekit_controller."""
 
-from __future__ import annotations
-
 import logging
 import re
-from typing import TYPE_CHECKING, Any, Self, cast
+from typing import TYPE_CHECKING, Any, Self, cast, override
 
 import aiohomekit
 from aiohomekit import Controller, const as aiohomekit_const
@@ -121,6 +119,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         """Create the controller."""
         self.controller = await async_get_controller(self.hass)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -164,7 +163,8 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required("device"): vol.In(
                         {
                             key: (
-                                f"{key} ({formatted_category(discovery.description.category)})"
+                                f"{key} ("
+                                f"{formatted_category(discovery.description.category)})"
                             )
                             for key, discovery in self.devices.items()
                         }
@@ -177,20 +177,18 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
     def _hkid_is_homekit(self, hkid: str) -> bool:
         """Determine if the device is a homekit bridge or accessory."""
         dev_reg = dr.async_get(self.hass)
-        device = dev_reg.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(hkid))}
-        )
-
-        if device is None:
-            return False
-
-        for entry_id in device.config_entries:
-            entry = self.hass.config_entries.async_get_entry(entry_id)
+        # Several config entries can each own a device for the same MAC, so check every
+        # matching device, not just the first.
+        for device in dev_reg.async_get_devices(
+            connections={(dr.CONNECTION_NETWORK_MAC, hkid)}
+        ):
+            entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
             if entry and entry.domain == HOMEKIT_BRIDGE_DOMAIN:
                 return True
 
         return False
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -335,6 +333,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         # pairing code)
         return self._async_step_pair_show_form()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         if other_flow.context.get("unique_id") == self.hkid and not other_flow.pairing:
@@ -347,6 +346,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                 return True
         return False
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:

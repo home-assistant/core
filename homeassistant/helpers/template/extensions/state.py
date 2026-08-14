@@ -1,19 +1,15 @@
 """State functions for Home Assistant templates."""
 
-from __future__ import annotations
-
-import collections.abc
 from collections.abc import Iterable
 import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_PERSONS,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfLength,
 )
 from homeassistant.core import State, valid_entity_id
@@ -164,7 +160,7 @@ class StateExtension(BaseTemplateExtension):
                     continue
             elif isinstance(entity, State):
                 entity_id = entity.entity_id
-            elif isinstance(entity, collections.abc.Iterable):
+            elif isinstance(entity, Iterable):
                 search += entity
                 continue
             else:
@@ -231,8 +227,8 @@ class StateExtension(BaseTemplateExtension):
                 )
                 return None
 
-            latitude = point_state.attributes[ATTR_LATITUDE]
-            longitude = point_state.attributes[ATTR_LONGITUDE]
+            latitude = point_state.attributes[EntityStateAttribute.LATITUDE]
+            longitude = point_state.attributes[EntityStateAttribute.LONGITUDE]
 
             entities = args[1]
 
@@ -311,8 +307,8 @@ class StateExtension(BaseTemplateExtension):
                     )
                     return None
 
-                latitude = point_state.attributes[ATTR_LATITUDE]
-                longitude = point_state.attributes[ATTR_LONGITUDE]
+                latitude = point_state.attributes[EntityStateAttribute.LATITUDE]
+                longitude = point_state.attributes[EntityStateAttribute.LONGITUDE]
 
             locations.append((latitude, longitude))
 

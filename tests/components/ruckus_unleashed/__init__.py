@@ -1,7 +1,5 @@
 """Tests for the Ruckus integration."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
 from aioruckus import AjaxSession, RuckusAjaxApi

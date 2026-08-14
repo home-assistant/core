@@ -1,9 +1,7 @@
 """Config flow for the Aprilaire integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyaprilaire.const import Attribute
 import voluptuous as vol
@@ -31,6 +29,7 @@ class AprilaireConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

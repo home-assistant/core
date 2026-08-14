@@ -1,9 +1,7 @@
 """Config flow for Forecast.Solar integration."""
 
-from __future__ import annotations
-
 import re
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -74,6 +72,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> ForecastSolarOptionFlowHandler:
@@ -82,12 +81,14 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_PLANE: PlaneSubentryFlowHandler}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -107,7 +108,11 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                             CONF_AZIMUTH: user_input[CONF_AZIMUTH],
                             CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
                         },
-                        "title": f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                        "title": (
+                            f"{user_input[CONF_DECLINATION]}°"
+                            f" / {user_input[CONF_AZIMUTH]}°"
+                            f" / {user_input[CONF_MODULES_POWER]}W"
+                        ),
                         "unique_id": None,
                     },
                 ],
@@ -242,7 +247,11 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                title=(
+                    f"{user_input[CONF_DECLINATION]}°"
+                    f" / {user_input[CONF_AZIMUTH]}°"
+                    f" / {user_input[CONF_MODULES_POWER]}W"
+                ),
                 data={
                     CONF_DECLINATION: user_input[CONF_DECLINATION],
                     CONF_AZIMUTH: user_input[CONF_AZIMUTH],
@@ -278,7 +287,11 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
                     CONF_AZIMUTH: user_input[CONF_AZIMUTH],
                     CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
                 },
-                title=f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                title=(
+                    f"{user_input[CONF_DECLINATION]}°"
+                    f" / {user_input[CONF_AZIMUTH]}°"
+                    f" / {user_input[CONF_MODULES_POWER]}W"
+                ),
             ):
                 if not entry.update_listeners:
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)

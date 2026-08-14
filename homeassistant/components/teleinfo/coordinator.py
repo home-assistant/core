@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for the Teleinfo integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 import serial
 from teleinfo import decode, read_frame
@@ -36,6 +35,7 @@ class TeleinfoCoordinator(DataUpdateCoordinator[dict[str, str]]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, str]:
         """Read a Teleinfo frame from the serial port and decode it."""
         port = self.config_entry.data[CONF_SERIAL_PORT]

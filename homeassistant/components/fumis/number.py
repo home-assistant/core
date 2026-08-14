@@ -1,10 +1,8 @@
 """Support for Fumis number entities."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from fumis import Fumis, FumisInfo
 
@@ -86,11 +84,13 @@ class FumisNumberEntity(FumisEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @fumis_exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         await self.entity_description.set_fn(self.coordinator.client, value)

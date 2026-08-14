@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
     async_parse_date_datetime,
 )
 from homeassistant.const import (
@@ -50,7 +50,11 @@ _PICTURE_TEMPLATE = '/local/picture_o{{ "n" if value=="on" else "ff" }}'
             "{{ x - 4 }}",
             template._SENTINEL,
             template._SENTINEL,
-            "Error parsing value for test.entity: 'x' is undefined (value: 1, template: {{ x - 4 }})",
+            (
+                "Error parsing value for test.entity:"
+                " 'x' is undefined"
+                " (value: 1, template: {{ x - 4 }})"
+            ),
         ),
     ],
 )
@@ -93,7 +97,8 @@ async def test_template_entity_requires_hass_set(hass: HomeAssistant) -> None:
             '{% if value=="on" %} mdi:on {% else %} mdi:off {% endif %}', hass
         ),
         "picture": template.Template(
-            '{% if value=="on" %} /local/picture_on {% else %} /local/picture_off {% endif %}',
+            '{% if value=="on" %} /local/picture_on'
+            " {% else %} /local/picture_off {% endif %}",
             hass,
         ),
     }
@@ -249,8 +254,8 @@ async def test_attribute_order(
     assert entity.extra_state_attributes == {"beer": 1, "more_beer": 2}
 
     assert (
-        "Error rendering attributes.no_beer template for test.entity: UndefinedError: 'sad' is undefined"
-        in caplog.text
+        "Error rendering attributes.no_beer template for"
+        " test.entity: UndefinedError: 'sad' is undefined" in caplog.text
     )
 
 
@@ -267,7 +272,8 @@ async def test_trigger_template_complex(hass: HomeAssistant) -> None:
             '{% if value=="on" %} mdi:on {% else %} mdi:off {% endif %}', hass
         ),
         CONF_PICTURE: template.Template(
-            '{% if value=="on" %} /local/picture_on {% else %} /local/picture_off {% endif %}',
+            '{% if value=="on" %} /local/picture_on'
+            " {% else %} /local/picture_off {% endif %}",
             hass,
         ),
         CONF_AVAILABILITY: template.Template('{{ has_value("test.entity") }}', hass),

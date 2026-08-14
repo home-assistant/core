@@ -1,7 +1,5 @@
 """Helper to test significant Fan state changes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -10,13 +8,13 @@ from homeassistant.helpers.significant_change import (
     check_valid_float,
 )
 
-from . import ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_PERCENTAGE, ATTR_PRESET_MODE
+from .const import FanEntityStateAttribute
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
+    FanEntityStateAttribute.DIRECTION,
+    FanEntityStateAttribute.OSCILLATING,
+    FanEntityStateAttribute.PERCENTAGE,
+    FanEntityStateAttribute.PRESET_MODE,
 }
 
 
@@ -42,7 +40,7 @@ def async_check_significant_change(
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
 
     for attr_name in changed_attrs:
-        if attr_name != ATTR_PERCENTAGE:
+        if attr_name != FanEntityStateAttribute.PERCENTAGE:
             return True
 
         old_attr_value = old_attrs.get(attr_name)

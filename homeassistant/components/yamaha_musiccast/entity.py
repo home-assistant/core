@@ -1,15 +1,12 @@
 """The MusicCast integration."""
 
-from __future__ import annotations
+from typing import override
 
 from aiomusiccast.capabilities import Capability
 
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_VIA_DEVICE
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.const import ATTR_CONNECTIONS
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import BRAND, DEFAULT_ZONE, DOMAIN, ENTITY_CATEGORY_MAPPING
@@ -52,6 +49,7 @@ class MusicCastDeviceEntity(MusicCastEntity):
         return self.coordinator.data.zones[self._zone_id].name
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this MusicCast device."""
 
@@ -65,25 +63,31 @@ class MusicCastDeviceEntity(MusicCastEntity):
             },
             manufacturer=BRAND,
             model=self.coordinator.data.model_name,
-            sw_version=self.coordinator.data.system_version,
+            sw_version=str(self.coordinator.data.system_version),
         )
 
         if self._zone_id == DEFAULT_ZONE:
             device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, format_mac(mac))
+                (CONNECTION_NETWORK_MAC, mac)
                 for mac in self.coordinator.data.mac_addresses.values()
             }
         else:
-            device_info[ATTR_VIA_DEVICE] = (DOMAIN, self.coordinator.data.device_id)
+            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, self.coordinator.data.device_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            )
 
         return device_info
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         await super().async_added_to_hass()
         # All entities should register callbacks to update HA when their state changes
         self.coordinator.musiccast.register_callback(self.async_write_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         await super().async_will_remove_from_hass()
@@ -107,6 +111,7 @@ class MusicCastCapabilityEntity(MusicCastDeviceEntity):
         self._attr_entity_category = ENTITY_CATEGORY_MAPPING.get(capability.entity_type)
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return f"{self.device_id}_{self.capability.id}"

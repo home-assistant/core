@@ -144,6 +144,43 @@ class RepeatMode(StrEnum):
 REPEAT_MODES = [cls.value for cls in RepeatMode]
 
 
+class MediaPlayerEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for media player entities."""
+
+    INPUT_SOURCE_LIST = "source_list"
+    SOUND_MODE_LIST = "sound_mode_list"
+
+
+class MediaPlayerEntityStateAttribute(StrEnum):
+    """State attributes for media player entities."""
+
+    MEDIA_VOLUME_LEVEL = "volume_level"
+    MEDIA_VOLUME_MUTED = "is_volume_muted"
+    MEDIA_CONTENT_ID = "media_content_id"
+    MEDIA_CONTENT_TYPE = "media_content_type"
+    MEDIA_DURATION = "media_duration"
+    MEDIA_POSITION = "media_position"
+    MEDIA_POSITION_UPDATED_AT = "media_position_updated_at"
+    MEDIA_TITLE = "media_title"
+    MEDIA_ARTIST = "media_artist"
+    MEDIA_ALBUM_NAME = "media_album_name"
+    MEDIA_ALBUM_ARTIST = "media_album_artist"
+    MEDIA_TRACK = "media_track"
+    MEDIA_SERIES_TITLE = "media_series_title"
+    MEDIA_SEASON = "media_season"
+    MEDIA_EPISODE = "media_episode"
+    MEDIA_CHANNEL = "media_channel"
+    MEDIA_PLAYLIST = "media_playlist"
+    APP_ID = "app_id"
+    APP_NAME = "app_name"
+    INPUT_SOURCE = "source"
+    SOUND_MODE = "sound_mode"
+    MEDIA_SHUFFLE = "shuffle"
+    MEDIA_REPEAT = "repeat"
+    GROUP_MEMBERS = "group_members"
+    ENTITY_PICTURE_LOCAL = "entity_picture_local"
+
+
 class MediaPlayerEntityFeature(IntFlag):
     """Supported features of the media player entity."""
 

@@ -1,12 +1,10 @@
 """Define an object to coordinate fetching Ondilo ICO data."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from ondilo import OndiloError
 
@@ -64,6 +62,7 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
         self.config_entry = config_entry
         self._device_registry = dr.async_get(self.hass)
 
+    @override
     async def _async_update_data(self) -> dict[str, OndiloIcoPoolData]:
         """Fetch pools data from API endpoint and update devices."""
         known_pools: set[str] = set(self.data) if self.data else set()
@@ -94,14 +93,12 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
         for pool_id in removed_pools:
             pool_data = self.data.pop(pool_id)
             await pool_data.measures_coordinator.async_shutdown()
-            device_entry = self._device_registry.async_get_device(
-                identifiers={(DOMAIN, pool_data.ico["serial_number"])}
+            device_entry = self._device_registry.async_get_device_by_identifier(
+                (DOMAIN, pool_data.ico["serial_number"]),
+                self.config_entry.entry_id,
             )
             if device_entry:
-                self._device_registry.async_update_device(
-                    device_id=device_entry.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                self._device_registry.async_remove_device(device_entry.id)
 
         for pool_id in current_pools:
             pool_data = data[pool_id]
@@ -165,6 +162,7 @@ class OndiloIcoMeasuresCoordinator(DataUpdateCoordinator[OndiloIcoMeasurementDat
         self._next_refresh: datetime | None = None
         self._pool_id = pool_id
 
+    @override
     async def _async_update_data(self) -> OndiloIcoMeasurementData:
         """Fetch measurement data from API endpoint."""
         async with UPDATE_LOCK:

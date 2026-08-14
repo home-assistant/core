@@ -16,6 +16,7 @@ import mutagen
 import pytest
 
 from homeassistant.components import esphome
+from homeassistant.components.esphome import DOMAIN
 from homeassistant.components.esphome.ffmpeg_proxy import (
     _MAX_STDERR_LINES,
     async_create_proxy_url,
@@ -53,7 +54,7 @@ def _write_silence(filename: str, length: int) -> None:
 
 async def test_async_create_proxy_url(hass: HomeAssistant) -> None:
     """Test that async_create_proxy_url returns the correct format."""
-    assert await async_setup_component(hass, "esphome", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     device_id = "test-device"
     convert_id = "test-id"
@@ -531,7 +532,7 @@ async def test_request_same_url_multiple_times(
     hass_client: ClientSessionGenerator,
     wav_file: str,
 ) -> None:
-    """Test that the ffmpeg process is restarted if the same URL is requested multiple times."""
+    """Test ffmpeg process is restarted if same URL requested again."""
     device_id = "1234"
 
     await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})

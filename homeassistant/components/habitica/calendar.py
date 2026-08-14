@@ -1,12 +1,10 @@
 """Calendar platform for Habitica integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import asdict
 from datetime import date, datetime, timedelta
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 from uuid import UUID
 
 from dateutil.rrule import rrule
@@ -72,11 +70,13 @@ class HabiticaCalendarEntity(HabiticaBase, CalendarEntity):
         """Return events."""
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the current or next upcoming event."""
 
         return next(iter(self.get_events(dt_util.now())), None)
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -111,6 +111,7 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
         translation_key=HabiticaCalendar.TODOS,
     )
 
+    @override
     def get_events(
         self, start_date: datetime, end_date: datetime | None = None
     ) -> list[CalendarEvent]:
@@ -182,6 +183,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
             else recurrence
         ).date() + timedelta(days=1)
 
+    @override
     def get_events(
         self, start_date: datetime, end_date: datetime | None = None
     ) -> list[CalendarEvent]:
@@ -236,11 +238,13 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         )
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return next(iter(self.get_events(self.start_of_today)), None)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool | None] | None:
         """Return entity specific state attributes."""
         return {
@@ -258,6 +262,7 @@ class HabiticaTodoRemindersCalendarEntity(HabiticaCalendarEntity):
         translation_key=HabiticaCalendar.TODO_REMINDERS,
     )
 
+    @override
     def get_events(
         self, start_date: datetime, end_date: datetime | None = None
     ) -> list[CalendarEvent]:
@@ -328,6 +333,7 @@ class HabiticaDailyRemindersCalendarEntity(HabiticaCalendarEntity):
             tzinfo=dt_util.DEFAULT_TIME_ZONE,
         )
 
+    @override
     def get_events(
         self, start_date: datetime, end_date: datetime | None = None
     ) -> list[CalendarEvent]:

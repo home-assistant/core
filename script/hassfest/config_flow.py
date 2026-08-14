@@ -1,7 +1,5 @@
 """Generate config flow file."""
 
-from __future__ import annotations
-
 import json
 from typing import Any
 
@@ -130,9 +128,10 @@ def _generate_integrations(
         "translated_name": set(),
     }
 
-    # Not all integrations will have an item in the brands collection.
-    # The config flow data index will be the union of the integrations without a brands item
-    # and the brand domain names from the brands collection.
+    # Not all integrations will have an item in the brands
+    # collection. The config flow data index will be the union of
+    # the integrations without a brands item and the brand domain
+    # names from the brands collection.
 
     # Compile a set of integrations which are referenced from at least one brand's
     # integrations list. These integrations will not be present in the root level of the

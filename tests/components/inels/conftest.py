@@ -20,7 +20,7 @@ def mock_inelsmqtt_fixture():
         return mqtt.mock_messages
 
     def last_value(topic):
-        """Mock last_value to return None if mock_last_value is empty or topic doesn't exist."""
+        """Mock last_value returning None if empty or topic missing."""
         return mqtt.mock_last_value.get(topic) if mqtt.mock_last_value else None
 
     async def discovery_all():

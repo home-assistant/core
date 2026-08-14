@@ -4,7 +4,7 @@ from unittest.mock import call
 
 from broadlink.exceptions import BroadlinkException
 from broadlink.remote import pulses_to_data
-from infrared_protocols import NECCommand
+from infrared_protocols.commands.nec import NECCommand
 import pytest
 
 from homeassistant.components.broadlink.const import DOMAIN
@@ -29,8 +29,8 @@ async def test_infrared_setup_works(
     for device in map(get_device, IR_DEVICES):
         mock_setup = await device.setup_entry(hass)
 
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
         )
         entries = er.async_entries_for_device(entity_registry, device_entry.id)
         infrared_entities = [

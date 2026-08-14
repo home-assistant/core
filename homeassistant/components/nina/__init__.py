@@ -1,24 +1,27 @@
 """The Nina integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    _LOGGER,
     ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
     CONF_FILTER_CORONA,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
+    DOMAIN,
+    LOGGER,
     NO_MATCH_REGEX,
 )
 from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
@@ -34,6 +37,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
     return True
 
 
+async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
+    """Set up services."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -45,10 +54,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bo
     version = entry.version
     minor_version = entry.minor_version
 
-    _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
+    LOGGER.debug("Migrating from version %s.%s", version, minor_version)
 
     new_data: dict[str, Any] = {**entry.data, CONF_FILTERS: {}}
 

@@ -4,7 +4,7 @@ import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-from google.genai.types import GenerateContentResponse
+from google.genai.types import GenerateContentResponse, ThinkingLevel
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -17,6 +17,7 @@ from homeassistant.components.conversation import (
 )
 from homeassistant.components.google_generative_ai_conversation.entity import (
     ERROR_GETTING_RESPONSE,
+    _create_thinking_config,
     _escape_decode,
     _format_schema,
 )
@@ -74,7 +75,7 @@ async def test_error_handling(
             Context(),
             agent_id="conversation.google_ai_conversation",
         )
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert (
         result.response.as_dict()["speech"]["plain"]["speech"] == ERROR_GETTING_RESPONSE
@@ -201,7 +202,8 @@ async def test_function_call(
                         "content": {
                             "parts": [
                                 {
-                                    "text": "test function with the provided parameters.",
+                                    "text": "test function with the"
+                                    " provided parameters.",
                                     "thought_signature": b"_thought_signature_5",
                                 }
                             ],
@@ -248,7 +250,7 @@ async def test_function_call(
         agent_id=agent_id,
         device_id="test_device",
     )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.as_dict()["speech"]["plain"]["speech"]
         == "I've called the test function with the provided parameters."
@@ -272,10 +274,14 @@ async def test_function_call(
         },
         "inline_data": None,
         "media_resolution": None,
+        "part_metadata": None,
         "text": None,
         "thought": None,
         "thought_signature": None,
+        "tool_call": None,
+        "tool_response": None,
         "video_metadata": None,
+        "audio_transcription": None,
     }
 
     # Test history conversion for multi-turn conversation
@@ -308,7 +314,8 @@ async def test_google_search_tool_is_sent(
     context = Context()
 
     messages = [
-        # Messages from the model which contain the google search answer (the usage of the Google Search tool is server side)
+        # Messages from the model which contain the google search
+        # answer (the usage of the Google Search tool is server side)
         [
             GenerateContentResponse(
                 candidates=[
@@ -354,7 +361,7 @@ async def test_google_search_tool_is_sent(
             agent_id=agent_id,
             device_id="test_device",
         )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.as_dict()["speech"]["plain"]["speech"]
         == "The last winner of the 2024 FIFA World Cup was Argentina."
@@ -404,7 +411,7 @@ async def test_blocked_response(
         device_id="test_device",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "The message got blocked due to content violations, reason: SAFETY"
@@ -448,7 +455,7 @@ async def test_empty_response(
         agent_id=agent_id,
         device_id="test_device",
     )
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "Unable to get response"
@@ -483,7 +490,7 @@ async def test_none_response(
         device_id="test_device",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "The message got blocked due to content violations, reason: unknown"
@@ -512,7 +519,7 @@ async def test_converse_error(
         agent_id="conversation.google_ai_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "Error preparing LLM API"
@@ -686,7 +693,7 @@ async def test_empty_content_in_chat_history(
     mock_chat_log: MockChatLog,  # noqa: F811
     mock_send_message_stream: AsyncMock,
 ) -> None:
-    """Tests that in case of an empty entry in the chat history the google API will receive an injected space sign instead."""
+    """Test empty chat history entries get an injected space for the API."""
     agent_id = "conversation.google_ai_conversation"
     context = Context()
 
@@ -796,6 +803,142 @@ async def test_history_always_user_first_turn(
         == "Garage door left open, do you want to close it?"
     )
     assert actual_history[1].role == "model"
+
+
+# --- Tests for _create_thinking_config ---
+
+
+@pytest.mark.parametrize(
+    ("model", "thinking_budget", "thinking_level", "expected"),
+    [
+        # Non-thinking models return None
+        ("models/gemini-1.5-flash", -1, None, None),
+        ("gemini-2.0-flash", -1, None, None),
+        # TTS/image models are excluded even if prefix matches
+        ("models/gemini-2.5-flash-preview-tts", -1, None, None),
+        ("models/gemini-2.5-pro-image", -1, None, None),
+        ("models/gemini-3-flash-tts", -1, None, None),
+    ],
+)
+def test_create_thinking_config_non_thinking_models(
+    model: str,
+    thinking_budget: int,
+    thinking_level: str | None,
+    expected: None,
+) -> None:
+    """Test that non-thinking models return None."""
+    assert _create_thinking_config(model, thinking_budget, thinking_level) is expected
+
+
+@pytest.mark.parametrize(
+    ("model", "thinking_level"),
+    [
+        ("models/gemini-3-flash", "minimal"),
+        ("models/gemini-3-flash", "low"),
+        ("gemini-3-pro", "medium"),
+        ("models/gemini-3-ultra", "high"),
+    ],
+)
+def test_create_thinking_config_gemini3_levels(
+    model: str,
+    thinking_level: str,
+) -> None:
+    """Test Gemini 3 models with explicit thinking levels."""
+    level_map = {
+        "minimal": ThinkingLevel.MINIMAL,
+        "low": ThinkingLevel.LOW,
+        "medium": ThinkingLevel.MEDIUM,
+        "high": ThinkingLevel.HIGH,
+    }
+
+    result = _create_thinking_config(model, -1, thinking_level)
+    assert result is not None
+    assert result.include_thoughts is True
+    assert result.thinking_level == level_map[thinking_level]
+
+
+@pytest.mark.parametrize(
+    ("model", "thinking_level"),
+    [
+        ("models/gemini-3-flash", "auto"),
+        ("models/gemini-3-flash", None),
+        ("gemini-3-pro", "minimal"),
+    ],
+)
+def test_create_thinking_config_gemini3_auto(
+    model: str,
+    thinking_level: str | None,
+) -> None:
+    """Test Gemini 3 with 'auto' or unset level defers to the API."""
+    result = _create_thinking_config(model, -1, thinking_level)
+    assert result is not None
+    assert result.include_thoughts is True
+    assert result.thinking_level is None
+
+
+@pytest.mark.parametrize(
+    ("model", "thinking_budget", "expected_budget"),
+    [
+        # Pro: budget < 128 is clamped to 128
+        ("models/gemini-2.5-pro", 0, 128),
+        ("models/gemini-2.5-pro", 1, 128),
+        ("models/gemini-2.5-pro", 127, 128),
+        ("models/gemini-2.5-pro-preview-05-06", 50, 128),
+        # Pro: budget >= 128 is passed through
+        ("models/gemini-2.5-pro", 128, 128),
+        ("models/gemini-2.5-pro", 1000, 1000),
+        ("models/gemini-2.5-pro", 8192, 8192),
+    ],
+)
+def test_create_thinking_config_gemini25_pro_clamping(
+    model: str,
+    thinking_budget: int,
+    expected_budget: int,
+) -> None:
+    """Test Gemini 2.5 Pro clamps budgets below 128."""
+    result = _create_thinking_config(model, thinking_budget)
+    assert result is not None
+    assert result.include_thoughts is True
+    assert result.thinking_budget == expected_budget
+
+
+def test_create_thinking_config_gemini25_pro_automatic() -> None:
+    """Test Gemini 2.5 Pro with automatic budget (-1)."""
+    result = _create_thinking_config("models/gemini-2.5-pro", -1)
+    assert result is not None
+    assert result.include_thoughts is True
+    assert result.thinking_budget is None
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        "models/gemini-2.5-flash",
+        "gemini-2.5-flash-preview-04-17",
+    ],
+)
+def test_create_thinking_config_gemini25_flash_disable(model: str) -> None:
+    """Test Gemini 2.5 Flash with budget 0 disables thinking."""
+    result = _create_thinking_config(model, 0)
+    assert result is not None
+    assert result.include_thoughts is False
+    assert result.thinking_budget == 0
+
+
+def test_create_thinking_config_gemini25_flash_automatic() -> None:
+    """Test Gemini 2.5 Flash with automatic budget (-1)."""
+    result = _create_thinking_config("models/gemini-2.5-flash", -1)
+    assert result is not None
+    assert result.include_thoughts is True
+    assert result.thinking_budget is None
+
+
+def test_create_thinking_config_gemini25_flash_custom() -> None:
+    """Test Gemini 2.5 Flash with a custom budget passes through."""
+    result = _create_thinking_config("models/gemini-2.5-flash", 2048)
+    assert result is not None
+    assert result.include_thoughts is True
+    assert result.thinking_budget == 2048
 
 
 @pytest.mark.usefixtures("mock_init_component")

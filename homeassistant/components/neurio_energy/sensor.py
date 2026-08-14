@@ -1,9 +1,8 @@
 """Support for monitoring a Neurio energy sensor."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 import neurio
 import requests.exceptions
@@ -200,16 +199,19 @@ class NeurioEnergy(SensorEntity):
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement

@@ -1,10 +1,8 @@
 """Config flow for the Pterodactyl integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from yarl import URL
@@ -59,6 +57,7 @@ class PterodactylConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

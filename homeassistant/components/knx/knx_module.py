@@ -1,8 +1,7 @@
 """Base module for the KNX integration."""
 
-from __future__ import annotations
-
 import logging
+from typing import cast
 
 from xknx import XKNX
 from xknx.core import XknxConnectionState
@@ -45,13 +44,12 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
-    CONF_KNX_TELEGRAM_LOG_SIZE,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     KNX_ADDRESS,
-    TELEGRAM_LOG_DEFAULT,
+    KNXConfigEntryOptions,
 )
 from .device import KNXInterfaceDevice
 from .entity import KnxEntityIdentifier
@@ -87,7 +85,7 @@ class KNXModule:
 
         default_state_updater = (
             TrackerOptions(tracker_type=StateTrackerType.EXPIRE, update_interval_min=60)
-            if self.entry.data[CONF_KNX_STATE_UPDATER]
+            if self.entry.options[CONF_KNX_STATE_UPDATER]
             else TrackerOptions(
                 tracker_type=StateTrackerType.INIT, update_interval_min=60
             )
@@ -95,7 +93,7 @@ class KNXModule:
         self.xknx = XKNX(
             address_format=self.project.get_address_format(),
             connection_config=self.connection_config(),
-            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
+            rate_limit=self.entry.options[CONF_KNX_RATE_LIMIT],
             state_updater=default_state_updater,
         )
         self.xknx.connection_manager.register_connection_state_changed_cb(
@@ -105,7 +103,7 @@ class KNXModule:
             hass=hass,
             xknx=self.xknx,
             project=self.project,
-            log_size=entry.data.get(CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT),
+            config=cast(KNXConfigEntryOptions, entry.options),
         )
         self.interface_device = KNXInterfaceDevice(
             hass=hass, entry=entry, xknx=self.xknx
@@ -133,7 +131,7 @@ class KNXModule:
     async def stop(self, event: Event | None = None) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""
         await self.xknx.stop()
-        await self.telegrams.save_history()
+        await self.telegrams.stop()
 
     def connection_config(self) -> ConnectionConfig:
         """Return the connection_config."""
@@ -260,7 +258,7 @@ class KNXModule:
 
     def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""
-        self.connected = state == XknxConnectionState.CONNECTED
+        self.connected = state is XknxConnectionState.CONNECTED
         for device in self.xknx.devices:
             device.after_update()
 
@@ -282,7 +280,9 @@ class KNXModule:
                 or next(
                     (
                         _transcoder
-                        for _filter, _transcoder in self._address_filter_transcoder.items()
+                        for _filter, _transcoder in (
+                            self._address_filter_transcoder.items()
+                        )
                         if _filter.match(telegram.destination_address)
                     ),
                     None,

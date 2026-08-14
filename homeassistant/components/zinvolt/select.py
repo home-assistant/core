@@ -1,5 +1,7 @@
 """Select platform for Zinvolt integration."""
 
+from typing import override
+
 from zinvolt.models import SmartMode
 
 from homeassistant.components.select import SelectEntity
@@ -13,9 +15,8 @@ MODE_MAP = {
     SmartMode.DYNAMIC: "dynamic",
     SmartMode.SELF_USE: "self_use",
     SmartMode.PERFORMANCE: "fast_discharge",
-    SmartMode.CHARGED: "charged",
-    SmartMode.DEFAULT: "idle",
-    SmartMode.FEED: "fast_charge",
+    SmartMode.CHARGED: "fast_charge",
+    SmartMode.FEED: "connected_solar_panels",
 }
 
 HA_TO_MODE = {v: k for k, v in MODE_MAP.items()}
@@ -45,10 +46,12 @@ class ZinvoltBatteryMode(ZinvoltEntity, SelectEntity):
         self._attr_unique_id = f"{coordinator.data.battery.serial_number}.mode"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current battery mode."""
         return MODE_MAP.get(self.coordinator.data.battery.smart_mode)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set battery mode."""
         await self.coordinator.client.set_smart_mode(

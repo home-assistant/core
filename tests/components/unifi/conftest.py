@@ -1,7 +1,5 @@
 """Fixtures for UniFi Network methods."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from datetime import timedelta

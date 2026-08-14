@@ -1,7 +1,5 @@
 """Tests for the lifx integration."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import contextmanager
 from typing import Any

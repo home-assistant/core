@@ -1,10 +1,8 @@
 """Support for Fumis button entities."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from fumis import Fumis
 
@@ -66,6 +64,7 @@ class FumisButtonEntity(FumisEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @fumis_exception_handler
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.press_fn(self.coordinator.client)

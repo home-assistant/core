@@ -1,9 +1,7 @@
 """Config flow for GitHub integration."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiogithubapi import (
     GitHubAPI,
@@ -121,12 +119,14 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_REPOSITORY: RepositoryFlowHandler}
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -145,7 +145,8 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
         async def _wait_for_login() -> None:
             if TYPE_CHECKING:
-                # mypy is not aware that we can't get here without having these set already
+                # mypy is not aware that we can't get here
+                # without having these set already
                 assert self._device is not None
                 assert self._login_device is not None
 

@@ -1,7 +1,5 @@
 """Fixtures for the Concord232 integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 

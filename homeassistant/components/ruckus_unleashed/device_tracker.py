@@ -1,8 +1,7 @@
 """Support for Ruckus devices."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
@@ -100,11 +99,13 @@ class RuckusDevice(CoordinatorEntity, ScannerEntity):
         self._name = name
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return a mac address."""
         return self._mac
 
     @property
+    @override
     def name(self) -> str:
         """Return the name."""
         if not self.is_connected:
@@ -112,6 +113,7 @@ class RuckusDevice(CoordinatorEntity, ScannerEntity):
         return self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_HOSTNAME]
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the ip address."""
         if not self.is_connected:
@@ -119,6 +121,7 @@ class RuckusDevice(CoordinatorEntity, ScannerEntity):
         return self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_IP]
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._mac in self.coordinator.data[KEY_SYS_CLIENTS]

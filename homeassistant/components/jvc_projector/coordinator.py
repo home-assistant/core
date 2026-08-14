@@ -1,11 +1,9 @@
 """Data update coordinator for the jvc_projector integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from jvcprojector import (
     JvcProjector,
@@ -71,6 +69,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         self.state: dict[type[Command], str] = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update state with the current value of a command."""
         commands: set[type[Command]] = set(self.async_contexts())
@@ -83,7 +82,8 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 new_state = await self._get_device_state(commands)
                 break
             except JvcProjectorTimeoutError as err:
-                # Timeouts are expected when the projector loses signal and ignores commands for a brief time.
+                # Timeouts are expected when the projector
+                # loses signal and ignores commands briefly.
                 last_timeout = err
                 await asyncio.sleep(TIMEOUT_SLEEP)
         else:

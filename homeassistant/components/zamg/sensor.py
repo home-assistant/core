@@ -1,9 +1,8 @@
 """Sensor for the zamg integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -214,6 +213,7 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
         coordinator.api_fields = API_FIELDS
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         try:
@@ -224,6 +224,7 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
             return None
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, str]:
         """Return the state attributes."""
         if (update_time := self.coordinator.data["last_update"]) is not None:

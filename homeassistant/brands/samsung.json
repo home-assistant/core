@@ -1,5 +1,5 @@
 {
   "domain": "samsung",
   "name": "Samsung",
-  "integrations": ["familyhub", "samsungtv", "syncthru"]
+  "integrations": ["familyhub", "samsung_infrared", "samsungtv", "syncthru"]
 }

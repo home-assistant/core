@@ -1,9 +1,7 @@
 """Config flow for Leviton Decora Wi-Fi integration."""
 
-from __future__ import annotations
-
 import contextlib
-from typing import Any
+from typing import Any, override
 
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.person import Person
@@ -46,6 +44,7 @@ class DecoraWifiConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

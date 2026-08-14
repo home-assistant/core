@@ -1,9 +1,7 @@
 """Support for HomematicIP Cloud sirens."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from homematicip.base.functionalChannels import NotificationMp3SoundChannel
 from homematicip.device import CombinationSignallingDevice
@@ -74,10 +72,12 @@ class HomematicipMP3Siren(HomematicipGenericEntity, SirenEntity):
         return self._device.functionalChannels[self._channel]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if siren is playing."""
         return self._func_channel.playingFileActive
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
         tone = kwargs.get(ATTR_TONE, 0)
@@ -88,6 +88,7 @@ class HomematicipMP3Siren(HomematicipGenericEntity, SirenEntity):
             sound_file=sound_file, volume_level=volume_level
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         await self._func_channel.stop_sound_async()

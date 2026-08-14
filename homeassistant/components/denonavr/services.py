@@ -1,7 +1,5 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN

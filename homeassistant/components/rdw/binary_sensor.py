@@ -1,9 +1,8 @@
 """Support for RDW binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from vehicle import Vehicle
 
@@ -72,6 +71,7 @@ class RDWBinarySensorEntity(RDWEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.data.license_plate}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return bool(self.entity_description.is_on_fn(self.coordinator.data))

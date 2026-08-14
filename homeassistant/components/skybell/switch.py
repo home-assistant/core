@@ -1,8 +1,6 @@
 """Switch support for the Skybell HD Doorbell."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -43,15 +41,18 @@ async def async_setup_entry(
 class SkybellSwitch(SkybellEntity, SwitchEntity):
     """A switch implementation for Skybell devices."""
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._device.async_set_setting(self.entity_description.key, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._device.async_set_setting(self.entity_description.key, False)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if entity is on."""
         return cast(bool, getattr(self._device, self.entity_description.key))

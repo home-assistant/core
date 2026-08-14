@@ -1,0 +1,101 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      No actions in this integration.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      The integration does not provide any actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration do not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      The integration does not provide any actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      There are no configuration options.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: |
+      Handled by coordinator.
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: |
+      Handled by coordinator.
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      Discovery not possible, as device is connected via 4G only. No LAN connection.
+  discovery:
+    status: exempt
+    comment: |
+      Discovery not possible, as device is connected via 4G only. No LAN connection.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations:
+    status: done
+    comment: |
+      No known limitations
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category:
+    status: done
+    comment: |
+      None of current sensors should be set as diagnostic
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: |
+      No repair issues are created.
+  stale-devices: done
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

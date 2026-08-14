@@ -1,7 +1,5 @@
 """The Diagnostics integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from http import HTTPStatus
@@ -38,9 +36,14 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 
 from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
-from .util import async_redact_data, entity_entry_as_dict
+from .util import async_redact_data, device_entry_as_dict, entity_entry_as_dict
 
-__all__ = ["REDACTED", "async_redact_data", "entity_entry_as_dict"]
+__all__ = [
+    "REDACTED",
+    "async_redact_data",
+    "device_entry_as_dict",
+    "entity_entry_as_dict",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -311,7 +314,10 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if info.device_diagnostics is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        data = await info.device_diagnostics(hass, config_entry, device)
+        # A device's diagnostics may be requested for a child device, but the
+        # callback is currently typed for a main device. Ignoring the mismatch until
+        # DiagnosticsPlatformData.device_diagnostics is widened to accept AnyDeviceEntry.
+        data = await info.device_diagnostics(hass, config_entry, device)  # type: ignore[arg-type]
         return await _async_get_json_file_response(
             hass, data, data_issues, filename, config_entry.domain, d_id, sub_id
         )

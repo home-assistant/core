@@ -1,9 +1,8 @@
 """Binary sensor platform for Portainer."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyportainer import DockerContainerState, EndpointStatus, StackStatus
 
@@ -165,6 +164,7 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
     entity_description: PortainerEndpointBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.coordinator.data[self.device_id])
@@ -176,6 +176,7 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
     entity_description: PortainerContainerBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.container_data)
@@ -187,6 +188,7 @@ class PortainerStackSensor(PortainerStackEntity, BinarySensorEntity):
     entity_description: PortainerStackBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.stack_data)

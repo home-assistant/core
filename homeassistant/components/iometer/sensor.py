@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -74,7 +75,7 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
-            int(round(data.status.device.core.battery_level))
+            round(data.status.device.core.battery_level)
             if data.status.device.core.battery_level is not None
             else None
         ),
@@ -125,6 +126,33 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.reading.get_current_power(),
     ),
+    IOmeterEntityDescription(
+        key="power_phase_1",
+        translation_key="power_three_phase",
+        translation_placeholders={"phase_number": "1"},
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.reading.get_power_phase_L1(),
+    ),
+    IOmeterEntityDescription(
+        key="power_phase_2",
+        translation_key="power_three_phase",
+        translation_placeholders={"phase_number": "2"},
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.reading.get_power_phase_L2(),
+    ),
+    IOmeterEntityDescription(
+        key="power_phase_3",
+        translation_key="power_three_phase",
+        translation_placeholders={"phase_number": "3"},
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.reading.get_power_phase_L3(),
+    ),
 ]
 
 
@@ -161,6 +189,7 @@ class IOmeterSensor(IOmeterEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.identifier}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)

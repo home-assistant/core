@@ -1,6 +1,7 @@
 """Tests for Shelly media player platform."""
 
 from copy import deepcopy
+from http import HTTPStatus
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_WALL_DISPLAY
@@ -36,6 +37,7 @@ from homeassistant.const import (
     STATE_BUFFERING,
     STATE_IDLE,
     STATE_PLAYING,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -139,7 +141,12 @@ STATUS_AUDIO_FILE = {
             "artist": "Artist",
             "duration": 132415,
             "position": 64644,
-            "thumb": "data:image/webp;base64,UklGRkAAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAIAAAAAAFZQOCAYAAAAMAEAnQEqAQABAAFAJiWkAANwAP79NmgA",
+            "thumb": (
+                "data:image/webp;base64,"
+                "UklGRkAAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAA"
+                "QUxQSAIAAAAAAFZQOCAYAAAAMAEAnQEqAQABAAFA"
+                "JiWkAANwAP79NmgA"
+            ),
             "title": "Title",
         },
         "media_type": "AUDIO",
@@ -366,7 +373,7 @@ async def test_get_image_http(
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(ENTITY_ID)
+    assert (state := hass.states.get(ENTITY_ID)) is not None
     assert "entity_picture_local" not in state.attributes
 
     client = await hass_client_no_auth()
@@ -377,13 +384,54 @@ async def test_get_image_http(
     assert isinstance(content, bytes)
 
 
-async def test_get_image_http_base64_decode_error(
+@pytest.mark.parametrize(
+    "invalid_thumb",
+    [
+        "data:image/webp;base64,0",
+        "data invalid",
+        "data:video/mpg;base64,AAAA",
+    ],
+)
+async def test_get_image_http_stale_url_after_thumb_invalidated(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     hass_client_no_auth: ClientSessionGenerator,
+    invalid_thumb: str,
 ) -> None:
-    """Test get image via http command base64 decode error."""
+    """Test image proxy with a stale URL after the thumb becomes invalid."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    entity_picture = state.attributes["entity_picture"]
+
+    monkeypatch.setitem(
+        mock_rpc_device.status["media"]["playback"]["media_meta"],
+        "thumb",
+        invalid_thumb,
+    )
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert "entity_picture" not in state.attributes
+
+    client = await hass_client_no_auth()
+    resp = await client.get(entity_picture)
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_entity_picture_absent_base64_data_invalid(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that entity_picture is absent when base64 data is invalid."""
     status = deepcopy(mock_rpc_device.status)
     status["media"] = STATUS_AUDIO_FILE
     status["media"]["playback"]["media_meta"]["thumb"] = "data:image/webp;base64,0"
@@ -391,15 +439,64 @@ async def test_get_image_http_base64_decode_error(
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(ENTITY_ID)
-    assert "entity_picture_local" not in state.attributes
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert "entity_picture" not in state.attributes
 
-    client = await hass_client_no_auth()
+    client = await hass_client()
+    resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
+    assert resp.status == HTTPStatus.NOT_FOUND
 
-    resp = await client.get(state.attributes["entity_picture"])
-    content = await resp.read()
 
-    assert isinstance(content, bytes)
+@pytest.mark.parametrize(
+    "invalid_thumb",
+    [
+        "data invalid",
+        "lorem ipsum",
+    ],
+)
+async def test_entity_picture_absent_thumb_string_invalid(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    hass_client: ClientSessionGenerator,
+    invalid_thumb: str,
+) -> None:
+    """Test that entity_picture is absent when thumb string has invalid format."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    status["media"]["playback"]["media_meta"]["thumb"] = invalid_thumb
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert "entity_picture" not in state.attributes
+
+    client = await hass_client()
+    resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_entity_picture_absent_mime_type_not_allowed(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that entity_picture is absent when MIME type is not allowed."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    status["media"]["playback"]["media_meta"]["thumb"] = "data:video/mpg;base64,0"
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert "entity_picture" not in state.attributes
+
+    client = await hass_client()
+    resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_rpc_media_player_browse_media_root(
@@ -563,11 +660,13 @@ async def test_rpc_media_player_browse_media_unsupported_media_type(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for media_player.test_name of Test name",
+            "Device communication error occurred while calling action"
+            " for media_player.test_name of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for media_player.test_name of Test name",
+            "RPC call error occurred while calling action"
+            " for media_player.test_name of Test name",
         ),
         (
             InvalidAuthError,
@@ -631,3 +730,27 @@ async def test_rpc_media_player_no_media_meta(
     assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) is None
     assert state.attributes.get(ATTR_MEDIA_DURATION) is None
     assert state.attributes.get(ATTR_MEDIA_POSITION) is None
+
+
+async def test_rpc_media_player_unavailable(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test media player entity handles device going offline without raising."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_PLAYING
+
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE

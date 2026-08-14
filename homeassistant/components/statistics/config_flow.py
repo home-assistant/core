@@ -1,10 +1,8 @@
 """Config flow for statistics."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -167,11 +165,13 @@ class StatisticsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_NAME])
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
@@ -236,7 +236,6 @@ async def ws_start_preview(
             seconds=max_age_input["seconds"],
         )
     preview_entity = StatisticsSensor(
-        hass,
         source_entity_id=entity_id,
         name=name,
         unique_id=None,

@@ -1,9 +1,7 @@
 """Provides a sensor to track various status aspects of a NUT device."""
 
-from __future__ import annotations
-
 import logging
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import outlet_numbers_from_status
 from .const import KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
 from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
@@ -1059,12 +1058,14 @@ async def async_setup_entry(
     status = coordinator.data
 
     # Dynamically add outlet sensors to valid sensors dictionary
-    if (num_outlets := status.get("outlet.count")) is not None:
+    if outlet_numbers := outlet_numbers_from_status(status):
         additional_sensor_types: dict[str, SensorEntityDescription] = {}
-        for outlet_num in range(1, int(num_outlets) + 1):
+        for outlet_num in sorted(outlet_numbers):
             outlet_num_str: str = str(outlet_num)
             outlet_name: str = (
-                status.get(f"outlet.{outlet_num_str}.name") or outlet_num_str
+                status.get(f"outlet.{outlet_num_str}.name")
+                or status.get(f"outlet.{outlet_num_str}.desc")
+                or outlet_num_str
             )
             additional_sensor_types |= {
                 f"outlet.{outlet_num_str}.current": SensorEntityDescription(
@@ -1138,6 +1139,7 @@ class NUTSensor(NUTBaseEntity, SensorEntity):
     """Representation of a sensor entity for NUT status values."""
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return entity state from NUT device."""
         status = self.coordinator.data

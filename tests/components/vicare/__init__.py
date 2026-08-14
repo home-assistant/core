@@ -1,7 +1,5 @@
 """Test for ViCare."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME

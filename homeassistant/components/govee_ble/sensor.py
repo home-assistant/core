@@ -1,9 +1,8 @@
 """Support for govee ble sensors."""
 
-from __future__ import annotations
-
 from datetime import date, datetime
 from decimal import Decimal
+from typing import override
 
 from govee_ble import DeviceClass, SensorUpdate, Units
 from govee_ble.parser import ERROR
@@ -20,10 +19,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfDensity,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -45,13 +43,13 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{DeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{DeviceClass.BATTERY}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
@@ -70,15 +68,41 @@ SENSOR_DESCRIPTIONS = {
     ): SensorEntityDescription(
         key=f"{DeviceClass.PM25}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.CO2, Units.CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
         key=f"{DeviceClass.CO2}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+}
+
+PROBE_SENSOR_DESCRIPTIONS = {
+    f"{translation_key}_{probe_id}": SensorEntityDescription(
+        key=f"{translation_key}_{probe_id}",
+        translation_key=translation_key,
+        translation_placeholders={"probe_id": str(probe_id)},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    )
+    for probe_id in range(1, 7)
+    for translation_key in (
+        "temperature_probe",
+        "temperature_alarm_probe",
+        "low_temperature_alarm_probe",
+    )
+} | {
+    "humidity_probe_1": SensorEntityDescription(
+        key="humidity_probe_1",
+        translation_key="humidity_probe",
+        translation_placeholders={"probe_id": "1"},
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    )
 }
 
 
@@ -92,9 +116,12 @@ def sensor_update_to_bluetooth_data_update(
             for device_id, device_info in sensor_update.devices.items()
         },
         entity_descriptions={
-            device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
-                (description.device_class, description.native_unit_of_measurement)
-            ]
+            device_key_to_bluetooth_entity_key(device_key): (
+                PROBE_SENSOR_DESCRIPTIONS.get(device_key.key)
+                or SENSOR_DESCRIPTIONS[
+                    (description.device_class, description.native_unit_of_measurement)
+                ]
+            )
             for device_key, description in sensor_update.entity_descriptions.items()
             if description.device_class and description.native_unit_of_measurement
         },
@@ -102,9 +129,10 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
+        # None overrides names restored from storage, {} would keep them
         entity_names={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
-            for device_key, sensor_values in sensor_update.entity_values.items()
+            device_key_to_bluetooth_entity_key(device_key): None
+            for device_key in sensor_update.entity_values
         },
     )
 
@@ -138,6 +166,7 @@ class GoveeBluetoothSensorEntity(
     processor: GoveeBLEPassiveBluetoothDataProcessor[_SensorValueType]
 
     @property
+    @override
     def available(self) -> bool:
         """Return False if sensor is in error."""
         coordinator = self.processor.coordinator
@@ -147,6 +176,7 @@ class GoveeBluetoothSensorEntity(
         )
 
     @property
-    def native_value(self) -> _SensorValueType:  # pylint: disable=hass-return-type
+    @override
+    def native_value(self) -> _SensorValueType:  # pylint: disable=home-assistant-return-type
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

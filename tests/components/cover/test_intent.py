@@ -43,7 +43,7 @@ async def test_open_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) -> 
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -75,7 +75,7 @@ async def test_close_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) ->
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -110,7 +110,7 @@ async def test_set_cover_position(hass: HomeAssistant, slots: dict[str, Any]) ->
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN

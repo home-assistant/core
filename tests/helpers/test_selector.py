@@ -300,6 +300,38 @@ def test_device_selector_schema_error(schema) -> None:
         (
             {
                 "filter": [
+                    {
+                        "device": {
+                            "manufacturer": "mock-manuf",
+                            "model": "mock-model",
+                            "model_id": "mock-model_id",
+                        }
+                    }
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {
+                        "domain": "binary_sensor",
+                        "device": {
+                            "integration": "zha",
+                            "manufacturer": "mock-manuf",
+                            "model": "mock-model",
+                            "model_id": "mock-model_id",
+                        },
+                    },
+                    {
+                        "device": {
+                            "integration": "matter",
+                            "manufacturer": "other-mock-manuf",
+                            "model": "other-mock-model",
+                            "model_id": "other-mock-model_id",
+                        },
+                    },
                     {"unit_of_measurement": "baguette"},
                 ]
             },
@@ -341,6 +373,10 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"unit_of_measurement": ["currywurst", "bratwurst"]},
         # Invalid unit_of_measurement
         {"filter": [{"unit_of_measurement": 42}]},
+        # Device properties must be grouped under the device key
+        {"filter": [{"manufacturer": "mock-manuf"}]},
+        {"filter": [{"model": "mock-model"}]},
+        {"filter": [{"model_id": "mock-model_id"}]},
         # reorder can only be used when multiple is true
         {"reorder": True},
         {"reorder": True, "multiple": False},
@@ -978,12 +1014,34 @@ def test_choose_selector_serialize(snapshot: SnapshotAssertion) -> None:
     assert choose_selector.serialize() == snapshot
 
     # Test with Selector object instances
-    choose_selector_objects = selector.ChooseSelector(
+    nested_choose = selector.ChooseSelector(
         {
             "choices": {
                 "text_choice": {"selector": selector.TextSelector({"multiline": True})},
                 "number_choice": {
                     "selector": selector.NumberSelector({"min": 0, "max": 100})
+                },
+            }
+        }
+    )
+    nested_obj = selector.ObjectSelector(
+        {
+            "fields": {
+                "choose": {
+                    "required": True,
+                    "selector": nested_choose,
+                },
+            }
+        }
+    )
+    choose_selector_objects = selector.ChooseSelector(
+        {
+            "choices": {
+                "text_choice": {
+                    "selector": selector.TextSelector({"multiline": True}),
+                },
+                "number_choice": {
+                    "selector": selector.NumberSelector({"min": 0, "max": 100}),
                 },
                 "object_choice": {
                     "selector": selector.ObjectSelector(
@@ -997,36 +1055,7 @@ def test_choose_selector_serialize(snapshot: SnapshotAssertion) -> None:
                                     "selector": selector.NumberSelector({}),
                                 },
                                 "object": {
-                                    "selector": selector.ObjectSelector(
-                                        {
-                                            "fields": {
-                                                "choose": {
-                                                    "required": True,
-                                                    "selector": selector.ChooseSelector(
-                                                        {
-                                                            "choices": {
-                                                                "text_choice": {
-                                                                    "selector": selector.TextSelector(
-                                                                        {
-                                                                            "multiline": True
-                                                                        }
-                                                                    )
-                                                                },
-                                                                "number_choice": {
-                                                                    "selector": selector.NumberSelector(
-                                                                        {
-                                                                            "min": 0,
-                                                                            "max": 100,
-                                                                        }
-                                                                    )
-                                                                },
-                                                            }
-                                                        }
-                                                    ),
-                                                },
-                                            }
-                                        }
-                                    ),
+                                    "selector": nested_obj,
                                 },
                             },
                             "multiple": False,
@@ -1235,18 +1264,18 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
     [
         (
             {"mode": "trigger"},
-            ("first", "last", "any"),
-            ("all", "invalid", None),
+            ("first", "all", "each"),
+            ("last", "any", "invalid", None),
         ),
         (
             {"mode": "condition"},
             ("all", "any"),
-            ("first", "last", "invalid", None),
+            ("first", "each", "last", "invalid", None),
         ),
         (
             {"mode": "trigger", "translation_key": "trigger_behavior"},
-            ("first", "last", "any"),
-            ("all", "invalid", None),
+            ("first", "all", "each"),
+            ("last", "any", "invalid", None),
         ),
     ],
 )
@@ -1342,7 +1371,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
 
 
 def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
-    """Test ObjectSelector custom serializer for using Selector in ObjectSelectorField."""
+    """Test ObjectSelector serializer with Selector in ObjectSelectorField."""
 
     selector_type = "object"
     schema = {
@@ -1366,6 +1395,12 @@ def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
     config = {selector_type: schema}
     selector.validate_selector(config)
     selector_instance = selector.selector(config)
+    selector_instance(
+        [
+            {"name": "Test 1", "percentage": 50},
+            {"name": "Test 2", "percentage": 70},
+        ]
+    )
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})

@@ -1,9 +1,7 @@
 """Config flow for Roku."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from rokuecp import Roku, RokuError
@@ -89,6 +87,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of the integration."""
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -121,6 +120,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=info["title"], data=user_input)
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -151,6 +151,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -195,6 +196,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: RokuConfigEntry,
     ) -> RokuOptionsFlowHandler:

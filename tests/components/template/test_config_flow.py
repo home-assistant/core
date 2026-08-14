@@ -73,7 +73,10 @@ BINARY_SENSOR_OPTIONS = {
         (
             "binary_sensor",
             {
-                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " or states('binary_sensor.two') == 'on' }}"
+                )
             },
             "on",
             {"one": "on", "two": "off"},
@@ -85,7 +88,9 @@ BINARY_SENSOR_OPTIONS = {
         (
             "sensor",
             {
-                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                "state": (
+                    "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                )
             },
             "50.0",
             {"one": "30.0", "two": "20.0"},
@@ -316,7 +321,7 @@ async def test_config_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
 
-    availability = {"advanced_options": {"availability": "{{ True }}"}}
+    availability = {"additional_options": {"availability": "{{ True }}"}}
 
     with patch(
         "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
@@ -570,10 +575,16 @@ async def test_config_flow_device(
         (
             "binary_sensor",
             {
-                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " or states('binary_sensor.two') == 'on' }}"
+                )
             },
             {
-                "state": "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " and states('binary_sensor.two') == 'on' }}"
+                )
             },
             ["on", "off"],
             {"one": "on", "two": "off"},
@@ -585,10 +596,14 @@ async def test_config_flow_device(
         (
             "sensor",
             {
-                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                "state": (
+                    "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                )
             },
             {
-                "state": "{{ float(states('sensor.one')) - float(states('sensor.two')) }}"
+                "state": (
+                    "{{ float(states('sensor.one')) - float(states('sensor.two')) }}"
+                )
             },
             ["50.0", "10.0"],
             {"one": "30.0", "two": "20.0"},
@@ -640,7 +655,9 @@ async def test_config_flow_device(
             "event",
             {"event_type": "{{ states('event.one') }}"},
             {"event_type": "{{ states('event.two') }}"},
-            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.000+00:00"],
+            # The reloaded entity restores the first timestamp, so the second
+            # event is bumped by 1ms to stay a distinct state change.
+            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.001+00:00"],
             {"one": "single", "two": "double"},
             {"event_types": "{{ ['single', 'double'] }}"},
             {"event_types": "{{ ['single', 'double'] }}"},
@@ -916,10 +933,16 @@ async def test_options(
         (
             "binary_sensor",
             {
-                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " or states('binary_sensor.two') == 'on' }}"
+                )
             },
             {
-                "state": "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " and states('binary_sensor.two') == 'on' }}"
+                )
             },
             {"one": "on", "two": "off"},
             {"device_class": "motion"},
@@ -1026,7 +1049,10 @@ async def test_options_remove_device_class(
     [
         (
             "binary_sensor",
-            "{{ states.binary_sensor.one.state == 'on' or states.binary_sensor.two.state == 'on' }}",
+            (
+                "{{ states.binary_sensor.one.state == 'on'"
+                " or states.binary_sensor.two.state == 'on' }}"
+            ),
             {},
             {"one": "on", "two": "off"},
             ["off", "on"],
@@ -1079,7 +1105,7 @@ async def test_config_flow_preview(
     assert result["preview"] == "template"
 
     availability = {
-        "advanced_options": {
+        "additional_options": {
             "availability": "{{ is_state('binary_sensor.available', 'on') }}"
         }
     }
@@ -1107,6 +1133,7 @@ async def test_config_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes[0],
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],
@@ -1131,6 +1158,7 @@ async def test_config_flow_preview(
             "attributes": {"friendly_name": "My template"}
             | extra_attributes[0]
             | extra_attributes[1],
+            "domain": template_type,
             "listeners": {
                 "all": False,
                 "domains": [],
@@ -1150,6 +1178,7 @@ async def test_config_flow_preview(
         "attributes": {"friendly_name": "My template"}
         | extra_attributes[0]
         | extra_attributes[1],
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],
@@ -1225,7 +1254,9 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
                 ),
                 "unit_of_measurement": (
                     "'None' is not a valid unit for device class 'energy'; "
-                    "expected one of 'cal', 'Gcal', 'GJ', 'GWh', 'J', 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh', 'mWh', 'TWh', 'Wh'"
+                    "expected one of 'cal', 'Gcal', 'GJ', 'GWh', 'J',"
+                    " 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh',"
+                    " 'mWh', 'TWh', 'Wh'"
                 ),
             },
         ),
@@ -1504,8 +1535,14 @@ async def test_config_flow_preview_bad_state(
     [
         (
             "binary_sensor",
-            "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
-            "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}",
+            (
+                "{{ states('binary_sensor.one') == 'on'"
+                " or states('binary_sensor.two') == 'on' }}"
+            ),
+            (
+                "{{ states('binary_sensor.one') == 'on'"
+                " and states('binary_sensor.two') == 'on' }}"
+            ),
             {},
             {},
             {"one": "on", "two": "off"},
@@ -1585,6 +1622,7 @@ async def test_option_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes,
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],

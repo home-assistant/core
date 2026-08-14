@@ -345,7 +345,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.MatchFailedReason.DUPLICATE_NAME
+    assert result.no_match_reason is intent.MatchFailedReason.DUPLICATE_NAME
     assert result.no_match_name == "bathroom light"
 
     # Works with duplicate names allowed
@@ -411,7 +411,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.MatchFailedReason.DUPLICATE_NAME
+    assert result.no_match_reason is intent.MatchFailedReason.DUPLICATE_NAME
 
     # Disambiguate by area name, if unique
     result = intent.async_match_targets(
@@ -432,7 +432,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.MatchFailedReason.DUPLICATE_NAME
+    assert result.no_match_reason is intent.MatchFailedReason.DUPLICATE_NAME
 
     # Does work if floor/area name combo is unique
     result = intent.async_match_targets(
@@ -457,7 +457,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.MatchFailedReason.AREA
+    assert result.no_match_reason is intent.MatchFailedReason.AREA
 
     # Check state constraint (only third floor bathroom light is on)
     result = intent.async_match_targets(
@@ -533,7 +533,7 @@ async def test_async_match_targets(
         states=states,
     )
     assert not result.is_match
-    assert result.no_match_reason == intent.MatchFailedReason.MULTIPLE_TARGETS
+    assert result.no_match_reason is intent.MatchFailedReason.MULTIPLE_TARGETS
 
     # Only one light on the ground floor
     result = intent.async_match_targets(
@@ -607,6 +607,55 @@ async def test_match_device_area(
     ) == [state1]
 
 
+async def test_match_child_device_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test async_match_states with an entity on a child device.
+
+    The child device inherits its parent's area.
+    """
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    area_kitchen = area_registry.async_get_or_create("kitchen")
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_update_device(parent_device.id, area_id=area_kitchen.id)
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent_device.id,
+        name="Outlet 1",
+    )
+
+    state1 = State(
+        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+    )
+    state2 = State(
+        "light.living_room", "on", attributes={ATTR_FRIENDLY_NAME: "living room light"}
+    )
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity(state1.entity_id, device_id=child_device.id)
+
+    # The entity is matched through the child device's inherited area
+    assert list(
+        intent.async_match_states(
+            hass,
+            domains={"light"},
+            area_name="kitchen",
+            states=[state1, state2],
+        )
+    ) == [state1]
+
+
 def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
     handler1 = MockIntentHandler({vol.Required("name"): cv.string})
@@ -642,7 +691,7 @@ def test_async_register(hass: HomeAssistant) -> None:
 
 
 def test_async_register_overwrite(hass: HomeAssistant) -> None:
-    """Test registering multiple intents with the same type, ensuring the last one overwrites the previous one and a warning is emitted."""
+    """Test registering duplicate intent types overwrites and emits a warning."""
     handler1 = MagicMock()
     handler1.intent_type = "test_intent"
 
@@ -661,7 +710,7 @@ def test_async_register_overwrite(hass: HomeAssistant) -> None:
 
 
 def test_async_remove(hass: HomeAssistant) -> None:
-    """Test removing an intent and verifying it is no longer present in the Home Assistant data."""
+    """Test removing an intent and verifying it is no longer present."""
     handler = MagicMock()
     handler.intent_type = "test_intent"
 
@@ -718,7 +767,7 @@ async def test_validate_then_run_in_background(hass: HomeAssistant) -> None:
         slots={"name": {"value": "kitchen"}},
     )
 
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response_type is intent.IntentResponseType.ACTION_DONE
 
     assert not call_done.is_set()
     await call_done.wait()
@@ -765,7 +814,7 @@ async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
             "TestType",
             slots={"area": {"value": "invalid area"}},
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_AREA
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.INVALID_AREA
 
     with pytest.raises(intent.MatchFailedError) as err:
         await intent.async_handle(
@@ -774,7 +823,7 @@ async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
             "TestType",
             slots={"floor": {"value": "invalid floor"}},
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_FLOOR
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.INVALID_FLOOR
 
 
 async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> None:
@@ -798,7 +847,7 @@ async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> N
         "TestType",
         slots={"name": {"value": "kitchen"}, "domain": {"value": "light"}},
     )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
 
     # Fails because the intent handler is restricted to lights only
@@ -916,7 +965,7 @@ async def test_service_handler_device_classes(
 async def test_service_handler_matched_states_uses_updated_state(
     hass: HomeAssistant,
 ) -> None:
-    """Test that matched_states reflects the post-service-call state, not the pre-call state."""
+    """Test matched_states reflects post-service-call state, not pre-call."""
     hass.states.async_set("light.kitchen", "off")
 
     async def mock_turn_on(call):
@@ -935,7 +984,7 @@ async def test_service_handler_matched_states_uses_updated_state(
         slots={"name": {"value": "kitchen"}},
     )
 
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(result.matched_states) == 1
     assert result.matched_states[0].entity_id == "light.kitchen"
     assert result.matched_states[0].state == "on"

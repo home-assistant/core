@@ -1,7 +1,5 @@
 """Test Litter-Robot setup process."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -169,7 +167,7 @@ async def test_unique_id_migration_conflict(
 async def test_unique_id_migration_connection_failure(
     hass: HomeAssistant,
 ) -> None:
-    """Test that migration fails when the API is unreachable during unique_id backfill."""
+    """Test migration fails when API is unreachable for unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],
@@ -206,14 +204,14 @@ async def test_device_remove_devices(
 
     device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "test-serial", "remove-serial")},
     )
-    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 

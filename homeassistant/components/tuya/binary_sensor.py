@@ -1,8 +1,7 @@
 """Support for Tuya binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from tuya_device_handlers.definition.binary_sensor import (
     BinarySensorDefinition,
@@ -91,6 +90,14 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="tankfull",
         ),
         TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_FULL",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="FULL",
+            translation_key="tankfull",
+        ),
+        TuyaBinarySensorEntityDescription(
             key="defrost",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
@@ -99,12 +106,68 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="defrost",
         ),
         TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_COIL",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="COIL",
+            translation_key="coil_freeze",
+        ),
+        TuyaBinarySensorEntityDescription(
             key="wet",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             bitmap_key="wet",
             translation_key="wet",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_Cleaning",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="Cleaning",
+            translation_key="filter_cleaning",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_E1",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="E1",
+            translation_key="temp_error",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_CL",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="CL",
+            translation_key="low_temp",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_CH",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="CH",
+            translation_key="high_temp",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_LO",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="LO",
+            translation_key="low_humidity",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_MOTOR",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="MOTOR",
+            translation_key="motor_fault",
         ),
     ),
     DeviceCategory.CWWSQ: (
@@ -205,14 +268,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TAMPER_BINARY_SENSOR,
     ),
-    DeviceCategory.LDCG: (
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.TEMPER_ALARM,
-            device_class=BinarySensorDeviceClass.TAMPER,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-        TAMPER_BINARY_SENSOR,
-    ),
+    DeviceCategory.LDCG: (TAMPER_BINARY_SENSOR,),
     DeviceCategory.MC: (
         TuyaBinarySensorEntityDescription(
             key=DPCode.STATUS,
@@ -441,10 +497,12 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         self._dpcode_wrapper = definition.binary_sensor_wrapper
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],

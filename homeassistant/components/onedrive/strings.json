@@ -90,8 +90,14 @@
     "authentication_failed": {
       "message": "Authentication failed"
     },
+    "connection_error": {
+      "message": "[%key:component::onedrive::config::abort::connection_error%]"
+    },
     "create_folder_error": {
       "message": "Failed to create folder: {message}"
+    },
+    "delete_error": {
+      "message": "Failed to delete from OneDrive: {paths}"
     },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
@@ -105,8 +111,14 @@
     "filenames_do_not_exist": {
       "message": "The following files do not exist: {filenames}"
     },
+    "invalid_destination_path": {
+      "message": "Invalid destination path `{destination_path}`: must be non-empty, must not contain `:` or `..` path segments"
+    },
     "no_access_to_path": {
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+    },
+    "no_files_match_pattern": {
+      "message": "No files match the following patterns: {patterns}"
     },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
@@ -142,6 +154,21 @@
     }
   },
   "services": {
+    "delete": {
+      "description": "Deletes one or more files from OneDrive.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The config entry representing the OneDrive you want to delete from.",
+          "name": "Config entry ID"
+        },
+        "destination_path": {
+          "description": "One or more paths to files inside the OneDrive app folder (Apps/Home Assistant) to delete.",
+          "example": "[\"photos/snapshots/image.jpg\", \"photos/snapshots/image2.jpg\"]",
+          "name": "Destination paths"
+        }
+      },
+      "name": "Delete files"
+    },
     "upload": {
       "description": "Uploads one or more files to OneDrive.",
       "fields": {
@@ -150,12 +177,12 @@
           "name": "Config entry ID"
         },
         "destination_folder": {
-          "description": "Folder inside the Home Assistant app folder (Apps/Home Assistant) you want to upload the files to. Will be created if it does not exist.",
+          "description": "Folder inside the OneDrive app folder (Apps/Home Assistant) you want to upload the files to. Will be created if it does not exist.",
           "example": "photos/snapshots",
           "name": "Destination folder"
         },
         "filename": {
-          "description": "One or more paths to files to upload.",
+          "description": "One or more paths to files to upload. Supports wildcards, for example `/config/www/*.jpg` to upload all JPG files in a folder, or `/config/www/**/*.jpg` to also include subfolders. Subfolders matched by a wildcard are recreated inside the destination folder. The characters `*`, `?` and `[` are treated as wildcards; to upload a file whose name contains one of these characters literally, make sure the file exists under that exact name.",
           "example": "{example_image_path}",
           "name": "Filenames"
         }

@@ -1,7 +1,5 @@
 """Zeroconf discovery for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from fnmatch import translate
@@ -15,6 +13,7 @@ from zeroconf import BadTypeInNameException, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
 
 from homeassistant import config_entries
+from homeassistant.const import ATTR_DOMAIN, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.discovery_flow import DiscoveryKey
@@ -43,8 +42,6 @@ HOMEKIT_PAIRED_STATUS_FLAG = "sf"
 HOMEKIT_MODEL_LOWER = "md"
 HOMEKIT_MODEL_UPPER = "MD"
 
-ATTR_DOMAIN: Final = "domain"
-ATTR_NAME: Final = "name"
 ATTR_PROPERTIES: Final = "properties"
 
 DUPLICATE_INSTANCE_ID_ISSUE_ID = "duplicate_instance_id"
@@ -466,7 +463,8 @@ class ZeroconfDiscovery:
         # Conflict detected, create repair issue
         _joined_ips = ", ".join(str(ip_address) for ip_address in discovered_ips)
         _LOGGER.warning(
-            "Discovered another Home Assistant instance with the same instance ID (%s) at %s",
+            "Discovered another Home Assistant instance"
+            " with the same instance ID (%s) at %s",
             discovered_instance_id,
             _joined_ips,
         )

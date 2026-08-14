@@ -402,6 +402,25 @@ async def test_thermostat_service_calls(
     )
     matter_client.write_attribute.reset_mock()
 
+    # fractional setpoints must round, not truncate: 10.2 * 100 is 1019.9999…
+    # in IEEE 754, so int() would produce 1019 instead of 1020.
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": "climate.longan_link_hvac",
+            "temperature": 10.2,
+            "hvac_mode": HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_args_list[-1] == call(
+        node_id=matter_node.node_id,
+        attribute_path="1/513/18",
+        value=1020,
+    )
+    matter_client.write_attribute.reset_mock()
+
 
 @pytest.mark.parametrize("node_fixture", ["mock_room_airconditioner"])
 async def test_room_airconditioner(
@@ -606,7 +625,7 @@ async def test_eve_thermo_v5_presets(
     assert state
     assert state.attributes["preset_mode"] == "home"
 
-    # Test that preset_mode is updated when ActivePresetHandle changes to different preset
+    # Test preset_mode updates when ActivePresetHandle changes
     set_node_attribute(
         matter_node,
         1,

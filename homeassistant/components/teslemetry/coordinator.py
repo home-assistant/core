@@ -1,13 +1,12 @@
 """Teslemetry Data Coordinator."""
 
-from __future__ import annotations
-
-from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from datetime import timedelta
+from typing import TYPE_CHECKING, Any, override
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     GatewayTimeout,
+    InsufficientCredits,
     InvalidResponse,
     InvalidToken,
     LoginRequired,
@@ -51,6 +50,10 @@ ENERGY_INFO_INTERVAL = timedelta(seconds=30)
 ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
 METADATA_INTERVAL = timedelta(hours=1)
 
+# Insufficient credits will not resolve themselves quickly, so back off polling
+# instead of hammering the API at the coordinator's normal interval.
+INSUFFICIENT_CREDITS_RETRY_AFTER = timedelta(hours=1).total_seconds()
+
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
     VehicleDataEndpoint.CLIMATE_STATE,
@@ -82,6 +85,7 @@ class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.teslemetry = teslemetry
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest metadata for subscription status."""
         try:
@@ -109,7 +113,6 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
     config_entry: TeslemetryConfigEntry
-    last_active: datetime
 
     def __init__(
         self,
@@ -131,24 +134,32 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.api = api
         self.data = flatten(product)
-        self.last_active = datetime.now()
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
         try:
             data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
         except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
+        except InsufficientCredits as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_insufficient_credits",
+                retry_after=INSUFFICIENT_CREDITS_RETRY_AFTER,
+            ) from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
 
         return flatten(data)
@@ -183,6 +194,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         }
         self.data = data
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
         try:
@@ -193,12 +205,14 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
         # Convert Wall Connectors from array to dict
         data["wall_connectors"] = {
@@ -230,6 +244,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self.api = api
         self.data = product
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
         try:
@@ -240,12 +255,14 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
 
         return flatten(
@@ -276,6 +293,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.data = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
         try:
@@ -286,12 +304,14 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
 
         if not data or not isinstance(data.get("time_series"), list):

@@ -1,9 +1,7 @@
 """Permissions for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import voluptuous as vol
 
@@ -70,14 +68,17 @@ class PolicyPermissions(AbstractPermissions):
         self._policy = policy
         self._perm_lookup = perm_lookup
 
+    @override
     def access_all_entities(self, key: str) -> bool:
         """Check if we have a certain access to all entities."""
         return test_all(self._policy.get(CAT_ENTITIES), key)
 
+    @override
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""
         return compile_entities(self._policy.get(CAT_ENTITIES), self._perm_lookup)
 
+    @override
     def __eq__(self, other: object) -> bool:
         """Equals check."""
         return isinstance(other, PolicyPermissions) and other._policy == self._policy
@@ -86,10 +87,12 @@ class PolicyPermissions(AbstractPermissions):
 class _OwnerPermissions(AbstractPermissions):
     """Owner permissions."""
 
+    @override
     def access_all_entities(self, key: str) -> bool:
         """Check if we have a certain access to all entities."""
         return True
 
+    @override
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""
         return lambda entity_id, key: True

@@ -1,7 +1,5 @@
 """The Watergate integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging

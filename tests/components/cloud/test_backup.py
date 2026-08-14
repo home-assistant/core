@@ -499,7 +499,8 @@ async def test_agents_upload_fail(
     [
         (
             CloudApiNonRetryableError("Boom!", code="NC-SH-FH-03"),
-            "The backup size of 13.37GB is too large to be uploaded to Home Assistant Cloud",
+            "The backup size of 13.37GB is too large to be"
+            " uploaded to Home Assistant Cloud",
         ),
         (
             CloudApiNonRetryableError("Boom!", code="NC-CE-01"),

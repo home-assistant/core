@@ -1,8 +1,6 @@
 """Support for Huum wifi-enabled sauna."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from huum.const import SaunaStatus
 from huum.exceptions import SafetyException
@@ -53,6 +51,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         self._attr_unique_id = coordinator.config_entry.entry_id
 
     @property
+    @override
     def min_temp(self) -> int:
         """Return configured minimal temperature."""
         sauna_config = self.coordinator.data.sauna_config
@@ -61,6 +60,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         return sauna_config.min_temp or CONFIG_DEFAULT_MIN_TEMP
 
     @property
+    @override
     def max_temp(self) -> int:
         """Return configured maximum temperature."""
         sauna_config = self.coordinator.data.sauna_config
@@ -69,6 +69,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         return sauna_config.max_temp or CONFIG_DEFAULT_MAX_TEMP
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if self.coordinator.data.status == SaunaStatus.ONLINE_HEATING:
@@ -76,15 +77,18 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def current_temperature(self) -> int | None:
         """Return the current temperature."""
         return self.coordinator.data.temperature
 
     @property
+    @override
     def target_temperature(self) -> int:
         """Return the temperature we try to reach."""
         return self.coordinator.data.target_temperature or int(self.min_temp)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -96,6 +100,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
             await self.coordinator.huum.turn_off()
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)

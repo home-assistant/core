@@ -1,7 +1,7 @@
 """A todo platform for OurGroceries."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -60,6 +60,7 @@ class OurGroceriesTodoListEntity(
         self._attr_name = list_name
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.coordinator.data is None:
@@ -75,6 +76,7 @@ class OurGroceriesTodoListEntity(
             ]
         super()._handle_coordinator_update()
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Create a To-do item."""
         if item.status != TodoItemStatus.NEEDS_ACTION:
@@ -84,6 +86,7 @@ class OurGroceriesTodoListEntity(
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
         if item.summary:
@@ -103,6 +106,7 @@ class OurGroceriesTodoListEntity(
             )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete a To-do item."""
         await asyncio.gather(
@@ -113,6 +117,7 @@ class OurGroceriesTodoListEntity(
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()

@@ -1,0 +1,11 @@
+{
+  "timestamp": 1704067200,
+  "datetime": "2024-01-01T00:00:00",
+  "1.8.0": { "value": 12345.678, "unit": "kWh", "name": "Total Import" },
+  "2.8.0": { "value": 1234.567, "unit": "kWh", "name": "Total Export" },
+  "16.7.0": { "value": 1500.5, "unit": "W", "name": "Active Power" },
+  "32.7.0": { "value": 230.1, "unit": "V", "name": "Voltage L1" },
+  "31.7.0": { "value": 6.52, "unit": "A", "name": "Current L1" },
+  "14.7.0": { "value": 50.01, "unit": "Hz", "name": "Frequency" },
+  "13.7.0": { "value": 0.985, "unit": "", "name": "Power Factor" }
+}

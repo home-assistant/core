@@ -10,19 +10,19 @@ from pytest_unordered import unordered
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.demo.cover import DemoCover
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.demo.media_player import AbstractDemoPlayer
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.demo.switch import DemoSwitch
 from homeassistant.components.google_assistant import (
     EVENT_COMMAND_RECEIVED,
@@ -84,7 +84,7 @@ def registries(
 async def test_async_handle_message(hass: HomeAssistant) -> None:
     """Test the async handle message method."""
     config = MockConfig(
-        should_expose=lambda state: state.entity_id != "light.not_expose",
+        should_expose=lambda entity_id: entity_id != "light.not_expose",
         entity_config={
             "light.demo_light": {
                 const.CONF_ROOM_HINT: "Living Room",
@@ -172,7 +172,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
     hass.states.async_set("light.not_expose", "on")
 
     config = MockConfig(
-        should_expose=lambda state: state.entity_id != "light.not_expose",
+        should_expose=lambda entity_id: entity_id != "light.not_expose",
         entity_config={
             "light.demo_light": {
                 const.CONF_ROOM_HINT: "Living Room",
@@ -545,7 +545,8 @@ async def test_execute(
                                         "params": {"on": True},
                                     },
                                     {
-                                        "command": "action.devices.commands.BrightnessAbsolute",
+                                        "command": "action.devices.commands"
+                                        ".BrightnessAbsolute",
                                         "params": {"brightness": 20},
                                     },
                                 ],
@@ -706,7 +707,8 @@ async def test_execute_times_out(
                                             "params": {"on": True},
                                         },
                                         {
-                                            "command": "action.devices.commands.BrightnessAbsolute",
+                                            "command": "action.devices.commands"
+                                            ".BrightnessAbsolute",
                                             "params": {"brightness": 20},
                                         },
                                     ],
@@ -1260,7 +1262,8 @@ async def test_trait_execute_adding_query_data(hass: HomeAssistant) -> None:
                                     "devices": [{"id": "camera.office"}],
                                     "execution": [
                                         {
-                                            "command": "action.devices.commands.GetCameraStream",
+                                            "command": "action.devices.commands"
+                                            ".GetCameraStream",
                                             "params": {
                                                 "StreamToChromecast": True,
                                                 "SupportedStreamProtocols": [
@@ -1342,7 +1345,10 @@ async def test_identify(hass: HomeAssistant) -> None:
                         "httpPort": 8123,
                         "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
-                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                        "webhookId": (
+                            "dde3b9800a905e886cc4d38e226a6e7e"
+                            "3f2a6993d2b9b9f63d13e42ee7de3219"
+                        ),
                     },
                 }
             ],
@@ -1386,7 +1392,7 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
     hass.states.async_set("lock.has_2fa", "on")
 
     config = MockConfig(
-        should_expose=lambda state: state.entity_id != "light.not_expose",
+        should_expose=lambda entity_id: entity_id != "light.not_expose",
     )
 
     user_agent_id = "mock-user-id"
@@ -1421,7 +1427,10 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
                         "httpPort": 8123,
                         "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
-                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                        "webhookId": (
+                            "dde3b9800a905e886cc4d38e226a6e7e"
+                            "3f2a6993d2b9b9f63d13e42ee7de3219"
+                        ),
                     },
                 },
                 {
@@ -1430,7 +1439,10 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
                         "httpPort": 8123,
                         "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
-                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                        "webhookId": (
+                            "dde3b9800a905e886cc4d38e226a6e7e"
+                            "3f2a6993d2b9b9f63d13e42ee7de3219"
+                        ),
                     },
                 },
                 {
@@ -1439,7 +1451,10 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
                         "httpPort": 8123,
                         "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
-                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                        "webhookId": (
+                            "dde3b9800a905e886cc4d38e226a6e7e"
+                            "3f2a6993d2b9b9f63d13e42ee7de3219"
+                        ),
                     },
                 },
                 {"id": proxy_device_id, "customData": {}},

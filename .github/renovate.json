@@ -6,9 +6,13 @@
     "pep621",
     "pip_requirements",
     "pre-commit",
+    "dockerfile",
+    "npm",
     "custom.regex",
     "homeassistant-manifest"
   ],
+
+  "ignorePaths": ["**/node_modules/**"],
 
   "pre-commit": {
     "enabled": true
@@ -19,6 +23,10 @@
       "/(^|/)requirements[\\w_-]*\\.txt$/",
       "/(^|/)homeassistant/package_constraints\\.txt$/"
     ]
+  },
+
+  "dockerfile": {
+    "managerFilePatterns": ["/^Dockerfile$/"]
   },
 
   "homeassistant-manifest": {
@@ -35,6 +43,14 @@
       "matchStrings": ["required-version = \">=(?<currentValue>[\\d.]+)\""],
       "depNameTemplate": "ruff",
       "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "description": "Update go2rtc RECOMMENDED_VERSION in const.py alongside the Dockerfile pin",
+      "managerFilePatterns": ["/^homeassistant/components/go2rtc/const\\.py$/"],
+      "matchStrings": ["RECOMMENDED_VERSION = \"(?<currentValue>[\\d.]+)\""],
+      "depNameTemplate": "ghcr.io/alexxit/go2rtc",
+      "datasourceTemplate": "docker"
     }
   ],
 
@@ -115,6 +131,7 @@
         "standard-aifc",
         "standard-telnetlib",
         "ulid-transform",
+        "unidiff",
         "url-normalize",
         "xmltodict"
       ],
@@ -128,7 +145,8 @@
         "home-assistant-bluetooth",
         "home-assistant-frontend",
         "home-assistant-intents",
-        "infrared-protocols"
+        "infrared-protocols",
+        "rf-protocols"
       ],
       "enabled": true,
       "minimumReleaseAge": null,
@@ -166,6 +184,15 @@
       "labels": ["dependency"]
     },
     {
+      "description": "pnpm version pinned in the E2E tests packageManager field (allowlisted)",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["tests/e2e/package.json"],
+      "matchDepTypes": ["packageManager"],
+      "matchPackageNames": ["pnpm"],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
       "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
       "matchPackageNames": ["/^types-/"],
       "matchUpdateTypes": ["patch"],
@@ -181,6 +208,13 @@
         "zizmorcore/zizmor-pre-commit"
       ],
       "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Docker allowlist (ghcr.io exposes no release timestamps so the global cooldown needs to be bypassed)",
+      "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
+      "enabled": true,
+      "minimumReleaseAge": null,
       "labels": ["dependency"]
     },
     {
@@ -212,6 +246,12 @@
       "matchPackageNames": ["pylint", "astroid"],
       "groupName": "pylint",
       "groupSlug": "pylint"
+    },
+    {
+      "description": "Group go2rtc Dockerfile pin with const.py RECOMMENDED_VERSION into one PR",
+      "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
+      "groupName": "go2rtc",
+      "groupSlug": "go2rtc"
     }
   ]
 }

@@ -1,12 +1,10 @@
 """Config flow for RFXCOM RFXtrx integration."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import copy
 import itertools
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
 
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
@@ -497,6 +495,7 @@ class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -628,6 +627,7 @@ class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> RfxtrxOptionsFlow:

@@ -1,10 +1,9 @@
 """Support for switch entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
+from typing import override
 
 from gardena_bluetooth.const import (
     AquaContourBattery,
@@ -12,6 +11,7 @@ from gardena_bluetooth.const import (
     Battery,
     EventHistory,
     FlowStatistics,
+    Pump,
     Sensor,
     Spray,
     Valve,
@@ -29,6 +29,8 @@ from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
     EntityCategory,
+    UnitOfPressure,
+    UnitOfTemperature,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
@@ -65,9 +67,9 @@ class GardenaBluetoothSensorEntityDescription[T](SensorEntityDescription):
     @property
     def context(self) -> set[str]:
         """Context needed for update coordinator."""
-        data = {self.char.uuid}
+        data = {self.char.unique_id}
         if self.connected_state:
-            data.add(self.connected_state.uuid)
+            data.add(self.connected_state.unique_id)
         return data
 
 
@@ -75,10 +77,14 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=Valve.activation_reason.unique_id,
         translation_key="activation_reason",
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
         char=Valve.activation_reason,
+        get=lambda x: (
+            x.name.lower() if isinstance(x, Valve.activation_reason.enum) else None
+        ),
+        options=[member.name.lower() for member in Valve.activation_reason.enum],
     ),
     GardenaBluetoothSensorEntityDescription(
         key=Battery.battery_level.unique_id,
@@ -166,6 +172,24 @@ DESCRIPTIONS = (
         get=_get_timestamp,
     ),
     GardenaBluetoothSensorEntityDescription(
+        key=Pump.tank_preassure.unique_id,
+        translation_key="tank_pressure",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
+        suggested_unit_of_measurement=UnitOfPressure.BAR,
+        suggested_display_precision=2,
+        char=Pump.tank_preassure,
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key=Pump.water_temperature.unique_id,
+        translation_key="water_temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        char=Pump.water_temperature,
+    ),
+    GardenaBluetoothSensorEntityDescription(
         key=Spray.current_distance.unique_id,
         translation_key="spray_current_distance",
         state_class=SensorStateClass.MEASUREMENT,
@@ -243,12 +267,14 @@ class GardenaBluetoothSensor(GardenaBluetoothDescriptorEntity, SensorEntity):
 
     entity_description: GardenaBluetoothSensorEntityDescription
 
+    @override
     def _handle_coordinator_update(self) -> None:
         value = self.coordinator.get_cached(self.entity_description.char)
         value = self.entity_description.get(value)
         self._attr_native_value = value
 
-        if char := self.entity_description.connected_state:
+        char = self.entity_description.connected_state
+        if char and char.unique_id in self.coordinator.characteristics:
             self._attr_available = bool(self.coordinator.get_cached(char))
         else:
             self._attr_available = True
@@ -269,11 +295,12 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
         key: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, {char.uuid})
+        super().__init__(coordinator, {char.unique_id})
         self._attr_unique_id = f"{coordinator.address}-{key}"
         self._attr_translation_key = key
         self._char = char
 
+    @override
     def _handle_coordinator_update(self) -> None:
         value = self.coordinator.get_cached(self._char)
         if not value:
@@ -281,7 +308,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
             super()._handle_coordinator_update()
             return
 
-        time = datetime.now(UTC) + timedelta(seconds=value)
+        time = dt_util.utcnow() + timedelta(seconds=value)
         if not self._attr_native_value:
             self._attr_native_value = time
             super()._handle_coordinator_update()
@@ -293,6 +320,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Sensor only available when open."""
         return super().available and self._attr_native_value is not None

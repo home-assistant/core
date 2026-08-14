@@ -1,8 +1,6 @@
 """Store backup configuration."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, override
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
@@ -43,6 +41,7 @@ class _BackupStore(Store[StoredBackupData]):
             minor_version=STORAGE_VERSION_MINOR,
         )
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,

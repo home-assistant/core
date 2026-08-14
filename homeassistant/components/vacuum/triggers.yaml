@@ -5,7 +5,7 @@
   fields:
     behavior:
       required: true
-      default: any
+      default: each
       selector:
         automation_behavior:
           mode: trigger
@@ -15,7 +15,7 @@
       selector:
         duration:
 
-docked: *trigger_common
+returned_to_dock: *trigger_common
 errored: *trigger_common
 paused_cleaning: *trigger_common
 started_cleaning: *trigger_common
