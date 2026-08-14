@@ -75,14 +75,40 @@ def _migrate_unique_ids(
     entity_entries = get_entity_entries()
 
     if stage == _MIGRATE_ENTITIES_TO_TEMPORARY:
-        for entity_entry in entity_entries:
-            if entity_entry.unique_id in id_map:
+        pending_entity_migrations = {
+            entity_entry.entity_id: (
+                entity_entry.unique_id,
+                id_map[entity_entry.unique_id],
+            )
+            for entity_entry in entity_entries
+            if entity_entry.unique_id in id_map
+            and (
+                entity_entry.previous_unique_id is None
+                or id_map.get(entity_entry.previous_unique_id) != entity_entry.unique_id
+            )
+        }
+        while pending_entity_migrations:
+            for entity_id, (_, new_unique_id) in list(
+                pending_entity_migrations.items()
+            ):
+                if entity_registry.async_get_entity_id(
+                    Platform.LIGHT, DOMAIN, new_unique_id
+                ):
+                    continue
                 entity_registry.async_update_entity(
-                    entity_entry.entity_id,
-                    new_unique_id=(
-                        f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{entity_entry.unique_id}"
-                    ),
+                    entity_id,
+                    new_unique_id=new_unique_id,
                 )
+                pending_entity_migrations.pop(entity_id)
+                break
+            else:
+                break
+
+        for entity_id, (old_unique_id, _) in pending_entity_migrations.items():
+            entity_registry.async_update_entity(
+                entity_id,
+                new_unique_id=f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{old_unique_id}",
+            )
         stage = _MIGRATE_ENTITIES_TO_FINAL
         set_stage(stage)
 
@@ -216,6 +242,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bo
 async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
     """Set up Cync from a config entry."""
     cync = await _async_create_cync(hass, entry)
+    entry.async_on_unload(cync.shut_down)
 
     devices_coordinator = CyncCoordinator(hass, entry, cync)
 
@@ -234,6 +261,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
     """Unload a config entry."""
-    cync = entry.runtime_data.cync
-    await cync.shut_down()
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
