@@ -1,19 +1,13 @@
 {
   "domain": "jfl_alarm",
   "name": "JFL Alarm",
-  "codeowners": [
-    "@jmceara"
-  ],
+  "codeowners": ["@jmceara"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/jfl_alarm",
   "integration_type": "hub",
   "iot_class": "local_push",
-  "loggers": [
-    "pyjfl"
-  ],
+  "loggers": ["pyjfl"],
   "quality_scale": "bronze",
-  "requirements": [
-    "pyjfl==0.2.0"
-  ]
+  "requirements": ["pyjfl==0.2.0"]
 }

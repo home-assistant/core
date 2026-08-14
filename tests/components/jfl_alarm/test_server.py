@@ -15,11 +15,8 @@ import asyncio
 import logging
 import socket
 
-import pytest
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from pyjfl import Cmd, ConnectionInfo, FrameReader
+import pytest
 
 from homeassistant.components.jfl_alarm import _ignore_discovery
 from homeassistant.components.jfl_alarm.const import (
@@ -28,6 +25,10 @@ from homeassistant.components.jfl_alarm.const import (
     UNKNOWN_HOLD,
     UNKNOWN_REJECT,
 )
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
 from tests.components.jfl_alarm.conftest import LOOPBACK, make_entry, wait_until
 from tests.components.jfl_alarm.panel_sim import FakePanel
 
@@ -162,11 +163,17 @@ async def test_three_models_on_one_port_produce_three_independent_devices(
     """
     panels = [
         # Active 32 Duo: four partitions, a fence.
-        FakePanel(serial="AAAAAAAAAA", model_byte=0xA0, partitions=[0x01, 0x02, 0x00, 0x00]),
+        FakePanel(
+            serial="AAAAAAAAAA", model_byte=0xA0, partitions=[0x01, 0x02, 0x00, 0x00]
+        ),
         # Active 8 Ultra: two partitions, no fence at all.
-        FakePanel(serial="BBBBBBBBBB", model_byte=0xA2, partitions=[0x01, 0x00], fence=0x00),
+        FakePanel(
+            serial="BBBBBBBBBB", model_byte=0xA2, partitions=[0x01, 0x00], fence=0x00
+        ),
         # Active 100 Bus: sixteen partitions.
-        FakePanel(serial="CCCCCCCCCC", model_byte=0xA4, partitions=[0x03] * 3, fence=0x02),
+        FakePanel(
+            serial="CCCCCCCCCC", model_byte=0xA4, partitions=[0x03] * 3, fence=0x02
+        ),
     ]
     entry = make_entry(port, serials=[panel.serial for panel in panels])
     entry.add_to_hass(hass)
@@ -192,10 +199,9 @@ async def test_three_models_on_one_port_produce_three_independent_devices(
         assert len(coordinators["BBBBBBBBBB"].data.partitions) == 2
         assert len(coordinators["CCCCCCCCCC"].data.partitions) == 16
 
-        # A model with no fence gets no fence entity, and one with a fence does.
-        assert hass.states.get("switch.electric_fence") is not None
+        # The status frame itself tells the two panels apart, independently of any entity.
+        assert coordinators["AAAAAAAAAA"].data.fence.present is True
         assert coordinators["BBBBBBBBBB"].data.fence.present is False
-        assert coordinators["BBBBBBBBBB"].discovered.fence is False
 
         devices = dr.async_get(hass)
         for panel in panels:
@@ -210,13 +216,18 @@ async def test_three_models_on_one_port_produce_three_independent_devices(
         await hass.async_block_till_done()
 
 
-async def test_unloading_actually_frees_the_port(hass: HomeAssistant, entry, port: int) -> None:
+async def test_unloading_actually_frees_the_port(
+    hass: HomeAssistant, entry, port: int
+) -> None:
     """Tested by rebinding the port for real, because that is the only thing that proves it."""
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    with pytest.raises(OSError), socket.socket(socket.AF_INET, socket.SOCK_STREAM) as taken:
+    with (
+        pytest.raises(OSError),
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM) as taken,
+    ):
         taken.bind((LOOPBACK, port))
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -227,7 +238,9 @@ async def test_unloading_actually_frees_the_port(hass: HomeAssistant, entry, por
         freed.bind((LOOPBACK, port))
 
 
-async def test_a_busy_port_leaves_the_entry_retrying(hass: HomeAssistant, port: int) -> None:
+async def test_a_busy_port_leaves_the_entry_retrying(
+    hass: HomeAssistant, port: int
+) -> None:
     """A bind failure is `ConfigEntryNotReady`: whatever holds the port may well let go."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as holder:
         holder.bind((LOOPBACK, port))
@@ -257,7 +270,9 @@ async def test_an_unknown_panel_is_added_automatically(
 
         await wait_until(
             hass,
-            lambda: any(sub.unique_id == panel.serial for sub in entry.subentries.values()),
+            lambda: any(
+                sub.unique_id == panel.serial for sub in entry.subentries.values()
+            ),
         )
         # Adding the subentry reloads the entry. Let that finish before unloading, or the reload
         # lands afterwards and leaves a second listener holding the port.
@@ -321,7 +336,9 @@ async def test_ignore_discovery_is_a_silent_no_op(caplog) -> None:
     """
     with caplog.at_level(logging.DEBUG):
         _ignore_discovery(
-            ConnectionInfo(serial="IGNOREME01", model_byte=0xA0, firmware="1", imei="", mac="")
+            ConnectionInfo(
+                serial="IGNOREME01", model_byte=0xA0, firmware="1", imei="", mac=""
+            )
         )
 
     assert "IGNOREME01" in caplog.text
@@ -350,7 +367,9 @@ async def test_the_raw_frame_ring_buffer_records_both_directions(
     """A bug report is worth much more with fifty frames of real traffic attached."""
     connection = await connect_panel(panel)
     await connection.introduce(hass)
-    await connection.report_status(hass, setup_entry.runtime_data.coordinators[panel.serial])
+    await connection.report_status(
+        hass, setup_entry.runtime_data.coordinators[panel.serial]
+    )
 
     frames = setup_entry.runtime_data.server.link(panel.serial).frames
     assert any(frame.outbound for frame in frames)

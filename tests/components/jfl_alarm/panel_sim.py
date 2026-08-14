@@ -15,8 +15,8 @@ offline suite.
 
 from __future__ import annotations
 
-import hashlib
 from dataclasses import dataclass, field
+import hashlib
 
 from pyjfl import EVENTS_PER_PAGE, Cmd, build_frame
 
@@ -143,7 +143,7 @@ class FakePanel:
         payload += bytes([self.signal, 0x00])  # signal 49, problem 50
         payload += bytes([sum(1 for state in self.partitions if state)])  # 51
         payload += bytes(32)  # accounts, 52-83
-        payload += bytes([self.fence])  # SELET, 84
+        payload += bytes([self.fence])  # SELECT, 84
         payload += bytes(self._partition_bytes())  # SPART, 85-100
         frame = build_frame(self._next_seq(), Cmd.CONNECTION, bytes(payload))
         assert len(frame) == CONNECTION_LENGTH, len(frame)
@@ -159,11 +159,17 @@ class FakePanel:
         payload += bytes([self.fence])  # ELET, 30
         payload += self._zone_bytes()  # ZONA, 31-80
         payload += self.problems  # PROB, 81-85
-        payload += bytes([self.fence_permissions, self.pgm_permissions])  # P-ELET 86, P-PGM 87
+        payload += bytes(
+            [self.fence_permissions, self.pgm_permissions]
+        )  # P-ELET 86, P-PGM 87
         payload += bytes(self._permission_bytes())  # P-PART, 88-103
         payload += self.bypassable  # P-INIB, 104-116
-        payload += bytes([self.pgm_high, self.pgm_permissions_high, 0x00])  # 117, 118, 119
-        payload += bytes([self.siren, 0x01 if self.updating else 0x00])  # PA_SIR 120, ATUALIZ 121
+        payload += bytes(
+            [self.pgm_high, self.pgm_permissions_high, 0x00]
+        )  # 117, 118, 119
+        payload += bytes(
+            [self.siren, 0x01 if self.updating else 0x00]
+        )  # PA_SIR 120, ATUALIZ 121
         payload += bytes(4)  # the tail firmware 7.60 adds, 122-125
         frame = build_frame(self._next_seq(), Cmd.STATUS, bytes(payload))
         assert len(frame) == STATUS_LENGTH, len(frame)
@@ -231,7 +237,9 @@ class FakePanel:
                     0x19,
                     0x30,  # last transmission, BCD
                     0x00,  # battery ok
-                    0x04 if index % 2 else 0x13,  # excellent direct / very good via repeater 1
+                    0x04
+                    if index % 2
+                    else 0x13,  # excellent direct / very good via repeater 1
                 ]
             )
         payload += bytes(16 * (per_page - len(chunk)))
@@ -244,11 +252,18 @@ class FakePanel:
         because that shape is the whole reason the coordinator has to loop, and a simulator that
         returned everything at once would let a broken loop pass.
         """
-        page = [record for record in self.events if record[0] > cursor][:EVENTS_PER_PAGE]
+        page = [record for record in self.events if record[0] > cursor][
+            :EVENTS_PER_PAGE
+        ]
         payload = bytes([EVENTS_PER_PAGE])
         for serial, code, subject, partition, stamp in page:
             payload += serial.to_bytes(4, "big")
-            payload += bytes([int(code[:2], 16), int(code[2:], 16), subject, partition])
+            # Suppressed below rather than switched to `base=0`: `code` is a bare Contact ID digit
+            # string with no `0x` prefix to strip (e.g. "3401"), and `int(x, base=0)` raises on one
+            # with a leading zero (e.g. "0570") because it reads as an invalid legacy octal literal.
+            payload += bytes(
+                [int(code[:2], 16), int(code[2:], 16), subject, partition]  # noqa: FURB166
+            )
             payload += bytes(stamp)
         # The real panel ends a download with terminator records rather than a short frame —
         # `docs/protocol/event-buffer.md`. Padding matters: a reply carrying no records at all is

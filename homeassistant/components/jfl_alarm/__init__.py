@@ -14,20 +14,21 @@ forwarded, so a panel that dials in during setup is already being heard; and it 
 are unloaded, so nothing is still holding the socket when the port is meant to be free.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
+
+from pyjfl import JflServer
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
-from pyjfl import JflServer
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from .const import (
     CONF_KEEPALIVE_MINUTES,
@@ -57,9 +58,10 @@ from .services import async_register_services
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from pyjfl import ConnectionInfo
+
     from homeassistant.helpers.device_registry import DeviceEntry
     from homeassistant.helpers.typing import ConfigType
-    from pyjfl import ConnectionInfo
 
 
 @dataclass
@@ -75,11 +77,6 @@ type JflConfigEntry = ConfigEntry[JflRuntimeData]
 
 PLATFORMS: Final[list[Platform]] = [
     Platform.ALARM_CONTROL_PANEL,
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.EVENT,
-    Platform.SENSOR,
-    Platform.SWITCH,
 ]
 """Lives here rather than in `const.py` so that `const.py` needs no Home Assistant import: the test
 asserting `DEFAULT_READ_ONLY is True` has to be runnable on a machine without it."""
@@ -106,7 +103,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: JflConfigEntry) -> bool:
     server = JflServer(
         host=entry.data.get(CONF_HOST, DEFAULT_HOST),
         port=entry.data.get(CONF_PORT, DEFAULT_PORT),
-        keepalive_minutes=options.get(CONF_KEEPALIVE_MINUTES, DEFAULT_KEEPALIVE_MINUTES),
+        keepalive_minutes=options.get(
+            CONF_KEEPALIVE_MINUTES, DEFAULT_KEEPALIVE_MINUTES
+        ),
         log_raw_frames=options.get(CONF_LOG_RAW_FRAMES, DEFAULT_LOG_RAW_FRAMES),
         unknown_panels=options.get(CONF_UNKNOWN_PANELS, DEFAULT_UNKNOWN_PANELS),
     )
@@ -197,7 +196,9 @@ async def async_remove_config_entry_device(
 
 
 @callback
-def _async_release_entities_of_enabled_devices(hass: HomeAssistant, entry: JflConfigEntry) -> None:
+def _async_release_entities_of_enabled_devices(
+    hass: HomeAssistant, entry: JflConfigEntry
+) -> None:
     """Re-enable entities left marked "disabled because their device is", on a device that is not.
 
     **This is a dead end the user cannot get out of.** Home Assistant writes `disabled_by: device`
@@ -207,7 +208,8 @@ def _async_release_entities_of_enabled_devices(hass: HomeAssistant, entry: JflCo
     2026-08-09), or any other route that leaves the device row enabled without firing that update,
     strands the entities: the frontend refuses to enable one whose device it believes is disabled,
     and the device it names is enabled, so there is nothing to switch. The author hit exactly this
-    on the electric fence, whose switch, both sensors and event entity were all unreachable.
+    on a partition's `alarm_control_panel` entity, which was unreachable until this function was
+    added.
 
     Nothing in this integration writes those flags, so this cannot un-do a deliberate choice: a
     device the user really has disabled is skipped, and an entity the user disabled themselves is

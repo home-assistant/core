@@ -1,4 +1,4 @@
-"""Arming, disarming and the electric fence — everything this integration sends to a panel.
+"""Arming and disarming — everything this integration sends to a panel in this PR.
 
 Author: Jonis Maurin Ceará <jmceara AT gmail.com>
 Based on the code developed by Carlos Jose Fernandes,
@@ -9,26 +9,31 @@ because the thing that can go wrong here is sending the wrong command to a real 
 house. Every expected frame below is one that was captured from ActiveNet driving the author's
 Active 32 Duo on 2026-08-08, or is the same command with a different partition byte.
 
-The two gates — `read_only` and the commands switch — are tested by asserting that **nothing at
-all** was written, which is the only assertion that means anything for a safety interlock.
+The two gates — `read_only` and the commands-enabled flag — are tested by asserting that **nothing
+at all** was written, which is the only assertion that means anything for a safety interlock.
 """
 
 from __future__ import annotations
 
 import asyncio
 
+from pyjfl import ArmMode, Cmd, FrameReader, build_frame
 import pytest
-from homeassistant.config_entries import ConfigEntryState
+
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.jfl_alarm.const import (
+    CONF_CODE,
+    CONF_CODE_ARM_REQUIRED,
+    CONF_READ_ONLY,
+    DOMAIN,
+    ISSUE_REMOTE_ACCESS_BLOCKED,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from pyjfl import ArmMode, Cmd, FrameReader
+from homeassistant.helpers import issue_registry as ir
 
-from homeassistant.components.jfl_alarm.const import CONF_CODE, CONF_CODE_ARM_REQUIRED, CONF_READ_ONLY
 from tests.components.jfl_alarm.conftest import make_entry, wait_until
 from tests.components.jfl_alarm.panel_sim import FakePanel
-
-FENCE = 0x63
-"""Partition 99, the electric fence."""
 
 
 async def _bring_up(hass: HomeAssistant, entry, connect_panel, panel: FakePanel):
@@ -40,7 +45,9 @@ async def _bring_up(hass: HomeAssistant, entry, connect_panel, panel: FakePanel)
     return connection, coordinator
 
 
-async def _writable_entry(hass: HomeAssistant, port: int, panel: FakePanel, **subentry: object):
+async def _writable_entry(
+    hass: HomeAssistant, port: int, panel: FakePanel, **subentry: object
+):
     """Set up an entry for *panel* with `read_only` off, and unload it afterwards."""
     entry = make_entry(
         port,
@@ -78,55 +85,6 @@ async def _wrote_nothing(connection, hass: HomeAssistant) -> bool:
     except TimeoutError:
         return True
     return False
-
-
-# --- the fence ------------------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    ("service", "expected_cmd"),
-    [("turn_on", Cmd.ARM), ("turn_off", Cmd.DISARM)],
-)
-async def test_the_fence_switch_sends_the_captured_frame(
-    hass: HomeAssistant, port: int, connect_panel, service: str, expected_cmd: Cmd
-) -> None:
-    """The project's primary goal, byte for byte.
-
-    Captured from ActiveNet: `7B 06 1A 4E 63 4A` armed the fence and `7B 06 22 4F 63 73` disarmed
-    it. Only the sequence byte and therefore the checksum differ here.
-    """
-    panel = FakePanel(serial="FENCECMD01")
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        connection, _ = await _bring_up(hass, entry, connect_panel, panel)
-        await hass.services.async_call(
-            "switch", service, {"entity_id": "switch.electric_fence"}, blocking=True
-        )
-        frame = await _next_command(connection)
-        assert frame.cmd == expected_cmd
-        assert frame.raw[4] == FENCE
-        assert len(frame.raw) == 6
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-async def test_the_fence_refuses_when_the_panel_has_not_granted_it(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """`P-ELET` bit 3 clear means the panel would ignore the command. Say which address to check."""
-    panel = FakePanel(serial="FENCEDENY1", fence_permissions=0x01)  # may disarm, may not arm
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        connection, _ = await _bring_up(hass, entry, connect_panel, panel)
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                "switch", "turn_on", {"entity_id": "switch.electric_fence"}, blocking=True
-            )
-        assert await _wrote_nothing(connection, hass)
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
 
 
 # --- partitions -----------------------------------------------------------------------------------
@@ -170,8 +128,6 @@ async def test_all_three_arm_modes_are_offered_on_the_one_entity(
     hass: HomeAssistant, port: int, connect_panel
 ) -> None:
     """The user asked for the panel's three modes without three different entities."""
-    from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-
     panel = FakePanel(serial="FEATURES01")
     entry = await _writable_entry(hass, port, panel)
     try:
@@ -200,16 +156,18 @@ async def test_features_do_not_follow_the_state_dependent_permission_bits(
     Deriving `supported_features` from it would make Home Assistant's buttons appear and disappear
     on their own, so the features come from the model and the bits are checked at call time.
     """
-    from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-
-    panel = FakePanel(serial="PARTPERM01", partition_permissions=[0x0B, 0x0B, 0x00, 0x00])
+    panel = FakePanel(
+        serial="PARTPERM01", partition_permissions=[0x0B, 0x0B, 0x00, 0x00]
+    )
     entry = await _writable_entry(hass, port, panel)
     try:
         connection, _ = await _bring_up(hass, entry, connect_panel, panel)
         features = hass.states.get("alarm_control_panel.partition_1").attributes[
             "supported_features"
         ]
-        assert features & AlarmControlPanelEntityFeature.ARM_HOME, "the button still exists"
+        assert features & AlarmControlPanelEntityFeature.ARM_HOME, (
+            "the button still exists"
+        )
 
         # But the call is refused, naming the address to fix rather than failing silently.
         with pytest.raises(ServiceValidationError):
@@ -229,12 +187,20 @@ async def test_the_partition_exposes_whether_it_can_be_armed(
     hass: HomeAssistant, port: int, connect_panel
 ) -> None:
     """`P-PART` bit 4 is the panel's own "no open zones" — it decides whether a plain arm works."""
-    panel = FakePanel(serial="READYBIT01", partition_permissions=[0x0F, 0x1F, 0x00, 0x00])
+    panel = FakePanel(
+        serial="READYBIT01", partition_permissions=[0x0F, 0x1F, 0x00, 0x00]
+    )
     entry = await _writable_entry(hass, port, panel)
     try:
         await _bring_up(hass, entry, connect_panel, panel)
-        assert hass.states.get("alarm_control_panel.partition_1").attributes["ready"] is False
-        assert hass.states.get("alarm_control_panel.partition_2").attributes["ready"] is True
+        assert (
+            hass.states.get("alarm_control_panel.partition_1").attributes["ready"]
+            is False
+        )
+        assert (
+            hass.states.get("alarm_control_panel.partition_2").attributes["ready"]
+            is True
+        )
     finally:
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
@@ -257,49 +223,6 @@ async def test_read_only_mode_sends_nothing_and_says_so(
             blocking=True,
         )
     assert await _wrote_nothing(connection, hass)
-
-
-async def test_the_master_switch_stops_every_command(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """`read_only` is the deliberate opt-in; this is the kill switch on the dashboard."""
-    panel = FakePanel(serial="MASTERSW01")
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        connection, coordinator = await _bring_up(hass, entry, connect_panel, panel)
-        assert coordinator.commands_enabled is True
-
-        await hass.services.async_call(
-            "switch",
-            "turn_off",
-            {"entity_id": "switch.active_32_duo_allow_commands"},
-            blocking=True,
-        )
-        assert coordinator.commands_enabled is False
-
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                "switch", "turn_on", {"entity_id": "switch.electric_fence"}, blocking=True
-            )
-        assert await _wrote_nothing(connection, hass)
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-async def test_the_master_switch_stays_available_while_the_panel_is_away(
-    hass: HomeAssistant, port: int
-) -> None:
-    """A setting, not a reading. Switching commands off matters most when the panel misbehaves."""
-    panel = FakePanel(serial="MASTERAV01")
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        state = hass.states.get("switch.active_32_duo_allow_commands")
-        assert state is not None
-        assert state.state == "on"
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
 
 
 async def test_a_command_to_a_disconnected_panel_fails_loudly(
@@ -346,9 +269,9 @@ async def test_a_wrong_code_refuses_and_sends_nothing(
     entry = await _writable_entry(hass, port, panel, **{CONF_CODE: "4321"})
     try:
         connection, _ = await _bring_up(hass, entry, connect_panel, panel)
-        assert hass.states.get("alarm_control_panel.partition_1").attributes["code_format"] == (
-            "number"
-        )
+        assert hass.states.get("alarm_control_panel.partition_1").attributes[
+            "code_format"
+        ] == ("number")
 
         with pytest.raises(ServiceValidationError):
             await hass.services.async_call(
@@ -382,7 +305,9 @@ async def test_the_code_can_be_required_for_disarming_only(
     try:
         connection, _ = await _bring_up(hass, entry, connect_panel, panel)
         assert (
-            hass.states.get("alarm_control_panel.partition_1").attributes["code_arm_required"]
+            hass.states.get("alarm_control_panel.partition_1").attributes[
+                "code_arm_required"
+            ]
             is False
         )
 
@@ -406,94 +331,6 @@ async def test_the_code_can_be_required_for_disarming_only(
         await hass.async_block_till_done()
 
 
-# --- verification ---------------------------------------------------------------------------------
-
-
-async def test_a_command_is_followed_by_status_re_reads(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """Nothing is optimistic.
-
-    The status frame that answers a command is not the final truth — arming in the 2026-08-08
-    capture returned a frame that still showed zone 9 open, and the panel auto-bypassed it a second
-    later. So a command schedules two re-reads and the panel's own answer is what the entities show.
-    """
-    panel = FakePanel(serial="VERIFY0001")
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        connection, _ = await _bring_up(hass, entry, connect_panel, panel)
-        await hass.services.async_call(
-            "switch", "turn_on", {"entity_id": "switch.electric_fence"}, blocking=True
-        )
-
-        seen: list[int] = []
-        reader = FrameReader()
-
-        async def _collect() -> None:
-            while len(seen) < 3:
-                for frame in reader.feed(await connection.read_reply(timeout=5.0)):
-                    seen.append(frame.cmd)
-
-        await asyncio.wait_for(_collect(), timeout=8.0)
-        assert seen[0] == Cmd.ARM
-        assert seen[1:3] == [Cmd.STATUS, Cmd.STATUS], "600 ms and 2 s after the command"
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-async def test_a_disconnect_between_command_and_re_read_does_not_raise(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """The two scheduled re-reads run unattended, seconds after the call already returned.
-
-    If the panel hangs up in that window, `_verify` has nobody left to report a failure to — the
-    calling service call finished already. It has to log and move on rather than raise into
-    whatever happens to run the event loop at 600 ms past midnight.
-    """
-    panel = FakePanel(serial="VERIFYGONE")
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        connection, _ = await _bring_up(hass, entry, connect_panel, panel)
-        await hass.services.async_call(
-            "switch", "turn_on", {"entity_id": "switch.electric_fence"}, blocking=True
-        )
-        await connection.close()
-
-        # Both VERIFY_DELAYS (0.6 s, 2 s) elapse with nothing to send to. The listener, and the
-        # entry, must both still be alive on the other side.
-        await asyncio.sleep(2.3)
-        await hass.async_block_till_done()
-        assert entry.state is ConfigEntryState.LOADED
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-async def test_the_switch_never_reports_a_state_the_panel_did_not_send(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """Optimistic state on an alarm is a lie with consequences. The switch waits for the panel."""
-    panel = FakePanel(serial="NOOPTIMIS1", fence=0x01)
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        connection, coordinator = await _bring_up(hass, entry, connect_panel, panel)
-        await hass.services.async_call(
-            "switch", "turn_on", {"entity_id": "switch.electric_fence"}, blocking=True
-        )
-        await hass.async_block_till_done()
-        assert hass.states.get("switch.electric_fence").state == "off", (
-            "the panel has not confirmed yet"
-        )
-
-        panel.fence = 0x02
-        await connection.report_status(hass, coordinator)
-        await wait_until(hass, lambda: hass.states.get("switch.electric_fence").state == "on")
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
 # --- the lockout guard ----------------------------------------------------------------------------
 
 
@@ -505,11 +342,6 @@ async def test_one_wrong_password_reply_blocks_and_raises_an_issue(
     Nothing this integration sends carries a password, so this reply should be impossible — which is
     exactly why the guard has to exist and be tested rather than assumed.
     """
-    from homeassistant.helpers import issue_registry as ir
-    from pyjfl import build_frame
-
-    from homeassistant.components.jfl_alarm.const import DOMAIN, ISSUE_REMOTE_ACCESS_BLOCKED
-
     panel = FakePanel(serial="LOCKOUT001")
     entry = await _writable_entry(hass, port, panel)
     try:
@@ -522,7 +354,9 @@ async def test_one_wrong_password_reply_blocks_and_raises_an_issue(
 
         issues = ir.async_get(hass)
         assert (
-            issues.async_get_issue(DOMAIN, f"{ISSUE_REMOTE_ACCESS_BLOCKED}_{panel.serial}")
+            issues.async_get_issue(
+                DOMAIN, f"{ISSUE_REMOTE_ACCESS_BLOCKED}_{panel.serial}"
+            )
             is not None
         )
     finally:
@@ -534,8 +368,6 @@ async def test_an_ordinary_ack_does_not_latch_the_lockout(
     hass: HomeAssistant, port: int, connect_panel
 ) -> None:
     """`0xBE` is not one of the two replies that mean remote access is blocked."""
-    from pyjfl import build_frame
-
     panel = FakePanel(serial="ACKOK00001")
     entry = await _writable_entry(hass, port, panel)
     try:
@@ -561,8 +393,6 @@ async def test_the_lockout_warning_fires_once_even_across_repeats(
     A second wrong-password reply after the flag is already set must not warn again or touch the
     repair issue a second time — the flag being `True` is what the early return is for.
     """
-    from pyjfl import build_frame
-
     panel = FakePanel(serial="LOCKOUT002")
     entry = await _writable_entry(hass, port, panel)
     try:
@@ -577,9 +407,9 @@ async def test_the_lockout_warning_fires_once_even_across_repeats(
         await wait_until(hass, lambda: coordinator.data.last_seen_at != before)
 
         assert coordinator.auth_blocked is True
-        assert not any("rejected a command" in record.message for record in caplog.records), (
-            "the second wrong password must not warn again"
-        )
+        assert not any(
+            "rejected a command" in record.message for record in caplog.records
+        ), "the second wrong password must not warn again"
     finally:
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()

@@ -41,10 +41,10 @@ driven by the panel's connection, so until the panel reports, these entities rea
 which is true.
 """
 
-from __future__ import annotations
-
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
+
+from pyjfl import ArmMode
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
@@ -54,7 +54,6 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from pyjfl import ArmMode
 
 from .const import (
     CONF_CODE,
@@ -100,7 +99,9 @@ async def async_setup_entry(
         if subentry.subentry_type != SUBENTRY_TYPE_PANEL:
             continue
         coordinator = entry.runtime_data.coordinators[str(subentry.data[CONF_SERIAL])]
-        async_add_discovered(coordinator, async_add_entities, partial(_discover, coordinator))
+        async_add_discovered(
+            coordinator, async_add_entities, partial(_discover, coordinator)
+        )
 
 
 @callback
@@ -136,10 +137,13 @@ class JflPartitionAlarm(JflPartitionEntity, AlarmControlPanelEntity):
         if code and not code.isdigit():
             self._attr_code_format = CodeFormat.TEXT
         self._attr_code_arm_required = bool(code) and bool(
-            coordinator.subentry.data.get(CONF_CODE_ARM_REQUIRED, DEFAULT_CODE_ARM_REQUIRED)
+            coordinator.subentry.data.get(
+                CONF_CODE_ARM_REQUIRED, DEFAULT_CODE_ARM_REQUIRED
+            )
         )
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Map `PART[i]` to a Home Assistant alarm state.
 
@@ -165,6 +169,7 @@ class JflPartitionAlarm(JflPartitionEntity, AlarmControlPanelEntity):
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Expose readiness, which the alarm panel domain has no state for.
 
@@ -173,19 +178,24 @@ class JflPartitionAlarm(JflPartitionEntity, AlarmControlPanelEntity):
         needed, and an automation needs it *before* it tries.
         """
         status = self.snapshot.status
-        if status is None or not 1 <= self.partition <= len(status.partition_permissions):
+        if status is None or not 1 <= self.partition <= len(
+            status.partition_permissions
+        ):
             return {}
         return {"ready": status.partition_permissions[self.partition - 1].ready}
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm this partition. The code, if one is configured, is always required here."""
         self._validate_code(code)
         await self.coordinator.async_disarm(self.partition)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm everything — the keypad's plain **Armar**. The panel refuses it if a zone is open."""
         await self._async_arm(ArmMode.TOTAL, code)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Arm the perimeter only — the keypad's **Armar STAY**, so somebody can stay inside."""
         await self._async_arm(ArmMode.STAY, code)

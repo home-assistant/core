@@ -46,35 +46,27 @@
           "data": {
             "serial": "Panel serial number",
             "read_only": "Read-only mode",
-            "zone_policy": "Which zones to create",
             "code": "Code to arm and disarm (optional)",
-            "code_arm_required": "Also ask for the code when arming",
-            "fence_pgm": "PGM that powers the electric fence"
+            "code_arm_required": "Also ask for the code when arming"
           },
           "data_description": {
             "serial": "The ten-character serial the panel reports. Pick a panel from the list if it has already connected.",
             "read_only": "While read-only mode is on, the integration observes the panel and never sends it a command. Status is still requested, because the panel only reports its state when asked.",
-            "zone_policy": "Only zones the panel reports as in use, or every zone the model can have.",
             "code": "Leave empty for no code. This is a Home Assistant code, not a panel user code — it is never sent to the panel. It stops a tablet on the wall from disarming the house with one tap.",
-            "code_arm_required": "Disarming always asks for the code once one is set. Turn this off if you would rather arm without typing it.",
-            "fence_pgm": "Normally leave this at 0: reading the panel's programming detects the energiser's output on its own (function 18 at addresses 821-824), moves its switch onto the electric fence's device and marks it as the fence's power supply. Give a number only to override that — for instance if a relay wired downstream of another output is what really switches your energiser."
+            "code_arm_required": "Disarming always asks for the code once one is set. Turn this off if you would rather arm without typing it."
           }
         },
         "reconfigure": {
           "description": "Settings for panel {serial}. The serial number identifies the panel and cannot be changed.",
           "data": {
             "read_only": "Read-only mode",
-            "zone_policy": "Which zones to create",
             "code": "Code to arm and disarm (optional)",
-            "code_arm_required": "Also ask for the code when arming",
-            "fence_pgm": "PGM that powers the electric fence"
+            "code_arm_required": "Also ask for the code when arming"
           },
           "data_description": {
             "read_only": "While read-only mode is on, the integration observes the panel and never sends it a command.",
-            "zone_policy": "Only zones the panel reports as in use, or every zone the model can have.",
             "code": "Leave empty for no code. This is a Home Assistant code, not a panel user code — it is never sent to the panel.",
-            "code_arm_required": "Disarming always asks for the code once one is set. Turn this off if you would rather arm without typing it.",
-            "fence_pgm": "Normally leave this at 0: reading the panel's programming detects the energiser's output on its own (function 18 at addresses 821-824). Give a number only to override what it finds."
+            "code_arm_required": "Disarming always asks for the code once one is set. Turn this off if you would rather arm without typing it."
           }
         }
       },
@@ -113,322 +105,6 @@
         "accept": "Add them automatically",
         "hold": "Hold them for approval",
         "reject": "Refuse the connection"
-      }
-    },
-    "zone_policy": {
-      "options": {
-        "programmed": "Only zones in use",
-        "all": "Every zone the model supports"
-      }
-    }
-  },
-  "entity": {
-    "binary_sensor": {
-      "connectivity": {
-        "name": "Panel connection"
-      },
-      "problem": {
-        "name": "Panel status"
-      },
-      "siren": {
-        "name": "Siren"
-      },
-      "updating": {
-        "name": "Panel updating"
-      },
-      "zone": {
-        "name": "Zone {zone}"
-      },
-      "zone_problem": {
-        "name": "Sensor"
-      },
-      "zone_tamper": {
-        "name": "Tamper"
-      },
-      "problem_wireless_low_battery": {
-        "name": "Wireless sensor battery"
-      },
-      "problem_sensor_supervision": {
-        "name": "Sensor supervision"
-      },
-      "problem_auxiliary_output": {
-        "name": "Auxiliary output"
-      },
-      "problem_tamper": {
-        "name": "Panel tamper"
-      },
-      "problem_dhcp": {
-        "name": "DHCP"
-      },
-      "problem_network_cable": {
-        "name": "Network cable"
-      },
-      "problem_cellular_module": {
-        "name": "Cellular module"
-      },
-      "problem_sms": {
-        "name": "SMS"
-      },
-      "problem_ethernet": {
-        "name": "Ethernet"
-      },
-      "problem_gprs": {
-        "name": "Mobile data"
-      },
-      "problem_telephone_line": {
-        "name": "Telephone line"
-      },
-      "problem_short": {
-        "name": "Short circuit"
-      },
-      "problem_keypad": {
-        "name": "Keypad"
-      },
-      "problem_siren": {
-        "name": "Siren circuit"
-      },
-      "problem_battery": {
-        "name": "Battery"
-      },
-      "problem_ac_mains": {
-        "name": "Mains power"
-      },
-      "problem_battery_reversed": {
-        "name": "Battery reversed"
-      },
-      "problem_destination_ip_2": {
-        "name": "Reporting destination 2"
-      },
-      "problem_destination_ip_1": {
-        "name": "Reporting destination 1"
-      },
-      "problem_dns_server": {
-        "name": "DNS server"
-      },
-      "problem_keypad_ac": {
-        "name": "Keypad mains power"
-      },
-      "problem_siren_supervision": {
-        "name": "Siren supervision"
-      },
-      "problem_wireless_password": {
-        "name": "Wireless password"
-      },
-      "problem_wireless_authentication": {
-        "name": "Wireless authentication"
-      },
-      "problem_ssid_not_found": {
-        "name": "Wi-Fi network not found"
-      },
-      "problem_ip_conflict": {
-        "name": "IP address conflict"
-      },
-      "problem_bus": {
-        "name": "Expansion bus"
-      },
-      "problem_ddns": {
-        "name": "Dynamic DNS"
-      },
-      "problem_notification": {
-        "name": "Notification service"
-      },
-      "problem_ethernet_module": {
-        "name": "Ethernet module"
-      },
-      "problem_signal_level": {
-        "name": "Mobile signal level"
-      },
-      "problem_sim_card": {
-        "name": "SIM card"
-      },
-      "fence_alarm": {
-        "name": "Alarm"
-      },
-      "zone_battery": {
-        "name": "Battery"
-      },
-      "zone_connectivity": {
-        "name": "Connection"
-      }
-    },
-    "button": {
-      "refresh_status": {
-        "name": "Refresh status"
-      },
-      "read_programming": {
-        "name": "Read programming"
-      }
-    },
-    "event": {
-      "panel_event": {
-        "name": "Panel events",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "alarm": "Alarm",
-              "alarm_restore": "Alarm restored",
-              "arm": "Armed",
-              "disarm": "Disarmed",
-              "fence_alarm": "Electric fence alarm",
-              "fence_alarm_restore": "Electric fence alarm restored",
-              "fence_arm": "Electric fence armed",
-              "fence_disarm": "Electric fence disarmed",
-              "bypass": "Zone bypassed",
-              "bypass_restore": "Bypass removed",
-              "trouble": "Trouble",
-              "trouble_restore": "Trouble restored",
-              "panic": "Panic",
-              "medical": "Medical",
-              "fire": "Fire",
-              "tamper": "Tamper",
-              "test": "Test",
-              "system": "System",
-              "unknown": "Unknown"
-            }
-          }
-        }
-      },
-      "partition_event": {
-        "name": "Events",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "alarm": "Alarm",
-              "alarm_restore": "Alarm restored",
-              "arm": "Armed",
-              "disarm": "Disarmed",
-              "fence_alarm": "Electric fence alarm",
-              "fence_alarm_restore": "Electric fence alarm restored",
-              "fence_arm": "Electric fence armed",
-              "fence_disarm": "Electric fence disarmed",
-              "bypass": "Zone bypassed",
-              "bypass_restore": "Bypass removed",
-              "trouble": "Trouble",
-              "trouble_restore": "Trouble restored",
-              "panic": "Panic",
-              "medical": "Medical",
-              "fire": "Fire",
-              "tamper": "Tamper",
-              "test": "Test",
-              "system": "System",
-              "unknown": "Unknown"
-            }
-          }
-        }
-      },
-      "fence_event": {
-        "name": "Events",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "alarm": "Alarm",
-              "alarm_restore": "Alarm restored",
-              "arm": "Armed",
-              "disarm": "Disarmed",
-              "fence_alarm": "Alarm",
-              "fence_alarm_restore": "Alarm restored",
-              "fence_arm": "Armed",
-              "fence_disarm": "Disarmed",
-              "bypass": "Zone bypassed",
-              "bypass_restore": "Bypass removed",
-              "trouble": "Trouble",
-              "trouble_restore": "Trouble restored",
-              "panic": "Panic",
-              "medical": "Medical",
-              "fire": "Fire",
-              "tamper": "Tamper",
-              "test": "Test",
-              "system": "System",
-              "unknown": "Unknown"
-            }
-          }
-        }
-      }
-    },
-    "sensor": {
-      "battery_voltage": {
-        "name": "Battery voltage"
-      },
-      "last_event": {
-        "name": "Last event"
-      },
-      "last_connected": {
-        "name": "Last connected"
-      },
-      "last_seen": {
-        "name": "Last heard from"
-      },
-      "signal": {
-        "name": "Mobile signal"
-      },
-      "panel_clock": {
-        "name": "Panel clock"
-      },
-      "programming_checksum": {
-        "name": "Programming checksum"
-      },
-      "fence_state": {
-        "name": "State",
-        "state": {
-          "disarmed": "Disarmed",
-          "armed": "Armed",
-          "triggered": "Alarm",
-          "not_ready": "Not ready"
-        }
-      },
-      "battery_level": {
-        "name": "Battery level"
-      },
-      "zone_signal": {
-        "name": "Signal",
-        "state": {
-          "none": "No signal",
-          "weak": "Weak",
-          "good": "Good",
-          "very_good": "Very good",
-          "excellent": "Excellent"
-        }
-      },
-      "zone_last_transmission": {
-        "name": "Last transmission"
-      },
-      "timer_entry_1": {
-        "name": "Entry delay 1"
-      },
-      "timer_entry_2": {
-        "name": "Entry delay 2"
-      },
-      "timer_exit_1": {
-        "name": "Exit delay 1"
-      },
-      "timer_exit_2": {
-        "name": "Exit delay 2"
-      },
-      "timer_open_door": {
-        "name": "Open door time"
-      },
-      "timer_smart_zone": {
-        "name": "Smart zone window"
-      },
-      "timer_ac_loss": {
-        "name": "Mains loss delay"
-      },
-      "timer_line_loss": {
-        "name": "Line loss delay"
-      }
-    },
-    "switch": {
-      "commands_enabled": {
-        "name": "Allow commands"
-      },
-      "pgm": {
-        "name": "PGM {number}"
-      },
-      "pgm_fence": {
-        "name": "PGM {number} (triggers the electric fence)"
-      },
-      "zone_bypass": {
-        "name": "Bypass"
       }
     }
   },
@@ -474,22 +150,11 @@
     "unknown_model": {
       "title": "Unrecognised panel model",
       "description": "Panel {serial} reports model byte {model_byte}, which is not in this integration's model table.\n\nThe integration has assumed a permissive set of capabilities so that entities still appear, which may mean partitions or zones that do not really exist. Please report the model byte and the panel's commercial name so it can be added."
-    },
-    "fence_pgm_conflict": {
-      "title": "Electric fence PGM setting disagrees with the panel",
-      "description": "You set PGM {configured} as the electric fence's power for panel {serial}, but the panel's own programming says PGM {detected} drives it.\n\nYour setting is being honoured — nothing has changed. But one of the two is wrong: either the programming reads a function you did not expect, or the number in the settings is a mistake. Check which output really switches your energiser and set it accordingly."
-    },
-    "fence_pgm_detected": {
-      "title": "A PGM output powers the electric fence",
-      "description": "This issue is retired — the integration now places and marks the switch itself instead of asking you to. Kept here only so an installation upgrading from an older version can still show and dismiss the one it already raised."
     }
   },
   "device": {
     "partition": {
       "name": "Partition {number}"
-    },
-    "fence": {
-      "name": "Electric fence"
     },
     "zone": {
       "name": "Zone {number}"
@@ -505,7 +170,7 @@
       "fields": {
         "device_id": {
           "name": "Panel",
-          "description": "Which panel to set. A partition or fence sub-device resolves to the panel it is on."
+          "description": "Which panel to set. A partition sub-device resolves to the panel it is on."
         }
       }
     },

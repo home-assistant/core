@@ -17,8 +17,6 @@ Nothing here identifies the installation: no serial, no MAC, no address. The pag
 people paste into forums.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components import system_health
@@ -29,7 +27,9 @@ from .const import DOMAIN
 
 
 @callback
-def async_register(hass: HomeAssistant, register: system_health.SystemHealthRegistration) -> None:
+def async_register(
+    hass: HomeAssistant, register: system_health.SystemHealthRegistration
+) -> None:
     """Register the health callback."""
     register.async_register_info(_system_health_info)
 
@@ -49,7 +49,9 @@ async def _system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     newest = None
     for entry in entries:
         runtime = entry.runtime_data
-        ports.append(str(runtime.server.port) + ("" if runtime.server.is_running else " (down)"))
+        ports.append(
+            str(runtime.server.port) + ("" if runtime.server.is_running else " (down)")
+        )
         for coordinator in runtime.coordinators.values():
             known += 1
             if coordinator.link.connected:
@@ -65,6 +67,8 @@ async def _system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         # The honest liveness signal. "Never" is a real answer and a common one: it means no panel
         # has been programmed to report here yet, which is the integration's most frequent problem.
         "last_frame": (
-            f"{round((dt_util.utcnow() - newest).total_seconds())} s ago" if newest else "never"
+            f"{round((dt_util.utcnow() - newest).total_seconds())} s ago"
+            if newest
+            else "never"
         ),
     }

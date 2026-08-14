@@ -1,16 +1,15 @@
-"""The panel's event buffer (`0x48`), read into Home Assistant. Sprint 8.9.
+"""The panel's event buffer (`0x48`), read through `coordinator.async_read_events` and the `read_event_buffer` service. Sprint 8.9.
 
 Author: Jonis Maurin Ceará <jmceara AT gmail.com>
 Based on the code developed by Carlos Jose Fernandes,
 available at https://github.com/fernac03/JFL_ACTIVE
 
-**The load-bearing test here is the one that proves nothing fires.** The buffer is a log of things
-that already happened, and an `event` entity firing is a live occurrence: automations run and
-notifications go out. Replaying a stored `1120` would be a panic button pressing itself, which is
-the same hazard that keeps events out of the coordinator snapshot. So the records come back as
-service *data*, and `test_reading_the_buffer_fires_no_entity` is what holds that line.
+The buffer is a log of things that already happened, and the records come back as service *data*
+rather than being routed to any entity — this PR ships no `event` platform to route them to anyway,
+so the tests here are only about the coordinator method and the service's own shape: the subject
+naming, and the cursor a caller uses to resume.
 
-The rest is about paging. The panel returns eight records at a time, oldest first, forward only —
+Most of it is about paging. The panel returns eight records at a time, oldest first, forward only —
 there is no request for "the newest twenty" — so the coordinator has to loop, and a simulator that
 returned everything in one page would let a broken loop pass. `FakePanel.event_buffer` pages exactly
 as the real one does.
@@ -20,13 +19,15 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-import pytest
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.util import dt as dt_util
 from pyjfl import UserRecord, ZoneRecord
+import pytest
 
 from homeassistant.components.jfl_alarm.const import CONF_READ_ONLY, DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.util import dt as dt_util
+
 from tests.components.jfl_alarm.conftest import make_entry, wait_until
 from tests.components.jfl_alarm.panel_sim import FakePanel
 
@@ -49,7 +50,9 @@ def _history(count: int, *, first_serial: int = 1) -> list:
 
 
 async def _entry_for(hass: HomeAssistant, port: int, panel: FakePanel):
-    entry = make_entry(port, serials=[panel.serial], subentry_data={CONF_READ_ONLY: True})
+    entry = make_entry(
+        port, serials=[panel.serial], subentry_data={CONF_READ_ONLY: True}
+    )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -83,7 +86,9 @@ async def test_the_buffer_is_paged_until_it_runs_out(
         await hass.async_block_till_done()
 
 
-async def test_reading_resumes_from_a_cursor(hass: HomeAssistant, port: int, connect_panel) -> None:
+async def test_reading_resumes_from_a_cursor(
+    hass: HomeAssistant, port: int, connect_panel
+) -> None:
     """The only way to reach the newest records without re-reading everything."""
     panel = FakePanel(serial="EVENTCUR01", events=_history(20))
     entry = await _entry_for(hass, port, panel)
@@ -97,7 +102,9 @@ async def test_reading_resumes_from_a_cursor(hass: HomeAssistant, port: int, con
         await hass.async_block_till_done()
 
 
-async def test_the_limit_is_a_hard_stop(hass: HomeAssistant, port: int, connect_panel) -> None:
+async def test_the_limit_is_a_hard_stop(
+    hass: HomeAssistant, port: int, connect_panel
+) -> None:
     """1073 records is 135 round trips on a link that is also polling the status."""
     panel = FakePanel(serial="EVENTLIM01", events=_history(40))
     entry = await _entry_for(hass, port, panel)
@@ -144,7 +151,9 @@ async def test_a_disconnect_mid_page_returns_what_was_already_read(
         connection, coordinator = await _bring_up(hass, entry, connect_panel, panel)
 
         first_page = await coordinator.async_read_events(limit=8)
-        assert len(first_page) == 8, "sanity: a full page, exactly what the panel holds per page"
+        assert len(first_page) == 8, (
+            "sanity: a full page, exactly what the panel holds per page"
+        )
 
         await connection.close()
         # `close()` returning is not the same moment the link notices: EOF is detected on the
@@ -155,32 +164,6 @@ async def test_a_disconnect_mid_page_returns_what_was_already_read(
 
         records = await coordinator.async_read_events(since=8)
         assert records == [], "nothing raised for the panel that is no longer there"
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-async def test_reading_the_buffer_fires_no_entity(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """⚠️ The one that matters: a stored panic must not press the panic button.
-
-    An `event` entity firing runs every automation listening for that type. The buffer is history,
-    so it is returned as data and never routed to an entity — the same reason Contact ID events
-    travel on a dispatcher signal instead of living in the coordinator snapshot.
-    """
-    panic = [(1, "1120", 3, 1, _STAMP), (2, "1130", 9, 1, _STAMP)]
-    panel = FakePanel(serial="EVENTSAFE1", events=panic)
-    entry = await _entry_for(hass, port, panel)
-    try:
-        _, coordinator = await _bring_up(hass, entry, connect_panel, panel)
-        before = hass.states.get("event.active_32_duo_panel_events").state
-
-        records = await coordinator.async_read_events()
-        await hass.async_block_till_done()
-
-        assert len(records) == 2, "the records really were read"
-        assert hass.states.get("event.active_32_duo_panel_events").state == before
     finally:
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
@@ -198,8 +181,14 @@ async def test_the_service_names_the_subject_and_returns_a_cursor(
         coordinator.programming = replace(
             coordinator.programming,
             read_at=dt_util.utcnow(),
-            users={3: UserRecord(number=3, name="Bruno", has_code=True, attributes=bytes(8))},
-            zones={9: ZoneRecord(9, "Porta dos fundos", bytes.fromhex("10FFFF1101FFFF"))},
+            users={
+                3: UserRecord(
+                    number=3, name="Bruno", has_code=True, attributes=bytes(8)
+                )
+            },
+            zones={
+                9: ZoneRecord(9, "Porta dos fundos", bytes.fromhex("10FFFF1101FFFF"))
+            },
         )
 
         response = await hass.services.async_call(
@@ -243,7 +232,10 @@ async def test_an_origin_subject_is_never_looked_up_as_a_person(
             read_at=dt_util.utcnow(),
             users={
                 0: UserRecord(
-                    number=0, name="Should not appear", has_code=False, attributes=bytes(8)
+                    number=0,
+                    name="Should not appear",
+                    has_code=False,
+                    attributes=bytes(8),
                 )
             },
         )
@@ -322,8 +314,6 @@ async def test_a_device_that_resolves_to_no_loaded_panel_fails_loudly(
 
 
 def _panel_device_id(hass: HomeAssistant, entry_id: str, serial: str) -> str:
-    from homeassistant.helpers import device_registry as dr
-
     device = dr.async_get(hass).async_get_device_by_identifier(
         (DOMAIN, serial), config_entry_id=entry_id
     )

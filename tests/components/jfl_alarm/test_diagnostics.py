@@ -14,18 +14,20 @@ from __future__ import annotations
 
 import json
 
+from homeassistant.components.jfl_alarm.const import DOMAIN
+from homeassistant.components.jfl_alarm.device import get_sub_device
+from homeassistant.components.jfl_alarm.system_health import _system_health_info
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
+
 from tests.common import get_system_health_info
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
-from tests.typing import ClientSessionGenerator
-
-from homeassistant.components.jfl_alarm.const import DOMAIN
-from homeassistant.components.jfl_alarm.device import get_sub_device
 from tests.components.jfl_alarm.panel_sim import FakePanel
+from tests.typing import ClientSessionGenerator
 
 
 async def test_the_dump_carries_state_but_no_identity(
@@ -86,7 +88,9 @@ async def test_the_raw_frame_buffer_redacts_the_connection_handshake(
     raw = json.dumps(result)
 
     [dumped] = result["panels"]
-    assert dumped["frames"], "the connection handshake should have landed in the ring buffer"
+    assert dumped["frames"], (
+        "the connection handshake should have landed in the ring buffer"
+    )
     assert panel.serial not in raw
     assert panel.imei not in raw
     assert panel.mac not in raw
@@ -109,23 +113,31 @@ async def test_the_same_panel_gets_the_same_token_everywhere(
     Blanking every serial to the same placeholder would turn three panels into three identical
     anonymous blobs. Hashing keeps them apart and still reveals nothing.
     """
+    coordinator = setup_entry.runtime_data.coordinators[panel.serial]
     connection = await connect_panel(panel)
     await connection.introduce(hass)
+    await connection.report_status(hass, coordinator)
 
     entry_dump = await get_diagnostics_for_config_entry(hass, hass_client, setup_entry)
     device = dr.async_get(hass).async_get_device_by_identifier(
         (DOMAIN, panel.serial), config_entry_id=setup_entry.entry_id
     )
-    panel_dump = await get_diagnostics_for_device(hass, hass_client, setup_entry, device)
+    panel_dump = await get_diagnostics_for_device(
+        hass, hass_client, setup_entry, device
+    )
 
     assert entry_dump["panels"][0]["serial"] == panel_dump["serial"]
     assert not panel_dump["serial"].endswith(panel.serial)
 
-    # A sub-device resolves to its parent panel rather than dumping nothing useful.
-    fence = get_sub_device(hass, setup_entry.entry_id, (DOMAIN, f"{panel.serial}-fence"))
-    if fence is not None:
-        fence_dump = await get_diagnostics_for_device(hass, hass_client, setup_entry, fence)
-        assert fence_dump["serial"] == panel_dump["serial"]
+    # A partition sub-device resolves to its parent panel rather than dumping nothing useful.
+    partition = get_sub_device(
+        hass, setup_entry.entry_id, (DOMAIN, f"{panel.serial}-partition1")
+    )
+    assert partition is not None
+    partition_dump = await get_diagnostics_for_device(
+        hass, hass_client, setup_entry, partition
+    )
+    assert partition_dump["serial"] == panel_dump["serial"]
 
 
 async def test_a_panel_that_never_connected_still_dumps(
@@ -157,7 +169,9 @@ async def test_a_device_with_no_loaded_coordinator_still_dumps(
         identifiers={(DOMAIN, "STRAYPANEL1")},
     )
 
-    result = await get_diagnostics_for_device(hass, hass_client, setup_entry, stray_device)
+    result = await get_diagnostics_for_device(
+        hass, hass_client, setup_entry, stray_device
+    )
 
     assert result == {"serial": result["serial"], "loaded": False}
     assert result["serial"].startswith("id:")
@@ -189,10 +203,6 @@ async def test_system_health_reports_the_port_and_the_frame_age(
     box at the far end has lost power — a connection count alone reports healthy panels that went
     dark twenty minutes ago.
     """
-    from homeassistant.setup import async_setup_component
-
-    from homeassistant.components.jfl_alarm.system_health import _system_health_info
-
     assert await async_setup_component(hass, "system_health", {})
 
     before = await _system_health_info(hass)
@@ -213,8 +223,6 @@ async def test_system_health_reports_the_port_and_the_frame_age(
 
 async def test_system_health_with_no_loaded_entry(hass: HomeAssistant) -> None:
     """It must not raise on an installation where every entry is unloaded."""
-    from homeassistant.components.jfl_alarm.system_health import _system_health_info
-
     assert await _system_health_info(hass) == {"listeners": 0}
 
 
@@ -227,8 +235,6 @@ async def test_system_health_is_actually_registered_with_the_component(
     nothing about whether `async_register` ever wired it up. `get_system_health_info` goes through
     `system_health`'s own lazy platform loading, the same as the frontend's "info" panel does.
     """
-    from homeassistant.setup import async_setup_component
-
     assert await async_setup_component(hass, "system_health", {})
 
     info = await get_system_health_info(hass, DOMAIN)

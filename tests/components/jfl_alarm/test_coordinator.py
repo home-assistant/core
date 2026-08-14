@@ -11,14 +11,9 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import issue_registry as ir
-from pyjfl import Cmd, FrameReader
-from tests.common import MockConfigEntry, async_fire_time_changed
+from pyjfl import Cmd, FrameReader, build_frame
 
+from homeassistant.components.jfl_alarm import async_remove_config_entry_device
 from homeassistant.components.jfl_alarm.const import (
     CONF_SERIAL,
     DOMAIN,
@@ -27,6 +22,13 @@ from homeassistant.components.jfl_alarm.const import (
     PANEL_NEVER_CONNECTED_MINUTES,
     SUBENTRY_TYPE_PANEL,
 )
+from homeassistant.components.jfl_alarm.coordinator import JflPanelCoordinator
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.jfl_alarm.conftest import LOOPBACK, make_entry, wait_until
 from tests.components.jfl_alarm.panel_sim import FakePanel
 
@@ -88,7 +90,9 @@ async def test_a_subentry_of_a_foreign_type_is_skipped(
         await hass.async_block_till_done()
 
 
-async def test_setup_does_not_fail_when_no_panel_is_there(hass: HomeAssistant, setup_entry) -> None:
+async def test_setup_does_not_fail_when_no_panel_is_there(
+    hass: HomeAssistant, setup_entry
+) -> None:
     """`async_config_entry_first_refresh` is deliberately never called.
 
     A panel typically dials in ten to sixty seconds after Home Assistant starts. A first refresh
@@ -101,8 +105,6 @@ async def test_an_undecodable_command_is_counted_not_dropped(
     hass: HomeAssistant, setup_entry, connect_panel, panel: FakePanel
 ) -> None:
     """An unknown command is how the next undocumented one gets found."""
-    from pyjfl import build_frame
-
     coordinator = setup_entry.runtime_data.coordinators[panel.serial]
     connection = await connect_panel(panel)
     await connection.introduce(hass)
@@ -182,7 +184,9 @@ async def test_an_untested_model_raises_a_repair_issue(
         await connection.introduce(hass)
 
         issues = ir.async_get(hass)
-        issue = issues.async_get_issue(DOMAIN, f"{ISSUE_UNSUPPORTED_MODEL}_{panel.serial}")
+        issue = issues.async_get_issue(
+            DOMAIN, f"{ISSUE_UNSUPPORTED_MODEL}_{panel.serial}"
+        )
         assert issue is not None
         assert issue.translation_key == ISSUE_UNSUPPORTED_MODEL
         assert issue.translation_placeholders["model"] == "Active 100 Bus"
@@ -206,7 +210,9 @@ async def test_an_unlisted_model_says_so_rather_than_failing(
         await connection.introduce(hass)
 
         issues = ir.async_get(hass)
-        issue = issues.async_get_issue(DOMAIN, f"{ISSUE_UNSUPPORTED_MODEL}_{panel.serial}")
+        issue = issues.async_get_issue(
+            DOMAIN, f"{ISSUE_UNSUPPORTED_MODEL}_{panel.serial}"
+        )
         assert issue is not None
         assert issue.translation_key == "unknown_model"
         assert issue.translation_placeholders["model_byte"] == "0xEE"
@@ -228,7 +234,10 @@ async def test_a_verified_model_raises_no_issue(
     await connection.introduce(hass)
 
     issues = ir.async_get(hass)
-    assert issues.async_get_issue(DOMAIN, f"{ISSUE_UNSUPPORTED_MODEL}_{panel.serial}") is None
+    assert (
+        issues.async_get_issue(DOMAIN, f"{ISSUE_UNSUPPORTED_MODEL}_{panel.serial}")
+        is None
+    )
 
 
 async def test_silence_raises_the_never_connected_issue(
@@ -304,8 +313,6 @@ async def test_the_device_of_a_removed_panel_can_be_deleted(
     hass: HomeAssistant, setup_entry, connect_panel, panel: FakePanel
 ) -> None:
     """A replaced panel leaves a device that will never update again."""
-    from homeassistant.components.jfl_alarm import async_remove_config_entry_device
-
     connection = await connect_panel(panel)
     await connection.introduce(hass)
 
@@ -340,7 +347,9 @@ async def test_a_partition_number_outside_the_model_returns_none(
 
     assert coordinator.data.partition(0) is None
     assert coordinator.data.partition(99) is None
-    assert coordinator.data.partition(1) is not None, "sanity: a real partition still resolves"
+    assert coordinator.data.partition(1) is not None, (
+        "sanity: a real partition still resolves"
+    )
 
 
 async def test_setup_panel_notices_a_link_already_connected(
@@ -355,8 +364,6 @@ async def test_setup_panel_notices_a_link_already_connected(
     -connected link, rather than by racing two real sockets against subentry ordering — and shut
     down again immediately, so it leaves nothing behind for `setup_entry`'s own teardown to trip on.
     """
-    from homeassistant.components.jfl_alarm.coordinator import JflPanelCoordinator
-
     live = setup_entry.runtime_data.coordinators[panel.serial]
     connection = await connect_panel(panel)
     await connection.introduce(hass)
@@ -413,4 +420,6 @@ async def test_a_repeated_zone_alert_event_is_not_a_state_change(
 
     await connection.send(panel.event(code="1384", partition="01", subject="001"))
     await wait_until(hass, lambda: coordinator.data.last_event_code == "1384")
-    assert coordinator.data.zone_alerts is latched_at, "no actual change, so the same object"
+    assert coordinator.data.zone_alerts is latched_at, (
+        "no actual change, so the same object"
+    )

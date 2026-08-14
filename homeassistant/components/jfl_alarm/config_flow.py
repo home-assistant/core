@@ -20,11 +20,11 @@ the panel is not powered yet, and the *hold* policy for someone who wants to app
 cannot work, and two on different ports are a legitimate setup.
 """
 
-from __future__ import annotations
+from typing import TYPE_CHECKING, Any, override
 
-from typing import TYPE_CHECKING, Any
-
+from pyjfl import check_port_available
 import voluptuous as vol
+
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -47,22 +47,18 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from pyjfl import check_port_available
 
 from .const import (
     CONF_CODE,
     CONF_CODE_ARM_REQUIRED,
-    CONF_FENCE_PGM,
     CONF_KEEPALIVE_MINUTES,
     CONF_LOG_RAW_FRAMES,
     CONF_PROGRAMMING_READ_INTERVAL,
     CONF_READ_ONLY,
     CONF_SERIAL,
     CONF_UNKNOWN_PANELS,
-    CONF_ZONE_POLICY,
     DEFAULT_CODE,
     DEFAULT_CODE_ARM_REQUIRED,
-    DEFAULT_FENCE_PGM,
     DEFAULT_HOST,
     DEFAULT_KEEPALIVE_MINUTES,
     DEFAULT_LOG_RAW_FRAMES,
@@ -70,7 +66,6 @@ from .const import (
     DEFAULT_PROGRAMMING_READ_INTERVAL,
     DEFAULT_READ_ONLY,
     DEFAULT_UNKNOWN_PANELS,
-    DEFAULT_ZONE_POLICY,
     DOMAIN,
     LOGGER,
     MAX_KEEPALIVE_MINUTES,
@@ -79,7 +74,6 @@ from .const import (
     MIN_PROGRAMMING_READ_INTERVAL,
     SUBENTRY_TYPE_PANEL,
     UNKNOWN_PANEL_POLICIES,
-    ZONE_POLICIES,
 )
 
 if TYPE_CHECKING:
@@ -95,7 +89,9 @@ def _hub_schema(host: str, port: int) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_PORT, default=port): NumberSelector(
-                NumberSelectorConfig(min=1, max=65535, step=1, mode=NumberSelectorMode.BOX)
+                NumberSelectorConfig(
+                    min=1, max=65535, step=1, mode=NumberSelectorMode.BOX
+                )
             ),
             vol.Required(CONF_HOST, default=host): TextSelector(),
         }
@@ -107,7 +103,10 @@ class JflConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Ask for the port to listen on and confirm nothing else holds it."""
         return await self._async_host_step(user_input, step_id="user")
 
@@ -155,7 +154,9 @@ class JflConfigFlow(ConfigFlow, domain=DOMAIN):
                     reconfigure.data.get(CONF_HOST),
                     reconfigure.data.get(CONF_PORT),
                 ):
-                    await self.hass.async_add_executor_job(check_port_available, host, port)
+                    await self.hass.async_add_executor_job(
+                        check_port_available, host, port
+                    )
             except OSError as err:
                 LOGGER.debug("cannot bind %s:%s: %s", host, port, err)
                 errors["base"] = "port_in_use"
@@ -180,12 +181,14 @@ class JflConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: JflConfigEntry) -> OptionsFlow:
         """Return the hub options flow. **No constructor argument** — AGENTS.md §5."""
         return JflOptionsFlow()
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -196,12 +199,16 @@ class JflConfigFlow(ConfigFlow, domain=DOMAIN):
 class JflOptionsFlow(OptionsFlow):
     """Hub-wide options: how often to poll, what to tell the panel, and how loud to be."""
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Show and save the hub options."""
         if user_input is not None:
             return self.async_create_entry(
                 data={
-                    CONF_PROGRAMMING_READ_INTERVAL: int(user_input[CONF_PROGRAMMING_READ_INTERVAL]),
+                    CONF_PROGRAMMING_READ_INTERVAL: int(
+                        user_input[CONF_PROGRAMMING_READ_INTERVAL]
+                    ),
                     CONF_KEEPALIVE_MINUTES: int(user_input[CONF_KEEPALIVE_MINUTES]),
                     CONF_LOG_RAW_FRAMES: bool(user_input[CONF_LOG_RAW_FRAMES]),
                     CONF_UNKNOWN_PANELS: str(user_input[CONF_UNKNOWN_PANELS]),
@@ -214,7 +221,8 @@ class JflOptionsFlow(OptionsFlow):
                 vol.Required(
                     CONF_PROGRAMMING_READ_INTERVAL,
                     default=options.get(
-                        CONF_PROGRAMMING_READ_INTERVAL, DEFAULT_PROGRAMMING_READ_INTERVAL
+                        CONF_PROGRAMMING_READ_INTERVAL,
+                        DEFAULT_PROGRAMMING_READ_INTERVAL,
                     ),
                 ): NumberSelector(
                     NumberSelectorConfig(
@@ -226,7 +234,9 @@ class JflOptionsFlow(OptionsFlow):
                 ),
                 vol.Required(
                     CONF_KEEPALIVE_MINUTES,
-                    default=options.get(CONF_KEEPALIVE_MINUTES, DEFAULT_KEEPALIVE_MINUTES),
+                    default=options.get(
+                        CONF_KEEPALIVE_MINUTES, DEFAULT_KEEPALIVE_MINUTES
+                    ),
                 ): NumberSelector(
                     NumberSelectorConfig(
                         min=MIN_KEEPALIVE_MINUTES,
@@ -262,7 +272,9 @@ class JflPanelSubentryFlow(ConfigSubentryFlow):
     panel is not powered yet, or the hub is set to hold unknown panels for approval.
     """
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
         """Offer the panels that have already reported in, or take a serial by hand."""
         entry: JflConfigEntry = self._get_entry()
         errors: dict[str, str] = {}
@@ -272,7 +284,9 @@ class JflPanelSubentryFlow(ConfigSubentryFlow):
             if subentry.subentry_type == SUBENTRY_TYPE_PANEL
         }
         pending = {
-            serial: info for serial, info in _pending_panels(entry).items() if serial not in known
+            serial: info
+            for serial, info in _pending_panels(entry).items()
+            if serial not in known
         }
 
         if user_input is not None:
@@ -289,8 +303,6 @@ class JflPanelSubentryFlow(ConfigSubentryFlow):
                     data={
                         CONF_SERIAL: serial,
                         CONF_READ_ONLY: bool(user_input[CONF_READ_ONLY]),
-                        CONF_ZONE_POLICY: str(user_input[CONF_ZONE_POLICY]),
-                        CONF_FENCE_PGM: int(user_input.get(CONF_FENCE_PGM, DEFAULT_FENCE_PGM)),
                         **_code_settings(user_input),
                     },
                     unique_id=serial,
@@ -303,7 +315,9 @@ class JflPanelSubentryFlow(ConfigSubentryFlow):
             serial_field = SelectSelector(
                 SelectSelectorConfig(
                     options=[
-                        SelectOptionDict(value=serial, label=f"{info.spec.name} — {serial}")
+                        SelectOptionDict(
+                            value=serial, label=f"{info.spec.name} — {serial}"
+                        )
                         for serial, info in sorted(pending.items())
                     ],
                     mode=SelectSelectorMode.DROPDOWN,
@@ -315,20 +329,12 @@ class JflPanelSubentryFlow(ConfigSubentryFlow):
             {
                 vol.Required(CONF_SERIAL): serial_field,
                 vol.Required(CONF_READ_ONLY, default=DEFAULT_READ_ONLY): bool,
-                vol.Required(CONF_ZONE_POLICY, default=DEFAULT_ZONE_POLICY): SelectSelector(
-                    SelectSelectorConfig(
-                        options=ZONE_POLICIES,
-                        translation_key=CONF_ZONE_POLICY,
-                        mode=SelectSelectorMode.LIST,
-                    )
-                ),
                 vol.Optional(CONF_CODE, default=DEFAULT_CODE): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.PASSWORD)
                 ),
-                vol.Required(CONF_CODE_ARM_REQUIRED, default=DEFAULT_CODE_ARM_REQUIRED): bool,
-                vol.Required(CONF_FENCE_PGM, default=DEFAULT_FENCE_PGM): NumberSelector(
-                    NumberSelectorConfig(min=0, max=16, step=1, mode=NumberSelectorMode.BOX)
-                ),
+                vol.Required(
+                    CONF_CODE_ARM_REQUIRED, default=DEFAULT_CODE_ARM_REQUIRED
+                ): bool,
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
@@ -346,8 +352,6 @@ class JflPanelSubentryFlow(ConfigSubentryFlow):
                 subentry,
                 data_updates={
                     CONF_READ_ONLY: bool(user_input[CONF_READ_ONLY]),
-                    CONF_ZONE_POLICY: str(user_input[CONF_ZONE_POLICY]),
-                    CONF_FENCE_PGM: int(user_input.get(CONF_FENCE_PGM, DEFAULT_FENCE_PGM)),
                     **_code_settings(user_input),
                 },
             )
@@ -358,33 +362,21 @@ class JflPanelSubentryFlow(ConfigSubentryFlow):
                 vol.Required(
                     CONF_READ_ONLY, default=data.get(CONF_READ_ONLY, DEFAULT_READ_ONLY)
                 ): bool,
-                vol.Required(
-                    CONF_ZONE_POLICY, default=data.get(CONF_ZONE_POLICY, DEFAULT_ZONE_POLICY)
-                ): SelectSelector(
-                    SelectSelectorConfig(
-                        options=ZONE_POLICIES,
-                        translation_key=CONF_ZONE_POLICY,
-                        mode=SelectSelectorMode.LIST,
-                    )
-                ),
-                vol.Optional(CONF_CODE, default=data.get(CONF_CODE, DEFAULT_CODE)): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                ),
+                vol.Optional(
+                    CONF_CODE, default=data.get(CONF_CODE, DEFAULT_CODE)
+                ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
                 vol.Required(
                     CONF_CODE_ARM_REQUIRED,
                     default=data.get(CONF_CODE_ARM_REQUIRED, DEFAULT_CODE_ARM_REQUIRED),
                 ): bool,
-                vol.Required(
-                    CONF_FENCE_PGM, default=data.get(CONF_FENCE_PGM, DEFAULT_FENCE_PGM)
-                ): NumberSelector(
-                    NumberSelectorConfig(min=0, max=16, step=1, mode=NumberSelectorMode.BOX)
-                ),
             }
         )
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=schema,
-            description_placeholders={CONF_SERIAL: str(subentry.data.get(CONF_SERIAL, ""))},
+            description_placeholders={
+                CONF_SERIAL: str(subentry.data.get(CONF_SERIAL, ""))
+            },
         )
 
 

@@ -14,17 +14,10 @@ was moved to `__init__.py` for exactly that reason: it was the only thing draggi
 `homeassistant.const` in.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import Final
 
-# `X as X` is the explicit re-export form. Without it `mypy --strict` refuses every
-# `from .const import UNKNOWN_ACCEPT` elsewhere in the integration, because `--strict` turns on
-# `no_implicit_reexport`.
-from pyjfl import UNKNOWN_ACCEPT as UNKNOWN_ACCEPT
-from pyjfl import UNKNOWN_HOLD as UNKNOWN_HOLD
-from pyjfl import UNKNOWN_REJECT as UNKNOWN_REJECT
+from pyjfl import UNKNOWN_ACCEPT, UNKNOWN_HOLD, UNKNOWN_REJECT
 
 DOMAIN: Final = "jfl_alarm"
 

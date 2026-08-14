@@ -20,12 +20,12 @@ Every one of them goes through the coordinator's two gates, so `read_only` and t
 mean what they say no matter how the panel is reached.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any
 
+from pyjfl import ContactIdCode, EventRecord, EventSubject, lookup
 import voluptuous as vol
+
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -35,11 +35,9 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
-from pyjfl import ContactIdCode, EventRecord, EventSubject, lookup
 
 from .const import DEFAULT_EVENT_LIMIT, DOMAIN, LOGGER, MAX_EVENT_LIMIT
 
@@ -57,7 +55,9 @@ ATTR_ZONES = "zones"
 ATTR_SINCE_SERIAL = "since_serial"
 ATTR_LIMIT = "limit"
 
-type _Action = Callable[["JflPanelCoordinator", ServiceCall], Coroutine[Any, Any, ServiceResponse]]
+type _Action = Callable[
+    ["JflPanelCoordinator", ServiceCall], Coroutine[Any, Any, ServiceResponse]
+]
 """What every service body looks like: given the target panel and the call, do the thing."""
 
 type _Handler = Callable[[ServiceCall], Coroutine[Any, Any, ServiceResponse]]
@@ -95,7 +95,10 @@ _READ_EVENT_BUFFER_SCHEMA = _TARGET_SCHEMA.extend(
 def async_register_services(hass: HomeAssistant) -> None:
     """Register every service. Called once from `async_setup`, whatever entries exist."""
     hass.services.async_register(
-        DOMAIN, SERVICE_SYNC_TIME, _make_handler(hass, _sync_time), schema=_TARGET_SCHEMA
+        DOMAIN,
+        SERVICE_SYNC_TIME,
+        _make_handler(hass, _sync_time),
+        schema=_TARGET_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
@@ -135,7 +138,9 @@ def _make_handler(hass: HomeAssistant, action: _Action) -> _Handler:
     return _handle
 
 
-async def _sync_time(coordinator: JflPanelCoordinator, call: ServiceCall) -> ServiceResponse:
+async def _sync_time(
+    coordinator: JflPanelCoordinator, call: ServiceCall
+) -> ServiceResponse:
     """Set the panel's clock to Home Assistant's local time.
 
     Local, not UTC: the panel has no timezone and displays whatever it is given, so sending UTC
@@ -145,13 +150,17 @@ async def _sync_time(coordinator: JflPanelCoordinator, call: ServiceCall) -> Ser
     return None
 
 
-async def _refresh_status(coordinator: JflPanelCoordinator, call: ServiceCall) -> ServiceResponse:
+async def _refresh_status(
+    coordinator: JflPanelCoordinator, call: ServiceCall
+) -> ServiceResponse:
     """Ask the panel for a status frame. A *read*, so it works in read-only mode."""
     await coordinator.async_refresh_status()
     return None
 
 
-async def _set_bypass_mask(coordinator: JflPanelCoordinator, call: ServiceCall) -> ServiceResponse:
+async def _set_bypass_mask(
+    coordinator: JflPanelCoordinator, call: ServiceCall
+) -> ServiceResponse:
     """Replace the whole manual-bypass bitmap with exactly the zones given."""
     zones = frozenset(call.data[ATTR_ZONES])
     await coordinator.async_set_bypass_mask(zones)
@@ -197,7 +206,9 @@ async def _read_event_buffer(
     return {
         # The cursor to resume from. Returned rather than left to the caller to compute, because
         # getting it wrong means either re-reading the whole buffer or silently skipping records.
-        "next_serial": records[-1].serial if records else int(call.data[ATTR_SINCE_SERIAL]),
+        "next_serial": records[-1].serial
+        if records
+        else int(call.data[ATTR_SINCE_SERIAL]),
         "count": len(events),
         "events": events,
     }
@@ -220,7 +231,9 @@ def _subject_name(
     return ""
 
 
-async def _read_programming(coordinator: JflPanelCoordinator, call: ServiceCall) -> ServiceResponse:
+async def _read_programming(
+    coordinator: JflPanelCoordinator, call: ServiceCall
+) -> ServiceResponse:
     """Read the panel's programming and return what it says.
 
     A **read**, so it works in read-only mode. The response carries the zone and partition names,
@@ -232,16 +245,21 @@ async def _read_programming(coordinator: JflPanelCoordinator, call: ServiceCall)
         str(number): record.name for number, record in sorted(programming.zones.items())
     }
     partitions: dict[str, JsonValueType] = {
-        str(number): record.name for number, record in sorted(programming.partitions.items())
+        str(number): record.name
+        for number, record in sorted(programming.partitions.items())
     }
     users: list[JsonValueType] = [
         {"number": record.number, "name": record.name, "has_code": record.has_code}
-        for record in sorted(programming.users.values(), key=lambda record: record.number)
+        for record in sorted(
+            programming.users.values(), key=lambda record: record.number
+        )
         if record.name
     ]
     wireless: list[JsonValueType] = [
         {"slot": record.slot, "serial": record.serial, "zone": record.zone}
-        for record in sorted(programming.wireless.values(), key=lambda record: record.slot)
+        for record in sorted(
+            programming.wireless.values(), key=lambda record: record.slot
+        )
         if record.present
     ]
     return {
@@ -286,7 +304,9 @@ def _coordinator_for(hass: HomeAssistant, call: ServiceCall) -> JflPanelCoordina
             if serial in runtime.coordinators:
                 return runtime.coordinators[serial]
 
-    LOGGER.debug("service call targeted device %s, which resolves to no loaded panel", device_id)
+    LOGGER.debug(
+        "service call targeted device %s, which resolves to no loaded panel", device_id
+    )
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="unknown_device",

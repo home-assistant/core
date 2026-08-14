@@ -14,20 +14,15 @@ safe to run on a machine that is also running the lab.
 from __future__ import annotations
 
 import asyncio
-import contextlib
-import socket
 from collections.abc import AsyncGenerator, Callable, Generator
+import contextlib
 from dataclasses import replace
+import socket
 from typing import Any
 from unittest.mock import patch
 
+from pyjfl import Cmd, FrameReader, PgmRecord
 import pytest
-from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
-from pyjfl import PgmRecord
-from tests.common import MockConfigEntry
 
 from homeassistant.components.jfl_alarm.const import (
     CONF_READ_ONLY,
@@ -36,6 +31,12 @@ from homeassistant.components.jfl_alarm.const import (
     SUBENTRY_TYPE_PANEL,
 )
 from homeassistant.components.jfl_alarm.coordinator import JflPanelCoordinator
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
+
+from tests.common import MockConfigEntry
 from tests.components.jfl_alarm.panel_sim import FakePanel
 
 LOOPBACK = "127.0.0.1"
@@ -143,7 +144,9 @@ def announce_programming(
         coordinator.programming,
         read_at=dt_util.utcnow(),
         pgms={
-            number: PgmRecord(number=number, name="", attributes=bytes([0, 0, 0, 0, 0, function]))
+            number: PgmRecord(
+                number=number, name="", attributes=bytes([0, 0, 0, 0, 0, function])
+            )
             for number, function in (pgms or {}).items()
         },
     )
@@ -199,7 +202,10 @@ class PanelConnection:
     """A fake panel's end of a real TCP connection to the listener."""
 
     def __init__(
-        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, panel: FakePanel
+        self,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+        panel: FakePanel,
     ) -> None:
         """Wrap an open socket to the listener."""
         self.reader = reader
@@ -242,8 +248,6 @@ class PanelConnection:
         self._programming_task = asyncio.create_task(self._serve_programming())
 
     async def _serve_programming(self) -> None:
-        from pyjfl import Cmd, FrameReader
-
         reader = FrameReader()
         with contextlib.suppress(Exception):
             while True:
@@ -257,7 +261,9 @@ class PanelConnection:
                     elif frame.cmd == Cmd.READ_WIRELESS and len(frame.raw) >= 6:
                         # `0x59` carries [per_page, page] and its reply is correlated by sequence,
                         # so the answer has to echo the sequence byte it was asked with.
-                        await self.send(self.panel.wireless_inventory(frame.seq, frame.raw[5]))
+                        await self.send(
+                            self.panel.wireless_inventory(frame.seq, frame.raw[5])
+                        )
                     elif frame.cmd == Cmd.READ_EVENTS and len(frame.raw) == 10:
                         # `0x48` carries [per_page, cursor(4)] and, like `0x59`, is correlated by
                         # sequence: the reply holds records and nothing that identifies the request.

@@ -15,14 +15,13 @@ So the registry is updated explicitly, once, when the connection frame arrives:
 can call it without importing the entity layer, which imports the coordinator.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
+
+from pyjfl import UNKNOWN_MODEL
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from pyjfl import UNKNOWN_MODEL
 
 from .const import DOMAIN, LOGGER, MANUFACTURER
 
@@ -36,9 +35,7 @@ if TYPE_CHECKING:
 # this integration actually runs on today — 2026.8.1 included — only has `via_device`. Detected
 # once at import time rather than per call, so the two code paths below never disagree mid-run.
 try:
-    from homeassistant.helpers.device_registry import (  # type: ignore[attr-defined]
-        ChildDeviceInfo as _,  # noqa: F401
-    )
+    from homeassistant.helpers.device_registry import ChildDeviceInfo as _  # noqa: F401
 
     _HAS_CHILD_DEVICE_INFO = True
 except ImportError:  # pragma: no cover — depends on which HA version is installed
@@ -70,7 +67,9 @@ def zone_device_id(serial: str, number: int) -> str:
 
 
 @callback
-def build_panel_device(info: ConnectionInfo | None, serial: str, name: str) -> DeviceInfo:
+def build_panel_device(
+    info: ConnectionInfo | None, serial: str, name: str
+) -> DeviceInfo:
     """Describe the panel itself.
 
     Everything an installer would otherwise be tempted to expose as a sensor goes here. Firmware
@@ -143,13 +142,13 @@ def get_sub_device(
     """
     registry = dr.async_get(hass)
     if _HAS_CHILD_DEVICE_INFO:
-        return registry.async_get_child_device_by_identifier(  # type: ignore[attr-defined,no-any-return]
-            identifier, entry_id
-        )
+        return registry.async_get_child_device_by_identifier(identifier, entry_id)
     return registry.async_get_device(identifiers={identifier})
 
 
-def _sub_device_exists(hass: HomeAssistant, entry_id: str, identifier: tuple[str, str]) -> bool:
+def _sub_device_exists(
+    hass: HomeAssistant, entry_id: str, identifier: tuple[str, str]
+) -> bool:
     """Whether the sub-device registered under *identifier* already exists.
 
     `async_apply_programmed_names` uses this rather than `get_sub_device` directly only because a
@@ -171,7 +170,7 @@ def _register_sub_device(
     """
     registry = dr.async_get(hass)
     if device.get("parent_device_id") is not None:
-        registry.async_get_or_create_child(  # type: ignore[attr-defined]
+        registry.async_get_or_create_child(
             config_entry_id=entry_id,
             config_subentry_id=subentry_id,
             **device,
@@ -213,7 +212,9 @@ def build_partition_device(
 
 
 @callback
-def build_fence_device(hass: HomeAssistant, entry_id: str, serial: str) -> dict[str, Any]:
+def build_fence_device(
+    hass: HomeAssistant, entry_id: str, serial: str
+) -> dict[str, Any]:
     """Describe the electric fence as a sub-device of the panel."""
     device: dict[str, Any] = {
         "identifiers": {(DOMAIN, fence_device_id(serial))},
@@ -227,7 +228,13 @@ def build_fence_device(hass: HomeAssistant, entry_id: str, serial: str) -> dict[
 
 @callback
 def build_zone_device(
-    hass: HomeAssistant, entry_id: str, serial: str, number: int, *, name: str = "", model: str = ""
+    hass: HomeAssistant,
+    entry_id: str,
+    serial: str,
+    number: int,
+    *,
+    name: str = "",
+    model: str = "",
 ) -> dict[str, Any]:
     """Describe one zone as a sub-device of the panel.
 
@@ -299,7 +306,9 @@ def async_apply_programmed_names(
     changes. That is the behaviour the entity map asked for, and a test holds it.
     """
     for number, name in zones.items():
-        if not _sub_device_exists(hass, entry_id, (DOMAIN, zone_device_id(serial, number))):
+        if not _sub_device_exists(
+            hass, entry_id, (DOMAIN, zone_device_id(serial, number))
+        ):
             continue
         radio = wireless.get(number)
         device = build_zone_device(
@@ -315,10 +324,14 @@ def async_apply_programmed_names(
             # place the panel says so. The serial is the detector's own, printed on its label. No
             # `serial_number` field exists on a 2026.9+ child device — see build_zone_device.
             device["serial_number"] = f"{radio.serial:010d}"
-        _register_sub_device(hass, entry_id=entry_id, subentry_id=subentry_id, device=device)
+        _register_sub_device(
+            hass, entry_id=entry_id, subentry_id=subentry_id, device=device
+        )
 
     for number, name in partitions.items():
-        if not _sub_device_exists(hass, entry_id, (DOMAIN, partition_device_id(serial, number))):
+        if not _sub_device_exists(
+            hass, entry_id, (DOMAIN, partition_device_id(serial, number))
+        ):
             continue
         _register_sub_device(
             hass,

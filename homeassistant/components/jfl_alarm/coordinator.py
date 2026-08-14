@@ -33,18 +33,10 @@ Sprint 3 added the command path, and it obeys three rules of its own:
   feature set derived from it would make Home Assistant's buttons appear and disappear on their own.
 """
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Final
 
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import dt as dt_util
 from pyjfl import (
     EVENTS_PER_PAGE,
     UNKNOWN_MODEL,
@@ -109,6 +101,13 @@ from pyjfl import (
 # at the top level, which is out of this repository's control. See BACKLOG.md.
 from pyjfl.protocol.programming import MAX_WIRELESS, REGIONS
 
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
+
 from .const import (
     CONF_FENCE_PGM,
     DEFAULT_EVENT_LIMIT,
@@ -126,7 +125,7 @@ from .const import (
     signal_panel_event,
 )
 from .device import async_apply_programmed_names, async_refresh_panel_device
-from .repairs import async_check_fence_pgm, async_check_model, async_report_lockout
+from .repairs import async_check_model, async_report_lockout
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -501,14 +500,20 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         The override half of `JflCapabilities.effective_fence_pgm`: a value here wins over what a
         programming read detects, because the user may know something the programming does not.
         """
-        return int(self.subentry.data.get(CONF_FENCE_PGM, DEFAULT_FENCE_PGM) or NO_FENCE_PGM)
+        return int(
+            self.subentry.data.get(CONF_FENCE_PGM, DEFAULT_FENCE_PGM) or NO_FENCE_PGM
+        )
 
     # --- lifecycle ------------------------------------------------------------------------------
 
     async def async_setup_panel(self) -> None:
         """Subscribe to the link and start polling. Never fails on a panel that is not there."""
-        self._unsubscribe.append(self.link.async_add_packet_listener(self._handle_packet))
-        self._unsubscribe.append(self.link.async_add_availability_listener(self._handle_available))
+        self._unsubscribe.append(
+            self.link.async_add_packet_listener(self._handle_packet)
+        )
+        self._unsubscribe.append(
+            self.link.async_add_availability_listener(self._handle_available)
+        )
         self._poll_task = self.config_entry.async_create_background_task(
             self.hass, self._poll_forever(), name=f"{DOMAIN} poll {self.serial}"
         )
@@ -585,7 +590,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
             try:
                 result = await self.async_read_programming()
             except (PanelNotConnectedError, OSError) as err:
-                LOGGER.debug("%s: automatic programming read failed: %s", self.serial, err)
+                LOGGER.debug(
+                    "%s: automatic programming read failed: %s", self.serial, err
+                )
                 await asyncio.sleep(self._programming_sleep())
                 continue
             if not result.zones and not result.partitions:
@@ -651,7 +658,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
                 checksum = region_checksum or checksum
 
             programming = self._build_programming(blocks, checksum, tuple(missing))
-            programming = replace(programming, inventory=await self._async_read_inventory())
+            programming = replace(
+                programming, inventory=await self._async_read_inventory()
+            )
             self.programming = programming
             LOGGER.debug(
                 "%s: programming read — %d zones, %d partitions, %d wireless devices%s",
@@ -666,24 +675,18 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
                 entry_id=self.config_entry.entry_id,
                 subentry_id=self.subentry.subentry_id,
                 serial=self.serial,
-                zones={number: record.name for number, record in programming.zones.items()},
+                zones={
+                    number: record.name for number, record in programming.zones.items()
+                },
                 partitions={
-                    number: record.name for number, record in programming.partitions.items()
+                    number: record.name
+                    for number, record in programming.partitions.items()
                 },
                 wireless={
                     record.zone: record
                     for record in programming.wireless.values()
                     if record.present
                 },
-            )
-            # The programming is the only thing that knows which PGM drives the fence. Now that it
-            # has been read, close ADR-0007's residual risk: warn about a detected energiser output
-            # the user never named, or one that disagrees with what they did name. ADR-0011.
-            async_check_fence_pgm(
-                self.hass,
-                self.serial,
-                configured=self.configured_fence_pgm,
-                detected=self.capabilities.detected_fence_pgm,
             )
             # Entities read names from `self.programming`, which is not part of the snapshot, so
             # they have to be told to look again.
@@ -724,7 +727,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
                 # The same treatment the wireless inventory gets: a panel that does not implement
                 # `0x48`, or that stops answering half way, returns what was read rather than
                 # raising. Partial history is worth having; a traceback in a service call is not.
-                LOGGER.debug("%s: event buffer read stopped at %d: %s", self.serial, cursor, err)
+                LOGGER.debug(
+                    "%s: event buffer read stopped at %d: %s", self.serial, cursor, err
+                )
                 break
             fresh = [record for record in page.records if record.serial > cursor]
             if not fresh:
@@ -734,7 +739,10 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
             if len(page.records) < EVENTS_PER_PAGE:
                 break
         LOGGER.debug(
-            "%s: read %d buffered events, up to serial %d", self.serial, len(collected), cursor
+            "%s: read %d buffered events, up to serial %d",
+            self.serial,
+            len(collected),
+            cursor,
         )
         return collected[:limit]
 
@@ -755,7 +763,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         """Read one block, retrying briefly. `None` when it never arrives."""
         for attempt in range(PROGRAMMING_READ_RETRIES):
             try:
-                return await self.link.async_read_programming(request.address, request.count)
+                return await self.link.async_read_programming(
+                    request.address, request.count
+                )
             except (PanelNotConnectedError, OSError, TimeoutError) as err:
                 LOGGER.debug(
                     "%s: programming read of %#06x+%d failed (attempt %d): %s",
@@ -788,10 +798,14 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
             try:
                 inventory = await self.link.async_read_wireless(page)
             except (PanelNotConnectedError, OSError, TimeoutError) as err:
-                LOGGER.debug("%s: wireless inventory page %d failed: %s", self.serial, page, err)
+                LOGGER.debug(
+                    "%s: wireless inventory page %d failed: %s", self.serial, page, err
+                )
                 break
             present = [
-                device for device in inventory.devices if device.serial not in (0, 0xFFFFFFFF)
+                device
+                for device in inventory.devices
+                if device.serial not in (0, 0xFFFFFFFF)
             ]
             if not present:
                 break
@@ -799,7 +813,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
                 devices[device.zone] = device
             await asyncio.sleep(PROGRAMMING_READ_GAP)
         if devices:
-            LOGGER.debug("%s: wireless inventory — %d devices", self.serial, len(devices))
+            LOGGER.debug(
+                "%s: wireless inventory — %d devices", self.serial, len(devices)
+            )
         return devices
 
     @callback
@@ -818,20 +834,28 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
             users=self._records(blocks, "users", parse_users),
             wireless={
                 record.slot: record
-                for record in parse_wireless(blocks.get("wireless", b""), REGIONS["wireless"][0])
+                for record in parse_wireless(
+                    blocks.get("wireless", b""), REGIONS["wireless"][0]
+                )
             },
-            holidays=tuple(parse_holidays(blocks.get("holidays", b""), REGIONS["holidays"][0])),
+            holidays=tuple(
+                parse_holidays(blocks.get("holidays", b""), REGIONS["holidays"][0])
+            ),
             timers=parse_timers(blocks.get("timers", b""), REGIONS["timers"][0]),
             zone_options=parse_global_zone_options(
                 blocks.get("zone_options", b""), REGIONS["zone_options"][0]
             ),
-            auto_arm_time=parse_auto_arm_time(blocks.get("timers", b""), REGIONS["timers"][0]),
+            auto_arm_time=parse_auto_arm_time(
+                blocks.get("timers", b""), REGIONS["timers"][0]
+            ),
             incomplete=missing,
         )
 
     @staticmethod
     def _records(
-        blocks: Mapping[str, bytes], region: str, parse: Callable[[bytes, int], list[Any]]
+        blocks: Mapping[str, bytes],
+        region: str,
+        parse: Callable[[bytes, int], list[Any]],
     ) -> dict[int, Any]:
         """Run one region's parser and key the result by record number."""
         data = blocks.get(region)
@@ -884,7 +908,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
             permissions.may_arm if arm else permissions.may_disarm,
             "300 TECLA3/TECLA4, and 'Opera eletrificador' at 301-398",
         )
-        LOGGER.debug("%s: %s the electric fence", self.serial, "arming" if arm else "disarming")
+        LOGGER.debug(
+            "%s: %s the electric fence", self.serial, "arming" if arm else "disarming"
+        )
         await self._async_command(build_fence_arm if arm else build_fence_disarm)
 
     async def async_pgm(self, number: int, *, on: bool) -> None:
@@ -895,7 +921,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         the coordinator deliberately does not second-guess a deliberate call.
         """
         self._require_pgm_permission(number)
-        LOGGER.debug("%s: switching PGM %d %s", self.serial, number, "on" if on else "off")
+        LOGGER.debug(
+            "%s: switching PGM %d %s", self.serial, number, "on" if on else "off"
+        )
         builder = build_pgm_on if on else build_pgm_off
         await self._async_command(lambda seq: builder(seq, number))
 
@@ -992,10 +1020,14 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
             try:
                 await self.link.async_request_status()
             except (PanelNotConnectedError, OSError) as err:
-                LOGGER.debug("%s: post-command status re-read failed: %s", self.serial, err)
+                LOGGER.debug(
+                    "%s: post-command status re-read failed: %s", self.serial, err
+                )
 
         for delay in VERIFY_DELAYS:
-            self.config_entry.async_on_unload(async_call_later(self.hass, delay, _verify))
+            self.config_entry.async_on_unload(
+                async_call_later(self.hass, delay, _verify)
+            )
 
     # --- guards ---------------------------------------------------------------------------------
 
@@ -1038,7 +1070,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         status = self.data.status
         if status is None:
             return
-        self._require_permission(status.pgm_permitted(number), "821-824 (the PGM's function)")
+        self._require_permission(
+            status.pgm_permitted(number), "821-824 (the PGM's function)"
+        )
 
     def _partition_permissions(self, partition: int) -> PartitionPermissions:
         """`P-PART[i]` for *partition*, read at the moment of the call.
@@ -1085,7 +1119,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
                 info=packet,
                 name=self.subentry.title,
             )
-            self.async_set_updated_data(replace(state, connection=packet, connected_since=now))
+            self.async_set_updated_data(
+                replace(state, connection=packet, connected_since=now)
+            )
             return
         if isinstance(packet, PanelStatus):
             self.async_set_updated_data(replace(state, status=packet))
@@ -1132,7 +1168,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         async_report_lockout(self.hass, self.serial)
 
     @callback
-    def _handle_event(self, event: PanelEvent, state: JflPanelState, now: datetime) -> None:
+    def _handle_event(
+        self, event: PanelEvent, state: JflPanelState, now: datetime
+    ) -> None:
         """Send a Contact ID event to the `event` entities and record that one arrived.
 
         The event itself travels on the dispatcher, not in the snapshot — see the module docstring.
@@ -1154,7 +1192,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
             )
         )
         async_dispatcher_send(
-            self.hass, signal_panel_event(self.config_entry.entry_id, self.serial), event
+            self.hass,
+            signal_panel_event(self.config_entry.entry_id, self.serial),
+            event,
         )
 
     @callback

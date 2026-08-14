@@ -18,9 +18,7 @@ sub-devices linked back to the panel by `parent_device_id`, so a dashboard can s
 without also showing everything else the panel knows.
 """
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -67,6 +65,7 @@ class JflEntity(CoordinatorEntity[JflPanelCoordinator]):
         return self.coordinator.data
 
     @property
+    @override
     def available(self) -> bool:
         """Availability follows the **connection**, not `last_update_success`.
 
@@ -80,7 +79,9 @@ class JflEntity(CoordinatorEntity[JflPanelCoordinator]):
 class JflPartitionEntity(JflEntity):
     """An entity that belongs to one partition's sub-device."""
 
-    def __init__(self, coordinator: JflPanelCoordinator, partition: int, key: str) -> None:
+    def __init__(
+        self, coordinator: JflPanelCoordinator, partition: int, key: str
+    ) -> None:
         """Bind to *partition*, 1-based, on this panel.
 
         The programmed name is passed through if one is already known — see `JflZoneEntity` for the
@@ -179,7 +180,9 @@ def async_add_discovered(
         new = list(discover(coordinator.data))
         if new:
             LOGGER.debug(
-                "%s: adding %d entities discovered after connection", coordinator.serial, len(new)
+                "%s: adding %d entities discovered after connection",
+                coordinator.serial,
+                len(new),
             )
             async_add_entities(new, config_subentry_id=coordinator.subentry.subentry_id)
 

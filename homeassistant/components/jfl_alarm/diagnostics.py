@@ -22,8 +22,6 @@ to it, the same as every other identifier in this file — hashing rather than b
 `_token` so the number matches the one in `identity.mac`/`identity.imei`/the top-level `serial`.
 """
 
-from __future__ import annotations
-
 import hashlib
 from typing import TYPE_CHECKING, Any
 
@@ -41,8 +39,9 @@ _IMEI_RANGE = slice(14, 29)
 _MAC_RANGE = slice(29, 41)
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.device_registry import DeviceEntry
     from pyjfl import PanelStatus
+
+    from homeassistant.helpers.device_registry import DeviceEntry
 
     from . import JflConfigEntry
     from .coordinator import JflPanelCoordinator
@@ -75,7 +74,11 @@ def _redact_frame_hex(data: bytes) -> str:
     Too short to safely contain a `0x21` frame's fixed ranges is left alone; a frame that short
     cannot be a genuine connection frame, so there is nothing here to redact.
     """
-    if len(data) <= 3 or data[3] != _CONNECTION_FRAME_CMD or len(data) < _MAC_RANGE.stop:
+    if (
+        len(data) <= 3
+        or data[3] != _CONNECTION_FRAME_CMD
+        or len(data) < _MAC_RANGE.stop
+    ):
         return data.hex(" ")
 
     def _hex(raw_range: bytes) -> str:
@@ -109,10 +112,15 @@ async def async_get_config_entry_diagnostics(
         },
         "options": dict(entry.options),
         "panels": [
-            _panel_diagnostics(coordinator) for coordinator in runtime.coordinators.values()
+            _panel_diagnostics(coordinator)
+            for coordinator in runtime.coordinators.values()
         ],
         "pending_panels": [
-            {"serial": _token(serial), "model": info.spec.name, "model_byte": info.model_byte}
+            {
+                "serial": _token(serial),
+                "model": info.spec.name,
+                "model_byte": info.model_byte,
+            }
             for serial, info in runtime.server.pending_panels.items()
         ],
     }
@@ -157,10 +165,14 @@ def _panel_diagnostics(coordinator: JflPanelCoordinator) -> dict[str, Any]:
         # what makes "why does disarming ask me for a code?" answerable from a dump; reporting the
         # code would put the thing that protects the house into a file the user emails around.
         "code_configured": bool(coordinator.subentry.data.get(CONF_CODE)),
-        "code_arm_required": bool(coordinator.subentry.data.get(CONF_CODE_ARM_REQUIRED)),
+        "code_arm_required": bool(
+            coordinator.subentry.data.get(CONF_CODE_ARM_REQUIRED)
+        ),
         "status_interval": coordinator.status_interval,
         "unknown_packets": state.unknown_packets,
-        "last_event_at": state.last_event_at.isoformat() if state.last_event_at else None,
+        "last_event_at": state.last_event_at.isoformat()
+        if state.last_event_at
+        else None,
         "last_event_code": state.last_event_code,
         "identity": {
             "model": state.spec.name,
@@ -228,7 +240,9 @@ def _status_diagnostics(status: PanelStatus | None) -> dict[str, Any] | None:
             }
             for index, partition in enumerate(status.partitions, start=1)
         ],
-        "partition_permissions": [permission.raw for permission in status.partition_permissions],
+        "partition_permissions": [
+            permission.raw for permission in status.partition_permissions
+        ],
         "zones": [
             {
                 "number": zone.number,

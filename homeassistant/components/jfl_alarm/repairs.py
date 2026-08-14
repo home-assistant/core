@@ -19,36 +19,18 @@ with "wrong password", which nothing this integration sends can provoke — the 
 on the path that carries no password. It exists because the failure it guards against is one the
 user cannot undo from Home Assistant: five wrong passwords block remote operation at the panel until
 somebody performs a valid keypad operation. AGENTS.md §6.
-
-`fence_pgm_conflict` is the last of the two issues the fence's PGM used to raise. A PGM on function
-18 *is* the energiser's power, and the status frame cannot say so — only the programming can, and
-only once it has been read. When the programming and the user's setting name **different** outputs,
-one of them is wrong and only the user can say which, so the setting is honoured and the
-disagreement is surfaced. ADR-0011.
-
-`fence_pgm_detected` is **gone**, and its removal is worth a note. It fired when a read found an
-energiser output the user had never named, and asked them to go and name it — not because the
-integration did not know which output it was, but because it had already created that output's
-switch with the wrong device, category and enabled flag, and Home Assistant fixes all three when an
-entity registers. Asking the user to correct bookkeeping the integration could correct itself is a
-repair issue that should never have existed. The switches now wait until the functions are known and
-are created in the right place; `async_check_fence_pgm` deletes any copy an earlier version raised.
-ADR-0017.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
+
+from pyjfl import MODELS
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_call_later
-from pyjfl import MODELS
 
 from .const import (
     DOMAIN,
-    ISSUE_FENCE_PGM_CONFLICT,
-    ISSUE_FENCE_PGM_DETECTED,
     ISSUE_PANEL_NEVER_CONNECTED,
     ISSUE_REMOTE_ACCESS_BLOCKED,
     ISSUE_UNSUPPORTED_MODEL,
@@ -122,7 +104,9 @@ def async_check_model(hass: HomeAssistant, info: ConnectionInfo) -> None:
         "%s: model 0x%02X is %s",
         info.serial,
         info.model_byte,
-        "implemented from the specification but untested" if known else "not in the model table",
+        "implemented from the specification but untested"
+        if known
+        else "not in the model table",
     )
     ir.async_create_issue(
         hass,
@@ -135,67 +119,6 @@ def async_check_model(hass: HomeAssistant, info: ConnectionInfo) -> None:
             "serial": info.serial,
             "model": info.spec.name,
             "model_byte": f"0x{info.model_byte:02X}",
-        },
-    )
-
-
-@callback
-def async_check_fence_pgm(
-    hass: HomeAssistant, serial: str, *, configured: int, detected: int | None
-) -> None:
-    """Reconcile the detected fence PGM with the one the user configured, and raise or clear issues.
-
-    Called after every programming read. The three outcomes:
-
-    * **Agreement, or nothing detected** — the setting and the programming say the same thing, or
-      the programming names no energiser output. Nothing to warn about.
-    * **Detected but not configured** — the ordinary case on a panel nobody has configured, and
-      **not a problem**: detection is enough, the switch has already been placed on the fence's
-      device from that same reading, and there is nothing for the user to do. Recorded at `debug`.
-    * **Detected and configured, but different** — the user's setting is honoured (the coordinator
-      never overrides it), and `fence_pgm_conflict` surfaces the disagreement, because one of the
-      two is wrong and only the user can say which.
-
-    The issue id is per serial so a mixed installation names each panel. Any `fence_pgm_detected`
-    an earlier version raised is deleted here, unconditionally — ADR-0017 retired it.
-    """
-    detected_id = f"{ISSUE_FENCE_PGM_DETECTED}_{serial}"
-    conflict_id = f"{ISSUE_FENCE_PGM_CONFLICT}_{serial}"
-    ir.async_delete_issue(hass, DOMAIN, detected_id)
-
-    if detected is None or detected == configured:
-        ir.async_delete_issue(hass, DOMAIN, conflict_id)
-        return
-
-    if not configured:
-        ir.async_delete_issue(hass, DOMAIN, conflict_id)
-        LOGGER.debug(
-            "%s: PGM %d is programmed to drive the electric fence (address %d); its switch belongs "
-            "to the fence's device and is marked as configuration",
-            serial,
-            detected,
-            820 + detected,
-        )
-        return
-
-    LOGGER.warning(
-        "Panel %s: PGM %d is set as the fence's power, but the programming says PGM %d drives it. "
-        "The setting is being honoured; check which is correct",
-        serial,
-        configured,
-        detected,
-    )
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        conflict_id,
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key=ISSUE_FENCE_PGM_CONFLICT,
-        translation_placeholders={
-            "serial": serial,
-            "configured": str(configured),
-            "detected": str(detected),
         },
     )
 
