@@ -38,17 +38,17 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
         },
     )
 
-    # Change state to on
+    # First known state initializes the expose without sending.
     hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
-    await knx.assert_write("1/1/8", True)
+    await knx.assert_no_telegram()
 
-    # Change attribute; keep state
+    # Change attribute; keep state.
     hass.states.async_set(entity_id, "on", {"brightness": 180})
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
-    # Change attribute and state
+    # Change state.
     hass.states.async_set(entity_id, "off", {"brightness": 0})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", False)
