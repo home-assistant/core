@@ -290,7 +290,7 @@ class KnxExposeEntity:
                 expose_value = self._get_expose_value(new_state, option)
                 if expose_value is None:
                     continue
-                    
+
                 if xknx_expose.sensor_value.value is None:
                     try:
                         xknx_expose.initialize_value(expose_value)
@@ -302,9 +302,7 @@ class KnxExposeEntity:
                         )
                     continue
 
-                tg.create_task(
-                    self._async_set_knx_value(xknx_expose, expose_value)
-                )
+                tg.create_task(self._async_set_knx_value(xknx_expose, expose_value))
 
     async def _async_set_knx_value(
         self, xknx_expose: ExposeSensor, value: StateType

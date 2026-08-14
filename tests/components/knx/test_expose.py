@@ -58,8 +58,6 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
     "core_state",
     [CoreState.not_running, CoreState.starting],
 )
-
-
 async def test_binary_expose_does_not_send_initial_state_during_startup(
     hass: HomeAssistant,
     knx: KNXTestKit,
@@ -349,7 +347,7 @@ async def test_expose_value_template(
     percent_address = "2/2/2"
 
     hass.states.async_set(entity_id, "off", {attribute: 255})
-    
+
     await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: [
