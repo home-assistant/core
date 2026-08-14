@@ -142,12 +142,12 @@ async def test_resume_partial_unique_id_migration(
     )
     device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1101")},
+        identifiers={(DOMAIN, "10000-1101")},
     )
     entity_registry.async_get_or_create(
         Platform.LIGHT,
         DOMAIN,
-        "1000-1",
+        "10000-1",
         config_entry=mock_config_entry,
         device_id=device_entry.id,
     )
@@ -157,6 +157,6 @@ async def test_resume_partial_unique_id_migration(
 
     migrated_device = device_registry.async_get(device_entry.id)
     assert migrated_device is not None
-    assert (DOMAIN, "1000-1") in migrated_device.identifiers
-    assert (DOMAIN, "1000-1101") not in migrated_device.identifiers
+    assert (DOMAIN, "10000-1") in migrated_device.identifiers
+    assert (DOMAIN, "10000-1101") not in migrated_device.identifiers
     assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
