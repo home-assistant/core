@@ -141,6 +141,20 @@
         "name": "Upper oven stop"
       }
     },
+    "fan": {
+      "air_purifier_fan": {
+        "name": "[%key:component::fan::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "Manual",
+              "quiet": "Quiet",
+              "smart": "Smart"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "bottomoven_cavity_light": {
         "name": "Lower cavity light"
