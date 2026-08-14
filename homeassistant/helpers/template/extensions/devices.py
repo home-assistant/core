@@ -85,7 +85,8 @@ class DeviceExtension(BaseTemplateExtension):
         return next(
             (
                 device_id
-                for device_id, device in dev_reg.devices.items()
+                for container in (dev_reg.devices, dev_reg.child_devices)
+                for device_id, device in container.items()
                 if (name := device.name_by_user or device.name)
                 and (str(entity_id_or_device_name) == name)
             ),

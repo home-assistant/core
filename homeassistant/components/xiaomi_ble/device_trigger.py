@@ -364,7 +364,7 @@ def _async_trigger_model_data(
 ) -> TriggerModelData | None:
     """Get available triggers for a given model."""
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get(device_id)
+    device = device_registry.async_get(device_id, include_child_devices=False)
     if device and device.model and (model_data := MODEL_DATA.get(device.model)):
         return model_data
     return None
