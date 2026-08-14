@@ -26,7 +26,10 @@ async def test_migrate_entry_does_not_connect(
 
     assert mock_config_entry.version == 2
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.data["mesh_unique_ids_migration_pending"] is True
+    assert (
+        mock_config_entry.data["mesh_unique_ids_migration_pending"]
+        == "entities_to_temporary"
+    )
 
 
 async def test_migrate_unique_ids(
@@ -210,10 +213,28 @@ async def test_migrate_overlapping_unique_ids(
         device_id=first_device.id,
     )
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch.object(device_registry, "async_update_device", side_effect=RuntimeError):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_config_entry.data["mesh_unique_ids_migration_pending"]
+        == "devices_to_temporary"
+    )
+    interrupted_chained_entity = entity_registry.async_get(chained_entity.entity_id)
+    assert interrupted_chained_entity is not None
+    assert interrupted_chained_entity.unique_id == "1000-1101"
+    interrupted_first_entity = entity_registry.async_get(first_entity.entity_id)
+    assert interrupted_first_entity is not None
+    assert interrupted_first_entity.unique_id == "1000-1"
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    current_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert current_entry is not None
+    assert current_entry.state is ConfigEntryState.LOADED
     migrated_chained_entity = entity_registry.async_get(chained_entity.entity_id)
     assert migrated_chained_entity is not None
     assert migrated_chained_entity.unique_id == "10000-1101"

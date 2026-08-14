@@ -23,6 +23,10 @@ _PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
 _MESH_UNIQUE_IDS_MIGRATION_PENDING = "mesh_unique_ids_migration_pending"
 _MESH_UNIQUE_ID_MIGRATION_PREFIX = "__cync_mesh_id_migration__"
+_MIGRATE_ENTITIES_TO_TEMPORARY = "entities_to_temporary"
+_MIGRATE_ENTITIES_TO_FINAL = "entities_to_final"
+_MIGRATE_DEVICES_TO_TEMPORARY = "devices_to_temporary"
+_MIGRATE_DEVICES_TO_FINAL = "devices_to_final"
 
 
 def _migrate_unique_ids(
@@ -44,87 +48,112 @@ def _migrate_unique_ids(
         f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{old_unique_id}": new_unique_id
         for old_unique_id, new_unique_id in id_map.items()
     }
-    migration_id_map = id_map | temporary_id_map
+
+    def set_stage(stage: str) -> None:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, _MESH_UNIQUE_IDS_MIGRATION_PENDING: stage},
+        )
+
+    stage = entry.data[_MESH_UNIQUE_IDS_MIGRATION_PENDING]
+    if stage is True:
+        stage = _MIGRATE_ENTITIES_TO_TEMPORARY
+        set_stage(stage)
 
     if not id_map:
         return
 
     entity_registry = er.async_get(hass)
-    migrated_device_ids = set()
-    migrated_unique_ids = set(id_map.values())
-    entity_migrations = []
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_registry, entry.entry_id
-    ):
-        if entity_entry.platform != DOMAIN or entity_entry.domain != Platform.LIGHT:
-            continue
-        if new_unique_id := migration_id_map.get(entity_entry.unique_id):
-            entity_migrations.append((entity_entry.entity_id, new_unique_id))
-        elif entity_entry.unique_id not in migrated_unique_ids:
-            continue
-        if entity_entry.device_id is not None:
-            migrated_device_ids.add(entity_entry.device_id)
 
-    for entity_id, _ in entity_migrations:
-        current_entity_entry = entity_registry.async_get(entity_id)
-        if (
-            current_entity_entry is not None
-            and current_entity_entry.unique_id in id_map
-        ):
-            entity_registry.async_update_entity(
-                entity_id,
-                new_unique_id=(
-                    f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}"
-                    f"{current_entity_entry.unique_id}"
-                ),
+    def get_entity_entries() -> list[er.RegistryEntry]:
+        return [
+            entity_entry
+            for entity_entry in er.async_entries_for_config_entry(
+                entity_registry, entry.entry_id
             )
-    for entity_id, new_unique_id in entity_migrations:
-        entity_registry.async_update_entity(
-            entity_id,
-            new_unique_id=new_unique_id,
-        )
+            if entity_entry.platform == DOMAIN and entity_entry.domain == Platform.LIGHT
+        ]
 
+    entity_entries = get_entity_entries()
+
+    if stage == _MIGRATE_ENTITIES_TO_TEMPORARY:
+        for entity_entry in entity_entries:
+            if entity_entry.unique_id in id_map:
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id,
+                    new_unique_id=(
+                        f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{entity_entry.unique_id}"
+                    ),
+                )
+        stage = _MIGRATE_ENTITIES_TO_FINAL
+        set_stage(stage)
+
+    if stage == _MIGRATE_ENTITIES_TO_FINAL:
+        entity_entries = get_entity_entries()
+        for entity_entry in entity_entries:
+            if new_unique_id := temporary_id_map.get(entity_entry.unique_id):
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id,
+                    new_unique_id=new_unique_id,
+                )
+        stage = _MIGRATE_DEVICES_TO_TEMPORARY
+        set_stage(stage)
+
+    entity_entries = get_entity_entries()
+    migrated_unique_ids = id_map.keys() | id_map.values() | temporary_id_map.keys()
+    migrated_device_ids = {
+        entity_entry.device_id
+        for entity_entry in entity_entries
+        if entity_entry.unique_id in migrated_unique_ids
+        and entity_entry.device_id is not None
+    }
     device_registry = dr.async_get(hass)
-    device_migrations = []
-    for device_id in migrated_device_ids:
-        device_entry = device_registry.async_get(device_id)
-        if device_entry is None:
-            continue
-        new_identifiers = {
-            (
-                domain,
-                migration_id_map.get(identifier, identifier)
-                if domain == DOMAIN
-                else identifier,
-            )
-            for domain, identifier in device_entry.identifiers
-        }
-        if new_identifiers != device_entry.identifiers:
-            device_migrations.append((device_entry.id, new_identifiers))
 
-    for device_id, _ in device_migrations:
-        device_entry = device_registry.async_get(device_id)
-        if device_entry is None:
-            continue
-        temporary_identifiers = {
-            (
-                domain,
-                f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{identifier}"
-                if domain == DOMAIN and identifier in id_map
-                else identifier,
-            )
-            for domain, identifier in device_entry.identifiers
-        }
-        if temporary_identifiers != device_entry.identifiers:
-            device_registry.async_update_device(
-                device_entry.id,
-                new_identifiers=temporary_identifiers,
-            )
-    for device_id, new_identifiers in device_migrations:
-        device_registry.async_update_device(
-            device_id,
-            new_identifiers=new_identifiers,
-        )
+    if stage == _MIGRATE_DEVICES_TO_TEMPORARY:
+        for device_id in migrated_device_ids:
+            device_entry = device_registry.async_get(device_id)
+            if device_entry is None:
+                continue
+            temporary_identifiers = {
+                (
+                    domain,
+                    f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{identifier}"
+                    if domain == DOMAIN and identifier in id_map
+                    else identifier,
+                )
+                for domain, identifier in device_entry.identifiers
+            }
+            if temporary_identifiers != device_entry.identifiers:
+                device_registry.async_update_device(
+                    device_entry.id,
+                    new_identifiers=temporary_identifiers,
+                )
+        stage = _MIGRATE_DEVICES_TO_FINAL
+        set_stage(stage)
+
+    if stage == _MIGRATE_DEVICES_TO_FINAL:
+        for device_id in migrated_device_ids:
+            device_entry = device_registry.async_get(device_id)
+            if device_entry is None:
+                continue
+            final_identifiers = {
+                (
+                    domain,
+                    temporary_id_map.get(identifier, identifier)
+                    if domain == DOMAIN
+                    else identifier,
+                )
+                for domain, identifier in device_entry.identifiers
+            }
+            if final_identifiers != device_entry.identifiers:
+                device_registry.async_update_device(
+                    device_entry.id,
+                    new_identifiers=final_identifiers,
+                )
+
+        data = dict(entry.data)
+        data.pop(_MESH_UNIQUE_IDS_MIGRATION_PENDING)
+        hass.config_entries.async_update_entry(entry, data=data)
 
 
 async def _async_create_cync(hass: HomeAssistant, entry: CyncConfigEntry) -> Cync:
@@ -155,7 +184,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bo
     if entry.version == 1:
         hass.config_entries.async_update_entry(
             entry,
-            data={**entry.data, _MESH_UNIQUE_IDS_MIGRATION_PENDING: True},
+            data={
+                **entry.data,
+                _MESH_UNIQUE_IDS_MIGRATION_PENDING: (_MIGRATE_ENTITIES_TO_TEMPORARY),
+            },
             version=2,
         )
 
@@ -175,9 +207,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
 
     if entry.data.get(_MESH_UNIQUE_IDS_MIGRATION_PENDING):
         _migrate_unique_ids(hass, entry, cync)
-        data = dict(entry.data)
-        data.pop(_MESH_UNIQUE_IDS_MIGRATION_PENDING)
-        hass.config_entries.async_update_entry(entry, data=data)
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
