@@ -1,4 +1,4 @@
-"""Support for Xiaomi Mi Air Quality Monitor (PM2.5) and Humidifier."""
+"""Support for Xiaomi Miio sensors."""
 
 from collections.abc import Iterable
 from dataclasses import dataclass
