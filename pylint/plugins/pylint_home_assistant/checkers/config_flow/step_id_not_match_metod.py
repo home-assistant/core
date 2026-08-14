@@ -1,9 +1,9 @@
-"""Checker for detecting IP-based unique IDs in config entries.
+"""Checker for step_id does not match method name.
 
-Using an IP address or hostname as a config entry's ``unique_id`` breaks when
-the device gets a new DHCP lease. The unique ID must be something stable -- a
-MAC address (formatted via ``format_mac``), serial number, or other hardware b
-identifier.
+The step_id parameter for async_show_form, async_external_step,
+async_show_progress, and async_show_menu should match the method
+name after removing the 'async_step_' prefix. For example,
+if the method is named async_step_user, the step_id should be 'user'.
 """
 
 from astroid import nodes
