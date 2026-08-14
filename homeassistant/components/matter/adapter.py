@@ -199,13 +199,10 @@ class MatterAdapter:
                 server_info,
                 endpoint.node.endpoints[0],
             )
-            via_device_id = (
-                dr.async_get_device_id_by_identifier(
-                    self.hass,
-                    (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{bridge_device_id}"),
-                    config_entry_id=self.config_entry.entry_id,
-                )
-                or UNDEFINED
+            via_device_id = dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{bridge_device_id}"),
+                config_entry_id=self.config_entry.entry_id,
             )
 
         node_device_id = get_device_id(
