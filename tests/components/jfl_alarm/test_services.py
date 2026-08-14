@@ -17,15 +17,15 @@ import asyncio
 from pyjfl import Cmd, FrameReader, bitmap_to_flags
 import pytest
 
-from homeassistant.components.jfl_alarm import async_setup
 from homeassistant.components.jfl_alarm.const import CONF_READ_ONLY, DOMAIN
 from homeassistant.components.jfl_alarm.device import get_sub_device
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
-from tests.components.jfl_alarm.conftest import make_entry
-from tests.components.jfl_alarm.panel_sim import FakePanel
+from .conftest import make_entry
+from .panel_sim import FakePanel
 
 
 async def _bring_up(hass: HomeAssistant, entry, connect_panel, panel: FakePanel):
@@ -61,8 +61,10 @@ async def _next_command(connection, timeout: float = 2.0):
     raise AssertionError("no command frame arrived")
 
 
-def _panel_device_id(hass: HomeAssistant, entry_id: str, serial: str) -> str:
-    device = dr.async_get(hass).async_get_device_by_identifier(
+def _panel_device_id(
+    device_registry: dr.DeviceRegistry, entry_id: str, serial: str
+) -> str:
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, serial), config_entry_id=entry_id
     )
     assert device is not None
@@ -76,13 +78,16 @@ async def test_the_services_are_registered_without_any_entry(
     hass: HomeAssistant,
 ) -> None:
     """Registered in `async_setup`, so an automation validates while the entry is unloaded."""
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     for service in ("sync_time", "refresh_status", "set_bypass_mask"):
         assert hass.services.has_service(DOMAIN, service)
 
 
 async def test_sync_time_sends_the_clock_in_the_panels_own_order(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant,
+    port: int,
+    connect_panel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """`0x55` is **hour first**, which is the reverse of the clock the status frame reports."""
     panel = FakePanel(serial="SYNCTIME01")
@@ -92,7 +97,11 @@ async def test_sync_time_sends_the_clock_in_the_panels_own_order(
         await hass.services.async_call(
             DOMAIN,
             "sync_time",
-            {"device_id": _panel_device_id(hass, entry.entry_id, panel.serial)},
+            {
+                "device_id": _panel_device_id(
+                    device_registry, entry.entry_id, panel.serial
+                )
+            },
             blocking=True,
         )
         frame = await _next_command(connection)
@@ -108,7 +117,11 @@ async def test_sync_time_sends_the_clock_in_the_panels_own_order(
 
 
 async def test_refresh_status_service_asks_the_panel_now(
-    hass: HomeAssistant, setup_entry, connect_panel, panel: FakePanel
+    hass: HomeAssistant,
+    setup_entry,
+    connect_panel,
+    panel: FakePanel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """A *read*, so it must work through the service call even in read-only mode.
 
@@ -122,7 +135,11 @@ async def test_refresh_status_service_asks_the_panel_now(
     await hass.services.async_call(
         DOMAIN,
         "refresh_status",
-        {"device_id": _panel_device_id(hass, setup_entry.entry_id, panel.serial)},
+        {
+            "device_id": _panel_device_id(
+                device_registry, setup_entry.entry_id, panel.serial
+            )
+        },
         blocking=True,
     )
     reply = await connection.read_reply()
@@ -130,14 +147,17 @@ async def test_refresh_status_service_asks_the_panel_now(
 
 
 async def test_set_bypass_mask_replaces_the_whole_list(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant,
+    port: int,
+    connect_panel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Including with an empty list, which is how every bypass is cleared."""
     panel = FakePanel(serial="MASKSVC001", zones={1: 0x1, 9: 0x1})
     entry = await _writable_entry(hass, port, panel)
     try:
         connection, _ = await _bring_up(hass, entry, connect_panel, panel)
-        device_id = _panel_device_id(hass, entry.entry_id, panel.serial)
+        device_id = _panel_device_id(device_registry, entry.entry_id, panel.serial)
 
         await hass.services.async_call(
             DOMAIN,
@@ -185,7 +205,7 @@ async def test_a_service_targeting_a_partition_finds_its_panel(
 
 async def test_a_service_on_an_unknown_device_fails_loudly(hass: HomeAssistant) -> None:
     """Never silently: an automation pointed at a deleted panel has to say so."""
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN, "sync_time", {"device_id": "does-not-exist"}, blocking=True
@@ -193,7 +213,11 @@ async def test_a_service_on_an_unknown_device_fails_loudly(hass: HomeAssistant) 
 
 
 async def test_read_only_mode_stops_the_services_too(
-    hass: HomeAssistant, setup_entry, connect_panel, panel: FakePanel
+    hass: HomeAssistant,
+    setup_entry,
+    connect_panel,
+    panel: FakePanel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """A gate that only guards the entities is not a gate."""
     connection, _ = await _bring_up(hass, setup_entry, connect_panel, panel)
@@ -202,7 +226,9 @@ async def test_read_only_mode_stops_the_services_too(
             DOMAIN,
             "set_bypass_mask",
             {
-                "device_id": _panel_device_id(hass, setup_entry.entry_id, panel.serial),
+                "device_id": _panel_device_id(
+                    device_registry, setup_entry.entry_id, panel.serial
+                ),
                 "zones": [1],
             },
             blocking=True,

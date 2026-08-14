@@ -46,17 +46,17 @@ from typing import TYPE_CHECKING, override
 
 from pyjfl import ArmMode
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
     CodeFormat,
 )
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 
 from .const import (
-    CONF_CODE,
     CONF_CODE_ARM_REQUIRED,
     CONF_SERIAL,
     DEFAULT_CODE,

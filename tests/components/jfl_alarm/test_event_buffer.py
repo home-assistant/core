@@ -28,8 +28,8 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
-from tests.components.jfl_alarm.conftest import make_entry, wait_until
-from tests.components.jfl_alarm.panel_sim import FakePanel
+from .conftest import make_entry, wait_until
+from .panel_sim import FakePanel
 
 # (serial, Contact ID, subject, partition, BCD DD MM YY HH MM SS) — the shape of a real record.
 _STAMP = [0x21, 0x03, 0x26, 0x15, 0x50, 0x23]
@@ -170,7 +170,10 @@ async def test_a_disconnect_mid_page_returns_what_was_already_read(
 
 
 async def test_the_service_names_the_subject_and_returns_a_cursor(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant,
+    port: int,
+    connect_panel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """The service response is what a person reads: a description, a name, and where to resume."""
     events = [(7, "3401", 3, 1, _STAMP), (8, "1130", 9, 1, _STAMP)]
@@ -194,7 +197,11 @@ async def test_the_service_names_the_subject_and_returns_a_cursor(
         response = await hass.services.async_call(
             DOMAIN,
             "read_event_buffer",
-            {"device_id": _panel_device_id(hass, entry.entry_id, panel.serial)},
+            {
+                "device_id": _panel_device_id(
+                    device_registry, entry.entry_id, panel.serial
+                )
+            },
             blocking=True,
             return_response=True,
         )
@@ -214,7 +221,10 @@ async def test_the_service_names_the_subject_and_returns_a_cursor(
 
 
 async def test_an_origin_subject_is_never_looked_up_as_a_person(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant,
+    port: int,
+    connect_panel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """`000` and `099` are the app and the monitoring connection, not user 0 or user 99.
 
@@ -243,7 +253,11 @@ async def test_an_origin_subject_is_never_looked_up_as_a_person(
         response = await hass.services.async_call(
             DOMAIN,
             "read_event_buffer",
-            {"device_id": _panel_device_id(hass, entry.entry_id, panel.serial)},
+            {
+                "device_id": _panel_device_id(
+                    device_registry, entry.entry_id, panel.serial
+                )
+            },
             blocking=True,
             return_response=True,
         )
@@ -256,7 +270,10 @@ async def test_an_origin_subject_is_never_looked_up_as_a_person(
 
 
 async def test_a_subjectless_code_gets_no_name_at_all(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant,
+    port: int,
+    connect_panel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """`1301` (AC power lost) names neither a zone nor a user — `EventSubject.NONE`.
 
@@ -274,7 +291,11 @@ async def test_a_subjectless_code_gets_no_name_at_all(
         response = await hass.services.async_call(
             DOMAIN,
             "read_event_buffer",
-            {"device_id": _panel_device_id(hass, entry.entry_id, panel.serial)},
+            {
+                "device_id": _panel_device_id(
+                    device_registry, entry.entry_id, panel.serial
+                )
+            },
             blocking=True,
             return_response=True,
         )
@@ -288,17 +309,20 @@ async def test_a_subjectless_code_gets_no_name_at_all(
 
 
 async def test_a_device_that_resolves_to_no_loaded_panel_fails_loudly(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant,
+    port: int,
+    connect_panel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """The device exists, but the entry it belongs to has since been unloaded.
 
-    Different from "device does not exist at all": here `dr.async_get(hass).async_get(device_id)`
+    Different from "device does not exist at all": here `device_registry.async_get(device_id)`
     succeeds, so the failure has to come from the loop that walks the device's config entries and
     finds none of them still holding a coordinator for this serial.
     """
     panel = FakePanel(serial="EVENTUNLD1")
     entry = await _entry_for(hass, port, panel)
-    device_id = _panel_device_id(hass, entry.entry_id, panel.serial)
+    device_id = _panel_device_id(device_registry, entry.entry_id, panel.serial)
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -313,8 +337,10 @@ async def test_a_device_that_resolves_to_no_loaded_panel_fails_loudly(
         )
 
 
-def _panel_device_id(hass: HomeAssistant, entry_id: str, serial: str) -> str:
-    device = dr.async_get(hass).async_get_device_by_identifier(
+def _panel_device_id(
+    device_registry: dr.DeviceRegistry, entry_id: str, serial: str
+) -> str:
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, serial), config_entry_id=entry_id
     )
     assert device is not None

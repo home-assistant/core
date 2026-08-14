@@ -1,7 +1,10 @@
 {
   "services": {
-    "sync_time": {
-      "service": "mdi:clock-check-outline"
+    "read_event_buffer": {
+      "service": "mdi:history"
+    },
+    "read_programming": {
+      "service": "mdi:file-download-outline"
     },
     "refresh_status": {
       "service": "mdi:refresh"
@@ -9,11 +12,8 @@
     "set_bypass_mask": {
       "service": "mdi:motion-sensor-off"
     },
-    "read_programming": {
-      "service": "mdi:file-download-outline"
-    },
-    "read_event_buffer": {
-      "service": "mdi:history"
+    "sync_time": {
+      "service": "mdi:clock-check-outline"
     }
   }
 }

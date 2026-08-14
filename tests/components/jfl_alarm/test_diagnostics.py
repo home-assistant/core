@@ -26,8 +26,9 @@ from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
-from tests.components.jfl_alarm.panel_sim import FakePanel
 from tests.typing import ClientSessionGenerator
+
+from .panel_sim import FakePanel
 
 
 async def test_the_dump_carries_state_but_no_identity(
@@ -107,6 +108,7 @@ async def test_the_same_panel_gets_the_same_token_everywhere(
     setup_entry,
     connect_panel,
     panel: FakePanel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Redaction must not make a multi-panel dump unreadable.
 
@@ -119,7 +121,7 @@ async def test_the_same_panel_gets_the_same_token_everywhere(
     await connection.report_status(hass, coordinator)
 
     entry_dump = await get_diagnostics_for_config_entry(hass, hass_client, setup_entry)
-    device = dr.async_get(hass).async_get_device_by_identifier(
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, panel.serial), config_entry_id=setup_entry.entry_id
     )
     panel_dump = await get_diagnostics_for_device(
@@ -157,13 +159,14 @@ async def test_a_device_with_no_loaded_coordinator_still_dumps(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     setup_entry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """A device left behind by a removed panel subentry, per `async_remove_config_entry_device`.
 
     Must still produce a dump rather than raising, with the serial still redacted.
     """
     subentry_id = next(iter(setup_entry.subentries))
-    stray_device = dr.async_get(hass).async_get_or_create(
+    stray_device = device_registry.async_get_or_create(
         config_entry_id=setup_entry.entry_id,
         config_subentry_id=subentry_id,
         identifiers={(DOMAIN, "STRAYPANEL1")},

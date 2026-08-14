@@ -37,7 +37,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
-from tests.components.jfl_alarm.panel_sim import FakePanel
+
+from .panel_sim import FakePanel
 
 LOOPBACK = "127.0.0.1"
 

@@ -33,7 +33,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_CODE, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -49,7 +49,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_CODE,
     CONF_CODE_ARM_REQUIRED,
     CONF_KEEPALIVE_MINUTES,
     CONF_LOG_RAW_FRAMES,

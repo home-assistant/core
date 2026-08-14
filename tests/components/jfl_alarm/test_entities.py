@@ -14,15 +14,15 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.components.jfl_alarm.const import CONF_CODE, DOMAIN
+from homeassistant.components.jfl_alarm.const import DOMAIN
 from homeassistant.components.jfl_alarm.device import get_sub_device
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import CONF_CODE, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.components.jfl_alarm.conftest import make_entry, wait_until
-from tests.components.jfl_alarm.panel_sim import FakePanel
+from .conftest import make_entry, wait_until
+from .panel_sim import FakePanel
 
 
 async def _bring_up(hass: HomeAssistant, entry, connect_panel, panel: FakePanel):
@@ -76,13 +76,17 @@ async def test_every_partition_state_maps_correctly(
 
 
 async def test_identity_is_on_the_device_and_not_in_entities(
-    hass: HomeAssistant, setup_entry, connect_panel, panel: FakePanel
+    hass: HomeAssistant,
+    setup_entry,
+    connect_panel,
+    panel: FakePanel,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """AGENTS.md §5: model, firmware, serial and MAC belong to the device registry."""
     await _bring_up(hass, setup_entry, connect_panel, panel)
 
-    devices = dr.async_get(hass)
-    device = devices.async_get_device_by_identifier(
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, panel.serial), config_entry_id=setup_entry.entry_id
     )
     assert device is not None
@@ -94,10 +98,11 @@ async def test_identity_is_on_the_device_and_not_in_entities(
     assert (dr.CONNECTION_NETWORK_MAC, dr.format_mac(panel.mac)) in device.connections
 
     # None of it leaked into an entity.
-    entities = er.async_get(hass)
     keys = {
         entry.unique_id
-        for entry in er.async_entries_for_config_entry(entities, setup_entry.entry_id)
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, setup_entry.entry_id
+        )
     }
     assert not any(
         "firmware" in key or "model" in key or "serial" in key for key in keys
@@ -105,13 +110,16 @@ async def test_identity_is_on_the_device_and_not_in_entities(
 
 
 async def test_partitions_are_sub_devices_of_the_panel(
-    hass: HomeAssistant, setup_entry, connect_panel, panel: FakePanel
+    hass: HomeAssistant,
+    setup_entry,
+    connect_panel,
+    panel: FakePanel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """The sub-device link is what makes the device page readable on a multi-partition install."""
     await _bring_up(hass, setup_entry, connect_panel, panel)
 
-    devices = dr.async_get(hass)
-    panel_device = devices.async_get_device_by_identifier(
+    panel_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, panel.serial), config_entry_id=setup_entry.entry_id
     )
     sub = get_sub_device(
@@ -125,7 +133,12 @@ async def test_partitions_are_sub_devices_of_the_panel(
 
 
 async def test_an_entity_stranded_on_an_enabled_device_is_released(
-    hass: HomeAssistant, port: int, connect_panel, panel: FakePanel
+    hass: HomeAssistant,
+    port: int,
+    connect_panel,
+    panel: FakePanel,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """`disabled_by: device` on a device that is not disabled is a dead end, and setup clears it.
 
@@ -141,15 +154,13 @@ async def test_an_entity_stranded_on_an_enabled_device_is_released(
     subentry_id = next(iter(entry.subentries))
     # `async_setup` has not run yet, so the panel device does not exist. Registered by hand here,
     # the same way `__init__.py` registers it before forwarding any platform.
-    registry = dr.async_get(hass)
-    panel_device = registry.async_get_or_create(
+    panel_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         config_subentry_id=subentry_id,
         identifiers={(DOMAIN, panel.serial)},
     )
     assert not panel_device.disabled, "the device is fine; only the entities are stuck"
-    entities = er.async_get(hass)
-    stranded = entities.async_get_or_create(
+    stranded = entity_registry.async_get_or_create(
         "alarm_control_panel",
         DOMAIN,
         f"{panel.serial}-partition1-alarm",
@@ -163,14 +174,18 @@ async def test_an_entity_stranded_on_an_enabled_device_is_released(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     try:
-        assert entities.async_get(stranded.entity_id).disabled_by is None
+        assert entity_registry.async_get(stranded.entity_id).disabled_by is None
     finally:
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
 
 async def test_an_entity_the_user_disabled_is_left_alone(
-    hass: HomeAssistant, port: int, connect_panel, panel: FakePanel
+    hass: HomeAssistant,
+    port: int,
+    connect_panel,
+    panel: FakePanel,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """The release is narrow on purpose: only `disabled_by: device`, and only on an enabled device.
 
@@ -179,8 +194,7 @@ async def test_an_entity_the_user_disabled_is_left_alone(
     """
     entry = make_entry(port, serials=[panel.serial])
     entry.add_to_hass(hass)
-    entities = er.async_get(hass)
-    chosen = entities.async_get_or_create(
+    chosen = entity_registry.async_get_or_create(
         "alarm_control_panel",
         DOMAIN,
         f"{panel.serial}-partition1-alarm",
@@ -193,7 +207,7 @@ async def test_an_entity_the_user_disabled_is_left_alone(
     await hass.async_block_till_done()
     try:
         assert (
-            entities.async_get(chosen.entity_id).disabled_by
+            entity_registry.async_get(chosen.entity_id).disabled_by
             is er.RegistryEntryDisabler.USER
         )
     finally:
@@ -202,7 +216,12 @@ async def test_an_entity_the_user_disabled_is_left_alone(
 
 
 async def test_an_entity_on_a_still_disabled_device_is_left_alone(
-    hass: HomeAssistant, port: int, connect_panel, panel: FakePanel
+    hass: HomeAssistant,
+    port: int,
+    connect_panel,
+    panel: FakePanel,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """The release only fixes the dead end — a device the user has genuinely disabled is untouched.
 
@@ -213,18 +232,16 @@ async def test_an_entity_on_a_still_disabled_device_is_left_alone(
     entry = make_entry(port, serials=[panel.serial])
     entry.add_to_hass(hass)
     subentry_id = next(iter(entry.subentries))
-    devices = dr.async_get(hass)
-    panel_device = devices.async_get_or_create(
+    panel_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         config_subentry_id=subentry_id,
         identifiers={(DOMAIN, panel.serial)},
     )
-    devices.async_update_device(
+    device_registry.async_update_device(
         panel_device.id, disabled_by=dr.DeviceEntryDisabler.USER
     )
 
-    entities = er.async_get(hass)
-    stranded = entities.async_get_or_create(
+    stranded = entity_registry.async_get_or_create(
         "alarm_control_panel",
         DOMAIN,
         f"{panel.serial}-partition1-alarm",
@@ -238,7 +255,7 @@ async def test_an_entity_on_a_still_disabled_device_is_left_alone(
     await hass.async_block_till_done()
     try:
         assert (
-            entities.async_get(stranded.entity_id).disabled_by
+            entity_registry.async_get(stranded.entity_id).disabled_by
             is er.RegistryEntryDisabler.DEVICE
         )
     finally:
@@ -291,7 +308,11 @@ async def test_a_partition_programmed_later_still_appears(
 
 
 async def test_the_device_learns_the_model_the_panel_reports(
-    hass: HomeAssistant, setup_entry, connect_panel, panel: FakePanel
+    hass: HomeAssistant,
+    setup_entry,
+    connect_panel,
+    panel: FakePanel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """The device registry must be corrected when the panel finally introduces itself.
 
@@ -304,9 +325,7 @@ async def test_the_device_learns_the_model_the_panel_reports(
     as a side effect of those entities being added later, so it looks fine — while a panel with
     none, an M-300 module for instance, reads "Unknown JFL panel" for ever.
     """
-    devices = dr.async_get(hass)
-
-    before = devices.async_get_device_by_identifier(
+    before = device_registry.async_get_device_by_identifier(
         (DOMAIN, panel.serial), config_entry_id=setup_entry.entry_id
     )
     assert before is not None
@@ -316,7 +335,7 @@ async def test_the_device_learns_the_model_the_panel_reports(
     connection = await connect_panel(panel)
     await connection.introduce(hass)
 
-    after = devices.async_get_device_by_identifier(
+    after = device_registry.async_get_device_by_identifier(
         (DOMAIN, panel.serial), config_entry_id=setup_entry.entry_id
     )
     assert after is not None
@@ -327,7 +346,7 @@ async def test_the_device_learns_the_model_the_panel_reports(
 
 
 async def test_firmware_that_is_not_three_digits_is_shown_as_is(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant, port: int, connect_panel, device_registry: dr.DeviceRegistry
 ) -> None:
     """`render_firmware` only reshapes a three-digit field; anything else passes through unchanged.
 
@@ -345,7 +364,7 @@ async def test_firmware_that_is_not_three_digits_is_shown_as_is(
         connection = await connect_panel(panel)
         await connection.introduce(hass)
 
-        device = dr.async_get(hass).async_get_device_by_identifier(
+        device = device_registry.async_get_device_by_identifier(
             (DOMAIN, panel.serial), config_entry_id=entry.entry_id
         )
         assert device is not None

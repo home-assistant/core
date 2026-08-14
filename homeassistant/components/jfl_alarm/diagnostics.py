@@ -25,9 +25,10 @@ to it, the same as every other identifier in this file — hashing rather than b
 import hashlib
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_CODE, CONF_CODE_ARM_REQUIRED, DOMAIN
+from .const import CONF_CODE_ARM_REQUIRED, DOMAIN
 
 # The 0x21 connection frame's command byte and the absolute byte ranges of the identifiers it
 # carries in cleartext ASCII, per docs/protocol/commands.md's layout table (also documented in

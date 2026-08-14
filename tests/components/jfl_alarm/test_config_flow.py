@@ -29,8 +29,8 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.components.jfl_alarm.conftest import LOOPBACK, free_port, make_entry
-from tests.components.jfl_alarm.panel_sim import FakePanel
+from .conftest import LOOPBACK, free_port, make_entry
+from .panel_sim import FakePanel
 
 
 async def test_the_user_step_only_asks_for_a_port(

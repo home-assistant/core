@@ -45,8 +45,6 @@ DEFAULT_PORT: Final = 9494
 # an integration that starts cleanly and never sees a panel.
 DEFAULT_HOST: Final = "0.0.0.0"
 
-CONF_HOST: Final = "host"
-CONF_PORT: Final = "port"
 CONF_SERIAL: Final = "serial"
 CONF_READ_ONLY: Final = "read_only"
 
@@ -121,16 +119,16 @@ ZONES_ALL: Final = "all"
 ZONE_POLICIES: Final = [ZONES_PROGRAMMED, ZONES_ALL]
 DEFAULT_ZONE_POLICY: Final = ZONES_PROGRAMMED
 
-CONF_CODE: Final = "code"
-"""An **optional** code Home Assistant asks for before arming or disarming.
-
-This is a Home Assistant-side code and has nothing to do with the panel: no user code is ever sent
-to the panel, because the command path this integration uses carries no password at all (see
-`docs/protocol/commands.md`). It exists so that a tablet on the wall cannot disarm the house with
-one tap. Empty means no code, which is the default — the panel's own keypad already has one.
-
-Stored in the panel subentry and treated as a secret: never logged, and redacted in diagnostics.
-"""
+# CONF_CODE (from homeassistant.const) is an **optional** code Home Assistant asks for before
+# arming or disarming.
+#
+# This is a Home Assistant-side code and has nothing to do with the panel: no user code is ever
+# sent to the panel, because the command path this integration uses carries no password at all
+# (see `docs/protocol/commands.md`). It exists so that a tablet on the wall cannot disarm the
+# house with one tap. Empty means no code, which is the default — the panel's own keypad already
+# has one.
+#
+# Stored in the panel subentry and treated as a secret: never logged, and redacted in diagnostics.
 
 DEFAULT_CODE: Final = ""
 

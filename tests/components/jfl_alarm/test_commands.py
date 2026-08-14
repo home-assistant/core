@@ -22,18 +22,18 @@ import pytest
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.jfl_alarm.const import (
-    CONF_CODE,
     CONF_CODE_ARM_REQUIRED,
     CONF_READ_ONLY,
     DOMAIN,
     ISSUE_REMOTE_ACCESS_BLOCKED,
 )
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 
-from tests.components.jfl_alarm.conftest import make_entry, wait_until
-from tests.components.jfl_alarm.panel_sim import FakePanel
+from .conftest import make_entry, wait_until
+from .panel_sim import FakePanel
 
 
 async def _bring_up(hass: HomeAssistant, entry, connect_panel, panel: FakePanel):
@@ -335,7 +335,10 @@ async def test_the_code_can_be_required_for_disarming_only(
 
 
 async def test_one_wrong_password_reply_blocks_and_raises_an_issue(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant,
+    port: int,
+    connect_panel,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """AGENTS.md §6: stop on the **first** `0xA1`, not the fifth.
 
@@ -352,9 +355,8 @@ async def test_one_wrong_password_reply_blocks_and_raises_an_issue(
         await connection.send(build_frame(0x40, Cmd.AUTH, bytes([0x03, 0xC0, 0xA1])))
         await wait_until(hass, lambda: coordinator.auth_blocked)
 
-        issues = ir.async_get(hass)
         assert (
-            issues.async_get_issue(
+            issue_registry.async_get_issue(
                 DOMAIN, f"{ISSUE_REMOTE_ACCESS_BLOCKED}_{panel.serial}"
             )
             is not None
@@ -386,7 +388,7 @@ async def test_an_ordinary_ack_does_not_latch_the_lockout(
 
 
 async def test_the_lockout_warning_fires_once_even_across_repeats(
-    hass: HomeAssistant, port: int, connect_panel, caplog
+    hass: HomeAssistant, port: int, connect_panel, caplog: pytest.LogCaptureFixture
 ) -> None:
     """AGENTS.md §6 says the flag latches on the first `0xA1` and is never cleared automatically.
 

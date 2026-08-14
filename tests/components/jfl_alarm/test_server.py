@@ -29,8 +29,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.components.jfl_alarm.conftest import LOOPBACK, make_entry, wait_until
-from tests.components.jfl_alarm.panel_sim import FakePanel
+from .conftest import LOOPBACK, make_entry, wait_until
+from .panel_sim import FakePanel
 
 
 def _frames(data: bytes) -> list:
@@ -79,7 +79,11 @@ async def test_event_is_acknowledged_with_the_counter_echoed(
 
 
 async def test_event_is_acknowledged_even_when_decoding_fails(
-    hass: HomeAssistant, setup_entry, connect_panel, panel: FakePanel, monkeypatch
+    hass: HomeAssistant,
+    setup_entry,
+    connect_panel,
+    panel: FakePanel,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """An unacknowledged event is retransmitted for ever, so a decoding bug must not cost the ack.
 
@@ -154,7 +158,7 @@ async def test_a_redial_before_the_old_socket_died_keeps_the_panel_available(
 
 
 async def test_three_models_on_one_port_produce_three_independent_devices(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant, port: int, connect_panel, device_registry: dr.DeviceRegistry
 ) -> None:
     """The sprint's headline acceptance criterion.
 
@@ -203,10 +207,9 @@ async def test_three_models_on_one_port_produce_three_independent_devices(
         assert coordinators["AAAAAAAAAA"].data.fence.present is True
         assert coordinators["BBBBBBBBBB"].data.fence.present is False
 
-        devices = dr.async_get(hass)
         for panel in panels:
             assert (
-                devices.async_get_device_by_identifier(
+                device_registry.async_get_device_by_identifier(
                     (DOMAIN, panel.serial), config_entry_id=entry.entry_id
                 )
                 is not None
@@ -325,7 +328,7 @@ async def test_a_rejected_panel_gets_result_zero(
         await hass.async_block_till_done()
 
 
-async def test_ignore_discovery_is_a_silent_no_op(caplog) -> None:
+async def test_ignore_discovery_is_a_silent_no_op(caplog: pytest.LogCaptureFixture) -> None:
     """`_ignore_discovery` itself — the callback registered for the *hold* and *reject* policies.
 
     `pyjfl.JflServer.notify_connected` only ever calls the registered discovery callback when the

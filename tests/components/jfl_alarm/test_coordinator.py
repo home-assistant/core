@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyjfl import Cmd, FrameReader, build_frame
+import pytest
 
 from homeassistant.components.jfl_alarm import async_remove_config_entry_device
 from homeassistant.components.jfl_alarm.const import (
@@ -29,8 +30,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.jfl_alarm.conftest import LOOPBACK, make_entry, wait_until
-from tests.components.jfl_alarm.panel_sim import FakePanel
+
+from .conftest import LOOPBACK, make_entry, wait_until
+from .panel_sim import FakePanel
 
 
 async def test_the_snapshot_is_never_none(hass: HomeAssistant, setup_entry) -> None:
@@ -145,7 +147,11 @@ async def test_the_poll_loop_asks_on_its_interval(
 
 
 async def test_availability_is_logged_once_per_transition(
-    hass: HomeAssistant, setup_entry, connect_panel, panel: FakePanel, caplog
+    hass: HomeAssistant,
+    setup_entry,
+    connect_panel,
+    panel: FakePanel,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A panel that redials every ninety seconds must not fill the log with a pair of lines."""
     coordinator = setup_entry.runtime_data.coordinators[panel.serial]
@@ -170,7 +176,7 @@ async def test_availability_is_logged_once_per_transition(
 
 
 async def test_an_untested_model_raises_a_repair_issue(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant, port: int, connect_panel, issue_registry: ir.IssueRegistry
 ) -> None:
     """Only the Active 32 Duo has been validated on hardware — AGENTS.md §0."""
     panel = FakePanel(serial="UNTESTED01", model_byte=0xA4)
@@ -183,8 +189,7 @@ async def test_an_untested_model_raises_a_repair_issue(
         connection = await connect_panel(panel)
         await connection.introduce(hass)
 
-        issues = ir.async_get(hass)
-        issue = issues.async_get_issue(
+        issue = issue_registry.async_get_issue(
             DOMAIN, f"{ISSUE_UNSUPPORTED_MODEL}_{panel.serial}"
         )
         assert issue is not None
@@ -196,7 +201,7 @@ async def test_an_untested_model_raises_a_repair_issue(
 
 
 async def test_an_unlisted_model_says_so_rather_than_failing(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant, port: int, connect_panel, issue_registry: ir.IssueRegistry
 ) -> None:
     """An unknown model byte must degrade permissively, never raise. AGENTS.md §0."""
     panel = FakePanel(serial="MYSTERY001", model_byte=0xEE)
@@ -209,8 +214,7 @@ async def test_an_unlisted_model_says_so_rather_than_failing(
         connection = await connect_panel(panel)
         await connection.introduce(hass)
 
-        issues = ir.async_get(hass)
-        issue = issues.async_get_issue(
+        issue = issue_registry.async_get_issue(
             DOMAIN, f"{ISSUE_UNSUPPORTED_MODEL}_{panel.serial}"
         )
         assert issue is not None
@@ -227,29 +231,36 @@ async def test_an_unlisted_model_says_so_rather_than_failing(
 
 
 async def test_a_verified_model_raises_no_issue(
-    hass: HomeAssistant, setup_entry, connect_panel, panel: FakePanel
+    hass: HomeAssistant,
+    setup_entry,
+    connect_panel,
+    panel: FakePanel,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """The Active 32 Duo is the one model that has been tested, so it gets no warning."""
     connection = await connect_panel(panel)
     await connection.introduce(hass)
 
-    issues = ir.async_get(hass)
     assert (
-        issues.async_get_issue(DOMAIN, f"{ISSUE_UNSUPPORTED_MODEL}_{panel.serial}")
+        issue_registry.async_get_issue(
+            DOMAIN, f"{ISSUE_UNSUPPORTED_MODEL}_{panel.serial}"
+        )
         is None
     )
 
 
 async def test_silence_raises_the_never_connected_issue(
-    freezer: FrozenDateTimeFactory, hass: HomeAssistant, setup_entry
+    freezer: FrozenDateTimeFactory,
+    hass: HomeAssistant,
+    setup_entry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """The answer to "I installed it and nothing appeared"."""
     freezer.tick(timedelta(minutes=PANEL_NEVER_CONNECTED_MINUTES + 1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    issues = ir.async_get(hass)
-    issue = issues.async_get_issue(DOMAIN, ISSUE_PANEL_NEVER_CONNECTED)
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_PANEL_NEVER_CONNECTED)
     assert issue is not None
     assert issue.translation_placeholders["port"] == str(setup_entry.data["port"])
 
@@ -260,6 +271,7 @@ async def test_no_issue_when_a_panel_did_connect(
     setup_entry,
     connect_panel,
     panel: FakePanel,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """The check is about silence, not about elapsed time."""
     connection = await connect_panel(panel)
@@ -269,12 +281,14 @@ async def test_no_issue_when_a_panel_did_connect(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    issues = ir.async_get(hass)
-    assert issues.async_get_issue(DOMAIN, ISSUE_PANEL_NEVER_CONNECTED) is None
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_PANEL_NEVER_CONNECTED) is None
 
 
 async def test_no_issue_when_the_listener_is_no_longer_running(
-    freezer: FrozenDateTimeFactory, hass: HomeAssistant, setup_entry
+    freezer: FrozenDateTimeFactory,
+    hass: HomeAssistant,
+    setup_entry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """A grace-period check that outlives its listener must not raise or crash.
 
@@ -288,8 +302,7 @@ async def test_no_issue_when_the_listener_is_no_longer_running(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    issues = ir.async_get(hass)
-    assert issues.async_get_issue(DOMAIN, ISSUE_PANEL_NEVER_CONNECTED) is None
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_PANEL_NEVER_CONNECTED) is None
 
 
 async def test_reloading_the_entry_leaves_no_listener_behind(
@@ -310,20 +323,23 @@ async def test_reloading_the_entry_leaves_no_listener_behind(
 
 
 async def test_the_device_of_a_removed_panel_can_be_deleted(
-    hass: HomeAssistant, setup_entry, connect_panel, panel: FakePanel
+    hass: HomeAssistant,
+    setup_entry,
+    connect_panel,
+    panel: FakePanel,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """A replaced panel leaves a device that will never update again."""
     connection = await connect_panel(panel)
     await connection.introduce(hass)
 
-    devices = dr.async_get(hass)
-    live = devices.async_get_device_by_identifier(
+    live = device_registry.async_get_device_by_identifier(
         (DOMAIN, panel.serial), config_entry_id=setup_entry.entry_id
     )
     assert live is not None
     assert not await async_remove_config_entry_device(hass, setup_entry, live)
 
-    stale = devices.async_get_or_create(
+    stale = device_registry.async_get_or_create(
         config_entry_id=setup_entry.entry_id, identifiers={(DOMAIN, "GONEPANEL1")}
     )
     assert await async_remove_config_entry_device(hass, setup_entry, stale)

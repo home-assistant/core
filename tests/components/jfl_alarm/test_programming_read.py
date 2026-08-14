@@ -23,8 +23,8 @@ from homeassistant.components.jfl_alarm.device import get_sub_device
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.components.jfl_alarm.conftest import make_entry
-from tests.components.jfl_alarm.panel_sim import FakePanel
+from .conftest import make_entry
+from .panel_sim import FakePanel
 
 SHORT_TIMEOUT = patch("pyjfl.transport.COMMAND_TIMEOUT", 0.05)
 """Shortens the per-block timeout so the give-up path is testable in a second, not a minute."""
@@ -199,14 +199,14 @@ async def test_a_wireless_zone_is_found_in_the_enrolment_table(
 
 
 async def test_the_service_response_can_never_carry_an_access_code(
-    hass: HomeAssistant, port: int, connect_panel
+    hass: HomeAssistant, port: int, connect_panel, device_registry: dr.DeviceRegistry
 ) -> None:
     """AGENTS.md §4. The parser discards codes, so the response cannot contain one to leak."""
     panel = FakePanel(serial="NOCODES001", **NAMED_PANEL)
     entry = await _entry_for(hass, port, panel)
     try:
         await _bring_up(hass, entry, connect_panel, panel)
-        device = dr.async_get(hass).async_get_device_by_identifier(
+        device = device_registry.async_get_device_by_identifier(
             (DOMAIN, panel.serial), config_entry_id=entry.entry_id
         )
 

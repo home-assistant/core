@@ -128,7 +128,8 @@ rules:
   # --- Silver ---------------------------------------------------------------------------------
   action-exceptions:
     status: done
-    comment: Every failure raises `ServiceValidationError` or `HomeAssistantError` with a
+    comment:
+      Every failure raises `ServiceValidationError` or `HomeAssistantError` with a
       translation key. Nothing fails silently.
   config-entry-unloading:
     status: done
@@ -149,7 +150,7 @@ rules:
       not merely because the coordinator has never been refreshed on Home Assistant's own schedule.
   integration-owner:
     status: done
-    comment: "`codeowners: [\"@jmceara\"]` in manifest.json."
+    comment: '`codeowners: ["@jmceara"]` in manifest.json.'
   log-when-unavailable:
     status: done
     comment: >-
@@ -190,7 +191,8 @@ rules:
       subentry is offered in the add-panel flow, which is the same idea reached from the other end.
   discovery-update-info:
     status: exempt
-    comment: Same reason. A panel that changes IP simply reconnects; it is keyed by serial, not by
+    comment:
+      Same reason. A panel that changes IP simply reconnects; it is keyed by serial, not by
       address.
   docs-data-update:
     status: done
