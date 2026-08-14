@@ -1,7 +1,5 @@
 """Tests for the Cync integration setup."""
 
-from unittest.mock import patch
-
 from homeassistant.components.cync.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -18,6 +16,7 @@ async def test_migrate_unique_ids(
 ) -> None:
     """Test migration to mesh-based entity and device registry IDs."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, version=1)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -59,6 +58,7 @@ async def test_migrate_unique_ids(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert mock_config_entry.version == 2
     migrated_entity = entity_registry.async_get(original_entity_id)
     assert migrated_entity is not None
     assert migrated_entity.entity_id == original_entity_id
@@ -90,11 +90,3 @@ async def test_migrate_unique_ids(
     reloaded_device = device_registry.async_get(original_device_id)
     assert reloaded_device is not None
     assert reloaded_device.identifiers == migrated_device.identifiers
-
-    with patch(
-        "homeassistant.components.cync._migrate_unique_ids"
-    ) as migrate_unique_ids:
-        await hass.config_entries.async_reload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    migrate_unique_ids.assert_not_called()

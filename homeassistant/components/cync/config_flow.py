@@ -36,7 +36,7 @@ STEP_TWO_FACTOR_SCHEMA = vol.Schema({vol.Required(CONF_TWO_FACTOR_CODE): str})
 class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cync."""
 
-    VERSION = 1
+    VERSION = 2
 
     cync_auth: Auth = None
 

@@ -81,6 +81,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title=MOCKED_EMAIL,
         unique_id=str(MOCKED_USER.user_id),
+        version=2,
         data={
             CONF_USER_ID: MOCKED_USER.user_id,
             CONF_AUTHORIZE_STRING: "test_authorize_string",

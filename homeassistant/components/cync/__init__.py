@@ -21,11 +21,9 @@ from .coordinator import CyncConfigEntry, CyncCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
-_MESH_UNIQUE_IDS_MIGRATED = "mesh_unique_ids_migrated"
-
 
 def _migrate_unique_ids(
-    hass: HomeAssistant, entry: CyncConfigEntry, coordinator: CyncCoordinator
+    hass: HomeAssistant, entry: CyncConfigEntry, cync: Cync
 ) -> None:
     """Migrate entity unique IDs from {home_id}-{device_id} to {home_id}-{mesh_device_id}.
 
@@ -34,7 +32,7 @@ def _migrate_unique_ids(
     """
     id_map = {
         f"{device.parent_home_id}-{device.device_id}": device.unique_id
-        for home in coordinator.cync.get_homes()
+        for home in cync.get_homes()
         for device in home.get_flattened_device_list()
         if isinstance(device, CyncLight)
         and f"{device.parent_home_id}-{device.device_id}" != device.unique_id
@@ -79,8 +77,8 @@ def _migrate_unique_ids(
             )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
-    """Set up Cync from a config entry."""
+async def _async_create_cync(hass: HomeAssistant, entry: CyncConfigEntry) -> Cync:
+    """Create an authenticated Cync client."""
     user_info = User(
         entry.data[CONF_ACCESS_TOKEN],
         entry.data[CONF_REFRESH_TOKEN],
@@ -92,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
     ssl_context = get_default_context()
 
     try:
-        cync = await Cync.create(
+        return await Cync.create(
             auth=cync_auth,
             ssl_context=ssl_context,
         )
@@ -101,19 +99,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
     except CyncError as ex:
         raise ConfigEntryNotReady("Unable to connect to Cync") from ex
 
+
+async def async_migrate_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
+    """Migrate an existing Cync config entry."""
+    if entry.version == 1:
+        cync = await _async_create_cync(hass, entry)
+        try:
+            _migrate_unique_ids(hass, entry, cync)
+        finally:
+            await cync.shut_down()
+        hass.config_entries.async_update_entry(entry, version=2)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
+    """Set up Cync from a config entry."""
+    cync = await _async_create_cync(hass, entry)
+
     devices_coordinator = CyncCoordinator(hass, entry, cync)
 
     cync.set_update_callback(devices_coordinator.on_data_update)
 
     await devices_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = devices_coordinator
-
-    if not entry.data.get(_MESH_UNIQUE_IDS_MIGRATED):
-        _migrate_unique_ids(hass, entry, devices_coordinator)
-        hass.config_entries.async_update_entry(
-            entry,
-            data={**entry.data, _MESH_UNIQUE_IDS_MIGRATED: True},
-        )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
