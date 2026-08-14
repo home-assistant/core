@@ -96,11 +96,6 @@ async def _async_create_cync(hass: HomeAssistant, entry: CyncConfigEntry) -> Cyn
 async def async_migrate_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
     """Migrate an existing Cync config entry."""
     if entry.version == 1:
-        cync = await _async_create_cync(hass, entry)
-        try:
-            _migrate_unique_ids(hass, entry, cync)
-        finally:
-            await cync.shut_down()
         hass.config_entries.async_update_entry(entry, version=2)
 
     return True
@@ -116,6 +111,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
 
     await devices_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = devices_coordinator
+
+    _migrate_unique_ids(hass, entry, cync)
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
