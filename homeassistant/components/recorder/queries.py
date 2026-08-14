@@ -93,10 +93,9 @@ def attributes_ids_exist_in_states(
     PostgreSQL does not support skip/loose index scan
     https://wiki.postgresql.org/wiki/Loose_indexscan
 
-    To avoid using distinct, we join against a single arbitrary States row per
-    attributes_id, picked by a correlated subquery. The row is identified by its
-    primary key: any nullable column would make the equality never hold for rows
-    where it is NULL, and report an attributes_id still in use as unused.
+    To avoid using distinct, we use a subquery to get the latest last_updated_ts
+    for each attributes_id. This is then used to filter out the attributes_id
+    that no longer exist in the States table.
 
     This query is fast for older MariaDB, older MySQL, and PostgreSQL.
     """
@@ -108,8 +107,8 @@ def attributes_ids_exist_in_states(
                 States,
                 and_(
                     States.attributes_id == StateAttributes.attributes_id,
-                    States.state_id
-                    == select(States.state_id)
+                    States.last_updated_ts
+                    == select(States.last_updated_ts)
                     .where(States.attributes_id == StateAttributes.attributes_id)
                     .limit(1)
                     .scalar_subquery()
@@ -138,10 +137,9 @@ def data_ids_exist_in_events(
     PostgreSQL does not support skip/loose index scan
     https://wiki.postgresql.org/wiki/Loose_indexscan
 
-    To avoid using distinct, we join against a single arbitrary Events row per
-    data_id, picked by a correlated subquery. The row is identified by its
-    primary key: any nullable column would make the equality never hold for
-    rows where it is NULL, and report a data_id still in use as unused.
+    To avoid using distinct, we use a subquery to get the latest time_fired_ts
+    for each data_id. This is then used to filter out the data_id
+    that no longer exist in the Events table.
 
     This query is fast for older MariaDB, older MySQL, and PostgreSQL.
     """
@@ -153,8 +151,8 @@ def data_ids_exist_in_events(
                 Events,
                 and_(
                     Events.data_id == EventData.data_id,
-                    Events.event_id
-                    == select(Events.event_id)
+                    Events.time_fired_ts
+                    == select(Events.time_fired_ts)
                     .where(Events.data_id == EventData.data_id)
                     .limit(1)
                     .scalar_subquery()

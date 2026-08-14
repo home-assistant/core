@@ -42,9 +42,7 @@ async def test_data_ids_still_referenced_by_events(
         session.flush()
         data_id = data.data_id
         for time_fired_ts in timestamps:
-            session.add(
-                Events(event_type_id=1, data_id=data_id, time_fired_ts=time_fired_ts)
-            )
+            session.add(Events(data_id=data_id, time_fired_ts=time_fired_ts))
         session.flush()
 
         for query in (
