@@ -189,23 +189,23 @@ async def test_migrate_overlapping_unique_ids(
     )
     chained_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1111")},
+        identifiers={(DOMAIN, "10000-1111")},
     )
     chained_entity = entity_registry.async_get_or_create(
         Platform.LIGHT,
         DOMAIN,
-        "1000-1111",
+        "10000-1111",
         config_entry=mock_config_entry,
         device_id=chained_device.id,
     )
     first_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1101")},
+        identifiers={(DOMAIN, "10000-1101")},
     )
     first_entity = entity_registry.async_get_or_create(
         Platform.LIGHT,
         DOMAIN,
-        "1000-1101",
+        "10000-1101",
         config_entry=mock_config_entry,
         device_id=first_device.id,
     )
@@ -216,14 +216,14 @@ async def test_migrate_overlapping_unique_ids(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     migrated_chained_entity = entity_registry.async_get(chained_entity.entity_id)
     assert migrated_chained_entity is not None
-    assert migrated_chained_entity.unique_id == "1000-1101"
+    assert migrated_chained_entity.unique_id == "10000-1101"
     migrated_first_entity = entity_registry.async_get(first_entity.entity_id)
     assert migrated_first_entity is not None
-    assert migrated_first_entity.unique_id == "1000-1"
+    assert migrated_first_entity.unique_id == "10000-1"
     migrated_chained_device = device_registry.async_get(chained_device.id)
     assert migrated_chained_device is not None
-    assert (DOMAIN, "1000-1101") in migrated_chained_device.identifiers
+    assert (DOMAIN, "10000-1101") in migrated_chained_device.identifiers
     migrated_first_device = device_registry.async_get(first_device.id)
     assert migrated_first_device is not None
-    assert (DOMAIN, "1000-1") in migrated_first_device.identifiers
+    assert (DOMAIN, "10000-1") in migrated_first_device.identifiers
     assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
