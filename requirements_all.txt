@@ -2575,7 +2575,7 @@ pysiaalarm==3.2.2
 pysignalclirestapi==0.3.25
 
 # homeassistant.components.silla_prism
-pysillaprism==0.1.0
+pysillaprism==0.2.0
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4

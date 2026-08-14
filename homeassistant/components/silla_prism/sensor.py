@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
-from pysillaprism import PortState, PrismStatus
+from pysillaprism import PortError, PortState, PrismStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -56,7 +56,7 @@ PORT_STATE_OPTIONS = {
 # specified, so they are reported as unknown rather than guessed, and logged so
 # that this mapping can grow with the codes seen in the field.
 ERROR_OPTIONS = {
-    0: "none",
+    PortError.NONE: "none",
 }
 
 
@@ -222,13 +222,16 @@ class PrismErrorSensor(PrismSensor):
         if code is None:
             return None
 
-        state = ERROR_OPTIONS.get(code)
-        if state is None and code not in self._logged_codes:
-            self._logged_codes.add(code)
-            _LOGGER.warning(
-                "Unknown error code: %s, please report at https://github.com/home-assistant/core/issues",
-                code,
-            )
+        try:
+            state = ERROR_OPTIONS[PortError(code)]
+        except KeyError, ValueError:
+            if code not in self._logged_codes:
+                self._logged_codes.add(code)
+                _LOGGER.warning(
+                    "Unknown error code: %s, please report at https://github.com/home-assistant/core/issues",
+                    code,
+                )
+            return None
         return state
 
 

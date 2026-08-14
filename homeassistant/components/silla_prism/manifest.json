@@ -10,5 +10,5 @@
   "loggers": ["pysillaprism"],
   "mqtt": ["prism/hello"],
   "quality_scale": "bronze",
-  "requirements": ["pysillaprism==0.1.0"]
+  "requirements": ["pysillaprism==0.2.0"]
 }
