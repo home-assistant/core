@@ -8,6 +8,7 @@ from bsblan import (
     BSBLANAuthError,
     BSBLANConnectionError,
     BSBLANError,
+    BSBLANUnsupportedFeatureError,
     BSBLANVersionError,
     State,
 )
@@ -300,12 +301,7 @@ async def test_slow_interval_poll_preserves_cached_schedule(
     mock_bsblan: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test interval polls keep the cached schedule without re-fetching it.
-
-    The schedule is fetched only off the interval (on startup and after a
-    write). An interval poll must refresh the config while carrying the cached
-    schedule over, without issuing a schedule request.
-    """
+    """Test interval polls preserve the cached schedule without refetching it."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -397,7 +393,7 @@ async def test_slow_interval_poll_does_not_retry_unsupported_schedule(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test interval polls do not retry an unsupported schedule."""
-    mock_bsblan.hot_water_schedule.side_effect = BSBLANError(
+    mock_bsblan.hot_water_schedule.side_effect = BSBLANUnsupportedFeatureError(
         "No hot water schedule parameters available"
     )
 
@@ -425,7 +421,7 @@ async def test_slow_interval_poll_stops_retrying_unsupported_schedule(
     """Test a pending retry stops when the schedule is unsupported."""
     mock_bsblan.hot_water_schedule.side_effect = [
         BSBLANConnectionError("Schedule failed"),
-        BSBLANError("No hot water schedule parameters available"),
+        BSBLANUnsupportedFeatureError("No hot water schedule parameters available"),
     ]
 
     mock_config_entry.add_to_hass(hass)

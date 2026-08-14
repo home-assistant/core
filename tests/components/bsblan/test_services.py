@@ -5,7 +5,14 @@ from datetime import time, timedelta
 from typing import Any
 from unittest.mock import MagicMock
 
-from bsblan import BSBLANError, DaySchedule, DeviceTime, TimeSlot
+from bsblan import (
+    BSBLANError,
+    BSBLANMalformedResponseError,
+    BSBLANUnsupportedFeatureError,
+    DaySchedule,
+    DeviceTime,
+    TimeSlot,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
@@ -261,7 +268,7 @@ async def test_set_hot_water_schedule_retries_failed_refresh(
     old_schedule = slow_coordinator.data.dhw_schedule
     refreshed_schedule = MagicMock()
     mock_bsblan.hot_water_schedule.side_effect = [
-        BSBLANError("Invalid response"),
+        BSBLANMalformedResponseError("Invalid response"),
         refreshed_schedule,
     ]
 
@@ -282,6 +289,36 @@ async def test_set_hot_water_schedule_retries_failed_refresh(
     await hass.async_block_till_done()
 
     assert slow_coordinator.data.dhw_schedule is refreshed_schedule
+
+
+async def test_set_hot_water_schedule_does_not_retry_unsupported_refresh(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    water_heater_device_entry: dr.DeviceEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a post-write refresh does not retry an unsupported schedule."""
+    mock_bsblan.hot_water_schedule.reset_mock()
+    mock_bsblan.hot_water_schedule.side_effect = BSBLANUnsupportedFeatureError(
+        "No hot water schedule parameters available"
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_hot_water_schedule",
+        {
+            "device_id": water_heater_device_entry.id,
+            "monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}],
+        },
+        blocking=True,
+    )
+
+    for _ in range(2):
+        freezer.tick(delta=timedelta(minutes=5, seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_bsblan.hot_water_schedule.assert_awaited_once_with()
 
 
 async def test_invalid_device_id(

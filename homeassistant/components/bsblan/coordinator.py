@@ -9,6 +9,7 @@ from bsblan import (
     BSBLANAuthError,
     BSBLANConnectionError,
     BSBLANError,
+    BSBLANMalformedResponseError,
     HotWaterConfig,
     HotWaterSchedule,
     HotWaterState,
@@ -182,7 +183,6 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         )
         self._dhw_schedule_refresh_pending = True
         self._dhw_schedule_refresh_generation = 0
-        self._retry_schedule_errors = False
 
     @override
     async def _async_update_data(self) -> BSBLanSlowData:
@@ -219,11 +219,9 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
                 dhw_schedule = refreshed_schedule
                 if refresh_generation == self._dhw_schedule_refresh_generation:
                     self._dhw_schedule_refresh_pending = False
-                    self._retry_schedule_errors = False
             elif (
                 refresh_generation == self._dhw_schedule_refresh_generation
                 and not retryable
-                and not self._retry_schedule_errors
             ):
                 self._dhw_schedule_refresh_pending = False
 
@@ -236,7 +234,6 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         """Refresh slow data after a successful schedule write."""
         self._dhw_schedule_refresh_pending = True
         self._dhw_schedule_refresh_generation += 1
-        self._retry_schedule_errors = True
         await self.async_refresh()
 
     async def _async_fetch_dhw_schedule(
@@ -245,7 +242,12 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         """Fetch the DHW schedule, returning None if unavailable."""
         try:
             return await self.client.hot_water_schedule(), False
-        except BSBLANConnectionError, BSBLANAuthError, TimeoutError:
+        except (
+            BSBLANConnectionError,
+            BSBLANAuthError,
+            BSBLANMalformedResponseError,
+            TimeoutError,
+        ):
             LOGGER.debug(
                 "DHW schedule not available on device at %s",
                 self.config_entry.data[CONF_HOST],
