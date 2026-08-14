@@ -37,6 +37,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "water_leak": {
+        "name": "Water leak"
+      }
+    },
     "select": {
       "room_priority": {
         "name": "Room priority",
@@ -51,6 +56,18 @@
       },
       "indoor_temperature": {
         "name": "Indoor temperature"
+      },
+      "leak_detector_battery": {
+        "name": "Battery"
+      },
+      "leak_detector_humidity": {
+        "name": "Humidity"
+      },
+      "leak_detector_signal_strength": {
+        "name": "Signal strength"
+      },
+      "leak_detector_temperature": {
+        "name": "Temperature"
       },
       "next_period_time": {
         "name": "Next period time"

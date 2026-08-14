@@ -10,6 +10,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import LyricDataUpdateCoordinator
 
 
@@ -69,6 +70,57 @@ class LyricDeviceEntity(LyricEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this Honeywell Lyric instance."""
         return create_thermostat_device_info(self.device)
+
+
+class LyricLeakDetectorEntity(CoordinatorEntity[LyricDataUpdateCoordinator]):
+    """Define a Honeywell Lyric leak detector entity."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: LyricDataUpdateCoordinator,
+        location: LyricLocation,
+        device: LyricDevice,
+        key: str,
+    ) -> None:
+        """Initialize the Honeywell Lyric leak detector entity."""
+        super().__init__(coordinator)
+        self._location_id = location.location_id
+        self._device_id = device.device_id
+        self._attr_unique_id = f"{device.device_id}_{key}"
+
+    @property
+    def location(self) -> LyricLocation:
+        """Return the Lyric location."""
+        return self.coordinator.data.locations_dict[self._location_id]
+
+    @property
+    def device(self) -> LyricDevice:
+        """Return the Lyric leak detector."""
+        return self.location.devices_by_id[self._device_id]
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the leak detector is available."""
+        return (
+            super().available
+            and self.device.is_alive
+            and not self.device.is_device_offline
+        )
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return device information for the leak detector."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer="Honeywell",
+            model=self.device.device_variant or self.device.device_type,
+            name=self.device.name,
+            sw_version=self.device.device_os_version,
+        )
 
 
 class LyricAccessoryEntity(LyricDeviceEntity):
