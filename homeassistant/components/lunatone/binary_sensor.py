@@ -23,7 +23,7 @@ async def async_setup_entry(
     config_entry: LunatoneConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Lunatone sensors from the config entry."""
+    """Set up Lunatone binary sensors from the config entry."""
     coordinator_scan = config_entry.runtime_data.coordinator_scan
 
     assert config_entry.unique_id is not None
@@ -46,7 +46,7 @@ class LunatoneDALIScanStatus(
         coordinator: LunatoneScanDataUpdateCoordinator,
         config_entry_unique_id: str,
     ) -> None:
-        """Initialize a Lunatone Sensor."""
+        """Initialize a Lunatone DALI scan status."""
         super().__init__(coordinator)
         self.entity_category = EntityCategory.DIAGNOSTIC
 
@@ -61,5 +61,5 @@ class LunatoneDALIScanStatus(
     @property
     @override
     def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
+        """Return true if the DALI scan is on."""
         return self.coordinator.dali_scan_api.is_busy
