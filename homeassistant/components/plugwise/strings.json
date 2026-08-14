@@ -314,9 +314,9 @@
         "name": "Domestic hot water",
         "state": {
           "auto": "[%key:common::state::auto%]",
-          "boost": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::boost%]",
-          "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
-          "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+          "boost": "Boost",
+          "comfort": "Comfort",
+          "eco": "Eco",
           "off": "[%key:common::state::off%]"
         }
       }
