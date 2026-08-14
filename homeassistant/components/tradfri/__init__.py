@@ -168,10 +168,8 @@ def remove_stale_devices(
             # If device_id is None an invalid device entry
             # was found for this config entry.
             # If the device_id is not in existing device ids it's a stale device entry.
-            # Remove config entry from this device entry in either case.
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=config_entry.entry_id
-            )
+            # Remove the device entry in either case.
+            device_registry.async_remove_device(device_entry.id)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -230,25 +228,6 @@ def migrate_config_entry_and_identifiers(
         # Check that device is related to tradfri domain (and is not the gateway itself)
         if not related_device_flag:
             continue
-
-        # Loop through list of config_entry_ids for device
-        config_entry_ids = device.config_entries
-        for config_entry_id in config_entry_ids:
-            # Check that the config entry in list is not
-            # the device's primary config entry
-            if config_entry_id == device.primary_config_entry:
-                continue
-
-            # Check that the 'other' config entry is also a tradfri config entry
-            other_entry = hass.config_entries.async_get_entry(config_entry_id)
-
-            if other_entry is None or other_entry.domain != DOMAIN:
-                continue
-
-            # Remove non-primary 'tradfri' config entry from device's config_entry_ids
-            device_reg.async_update_device(
-                device.id, remove_config_entry_id=config_entry_id
-            )
 
         if config_entry.data[CONF_GATEWAY_ID] in device_id:
             continue
