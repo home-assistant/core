@@ -786,6 +786,49 @@ async def test_subentry_removal_reloads(hass: HomeAssistant) -> None:
     mock_reload.assert_called_once_with(entry.entry_id)
 
 
+async def test_subentry_removal_keeps_vehicle_device_and_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Removing a vehicle subentry leaves the cloud vehicle device and entities intact."""
+    entry = _entry_with_vehicle_subentry()
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, VIN), entry.entry_id
+    )
+    assert device is not None
+    # The device and its entities belong to the parent entry, never the subentry.
+    assert device.config_subentry_id is None
+    entities_before = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+    assert entities_before
+    assert all(entity.config_subentry_id is None for entity in entities_before)
+    unique_ids_before = {entity.unique_id for entity in entities_before}
+
+    # Patch the reload so only the subentry removal itself is exercised here.
+    with patch.object(hass.config_entries, "async_schedule_reload"):
+        assert hass.config_entries.async_remove_subentry(entry, subentry_id)
+        await hass.async_block_till_done()
+
+    # The vehicle device and every entity on it survive the removal.
+    device_after = device_registry.async_get_device_by_identifier(
+        (DOMAIN, VIN), entry.entry_id
+    )
+    assert device_after is not None
+    assert device_after.id == device.id
+    entities_after = er.async_entries_for_device(
+        entity_registry, device_after.id, include_disabled_entities=True
+    )
+    assert {entity.unique_id for entity in entities_after} == unique_ids_before
+
+
 async def test_no_subentry_auto_created_at_setup(hass: HomeAssistant) -> None:
     """Setup never auto-creates a Bluetooth subentry for account vehicles."""
     entry = mock_config_entry()
@@ -884,12 +927,12 @@ async def test_subentry_scan_finds_device_after_active_scan(
     vehicle.connect.assert_awaited_once()
 
 
-async def test_subentry_add_flow_creates_bound_subentry(
+async def test_subentry_add_flow_keeps_device_on_parent(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """The add flow lists an account vehicle, pairs it, and binds its device."""
+    """The add flow pairs an account vehicle without moving its device off the parent entry."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -968,7 +1011,7 @@ async def test_subentry_add_flow_creates_bound_subentry(
     # routes over Bluetooth instead of staying cloud-only.
     assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
 
-    # The pairing attaches to the vehicle's existing device, never a duplicate.
+    # The pairing reuses the vehicle's existing device, never a duplicate.
     bound_devices = [
         device
         for device in device_registry.devices.values()
@@ -976,20 +1019,19 @@ async def test_subentry_add_flow_creates_bound_subentry(
     ]
     assert len(bound_devices) == 1
     bound_device = bound_devices[0]
-    # The same device ID is kept, now owned by the created subentry.
+    # The same device ID is kept and it stays on the parent entry, not the
+    # subentry, so removing the pairing never deletes the cloud vehicle.
     assert bound_device.id == existing_device.id
-    assert bound_device.config_subentry_id == subentry.subentry_id
+    assert bound_device.config_subentry_id is None
 
-    # The vehicle entities keep their unique IDs and now belong to the subentry.
+    # The vehicle entities keep their unique IDs and stay on the parent entry.
     bound_entities = er.async_entries_for_device(
         entity_registry, bound_device.id, include_disabled_entities=True
     )
     assert {entity.unique_id for entity in bound_entities} == {
         entity.unique_id for entity in vehicle_entities
     }
-    assert all(
-        entity.config_subentry_id == subentry.subentry_id for entity in bound_entities
-    )
+    assert all(entity.config_subentry_id is None for entity in bound_entities)
 
 
 async def test_subentry_add_flow_no_available_vehicles(hass: HomeAssistant) -> None:
