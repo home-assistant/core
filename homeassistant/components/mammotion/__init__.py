@@ -37,7 +37,7 @@ type MammotionConfigEntry = ConfigEntry[MammotionDevices]
 async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> bool:
     """Set up Mammotion Luba from a config entry."""
 
-    api = HomeAssistantMowerApi(async_get_clientsession(hass))
+    api = HomeAssistantMowerApi(ha_version="1.0.0", session=async_get_clientsession(hass))
     mammotion = api.mammotion
     account = entry.data.get(CONF_ACCOUNTNAME)
     password = entry.data.get(CONF_PASSWORD)

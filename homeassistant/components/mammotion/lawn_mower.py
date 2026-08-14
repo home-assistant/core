@@ -67,7 +67,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
         mode = self.rpt_dev_status.sys_status
 
         LOGGER.debug("activity mode %s", mode)
-        if mode == WorkMode.MODE_PAUSE or (
+        if mode in (WorkMode.MODE_PAUSE, WorkMode.MODE_CHARGING_PAUSE) or (
             mode == WorkMode.MODE_READY and charge_state == 0
         ):
             return LawnMowerActivity.PAUSED
