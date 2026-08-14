@@ -11,6 +11,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -88,20 +89,43 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     def _security_and_alarm(self) -> SecurityAndAlarmHome:
         return self._home.get_functionalHome(SecurityAndAlarmHome)
 
+    async def _async_set_zones_activation(
+        self, *, internal: bool, external: bool
+    ) -> None:
+        """Set the zone activation and raise when the panel refuses it."""
+        result = await self._home.set_security_zones_activation_async(
+            internal, external
+        )
+        # a request-based panel answers 200 without arming when a sensor blocks it
+        if result.success:
+            return
+
+        problems = self._home.get_security_zone_activation_problems(result)
+        if not problems:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="alarm_activation_failed",
+            )
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="alarm_activation_blocked",
+            translation_placeholders={"devices": ", ".join(sorted(problems))},
+        )
+
     @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self._home.set_security_zones_activation_async(False, False)
+        await self._async_set_zones_activation(internal=False, external=False)
 
     @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self._home.set_security_zones_activation_async(False, True)
+        await self._async_set_zones_activation(internal=False, external=True)
 
     @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._home.set_security_zones_activation_async(True, True)
+        await self._async_set_zones_activation(internal=True, external=True)
 
     @override
     async def async_added_to_hass(self) -> None:

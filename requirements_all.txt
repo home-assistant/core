@@ -133,7 +133,7 @@ WSDiscovery==2.1.2
 accuweather==5.1.0
 
 # homeassistant.components.actron_air
-actron-neo-api==0.5.12
+actron-neo-api==0.5.13
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -294,7 +294,7 @@ aiohasupervisor==0.6.0
 aiohomeconnect==0.39.1
 
 # homeassistant.components.homekit_controller
-aiohomekit==4.0.0
+aiohomekit==4.0.1
 
 # homeassistant.components.hortimax
 aiohortos==0.3.1
@@ -453,7 +453,7 @@ aiotedee==0.3.0
 aiotractive==1.0.3
 
 # homeassistant.components.unifi
-aiounifi==91
+aiounifi==92
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
@@ -669,7 +669,7 @@ bleak-smlight==1.1.0
 bleak==3.0.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.6
+blebox-uniapi==2.5.7
 
 # homeassistant.components.blink
 blinkpy==0.25.9
@@ -1029,6 +1029,9 @@ flexit_bacnet==2.2.3
 # homeassistant.components.flipr
 flipr-api==1.6.1
 
+# homeassistant.components.flow_it
+flow-it-api==0.0.1.1
+
 # homeassistant.components.fluss
 fluss-api==0.2.5
 
@@ -1281,7 +1284,7 @@ hole==0.9.2
 holidays==0.101
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260729.6
+home-assistant-frontend==20260729.7
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.7.30
@@ -1293,7 +1296,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.0.5
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.14.1
+homematicip==2.15.0
 
 # homeassistant.components.homevolt
 homevolt==0.5.0
@@ -1362,7 +1365,7 @@ imeon_inverter_api==0.4.0
 imgw_pib==2.5.1
 
 # homeassistant.components.incomfort
-incomfort-client==0.7.0
+incomfort-client==0.7.1
 
 # homeassistant.components.indevolt
 indevolt-api==1.8.7
@@ -1589,7 +1592,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==7.0.0
+midea-local==8.0.1
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -1613,7 +1616,7 @@ moehlenhoff-alpha2==1.4.0
 momonga==0.3.0
 
 # homeassistant.components.monarch_money
-monarchmoneycommunity==1.5.1
+monarchmoneycommunity==1.5.2
 
 # homeassistant.components.monzo
 monzopy==1.8.0
@@ -1652,7 +1655,7 @@ mvg==1.4.0
 myuplink==0.7.0
 
 # homeassistant.components.nad
-nad-receiver==0.3.0
+nad-receiver==0.4.0
 
 # homeassistant.components.keenetic_ndms2
 ndms2-client==0.1.2
@@ -1956,7 +1959,7 @@ py-nextbusnext==2.3.0
 py-nightscout==1.2.2
 
 # homeassistant.components.mta
-py-nymta==0.4.0
+py-nymta==0.4.1
 
 # homeassistant.components.opendisplay
 py-opendisplay==7.15.0
@@ -2116,7 +2119,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.18.5
+pydaikin==2.19.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2783,7 +2786,7 @@ python-swisscom-internet-box==0.2.0
 python-tado==0.18.16
 
 # homeassistant.components.technove
-python-technove==2.1.1
+python-technove==2.1.2
 
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==22.7
@@ -3175,7 +3178,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.8.2
+tesla-fleet-api==1.9.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3238,7 +3241,7 @@ triggercmd==0.0.36
 trmnl==0.1.1
 
 # homeassistant.components.twinkly
-ttls==1.10.0
+ttls==1.11.1
 
 # homeassistant.components.thethingsnetwork
 ttn_client==1.3.0
@@ -3385,7 +3388,7 @@ weheat==2026.4.8
 whirlpool-sixth-sense==1.3.1
 
 # homeassistant.components.whois
-whois==0.9.27
+whoisdomain==2.20260806.3
 
 # homeassistant.components.wiffi
 wiffi==1.1.2
@@ -3482,7 +3485,7 @@ zha-quirks==2.2.0
 zha==2.1.0
 
 # homeassistant.components.zhong_hong
-zhong-hong-hvac==1.0.18
+zhong-hong-hvac==1.0.19
 
 # homeassistant.components.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.1.0
