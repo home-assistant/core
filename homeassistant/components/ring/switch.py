@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine, Sequence
 from dataclasses import dataclass
 import logging
-from typing import Any, Generic, Self, cast
+from typing import Any, Generic, Self, cast, override
 
 from ring_doorbell import RingCapability, RingDoorBell, RingStickUpCam
 from ring_doorbell.const import DOORBELL_EXISTING_TYPE
@@ -36,13 +36,15 @@ IN_HOME_CHIME_IS_PRESENT = {v for k, v in DOORBELL_EXISTING_TYPE.items() if k !=
 
 @dataclass(frozen=True, kw_only=True)
 class RingSwitchEntityDescription(
-    SwitchEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+    SwitchEntityDescription,
+    RingEntityDescription,
+    Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes a Ring switch entity."""
 
     exists_fn: Callable[[RingDeviceT], bool]
-    unique_id_fn: Callable[[Self, RingDeviceT], str] = (
-        lambda self, device: f"{device.device_api_id}-{self.key}"
+    unique_id_fn: Callable[[Self, RingDeviceT], str] = lambda self, device: (
+        f"{device.device_api_id}-{self.key}"
     )
     is_on_fn: Callable[[RingDeviceT], bool]
     turn_on_fn: Callable[[RingDeviceT], Coroutine[Any, Any, None]]
@@ -64,8 +66,10 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
     RingSwitchEntityDescription[RingDoorBell](
         key="in_home_chime",
         translation_key="in_home_chime",
-        exists_fn=lambda device: device.family == "doorbots"
-        and device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT,
+        exists_fn=lambda device: (
+            device.family == "doorbots"
+            and device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT
+        ),
         is_on_fn=lambda device: device.existing_doorbell_type_enabled or False,
         turn_on_fn=lambda device: device.async_set_existing_doorbell_type_enabled(True),
         turn_off_fn=lambda device: device.async_set_existing_doorbell_type_enabled(
@@ -125,6 +129,7 @@ class RingSwitch(RingEntity[RingDeviceT], SwitchEntity):
         self._attr_is_on = description.is_on_fn(device)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
         self._device = cast(
@@ -145,10 +150,12 @@ class RingSwitch(RingEntity[RingDeviceT], SwitchEntity):
         self._attr_is_on = switch_on
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on for 30 seconds."""
         await self._async_set_switch(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         await self._async_set_switch(False)

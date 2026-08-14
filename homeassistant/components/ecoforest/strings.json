@@ -35,7 +35,7 @@
           "cpu_overheating": "CPU overheating",
           "none": "None",
           "pellets": "Pellets",
-          "unkownn": "Unknown alarm"
+          "unknown": "Unknown alarm"
         }
       },
       "convector_air_flow": {

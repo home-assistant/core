@@ -1,10 +1,8 @@
 """Config flow to configure Blink."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from blinkpy.auth import Auth, BlinkTwoFARequiredError, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
@@ -21,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEVICE_ID, DOMAIN
+from .const import DOMAIN, HARDWARE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,21 +27,23 @@ _LOGGER = logging.getLogger(__name__)
 async def validate_input(blink: Blink) -> None:
     """Validate the user input allows us to connect."""
     try:
-        await blink.start()
+        result = await blink.start()
     except (LoginError, TokenRefreshFailed) as err:
         raise InvalidAuth from err
+    if result is False:
+        raise InvalidAuth
 
 
-async def _send_blink_2fa_pin(blink: Blink, pin: str | None) -> bool:
+async def _send_blink_2fa_pin(blink: Blink, pin: str | None) -> None:
     """Send 2FA pin to blink servers."""
-    await blink.send_2fa_code(pin)
-    return True
+    if not await blink.send_2fa_code(pin):
+        raise InvalidAuth
 
 
 class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Blink config flow."""
 
-    VERSION = 3
+    VERSION = 4
 
     def __init__(self) -> None:
         """Initialize the blink flow."""
@@ -53,7 +53,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _handle_user_input(self, user_input: dict[str, Any]):
         """Handle user input."""
         self.auth = Auth(
-            {**user_input, "device_id": DEVICE_ID},
+            {**user_input, "hardware_id": HARDWARE_ID},
             no_prompt=True,
             session=async_get_clientsession(self.hass),
         )
@@ -66,6 +66,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         await validate_input(self.blink)
         return self._async_finish_flow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -105,6 +106,8 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except TokenRefreshFailed:
                 errors["base"] = "invalid_access_token"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

@@ -1,12 +1,14 @@
 """Support for LCN binary sensors."""
 
 from collections.abc import Iterable
+from datetime import timedelta
 from functools import partial
+from typing import override
 
 import pypck
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as DOMAIN_BINARY_SENSOR,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
@@ -18,7 +20,8 @@ from .const import CONF_DOMAIN_DATA
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 2
+SCAN_INTERVAL = timedelta(minutes=10)
 
 
 def add_lcn_entities(
@@ -46,14 +49,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_BINARY_SENSOR: add_entities}
+        {BINARY_SENSOR_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_BINARY_SENSOR
+            if entity_config[CONF_DOMAIN] == BINARY_SENSOR_DOMAIN
         ),
     )
 
@@ -69,26 +72,20 @@ class LcnBinarySensor(LcnEntity, BinarySensorEntity):
             config[CONF_DOMAIN_DATA][CONF_SOURCE]
         ]
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(
-                self.bin_sensor_port
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        self._attr_available = (
+            await self.device_connection.request_status_binary_sensors(
+                SCAN_INTERVAL.seconds
             )
+            is not None
+        )
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(
-                self.bin_sensor_port
-            )
-
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusBinSensors):
             return
-
+        self._attr_available = True
         self._attr_is_on = input_obj.get_state(self.bin_sensor_port.value)
         self.async_write_ha_state()

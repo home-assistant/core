@@ -18,7 +18,7 @@
         'ip_address': '**REDACTED**',
         'last_data_update': '2022-09-28T16:42:12.706017',
         'mac_address': '**REDACTED**',
-        'name': 'Heater FE12',
+        'name': 'WaterHeater FE12',
         'power_consumption': 2780,
         'remaining_time': '01:29:32',
         'token_needed': False,

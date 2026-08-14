@@ -1,9 +1,8 @@
 """Data update coordinator for the Sonarr integration."""
 
-from __future__ import annotations
-
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import TypeVar, cast
+from typing import TypeVar, cast, override
 
 from aiopyarr import (
     Command,
@@ -40,15 +39,31 @@ SonarrDataT = TypeVar(
 )
 
 
+@dataclass
+class SonarrData:
+    """Sonarr data type."""
+
+    upcoming: CalendarDataUpdateCoordinator
+    commands: CommandsDataUpdateCoordinator
+    diskspace: DiskSpaceDataUpdateCoordinator
+    queue: QueueDataUpdateCoordinator
+    series: SeriesDataUpdateCoordinator
+    status: StatusDataUpdateCoordinator
+    wanted: WantedDataUpdateCoordinator
+
+
+type SonarrConfigEntry = ConfigEntry[SonarrData]
+
+
 class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
     """Data update coordinator for the Sonarr integration."""
 
-    config_entry: ConfigEntry
+    config_entry: SonarrConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SonarrConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: SonarrClient,
     ) -> None:
@@ -64,6 +79,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
         self.host_configuration = host_configuration
         self.system_version: str | None = None
 
+    @override
     async def _async_update_data(self) -> SonarrDataT:
         """Get the latest data from Sonarr."""
         try:
@@ -84,6 +100,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
 class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalendar]]):
     """Calendar update coordinator."""
 
+    @override
     async def _fetch_data(self) -> list[SonarrCalendar]:
         """Fetch the movies data."""
         local = dt_util.start_of_local_day().replace(microsecond=0)
@@ -100,6 +117,7 @@ class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalen
 class CommandsDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[Command]]):
     """Commands update coordinator for Sonarr."""
 
+    @override
     async def _fetch_data(self) -> list[Command]:
         """Fetch the data."""
         return cast(list[Command], await self.api_client.async_get_commands())
@@ -108,6 +126,7 @@ class CommandsDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[Command]]):
 class DiskSpaceDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[Diskspace]]):
     """Disk space update coordinator for Sonarr."""
 
+    @override
     async def _fetch_data(self) -> list[Diskspace]:
         """Fetch the data."""
         return await self.api_client.async_get_diskspace()
@@ -116,6 +135,7 @@ class DiskSpaceDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[Diskspace]
 class QueueDataUpdateCoordinator(SonarrDataUpdateCoordinator[SonarrQueue]):
     """Queue update coordinator."""
 
+    @override
     async def _fetch_data(self) -> SonarrQueue:
         """Fetch the data."""
         return await self.api_client.async_get_queue(
@@ -126,6 +146,7 @@ class QueueDataUpdateCoordinator(SonarrDataUpdateCoordinator[SonarrQueue]):
 class SeriesDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrSeries]]):
     """Series update coordinator."""
 
+    @override
     async def _fetch_data(self) -> list[SonarrSeries]:
         """Fetch the data."""
         return cast(list[SonarrSeries], await self.api_client.async_get_series())
@@ -134,6 +155,7 @@ class SeriesDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrSeries]
 class StatusDataUpdateCoordinator(SonarrDataUpdateCoordinator[SystemStatus]):
     """Status update coordinator for Sonarr."""
 
+    @override
     async def _fetch_data(self) -> SystemStatus:
         """Fetch the data."""
         return await self.api_client.async_get_system_status()
@@ -142,6 +164,7 @@ class StatusDataUpdateCoordinator(SonarrDataUpdateCoordinator[SystemStatus]):
 class WantedDataUpdateCoordinator(SonarrDataUpdateCoordinator[SonarrWantedMissing]):
     """Wanted update coordinator."""
 
+    @override
     async def _fetch_data(self) -> SonarrWantedMissing:
         """Fetch the data."""
         return await self.api_client.async_get_wanted(

@@ -1,8 +1,6 @@
 """Config flow for Nina integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pynina import ApiError, Nina
 import voluptuous as vol
@@ -20,7 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    _LOGGER,
     ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
     CONF_FILTERS,
@@ -30,7 +27,9 @@ from .const import (
     CONST_REGION_MAPPING,
     CONST_REGIONS,
     DOMAIN,
+    LOGGER,
     NO_MATCH_REGEX,
+    SENSOR_SUFFIXES,
 )
 
 
@@ -86,6 +85,34 @@ def prepare_user_input(
     return user_input
 
 
+def create_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
+    """Create the schema for the flows."""
+    schema_dict: VolDictType = {
+        **{
+            vol.Optional(region): cv.multi_select(regions[region])
+            for region in CONST_REGIONS
+        },
+        vol.Required(
+            CONF_MESSAGE_SLOTS,
+            default=5,
+        ): vol.All(int, vol.Range(min=1, max=20)),
+        vol.Required(CONF_FILTERS): section(
+            vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_HEADLINE_FILTER,
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_AREA_FILTER,
+                    ): cv.string,
+                }
+            )
+        ),
+    }
+
+    return vol.Schema(schema_dict)
+
+
 class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NINA."""
 
@@ -101,6 +128,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
         for name in CONST_REGIONS:
             self.regions[name] = {}
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -113,13 +141,13 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 self._all_region_codes_sorted = swap_key_value(
-                    await nina.getAllRegionalCodes()
+                    await nina.get_all_regional_codes()
                 )
             except ApiError:
-                errors["base"] = "cannot_connect"
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception: %s", err)
-                errors["base"] = "unknown"
+                return self.async_abort(reason="no_fetch")
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
 
@@ -141,38 +169,26 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "no_selection"
 
-        regions_schema: VolDictType = {
-            vol.Optional(region): cv.multi_select(self.regions[region])
-            for region in CONST_REGIONS
+        default_filters = {
+            CONF_FILTERS: {
+                CONF_HEADLINE_FILTER: NO_MATCH_REGEX,
+                CONF_AREA_FILTER: ALL_MATCH_REGEX,
+            }
         }
+
+        schema_with_suggested = self.add_suggested_values_to_schema(
+            create_schema(self.regions), default_filters
+        )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    **regions_schema,
-                    vol.Required(CONF_MESSAGE_SLOTS, default=5): vol.All(
-                        int, vol.Range(min=1, max=20)
-                    ),
-                    vol.Required(CONF_FILTERS): section(
-                        vol.Schema(
-                            {
-                                vol.Optional(
-                                    CONF_HEADLINE_FILTER, default=NO_MATCH_REGEX
-                                ): cv.string,
-                                vol.Optional(
-                                    CONF_AREA_FILTER, default=ALL_MATCH_REGEX
-                                ): cv.string,
-                            }
-                        )
-                    ),
-                }
-            ),
+            data_schema=schema_with_suggested,
             errors=errors,
         )
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
@@ -206,13 +222,13 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
             try:
                 self._all_region_codes_sorted = swap_key_value(
-                    await nina.getAllRegionalCodes()
+                    await nina.get_all_regional_codes()
                 )
             except ApiError:
-                errors["base"] = "cannot_connect"
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception: %s", err)
-                errors["base"] = "unknown"
+                return self.async_abort(reason="no_fetch")
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
 
@@ -228,32 +244,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     user_input, self._all_region_codes_sorted
                 )
 
-                entity_registry = er.async_get(self.hass)
-
-                entries = er.async_entries_for_config_entry(
-                    entity_registry, self.config_entry.entry_id
-                )
-
-                removed_entities_slots = [
-                    f"{region}-{slot_id}"
-                    for region in self.data[CONF_REGIONS]
-                    for slot_id in range(self.data[CONF_MESSAGE_SLOTS] + 1)
-                    if slot_id > user_input[CONF_MESSAGE_SLOTS]
-                ]
-
-                removed_entites_area = [
-                    f"{cfg_region}-{slot_id}"
-                    for slot_id in range(1, self.data[CONF_MESSAGE_SLOTS] + 1)
-                    for cfg_region in self.data[CONF_REGIONS]
-                    if cfg_region not in user_input[CONF_REGIONS]
-                ]
-
-                for entry in entries:
-                    for entity_uid in list(
-                        set(removed_entities_slots + removed_entites_area)
-                    ):
-                        if entry.unique_id == entity_uid:
-                            entity_registry.async_remove(entry.entity_id)
+                await self.remove_unused_entities(user_input)
 
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=user_input
@@ -263,35 +254,44 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
             errors["base"] = "no_selection"
 
-        schema: VolDictType = {
-            **{
-                vol.Optional(region, default=self.data[region]): cv.multi_select(
-                    self.regions[region]
-                )
-                for region in CONST_REGIONS
-            },
-            vol.Required(
-                CONF_MESSAGE_SLOTS,
-                default=self.data[CONF_MESSAGE_SLOTS],
-            ): vol.All(int, vol.Range(min=1, max=20)),
-            vol.Required(CONF_FILTERS): section(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_HEADLINE_FILTER,
-                            default=self.data[CONF_FILTERS][CONF_HEADLINE_FILTER],
-                        ): cv.string,
-                        vol.Optional(
-                            CONF_AREA_FILTER,
-                            default=self.data[CONF_FILTERS][CONF_AREA_FILTER],
-                        ): cv.string,
-                    }
-                )
-            ),
-        }
+        schema_with_suggested = self.add_suggested_values_to_schema(
+            create_schema(self.regions), self.data
+        )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(schema),
+            data_schema=schema_with_suggested,
             errors=errors,
         )
+
+    async def remove_unused_entities(self, user_input: dict[str, Any]) -> None:
+        """Remove entities which are not used anymore."""
+        entity_registry = er.async_get(self.hass)
+
+        entries = er.async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        )
+
+        id_type_suffix = [f"-{sensor_id}" for sensor_id in SENSOR_SUFFIXES] + [""]
+
+        removed_entities_slots = [
+            f"{region}-{slot_id}{suffix}"
+            for region in self.data[CONF_REGIONS]
+            for slot_id in range(self.data[CONF_MESSAGE_SLOTS] + 1)
+            for suffix in id_type_suffix
+            if slot_id > user_input[CONF_MESSAGE_SLOTS]
+        ]
+
+        removed_entities_area = [
+            f"{cfg_region}-{slot_id}{suffix}"
+            for slot_id in range(1, self.data[CONF_MESSAGE_SLOTS] + 1)
+            for cfg_region in self.data[CONF_REGIONS]
+            for suffix in id_type_suffix
+            if cfg_region not in user_input[CONF_REGIONS]
+        ]
+
+        removed_uids = set(removed_entities_slots + removed_entities_area)
+
+        for entry in entries:
+            if entry.unique_id in removed_uids:
+                entity_registry.async_remove(entry.entity_id)

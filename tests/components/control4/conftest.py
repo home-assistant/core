@@ -1,6 +1,7 @@
 """Common fixtures for the Control4 tests."""
 
 from collections.abc import AsyncGenerator, Generator
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -33,36 +34,61 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock control4 setup entry."""
+    with patch(
+        "homeassistant.components.control4.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
 def mock_c4_account() -> Generator[MagicMock]:
     """Mock a Control4 Account client."""
-    with patch(
-        "homeassistant.components.control4.C4Account", autospec=True
-    ) as mock_account_class:
+    with (
+        patch(
+            "homeassistant.components.control4.C4Account", autospec=True
+        ) as mock_account_class,
+        patch(
+            "homeassistant.components.control4.config_flow.C4Account",
+            new=mock_account_class,
+        ),
+    ):
         mock_account = mock_account_class.return_value
-        mock_account.getAccountBearerToken = AsyncMock()
-        mock_account.getAccountControllers = AsyncMock(
-            return_value={"href": "https://example.com"}
+        mock_account.get_account_bearer_token = AsyncMock()
+        mock_account.get_account_controllers = AsyncMock(
+            return_value={
+                "controllerCommonName": "control4_model_00AA00AA00AA",
+                "href": "https://apis.control4.com/account/v3/rest/accounts/000000",
+                "name": "Name",
+            }
         )
-        mock_account.getDirectorBearerToken = AsyncMock(return_value={"token": "test"})
-        mock_account.getControllerOSVersion = AsyncMock(return_value="3.2.0")
+        mock_account.get_director_bearer_token = AsyncMock(
+            return_value={"token": "test", "validSeconds": 86400}
+        )
+        mock_account.get_controller_os_version = AsyncMock(return_value="3.2.0")
         yield mock_account
 
 
 @pytest.fixture
 def mock_c4_director() -> Generator[MagicMock]:
     """Mock a Control4 Director client."""
-    with patch(
-        "homeassistant.components.control4.C4Director", autospec=True
-    ) as mock_director_class:
+    with (
+        patch(
+            "homeassistant.components.control4.C4Director", autospec=True
+        ) as mock_director_class,
+        patch(
+            "homeassistant.components.control4.config_flow.C4Director",
+            new=mock_director_class,
+        ),
+    ):
         mock_director = mock_director_class.return_value
-        # Multi-platform setup: media room, climate room, shared devices
-        # Note: The API returns JSON strings, so we load fixtures as strings
-        mock_director.getAllItemInfo = AsyncMock(
-            return_value=load_fixture("director_all_items.json", DOMAIN)
+        all_items = json.loads(load_fixture("director_all_items.json", DOMAIN))
+        mock_director.get_all_item_info = AsyncMock(return_value=all_items)
+        mock_director.get_ui_configuration = AsyncMock(
+            return_value=json.loads(load_fixture("ui_configuration.json", DOMAIN))
         )
-        mock_director.getUiConfiguration = AsyncMock(
-            return_value=load_fixture("ui_configuration.json", DOMAIN)
-        )
+        mock_director.get_item_variables = AsyncMock(return_value=[])
         yield mock_director
 
 
@@ -96,12 +122,15 @@ def mock_climate_variables() -> dict:
     """Mock climate variable data for default thermostat state."""
     return {
         123: {
-            "HVAC_STATE": "idle",
+            "HVAC_STATE": "Off",
             "HVAC_MODE": "Heat",
             "TEMPERATURE_F": 72.5,
             "HUMIDITY": 45,
             "COOL_SETPOINT_F": 75.0,
             "HEAT_SETPOINT_F": 68.0,
+            "FAN_MODE": "Auto",
+            "FAN_MODES_LIST": "Auto,On,Circulate",
+            "SCALE": "FAHRENHEIT",
         }
     }
 
@@ -129,9 +158,12 @@ def mock_c4_climate() -> Generator[MagicMock]:
         "homeassistant.components.control4.climate.C4Climate", autospec=True
     ) as mock_class:
         mock_instance = mock_class.return_value
-        mock_instance.setHvacMode = AsyncMock()
-        mock_instance.setHeatSetpointF = AsyncMock()
-        mock_instance.setCoolSetpointF = AsyncMock()
+        mock_instance.set_hvac_mode = AsyncMock()
+        mock_instance.set_heat_setpoint_f = AsyncMock()
+        mock_instance.set_cool_setpoint_f = AsyncMock()
+        mock_instance.set_fan_mode = AsyncMock()
+        mock_instance.set_heat_setpoint_c = AsyncMock()
+        mock_instance.set_cool_setpoint_c = AsyncMock()
         yield mock_instance
 
 

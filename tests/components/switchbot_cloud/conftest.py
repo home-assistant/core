@@ -32,6 +32,29 @@ def mock_get_status():
         yield mock_get_status
 
 
+@pytest.fixture
+def mock_setup_webhook():
+    """Mock setup_webhook."""
+    with patch.object(SwitchBotAPI, "setup_webhook") as mock_setup_webhook:
+        yield mock_setup_webhook
+
+
+@pytest.fixture
+def mock_delete_webhook():
+    """Mock delete_webhook."""
+    with patch.object(SwitchBotAPI, "delete_webhook") as mock_delete_webhook:
+        yield mock_delete_webhook
+
+
+@pytest.fixture
+def mock_get_webook_configuration():
+    """Mock get_webook_configuration."""
+    with patch.object(
+        SwitchBotAPI, "get_webook_configuration"
+    ) as mock_get_webook_configuration:
+        yield mock_get_webook_configuration
+
+
 @pytest.fixture(scope="package", autouse=True)
 def mock_after_command_refresh():
     """Mock after command refresh."""
@@ -46,6 +69,16 @@ def mock_after_command_refresh_for_cover():
     """Mock after command refresh."""
     with patch(
         "homeassistant.components.switchbot_cloud.const.COVER_ENTITY_AFTER_COMMAND_REFRESH",
+        0,
+    ):
+        yield
+
+
+@pytest.fixture(scope="package", autouse=True)
+def mock_after_command_refresh_for_smart_radiator_thermostat():
+    """Mock after command refresh."""
+    with patch(
+        "homeassistant.components.switchbot_cloud.const.SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH",
         0,
     ):
         yield

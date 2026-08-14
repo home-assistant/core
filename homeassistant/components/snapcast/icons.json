@@ -1,8 +1,5 @@
 {
   "services": {
-    "join": {
-      "service": "mdi:music-note-plus"
-    },
     "restore": {
       "service": "mdi:camera-retake"
     },
@@ -11,9 +8,6 @@
     },
     "snapshot": {
       "service": "mdi:camera"
-    },
-    "unjoin": {
-      "service": "mdi:music-note-minus"
     }
   }
 }

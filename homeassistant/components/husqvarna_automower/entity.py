@@ -1,12 +1,10 @@
 """Platform for Husqvarna Automower base entity."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
+from typing import Any, Concatenate, overload, override
 
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
@@ -37,18 +35,14 @@ ERROR_STATES = [
 ]
 
 
-_Entity = TypeVar("_Entity", bound="AutomowerBaseEntity")
-_P = ParamSpec("_P")
-
-
 @overload
-def handle_sending_exception(
+def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     _func: Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, None]]: ...
 
 
 @overload
-def handle_sending_exception(
+def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     *,
     poll_after_sending: bool = False,
 ) -> Callable[
@@ -57,7 +51,7 @@ def handle_sending_exception(
 ]: ...
 
 
-def handle_sending_exception(
+def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     _func: Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, Any]] | None = None,
     *,
     poll_after_sending: bool = False,
@@ -85,8 +79,9 @@ def handle_sending_exception(
                 ) from exception
             else:
                 if poll_after_sending:
-                    # As there are no updates from the websocket for this attribute,
-                    # we need to wait until the command is executed and then poll the API.
+                    # As there are no updates from the websocket for
+                    # this attribute, we need to wait until the
+                    # command is executed and then poll the API.
                     await asyncio.sleep(EXECUTION_TIME_DELAY)
                     await self.coordinator.async_request_refresh()
 
@@ -121,12 +116,15 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         """Initialize AutomowerEntity."""
         super().__init__(coordinator)
         self.mower_id = mower_id
-        parts = self.mower_attributes.system.model.split(maxsplit=2)
+        model_witout_manufacturer = self.mower_attributes.system.model.removeprefix(
+            "Husqvarna "
+        ).removeprefix("HUSQVARNA ")
+        parts = model_witout_manufacturer.split(maxsplit=1)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mower_id)},
-            manufacturer=parts[0],
-            model=parts[1],
-            model_id=parts[2],
+            manufacturer="Husqvarna",
+            model=parts[0].capitalize().removesuffix("®"),
+            model_id=parts[1],
             name=self.mower_attributes.system.name,
             serial_number=self.mower_attributes.system.serial_number,
             suggested_area="Garden",
@@ -138,6 +136,7 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         return self.coordinator.data[self.mower_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the device is available."""
         return super().available and self.mower_id in self.coordinator.data
@@ -147,6 +146,7 @@ class AutomowerControlEntity(AutomowerBaseEntity):
     """Replies available when the mower is connected."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the device is available."""
         return (
@@ -170,21 +170,26 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
         self.work_area_id = work_area_id
 
     @property
-    def work_areas(self) -> dict[int, WorkArea]:
+    def work_areas(self) -> dict[int, WorkArea] | None:
         """Get the work areas from the mower attributes."""
-        if TYPE_CHECKING:
-            assert self.mower_attributes.work_areas is not None
         return self.mower_attributes.work_areas
 
     @property
-    def work_area_attributes(self) -> WorkArea:
+    def work_area_attributes(self) -> WorkArea | None:
         """Get the work area attributes of the current work area."""
-        return self.work_areas[self.work_area_id]
+        if (work_areas := self.work_areas) is None:
+            return None
+        return work_areas.get(self.work_area_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the work area is available and the mower has no errors."""
-        return super().available and self.work_area_id in self.work_areas
+        return (
+            super().available
+            and self.work_areas is not None
+            and self.work_area_id in self.work_areas
+        )
 
 
 class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerControlEntity):

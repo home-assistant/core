@@ -13,7 +13,7 @@ from aiontfy.exceptions import (
     NtfyTimeoutError,
     NtfyUnauthorizedAuthenticationError,
 )
-from freezegun.api import FrozenDateTimeFactory, freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -25,11 +25,7 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -44,7 +40,7 @@ async def event_only() -> AsyncGenerator[None]:
 
 
 @pytest.mark.usefixtures("mock_aiontfy")
-@freeze_time("2025-09-03T22:00:00.000Z")
+@pytest.mark.freeze_time("2025-09-03T22:00:00.000Z")
 async def test_event_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -101,6 +97,7 @@ async def test_event(
         "time": datetime(2025, 3, 28, 17, 58, 46, tzinfo=UTC),
         "title": "Title",
         "topic": "mytopic",
+        "sequence_id": "Mc3otamDNcpJ",
     }
 
 
@@ -196,7 +193,6 @@ async def test_event_topic_protected(
         domain=DOMAIN, issue_id="topic_protected_mytopic"
     )
 
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
     result = await start_repair_fix_flow(client, DOMAIN, "topic_protected_mytopic")
 

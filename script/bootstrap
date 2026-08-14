@@ -6,12 +6,16 @@ set -e
 
 cd "$(realpath "$(dirname "$0")/..")"
 
+if [ ! -n "$VIRTUAL_ENV" ]; then
+  source .venv/bin/activate
+fi
+
 echo "Installing development dependencies..."
 uv pip install \
   -e . \
+  -r requirements_all.txt \
   -r requirements_test.txt \
   colorlog \
-  --constraint homeassistant/package_constraints.txt \
   --upgrade \
   --config-settings editable_mode=compat
 

@@ -1,8 +1,6 @@
 """Adds config flow for Brother Printer."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
@@ -116,6 +114,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         self.brother: Brother
         self.host: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -127,7 +126,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 model, serial = await validate_input(self.hass, user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
-            except (ConnectionError, TimeoutError):
+            except ConnectionError, TimeoutError:
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"
@@ -144,6 +143,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -163,7 +163,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.brother.async_update()
         except UnsupportedModelError:
             return self.async_abort(reason="unsupported_model")
-        except (ConnectionError, SnmpError, TimeoutError):
+        except ConnectionError, SnmpError, TimeoutError:
             return self.async_abort(reason="cannot_connect")
 
         # Check if already configured
@@ -211,7 +211,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input, entry.unique_id)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
-            except (ConnectionError, TimeoutError):
+            except ConnectionError, TimeoutError:
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"

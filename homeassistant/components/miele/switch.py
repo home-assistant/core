@@ -1,13 +1,11 @@
 """Switch platform for Miele switch integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
-import aiohttp
+from aiohttp import ClientResponseError
 from pymiele import MieleDevice
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -58,7 +56,7 @@ SWITCH_TYPES: Final[tuple[MieleSwitchDefinition, ...]] = (
         description=MieleSwitchDescription(
             key="supercooling",
             value_fn=lambda value: value.state_status,
-            on_value=StateStatus.SUPERCOOLING,
+            on_value=StateStatus.supercooling,
             translation_key="supercooling",
             on_cmd_data={PROCESS_ACTION: MieleActions.START_SUPERCOOL},
             off_cmd_data={PROCESS_ACTION: MieleActions.STOP_SUPERCOOL},
@@ -73,7 +71,7 @@ SWITCH_TYPES: Final[tuple[MieleSwitchDefinition, ...]] = (
         description=MieleSwitchDescription(
             key="superfreezing",
             value_fn=lambda value: value.state_status,
-            on_value=StateStatus.SUPERFREEZING,
+            on_value=StateStatus.superfreezing,
             translation_key="superfreezing",
             on_cmd_data={PROCESS_ACTION: MieleActions.START_SUPERFREEZE},
             off_cmd_data={PROCESS_ACTION: MieleActions.STOP_SUPERFREEZE},
@@ -117,7 +115,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     added_devices: set[str] = set()
 
     def _async_add_new_devices() -> None:
@@ -153,10 +151,12 @@ class MieleSwitch(MieleEntity, SwitchEntity):
 
     entity_description: MieleSwitchDescription
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         await self.async_turn_switch(self.entity_description.on_cmd_data)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         await self.async_turn_switch(self.entity_description.off_cmd_data)
@@ -165,7 +165,8 @@ class MieleSwitch(MieleEntity, SwitchEntity):
         """Set switch to mode."""
         try:
             await self.api.send_action(self._device_id, mode)
-        except aiohttp.ClientError as err:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting switch state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
@@ -181,23 +182,27 @@ class MielePowerSwitch(MieleSwitch):
     entity_description: MieleSwitchDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
         return self.action.power_off_enabled
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the entity."""
 
-        return (
+        return super().available and (
             self.action.power_off_enabled or self.action.power_on_enabled
-        ) and super().available
+        )
 
+    @override
     async def async_turn_switch(self, mode: dict[str, str | int | bool]) -> None:
         """Set switch to mode."""
         try:
             await self.api.send_action(self._device_id, mode)
-        except aiohttp.ClientError as err:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting switch state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
@@ -216,6 +221,7 @@ class MieleSuperSwitch(MieleSwitch):
     entity_description: MieleSwitchDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
         return (

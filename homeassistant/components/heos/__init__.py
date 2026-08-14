@@ -1,7 +1,5 @@
 """Denon HEOS Media Player."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from homeassistant.const import Platform
@@ -45,10 +43,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 
             # Create set of identifiers excluding this integration
             identifiers = {ident for ident in device.identifiers if ident[0] != DOMAIN}
-            migrated_identifiers = {(DOMAIN, str(player_id))}
-            # Add migrated if not already present in another device, which occurs if the user downgraded and then upgraded
-            if not device_registry.async_get_device(migrated_identifiers):
-                identifiers.update(migrated_identifiers)
+            migrated_identifier = (DOMAIN, str(player_id))
+            # Add migrated if not already present in another
+            # device, which occurs if the user downgraded and
+            # then upgraded
+            if not device_registry.async_get_devices(identifiers={migrated_identifier}):
+                identifiers.add(migrated_identifier)
             if len(identifiers) > 0:
                 device_registry.async_update_device(
                     device.id, new_identifiers=identifiers

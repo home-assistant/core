@@ -217,7 +217,8 @@ select_source:
       required: true
       example: "video1"
       selector:
-        text:
+        state:
+          attribute: source
 
 select_sound_mode:
   target:
@@ -229,7 +230,8 @@ select_sound_mode:
     sound_mode:
       example: "Music"
       selector:
-        text:
+        state:
+          attribute: sound_mode
 
 clear_playlist:
   target:

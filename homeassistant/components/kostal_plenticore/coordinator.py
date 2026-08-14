@@ -1,12 +1,10 @@
 """Code to handle the Plenticore API."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohttp.client_exceptions import ClientError
 from pykoplenti import (
@@ -212,6 +210,7 @@ class ProcessDataUpdateCoordinator(
 ):
     """Implementation of PlenticoreUpdateCoordinator for process data."""
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
         client = self._plenticore.client
 
@@ -236,15 +235,25 @@ class SettingDataUpdateCoordinator(
 ):
     """Implementation of PlenticoreUpdateCoordinator for settings data."""
 
+    @override
     async def _async_update_data(self) -> Mapping[str, Mapping[str, str]]:
-        client = self._plenticore.client
-
-        if not self._fetch or client is None:
+        if (client := self._plenticore.client) is None:
             return {}
 
-        _LOGGER.debug("Fetching %s for %s", self.name, self._fetch)
+        fetch = defaultdict(set)
 
-        return await client.get_setting_values(self._fetch)
+        for module_id, data_ids in self._fetch.items():
+            fetch[module_id].update(data_ids)
+
+        for module_id, data_id in self.async_contexts():
+            fetch[module_id].add(data_id)
+
+        if not fetch:
+            return {}
+
+        _LOGGER.debug("Fetching %s for %s", self.name, fetch)
+
+        return await client.get_setting_values(fetch)
 
 
 class PlenticoreSelectUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
@@ -301,6 +310,7 @@ class SelectDataUpdateCoordinator(
 ):
     """Implementation of PlenticoreUpdateCoordinator for select data."""
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
         if self._plenticore.client is None:
             return {}

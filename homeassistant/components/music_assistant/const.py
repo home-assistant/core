@@ -7,6 +7,11 @@ DOMAIN_EVENT = f"{DOMAIN}_event"
 
 DEFAULT_NAME = "Music Assistant"
 
+# Schema version where mandatory authentication was added to the MA webserver
+AUTH_SCHEMA_VERSION = 28
+# Schema version where hassio discovery support was added
+HASSIO_DISCOVERY_SCHEMA_VERSION = 28
+
 ATTR_IS_GROUP = "is_group"
 ATTR_GROUP_MEMBERS = "group_members"
 ATTR_GROUP_PARENTS = "group_parents"
@@ -44,6 +49,7 @@ ATTR_ALBUM = "album"
 ATTR_URL = "url"
 ATTR_USE_PRE_ANNOUNCE = "use_pre_announce"
 ATTR_ANNOUNCE_VOLUME = "announce_volume"
+ATTR_PRE_ANNOUNCE_URL = "pre_announce_url"
 ATTR_SOURCE_PLAYER = "source_player"
 ATTR_AUTO_PLAY = "auto_play"
 ATTR_QUEUE_ID = "queue_id"
@@ -68,6 +74,7 @@ ATTR_EXPLICIT = "explicit"
 ATTR_BITRATE = "bit_rate"
 ATTR_DISCART_IMAGE = "discart_image"
 ATTR_FANART_IMAGE = "fanart_image"
+ATTR_USERNAME = "username"
 
 ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 

@@ -23,11 +23,6 @@ from tests.common import async_fire_mqtt_message, async_get_device_automations
 from tests.typing import MqttMockHAClient, WebSocketGenerator
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 async def test_get_triggers_btn(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -45,8 +40,9 @@ async def test_get_triggers_btn(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     expected_triggers = [
         {
@@ -88,8 +84,9 @@ async def test_get_triggers_swc(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     expected_triggers = [
         {
@@ -123,8 +120,9 @@ async def test_get_unknown_triggers(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -171,8 +169,9 @@ async def test_get_non_existing_triggers(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -202,8 +201,9 @@ async def test_discover_bad_triggers(
         )
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -238,8 +238,9 @@ async def test_discover_bad_triggers(
         )
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -290,8 +291,9 @@ async def test_update_remove_triggers(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     expected_triggers1 = [
@@ -360,8 +362,9 @@ async def test_if_fires_on_mqtt_message_btn(
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -436,8 +439,9 @@ async def test_if_fires_on_mqtt_message_swc(
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -538,8 +542,9 @@ async def test_if_fires_on_mqtt_message_late_discover(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -618,8 +623,9 @@ async def test_if_fires_on_mqtt_message_after_update(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -702,8 +708,9 @@ async def test_no_resubscribe_same_topic(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -754,8 +761,9 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -831,8 +839,9 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -893,8 +902,9 @@ async def test_attach_remove(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     service_calls = []
@@ -959,8 +969,9 @@ async def test_attach_remove_late(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     service_calls = []
@@ -1035,8 +1046,9 @@ async def test_attach_remove_late2(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     service_calls = []
@@ -1092,8 +1104,9 @@ async def test_attach_remove_unknown1(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     remove = await async_initialize_triggers(
@@ -1145,8 +1158,9 @@ async def test_attach_unknown_remove_device_from_registry(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     await async_initialize_triggers(
@@ -1189,8 +1203,9 @@ async def test_attach_remove_config_entry(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac),
+        hass.config_entries.async_entries("tasmota")[0].entry_id,
     )
 
     service_calls = []

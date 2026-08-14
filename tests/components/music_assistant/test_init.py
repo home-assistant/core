@@ -1,22 +1,26 @@
 """Test the Music Assistant integration init."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock
 
 from music_assistant_models.enums import EventType
-from music_assistant_models.errors import ActionUnavailable
+from music_assistant_models.errors import ActionUnavailable, AuthenticationRequired
 
 from homeassistant.components.music_assistant.const import (
     ATTR_CONF_EXPOSE_PLAYER_TO_HA,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .common import setup_integration_from_fixtures, trigger_subscription_callback
 
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
@@ -45,13 +49,13 @@ async def test_remove_config_entry_device(
     music_assistant_client.config.remove_player_config = AsyncMock(
         side_effect=ActionUnavailable
     )
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert music_assistant_client.config.remove_player_config.call_count == 1
     assert response["success"] is False
 
     # test if the removal should be allowed if the device is not in use
     music_assistant_client.config.remove_player_config = AsyncMock()
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"] is True
     await hass.async_block_till_done()
     assert not device_registry.async_get(device_entry.id)
@@ -69,7 +73,7 @@ async def test_remove_config_entry_device(
     assert entity_registry.async_get(entity_id)
     assert hass.states.get(entity_id)
     music_assistant_client.config.remove_player_config = AsyncMock()
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert music_assistant_client.config.remove_player_config.call_count == 0
     assert response["success"] is True
 
@@ -90,7 +94,9 @@ async def test_player_config_expose_to_ha_toggle(
     player_id = "00:00:00:00:00:01"
     assert hass.states.get(entity_id)
     assert entity_registry.async_get(entity_id)
-    device_entry = device_registry.async_get_device({(DOMAIN, player_id)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, player_id), config_entry.entry_id
+    )
     assert device_entry
     assert player_id in config_entry.runtime_data.discovered_players
 
@@ -121,7 +127,9 @@ async def test_player_config_expose_to_ha_toggle(
     assert player_id not in config_entry.runtime_data.discovered_players
     assert not hass.states.get(entity_id)
     assert not entity_registry.async_get(entity_id)
-    device_entry = device_registry.async_get_device({(DOMAIN, player_id)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, player_id), config_entry.entry_id
+    )
     assert not device_entry
 
     # Now test re-adding the player: expose_to_ha = True
@@ -149,5 +157,63 @@ async def test_player_config_expose_to_ha_toggle(
     assert player_id in config_entry.runtime_data.discovered_players
     assert hass.states.get(entity_id)
     assert entity_registry.async_get(entity_id)
-    device_entry = device_registry.async_get_device({(DOMAIN, player_id)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, player_id), config_entry.entry_id
+    )
     assert device_entry
+
+
+async def test_authentication_required_triggers_reauth(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that AuthenticationRequired exception triggers reauth flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Music Assistant",
+        data={"url": "http://localhost:8095", "token": "old_token"},
+        unique_id="test_server_id",
+    )
+    config_entry.add_to_hass(hass)
+
+    music_assistant_client.connect.side_effect = AuthenticationRequired(
+        "Authentication required"
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
+    assert issue_reg.async_get_issue("homeassistant", issue_id)
+
+
+async def test_authentication_required_addon_no_reauth(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that AuthenticationRequired exception does not trigger reauth for addon."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Music Assistant",
+        data={"url": "http://localhost:8095", "token": "old_token"},
+        unique_id="test_server_id",
+    )
+    config_entry.add_to_hass(hass)
+
+    music_assistant_client.server_info.homeassistant_addon = True
+
+    music_assistant_client.connect.side_effect = AuthenticationRequired(
+        "Authentication required"
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
+    assert issue_reg.async_get_issue("homeassistant", issue_id) is None

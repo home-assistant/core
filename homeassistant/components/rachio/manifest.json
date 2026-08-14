@@ -23,6 +23,7 @@
   "homekit": {
     "models": ["Rachio"]
   },
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["rachiopy"],
   "requirements": ["RachioPy==1.1.0"],

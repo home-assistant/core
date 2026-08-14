@@ -1,8 +1,7 @@
 """Support for Xiaomi Cameras (HiSilicon Hi3518e V200)."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from aioftp import Client, StatusCodeError
 from haffmpeg.camera import CameraMjpeg
@@ -118,6 +117,7 @@ class YiCamera(Camera):
             self._attr_is_on = False
             return None
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -135,6 +135,7 @@ class YiCamera(Camera):
 
         return self._last_image
 
+    @override
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         if not self._attr_is_on:

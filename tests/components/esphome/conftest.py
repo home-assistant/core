@@ -1,7 +1,5 @@
 """esphome session fixtures."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import Event
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
@@ -212,7 +210,7 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
             "homeassistant.components.esphome.manager.ReconnectLogic",
             BaseMockReconnectLogic,
         ),
-        patch("homeassistant.components.esphome.APIClient", mock_client),
+        patch("homeassistant.components.esphome.manager.APIClient", mock_client),
         patch("homeassistant.components.esphome.config_flow.APIClient", mock_client),
     ):
         yield mock_client
@@ -560,9 +558,10 @@ async def _mock_generic_device_entry(
 
         async def mock_try_connect(self):
             """Set an event when ReconnectLogic._try_connect has been awaited."""
-            result = await super()._try_connect()
-            try_connect_done.set()
-            return result
+            try:
+                return await super()._try_connect()
+            finally:
+                try_connect_done.set()
 
         def stop_callback(self) -> None:
             """Stop the reconnect logic."""

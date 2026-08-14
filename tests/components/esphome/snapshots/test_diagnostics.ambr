@@ -82,6 +82,7 @@
         'minor': 99,
       }),
       'device_info': dict({
+        'api_encryption_provisionable': False,
         'api_encryption_supported': False,
         'area': dict({
           'area_id': 0,
@@ -105,6 +106,8 @@
         'name': 'test',
         'project_name': '',
         'project_version': '',
+        'serial_proxies': list([
+        ]),
         'suggested_area': '',
         'uses_password': False,
         'voice_assistant_feature_flags': 0,

@@ -5,7 +5,7 @@
       "invalid_identifier": "[%key:component::dwd_weather_warnings::config::error::invalid_identifier%]"
     },
     "error": {
-      "ambiguous_identifier": "The region identifier and device tracker can not be specified together.",
+      "ambiguous_identifier": "The region identifier and device tracker cannot be specified together.",
       "attribute_not_found": "The required attributes 'Latitude' and 'Longitude' were not found in the specified device tracker.",
       "entity_not_found": "The specified device tracker entity was not found.",
       "invalid_identifier": "The specified region identifier / device tracker is invalid.",

@@ -2,6 +2,7 @@
 
 import logging
 from queue import Empty, Full, Queue
+from typing import override
 
 import temescal
 import voluptuous as vol
@@ -72,6 +73,7 @@ class LGSoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
@@ -106,5 +108,5 @@ class LGSoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(DATA_SCHEMA),
-            errors=errors if errors else {},
+            errors=errors or {},
         )

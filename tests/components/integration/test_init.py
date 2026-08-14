@@ -151,8 +151,8 @@ async def test_setup_and_remove_config_entry(
 async def test_entry_changed(hass: HomeAssistant, platform) -> None:
     """Test reconfiguring."""
 
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     def _create_mock_entity(domain: str, name: str) -> er.RegistryEntry:
         config_entry = MockConfigEntry(
@@ -213,94 +213,6 @@ async def test_entry_changed(hass: HomeAssistant, platform) -> None:
     assert integration_entity_entry.device_id == valid_entry.device_id
 
 
-async def test_device_cleaning(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test for source entity device for Integration."""
-
-    # Source entity device config entry
-    source_config_entry = MockConfigEntry()
-    source_config_entry.add_to_hass(hass)
-
-    # Device entry of the source entity
-    source_device1_entry = device_registry.async_get_or_create(
-        config_entry_id=source_config_entry.entry_id,
-        identifiers={("sensor", "identifier_test1")},
-        connections={("mac", "30:31:32:33:34:01")},
-    )
-
-    # Source entity registry
-    source_entity = entity_registry.async_get_or_create(
-        "sensor",
-        "test",
-        "source",
-        config_entry=source_config_entry,
-        device_id=source_device1_entry.id,
-    )
-    await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
-
-    # Configure the configuration entry for Integration
-    integration_config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            "method": "trapezoidal",
-            "name": "Integration",
-            "round": 1.0,
-            "source": "sensor.test_source",
-            "unit_prefix": "k",
-            "unit_time": "min",
-            "max_sub_interval": {"minutes": 1},
-        },
-        title="Integration",
-    )
-    integration_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Confirm the link between the source entity device and the integration sensor
-    integration_entity = entity_registry.async_get("sensor.integration")
-    assert integration_entity is not None
-    assert integration_entity.device_id == source_entity.device_id
-
-    # Device entry incorrectly linked to Integration config entry
-    device_registry.async_get_or_create(
-        config_entry_id=integration_config_entry.entry_id,
-        identifiers={("sensor", "identifier_test2")},
-        connections={("mac", "30:31:32:33:34:02")},
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=integration_config_entry.entry_id,
-        identifiers={("sensor", "identifier_test3")},
-        connections={("mac", "30:31:32:33:34:03")},
-    )
-    await hass.async_block_till_done()
-
-    # Before reloading the config entry, two devices are expected to be linked
-    devices_before_reload = device_registry.devices.get_devices_for_config_entry_id(
-        integration_config_entry.entry_id
-    )
-    assert len(devices_before_reload) == 2
-
-    # Config entry reload
-    await hass.config_entries.async_reload(integration_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Confirm the link between the source entity device and the integration sensor after reload
-    integration_entity = entity_registry.async_get("sensor.integration")
-    assert integration_entity is not None
-    assert integration_entity.device_id == source_entity.device_id
-
-    # After reloading the config entry, only one linked device is expected
-    devices_after_reload = device_registry.devices.get_devices_for_config_entry_id(
-        integration_config_entry.entry_id
-    )
-    assert len(devices_after_reload) == 0
-
-
 async def test_async_handle_source_entity_changes_source_entity_removed(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -310,7 +222,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     sensor_device: dr.DeviceEntry,
     sensor_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test the integration config entry is removed when the source entity is removed."""
+    """Test config entry is removed when source entity is removed."""
     assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -322,15 +234,12 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
 
     events = track_entity_registry_actions(hass, integration_entity_entry.entity_id)
 
-    # Remove the source sensor's config entry from the device, this removes the
-    # source sensor
+    # Remove the source device, this removes the source sensor
     with patch(
         "homeassistant.components.integration.async_unload_entry",
         wraps=integration.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            sensor_device.id, remove_config_entry_id=sensor_config_entry.entry_id
-        )
+        device_registry.async_remove_device(sensor_device.id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()
@@ -354,18 +263,10 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     integration_config_entry: MockConfigEntry,
-    sensor_config_entry: ConfigEntry,
     sensor_device: dr.DeviceEntry,
     sensor_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test the integration config entry is removed when the source entity is removed."""
-    # Add another config entry to the sensor device
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
-    device_registry.async_update_device(
-        sensor_device.id, add_config_entry_id=other_config_entry.entry_id
-    )
-
+    """Test the source entity is removed but the source device is not removed."""
     assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -377,15 +278,12 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
 
     events = track_entity_registry_actions(hass, integration_entity_entry.entity_id)
 
-    # Remove the source sensor's config entry from the device, this removes the
-    # source sensor
+    # Remove the source entity, this does not remove the source device
     with patch(
         "homeassistant.components.integration.async_unload_entry",
         wraps=integration.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            sensor_device.id, remove_config_entry_id=sensor_config_entry.entry_id
-        )
+        entity_registry.async_remove(sensor_entity_entry.entity_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()
@@ -393,6 +291,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     # Check that the entity is no longer linked to the source device
     integration_entity_entry = entity_registry.async_get("sensor.my_integration")
     assert integration_entity_entry.device_id is None
+
+    # Check that the source device is not removed
+    assert device_registry.async_get(sensor_device.id) is not None
 
     # Check that the integration config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
@@ -559,7 +460,7 @@ async def test_migration_1_1(
     sensor_entity_entry: er.RegistryEntry,
     sensor_device: dr.DeviceEntry,
 ) -> None:
-    """Test migration from v1.1 removes integration config entry from device."""
+    """Test migration from v1.1 keeps the helper entity linked to the source device."""
 
     integration_config_entry = MockConfigEntry(
         data={},
@@ -579,22 +480,13 @@ async def test_migration_1_1(
     )
     integration_config_entry.add_to_hass(hass)
 
-    # Add the helper config entry to the device
-    device_registry.async_update_device(
-        sensor_device.id, add_config_entry_id=integration_config_entry.entry_id
-    )
-
-    # Check preconditions
-    sensor_device = device_registry.async_get(sensor_device.id)
-    assert integration_config_entry.entry_id in sensor_device.config_entries
-
     await hass.config_entries.async_setup(integration_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert integration_config_entry.state is ConfigEntryState.LOADED
 
-    # Check that the helper config entry is removed from the device and the helper
-    # entity is linked to the source device
+    # Check that the helper config entry is not in the device and the helper entity
+    # is linked to the source device
     sensor_device = device_registry.async_get(sensor_device.id)
     assert integration_config_entry.entry_id not in sensor_device.config_entries
     integration_entity_entry = entity_registry.async_get("sensor.my_integration")

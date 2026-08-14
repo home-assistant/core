@@ -7,28 +7,21 @@ import pytest
 
 from homeassistant import config
 from homeassistant.components.template import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(2, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
-                },
-            },
             "template": [
                 {
                     "trigger": {"platform": "event", "event_type": "event_1"},
@@ -38,10 +31,16 @@ from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_p
                     },
                 },
                 {
-                    "sensor": {
-                        "name": "top level state",
-                        "state": "{{ states.sensor.top_level.state }} + 2",
-                    },
+                    "sensor": [
+                        {
+                            "name": "state",
+                            "state": "{{ states.sensor.test_sensor.state }}",
+                        },
+                        {
+                            "name": "top level state",
+                            "state": "{{ states.sensor.top_level.state }} + 2",
+                        },
+                    ],
                     "binary_sensor": {
                         "name": "top level state",
                         "state": "{{ states.sensor.top_level.state == 'init' }}",
@@ -80,26 +79,26 @@ async def test_reloadable(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.top_level_2").state == "reload"
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(2, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "event_1"},
+                    "sensor": {
+                        "name": "top level",
+                        "state": "{{ trigger.event.data.source }}",
                     },
                 },
-            },
-            "template": {
-                "trigger": {"platform": "event", "event_type": "event_1"},
-                "sensor": {
-                    "name": "top level",
-                    "state": "{{ trigger.event.data.source }}",
+                {
+                    "sensor": {
+                        "name": "state",
+                        "state": "{{ states.sensor.test_sensor.state }}",
+                    },
                 },
-            },
+            ],
         },
     ],
 )
@@ -118,17 +117,15 @@ async def test_reloadable_can_remove(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 1
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
+            "template": {
+                "sensor": {
+                    "name": "state",
+                    "state": "{{ states.sensor.test_sensor.state }}",
                 },
             }
         },
@@ -142,22 +139,22 @@ async def test_reloadable_stops_on_invalid_config(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.state").state == "mytest"
     assert len(hass.states.async_all()) == 2
 
-    await async_yaml_patch_helper(hass, "configuration.yaml.corrupt")
+    with pytest.raises(HomeAssistantError, match="Error reloading template entities: "):
+        await async_yaml_patch_helper(hass, "configuration.yaml.corrupt")
+
     assert hass.states.get("sensor.state").state == "mytest"
     assert len(hass.states.async_all()) == 2
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
+            "template": {
+                "sensor": {
+                    "name": "state",
+                    "state": "{{ states.sensor.test_sensor.state }}",
                 },
             }
         },
@@ -165,7 +162,7 @@ async def test_reloadable_stops_on_invalid_config(hass: HomeAssistant) -> None:
 )
 @pytest.mark.usefixtures("start_ha")
 async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> None:
-    """Test we can still setup valid sensors when configuration.yaml has a broken entry."""
+    """Test we can still setup valid sensors when config has a broken entry."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
     assert hass.states.get("sensor.state").state == "mytest"
@@ -179,17 +176,19 @@ async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> N
     assert float(hass.states.get("sensor.combined_sensor_energy_usage").state) == 0
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
+            "template": {
+                "sensor": {
+                    "name": "state",
+                    "state": "{{ states.sensor.test_sensor.state }}",
+                },
+                "binary_sensor": {
+                    "name": "state",
+                    "state": "{{ states.sensor.test_sensor.state == 'foo' }}",
                 },
             }
         },
@@ -199,20 +198,6 @@ async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> N
 async def test_reloadable_multiple_platforms(hass: HomeAssistant) -> None:
     """Test that we can reload."""
     hass.states.async_set("sensor.test_sensor", "mytest")
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
-                },
-            }
-        },
-    )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.state").state == "mytest"
     assert hass.states.get("binary_sensor.state").state == "off"
@@ -226,15 +211,15 @@ async def test_reloadable_multiple_platforms(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.top_level_2") is not None
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {"value_template": "{{ 1 }}"},
+            "template": {
+                "sensor": {
+                    "name": "state",
+                    "state": "{{ 1 }}",
                 },
             }
         },
@@ -348,10 +333,12 @@ async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
                 "name": "My template",
                 "state": "{{ 'on' }}",
                 "options": "{{ ['off', 'on', 'auto'] }}",
+                "select_option": [],
             },
             {
                 "state": "{{ 'on' }}",
                 "options": "{{ ['off', 'on', 'auto'] }}",
+                "select_option": [],
             },
         ),
         (
@@ -503,6 +490,116 @@ async def test_change_device(
     )
 
 
+async def test_setup_removes_stale_helper_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Setup removes stale devices the helper owns and relinks their entities.
+
+    A device is owned by a single config entry now, so a template entry that created a
+    device for a previously selected source device has that leftover removed on setup and
+    its entities relinked to the current source device.
+    """
+    source_entry = MockConfigEntry()
+    source_entry.add_to_hass(hass)
+    source_device = device_registry.async_get_or_create(
+        config_entry_id=source_entry.entry_id,
+        identifiers={("test", "source")},
+    )
+
+    template_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{10}}",
+            "template_type": "sensor",
+            "device_id": source_device.id,
+        },
+        title="Template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    # A leftover device owned by the template config entry, with a helper entity on it
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=template_config_entry.entry_id,
+        identifiers={("test", "stale")},
+    )
+    stale_entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "stale",
+        config_entry=template_config_entry,
+        device_id=stale_device.id,
+    )
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The stale device is removed, its entity relinked to the source device, and the
+    # template config entry is left owning no devices.
+    assert device_registry.async_get(stale_device.id) is None
+    assert (
+        entity_registry.async_get(stale_entity.entity_id).device_id == source_device.id
+    )
+    assert (
+        dr.async_entries_for_config_entry(
+            device_registry, template_config_entry.entry_id
+        )
+        == []
+    )
+
+
+async def test_setup_removes_stale_helper_device_without_source_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Setup sweeps leftover helper devices even when no source device is selected.
+
+    After the user removes the device option, a leftover device the entry created for a
+    previously selected source device is still removed on setup and its entity left without
+    a device.
+    """
+    template_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{10}}",
+            "template_type": "sensor",
+        },
+        title="Template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    # A leftover device owned by the template config entry, with a helper entity on it
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=template_config_entry.entry_id,
+        identifiers={("test", "stale")},
+    )
+    stale_entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "stale",
+        config_entry=template_config_entry,
+        device_id=stale_device.id,
+    )
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The stale device is removed, its entity left without a device, and the template config
+    # entry is left owning no devices.
+    assert device_registry.async_get(stale_device.id) is None
+    assert entity_registry.async_get(stale_entity.entity_id).device_id is None
+    assert (
+        dr.async_entries_for_config_entry(
+            device_registry, template_config_entry.entry_id
+        )
+        == []
+    )
+
+
 async def test_fail_non_numerical_number_settings(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -538,3 +635,104 @@ async def test_fail_non_numerical_number_settings(
         "The 'My template' number template needs to be reconfigured, "
         "max must be a number, got '{{ 100 }}'" in caplog.text
     )
+
+
+async def test_migration_1_1(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration from v1.1 does not add the template config entry to the device."""
+
+    device_config_entry = MockConfigEntry()
+    device_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "sensor",
+            "state": "{{ 'foo' }}",
+            "device_id": device_entry.id,
+        },
+        title="My template",
+        version=1,
+        minor_version=1,
+    )
+    template_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert template_config_entry.state is ConfigEntryState.LOADED
+
+    # Check that the helper config entry is not in the device and the helper
+    # entity is linked to the source device
+    device_entry = device_registry.async_get(device_entry.id)
+    assert template_config_entry.entry_id not in device_entry.config_entries
+    template_entity_entry = entity_registry.async_get("sensor.my_template")
+    assert template_entity_entry.device_id == device_entry.id
+
+    assert template_config_entry.version == 2
+    assert template_config_entry.minor_version == 1
+
+
+async def test_migration_1_2(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from v1.2 renames the advanced_options section."""
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "sensor",
+            "state": "{{ 'foo' }}",
+            "advanced_options": {"availability": "{{ True }}"},
+        },
+        title="My template",
+        version=1,
+        minor_version=2,
+    )
+    template_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert template_config_entry.state is ConfigEntryState.LOADED
+    assert "advanced_options" not in template_config_entry.options
+    assert template_config_entry.options["additional_options"] == {
+        "availability": "{{ True }}"
+    }
+
+    assert template_config_entry.version == 2
+    assert template_config_entry.minor_version == 1
+
+
+async def test_migration_from_future_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from future version."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "hello",
+            "template_type": "sensor",
+            "state": "{{ 'foo' }}",
+        },
+        title="My template",
+        version=3,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR

@@ -46,7 +46,7 @@ def mock_update_empty_fixture(routes_mock: AsyncMock) -> AsyncMock:
 @pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor(hass: HomeAssistant) -> None:
     """Test that sensor works."""
-    assert hass.states.get("sensor.google_travel_time").state == "27"
+    assert hass.states.get("sensor.google_travel_time").state == "27.0"
     assert (
         hass.states.get("sensor.google_travel_time").attributes["attribution"]
         == "Powered by Google"
@@ -74,6 +74,25 @@ async def test_sensor(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("routes_mock")
+async def test_sensor_name_from_entry_title(hass: HomeAssistant) -> None:
+    """Test that the sensor name is taken from the config entry title."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home to work",
+        data=MOCK_CONFIG,
+        options=DEFAULT_OPTIONS,
+        entry_id="test",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.google_travel_time_home_to_work"))
+    assert state.name == "Google Travel Time Home to work"
+    assert state.state == "27.0"
+
+
 @pytest.mark.usefixtures("mock_update_empty", "mock_config")
 @pytest.mark.parametrize(
     ("data", "options"),
@@ -99,7 +118,7 @@ async def test_sensor_empty_response(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor_departure_time(hass: HomeAssistant) -> None:
     """Test that sensor works for departure time."""
-    assert hass.states.get("sensor.google_travel_time").state == "27"
+    assert hass.states.get("sensor.google_travel_time").state == "27.0"
 
 
 @pytest.mark.parametrize(
@@ -120,7 +139,7 @@ async def test_sensor_departure_time(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor_arrival_time(hass: HomeAssistant) -> None:
     """Test that sensor works for arrival time."""
-    assert hass.states.get("sensor.google_travel_time").state == "27"
+    assert hass.states.get("sensor.google_travel_time").state == "27.0"
 
 
 @pytest.mark.parametrize(

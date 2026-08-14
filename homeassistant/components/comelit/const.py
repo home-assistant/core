@@ -9,9 +9,9 @@ from aiocomelit.api import (
 )
 from aiocomelit.const import BRIDGE, VEDO
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
-ObjectClassType = (
+type ObjectClassType = (
     ComelitSerialBridgeObject | ComelitVedoAreaObject | ComelitVedoZoneObject
 )
 
@@ -19,6 +19,7 @@ ObjectClassType = (
 DOMAIN = "comelit"
 DEFAULT_PORT = 80
 DEVICE_TYPE_LIST = [BRIDGE, VEDO]
+CONF_VEDO_PIN = "vedo_pin"
 
 SCAN_INTERVAL = 5
 

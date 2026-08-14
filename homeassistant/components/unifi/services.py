@@ -3,11 +3,13 @@
 from collections.abc import Mapping
 from typing import Any
 
+import aiounifi
 from aiounifi.models.client import ClientReconnectRequest, ClientRemoveRequest
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
@@ -52,10 +54,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
 async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     """Try to get wireless client to reconnect to Wi-Fi."""
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(data[ATTR_DEVICE_ID])
+    device_entry = device_registry.async_get(
+        data[ATTR_DEVICE_ID], include_child_devices=False
+    )
 
     if device_entry is None:
-        return
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="reconnect_client_device_not_found",
+        )
 
     mac = ""
     for connection in device_entry.connections:
@@ -64,7 +71,10 @@ async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -
             break
 
     if mac == "":
-        return
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="reconnect_client_no_mac",
+        )
 
     for config_entry in hass.config_entries.async_loaded_entries(DOMAIN):
         if (
@@ -74,7 +84,13 @@ async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -
         ):
             continue
 
-        await hub.api.request(ClientReconnectRequest.create(mac))
+        try:
+            await hub.api.request(ClientReconnectRequest.create(mac))
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="reconnect_client_request_failed",
+            ) from err
 
 
 async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
@@ -104,4 +120,10 @@ async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> 
             clients_to_remove.append(client.mac)
 
         if clients_to_remove:
-            await hub.api.request(ClientRemoveRequest.create(clients_to_remove))
+            try:
+                await hub.api.request(ClientRemoveRequest.create(clients_to_remove))
+            except aiounifi.AiounifiException as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="remove_clients_request_failed",
+                ) from err

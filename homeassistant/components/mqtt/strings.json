@@ -1,10 +1,10 @@
 {
   "config": {
     "abort": {
-      "addon_connection_failed": "Failed to connect to the {addon} add-on. Check the add-on status and try again later.",
-      "addon_info_failed": "Failed get info for the {addon} add-on.",
-      "addon_install_failed": "Failed to install the {addon} add-on.",
-      "addon_start_failed": "Failed to start the {addon} add-on.",
+      "addon_connection_failed": "Failed to connect to the {addon} app. Check the app status and try again later.",
+      "addon_info_failed": "Failed get info for the {addon} app.",
+      "addon_install_failed": "Failed to install the {addon} app.",
+      "addon_start_failed": "Failed to start the {addon} app.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
@@ -26,53 +26,60 @@
     "step": {
       "broker": {
         "data": {
-          "advanced_options": "Advanced options",
           "broker": "Broker",
-          "certificate": "Upload custom CA certificate file",
-          "client_cert": "Upload client certificate file",
-          "client_id": "Client ID (leave empty to randomly generated one)",
-          "client_key": "Upload private key file",
-          "client_key_password": "[%key:common::config_flow::data::password%]",
-          "keepalive": "The time between sending keep alive messages",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "protocol": "MQTT protocol",
-          "set_ca_cert": "Broker certificate validation",
-          "set_client_cert": "Use a client certificate",
-          "tls_insecure": "Ignore broker certificate validation",
-          "transport": "MQTT transport",
-          "username": "[%key:common::config_flow::data::username%]",
-          "ws_headers": "WebSocket headers in JSON format",
-          "ws_path": "WebSocket path"
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "advanced_options": "Enable and select **Next** to set advanced options.",
           "broker": "The hostname or IP address of your MQTT broker.",
-          "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
-          "client_cert": "The client certificate to authenticate against your MQTT broker.",
-          "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
-          "client_key": "The private key file that belongs to your client certificate.",
-          "client_key_password": "The password for the private key file (if set).",
-          "keepalive": "A value less than 90 seconds is advised.",
           "password": "The password to log in to your MQTT broker.",
           "port": "The port your MQTT broker listens to. For example 1883.",
-          "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
-          "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
-          "set_client_cert": "Enable and select **Next** to set a client certificate and private key to authenticate against your MQTT broker.",
-          "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
-          "transport": "The transport to be used for the connection to your MQTT broker.",
-          "username": "The username to log in to your MQTT broker.",
-          "ws_headers": "The WebSocket headers to pass through the WebSocket-based connection to your MQTT broker.",
-          "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
+          "protocol": "The MQTT protocol version that is used. Note that Home Assistant will silently change to version 5 if your broker supports it.",
+          "username": "The username to log in to your MQTT broker."
         },
-        "description": "Please enter the connection information of your MQTT broker."
+        "description": "Please enter the connection information of your MQTT broker.",
+        "sections": {
+          "other_settings": {
+            "data": {
+              "certificate": "Upload custom CA certificate file",
+              "client_cert": "Upload client certificate file",
+              "client_id": "Client ID (leave empty for a randomly generated one)",
+              "client_key": "Upload private key file",
+              "client_key_password": "[%key:common::config_flow::data::password%]",
+              "keepalive": "The time between sending keep alive messages",
+              "set_ca_cert": "Broker certificate validation",
+              "set_client_cert": "Use a client certificate",
+              "tls_insecure": "Ignore broker certificate validation",
+              "transport": "MQTT transport",
+              "ws_headers": "WebSocket headers in JSON format",
+              "ws_path": "WebSocket path"
+            },
+            "data_description": {
+              "certificate": "The custom CA certificate file to validate your MQTT broker's certificate.",
+              "client_cert": "The client certificate to authenticate against your MQTT broker.",
+              "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
+              "client_key": "The private key file that belongs to your client certificate.",
+              "client_key_password": "The password for the private key file (if set).",
+              "keepalive": "A value less than 90 seconds is advised. Defaults to 60 seconds.",
+              "set_ca_cert": "When already set to **Custom**, a custom CA validation certificate is configured. Select **Auto** for automatic CA validation, or upload a custom CA certificate, to allow validating your MQTT broker's certificate.",
+              "set_client_cert": "When already selected, client certificate authentication is enabled. Upload a client certificate and key to enable.",
+              "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
+              "transport": "The transport to be used for the connection to your MQTT broker.",
+              "ws_headers": "The WebSocket headers to pass through the WebSocket-based connection to your MQTT broker.",
+              "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
+            },
+            "name": "Other settings"
+          }
+        }
       },
       "hassio_confirm": {
-        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
-        "title": "MQTT broker via Home Assistant add-on"
+        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the {addon} app?",
+        "title": "MQTT broker via Home Assistant app"
       },
       "install_addon": {
-        "title": "Installing add-on"
+        "title": "Installing app"
       },
       "reauth_confirm": {
         "data": {
@@ -83,16 +90,16 @@
           "password": "[%key:component::mqtt::config::step::broker::data_description::password%]",
           "username": "[%key:component::mqtt::config::step::broker::data_description::username%]"
         },
-        "description": "The MQTT broker reported an authentication error. Please confirm the brokers correct username and password.",
+        "description": "The MQTT broker reported an authentication error. Please confirm the broker's correct username and password.",
         "title": "Re-authentication required with the MQTT broker"
       },
       "start_addon": {
-        "title": "Starting add-on"
+        "title": "Starting app"
       },
       "user": {
         "description": "Please choose how you want to connect to the MQTT broker:",
         "menu_options": {
-          "addon": "Use the official {addon} add-on.",
+          "addon": "Use the official {addon} app.",
           "broker": "Manually enter the MQTT broker connection details"
         }
       }
@@ -162,7 +169,7 @@
             "component": "Entity"
           },
           "data_description": {
-            "component": "Select the entity you want to delete. Minimal one entity is required."
+            "component": "Select the entity you want to delete. At least one entity is required."
           },
           "description": "Delete an entity. The entity will be removed from the device. Removing an entity will break any automations or scripts that depend on it.",
           "title": "Delete entity"
@@ -184,7 +191,18 @@
           },
           "description": "Enter the MQTT device details:",
           "sections": {
-            "advanced_settings": {
+            "mqtt_settings": {
+              "data": {
+                "message_expiry_interval": "Message Expiry Interval",
+                "qos": "QoS"
+              },
+              "data_description": {
+                "message_expiry_interval": "Retention time interval for published message.",
+                "qos": "The Quality of Service value the device's entities should use."
+              },
+              "name": "MQTT settings"
+            },
+            "other_settings": {
               "data": {
                 "hw_version": "Hardware version",
                 "sw_version": "Software version"
@@ -193,16 +211,7 @@
                 "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
                 "sw_version": "The software version of the device. E.g. '2025.1.0'."
               },
-              "name": "Advanced device settings"
-            },
-            "mqtt_settings": {
-              "data": {
-                "qos": "QoS"
-              },
-              "data_description": {
-                "qos": "The Quality of Service value the device's entities should use."
-              },
-              "name": "MQTT settings"
+              "name": "Other device settings"
             }
           },
           "title": "Configure MQTT device details"
@@ -242,12 +251,15 @@
             "fan_feature_speed": "Speed support",
             "image_processing_mode": "Image processing mode",
             "options": "Add option",
+            "reports_position": "Reports position",
             "schema": "Schema",
             "state_class": "State class",
             "suggested_display_precision": "Suggested display precision",
             "supported_features": "Supported features",
             "temperature_unit": "Temperature unit",
-            "unit_of_measurement": "Unit of measurement"
+            "unit_of_measurement": "Unit of measurement",
+            "water_heater_feature_current_temperature": "[%key:component::mqtt::config_subentries::device::step::entity_platform_config::data::climate_feature_current_temperature%]",
+            "water_heater_feature_power": "[%key:component::mqtt::config_subentries::device::step::entity_platform_config::data::climate_feature_power%]"
           },
           "data_description": {
             "alarm_control_panel_code_mode": "Configures how the alarm control panel validates the code. A local code is configured with the entity and is validated by Home Assistant. A remote code is sent to the device and validated remotely. [Learn more.]({url}#code)",
@@ -269,23 +281,26 @@
             "fan_feature_speed": "The fan supports multiple speeds.",
             "image_processing_mode": "Select how the image data is received.",
             "options": "Options for allowed sensor state values. The sensor’s Device class must be set to Enumeration. The 'Options' setting cannot be used together with State class or Unit of measurement.",
+            "reports_position": "Set this option if the valve reports the position or supports setting the position. Enabling this option will cause the position to be published instead of a payload defined by payload \"open\", payload \"close\" or payload \"stop\". When receiving messages, state topic will accept numeric payloads or one of the configured state messages.",
             "schema": "The schema to use. [Learn more.]({url}#comparison-of-light-mqtt-schemas)",
-            "state_class": "The [State class]({available_state_classes_url}) of the sensor. [Learn more.]({url}#state_class)",
+            "state_class": "The [state class]({available_state_classes_url}) of the sensor. [Learn more.]({url}#state_class)",
             "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more.]({url}#suggested_display_precision)",
             "supported_features": "The features that the entity supports.",
-            "temperature_unit": "This determines the native unit of measurement the MQTT climate device works with.",
-            "unit_of_measurement": "Defines the unit of measurement, if any."
+            "temperature_unit": "This determines the native unit of measurement the MQTT device works with.",
+            "unit_of_measurement": "Defines the unit of measurement, if any.",
+            "water_heater_feature_current_temperature": "The water heater supports reporting the current temperature.",
+            "water_heater_feature_power": "The water heater supports the power \"on\" and \"off\" commands."
           },
           "description": "Please configure specific details for {platform} entity \"{entity}\":",
           "sections": {
-            "advanced_settings": {
+            "other_settings": {
               "data": {
                 "suggested_display_precision": "Suggested display precision"
               },
               "data_description": {
                 "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more.]({url}#suggested_display_precision)"
               },
-              "name": "Advanced options"
+              "name": "Other settings"
             }
           },
           "title": "Configure MQTT device \"{mqtt_device}\""
@@ -356,6 +371,8 @@
             "payload_on": "Payload \"on\"",
             "payload_press": "Payload \"press\"",
             "payload_reset": "Payload \"reset\"",
+            "position_closed": "Position \"closed\"",
+            "position_open": "Position \"open\"",
             "qos": "QoS",
             "red_template": "Red template",
             "retain": "Retain",
@@ -368,6 +385,7 @@
             "support_duration": "Duration support",
             "support_volume_set": "Set volume support",
             "supported_color_modes": "Supported color modes",
+            "timezone": "Time zone",
             "url_template": "URL template",
             "url_topic": "URL topic",
             "value_template": "Value template"
@@ -396,7 +414,7 @@
             "min": "Minimum value. [Learn more.]({url}#min)",
             "mode": "Control how the number should be displayed in the UI. [Learn more.]({url}#mode)",
             "mode_command_template": "[Template]({command_templating_url}) to define the operation mode to be sent to the operation mode command topic. [Learn more.]({url}#mode_command_template)",
-            "mode_command_topic": "The MQTT topic to publish commands to change the climate operation mode. [Learn more.]({url}#mode_command_topic)",
+            "mode_command_topic": "The MQTT topic to publish commands to change the operation mode. [Learn more.]({url}#mode_command_topic)",
             "mode_state_template": "Defines a [template]({value_templating_url}) to extract the operation mode state. [Learn more.]({url}#mode_state_template)",
             "mode_state_topic": "The MQTT topic subscribed to receive operation mode state messages. [Learn more.]({url}#mode_state_topic)",
             "modes": "A list of supported operation modes. [Learn more.]({url}#modes)",
@@ -407,6 +425,8 @@
             "payload_on": "The payload that represents the \"on\" state.",
             "payload_press": "The payload to send when the button is triggered.",
             "payload_reset": "The payload received at the state topic that resets the entity to an unknown state.",
+            "position_closed": "Number which represents closed position. The valve’s position will be scaled to the (position \"closed\"…position \"open\") range when an action is performed and scaled back when a value is received.",
+            "position_open": "Number which represents open position. The valve’s position will be scaled to the (position \"closed\"…position \"open\") range when an action is performed and scaled back when a value is received.",
             "qos": "The QoS value a {platform} entity should use.",
             "red_template": "[Template]({value_templating_url}) to extract red color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
@@ -418,35 +438,13 @@
             "support_duration": "The siren supports setting a duration in second. The `duration` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_duration)",
             "support_volume_set": "The siren supports setting a volume. The `volume_level` variable will become available for use in the \"Command template\" setting. [Learn more.]({url}#support_volume_set)",
             "supported_color_modes": "A list of color modes supported by the light. Possible color modes are On/Off, Brightness, Color temperature, HS, XY, RGB, RGBW, RGBWW, White. Note that if On/Off or Brightness are used, that must be the only value in the list. [Learn more.]({url}#supported_color_modes)",
+            "timezone": "Set to a valid [IANA time zone identifier]({tz_abbr_url}). Do not set this option if the date/time structure is providing time zone information via the status update.",
             "url_template": "[Template]({value_templating_url}) to extract an URL from the received URL topic payload value. [Learn more.]({url}#url_template)",
             "url_topic": "The MQTT topic subscribed to receive messages containing the image URL. [Learn more.]({url}#url_topic)",
             "value_template": "Defines a [template]({value_templating_url}) to extract the {platform} entity value. [Learn more.]({url}#value_template)"
           },
           "description": "Please configure MQTT specific details for {platform} entity \"{entity}\":",
           "sections": {
-            "advanced_settings": {
-              "data": {
-                "expire_after": "Expire after",
-                "flash": "Flash support",
-                "flash_time_long": "Flash time long",
-                "flash_time_short": "Flash time short",
-                "max_kelvin": "Max Kelvin",
-                "min_kelvin": "Min Kelvin",
-                "off_delay": "OFF delay",
-                "transition": "Transition support"
-              },
-              "data_description": {
-                "expire_after": "If set, it defines the number of seconds after the sensor’s state expires, if it’s not updated. After expiry, the sensor’s state becomes unavailable. If not set, the sensor's state never expires. [Learn more.]({url}#expire_after)",
-                "flash": "Enable the flash feature for this light",
-                "flash_time_long": "The duration, in seconds, of a \"long\" flash.",
-                "flash_time_short": "The duration, in seconds, of a \"short\" flash.",
-                "max_kelvin": "The maximum color temperature in Kelvin.",
-                "min_kelvin": "The minimum color temperature in Kelvin.",
-                "off_delay": "For sensors that only send \"on\" state updates (like PIRs), this variable sets a delay in seconds after which the sensor’s state will be updated back to \"off\".",
-                "transition": "Enable the transition feature for this light"
-              },
-              "name": "Advanced settings"
-            },
             "alarm_control_panel_payload_settings": {
               "data": {
                 "payload_arm_away": "Payload \"arm away\"",
@@ -719,8 +717,8 @@
               "data_description": {
                 "payload_reset_percentage": "A special payload that resets the fan speed percentage state attribute to unknown when received at the percentage state topic.",
                 "percentage_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the percentage command topic.",
-                "percentage_command_topic": "The MQTT topic to publish commands to change the fan speed state based on a percentage. [Learn more.]({url}#percentage_command_topic)",
-                "percentage_state_topic": "The MQTT topic subscribed to receive fan speed based on percentage. [Learn more.]({url}#percentage_state_topic)",
+                "percentage_command_topic": "The MQTT topic to publish commands to change the fan speed state based on a percentage setting. The value shall be in the range from \"speed range min\" to \"speed range max\". [Learn more.]({url}#percentage_command_topic)",
+                "percentage_state_topic": "The MQTT topic subscribed to receive fan speed state. This is a value in the range from \"speed range min\" to \"speed range max\". [Learn more.]({url}#percentage_state_topic)",
                 "percentage_value_template": "Defines a [template]({value_templating_url}) to extract the speed percentage value.",
                 "speed_range_max": "The maximum of numeric output range (representing 100 %). The percentage step is 100 / number of speeds within the \"speed range\".",
                 "speed_range_min": "The minimum of numeric output range (off not included, so speed_range_min - 1 represents 0 %). The percentage step is 100 / the number of speeds within the \"speed range\"."
@@ -902,14 +900,37 @@
               },
               "name": "Lock payload settings"
             },
-            "siren_advanced_settings": {
+            "other_settings": {
+              "data": {
+                "expire_after": "Expire after",
+                "flash": "Flash support",
+                "flash_time_long": "Flash time long",
+                "flash_time_short": "Flash time short",
+                "max_kelvin": "Max Kelvin",
+                "min_kelvin": "Min Kelvin",
+                "off_delay": "OFF delay",
+                "transition": "Transition support"
+              },
+              "data_description": {
+                "expire_after": "If set, it defines the number of seconds after the sensor’s state expires, if it’s not updated. After expiry, the sensor’s state becomes unavailable. If not set, the sensor's state never expires. [Learn more.]({url}#expire_after)",
+                "flash": "Enable the flash feature for this light",
+                "flash_time_long": "The duration, in seconds, of a \"long\" flash.",
+                "flash_time_short": "The duration, in seconds, of a \"short\" flash.",
+                "max_kelvin": "The maximum color temperature in Kelvin.",
+                "min_kelvin": "The minimum color temperature in Kelvin.",
+                "off_delay": "For sensors that only send \"on\" state updates (like PIRs), this variable sets a delay in seconds after which the sensor’s state will be updated back to \"off\".",
+                "transition": "Enable the transition feature for this light"
+              },
+              "name": "Other settings"
+            },
+            "siren_other_settings": {
               "data": {
                 "command_off_template": "Command \"off\" template"
               },
               "data_description": {
                 "command_off_template": "The [template]({command_templating_url}) for \"off\" state changes. By default the \"[Command template]({url}#command_template)\" will be used.  [Learn more.]({url}#command_off_template)"
               },
-              "name": "Advanced siren settings"
+              "name": "Other siren settings"
             },
             "target_humidity_settings": {
               "data": {
@@ -951,13 +972,13 @@
                 "temperature_state_topic": "Temperature state topic"
               },
               "data_description": {
-                "initial": "The climate initializes with this target temperature.",
+                "initial": "The device initializes with this target temperature.",
                 "max_temp": "The maximum target temperature that can be set.",
                 "min_temp": "The minimum target temperature that can be set.",
                 "precision": "The precision in degrees the thermostat is working at.",
                 "temp_step": "The target temperature step in degrees Celsius or Fahrenheit.",
                 "temperature_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the temperature command topic.",
-                "temperature_command_topic": "The MQTT topic to publish commands to change the climate target temperature. [Learn more.]({url}#temperature_command_topic)",
+                "temperature_command_topic": "The MQTT topic to publish commands to change the target temperature. [Learn more.]({url}#temperature_command_topic)",
                 "temperature_high_command_template": "A [template]({command_templating_url}) to compose the payload to be published at the upper temperature command topic.",
                 "temperature_high_command_topic": "The MQTT topic to publish commands to change the climate upper target temperature. [Learn more.]({url}#temperature_high_command_topic)",
                 "temperature_high_state_template": "A [template]({value_templating_url}) to render the value received on the upper temperature state topic with.",
@@ -970,6 +991,57 @@
                 "temperature_state_topic": "The MQTT topic to subscribe for changes of the target temperature. [Learn more.]({url}#temperature_state_topic)"
               },
               "name": "Target temperature settings"
+            },
+            "text_other_settings": {
+              "data": {
+                "max": "Maximum length",
+                "min": "Minimum length",
+                "mode": "Mode",
+                "pattern": "Pattern"
+              },
+              "data_description": {
+                "max": "Maximum length of the text input",
+                "min": "Minimum length of the text input",
+                "mode": "Mode of the text input",
+                "pattern": "A valid regex pattern"
+              },
+              "name": "Other text entity settings"
+            },
+            "valve_payload_settings": {
+              "data": {
+                "payload_close": "Payload \"close\"",
+                "payload_open": "Payload \"open\"",
+                "payload_stop": "Payload \"stop\"",
+                "state_closed": "State \"closed\"",
+                "state_closing": "State \"closing\"",
+                "state_open": "State \"open\"",
+                "state_opening": "State \"opening\""
+              },
+              "data_description": {
+                "payload_close": "The payload sent when a \"close\" command is issued.",
+                "payload_open": "The payload sent when an \"open\" command is issued.",
+                "payload_stop": "The payload sent when a \"stop\" command is issued. Set this payload only if your valve supports the \"stop\" action.",
+                "state_closed": "The payload received at the state topic that represents the \"closed\" state.",
+                "state_closing": "The payload received at the state topic that represents the \"closing\" state.",
+                "state_open": "The payload received at the state topic that represents the \"open\" state.",
+                "state_opening": "The payload received at the state topic that represents the \"opening\" state."
+              },
+              "name": "Valve payload settings"
+            },
+            "water_heater_power_settings": {
+              "data": {
+                "payload_off": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data::payload_off%]",
+                "payload_on": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data::payload_on%]",
+                "power_command_template": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::sections::climate_power_settings::data::power_command_template%]",
+                "power_command_topic": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::sections::climate_power_settings::data::power_command_topic%]"
+              },
+              "data_description": {
+                "payload_off": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data_description::payload_off%]",
+                "payload_on": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data_description::payload_on%]",
+                "power_command_template": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::sections::climate_power_settings::data_description::power_command_template%]",
+                "power_command_topic": "The MQTT topic to publish commands to change the water heater power state. Sends the payload configured with payload \"on\" or payload \"off\". [Learn more.]({url}#power_command_topic)"
+              },
+              "name": "Power settings"
             }
           },
           "title": "Configure MQTT device \"{mqtt_device}\""
@@ -1024,19 +1096,28 @@
   },
   "exceptions": {
     "addon_start_failed": {
-      "message": "Failed to correctly start {addon} add-on."
+      "message": "Failed to correctly start {addon} app."
     },
     "command_template_error": {
       "message": "Parsing template `{command_template}` for entity `{entity_id}` failed with error: {error}."
     },
-    "invalid_platform_config": {
-      "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. See logs for more details."
+    "invalid_platform_config_message": {
+      "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. Message: {message}"
     },
     "invalid_publish_topic": {
       "message": "Unable to publish: topic template `{topic_template}` produced an invalid topic `{topic}` after rendering ({error})"
     },
     "mqtt_broker_error": {
       "message": "Error talking to MQTT: {error_message}."
+    },
+    "mqtt_max_subscription_id_reached": {
+      "message": "MQTT Subscription ID limit reached. Cannot generate more IDs to subscribe."
+    },
+    "mqtt_message_expiry_interval_not_supported": {
+      "message": "Publishing to topic {topic} with a Message Expiry Interval is not supported for protocol version {protocol}."
+    },
+    "mqtt_not_enabled_cannot_subscribe": {
+      "message": "Cannot subscribe to topic \"{topic}\" because MQTT is not enabled, make sure MQTT is set up correctly."
     },
     "mqtt_not_setup_cannot_publish": {
       "message": "Cannot publish to topic \"{topic}\", make sure MQTT is set up correctly."
@@ -1055,17 +1136,13 @@
     }
   },
   "issues": {
-    "deprecated_object_id": {
-      "description": "Entity {entity_id} uses the `object_id` option which is deprecated. To fix the issue, replace the `object_id: {object_id}` option with `default_entity_id: {domain}.{object_id}` in your \"configuration.yaml\", and restart Home Assistant.",
-      "title": "Deprecated option object_id used"
-    },
-    "deprecated_vacuum_battery_feature": {
-      "description": "Vacuum entity {entity_id} implements the battery feature which is deprecated. This will stop working in Home Assistant 2026.2. Implement a separate entity for the battery state instead. To fix the issue, remove the `battery` feature from the configured supported features, and restart Home Assistant.",
-      "title": "Deprecated battery feature used"
-    },
     "invalid_platform_config": {
-      "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
+      "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/config/tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
       "title": "Invalid config found for MQTT {domain} item"
+    },
+    "protocol_5_migration": {
+      "description": "The automatic migration to MQTT protocol version 5 failed. The currently configured protocol version for MQTT broker {broker} is {protocol}, but this protocol version is deprecated, and support for it will be removed.\n\nMake sure your broker supports protocol version 5. Update your MQTT broker's connection settings, and restart Home Assistant to fix this issue.",
+      "title": "MQTT protocol migration failed"
     },
     "subentry_migration_discovery": {
       "fix_flow": {
@@ -1088,6 +1165,10 @@
         }
       },
       "title": "MQTT device \"{name}\" subentry migration to YAML"
+    },
+    "yaml_setup_without_active_setup": {
+      "description": "Home Assistant detected manually configured MQTT items, but these items cannot be loaded because MQTT is not set up correctly. Make sure the MQTT broker is set up correctly, or remove the MQTT configuration from your `configuration.yaml` file and restart Home Assistant to fix this issue.",
+      "title": "MQTT is not set up correctly"
     }
   },
   "options": {
@@ -1104,48 +1185,6 @@
       "invalid_inclusion": "[%key:component::mqtt::config::error::invalid_inclusion%]"
     },
     "step": {
-      "broker": {
-        "data": {
-          "advanced_options": "[%key:component::mqtt::config::step::broker::data::advanced_options%]",
-          "broker": "[%key:component::mqtt::config::step::broker::data::broker%]",
-          "certificate": "[%key:component::mqtt::config::step::broker::data::certificate%]",
-          "client_cert": "[%key:component::mqtt::config::step::broker::data::client_cert%]",
-          "client_id": "[%key:component::mqtt::config::step::broker::data::client_id%]",
-          "client_key": "[%key:component::mqtt::config::step::broker::data::client_key%]",
-          "keepalive": "[%key:component::mqtt::config::step::broker::data::keepalive%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "protocol": "[%key:component::mqtt::config::step::broker::data::protocol%]",
-          "set_ca_cert": "[%key:component::mqtt::config::step::broker::data::set_ca_cert%]",
-          "set_client_cert": "[%key:component::mqtt::config::step::broker::data::set_client_cert%]",
-          "tls_insecure": "[%key:component::mqtt::config::step::broker::data::tls_insecure%]",
-          "transport": "[%key:component::mqtt::config::step::broker::data::transport%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "ws_headers": "[%key:component::mqtt::config::step::broker::data::ws_headers%]",
-          "ws_path": "[%key:component::mqtt::config::step::broker::data::ws_path%]"
-        },
-        "data_description": {
-          "advanced_options": "[%key:component::mqtt::config::step::broker::data_description::advanced_options%]",
-          "broker": "[%key:component::mqtt::config::step::broker::data_description::broker%]",
-          "certificate": "[%key:component::mqtt::config::step::broker::data_description::certificate%]",
-          "client_cert": "[%key:component::mqtt::config::step::broker::data_description::client_cert%]",
-          "client_id": "[%key:component::mqtt::config::step::broker::data_description::client_id%]",
-          "client_key": "[%key:component::mqtt::config::step::broker::data_description::client_key%]",
-          "keepalive": "[%key:component::mqtt::config::step::broker::data_description::keepalive%]",
-          "password": "[%key:component::mqtt::config::step::broker::data_description::password%]",
-          "port": "[%key:component::mqtt::config::step::broker::data_description::port%]",
-          "protocol": "[%key:component::mqtt::config::step::broker::data_description::protocol%]",
-          "set_ca_cert": "[%key:component::mqtt::config::step::broker::data_description::set_ca_cert%]",
-          "set_client_cert": "[%key:component::mqtt::config::step::broker::data_description::set_client_cert%]",
-          "tls_insecure": "[%key:component::mqtt::config::step::broker::data_description::tls_insecure%]",
-          "transport": "[%key:component::mqtt::config::step::broker::data_description::transport%]",
-          "username": "[%key:component::mqtt::config::step::broker::data_description::username%]",
-          "ws_headers": "[%key:component::mqtt::config::step::broker::data_description::ws_headers%]",
-          "ws_path": "[%key:component::mqtt::config::step::broker::data_description::ws_path%]"
-        },
-        "description": "[%key:component::mqtt::config::step::broker::description%]",
-        "title": "Broker options"
-      },
       "options": {
         "data": {
           "birth_enable": "Enable birth message",
@@ -1155,6 +1194,7 @@
           "birth_topic": "Birth message topic",
           "discovery": "Enable discovery",
           "discovery_prefix": "Discovery prefix",
+          "discovery_qos": "Discovery QoS",
           "will_enable": "Enable will message",
           "will_payload": "Will message payload",
           "will_qos": "Will message QoS",
@@ -1169,6 +1209,7 @@
           "birth_topic": "The MQTT topic where Home Assistant will publish a \"birth\" message.",
           "discovery": "Option to enable MQTT automatic discovery.",
           "discovery_prefix": "The prefix of configuration topics the MQTT integration will subscribe to.",
+          "discovery_qos": "The quality of service for discovery subscriptions to your MQTT broker.",
           "will_enable": "When set, Home Assistant will ask your broker to publish a \"will\" message when MQTT is stopped or when it loses the connection to your broker.",
           "will_payload": "The message your MQTT broker \"will\" publish when the MQTT integration is stopped or when the connection is lost.",
           "will_qos": "The quality of service of the \"will\" message that is published by your MQTT broker.",
@@ -1312,6 +1353,7 @@
         "speed": "[%key:component::sensor::entity_component::speed::name%]",
         "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+        "temperature_delta": "[%key:component::sensor::entity_component::temperature_delta::name%]",
         "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
@@ -1329,6 +1371,12 @@
       "options": {
         "outlet": "[%key:component::switch::entity_component::outlet::name%]",
         "switch": "[%key:component::switch::title%]"
+      }
+    },
+    "device_class_valve": {
+      "options": {
+        "gas": "[%key:component::valve::entity_component::gas::name%]",
+        "water": "[%key:component::valve::entity_component::water::name%]"
       }
     },
     "entity_category": {
@@ -1377,6 +1425,8 @@
         "button": "[%key:component::button::title%]",
         "climate": "[%key:component::climate::title%]",
         "cover": "[%key:component::cover::title%]",
+        "date": "[%key:component::date::title%]",
+        "datetime": "[%key:component::datetime::title%]",
         "fan": "[%key:component::fan::title%]",
         "image": "[%key:component::image::title%]",
         "light": "[%key:component::light::title%]",
@@ -1386,7 +1436,11 @@
         "select": "[%key:component::select::title%]",
         "sensor": "[%key:component::sensor::title%]",
         "siren": "[%key:component::siren::title%]",
-        "switch": "[%key:component::switch::title%]"
+        "switch": "[%key:component::switch::title%]",
+        "text": "[%key:component::text::title%]",
+        "time": "[%key:component::time::title%]",
+        "valve": "[%key:component::valve::title%]",
+        "water_heater": "[%key:component::water_heater::title%]"
       }
     },
     "set_ca_cert": {
@@ -1423,6 +1477,24 @@
         "none": "No target temperature",
         "single": "Single target temperature"
       }
+    },
+    "text_mode": {
+      "options": {
+        "password": "[%key:common::config_flow::data::password%]",
+        "text": "[%key:component::text::entity_component::_::state_attributes::mode::state::text%]"
+      }
+    },
+    "water_heater_modes": {
+      "options": {
+        "auto": "[%key:common::state::auto%]",
+        "eco": "[%key:component::water_heater::entity_component::_::state::eco%]",
+        "electric": "[%key:component::water_heater::entity_component::_::state::electric%]",
+        "gas": "[%key:component::water_heater::entity_component::_::state::gas%]",
+        "heat_pump": "[%key:component::water_heater::entity_component::_::state::heat_pump%]",
+        "high_demand": "[%key:component::water_heater::entity_component::_::state::high_demand%]",
+        "off": "[%key:common::state::off%]",
+        "performance": "[%key:component::water_heater::entity_component::_::state::performance%]"
+      }
     }
   },
   "services": {
@@ -1447,6 +1519,10 @@
           "description": "If 'Payload' is a Python bytes literal, evaluate the bytes literal and publish the raw data.",
           "name": "Evaluate payload"
         },
+        "message_expiry_interval": {
+          "description": "Expires a publish message after the interval in case the device subscriber was temporarily offline, or the message was set as a retained message. Only supported with MQTT protocol version 5.0.",
+          "name": "Message Expiry Interval"
+        },
         "payload": {
           "description": "The payload to publish. Publishes an empty message if not provided.",
           "name": "Payload"
@@ -1464,7 +1540,12 @@
           "name": "Topic"
         }
       },
-      "name": "Publish"
+      "name": "Publish",
+      "sections": {
+        "publish_options": {
+          "name": "Publish options"
+        }
+      }
     },
     "reload": {
       "description": "Reloads MQTT entities from the YAML-configuration.",
@@ -1473,8 +1554,7 @@
   },
   "triggers": {
     "_": {
-      "description": "When a specific message is received on a given MQTT topic.",
-      "description_configured": "When an MQTT message has been received",
+      "description": "Triggers after a specific message is received on a given MQTT topic.",
       "fields": {
         "payload": {
           "description": "The payload to trigger on.",
@@ -1485,7 +1565,7 @@
           "name": "Topic"
         }
       },
-      "name": "MQTT"
+      "name": "MQTT message received"
     }
   }
 }

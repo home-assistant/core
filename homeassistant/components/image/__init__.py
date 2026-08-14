@@ -1,7 +1,5 @@
 """The image integration."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from contextlib import suppress
@@ -10,7 +8,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 from random import SystemRandom
-from typing import Final, final
+from typing import Final, final, override
 
 from aiohttp import hdrs, web
 import httpx
@@ -19,7 +17,11 @@ import voluptuous as vol
 
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONTENT_TYPE_MULTIPART,
+    EVENT_HOMEASSISTANT_STOP,
+    EntityStateAttribute,
+)
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -43,7 +45,7 @@ from homeassistant.helpers.typing import (
     VolDictType,
 )
 
-from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT
+from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT, ImageEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,6 +72,20 @@ LAST_FRAME_MARKER = bytes(f"\r\n--{FRAME_BOUNDARY}--\r\n", "utf-8")
 
 IMAGE_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.string}
 
+MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE = {
+    b"\x89PNG": "image/png",
+    b"GIF8": "image/gif",
+    b"RIFF": "image/webp",
+    b"\x49\x49\x2a\x00": "image/tiff",
+    b"\x4d\x4d\x00\x2a": "image/tiff",
+    b"\xff\xd8\xff\xdb": "image/jpeg",
+    b"\xff\xd8\xff\xe0": "image/jpeg",
+    b"\xff\xd8\xff\xed": "image/jpeg",
+    b"\xff\xd8\xff\xee": "image/jpeg",
+    b"\xff\xd8\xff\xe1": "image/jpeg",
+    b"\xff\xd8\xff\xe2": "image/jpeg",
+}
+
 
 class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes image entities."""
@@ -92,6 +108,11 @@ def valid_image_content_type(content_type: str | None) -> str:
     if content_type is None or content_type.split("/", 1)[0].lower() != "image":
         raise ImageContentTypeError
     return content_type
+
+
+def infer_image_type(content: bytes) -> str | None:
+    """Infer image type from first 4 bytes (magic number)."""
+    return MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE.get(content[:4])
 
 
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
@@ -176,13 +197,13 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for image entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {"access_token", "entity_picture"}
+        {ImageEntityStateAttribute.ACCESS_TOKEN, EntityStateAttribute.ENTITY_PICTURE}
     )
 
     # Entity Properties
     _attr_content_type: str = DEFAULT_CONTENT_TYPE
     _attr_image_last_updated: datetime | None = None
-    _attr_image_url: str | None | UndefinedType = UNDEFINED
+    _attr_image_url: str | UndefinedType | None = UNDEFINED
     _attr_should_poll: bool = False  # No need to poll image entities
     _attr_state: None = None  # State is determined by last_updated
     _cached_image: Image | None = None
@@ -190,7 +211,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def __init__(self, hass: HomeAssistant, verify_ssl: bool = False) -> None:
         """Initialize an image entity."""
         self._client = get_async_client(hass, verify_ssl=verify_ssl)
-        self.access_tokens: collections.deque = collections.deque([], 2)
+        self.access_tokens: collections.deque = collections.deque(maxlen=2)
         self.async_update_token()
 
     @cached_property
@@ -199,6 +220,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_content_type
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return a link to the image as entity picture."""
         if self._attr_entity_picture is not None:
@@ -211,7 +233,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_image_last_updated
 
     @cached_property
-    def image_url(self) -> str | None | UndefinedType:
+    def image_url(self) -> str | UndefinedType | None:
         """Return URL of image."""
         return self._attr_image_url
 
@@ -242,7 +264,9 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
         if response := await self._fetch_url(url):
-            content_type = response.headers.get("content-type")
+            content_type = response.headers.get("content-type") or infer_image_type(
+                response.content
+            )
             try:
                 return Image(
                     content=response.content,
@@ -273,6 +297,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state."""
         if self.image_last_updated is None:
@@ -281,9 +306,10 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        return {"access_token": self.access_tokens[-1]}
+        return {ImageEntityStateAttribute.ACCESS_TOKEN: self.access_tokens[-1]}
 
     @callback
     def async_update_token(self) -> None:
@@ -307,7 +333,9 @@ class ImageView(HomeAssistantView):
     ) -> ImageEntity:
         """Authenticate request and return image entity."""
         if (image_entity := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound
+            raise (
+                web.HTTPNotFound if request[KEY_AUTHENTICATED] else web.HTTPUnauthorized
+            )
 
         authenticated = (
             request[KEY_AUTHENTICATED]
@@ -315,11 +343,15 @@ class ImageView(HomeAssistantView):
         )
 
         if not authenticated:
-            # Attempt with invalid bearer token, raise unauthorized
-            # so ban middleware can handle it.
             if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
                 raise web.HTTPUnauthorized
-            # Invalid sigAuth or image entity access token
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
             raise web.HTTPForbidden
 
         return image_entity
@@ -443,6 +475,7 @@ class ImageStreamView(ImageView):
     url = "/api/image_proxy_stream/{entity_id}"
     name = "api:image:stream"
 
+    @override
     async def handle(
         self, request: web.Request, image_entity: ImageEntity
     ) -> web.StreamResponse:
@@ -460,7 +493,9 @@ async def async_handle_snapshot_service(
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
         raise HomeAssistantError(
-            f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+            f"Cannot write `{snapshot_file}`, no access to path;"
+            " `allowlist_external_dirs` may need to be adjusted"
+            " in `configuration.yaml`"
         )
 
     async with asyncio.timeout(IMAGE_TIMEOUT):

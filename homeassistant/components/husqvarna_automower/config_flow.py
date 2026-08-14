@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioautomower.session import AutomowerSession
 from aioautomower.utils import structure_token
@@ -30,6 +30,7 @@ class HusqvarnaConfigFlowHandler(
     VERSION = 1
     DOMAIN = DOMAIN
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow."""
         token = data[CONF_TOKEN]
@@ -70,6 +71,7 @@ class HusqvarnaConfigFlowHandler(
         )
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
@@ -104,7 +106,9 @@ class HusqvarnaConfigFlowHandler(
             return self.async_show_form(
                 step_id="missing_scope",
                 description_placeholders={
-                    "application_url": f"{HUSQVARNA_DEV_PORTAL_URL}/{token_structured.client_id}"
+                    "application_url": (
+                        f"{HUSQVARNA_DEV_PORTAL_URL}/{token_structured.client_id}"
+                    )
                 },
             )
         return await self.async_step_user()

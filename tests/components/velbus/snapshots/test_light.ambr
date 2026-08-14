@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_entities[light.bedroom_kid_1_led_buttonon-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
@@ -24,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED ButtonOn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -33,7 +35,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 8>,
-    'translation_key': None,
+    'translation_key': 'button_light',
     'unique_id': 'a1b2c3d4e5f6-1',
     'unit_of_measurement': None,
   })
@@ -41,12 +43,12 @@
 # name: test_entities[light.bedroom_kid_1_led_buttonon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': None,
-      'friendly_name': 'Bedroom kid 1 LED ButtonOn',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom kid 1 LED ButtonOn',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 8>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 8>,
     }),
     'context': <ANY>,
     'entity_id': 'light.bedroom_kid_1_led_buttonon',
@@ -58,11 +60,12 @@
 # ---
 # name: test_entities[light.dimmer_full_name_dimmer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -81,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -98,13 +102,13 @@
 # name: test_entities[light.dimmer_full_name_dimmer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'friendly_name': 'Dimmer full name Dimmer',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer full name Dimmer',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
     'entity_id': 'light.dimmer_full_name_dimmer',

@@ -5,6 +5,7 @@
     "living_room": "Living Room"
   },
   "dashboard": {
-    "map": { "title": "Map" }
+    "map": { "title": "Map" },
+    "overview": { "title": "Overview" }
   }
 }

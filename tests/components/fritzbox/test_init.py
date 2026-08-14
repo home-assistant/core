@@ -1,7 +1,5 @@
 """Tests for the AVM Fritz!Box integration."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock, call, patch
 
 from pyfritzhome import LoginError
@@ -44,7 +42,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert entries[0].data[CONF_USERNAME] == "fake_user"
     assert fritz.call_count == 1
     assert fritz.call_args_list == [
-        call(host="10.0.0.1", password="fake_pass", user="fake_user")
+        call(host="10.0.0.1", password="fake_pass", user="fake_user", timeout=20)
     ]
 
 
@@ -263,14 +261,14 @@ async def test_remove_device(
 
     # try to delete good_device
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(good_device.id, entry.entry_id)
+    response = await ws_client.remove_device(good_device.id)
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     await hass.async_block_till_done()
 
     # try to delete orphan_device
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(orphan_device.id, entry.entry_id)
+    response = await ws_client.remove_device(orphan_device.id)
     assert response["success"]
     await hass.async_block_till_done()
 

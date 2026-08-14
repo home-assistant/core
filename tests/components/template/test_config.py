@@ -1,20 +1,84 @@
 """Test Template config."""
 
-from __future__ import annotations
-
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.template import DOMAIN
+from homeassistant.components.template import DOMAIN, PLATFORMS
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
     async_validate_config_section,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.discovery import Platform
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
+
+from tests.common import assert_platform_setup_creates_issue, assert_setup_component
+
+
+@pytest.mark.parametrize(
+    "platform_domain",
+    [platform for platform in PLATFORMS if platform != Platform.DEVICE_TRACKER],
+)
+async def test_platform_config_creates_issue(
+    hass: HomeAssistant,
+    platform_domain: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    await assert_platform_setup_creates_issue(
+        hass,
+        platform_domain,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
+
+
+async def test_platform_device_tracker_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    caplog.clear()
+    integration_domain = DOMAIN
+    platform_domain = Platform.DEVICE_TRACKER
+    with assert_setup_component(1, platform_domain):
+        assert await async_setup_component(
+            hass,
+            platform_domain,
+            {platform_domain: {"platform": integration_domain}},
+        )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(platform_domain)) == 0
+    assert (
+        f"The {integration_domain} platform for the {platform_domain} integration does not support platform"
+        " setup, please remove it from your config" in caplog.text
+    )
+
+    issue = issue_registry.async_get_issue(
+        "homeassistant",
+        f"platform_integration_no_support_{platform_domain}_{integration_domain}",
+    )
+
+    assert issue
+    assert issue.issue_domain == integration_domain
+    assert issue.learn_more_url is None
+    assert issue.translation_key == "platform_setup_not_supported"
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {
+        "platform_domain": platform_domain,
+        "integration_domain": integration_domain,
+        "platform_key": f"platform: {integration_domain}",
+        "yaml_example": f"```yaml\n{platform_domain}:\n  - platform: {integration_domain}\n```",
+    }
 
 
 @pytest.mark.parametrize(
@@ -133,7 +197,8 @@ async def test_invalid_default_entity_id(
                     "auto_off": "00:00:01",
                 },
             },
-            "The auto_off option for template binary sensor: name: Template Binary Sensor",
+            "The auto_off option for template binary sensor:"
+            " name: Template Binary Sensor",
         ),
         (
             {
@@ -174,7 +239,8 @@ async def test_invalid_default_entity_id(
                     "auto_off": "00:00:01",
                 },
             },
-            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+            "The auto_off option for template binary sensor:"
+            " default_entity_id: binary_sensor.test_entity_id",
         ),
         (
             {
@@ -197,7 +263,8 @@ async def test_invalid_default_entity_id(
                     "auto_off": "00:00:01",
                 },
             },
-            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+            "The auto_off option for template binary sensor:"
+            " default_entity_id: binary_sensor.test_entity_id",
         ),
     ],
 )
@@ -209,7 +276,7 @@ async def test_invalid_binary_sensor_schema_with_auto_off(
 ) -> None:
     """Test invalid config schemas create issue and log warning."""
 
-    await async_setup_component(hass, "template", {"template": [config]})
+    await async_setup_component(hass, DOMAIN, {"template": [config]})
 
     assert (
         expected_error is None and "ERROR" not in caplog.text
@@ -319,6 +386,64 @@ async def test_combined_state_variables(
 
 
 @pytest.mark.parametrize(
+    ("config", "expected_error"),
+    [
+        pytest.param(
+            {
+                "triggers": [
+                    {"trigger": "event", "event_type": "valid"},
+                    {"trigger": "not_a_platform"},
+                ],
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Invalid trigger 'not_a_platform' specified '', got"
+            " {'triggers': [{'trigger': 'event', 'event_type': 'valid'},"
+            " {'trigger': 'not_a_platform'}],"
+            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            id="trigger",
+        ),
+        pytest.param(
+            {
+                "triggers": {"trigger": "event", "event_type": "valid"},
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "sensor.foo",
+                        "state": "on",
+                    },
+                    {
+                        "condition": "state",
+                        "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                        "state": "on",
+                    },
+                ],
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " '', got"
+            " {'triggers': {'trigger': 'event', 'event_type': 'valid'},"
+            " 'conditions': [{'condition': 'state', 'entity_id': 'sensor.foo',"
+            " 'state': 'on'}, {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'on'}],"
+            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            id="condition",
+        ),
+    ],
+)
+async def test_setup_component_bad_config_logs_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config: dict,
+    expected_error: str,
+) -> None:
+    """Test setting up template with a bad config logs a useful error message."""
+    await async_setup_component(hass, "template", {"template": [config]})
+    assert expected_error in caplog.text
+
+
+@pytest.mark.parametrize(
     ("config", "expected_root", "expected_entity"),
     [
         (
@@ -378,7 +503,7 @@ async def test_combined_trigger_variables(
 async def test_state_init_attribute_variables(
     hass: HomeAssistant,
 ) -> None:
-    """Test a state based template entity initializes icon, name, and picture with variables."""
+    """Test state based template entity initializes attributes with variables."""
     source = "switch.foo"
     entity_id = "sensor.foo"
 
@@ -398,7 +523,9 @@ async def test_state_init_attribute_variables(
                     },
                     "name": "{{ state_attr(switch, 'friendly_name') }}",
                     "icon": "{{ on_icon if is_state(switch, 'on') else off_icon }}",
-                    "picture": "{{ on_picture if is_state(switch, 'on') else off_picture }}",
+                    "picture": (
+                        "{{ on_picture if is_state(switch, 'on') else off_picture }}"
+                    ),
                     "state": "{{ is_state(switch, 'on') }}",
                 },
             }
@@ -438,7 +565,8 @@ async def test_state_init_attribute_variables(
             {
                 "trigger": {"trigger": "event", "event_type": "my_event"},
             },
-            "Invalid template configuration found, trigger option is missing matching domain",
+            "Invalid template configuration found, trigger option is"
+            " missing matching domain",
         ),
         (
             {
@@ -466,7 +594,7 @@ async def test_invalid_schema_raises_issue(
 ) -> None:
     """Test invalid config schemas create issue and log warning."""
 
-    await async_setup_component(hass, "template", {"template": [config]})
+    await async_setup_component(hass, DOMAIN, {"template": [config]})
 
     assert expected_warning in caplog.text
 
@@ -475,3 +603,86 @@ async def test_invalid_schema_raises_issue(
 
     assert issue.domain == "template"
     assert issue.severity == ir.IssueSeverity.WARNING
+
+
+async def test_multiple_configuration_keys(
+    hass: HomeAssistant,
+) -> None:
+    """Test multiple configurations keys create entities."""
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "template": [{"binary_sensor": [{"name": "Foo", "state": "{{ True }}"}]}],
+            "template mytemplates": [
+                {
+                    "sensor": [
+                        {"name": "Foo", "state": "{{ 'bar' }}"},
+                        {"name": "Bar", "state": "{{ 'foo' }}"},
+                    ]
+                }
+            ],
+            "template y": [
+                {
+                    "cover": [
+                        {
+                            "name": "Shades Curtain",
+                            "unique_id": "shades_curtain",
+                            "open_cover": [],
+                            "close_cover": [],
+                            "stop_cover": [],
+                        }
+                    ]
+                },
+                {
+                    "cover": [
+                        {
+                            "open_cover": {
+                                "target": {"entity_id": ["cover.shades_curtain"]},
+                                "action": "cover.close_cover",
+                            },
+                            "close_cover": {
+                                "target": {"entity_id": ["cover.shades_curtain"]},
+                                "action": "cover.open_cover",
+                            },
+                            "stop_cover": {
+                                "target": {"entity_id": ["cover.shades_curtain"]},
+                                "action": "cover.stop_cover",
+                            },
+                            "default_entity_id": "cover.shades_reversed",
+                            "icon": (
+                                "{% set s = states('cover.shades_curtain') %}\n"
+                                "{% if s == 'open' %}\n"
+                                "   mdi:curtains-closed\n"
+                                "{% else %}\n"
+                                "   mdi:curtains\n"
+                                "{% endif %}"
+                            ),
+                            "name": "Shades Reversed",
+                            "unique_id": "c0223bcb-32c6-430e-a2c1-3545f8031796",
+                            "state": (
+                                "{% set s = states('cover.shades_curtain') %}\n"
+                                "{% if s == 'open' %}\n  closed\n"
+                                "{% elif s == 'closed' %}\n  open\n"
+                                "{% elif s == 'opening' %}\n  closing\n"
+                                "{% elif s == 'closing' %}\n  opening\n"
+                                "{% else %}\n  unknown\n{% endif %}"
+                            ),
+                        }
+                    ]
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    for entity_id, expected in (
+        ("binary_sensor.foo", "on"),
+        ("sensor.foo", "bar"),
+        ("sensor.bar", "foo"),
+        ("cover.shades_curtain", "unknown"),
+        ("cover.shades_reversed", "unknown"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected

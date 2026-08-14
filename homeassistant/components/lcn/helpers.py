@@ -1,7 +1,5 @@
 """Helpers for LCN component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from copy import deepcopy
@@ -11,6 +9,7 @@ from typing import cast
 
 import pypck
 from pypck.connection import PchkConnectionManager
+from pypck.device import DeviceConnection
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -48,7 +47,7 @@ class LcnRuntimeData:
     connection: PchkConnectionManager
     """Connection to PCHK host."""
 
-    device_connections: dict[str, DeviceConnectionType]
+    device_connections: dict[str, DeviceConnection]
     """Logical addresses of devices connected to the host."""
 
     add_entities_callbacks: dict[str, Callable[[Iterable[ConfigType]], None]]
@@ -59,9 +58,8 @@ class LcnRuntimeData:
 type LcnConfigEntry = ConfigEntry[LcnRuntimeData]
 
 type AddressType = tuple[int, int, bool]
-type DeviceConnectionType = pypck.module.ModuleConnection | pypck.module.GroupConnection
 
-type InputType = type[pypck.inputs.Input]
+type InputType = pypck.inputs.Input
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile(
@@ -82,11 +80,11 @@ DOMAIN_LOOKUP = {
 
 def get_device_connection(
     hass: HomeAssistant, address: AddressType, config_entry: LcnConfigEntry
-) -> DeviceConnectionType:
+) -> DeviceConnection:
     """Return a lcn device_connection."""
     host_connection = config_entry.runtime_data.connection
     addr = pypck.lcn_addr.LcnAddr(*address)
-    return host_connection.get_address_conn(addr)
+    return host_connection.get_device_connection(addr)
 
 
 def get_resource(domain_name: str, domain_data: ConfigType) -> str:
@@ -161,7 +159,9 @@ def purge_device_registry(
 
     # Find device that references the host.
     references_host = set()
-    host_device = device_registry.async_get_device(identifiers={(DOMAIN, entry_id)})
+    host_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry_id), entry_id
+    )
     if host_device is not None:
         references_host.add(host_device.id)
 
@@ -169,8 +169,8 @@ def purge_device_registry(
     references_entry_data = set()
     for device_data in imported_entry_data[CONF_DEVICES]:
         device_unique_id = generate_unique_id(entry_id, device_data[CONF_ADDRESS])
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_unique_id)}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_unique_id), entry_id
         )
         if device is not None:
             references_entry_data.add(device.id)
@@ -204,14 +204,16 @@ def register_lcn_host_device(hass: HomeAssistant, config_entry: LcnConfigEntry) 
 def register_lcn_address_devices(
     hass: HomeAssistant, config_entry: LcnConfigEntry
 ) -> None:
-    """Register LCN modules and groups defined in config_entry as devices in device registry.
+    """Register LCN modules and groups as devices.
 
     The name of all given device_connections is collected and the devices
     are updated.
     """
     device_registry = dr.async_get(hass)
 
-    host_identifiers = (DOMAIN, config_entry.entry_id)
+    host_device_id = dr.async_get_device_id_by_identifier(
+        hass, (DOMAIN, config_entry.entry_id), config_entry_id=config_entry.entry_id
+    )
 
     for device_config in config_entry.data[CONF_DEVICES]:
         address = device_config[CONF_ADDRESS]
@@ -233,7 +235,7 @@ def register_lcn_address_devices(
         device_entry = device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers=identifiers,
-            via_device=host_identifiers,
+            via_device_id=host_device_id,
             manufacturer="Issendorff",
             sw_version=sw_version,
             name=device_name,
@@ -246,27 +248,33 @@ def register_lcn_address_devices(
 
 
 async def async_update_device_config(
-    device_connection: DeviceConnectionType, device_config: ConfigType
+    device_connection: DeviceConnection, device_config: ConfigType
 ) -> None:
     """Fill missing values in device_config with infos from LCN bus."""
     # fetch serial info if device is module
     if not (is_group := device_config[CONF_ADDRESS][2]):  # is module
-        await device_connection.serial_known
+        await device_connection.serials_known()
         if device_config[CONF_HARDWARE_SERIAL] == -1:
-            device_config[CONF_HARDWARE_SERIAL] = device_connection.hardware_serial
+            device_config[CONF_HARDWARE_SERIAL] = (
+                device_connection.serials.hardware_serial
+            )
         if device_config[CONF_SOFTWARE_SERIAL] == -1:
-            device_config[CONF_SOFTWARE_SERIAL] = device_connection.software_serial
+            device_config[CONF_SOFTWARE_SERIAL] = (
+                device_connection.serials.software_serial
+            )
         if device_config[CONF_HARDWARE_TYPE] == -1:
-            device_config[CONF_HARDWARE_TYPE] = device_connection.hardware_type.value
+            device_config[CONF_HARDWARE_TYPE] = (
+                device_connection.serials.hardware_type.value
+            )
 
     # fetch name if device is module
     if device_config[CONF_NAME] != "":
         return
 
-    device_name = ""
+    device_name: str | None = None
     if not is_group:
         device_name = await device_connection.request_name()
-    if is_group or device_name == "":
+    if is_group or device_name is None:
         module_type = "Group" if is_group else "Module"
         device_name = (
             f"{module_type} "

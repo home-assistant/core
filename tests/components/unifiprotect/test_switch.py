@@ -1,11 +1,19 @@
 """Test the UniFi Protect switch platform."""
 
-from __future__ import annotations
-
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
-from uiprotect.data import Camera, Light, Permission, RecordingMode, VideoMode
+from uiprotect.data import (
+    Camera,
+    Light,
+    Permission,
+    PublicHdrMode,
+    RecordingMode,
+    SmartDetectAudioType,
+    SmartDetectObjectType,
+    VideoMode,
+)
+from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.switch import (
@@ -16,10 +24,19 @@ from homeassistant.components.unifiprotect.switch import (
     PRIVACY_MODE_SWITCH,
     ProtectSwitchEntityDescription,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, STATE_OFF, Platform
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import patch_ufp_method
 from .utils import (
     MockUFPFixture,
     adopt_devices,
@@ -27,7 +44,10 @@ from .utils import (
     enable_entity,
     ids_from_device_description,
     init_entry,
+    make_public_light,
+    public_device_ws_message,
     remove_entities,
+    setup_public_light,
 )
 
 CAMERA_SWITCHES_BASIC = [
@@ -88,21 +108,20 @@ async def test_switch_nvr(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     assert_entity_counts(hass, Platform.SWITCH, 2, 2)
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__pydantic_fields__["set_insights"] = Mock(final=False, frozen=False)
-    nvr.set_insights = AsyncMock()
     entity_id = "switch.unifiprotect_insights_enabled"
 
-    await hass.services.async_call(
-        "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
+    with patch_ufp_method(nvr, "set_insights", new_callable=AsyncMock) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
-    nvr.set_insights.assert_called_once_with(True)
+        mock_method.assert_called_once_with(True)
 
-    await hass.services.async_call(
-        "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
-    nvr.set_insights.assert_called_with(False)
+        mock_method.assert_called_with(False)
 
 
 async def test_switch_setup_no_perm(
@@ -130,6 +149,7 @@ async def test_switch_setup_light(
 ) -> None:
     """Test switch entity setup for light devices."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SWITCH, 4, 3)
 
@@ -260,29 +280,64 @@ async def test_switch_light_status(
 ) -> None:
     """Tests status light switch for lights."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SWITCH, 4, 3)
 
     description = LIGHT_SWITCHES[1]
 
-    light.__pydantic_fields__["set_status_light"] = Mock(final=False, frozen=False)
-    light.set_status_light = AsyncMock()
-
     _, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, light, description
     )
 
-    await hass.services.async_call(
-        "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    with patch_ufp_method(
+        light, "set_status_light_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+        mock_method.assert_called_once_with(True)
+
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+        mock_method.assert_called_with(False)
+
+
+async def test_switch_light_status_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Status light switch reads from the public object and refreshes on a WS update."""
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, light, LIGHT_SWITCHES[1]
     )
+    assert hass.states.get(entity_id).state == STATE_OFF
 
-    light.set_status_light.assert_called_once_with(True)
+    # The private fixture has the indicator disabled; the public ON proves the source.
+    public = make_public_light(light, is_indicator_enabled=True)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_switch_light_status_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """The migrated status light switch is unavailable without a public object."""
+
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, light, LIGHT_SWITCHES[1]
     )
-
-    light.set_status_light.assert_called_with(False)
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_switch_camera_ssh(
@@ -295,25 +350,23 @@ async def test_switch_camera_ssh(
 
     description = CAMERA_SWITCHES[0]
 
-    doorbell.__pydantic_fields__["set_ssh"] = Mock(final=False, frozen=False)
-    doorbell.set_ssh = AsyncMock()
-
     _, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, doorbell, description
     )
     await enable_entity(hass, ufp.entry.entry_id, entity_id)
 
-    await hass.services.async_call(
-        "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
+    with patch_ufp_method(doorbell, "set_ssh", new_callable=AsyncMock) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
-    doorbell.set_ssh.assert_called_once_with(True)
+        mock_method.assert_called_once_with(True)
 
-    await hass.services.async_call(
-        "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
-    doorbell.set_ssh.assert_called_with(False)
+        mock_method.assert_called_with(False)
 
 
 @pytest.mark.parametrize("description", CAMERA_SWITCHES_NO_EXTRA)
@@ -330,27 +383,24 @@ async def test_switch_camera_simple(
 
     assert description.ufp_set_method is not None
 
-    doorbell.__pydantic_fields__[description.ufp_set_method] = Mock(
-        final=False, frozen=False
-    )
-    setattr(doorbell, description.ufp_set_method, AsyncMock())
-    set_method = getattr(doorbell, description.ufp_set_method)
+    with patch_ufp_method(
+        doorbell, description.ufp_set_method, new_callable=AsyncMock
+    ) as mock_method:
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.SWITCH, doorbell, description
+        )
 
-    _, entity_id = await ids_from_device_description(
-        hass, Platform.SWITCH, doorbell, description
-    )
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
-    await hass.services.async_call(
-        "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
+        mock_method.assert_called_once_with(True)
 
-    set_method.assert_called_once_with(True)
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
-    await hass.services.async_call(
-        "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
-
-    set_method.assert_called_with(False)
+        mock_method.assert_called_with(False)
 
 
 async def test_switch_camera_highfps(
@@ -363,24 +413,120 @@ async def test_switch_camera_highfps(
 
     description = CAMERA_SWITCHES[3]
 
-    doorbell.__pydantic_fields__["set_video_mode"] = Mock(final=False, frozen=False)
-    doorbell.set_video_mode = AsyncMock()
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
+
+    with patch_ufp_method(
+        doorbell, "set_video_mode_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+        mock_method.assert_called_once_with(VideoMode.HIGH_FPS)
+
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+        mock_method.assert_called_with(VideoMode.DEFAULT)
+
+
+CAMERA_SWITCHES_DETECTIONS_EXTRA = [
+    d
+    for d in CAMERA_SWITCHES
+    if d.translation_key.startswith("detections_")
+    and d.key
+    not in {
+        "detections_motion",
+        "detections_person",
+        "detections_vehicle",
+        "detections_animal",
+    }
+]
+
+
+async def test_switch_camera_hdr(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Tests HDR mode switch uses the public API helper."""
+
+    await init_entry(hass, ufp, [doorbell])
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
+
+    description = next(d for d in CAMERA_SWITCHES if d.key == "hdr_mode")
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
+    await enable_entity(hass, ufp.entry.entry_id, entity_id)
+
+    with patch_ufp_method(
+        doorbell, "set_hdr_mode_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+        mock_method.assert_has_calls(
+            [call(PublicHdrMode.AUTO), call(PublicHdrMode.OFF)]
+        )
+        assert mock_method.call_count == 2
+
+
+@pytest.mark.parametrize("description", CAMERA_SWITCHES_DETECTIONS_EXTRA)
+async def test_switch_camera_detections_public_api(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    description: ProtectSwitchEntityDescription,
+) -> None:
+    """Tests detection switches call the public API setters."""
+
+    doorbell.feature_flags.smart_detect_types = [
+        SmartDetectObjectType.PERSON,
+        SmartDetectObjectType.VEHICLE,
+        SmartDetectObjectType.ANIMAL,
+        SmartDetectObjectType.PACKAGE,
+        SmartDetectObjectType.LICENSE_PLATE,
+    ]
+    doorbell.feature_flags.smart_detect_audio_types = [
+        SmartDetectAudioType.SMOKE,
+        SmartDetectAudioType.CMONX,
+        SmartDetectAudioType.SIREN,
+        SmartDetectAudioType.BABY_CRY,
+        SmartDetectAudioType.SPEAK,
+        SmartDetectAudioType.BARK,
+        SmartDetectAudioType.BURGLAR,
+        SmartDetectAudioType.CAR_HORN,
+        SmartDetectAudioType.GLASS_BREAK,
+    ]
+
+    await init_entry(hass, ufp, [doorbell])
+
+    assert description.ufp_set_method is not None
+    assert description.ufp_set_method.endswith("_public")
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, doorbell, description
     )
 
-    await hass.services.async_call(
-        "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
+    with patch_ufp_method(
+        doorbell, description.ufp_set_method, new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
-    doorbell.set_video_mode.assert_called_once_with(VideoMode.HIGH_FPS)
-
-    await hass.services.async_call(
-        "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
-
-    doorbell.set_video_mode.assert_called_with(VideoMode.DEFAULT)
+        mock_method.assert_has_calls([call(True), call(False)])
+        assert mock_method.call_count == 2
 
 
 async def test_switch_camera_privacy(
@@ -396,9 +542,6 @@ async def test_switch_camera_privacy(
 
     description = PRIVACY_MODE_SWITCH
 
-    doorbell.__pydantic_fields__["set_privacy"] = Mock(final=False, frozen=False)
-    doorbell.set_privacy = AsyncMock()
-
     _, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, doorbell, description
     )
@@ -408,35 +551,38 @@ async def test_switch_camera_privacy(
     assert ATTR_PREV_MIC not in state.attributes
     assert ATTR_PREV_RECORD not in state.attributes
 
-    await hass.services.async_call(
-        "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
+    with patch_ufp_method(
+        doorbell, "set_privacy", new_callable=AsyncMock
+    ) as mock_set_privacy:
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
-    doorbell.set_privacy.assert_called_with(True, 0, RecordingMode.NEVER)
+        mock_set_privacy.assert_called_with(True, 0, RecordingMode.NEVER)
 
-    new_doorbell = doorbell.model_copy()
-    new_doorbell.add_privacy_zone()
-    new_doorbell.mic_volume = 0
-    new_doorbell.recording_settings.mode = RecordingMode.NEVER
-    ufp.api.bootstrap.cameras = {new_doorbell.id: new_doorbell}
+        new_doorbell = doorbell.model_copy()
+        new_doorbell.add_privacy_zone()
+        new_doorbell.mic_volume = 0
+        new_doorbell.recording_settings.mode = RecordingMode.NEVER
+        ufp.api.bootstrap.cameras = {new_doorbell.id: new_doorbell}
 
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_doorbell
-    ufp.ws_msg(mock_msg)
+        mock_msg = Mock()
+        mock_msg.changed_data = {}
+        mock_msg.new_obj = new_doorbell
+        ufp.ws_msg(mock_msg)
 
-    state = hass.states.get(entity_id)
-    assert state and state.state == "on"
-    assert state.attributes[ATTR_PREV_MIC] == previous_mic
-    assert state.attributes[ATTR_PREV_RECORD] == previous_record.value
+        state = hass.states.get(entity_id)
+        assert state and state.state == "on"
+        assert state.attributes[ATTR_PREV_MIC] == previous_mic
+        assert state.attributes[ATTR_PREV_RECORD] == previous_record.value
 
-    doorbell.set_privacy.reset_mock()
+        mock_set_privacy.reset_mock()
 
-    await hass.services.async_call(
-        "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
-    doorbell.set_privacy.assert_called_with(False, previous_mic, previous_record)
+        mock_set_privacy.assert_called_with(False, previous_mic, previous_record)
 
 
 async def test_switch_camera_privacy_already_on(
@@ -450,15 +596,71 @@ async def test_switch_camera_privacy_already_on(
 
     description = PRIVACY_MODE_SWITCH
 
-    doorbell.__pydantic_fields__["set_privacy"] = Mock(final=False, frozen=False)
-    doorbell.set_privacy = AsyncMock()
-
     _, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, doorbell, description
     )
 
-    await hass.services.async_call(
-        "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    with patch_ufp_method(
+        doorbell, "set_privacy", new_callable=AsyncMock
+    ) as mock_set_privacy:
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+        mock_set_privacy.assert_called_once_with(False, 100, RecordingMode.ALWAYS)
+
+
+async def test_switch_turn_on_client_error(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Test switch turn on with ClientError raises HomeAssistantError."""
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light])
+
+    description = LIGHT_SWITCHES[1]
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, light, description
     )
 
-    doorbell.set_privacy.assert_called_once_with(False, 100, RecordingMode.ALWAYS)
+    with (
+        patch_ufp_method(
+            light,
+            "set_status_light_public",
+            new_callable=AsyncMock,
+            side_effect=ClientError("Test error"),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+
+async def test_switch_turn_on_not_authorized(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Test switch turn on with NotAuthorized raises HomeAssistantError."""
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light])
+
+    description = LIGHT_SWITCHES[1]
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, light, description
+    )
+
+    with (
+        patch_ufp_method(
+            light,
+            "set_status_light_public",
+            new_callable=AsyncMock,
+            side_effect=NotAuthorized("Not authorized"),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )

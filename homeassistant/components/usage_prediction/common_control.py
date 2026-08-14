@@ -1,7 +1,5 @@
 """Code to generate common control usage patterns."""
 
-from __future__ import annotations
-
 from collections import Counter
 from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
@@ -144,13 +142,7 @@ async def async_predict_common_control(
         if not service_data:
             continue
 
-        entity_ids: str | list[str] | None
-        if (target := service_data.get("target")) and (
-            target_entity_ids := target.get("entity_id")
-        ):
-            entity_ids = target_entity_ids
-        else:
-            entity_ids = service_data.get("entity_id")
+        entity_ids: str | list[str] | None = service_data.get("entity_id")
 
         # No entity IDs found, skip this event
         if entity_ids is None:

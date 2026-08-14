@@ -3,8 +3,6 @@
 To update, run python3 -m script.hassfest
 """
 
-from __future__ import annotations
-
 from typing import Final
 
 BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
@@ -66,6 +64,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "0000fce0-0000-1000-8000-00805f9b34fb",
     },
     {
+        "domain": "avea",
+        "local_name": "Avea*",
+        "service_uuid": "f815e810-456c-6761-746f-4d756e696368",
+    },
+    {
         "connectable": False,
         "domain": "bluemaestro",
         "manufacturer_id": 307,
@@ -84,6 +87,16 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": False,
         "domain": "bthome",
         "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": True,
+        "domain": "casper_glow",
+        "local_name": "Jar*",
+    },
+    {
+        "connectable": False,
+        "domain": "chef_iq",
+        "manufacturer_id": 1485,
     },
     {
         "domain": "dormakaba_dkey",
@@ -110,6 +123,14 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "eufylife_ble",
+        "local_name": "eufy T9120",
+    },
+    {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9130",
+    },
+    {
+        "domain": "eufylife_ble",
         "local_name": "eufy T9140",
     },
     {
@@ -129,17 +150,18 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "eufy T9149",
     },
     {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9150",
+    },
+    {
+        "connectable": True,
+        "domain": "eurotronic_cometblue",
+        "service_uuid": "47e9ee00-47e9-11e4-8939-164230d1df67",
+    },
+    {
         "connectable": False,
         "domain": "fjaraskupan",
-        "manufacturer_data_start": [
-            79,
-            68,
-            70,
-            74,
-            65,
-            82,
-        ],
-        "manufacturer_id": 20296,
+        "service_uuid": "77a2bd49-1e5a-4961-bba1-21f34fa4bc7b",
     },
     {
         "connectable": True,
@@ -211,6 +233,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": False,
         "domain": "govee_ble",
         "local_name": "GVH5110*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "local_name": "GV5140*",
     },
     {
         "connectable": False,
@@ -318,6 +345,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
             6,
         ],
         "manufacturer_id": 76,
+    },
+    {
+        "connectable": True,
+        "domain": "hue_ble",
+        "service_data_uuid": "0000fe0f-0000-1000-8000-00805f9b34fb",
+        "service_uuid": "0000fe0f-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": True,
@@ -610,6 +643,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "MOTION_*",
     },
     {
+        "connectable": True,
+        "domain": "opendisplay",
+        "manufacturer_id": 9286,
+    },
+    {
         "domain": "oralb",
         "manufacturer_id": 220,
     },
@@ -705,6 +743,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "shelly",
         "local_name": "Shelly*",
+    },
+    {
+        "domain": "shelly",
+        "manufacturer_id": 2985,
     },
     {
         "domain": "snooz",
@@ -848,6 +890,14 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "domain": "togrill",
         "manufacturer_id": 34714,
         "service_uuid": "0000cee0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "victron_ble",
+        "manufacturer_data_start": [
+            16,
+        ],
+        "manufacturer_id": 737,
     },
     {
         "connectable": False,

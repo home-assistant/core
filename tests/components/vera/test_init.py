@@ -49,40 +49,12 @@ async def test_init(
     assert entry1.unique_id == "vera_first_serial_1"
 
 
-async def test_init_from_file(
+async def test_multiple_controllers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     vera_component_factory: ComponentFactory,
 ) -> None:
-    """Test function."""
-    vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
-    vera_device1.device_id = 1
-    vera_device1.vera_device_id = vera_device1.device_id
-    vera_device1.name = "first_dev"
-    vera_device1.is_tripped = False
-    entity1_id = "binary_sensor.first_dev_1"
-
-    await vera_component_factory.configure_component(
-        hass=hass,
-        controller_config=new_simple_controller_config(
-            config={CONF_CONTROLLER: "http://127.0.0.1:111"},
-            config_source=ConfigSource.FILE,
-            serial_number="first_serial",
-            devices=(vera_device1,),
-        ),
-    )
-
-    entry1 = entity_registry.async_get(entity1_id)
-    assert entry1
-    assert entry1.unique_id == "vera_first_serial_1"
-
-
-async def test_multiple_controllers_with_legacy_one(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    vera_component_factory: ComponentFactory,
-) -> None:
-    """Test multiple controllers with one legacy controller."""
+    """Test multiple controllers."""
     vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device1.device_id = 1
     vera_device1.vera_device_id = vera_device1.device_id
@@ -106,7 +78,7 @@ async def test_multiple_controllers_with_legacy_one(
         hass=hass,
         controller_config=new_simple_controller_config(
             config={CONF_CONTROLLER: "http://127.0.0.1:111"},
-            config_source=ConfigSource.FILE,
+            config_source=ConfigSource.CONFIG_FLOW,
             serial_number="first_serial",
             devices=(vera_device1,),
         ),
@@ -124,7 +96,7 @@ async def test_multiple_controllers_with_legacy_one(
 
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
-    assert entry1.unique_id == "1"
+    assert entry1.unique_id == "vera_first_serial_1"
 
     entry2 = entity_registry.async_get(entity2_id)
     assert entry2

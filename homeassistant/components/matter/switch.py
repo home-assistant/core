@@ -1,10 +1,8 @@
 """Matter switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterCommand, NullValue
@@ -15,13 +13,12 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 EVSE_SUPPLY_STATE_MAP = {
@@ -34,11 +31,11 @@ EVSE_SUPPLY_STATE_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter switches from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.SWITCH, async_add_entities)
 
 
@@ -46,30 +43,45 @@ async def async_setup_entry(
 class MatterSwitchEntityDescription(SwitchEntityDescription, MatterEntityDescription):
     """Describe Matter Switch entities."""
 
+    inverted: bool = False
+
 
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
 
+    entity_description: MatterSwitchEntityDescription
     _platform_translation_key = "switch"
 
+    def _get_command_for_value(self, value: bool) -> ClusterCommand:
+        """Get the appropriate command for the desired value.
+
+        Applies inversion if needed (e.g., for inverted logic like mute).
+        """
+        send_value = not value if self.entity_description.inverted else value
+        return (
+            clusters.OnOff.Commands.On()
+            if send_value
+            else clusters.OnOff.Commands.Off()
+        )
+
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        await self.send_device_command(
-            clusters.OnOff.Commands.On(),
-        )
+        await self.send_device_command(self._get_command_for_value(True))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
-        await self.send_device_command(
-            clusters.OnOff.Commands.Off(),
-        )
+        await self.send_device_command(self._get_command_for_value(False))
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
-        self._attr_is_on = self.get_matter_attribute_value(
-            self._entity_info.primary_attribute
-        )
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if self.entity_description.inverted:
+            value = not value
+        self._attr_is_on = value
 
 
 class MatterGenericCommandSwitch(MatterSwitch):
@@ -79,6 +91,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
 
     _platform_translation_key = "switch"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         if self.entity_description.on_command:
@@ -88,6 +101,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
                 self.entity_description.command_timeout,
             )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         if self.entity_description.off_command:
@@ -97,6 +111,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
             )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -104,6 +119,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
             value = value_convert(value)
         self._attr_is_on = value
 
+    @override
     async def send_device_command(
         self,
         command: ClusterCommand,
@@ -121,9 +137,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MatterGenericCommandSwitchEntityDescription(
-    SwitchEntityDescription, MatterEntityDescription
-):
+class MatterGenericCommandSwitchEntityDescription(MatterSwitchEntityDescription):
     """Describe Matter Generic command Switch entities."""
 
     # command: a custom callback to create the command to send to the device
@@ -133,9 +147,7 @@ class MatterGenericCommandSwitchEntityDescription(
 
 
 @dataclass(frozen=True, kw_only=True)
-class MatterNumericSwitchEntityDescription(
-    SwitchEntityDescription, MatterEntityDescription
-):
+class MatterNumericSwitchEntityDescription(MatterSwitchEntityDescription):
     """Describe Matter Numeric Switch entities."""
 
 
@@ -146,21 +158,23 @@ class MatterNumericSwitch(MatterSwitch):
 
     async def _async_set_native_value(self, value: bool) -> None:
         """Update the current value."""
+        send_value: Any = value
         if value_convert := self.entity_description.ha_to_device:
             send_value = value_convert(value)
-        await self.write_attribute(
-            value=send_value,
-        )
+        await self.write_attribute(value=send_value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self._async_set_native_value(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self._async_set_native_value(False)
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -199,7 +213,6 @@ DISCOVERY_SCHEMAS = [
             device_types.Cooktop,
             device_types.Dishwasher,
             device_types.ExtractorHood,
-            device_types.HeatingCoolingUnit,
             device_types.LaundryDryer,
             device_types.LaundryWasher,
             device_types.Oven,
@@ -234,7 +247,6 @@ DISCOVERY_SCHEMAS = [
             device_types.Dishwasher,
             device_types.ExtractorHood,
             device_types.Fan,
-            device_types.HeatingCoolingUnit,
             device_types.LaundryDryer,
             device_types.LaundryWasher,
             device_types.Oven,
@@ -248,19 +260,12 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=MatterNumericSwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterMuteToggle",
             translation_key="speaker_mute",
-            device_to_ha={
-                True: False,  # True means volume is on, so HA should show mute as off
-                False: True,  # False means volume is off (muted), so HA should show mute as on
-            }.get,
-            ha_to_device={
-                False: True,  # HA showing mute as off means volume is on, so send True
-                True: False,  # HA showing mute as on means volume is off (muted), so send False
-            }.get,
+            inverted=True,
         ),
-        entity_class=MatterNumericSwitch,
+        entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
         device_type=(device_types.Speaker,),
     ),
@@ -318,5 +323,15 @@ DISCOVERY_SCHEMAS = [
         ),
         value_contains=clusters.EnergyEvse.Commands.EnableCharging.command_id,
         allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="EveChildLock",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="child_lock",
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.EveCluster.Attributes.ChildLock,),
     ),
 ]

@@ -1,19 +1,18 @@
 """Select entities for the Motionblinds Bluetooth integration."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from motionblindsble.const import MotionBlindType, MotionSpeedLevel
 from motionblindsble.device import MotionDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_SPEED, CONF_MAC_CODE, DOMAIN
+from . import MotionConfigEntry
+from .const import ATTR_SPEED, CONF_MAC_CODE
 from .entity import MotionblindsBLEEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,12 +32,12 @@ SELECT_TYPES: dict[str, SelectEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select entities based on a config entry."""
 
-    device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
+    device = entry.runtime_data
 
     if device.blind_type not in {MotionBlindType.CURTAIN, MotionBlindType.VERTICAL}:
         async_add_entities([SpeedSelect(device, entry, SELECT_TYPES[ATTR_SPEED])])
@@ -50,7 +49,7 @@ class SpeedSelect(MotionblindsBLEEntity, SelectEntity):
     def __init__(
         self,
         device: MotionDevice,
-        entry: ConfigEntry,
+        entry: MotionConfigEntry,
         entity_description: SelectEntityDescription,
     ) -> None:
         """Initialize the speed select entity."""
@@ -59,6 +58,7 @@ class SpeedSelect(MotionblindsBLEEntity, SelectEntity):
         )
         self._attr_current_option = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
         _LOGGER.debug(
@@ -73,6 +73,7 @@ class SpeedSelect(MotionblindsBLEEntity, SelectEntity):
         self._attr_current_option = str(speed_level.value) if speed_level else None
         self.async_write_ha_state()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected speed sensor value."""
         speed_level = MotionSpeedLevel(int(option))

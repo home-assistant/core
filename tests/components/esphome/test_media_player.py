@@ -59,7 +59,9 @@ async def test_media_player_entity(
             key=1,
             name="my media_player",
             supports_pause=True,
-            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY,TURN_OFF,TURN_ON
+            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
+            # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY,
+            # TURN_OFF,TURN_ON
             feature_flags=1201037,
         )
     ]
@@ -285,7 +287,7 @@ async def test_media_player_entity_with_source(
                     media_class=MediaClass.APP,
                     media_content_id="",
                     media_content_type="spotify",
-                    thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+                    thumbnail="/api/brands/integration/spotify/logo.png",
                     can_play=False,
                     can_expand=True,
                 )
@@ -314,7 +316,8 @@ async def test_media_player_entity_with_source(
             key=1,
             name="my media_player",
             supports_pause=True,
-            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
+            # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
             feature_flags=1200653,
         )
     ]
@@ -431,7 +434,8 @@ async def test_media_player_proxy(
                 key=1,
                 name="my media_player",
                 supports_pause=True,
-                # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+                # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
+                # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
                 feature_flags=1200653,
                 supported_formats=[
                     MediaPlayerSupportedFormat(
@@ -464,8 +468,9 @@ async def test_media_player_proxy(
         ],
     )
     await hass.async_block_till_done()
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
     assert dev is not None
     state = hass.states.get("media_player.test_my_media_player")
@@ -591,7 +596,8 @@ async def test_media_player_formats_reload_preserves_data(
                 key=1,
                 name="Test Media Player",
                 supports_pause=True,
-                # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+                # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
+                # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
                 feature_flags=1200653,
                 supported_formats=supported_formats,
             )

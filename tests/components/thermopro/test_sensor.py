@@ -1,4 +1,4 @@
-"""Test the ThermoPro config flow."""
+"""Test the ThermoPro sensors."""
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.thermopro.const import DOMAIN
@@ -8,7 +8,10 @@ from homeassistant.core import HomeAssistant
 from . import TP357_SERVICE_INFO, TP962R_SERVICE_INFO, TP962R_SERVICE_INFO_2
 
 from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
+from tests.components.bluetooth import (
+    inject_bluetooth_service_info,
+    patch_discovered_devices,
+)
 
 
 async def test_sensors_tp962r(hass: HomeAssistant) -> None:
@@ -125,3 +128,34 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_sensors_restored_on_restart(hass: HomeAssistant) -> None:
+    """Test sensors are restored on restart before a new advertisement arrives."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, TP357_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Simulate a restart with no fresh advertisement: drop the leftover states
+    # and clear the cached advertisements so only the restore storage can
+    # recreate the entities.
+    for state in hass.states.async_all():
+        hass.states.async_remove(state.entity_id)
+
+    with patch_discovered_devices([]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3

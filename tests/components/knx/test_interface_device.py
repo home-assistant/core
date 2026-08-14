@@ -36,6 +36,7 @@ async def test_diagnostic_entities(
         "sensor.knx_interface_outgoing_telegrams",
         "sensor.knx_interface_outgoing_telegram_errors",
         "sensor.knx_interface_telegrams",
+        "sensor.knx_interface_undecodable_data_secure_telegrams",
     ):
         entity = entity_registry.async_get(entity_id)
         assert entity.entity_category is EntityCategory.DIAGNOSTIC
@@ -43,6 +44,7 @@ async def test_diagnostic_entities(
     for entity_id in (
         "sensor.knx_interface_incoming_telegrams",
         "sensor.knx_interface_outgoing_telegrams",
+        "sensor.knx_interface_undecodable_data_secure_telegrams",
     ):
         entity = entity_registry.async_get(entity_id)
         assert entity.disabled is True
@@ -57,7 +59,7 @@ async def test_diagnostic_entities(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert len(events) == 3  # 5 polled sensors - 2 disabled
+    assert len(events) == 3  # 6 polled sensors - 3 disabled
     events.clear()
 
     for entity_id, test_state in (
@@ -74,7 +76,7 @@ async def test_diagnostic_entities(
         state=XknxConnectionState.DISCONNECTED
     )
     await hass.async_block_till_done()
-    assert len(events) == 4  # 3 not always_available + 3 force_update - 2 disabled
+    assert len(events) == 4
     events.clear()
 
     knx.xknx.current_address = IndividualAddress("1.1.1")
@@ -129,7 +131,7 @@ async def test_remove_interface_device(
     assert knx_devices[0].name == "KNX Interface"
     device_id = knx_devices[0].id
     # interface device can't be removed
-    res = await client.remove_device(device_id, knx.mock_config_entry.entry_id)
+    res = await client.remove_device(device_id)
     assert not res["success"]
     assert (
         res["error"]["message"]

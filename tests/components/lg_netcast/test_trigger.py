@@ -1,5 +1,6 @@
 """The tests for LG Netcast device triggers."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -17,15 +18,24 @@ from . import ENTITY_ID, UNIQUE_ID, setup_lgnetcast
 from tests.common import MockEntity, MockEntityPlatform
 
 
+@pytest.fixture(autouse=True)
+def mock_lg_netcast() -> Generator[None]:
+    """Mock LG Netcast library."""
+    with patch("homeassistant.components.lg_netcast.LgNetCastClient"):
+        yield
+
+
 async def test_lg_netcast_turn_on_trigger_device_id(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for turn_on trigger by device_id firing."""
-    await setup_lgnetcast(hass)
+    config_entry = await setup_lgnetcast(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIQUE_ID), config_entry.entry_id
+    )
     assert device, repr(device_registry.devices)
 
     assert await async_setup_component(

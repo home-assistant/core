@@ -6,8 +6,9 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
+from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -20,9 +21,26 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
 from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with patch(
+        "homeassistant.components.reolink.PLATFORMS",
+        [Platform.SELECT],
+    ):
+        await setup_integration(hass, config_entry)
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_floodlight_mode_select(
@@ -68,7 +86,7 @@ async def test_floodlight_mode_select(
         )
 
     reolink_host.whiteled_mode.return_value = -99  # invalid value
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -142,7 +160,7 @@ async def test_host_scene_select(
         )
 
     reolink_host.baichuan.active_scene = "Invalid value"
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -202,7 +220,7 @@ async def test_chime_select(
     # Test unavailable
     reolink_chime.event_info = {}
     reolink_chime.update_enums()
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

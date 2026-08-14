@@ -189,7 +189,7 @@ async def test_set_wifi_credentials(
 
 @pytest.mark.usefixtures("matter_node")
 # setup (mock) integration with a random node fixture
-@pytest.mark.parametrize("node_fixture", ["onoff_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
 async def test_node_diagnostics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -198,10 +198,9 @@ async def test_node_diagnostics(
 ) -> None:
     """Test the node diagnostics command."""
     # get the device registry entry for the mocked node
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -258,7 +257,7 @@ async def test_node_diagnostics(
 
 @pytest.mark.usefixtures("matter_node")
 # setup (mock) integration with a random node fixture
-@pytest.mark.parametrize("node_fixture", ["onoff_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
 async def test_ping_node(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -267,10 +266,9 @@ async def test_ping_node(
 ) -> None:
     """Test the ping_node command."""
     # get the device registry entry for the mocked node
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -313,7 +311,7 @@ async def test_ping_node(
 
 @pytest.mark.usefixtures("matter_node")
 # setup (mock) integration with a random node fixture
-@pytest.mark.parametrize("node_fixture", ["onoff_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
 async def test_open_commissioning_window(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -322,10 +320,9 @@ async def test_open_commissioning_window(
 ) -> None:
     """Test the open_commissioning_window command."""
     # get the device registry entry for the mocked node
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -374,7 +371,7 @@ async def test_open_commissioning_window(
 
 @pytest.mark.usefixtures("matter_node")
 # setup (mock) integration with a random node fixture
-@pytest.mark.parametrize("node_fixture", ["onoff_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
 async def test_remove_matter_fabric(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -383,10 +380,9 @@ async def test_remove_matter_fabric(
 ) -> None:
     """Test the remove_matter_fabric command."""
     # get the device registry entry for the mocked node
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -402,7 +398,7 @@ async def test_remove_matter_fabric(
     )
     msg = await ws_client.receive_json()
     assert msg["success"]
-    matter_client.remove_matter_fabric.assert_called_once_with(1, 3)
+    matter_client.remove_matter_fabric.assert_called_once_with(30, 3)
 
     # repeat test with a device id that does not have a node attached
     new_entry = device_registry.async_get_or_create(
@@ -425,7 +421,7 @@ async def test_remove_matter_fabric(
 
 @pytest.mark.usefixtures("matter_node")
 # setup (mock) integration with a random node fixture
-@pytest.mark.parametrize("node_fixture", ["onoff_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
 async def test_interview_node(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -434,10 +430,9 @@ async def test_interview_node(
 ) -> None:
     """Test the interview_node command."""
     # get the device registry entry for the mocked node
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
     # issue command on the ws api
@@ -447,7 +442,7 @@ async def test_interview_node(
     )
     msg = await ws_client.receive_json()
     assert msg["success"]
-    matter_client.interview_node.assert_called_once_with(1)
+    matter_client.interview_node.assert_called_once_with(30)
 
     # repeat test with a device id that does not have a node attached
     new_entry = device_registry.async_get_or_create(

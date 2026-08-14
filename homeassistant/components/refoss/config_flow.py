@@ -1,11 +1,9 @@
 """Config Flow for Refoss integration."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 
-from .const import _LOGGER, DISCOVERY_TIMEOUT, DOMAIN
+from .const import DISCOVERY_TIMEOUT, DOMAIN, LOGGER
 from .util import refoss_discovery_server
 
 
@@ -14,7 +12,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     refoss_discovery = await refoss_discovery_server(hass)
     devices = await refoss_discovery.broadcast_msg(wait_for=DISCOVERY_TIMEOUT)
-    _LOGGER.debug(
+    LOGGER.debug(
         "Discovered devices: [%s]", ", ".join([info.dev_name for info in devices])
     )
     return len(devices) > 0

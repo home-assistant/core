@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch[load_platforms0][switch.device1_autolock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Autolock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -37,7 +39,7 @@
 # name: test_switch[load_platforms0][switch.device1_autolock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device1 Autolock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device1 Autolock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device1_autolock',
@@ -49,8 +51,9 @@
 # ---
 # name: test_switch[load_platforms0][switch.device2_autolock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Autolock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -85,7 +89,7 @@
 # name: test_switch[load_platforms0][switch.device2_autolock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device2 Autolock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device2 Autolock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device2_autolock',
@@ -97,8 +101,9 @@
 # ---
 # name: test_switch[load_platforms0][switch.device3_autolock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Autolock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -133,7 +139,7 @@
 # name: test_switch[load_platforms0][switch.device3_autolock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device3 Autolock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device3 Autolock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device3_autolock',
@@ -145,8 +151,9 @@
 # ---
 # name: test_switch[load_platforms0][switch.device7_autolock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Autolock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -181,7 +189,7 @@
 # name: test_switch[load_platforms0][switch.device7_autolock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device7 Autolock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device7 Autolock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device7_autolock',
@@ -193,8 +201,9 @@
 # ---
 # name: test_switch[load_platforms0][switch.device8_autolock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Autolock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -229,7 +239,7 @@
 # name: test_switch[load_platforms0][switch.device8_autolock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device8 Autolock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device8 Autolock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device8_autolock',
@@ -241,8 +251,9 @@
 # ---
 # name: test_switch[load_platforms0][switch.device9_autolock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Autolock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -277,7 +289,7 @@
 # name: test_switch[load_platforms0][switch.device9_autolock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device9 Autolock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device9 Autolock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device9_autolock',

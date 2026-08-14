@@ -6,15 +6,10 @@ from asyncsleepiq import (
     SleepIQTimeoutException,
 )
 
-from homeassistant.components.sleepiq.const import (
-    DOMAIN,
-    IS_IN_BED,
-    PRESSURE,
-    SLEEP_NUMBER,
-)
+from homeassistant.components.sleepiq.const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
 from homeassistant.components.sleepiq.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, PRESSURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -131,7 +126,7 @@ async def test_unique_id_migration(hass: HomeAssistant, mock_asyncsleepiq) -> No
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
+    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     sensor_is_in_bed = ent_reg.async_get(ENTITY_IS_IN_BED)
     assert sensor_is_in_bed.unique_id == f"{SLEEPER_L_ID}_{IS_IN_BED}"

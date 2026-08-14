@@ -123,7 +123,7 @@ class Auth:
                     allow_redirects=True,
                 )
 
-        except (TimeoutError, aiohttp.ClientError):
+        except TimeoutError, aiohttp.ClientError:
             _LOGGER.error("Timeout calling LWA to get auth token")
             return None
 

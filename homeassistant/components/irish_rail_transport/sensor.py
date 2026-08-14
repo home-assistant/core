@@ -1,9 +1,7 @@
 """Support for Irish Rail RTPI information."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pyirishrail.pyirishrail import IrishRailRTPI
 import voluptuous as vol
@@ -95,16 +93,19 @@ class IrishRailTransportSensor(SensorEntity):
         self._times = []
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times:
@@ -131,6 +132,7 @@ class IrishRailTransportSensor(SensorEntity):
         return None
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return UnitOfTime.MINUTES
@@ -165,7 +167,7 @@ class IrishRailTransportData:
             destination=self.destination,
             stops_at=self.stops_at,
         )
-        stops_at = self.stops_at if self.stops_at else ""
+        stops_at = self.stops_at or ""
         self.info = []
         for train in trains:
             train_data = {
@@ -186,9 +188,9 @@ class IrishRailTransportData:
 
     def _empty_train_data(self):
         """Generate info for an empty train."""
-        dest = self.destination if self.destination else ""
-        direction = self.direction if self.direction else ""
-        stops_at = self.stops_at if self.stops_at else ""
+        dest = self.destination or ""
+        direction = self.direction or ""
+        stops_at = self.stops_at or ""
         return [
             {
                 ATTR_STATION: self.station,

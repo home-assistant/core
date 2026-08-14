@@ -1,0 +1,47 @@
+{
+  "sn": "ZVG011025120088",
+  "name": "ZVG011025120088",
+  "onlineStatus": "ONLINE",
+  "currentPower": {
+    "soc": 100,
+    "coc": 4,
+    "pbt": -19,
+    "ppv": 0,
+    "pso": -19,
+    "onGrid": true,
+    "onlineStatus": "ONLINE",
+    "smp": 800,
+    "isDormancy": false,
+    "socCalibrateStatus": false
+  },
+  "smartMode": "CHARGED",
+  "globalSettings": {
+    "maxOutput": 800,
+    "maxOutputLimit": 800,
+    "maxOutputUnlocked": false,
+    "batHighCap": 100,
+    "batUseCap": 10,
+    "maxChargePower": 800,
+    "feedModePower": {
+      "modeType": "FIXED",
+      "fixedPower": 200,
+      "pvFeedLimitPower": 800,
+      "equips": []
+    },
+    "haveElectricityPrices": false,
+    "standbyTime": 60
+  },
+  "tips": [],
+  "bpd": 2119,
+  "updating": {
+    "units": []
+  },
+  "statistic": {
+    "co2": 0,
+    "saveAmount": 0,
+    "totalCapacity": 0
+  },
+  "isShowStatistic": false,
+  "meterReaders": [],
+  "remindManualSocCalibration": true
+}

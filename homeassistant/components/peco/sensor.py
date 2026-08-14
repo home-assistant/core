@@ -1,28 +1,22 @@
 """Sensor component for PECO outage counter."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PECOCoordinatorData
 from .const import ATTR_CONTENT, CONF_COUNTY, DOMAIN
+from .coordinator import PecoConfigEntry, PECOCoordinatorData, PecoOutageCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -75,21 +69,19 @@ SENSOR_LIST: tuple[PECOSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PecoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     county: str = config_entry.data[CONF_COUNTY]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["outage_count"]
+    coordinator = config_entry.runtime_data.outage_coordinator
 
     async_add_entities(
         PecoSensor(sensor, county, coordinator) for sensor in SENSOR_LIST
     )
 
 
-class PecoSensor(
-    CoordinatorEntity[DataUpdateCoordinator[PECOCoordinatorData]], SensorEntity
-):
+class PecoSensor(CoordinatorEntity[PecoOutageCoordinator], SensorEntity):
     """PECO outage counter sensor."""
 
     entity_description: PECOSensorEntityDescription
@@ -100,7 +92,7 @@ class PecoSensor(
         self,
         description: PECOSensorEntityDescription,
         county: str,
-        coordinator: DataUpdateCoordinator[PECOCoordinatorData],
+        coordinator: PecoOutageCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -111,11 +103,13 @@ class PecoSensor(
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> int | str:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return state attributes for the sensor."""
         return self.entity_description.attribute_fn(self.coordinator.data)

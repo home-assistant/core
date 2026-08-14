@@ -1,9 +1,7 @@
 """Config flow for APCUPSd integration."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import Any
+from typing import Any, override
 
 import aioapcaccess
 import voluptuous as vol
@@ -37,6 +35,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -50,7 +49,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(CONNECTION_TIMEOUT):
                 data = APCUPSdData(await aioapcaccess.request_status(host, port))
-        except (OSError, asyncio.IncompleteReadError, TimeoutError):
+        except OSError, asyncio.IncompleteReadError, TimeoutError:
             errors = {"base": "cannot_connect"}
             return self.async_show_form(
                 step_id="user", data_schema=_SCHEMA, errors=errors
@@ -77,7 +76,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(CONNECTION_TIMEOUT):
                 data = APCUPSdData(await aioapcaccess.request_status(host, port))
-        except (OSError, asyncio.IncompleteReadError, TimeoutError):
+        except OSError, asyncio.IncompleteReadError, TimeoutError:
             errors = {"base": "cannot_connect"}
             return self.async_show_form(
                 step_id="reconfigure", data_schema=_SCHEMA, errors=errors

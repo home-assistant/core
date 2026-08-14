@@ -1,15 +1,17 @@
 """Sensor to indicate whether the current day is a workday."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import cast
 
 from holidays import DateLike, HolidayBase
+import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -18,6 +20,7 @@ from .const import (
     CONF_OFFSET,
     CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
+    DOMAIN,
     LOGGER,
     PLATFORMS,
 )
@@ -29,6 +32,26 @@ from .util import (
 )
 
 type WorkdayConfigEntry = ConfigEntry[HolidayBase]
+
+SERVICE_CHECK_DATE = "check_date"
+CHECK_DATE = "check_date"
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Workday integration."""
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_CHECK_DATE,
+        entity_domain=BINARY_SENSOR_DOMAIN,
+        schema={vol.Required(CHECK_DATE): cv.date},
+        func="check_date",
+        supports_response=SupportsResponse.ONLY,
+    )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> bool:
@@ -71,3 +94,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> 
     """Unload Workday config entry."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> bool:
+    """Migrate old config entry."""
+
+    if entry.version == 1 and entry.minor_version == 1:
+        # By keeping name in the data, it's enough to bump the minor version
+        hass.config_entries.async_update_entry(
+            entry,
+            minor_version=2,
+        )
+
+    return True

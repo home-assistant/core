@@ -1,7 +1,5 @@
 """Diagnostics support for Kostal Plenticore."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
@@ -32,6 +30,29 @@ async def async_get_config_entry_diagnostics(
             module_id: [str(setting) for setting in settings]
             for module_id, settings in available_settings_data.items()
         },
+    }
+
+    # Add important information how the inverter is configured
+    string_count_setting = await plenticore.client.get_setting_values(
+        "devices:local", "Properties:StringCnt"
+    )
+    try:
+        string_count = int(
+            string_count_setting["devices:local"]["Properties:StringCnt"]
+        )
+    except ValueError:
+        string_count = 0
+
+    configuration_settings = await plenticore.client.get_setting_values(
+        "devices:local",
+        (
+            "Properties:StringCnt",
+            *(f"Properties:String{idx}Features" for idx in range(string_count)),
+        ),
+    )
+
+    data["configuration"] = {
+        **configuration_settings,
     }
 
     device_info = {**plenticore.device_info}

@@ -1,1 +1,1 @@
-"""The fints component."""
+"""The FinTS integration."""

@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_entities[select.kitchen_select-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'summer',
         'winter',
@@ -27,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'select',
     'options': dict({
     }),
     'original_device_class': None,
@@ -36,7 +38,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'select_program',
     'unique_id': 'qwerty1234567-33-program_select',
     'unit_of_measurement': None,
   })
@@ -44,8 +46,8 @@
 # name: test_entities[select.kitchen_select-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen select',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen select',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'summer',
         'winter',

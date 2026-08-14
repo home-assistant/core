@@ -1,7 +1,5 @@
 """Helpers for tests around template rendering."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import Any
 
@@ -44,7 +42,13 @@ def assert_result_info(
     all_states: bool = False,
 ) -> None:
     """Check result info."""
-    assert info.result() == result
+    actual = info.result()
+    assert actual == result, (
+        f"Template result mismatch:\n"
+        f"  Expected: {result!r} (type: {type(result).__name__})\n"
+        f"  Actual:   {actual!r} (type: {type(actual).__name__})\n"
+        f"  Template: {info.template!r}"
+    )
     assert info.all_states == all_states
     assert info.filter("invalid_entity_name.somewhere") == all_states
     if entities is not None:

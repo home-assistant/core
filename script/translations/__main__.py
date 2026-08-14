@@ -32,7 +32,7 @@ if __name__ == "__main__":
         print()
         print(f"Fatal Error: {err.reason}")
         sys.exit(err.exit_code)
-    except (KeyboardInterrupt, EOFError):
+    except KeyboardInterrupt, EOFError:
         print()
         print("Aborted!")
         sys.exit(2)

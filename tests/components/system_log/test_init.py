@@ -1,7 +1,5 @@
 """Test system log component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable
 import logging
@@ -145,7 +143,7 @@ async def test_warning(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) 
 async def test_warning_good_format(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that warning with good format arguments are logged and retrieved correctly."""
+    """Test warning with good format arguments are logged correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
     _LOGGER.warning("Warning message: %s", "test")
@@ -158,7 +156,7 @@ async def test_warning_good_format(
 async def test_warning_missing_format_args(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that warning with missing format arguments are logged and retrieved correctly."""
+    """Test warning with missing format args are logged correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
     _LOGGER.warning("Warning message missing a format arg %s")

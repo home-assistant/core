@@ -1,12 +1,13 @@
 """Support for LCN switches."""
 
 from collections.abc import Iterable
+from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 import pypck
 
-from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -16,7 +17,8 @@ from .const import CONF_DOMAIN_DATA, CONF_OUTPUT, OUTPUT_PORTS, RELAY_PORTS, SET
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 2
+SCAN_INTERVAL = timedelta(minutes=10)
 
 
 def add_lcn_switch_entities(
@@ -54,14 +56,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_SWITCH: add_entities}
+        {SWITCH_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_SWITCH
+            if entity_config[CONF_DOMAIN] == SWITCH_DOMAIN
         ),
     )
 
@@ -77,18 +79,7 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
 
         self.output = pypck.lcn_defs.OutputPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.output)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.output)
-
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if not await self.device_connection.dim_output(self.output.value, 100, 0):
@@ -96,6 +87,7 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if not await self.device_connection.dim_output(self.output.value, 0, 0):
@@ -103,6 +95,16 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        self._attr_available = (
+            await self.device_connection.request_status_output(
+                self.output, SCAN_INTERVAL.seconds
+            )
+            is not None
+        )
+
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
         if (
@@ -110,7 +112,7 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
             or input_obj.get_output_id() != self.output.value
         ):
             return
-
+        self._attr_available = True
         self._attr_is_on = input_obj.get_percent() > 0
         self.async_write_ha_state()
 
@@ -126,18 +128,7 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
 
         self.output = pypck.lcn_defs.RelayPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.output)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.output)
-
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
@@ -147,6 +138,7 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
@@ -156,11 +148,19 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        self._attr_available = (
+            await self.device_connection.request_status_relays(SCAN_INTERVAL.seconds)
+            is not None
+        )
+
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusRelays):
             return
-
+        self._attr_available = True
         self._attr_is_on = input_obj.get_state(self.output.value)
         self.async_write_ha_state()
 
@@ -179,22 +179,7 @@ class LcnRegulatorLockSwitch(LcnEntity, SwitchEntity):
         ]
         self.reg_id = pypck.lcn_defs.Var.to_set_point_id(self.setpoint_variable)
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(
-                self.setpoint_variable
-            )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(
-                self.setpoint_variable
-            )
-
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if not await self.device_connection.lock_regulator(self.reg_id, True):
@@ -202,6 +187,7 @@ class LcnRegulatorLockSwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if not await self.device_connection.lock_regulator(self.reg_id, False):
@@ -209,14 +195,24 @@ class LcnRegulatorLockSwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        self._attr_available = (
+            await self.device_connection.request_status_variable(
+                self.setpoint_variable, SCAN_INTERVAL.seconds
+            )
+            is not None
+        )
+
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
         if (
             not isinstance(input_obj, pypck.inputs.ModStatusVar)
-            or input_obj.get_var() != self.setpoint_variable
+            or input_obj.get_var() is not self.setpoint_variable
         ):
             return
-
+        self._attr_available = True
         self._attr_is_on = input_obj.get_value().is_locked_regulator()
         self.async_write_ha_state()
 
@@ -234,18 +230,7 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
         self.table_id = ord(self.key.name[0]) - 65
         self.key_id = int(self.key.name[1]) - 1
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.key)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.key)
-
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         states = [pypck.lcn_defs.KeyLockStateModifier.NOCHANGE] * 8
@@ -257,6 +242,7 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         states = [pypck.lcn_defs.KeyLockStateModifier.NOCHANGE] * 8
@@ -268,6 +254,16 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        self._attr_available = (
+            await self.device_connection.request_status_locked_keys(
+                SCAN_INTERVAL.seconds
+            )
+            is not None
+        )
+
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
         if (
@@ -275,6 +271,6 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
             or self.key not in pypck.lcn_defs.Key
         ):
             return
-
+        self._attr_available = True
         self._attr_is_on = input_obj.get_state(self.table_id, self.key_id)
         self.async_write_ha_state()

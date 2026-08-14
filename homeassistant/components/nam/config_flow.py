@@ -1,10 +1,8 @@
 """Adds config flow for Nettigo Air Monitor."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nettigo_air_monitor import (
@@ -50,6 +48,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
     host: str
     auth_enabled: bool = False
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -61,7 +60,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 nam = await async_get_nam(self.hass, self.host, {})
-            except (ApiError, ClientConnectorError, TimeoutError):
+            except ApiError, ClientConnectorError, TimeoutError:
                 errors["base"] = "cannot_connect"
             except CannotGetMacError:
                 return self.async_abort(reason="device_unsupported")
@@ -96,7 +95,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
                 nam = await async_get_nam(self.hass, self.host, user_input)
             except AuthFailedError:
                 errors["base"] = "invalid_auth"
-            except (ApiError, ClientConnectorError, TimeoutError):
+            except ApiError, ClientConnectorError, TimeoutError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -114,6 +113,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=AUTH_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -126,7 +126,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             nam = await async_get_nam(self.hass, self.host, {})
-        except (ApiError, ClientConnectorError, TimeoutError):
+        except ApiError, ClientConnectorError, TimeoutError:
             return self.async_abort(reason="cannot_connect")
         except CannotGetMacError:
             return self.async_abort(reason="device_unsupported")
@@ -208,7 +208,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 nam = await async_get_nam(self.hass, user_input[CONF_HOST], {})
-            except (ApiError, ClientConnectorError, TimeoutError):
+            except ApiError, ClientConnectorError, TimeoutError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(format_mac(nam.mac))

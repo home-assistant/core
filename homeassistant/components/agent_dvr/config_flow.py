@@ -1,7 +1,7 @@
 """Config flow to configure Agent devices."""
 
 from contextlib import suppress
-from typing import Any
+from typing import Any, override
 
 from agent import AgentConnectionError, AgentError
 from agent.a import Agent
@@ -20,6 +20,7 @@ DEFAULT_PORT = 8090
 class AgentFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an Agent config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

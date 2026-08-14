@@ -1,8 +1,6 @@
 """The power switch which can be toggled via the APsystems local API integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectionError
 from APsystemsEZ1 import InverterReturnedError
@@ -43,16 +41,18 @@ class ApSystemsInverterSwitch(ApSystemsEntity, SwitchEntity):
         """Update switch status and availability."""
         try:
             status = await self._api.get_device_power_status()
-        except (TimeoutError, ClientConnectionError, InverterReturnedError):
+        except TimeoutError, ClientConnectionError, InverterReturnedError:
             self._attr_available = False
         else:
             self._attr_available = True
             self._attr_is_on = status
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._api.set_device_power_status(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._api.set_device_power_status(False)

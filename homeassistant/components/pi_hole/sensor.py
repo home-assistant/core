@@ -1,20 +1,17 @@
 """Support for getting statistical data from a Pi-hole system."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from hole import Hole
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleConfigEntry
+from .coordinator import PiHoleConfigEntry, PiHoleUpdateCoordinator
 from .entity import PiHoleEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -122,7 +119,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole sensor."""
-    name = entry.data[CONF_NAME]
+    name = entry.title
     hole_data = entry.runtime_data
     sensors = [
         PiHoleSensor(
@@ -148,7 +145,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator[None],
+        coordinator: PiHoleUpdateCoordinator,
         name: str,
         server_unique_id: str,
         description: SensorEntityDescription,
@@ -160,6 +157,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the device."""
         return get_nested(self.api.data, self.entity_description.key)

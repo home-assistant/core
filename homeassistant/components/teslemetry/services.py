@@ -1,12 +1,20 @@
 """Service calls for the Teslemetry integration."""
 
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 from voluptuous import All, Range
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    ATTR_ID,
+    ATTR_LOCATION,
+    ATTR_NAME,
+    ATTR_TIME,
+    CONF_DEVICE_ID,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -15,20 +23,20 @@ from .const import DOMAIN
 from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
+if TYPE_CHECKING:
+    from . import TeslemetryConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 # Attributes
-ATTR_ID = "id"
 ATTR_GPS = "gps"
 ATTR_TYPE = "type"
 ATTR_VALUE = "value"
-ATTR_LOCATION = "location"
 ATTR_LOCALE = "locale"
 ATTR_ORDER = "order"
 ATTR_TIMESTAMP = "timestamp"
 ATTR_FIELDS = "fields"
 ATTR_ENABLE = "enable"
-ATTR_TIME = "time"
 ATTR_PIN = "pin"
 ATTR_TOU_SETTINGS = "tou_settings"
 ATTR_PRECONDITIONING_ENABLED = "preconditioning_enabled"
@@ -41,7 +49,6 @@ ATTR_DAYS_OF_WEEK = "days_of_week"
 ATTR_START_TIME = "start_time"
 ATTR_END_TIME = "end_time"
 ATTR_ONE_TIME = "one_time"
-ATTR_NAME = "name"
 ATTR_PRECONDITION_TIME = "precondition_time"
 
 # Services
@@ -63,7 +70,11 @@ def async_get_device_for_service_call(
     """Get the device entry related to a service call."""
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
-    if (device_entry := device_registry.async_get(device_id)) is None:
+    if (
+        device_entry := device_registry.async_get(
+            device_id, include_child_devices=False
+        )
+    ) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_device",
@@ -75,38 +86,47 @@ def async_get_device_for_service_call(
 
 def async_get_config_for_device(
     hass: HomeAssistant, device_entry: dr.DeviceEntry
-) -> ConfigEntry:
+) -> TeslemetryConfigEntry:
     """Get the config entry related to a device entry."""
-    config_entry: ConfigEntry
     for entry_id in device_entry.config_entries:
         if entry := hass.config_entries.async_get_entry(entry_id):
             if entry.domain == DOMAIN:
-                config_entry = entry
-    return config_entry
+                return entry
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="no_config_entry_for_device",
+        translation_placeholders={"device_id": device_entry.id},
+    )
 
 
 def async_get_vehicle_for_entry(
-    hass: HomeAssistant, device: dr.DeviceEntry, config: ConfigEntry
+    hass: HomeAssistant, device: dr.DeviceEntry, config: TeslemetryConfigEntry
 ) -> TeslemetryVehicleData:
     """Get the vehicle data for a config entry."""
-    vehicle_data: TeslemetryVehicleData
     assert device.serial_number is not None
     for vehicle in config.runtime_data.vehicles:
         if vehicle.vin == device.serial_number:
-            vehicle_data = vehicle
-    return vehicle_data
+            return vehicle
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="no_vehicle_data_for_device",
+        translation_placeholders={"device_id": device.id},
+    )
 
 
 def async_get_energy_site_for_entry(
-    hass: HomeAssistant, device: dr.DeviceEntry, config: ConfigEntry
+    hass: HomeAssistant, device: dr.DeviceEntry, config: TeslemetryConfigEntry
 ) -> TeslemetryEnergyData:
     """Get the energy site data for a config entry."""
-    energy_data: TeslemetryEnergyData
     assert device.serial_number is not None
     for energysite in config.runtime_data.energysites:
         if str(energysite.id) == device.serial_number:
-            energy_data = energysite
-    return energy_data
+            return energysite
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="no_energy_site_data_for_device",
+        translation_placeholders={"device_id": device.id},
+    )
 
 
 @callback
@@ -123,7 +143,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             vehicle.api.navigation_gps_request(
                 lat=call.data[ATTR_GPS][CONF_LATITUDE],
                 lon=call.data[ATTR_GPS][CONF_LONGITUDE],
-                order=call.data.get(ATTR_ORDER),
+                order=call.data.get(ATTR_ORDER, 0),
             )
         )
 
@@ -149,7 +169,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        time: int | None = None
+        time: int
         # Convert time to minutes since minute
         if "time" in call.data:
             (hours, minutes, *_seconds) = call.data["time"].split(":")
@@ -158,6 +178,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="set_scheduled_charging_time"
             )
+        else:
+            time = 0
 
         await handle_vehicle_command(
             vehicle.api.set_scheduled_charging(enable=call.data["enable"], time=time)
@@ -198,6 +220,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="set_scheduled_departure_preconditioning",
             )
+        else:
+            departure_time = 0
 
         # Off peak charging
         off_peak_charging_enabled = call.data.get(ATTR_OFF_PEAK_CHARGING_ENABLED, False)
@@ -214,6 +238,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="set_scheduled_departure_off_peak",
             )
+        else:
+            end_off_peak_time = 0
 
         await handle_vehicle_command(
             vehicle.api.set_scheduled_departure(
@@ -252,9 +278,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         await handle_vehicle_command(
-            vehicle.api.set_valet_mode(
-                call.data.get("enable"), call.data.get("pin", "")
-            )
+            vehicle.api.set_valet_mode(call.data["enable"], call.data["pin"])
         )
 
     hass.services.async_register(
@@ -276,14 +300,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        enable = call.data.get("enable")
+        enable = call.data["enable"]
         if enable is True:
             await handle_vehicle_command(
-                vehicle.api.speed_limit_activate(call.data.get("pin"))
+                vehicle.api.speed_limit_activate(call.data["pin"])
             )
         elif enable is False:
             await handle_vehicle_command(
-                vehicle.api.speed_limit_deactivate(call.data.get("pin"))
+                vehicle.api.speed_limit_deactivate(call.data["pin"])
             )
 
     hass.services.async_register(
@@ -305,9 +329,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         site = async_get_energy_site_for_entry(hass, device, config)
 
-        resp = await handle_command(
-            site.api.time_of_use_settings(call.data.get(ATTR_TOU_SETTINGS))
-        )
+        tou_settings = call.data[ATTR_TOU_SETTINGS]
+        # Unwrap tariff_content_v2 if user included it, since the SDK adds this wrapper
+        if "tariff_content_v2" in tou_settings:
+            tou_settings = tou_settings["tariff_content_v2"]
+
+        resp = await handle_command(site.api.time_of_use_settings(tou_settings))
         if "error" in resp:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -325,6 +352,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Required(ATTR_TOU_SETTINGS): dict,
             }
         ),
+        description_placeholders={
+            "time_of_use_url": "https://developer.tesla.com/docs/fleet-api#time_of_use_settings"
+        },
     )
 
     async def add_charge_schedule(call: ServiceCall) -> None:
@@ -335,7 +365,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Extract parameters from the service call
         days_of_week = call.data[ATTR_DAYS_OF_WEEK]
-        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        # If days_of_week is a list (from select with
+        # multiple), convert to comma-separated string
         if isinstance(days_of_week, list):
             days_of_week = ",".join(days_of_week)
         enabled = call.data[ATTR_ENABLE]
@@ -435,7 +466,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Extract parameters from the service call
         days_of_week = call.data[ATTR_DAYS_OF_WEEK]
-        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        # If days_of_week is a list (from select with
+        # multiple), convert to comma-separated string
         if isinstance(days_of_week, list):
             days_of_week = ",".join(days_of_week)
         enabled = call.data[ATTR_ENABLE]

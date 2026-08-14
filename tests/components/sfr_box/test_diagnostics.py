@@ -25,7 +25,10 @@ def override_platforms() -> Generator[None]:
         yield
 
 
-@pytest.mark.parametrize("net_infra", ["adsl", "ftth"])
+@pytest.mark.parametrize(
+    ("net_infra", "patch_to_none"),
+    [("adsl", "ftth_get_info"), ("ftth", "dsl_get_info")],
+)
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -33,13 +36,18 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
     system_get_info: SystemInfo,
     net_infra: str,
+    patch_to_none: str,
 ) -> None:
     """Test config entry diagnostics."""
     system_get_info.net_infra = net_infra
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-        == snapshot
-    )
+    with patch(
+        f"homeassistant.components.sfr_box.coordinator.SFRBox.{patch_to_none}",
+        return_value=None,
+    ):
+        assert (
+            await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+            == snapshot
+        )

@@ -1,7 +1,5 @@
 """The Anova integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -45,7 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> boo
     except NoDevicesFound as err:
         # Can later setup successfully and spawn a repair.
         raise ConfigEntryNotReady(
-            "No devices were found on the websocket, perhaps you don't have any devices on this account?"
+            "No devices were found on the websocket, perhaps you"
+            " don't have any devices on this account?"
         ) from err
     except WebsocketFailure as err:
         raise ConfigEntryNotReady("Failed connecting to the websocket.") from err
@@ -75,10 +74,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bo
 async def async_migrate_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
-
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 1 and entry.minor_version == 1:
         new_data = {**entry.data}

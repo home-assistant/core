@@ -1,7 +1,5 @@
 """The OpenRGB integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -10,7 +8,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import DOMAIN
 from .coordinator import OpenRGBConfigEntry, OpenRGBCoordinator
 
-PLATFORMS: list[Platform] = [Platform.LIGHT]
+PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SELECT]
 
 
 def _setup_server_device_registry(
@@ -37,6 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> b
 
     await coordinator.async_config_entry_first_refresh()
 
+    # The server device must be created first as other devices are children of it
     _setup_server_device_registry(hass, entry, coordinator)
 
     entry.runtime_data = coordinator

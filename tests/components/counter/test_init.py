@@ -6,7 +6,6 @@ from typing import Any
 import pytest
 
 from homeassistant.components.counter import (
-    ATTR_EDITABLE,
     ATTR_INITIAL,
     ATTR_MAXIMUM,
     ATTR_MINIMUM,
@@ -24,7 +23,13 @@ from homeassistant.components.counter import (
     SERVICE_SET_VALUE,
     VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
+from homeassistant.const import (
+    ATTR_EDITABLE,
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    ATTR_NAME,
+)
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -103,7 +108,7 @@ async def test_config_options(hass: HomeAssistant) -> None:
         }
     }
 
-    assert await async_setup_component(hass, "counter", config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
     _LOGGER.debug("ENTITIES: %s", hass.states.async_entity_ids())
@@ -135,7 +140,7 @@ async def test_methods(hass: HomeAssistant) -> None:
     """Test increment, decrement, set value, and reset methods."""
     config = {DOMAIN: {"test_1": {}}}
 
-    assert await async_setup_component(hass, "counter", config)
+    assert await async_setup_component(hass, DOMAIN, config)
 
     entity_id = "counter.test_1"
 
@@ -193,7 +198,7 @@ async def test_methods_with_config(hass: HomeAssistant) -> None:
         }
     }
 
-    assert await async_setup_component(hass, "counter", config)
+    assert await async_setup_component(hass, DOMAIN, config)
 
     entity_id = "counter.test"
 
@@ -280,6 +285,58 @@ async def test_methods_with_config(hass: HomeAssistant) -> None:
     assert state.state == "5"
 
 
+async def test_negative_with_config(hass: HomeAssistant) -> None:
+    """Test increment, decrement, set, and reset methods with negative values."""
+    config = {
+        DOMAIN: {
+            "test": {
+                CONF_NAME: "Hello World",
+                CONF_INITIAL: -10,
+                CONF_STEP: 2,
+                CONF_MINIMUM: -10,
+                CONF_MAXIMUM: -2,
+            }
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    entity_id = "counter.test"
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -10
+
+    async_increment(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -8
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            VALUE: -4,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -4
+
+    async_decrement(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -6
+
+    async_reset(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert int(state.state) == -10
+
+
 async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
@@ -347,15 +404,15 @@ async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> Non
 
 async def test_counter_context(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test that counter context works."""
-    assert await async_setup_component(hass, "counter", {"counter": {"test": {}}})
+    assert await async_setup_component(hass, DOMAIN, {"counter": {"test": {}}})
 
     state = hass.states.get("counter.test")
     assert state is not None
 
     await hass.services.async_call(
-        "counter",
+        DOMAIN,
         "increment",
-        {"entity_id": state.entity_id},
+        {ATTR_ENTITY_ID: state.entity_id},
         True,
         Context(user_id=hass_admin_user.id),
     )
@@ -369,7 +426,7 @@ async def test_counter_context(hass: HomeAssistant, hass_admin_user: MockUser) -
 async def test_counter_min(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test that min works."""
     assert await async_setup_component(
-        hass, "counter", {"counter": {"test": {"minimum": "0", "initial": "0"}}}
+        hass, DOMAIN, {"counter": {"test": {"minimum": "0", "initial": "0"}}}
     )
 
     state = hass.states.get("counter.test")
@@ -377,9 +434,9 @@ async def test_counter_min(hass: HomeAssistant, hass_admin_user: MockUser) -> No
     assert state.state == "0"
 
     await hass.services.async_call(
-        "counter",
+        DOMAIN,
         "decrement",
-        {"entity_id": state.entity_id},
+        {ATTR_ENTITY_ID: state.entity_id},
         True,
         Context(user_id=hass_admin_user.id),
     )
@@ -389,9 +446,9 @@ async def test_counter_min(hass: HomeAssistant, hass_admin_user: MockUser) -> No
     assert state2.state == "0"
 
     await hass.services.async_call(
-        "counter",
+        DOMAIN,
         "increment",
-        {"entity_id": state.entity_id},
+        {ATTR_ENTITY_ID: state.entity_id},
         True,
         Context(user_id=hass_admin_user.id),
     )
@@ -404,7 +461,7 @@ async def test_counter_min(hass: HomeAssistant, hass_admin_user: MockUser) -> No
 async def test_counter_max(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test that max works."""
     assert await async_setup_component(
-        hass, "counter", {"counter": {"test": {"maximum": "0", "initial": "0"}}}
+        hass, DOMAIN, {"counter": {"test": {"maximum": "0", "initial": "0"}}}
     )
 
     state = hass.states.get("counter.test")
@@ -412,9 +469,9 @@ async def test_counter_max(hass: HomeAssistant, hass_admin_user: MockUser) -> No
     assert state.state == "0"
 
     await hass.services.async_call(
-        "counter",
+        DOMAIN,
         "increment",
-        {"entity_id": state.entity_id},
+        {ATTR_ENTITY_ID: state.entity_id},
         True,
         Context(user_id=hass_admin_user.id),
     )
@@ -424,9 +481,9 @@ async def test_counter_max(hass: HomeAssistant, hass_admin_user: MockUser) -> No
     assert state2.state == "0"
 
     await hass.services.async_call(
-        "counter",
+        DOMAIN,
         "decrement",
-        {"entity_id": state.entity_id},
+        {ATTR_ENTITY_ID: state.entity_id},
         True,
         Context(user_id=hass_admin_user.id),
     )

@@ -1,13 +1,14 @@
 """Custom actions (previously known as services) for the Music Assistant integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from music_assistant_models.enums import MediaType
+from music_assistant_models.enums import MediaType, QueueOption
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+)
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -17,31 +18,43 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
+    ATTR_ALBUM,
     ATTR_ALBUM_ARTISTS_ONLY,
     ATTR_ALBUM_TYPE,
     ATTR_ALBUMS,
+    ATTR_ANNOUNCE_VOLUME,
+    ATTR_ARTIST,
     ATTR_ARTISTS,
     ATTR_AUDIOBOOKS,
+    ATTR_AUTO_PLAY,
     ATTR_FAVORITE,
     ATTR_ITEMS,
     ATTR_LIBRARY_ONLY,
     ATTR_LIMIT,
+    ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
     ATTR_OFFSET,
     ATTR_ORDER_BY,
     ATTR_PLAYLISTS,
     ATTR_PODCASTS,
+    ATTR_PRE_ANNOUNCE_URL,
     ATTR_RADIO,
+    ATTR_RADIO_MODE,
     ATTR_SEARCH,
     ATTR_SEARCH_ALBUM,
     ATTR_SEARCH_ARTIST,
     ATTR_SEARCH_NAME,
+    ATTR_SOURCE_PLAYER,
     ATTR_TRACKS,
+    ATTR_URL,
+    ATTR_USE_PRE_ANNOUNCE,
+    ATTR_USERNAME,
     DOMAIN,
 )
+from .helpers import async_verify_mass_username_availability, get_music_assistant_client
 from .schemas import (
     LIBRARY_RESULTS_SCHEMA,
     SEARCH_RESULT_SCHEMA,
@@ -49,7 +62,6 @@ from .schemas import (
 )
 
 if TYPE_CHECKING:
-    from music_assistant_client import MusicAssistantClient
     from music_assistant_models.media_items import (
         Album,
         Artist,
@@ -60,26 +72,16 @@ if TYPE_CHECKING:
         Track,
     )
 
-    from . import MusicAssistantConfigEntry
-
 SERVICE_SEARCH = "search"
 SERVICE_GET_LIBRARY = "get_library"
+SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
+SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
+SERVICE_TRANSFER_QUEUE = "transfer_queue"
+SERVICE_GET_QUEUE = "get_queue"
+
 DEFAULT_OFFSET = 0
 DEFAULT_LIMIT = 25
 DEFAULT_SORT_ORDER = "name"
-
-
-@callback
-def get_music_assistant_client(
-    hass: HomeAssistant, config_entry_id: str
-) -> MusicAssistantClient:
-    """Get the Music Assistant client for the given config entry."""
-    entry: MusicAssistantConfigEntry | None
-    if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
-        raise ServiceValidationError("Entry not found")
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError("Entry not loaded")
-    return entry.runtime_data.mass
 
 
 @callback
@@ -100,6 +102,7 @@ def register_actions(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_SEARCH_ALBUM): cv.string,
                 vol.Optional(ATTR_LIMIT, default=5): vol.Coerce(int),
                 vol.Optional(ATTR_LIBRARY_ONLY, default=False): cv.boolean,
+                vol.Optional(ATTR_USERNAME): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -119,8 +122,60 @@ def register_actions(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_ORDER_BY): cv.string,
                 vol.Optional(ATTR_ALBUM_TYPE): list[MediaType],
                 vol.Optional(ATTR_ALBUM_ARTISTS_ONLY): cv.boolean,
+                vol.Optional(ATTR_USERNAME): cv.string,
             }
         ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    # Platform entity services
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema={
+            vol.Required(ATTR_MEDIA_ID): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_MEDIA_TYPE): vol.Coerce(MediaType),
+            vol.Optional(ATTR_MEDIA_ENQUEUE): vol.Coerce(QueueOption),
+            vol.Optional(ATTR_ARTIST): cv.string,
+            vol.Optional(ATTR_ALBUM): cv.string,
+            vol.Optional(ATTR_RADIO_MODE): vol.Coerce(bool),
+            vol.Optional(ATTR_USERNAME): cv.string,
+        },
+        func="_async_handle_play_media",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_PLAY_ANNOUNCEMENT,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema={
+            vol.Required(ATTR_URL): cv.string,
+            vol.Optional(ATTR_USE_PRE_ANNOUNCE): vol.Coerce(bool),
+            vol.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
+            vol.Optional(ATTR_ANNOUNCE_VOLUME): vol.Coerce(int),
+        },
+        func="_async_handle_play_announcement",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_TRANSFER_QUEUE,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema={
+            vol.Optional(ATTR_SOURCE_PLAYER): cv.entity_id,
+            vol.Optional(ATTR_AUTO_PLAY): vol.Coerce(bool),
+        },
+        func="_async_handle_transfer_queue",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_GET_QUEUE,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema=None,
+        func="_async_handle_get_queue",
         supports_response=SupportsResponse.ONLY,
     )
 
@@ -131,6 +186,11 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
     search_name = call.data[ATTR_SEARCH_NAME]
     search_artist = call.data.get(ATTR_SEARCH_ARTIST)
     search_album = call.data.get(ATTR_SEARCH_ALBUM)
+    search_username = call.data.get(ATTR_USERNAME)
+    if search_username is not None:
+        await async_verify_mass_username_availability(
+            mass=mass, username=search_username
+        )
     if search_album and search_artist:
         search_name = f"{search_artist} - {search_album} - {search_name}"
     elif search_album:
@@ -142,6 +202,7 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
         media_types=call.data.get(ATTR_MEDIA_TYPE, MediaType.ALL),
         limit=call.data[ATTR_LIMIT],
         library_only=call.data[ATTR_LIBRARY_ONLY],
+        user=search_username,
     )
     response: ServiceResponse = SEARCH_RESULT_SCHEMA(
         {
@@ -185,12 +246,16 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
     limit = call.data.get(ATTR_LIMIT, DEFAULT_LIMIT)
     offset = call.data.get(ATTR_OFFSET, DEFAULT_OFFSET)
     order_by = call.data.get(ATTR_ORDER_BY, DEFAULT_SORT_ORDER)
+    username = call.data.get(ATTR_USERNAME)
+    if username is not None:
+        await async_verify_mass_username_availability(mass=mass, username=username)
     base_params = {
         "favorite": call.data.get(ATTR_FAVORITE),
         "search": call.data.get(ATTR_SEARCH),
         "limit": limit,
         "offset": offset,
         "order_by": order_by,
+        "user": username,
     }
     library_result: (
         list[Album]

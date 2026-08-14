@@ -3,7 +3,6 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
-from freezegun import freeze_time
 from google.genai.types import File, FileState, GenerateContentResponse
 import pytest
 import voluptuous as vol
@@ -223,7 +222,7 @@ async def test_generate_data(
 
 
 @pytest.mark.usefixtures("mock_init_component")
-@freeze_time("2025-06-14 22:59:00")
+@pytest.mark.freeze_time("2025-06-14 22:59:00")
 async def test_generate_image(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -260,7 +259,7 @@ async def test_generate_image(
     with patch.object(
         media_source.local_source.LocalSource,
         "async_upload_media",
-        return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
+        return_value="media-source://ai_task/image/2025-06-14_155900_test_task.png",
     ) as mock_upload_media:
         result = await ai_task.async_generate_image(
             hass,
@@ -279,7 +278,7 @@ async def test_generate_image(
     image_data = mock_upload_media.call_args[0][1]
     assert image_data.file.getvalue() == mock_image_data
     assert image_data.content_type == "image/png"
-    assert image_data.filename == "2025-06-14_225900_test_task.png"
+    assert image_data.filename == "2025-06-14_155900_test_task.png"
 
     # Verify that generate_content was called with correct parameters
     assert mock_generate_content.called

@@ -1,6 +1,6 @@
 """Provides the base entities."""
 
-from __future__ import annotations
+from typing import override
 
 from bleak.exc import BleakError
 from togrill_bluetooth.client import Client
@@ -49,3 +49,11 @@ class ToGrillEntity(CoordinatorEntity[ToGrillCoordinator]):
                 translation_domain=DOMAIN, translation_key="rejected"
             ) from exc
         await self.coordinator.async_request_refresh()
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.coordinator.last_update_success and self.coordinator.client is not None
+        )

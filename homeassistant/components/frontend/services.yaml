@@ -3,17 +3,15 @@
 set_theme:
   fields:
     name:
-      required: true
+      required: false
       example: "default"
       selector:
         theme:
           include_default: true
-    mode:
-      default: "light"
+    name_dark:
+      required: false
+      example: "default"
       selector:
-        select:
-          options:
-            - "dark"
-            - "light"
-          translation_key: mode
+        theme:
+          include_default: true
 reload_themes:

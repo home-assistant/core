@@ -1,20 +1,20 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: The integration does not register services.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
+  docs-actions: done
+  docs-conditions:
     status: exempt
-    comment: The integration does not register services.
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -24,9 +24,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: The integration does not register services.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -55,7 +53,7 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations: todo
+  entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done

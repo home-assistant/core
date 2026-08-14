@@ -1,7 +1,5 @@
 """Collection of useful functions for the HomeKit component."""
 
-from __future__ import annotations
-
 import io
 import ipaddress
 import logging
@@ -15,15 +13,11 @@ from pyhap.accessory import Accessory
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import (
-    binary_sensor,
-    input_number,
-    media_player,
-    persistent_notification,
-    sensor,
-)
+from homeassistant.components import persistent_notification
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -31,6 +25,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntityFeature
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -108,10 +103,12 @@ from .const import (
     TYPE_AIR_PURIFIER,
     TYPE_FAN,
     TYPE_FAUCET,
+    TYPE_HEATER_COOLER,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
+    TYPE_THERMOSTAT,
     TYPE_VALVE,
     VIDEO_CODEC_COPY,
     VIDEO_CODEC_H264_OMX,
@@ -143,9 +140,9 @@ VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 BASIC_INFO_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
         vol.Optional(CONF_LINKED_BATTERY_CHARGING_SENSOR): cv.entity_domain(
-            binary_sensor.DOMAIN
+            BINARY_SENSOR_DOMAIN
         ),
         vol.Optional(
             CONF_LOW_BATTERY_THRESHOLD, default=DEFAULT_LOW_BATTERY_THRESHOLD
@@ -186,16 +183,16 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
             CONF_VIDEO_PACKET_SIZE, default=DEFAULT_VIDEO_PACKET_SIZE
         ): cv.positive_int,
         vol.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(
-            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+            [BINARY_SENSOR_DOMAIN, EVENT_DOMAIN]
         ),
         vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
-            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+            [BINARY_SENSOR_DOMAIN, EVENT_DOMAIN]
         ),
     }
 )
 
 HUMIDIFIER_SCHEMA = BASIC_INFO_SCHEMA.extend(
-    {vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN)}
+    {vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(SENSOR_DOMAIN)}
 )
 
 FAN_SCHEMA = BASIC_INFO_SCHEMA.extend(
@@ -209,21 +206,36 @@ FAN_SCHEMA = BASIC_INFO_SCHEMA.extend(
                 )
             ),
         ),
-        vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN),
-        vol.Optional(CONF_LINKED_PM25_SENSOR): cv.entity_domain(sensor.DOMAIN),
-        vol.Optional(CONF_LINKED_TEMPERATURE_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
+        vol.Optional(CONF_LINKED_PM25_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
+        vol.Optional(CONF_LINKED_TEMPERATURE_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
         vol.Optional(CONF_LINKED_FILTER_CHANGE_INDICATION): cv.entity_domain(
-            binary_sensor.DOMAIN
+            BINARY_SENSOR_DOMAIN
         ),
-        vol.Optional(CONF_LINKED_FILTER_LIFE_LEVEL): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_FILTER_LIFE_LEVEL): cv.entity_domain(SENSOR_DOMAIN),
     }
 )
 
 COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
         vol.Optional(CONF_LINKED_OBSTRUCTION_SENSOR): cv.entity_domain(
-            binary_sensor.DOMAIN
+            BINARY_SENSOR_DOMAIN
         )
+    }
+)
+
+# No default so an unset type keeps the automatic Thermostat/HeaterCooler routing.
+CLIMATE_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_TYPE): vol.All(
+            cv.string,
+            vol.In(
+                (
+                    TYPE_HEATER_COOLER,
+                    TYPE_THERMOSTAT,
+                )
+            ),
+        ),
     }
 )
 
@@ -234,7 +246,7 @@ CODE_SCHEMA = BASIC_INFO_SCHEMA.extend(
 LOCK_SCHEMA = CODE_SCHEMA.extend(
     {
         vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
-            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+            [BINARY_SENSOR_DOMAIN, EVENT_DOMAIN]
         ),
     }
 )
@@ -270,8 +282,8 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
                 )
             ),
         ),
-        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
-        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(INPUT_NUMBER_DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(SENSOR_DOMAIN),
     }
 )
 
@@ -284,8 +296,8 @@ SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
 
 VALVE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
-        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(INPUT_NUMBER_DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(SENSOR_DOMAIN),
     }
 )
 
@@ -339,7 +351,7 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
         if domain == "alarm_control_panel":
             config = CODE_SCHEMA(config)
 
-        elif domain == media_player.const.DOMAIN:
+        elif domain == MEDIA_PLAYER_DOMAIN:
             config = FEATURE_SCHEMA(config)
             feature_list = {}
             for feature in config[CONF_FEATURE_LIST]:
@@ -361,6 +373,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
         elif domain == "humidifier":
             config = HUMIDIFIER_SCHEMA(config)
+
+        elif domain == "climate":
+            config = CLIMATE_SCHEMA(config)
 
         elif domain == "cover":
             config = COVER_SCHEMA(config)
@@ -455,7 +470,7 @@ def convert_to_float(state: Any) -> float | None:
     """Return float of state, catch errors."""
     try:
         return float(state)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 
@@ -463,7 +478,7 @@ def coerce_int(state: str) -> int:
     """Return int."""
     try:
         return int(state)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return 0
 
 
@@ -535,7 +550,8 @@ def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
 def density_to_air_quality_voc(density: float) -> int:
     """Map VOCs μg/m3 to HomeKit AirQuality level.
 
-    The VOC mappings use the IAQ guidelines for Europe released by the WHO (World Health Organization).
+    The VOC mappings use the IAQ guidelines for Europe released
+    by the WHO (World Health Organization).
     Referenced from Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
     https://github.com/paulvha/svm30/blob/master/extras/Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
     """
@@ -625,10 +641,13 @@ def _get_test_socket() -> socket.socket:
 @callback
 def async_port_is_available(port: int) -> bool:
     """Check to see if a port is available."""
+    test_socket = _get_test_socket()
     try:
-        _get_test_socket().bind(("", port))
+        test_socket.bind(("", port))
     except OSError:
         return False
+    finally:
+        test_socket.close()
     return True
 
 
@@ -686,14 +705,18 @@ def accessory_friendly_name(hass_name: str, accessory: Accessory) -> str:
 
 
 def state_needs_accessory_mode(state: State) -> bool:
-    """Return if the entity represented by the state must be paired in accessory mode."""
+    """Return if the entity state must be paired in accessory mode."""
     if state.domain in (CAMERA_DOMAIN, LOCK_DOMAIN):
         return True
 
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS)
-        in (MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.RECEIVER)
+        in (
+            MediaPlayerDeviceClass.TV,
+            MediaPlayerDeviceClass.RECEIVER,
+            MediaPlayerDeviceClass.PROJECTOR,
+        )
     ) or (
         state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)

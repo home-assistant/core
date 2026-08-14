@@ -2,16 +2,19 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pypck.inputs import ModStatusOutput, ModStatusRelays
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import RelayStateModifier
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lcn.helpers import get_device_connection
+from homeassistant.components.lcn.light import SCAN_INTERVAL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    DOMAIN as DOMAIN_LIGHT,
+    DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -25,9 +28,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockConfigEntry, MockModuleConnection, init_integration
+from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
 
-from tests.common import snapshot_platform
+from tests.common import async_fire_time_changed, snapshot_platform
 
 LIGHT_OUTPUT1 = "light.testmodule_light_output1"
 LIGHT_OUTPUT2 = "light.testmodule_light_output2"
@@ -51,12 +54,12 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
     """Test the output light turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "toggle_output") as toggle_output:
+    with patch.object(MockDeviceConnection, "toggle_output") as toggle_output:
         # command failed
         toggle_output.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
             blocking=True,
@@ -73,7 +76,7 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
         toggle_output.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
             blocking=True,
@@ -92,11 +95,11 @@ async def test_output_turn_on_with_attributes(
     """Test the output light turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "dim_output") as dim_output:
+    with patch.object(MockDeviceConnection, "dim_output") as dim_output:
         dim_output.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {
                 ATTR_ENTITY_ID: LIGHT_OUTPUT1,
@@ -117,9 +120,9 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
     """Test the output light turns off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "toggle_output") as toggle_output:
+    with patch.object(MockDeviceConnection, "toggle_output") as toggle_output:
         await hass.services.async_call(
-            DOMAIN_LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
             blocking=True,
@@ -129,7 +132,7 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
         toggle_output.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
             blocking=True,
@@ -146,7 +149,7 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
         toggle_output.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
             blocking=True,
@@ -163,7 +166,7 @@ async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> Non
     """Test the relay light turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "control_relays") as control_relays:
+    with patch.object(MockDeviceConnection, "control_relays") as control_relays:
         states = [RelayStateModifier.NOCHANGE] * 8
         states[0] = RelayStateModifier.ON
 
@@ -171,7 +174,7 @@ async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> Non
         control_relays.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: LIGHT_RELAY1},
             blocking=True,
@@ -188,7 +191,7 @@ async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> Non
         control_relays.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: LIGHT_RELAY1},
             blocking=True,
@@ -205,18 +208,22 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
     """Test the relay light turns off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "control_relays") as control_relays:
+    with patch.object(MockDeviceConnection, "control_relays") as control_relays:
         states = [RelayStateModifier.NOCHANGE] * 8
         states[0] = RelayStateModifier.OFF
 
-        state = hass.states.get(LIGHT_RELAY1)
-        state.state = STATE_ON
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: LIGHT_RELAY1},
+            blocking=True,
+        )
 
         # command failed
         control_relays.return_value = False
 
         await hass.services.async_call(
-            DOMAIN_LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: LIGHT_RELAY1},
             blocking=True,
@@ -233,7 +240,7 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
         control_relays.return_value = True
 
         await hass.services.async_call(
-            DOMAIN_LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: LIGHT_RELAY1},
             blocking=True,
@@ -304,6 +311,61 @@ async def test_pushed_relay_status_change(
     state = hass.states.get(LIGHT_RELAY1)
     assert state is not None
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "request_method", "return_value"),
+    [
+        (
+            LIGHT_OUTPUT1,
+            "request_status_output",
+            ModStatusOutput(LcnAddr(0, 7, False), 0, 0),
+        ),
+        (
+            LIGHT_RELAY1,
+            "request_status_relays",
+            ModStatusRelays(LcnAddr(0, 7, False), [False] * 8),
+        ),
+    ],
+)
+async def test_availability(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entry: MockConfigEntry,
+    entity_id: str,
+    request_method: str,
+    return_value: ModStatusOutput | ModStatusRelays,
+) -> None:
+    """Test the availability of light entity."""
+    await init_integration(hass, entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # no response from device -> unavailable
+    with patch.object(MockDeviceConnection, request_method, return_value=None):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # response from device -> available
+    with patch.object(
+        MockDeviceConnection,
+        request_method,
+        return_value=return_value,
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:

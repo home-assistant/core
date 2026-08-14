@@ -1,7 +1,5 @@
 """Provides the worker thread needed for processing streams."""
 
-from __future__ import annotations
-
 from collections import defaultdict, deque
 from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
@@ -11,10 +9,11 @@ from io import SEEK_END, BytesIO
 import logging
 import math
 from threading import Event
-from typing import Any, Self, cast
+from typing import Any, Self, cast, override
 
 import av
 import av.audio
+from av.codec.codec import UnknownCodecError  # pylint: disable=no-name-in-module
 import av.container
 from av.container import InputContainer
 import av.stream
@@ -52,7 +51,7 @@ NEGATIVE_INF = -math.inf
 
 def redact_av_error_string(err: av.FFmpegError) -> str:
     """Return an error string with credentials redacted from the url."""
-    parts = [str(err.type), err.strerror]  # type: ignore[attr-defined]
+    parts = [err.strerror or ""]
     if err.filename:
         parts.append(redact_credentials(err.filename))
     return ", ".join(parts)
@@ -152,6 +151,23 @@ class StreamMuxer:
         self._stream_state = stream_state
         self._start_time = dt_util.utcnow()
 
+    @staticmethod
+    def _add_stream_from_template(
+        container: av.container.OutputContainer,
+        template: av.stream.Stream,
+    ) -> av.stream.Stream:
+        """Add a stream to the output container from a template.
+
+        Decoder-only codecs (e.g., libdav1d for AV1) have no matching
+        encoder, causing add_stream_from_template to fail. Retrying with
+        opaque=True bypasses the encoder lookup and copies codec parameters
+        directly from the template, which is sufficient for remuxing.
+        """
+        try:
+            return container.add_stream_from_template(template)
+        except UnknownCodecError:
+            return container.add_stream_from_template(template, opaque=True)
+
     def make_new_av(
         self,
         memory_file: BytesIO,
@@ -169,7 +185,11 @@ class StreamMuxer:
             # https://github.com/home-assistant/core/pull/39970
             # "cmaf" flag replaces several of the movflags used,
             # but too recent to use for now
-            "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
+            "movflags": (
+                "frag_custom+empty_moov+default_base_moof"
+                "+frag_discont+negative_cts_offsets"
+                "+skip_trailer+delay_moov"
+            ),
             # Sometimes the first segment begins with negative timestamps,
             # and this setting just
             # adjusts the timestamps in the output from that segment to start
@@ -183,7 +203,12 @@ class StreamMuxer:
             # Fragment durations may exceed the 15% allowed variance but it seems ok
             **(
                 {
-                    "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
+                    "movflags": (
+                        "empty_moov+default_base_moof"
+                        "+frag_discont"
+                        "+negative_cts_offsets"
+                        "+skip_trailer+delay_moov"
+                    ),
                     # Create a fragment every TARGET_PART_DURATION. The data from
                     # each fragment is stored in a "Part" that can be combined with
                     # the data from all the other "Part"s, plus an init section,
@@ -223,7 +248,10 @@ class StreamMuxer:
             format=SEGMENT_CONTAINER_FORMAT,
             container_options=container_options,
         )
-        output_vstream = container.add_stream(template=input_vstream)
+        output_vstream = cast(
+            av.VideoStream,
+            self._add_stream_from_template(container, input_vstream),
+        )
         # Check if audio is requested
         output_astream = None
         if input_astream:
@@ -231,8 +259,11 @@ class StreamMuxer:
                 self._audio_bsf_context = av.BitStreamFilterContext(
                     self._audio_bsf, input_astream
                 )
-            output_astream = container.add_stream(template=input_astream)
-        return container, output_vstream, output_astream  # type: ignore[return-value]
+            output_astream = cast(
+                av.audio.AudioStream,
+                self._add_stream_from_template(container, input_astream),
+            )
+        return container, output_vstream, output_astream
 
     def reset(self, video_dts: int) -> None:
         """Initialize a new stream segment."""
@@ -260,6 +291,7 @@ class StreamMuxer:
         if packet.stream == self._input_video_stream:
             if (
                 packet.is_keyframe
+                and packet.dts
                 and (packet.dts - self._segment_start_dts) * packet.time_base
                 >= self._stream_settings.min_segment_duration
             ):
@@ -331,6 +363,7 @@ class StreamMuxer:
         playback issues in some clients.
         """
         # Part durations should not exceed the part target duration
+        assert packet.dts is not None
         adjusted_dts = min(
             packet.dts,
             self._part_start_dts
@@ -391,8 +424,28 @@ class StreamMuxer:
 
     def close(self) -> None:
         """Close stream buffer."""
-        self._av_output.close()
-        self._memory_file.close()
+        try:
+            self._av_output.close()
+        finally:
+            self._memory_file.close()
+
+
+@contextlib.contextmanager
+def closing_stream_worker(
+    container: InputContainer, muxer: StreamMuxer
+) -> Generator[None]:
+    """Close worker resources without masking an active error."""
+    try:
+        yield
+    except BaseException:
+        with contextlib.suppress(av.FFmpegError):
+            muxer.close()
+        with contextlib.suppress(av.FFmpegError):
+            container.close()
+        raise
+    else:
+        with contextlib.closing(container), contextlib.closing(muxer):
+            pass
 
 
 class PeekIterator(Iterator[av.Packet]):
@@ -409,10 +462,12 @@ class PeekIterator(Iterator[av.Packet]):
         # A pointer to either _iterator or _buffer
         self._next = self._iterator.__next__
 
+    @override
     def __iter__(self) -> Self:
         """Return an iterator."""
         return self
 
+    @override
     def __next__(self) -> av.Packet:
         """Return and consume the next item available."""
         return self._next()
@@ -434,6 +489,28 @@ class PeekIterator(Iterator[av.Packet]):
         for packet in self._iterator:
             self._buffer.append(packet)
             yield packet
+
+
+def repair_initial_missing_dts(packets: PeekIterator) -> None:
+    """Repair a missing DTS on the initial video keyframe."""
+    buffered_packets = packets.peek()
+    first_video_packet = next(
+        (packet for packet in buffered_packets if packet.stream.type == "video"), None
+    )
+    if (
+        first_video_packet is None
+        or not first_video_packet.is_keyframe
+        or first_video_packet.dts is not None
+    ):
+        return
+
+    next_video_packet = next(
+        (packet for packet in buffered_packets if packet.stream.type == "video"), None
+    )
+    if next_video_packet is None or next_video_packet.dts is None:
+        return
+
+    first_video_packet.dts = next_video_packet.dts - (next_video_packet.duration or 1)
 
 
 class TimestampValidator:
@@ -459,7 +536,7 @@ class TimestampValidator:
         """Validate the packet timestamp based on ordering within the stream."""
         # Discard packets missing DTS. Terminate if too many are missing.
         if packet.dts is None:
-            if self._missing_dts >= MAX_MISSING_DTS:  # type: ignore[unreachable]
+            if self._missing_dts >= MAX_MISSING_DTS:
                 raise StreamWorkerError(
                     f"No dts in {MAX_MISSING_DTS + 1} consecutive packets"
                 )
@@ -571,13 +648,13 @@ def stream_worker(
     keyframe_converter.create_codec_context(codec_context=video_stream.codec_context)
     try:
         audio_stream = container.streams.audio[0]
-    except (KeyError, IndexError):
+    except KeyError, IndexError:
         audio_stream = None
     if audio_stream and audio_stream.name not in AUDIO_CODECS:
         audio_stream = None
     # Some audio streams do not have a profile and throw errors when remuxing
     if audio_stream and audio_stream.profile is None:
-        audio_stream = None  # type: ignore[unreachable]
+        audio_stream = None
     # Disable ll-hls for hls inputs
     if container.format.name == "hls":
         for field in fields(StreamSettings):
@@ -595,8 +672,9 @@ def stream_worker(
         int(1 / video_stream.time_base),  # type: ignore[operator]
         int(1 / audio_stream.time_base) if audio_stream else 1,  # type: ignore[operator]
     )
+    unvalidated_packets = PeekIterator(container.demux((video_stream, audio_stream)))
     container_packets = PeekIterator(
-        filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
+        filter(dts_validator.is_valid, unvalidated_packets)
     )
 
     def is_video(packet: av.Packet) -> Any:
@@ -610,6 +688,7 @@ def stream_worker(
     # Use a peeking iterator to peek into the start of the stream, ensuring
     # everything looks good, then go back to the start when muxing below.
     try:
+        repair_initial_missing_dts(unvalidated_packets)
         # Get the required bitstream filter
         audio_bsf = get_audio_bitstream_filter(container_packets.peek(), audio_stream)
         # Advance to the first keyframe for muxing, then rewind so the muxing
@@ -626,6 +705,7 @@ def stream_worker(
         # adjustment, it does not filter out the case where the duration below is
         # 0 and both the first_keyframe and next_video_packet end up with the same
         # dts. Use "or 1" to deal with this.
+        assert next_video_packet.dts is not None
         start_dts = next_video_packet.dts - (next_video_packet.duration or 1)
         first_keyframe.dts = first_keyframe.pts = start_dts
     except StreamWorkerError:
@@ -637,7 +717,8 @@ def stream_worker(
     except av.FFmpegError as ex:
         container.close()
         raise StreamWorkerError(
-            f"Error demuxing stream while finding first packet ({redact_av_error_string(ex)})"
+            "Error demuxing stream while finding first packet"
+            f" ({redact_av_error_string(ex)})"
         ) from ex
 
     muxer = StreamMuxer(
@@ -650,10 +731,15 @@ def stream_worker(
     )
     muxer.reset(start_dts)
 
-    # Mux the first keyframe, then proceed through the rest of the packets
-    muxer.mux_packet(first_keyframe)
+    with closing_stream_worker(container, muxer):
+        # Mux the first keyframe, then proceed through the rest of the packets
+        try:
+            muxer.mux_packet(first_keyframe)
+        except av.FFmpegError as ex:
+            raise StreamWorkerError(
+                f"Error muxing first keyframe ({redact_av_error_string(ex)})"
+            ) from ex
 
-    with contextlib.closing(container), contextlib.closing(muxer):
         while not quit_event.is_set():
             try:
                 packet = next(container_packets)
@@ -666,7 +752,12 @@ def stream_worker(
                     f"Error demuxing stream ({redact_av_error_string(ex)})"
                 ) from ex
 
-            muxer.mux_packet(packet)
+            try:
+                muxer.mux_packet(packet)
+            except av.FFmpegError as ex:
+                raise StreamWorkerError(
+                    f"Error muxing stream ({redact_av_error_string(ex)})"
+                ) from ex
 
             if packet.is_keyframe and is_video(packet):
                 keyframe_converter.stash_keyframe_packet(packet)

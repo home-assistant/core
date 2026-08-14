@@ -3,13 +3,16 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.ekeybionyx.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 def dummy_systems(
@@ -93,8 +96,14 @@ def mock_webhooks(
             {
                 "functionWebhookId": "946DA01F-9ABD-4D9D-80C7-02AF85C822B9",
                 "integrationName": "Home Assistant",
-                "locationName": "A simple string containing 0 to 128 word, space and punctuation characters.",
-                "functionName": "A simple string containing 0 to 50 word, space and punctuation characters.",
+                "locationName": (
+                    "A simple string containing 0 to 128"
+                    " word, space and punctuation characters."
+                ),
+                "functionName": (
+                    "A simple string containing 0 to 50"
+                    " word, space and punctuation characters."
+                ),
                 "expiresAt": "2022-05-16T04:11:28.0000000+00:00",
                 "modificationState": None,
             }
@@ -136,7 +145,8 @@ def mock_add_webhook(
 def mock_webhook_id():
     """Mock webhook_id."""
     with patch(
-        "homeassistant.components.webhook.async_generate_id", return_value="1234567890"
+        "homeassistant.components.ekeybionyx.config_flow.webhook_generate_id",
+        return_value="1234567890",
     ):
         yield
 
@@ -160,9 +170,13 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={
             "webhooks": [
                 {
-                    "webhook_id": "a2156edca7fb6671e13845314f6fc68622e5dd7c58f17663a487bd28cac247e7",
+                    "webhook_id": (
+                        "a2156edca7fb6671e13845314f6fc68622e5dd7c58f17663a487bd28cac247e7"
+                    ),
                     "name": "Test1",
-                    "auth": "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7",
+                    "auth": (
+                        "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7"
+                    ),
                     "ekey_id": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
                 }
             ]
@@ -171,3 +185,26 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         version=1,
         minor_version=1,
     )
+
+
+@pytest.fixture
+async def load_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Set up the config entry."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def webhook_test_env(
+    hass: HomeAssistant,
+    load_config_entry: None,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> TestClient:
+    """Provide a ready HTTP/webhook stack and return client."""
+    assert await async_setup_component(hass, "http", {"http": {}})
+    assert await async_setup_component(hass, "webhook", {})
+    return await hass_client_no_auth()

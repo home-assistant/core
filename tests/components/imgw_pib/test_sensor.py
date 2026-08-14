@@ -8,8 +8,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imgw_pib.const import DOMAIN, UPDATE_INTERVAL
-from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -40,7 +40,7 @@ async def test_availability(
     mock_imgw_pib_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure entities are marked unavailable when service is offline."""
     await init_integration(hass, mock_config_entry)
 
     state = hass.states.get(ENTITY_ID)
@@ -68,6 +68,34 @@ async def test_availability(
     assert state.state == "526.0"
 
 
+async def test_unknown_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_imgw_pib_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Ensure the entity is created when temporarily there is no value."""
+    entity_id = "sensor.river_name_station_name_ice_phenomena"
+    mock_imgw_pib_client.get_hydrological_data.return_value.ice_phenomena.value = None
+
+    await init_integration(hass, mock_config_entry)
+
+    # Initially, the state should be unknown since the value is None
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    mock_imgw_pib_client.get_hydrological_data.return_value.ice_phenomena.value = 22
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "22"
+
+
 async def test_remove_entity(
     hass: HomeAssistant,
     mock_imgw_pib_client: AsyncMock,
@@ -79,7 +107,7 @@ async def test_remove_entity(
     mock_config_entry.add_to_hass(hass)
 
     entity_registry.async_get_or_create(
-        SENSOR_PLATFORM,
+        SENSOR_DOMAIN,
         DOMAIN,
         "123_flood_alarm_level",
         suggested_object_id=entity_id.rsplit(".", maxsplit=1)[-1],

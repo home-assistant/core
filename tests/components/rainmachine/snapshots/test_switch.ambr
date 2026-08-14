@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switches[switch.12345_evening-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening',
     'options': dict({
     }),
     'original_device_class': None,
@@ -38,8 +40,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'program',
-      'friendly_name': '12345 Evening',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Evening',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 2,
       'next_run': '2018-06-04T06:00:00',
       'soak': 0,
@@ -75,8 +77,9 @@
 # ---
 # name: test_switches[switch.12345_evening_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -94,6 +97,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -112,8 +116,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'program',
-      'friendly_name': '12345 Evening enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Evening enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_evening_enabled',
@@ -125,8 +129,9 @@
 # ---
 # name: test_switches[switch.12345_extra_water_on_hot_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -144,6 +149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extra water on hot days',
     'options': dict({
     }),
     'original_device_class': None,
@@ -161,8 +167,8 @@
 # name: test_switches[switch.12345_extra_water_on_hot_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '12345 Extra water on hot days',
-      'icon': 'mdi:heat-wave',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Extra water on hot days',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:heat-wave',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_extra_water_on_hot_days',
@@ -174,8 +180,9 @@
 # ---
 # name: test_switches[switch.12345_flower_box-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -193,6 +200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower box',
     'options': dict({
     }),
     'original_device_class': None,
@@ -214,8 +222,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.17,
-      'friendly_name': '12345 Flower box',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower box',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 2,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -237,8 +245,9 @@
 # ---
 # name: test_switches[switch.12345_flower_box_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -256,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower box enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -274,8 +284,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Flower box enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower box enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_flower_box_enabled',
@@ -287,8 +297,9 @@
 # ---
 # name: test_switches[switch.12345_freeze_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -306,6 +317,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freeze protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -323,8 +335,8 @@
 # name: test_switches[switch.12345_freeze_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '12345 Freeze protection',
-      'icon': 'mdi:snowflake-alert',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Freeze protection',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake-alert',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_freeze_protection',
@@ -336,8 +348,9 @@
 # ---
 # name: test_switches[switch.12345_landscaping-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -355,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping',
     'options': dict({
     }),
     'original_device_class': None,
@@ -376,8 +390,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.17,
-      'friendly_name': '12345 Landscaping',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 1,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -399,8 +413,9 @@
 # ---
 # name: test_switches[switch.12345_landscaping_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -418,6 +433,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -436,8 +452,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Landscaping enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_landscaping_enabled',
@@ -449,8 +465,9 @@
 # ---
 # name: test_switches[switch.12345_morning-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -468,6 +485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -486,8 +504,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'program',
-      'friendly_name': '12345 Morning',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Morning',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 1,
       'next_run': '2018-06-04T06:00:00',
       'soak': 0,
@@ -523,8 +541,9 @@
 # ---
 # name: test_switches[switch.12345_morning_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -542,6 +561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -560,8 +580,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'program',
-      'friendly_name': '12345 Morning enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Morning enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_morning_enabled',
@@ -573,8 +593,9 @@
 # ---
 # name: test_switches[switch.12345_test-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -592,6 +613,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test',
     'options': dict({
     }),
     'original_device_class': None,
@@ -613,8 +635,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
-      'friendly_name': '12345 Test',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Test',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 3,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -636,8 +658,9 @@
 # ---
 # name: test_switches[switch.12345_test_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -655,6 +678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -673,8 +697,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Test enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Test enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_test_enabled',
@@ -686,8 +710,9 @@
 # ---
 # name: test_switches[switch.12345_zone_10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -705,6 +730,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10',
     'options': dict({
     }),
     'original_device_class': None,
@@ -726,8 +752,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
-      'friendly_name': '12345 Zone 10',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 10,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -749,8 +775,9 @@
 # ---
 # name: test_switches[switch.12345_zone_10_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -768,6 +795,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -786,8 +814,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Zone 10 enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_10_enabled',
@@ -799,8 +827,9 @@
 # ---
 # name: test_switches[switch.12345_zone_11-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -818,6 +847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11',
     'options': dict({
     }),
     'original_device_class': None,
@@ -839,8 +869,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
-      'friendly_name': '12345 Zone 11',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 11,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -862,8 +892,9 @@
 # ---
 # name: test_switches[switch.12345_zone_11_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -881,6 +912,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -899,8 +931,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Zone 11 enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_11_enabled',
@@ -912,8 +944,9 @@
 # ---
 # name: test_switches[switch.12345_zone_12-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -931,6 +964,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12',
     'options': dict({
     }),
     'original_device_class': None,
@@ -952,8 +986,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
-      'friendly_name': '12345 Zone 12',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 12,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -975,8 +1009,9 @@
 # ---
 # name: test_switches[switch.12345_zone_12_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -994,6 +1029,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1012,8 +1048,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Zone 12 enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_12_enabled',
@@ -1025,8 +1061,9 @@
 # ---
 # name: test_switches[switch.12345_zone_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1044,6 +1081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1065,8 +1103,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
-      'friendly_name': '12345 Zone 4',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 4,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -1088,8 +1126,9 @@
 # ---
 # name: test_switches[switch.12345_zone_4_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1107,6 +1146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1125,8 +1165,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Zone 4 enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_4_enabled',
@@ -1138,8 +1178,9 @@
 # ---
 # name: test_switches[switch.12345_zone_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1157,6 +1198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1178,8 +1220,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
-      'friendly_name': '12345 Zone 5',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 5,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -1201,8 +1243,9 @@
 # ---
 # name: test_switches[switch.12345_zone_5_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1220,6 +1263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1238,8 +1282,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Zone 5 enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_5_enabled',
@@ -1251,8 +1295,9 @@
 # ---
 # name: test_switches[switch.12345_zone_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1270,6 +1315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1291,8 +1337,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
-      'friendly_name': '12345 Zone 6',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 6,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -1314,8 +1360,9 @@
 # ---
 # name: test_switches[switch.12345_zone_6_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1333,6 +1380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1351,8 +1399,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Zone 6 enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_6_enabled',
@@ -1364,8 +1412,9 @@
 # ---
 # name: test_switches[switch.12345_zone_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1383,6 +1432,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1404,8 +1454,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
-      'friendly_name': '12345 Zone 7',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 7,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -1427,8 +1477,9 @@
 # ---
 # name: test_switches[switch.12345_zone_7_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1446,6 +1497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1464,8 +1516,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Zone 7 enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_7_enabled',
@@ -1477,8 +1529,9 @@
 # ---
 # name: test_switches[switch.12345_zone_8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1496,6 +1549,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1517,8 +1571,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
-      'friendly_name': '12345 Zone 8',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 8,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -1540,8 +1594,9 @@
 # ---
 # name: test_switches[switch.12345_zone_8_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1559,6 +1614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1577,8 +1633,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Zone 8 enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_8_enabled',
@@ -1590,8 +1646,9 @@
 # ---
 # name: test_switches[switch.12345_zone_9-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1609,6 +1666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1630,8 +1688,8 @@
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
-      'friendly_name': '12345 Zone 9',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       'id': 9,
       'number_of_cycles': 0,
       'restrictions': False,
@@ -1653,8 +1711,9 @@
 # ---
 # name: test_switches[switch.12345_zone_9_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1672,6 +1731,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1690,8 +1750,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'activity_type': 'zone',
-      'friendly_name': '12345 Zone 9 enabled',
-      'icon': 'mdi:cog',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 enabled',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.12345_zone_9_enabled',

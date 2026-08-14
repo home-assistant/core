@@ -1,8 +1,7 @@
 """Support for Gogogate2 garage Doors."""
 
-from __future__ import annotations
-
 from itertools import chain
+from typing import Any, override
 
 from ismartgate.common import AbstractDoor, get_configured_doors
 
@@ -49,7 +48,8 @@ class DoorSensorEntity(GoGoGate2Entity, SensorEntity):
     """Base class for door sensor entities."""
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
         door = self.door
@@ -77,11 +77,13 @@ class DoorSensorBattery(DoorSensorEntity):
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
 
     @property
+    @override
     def name(self):
         """Return the name of the door."""
         return f"{self.door.name} battery"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the entity."""
         return self.door.voltage  # This is a percentage, not an absolute voltage
@@ -105,11 +107,13 @@ class DoorSensorTemperature(DoorSensorEntity):
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
 
     @property
+    @override
     def name(self):
         """Return the name of the door."""
         return f"{self.door.name} temperature"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the entity."""
         return self.door.temperature

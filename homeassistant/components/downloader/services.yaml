@@ -17,3 +17,9 @@ download_file:
       default: false
       selector:
         boolean:
+    headers:
+      default: {}
+      example:
+        Accept: application/json
+      selector:
+        object:

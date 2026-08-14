@@ -1,7 +1,5 @@
 """Test ESPHome repairs."""
 
-from __future__ import annotations
-
 import asyncio
 from unittest.mock import AsyncMock
 
@@ -24,7 +22,6 @@ from .conftest import MockESPHomeDeviceType
 
 from tests.common import MockConfigEntry
 from tests.components.repairs import (
-    async_process_repairs_platforms,
     get_repairs,
     process_repair_fix_flow,
     start_repair_fix_flow,
@@ -75,18 +72,10 @@ async def test_device_conflict_manual(
     assert issues
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "192.168.1.2",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.MENU
     assert data["step_id"] == "init"
 
@@ -95,13 +84,6 @@ async def test_device_conflict_manual(
     )
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "192.168.1.2",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.FORM
     assert data["step_id"] == "manual"
 
@@ -157,13 +139,15 @@ async def test_device_conflict_migration(
 
     ent_reg_entry = entity_registry.async_get("binary_sensor.test_my_binary_sensor")
     assert ent_reg_entry
-    assert ent_reg_entry.unique_id == "11:22:33:44:55:AA-binary_sensor-mybinary_sensor"
+    assert (
+        ent_reg_entry.unique_id == "11:22:33:44:55:AA/0/binary_sensor/my binary_sensor"
+    )
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
     assert entries is not None
     for entry in entries:
-        assert entry.unique_id.startswith("11:22:33:44:55:AA-")
+        assert entry.unique_id.startswith("11:22:33:44:55:AA/")
     disconnect_done = hass.loop.create_future()
 
     async def async_disconnect(*args, **kwargs) -> None:
@@ -193,18 +177,10 @@ async def test_device_conflict_migration(
     assert issues
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "test.local",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.MENU
     assert data["step_id"] == "init"
 
@@ -213,13 +189,6 @@ async def test_device_conflict_migration(
     )
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "test.local",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.FORM
     assert data["step_id"] == "migrate"
 
@@ -234,21 +203,25 @@ async def test_device_conflict_migration(
     assert mock_config_entry.unique_id == "11:22:33:44:55:ab"
     ent_reg_entry = entity_registry.async_get("binary_sensor.test_my_binary_sensor")
     assert ent_reg_entry
-    assert ent_reg_entry.unique_id == "11:22:33:44:55:AB-binary_sensor-mybinary_sensor"
+    assert (
+        ent_reg_entry.unique_id == "11:22:33:44:55:AB/0/binary_sensor/my binary_sensor"
+    )
 
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
     assert entries is not None
     for entry in entries:
-        assert entry.unique_id.startswith("11:22:33:44:55:AB-")
+        assert entry.unique_id.startswith("11:22:33:44:55:AB/")
 
-    dev_entry = device_registry.async_get_device(
-        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:ab")}
+    dev_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:ab"), mock_config_entry.entry_id
     )
     assert dev_entry is not None
 
-    old_dev_entry = device_registry.async_get_device(
-        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")}
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa"), mock_config_entry.entry_id
+        )
+        is None
     )
-    assert old_dev_entry is None

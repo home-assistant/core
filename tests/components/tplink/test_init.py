@@ -1,7 +1,5 @@
 """Tests for the TP-Link component."""
 
-from __future__ import annotations
-
 import copy
 from datetime import timedelta
 from typing import Any
@@ -48,6 +46,7 @@ from homeassistant.util import dt as dt_util
 from . import (
     _mocked_device,
     _mocked_feature,
+    _mocked_strip_children,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
@@ -138,7 +137,9 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test no migration happens if the original entity id still exists."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
     config_entry.add_to_hass(hass)
     dimmer = _mocked_device(alias="My dimmer", modules=[Module.Light])
     rollout_unique_id = MAC_ADDRESS.replace(":", "").upper()
@@ -192,8 +193,8 @@ async def test_config_entry_wrong_mac_Address(
         assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert (
-        "Unexpected device found at 127.0.0.1; expected aa:bb:cc:dd:ee:f0, found aa:bb:cc:dd:ee:ff"
-        in caplog.text
+        "Unexpected device found at 127.0.0.1; expected"
+        " aa:bb:cc:dd:ee:f0, found aa:bb:cc:dd:ee:ff" in caplog.text
     )
 
 
@@ -273,8 +274,8 @@ async def test_config_entry_conn_params_invalid(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     assert (
-        f"Invalid connection parameters dict for {IP_ADDRESS}: {entry_data.get(CONF_CONNECTION_PARAMETERS)}"
-        in caplog.text
+        f"Invalid connection parameters dict for {IP_ADDRESS}:"
+        f" {entry_data.get(CONF_CONNECTION_PARAMETERS)}" in caplog.text
     )
 
 
@@ -519,8 +520,8 @@ async def test_unlink_devices(
     update_msg_fragment = "identifiers for device dummy (hs300):"
     update_msg = f"{expected_message} {update_msg_fragment}" if expected_message else ""
 
-    # Expected identifiers should include all other domains or all the newer non-mac device ids
-    # or just the parent mac device id
+    # Expected identifiers should include all other domains or all
+    # the newer non-mac device ids or just the parent mac device id
     expected_identifiers = [
         (domain, device_id)
         for domain, device_id in test_identifiers
@@ -545,7 +546,12 @@ async def test_unlink_devices(
     }
     assert device_entries[0].identifiers == set(test_identifiers)
 
-    with patch("homeassistant.components.tplink.CONF_CONFIG_ENTRY_MINOR_VERSION", 3):
+    with (
+        patch("homeassistant.components.tplink.CONF_CONFIG_ENTRY_MINOR_VERSION", 3),
+        _patch_discovery(),
+        _patch_single_discovery(),
+        _patch_connect(),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -596,6 +602,8 @@ async def test_move_credentials_hash(
         patch("homeassistant.components.tplink.Device.connect", new=_connect),
         patch("homeassistant.components.tplink.PLATFORMS", []),
         patch("homeassistant.components.tplink.CONF_CONFIG_ENTRY_MINOR_VERSION", 4),
+        _patch_discovery(),
+        _patch_single_discovery(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -640,6 +648,8 @@ async def test_move_credentials_hash_auth_error(
         ),
         patch("homeassistant.components.tplink.PLATFORMS", []),
         patch("homeassistant.components.tplink.CONF_CONFIG_ENTRY_MINOR_VERSION", 4),
+        _patch_discovery(),
+        _patch_single_discovery(),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -682,6 +692,8 @@ async def test_move_credentials_hash_other_error(
         ),
         patch("homeassistant.components.tplink.PLATFORMS", []),
         patch("homeassistant.components.tplink.CONF_CONFIG_ENTRY_MINOR_VERSION", 4),
+        _patch_discovery(),
+        _patch_single_discovery(),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -717,6 +729,8 @@ async def test_credentials_hash(
     with (
         patch("homeassistant.components.tplink.PLATFORMS", []),
         patch("homeassistant.components.tplink.Device.connect", new=_connect),
+        _patch_discovery(),
+        _patch_single_discovery(),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -753,6 +767,8 @@ async def test_credentials_hash_auth_error(
             "homeassistant.components.tplink.Device.connect",
             side_effect=AuthenticationError,
         ) as connect_mock,
+        _patch_discovery(),
+        _patch_single_discovery(),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -782,6 +798,7 @@ async def test_credentials_hash_auth_error(
 async def test_migrate_remove_device_config(
     hass: HomeAssistant,
     mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
     caplog: pytest.LogCaptureFixture,
     device_config: DeviceConfig,
     expected_entry_data: dict[str, Any],
@@ -910,14 +927,14 @@ async def test_automatic_feature_device_addition_and_removal(
         assert state
         assert entity_registry.async_get(entity_id)
 
-    parent_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "hub_parent")}
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "hub_parent"), mock_config_entry.entry_id
     )
     assert parent_device
 
     for device_id in ("child1", "child2"):
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_config_entry.entry_id
         )
         assert device_entry
         assert device_entry.via_device_id == parent_device.id
@@ -932,7 +949,12 @@ async def test_automatic_feature_device_addition_and_removal(
     assert state is None
     assert entity_registry.async_get(entity_id) is None
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "child2")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "child2"), mock_config_entry.entry_id
+        )
+        is None
+    )
 
     # Re-dd the previously removed child device
     mock_device.children = [
@@ -949,8 +971,8 @@ async def test_automatic_feature_device_addition_and_removal(
         assert entity_registry.async_get(entity_id)
 
     for device_id in ("child1", "child2"):
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_config_entry.entry_id
         )
         assert device_entry
         assert device_entry.via_device_id == parent_device.id
@@ -967,7 +989,9 @@ async def test_automatic_feature_device_addition_and_removal(
         assert entity_registry.async_get(entity_id)
 
     for device_id in ("child1", "child3", "child4"):
-        assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        assert device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_config_entry.entry_id
+        )
 
     # Add the previously removed child device
     mock_device.children = [
@@ -986,8 +1010,8 @@ async def test_automatic_feature_device_addition_and_removal(
         assert entity_registry.async_get(entity_id)
 
     for device_id in ("child1", "child2", "child3", "child4"):
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_config_entry.entry_id
         )
         assert device_entry
         assert device_entry.via_device_id == parent_device.id
@@ -1005,7 +1029,7 @@ async def test_automatic_feature_device_addition_and_removal(
         pytest.param(
             "light",
             [Module.Light, Module.LightEffect],
-            [],
+            ["brightness", "hsv", "color_temp"],
             None,
             DeviceType.Camera,
             id="light_effect",
@@ -1074,14 +1098,14 @@ async def test_automatic_module_device_addition_and_removal(
         assert state
         assert entity_registry.async_get(entity_id)
 
-    parent_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "hub_parent")}
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "hub_parent"), mock_camera_config_entry.entry_id
     )
     assert parent_device
 
     for device_id in ("child1", "child2"):
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_camera_config_entry.entry_id
         )
         assert device_entry
         assert device_entry.via_device_id == parent_device.id
@@ -1097,7 +1121,12 @@ async def test_automatic_module_device_addition_and_removal(
     assert state is None
     assert entity_registry.async_get(entity_id) is None
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "child2")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "child2"), mock_camera_config_entry.entry_id
+        )
+        is None
+    )
 
     # Re-dd the previously removed child device
     mock_device.children = [
@@ -1115,8 +1144,8 @@ async def test_automatic_module_device_addition_and_removal(
         assert entity_registry.async_get(entity_id)
 
     for device_id in ("child1", "child2"):
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_camera_config_entry.entry_id
         )
         assert device_entry
         assert device_entry.via_device_id == parent_device.id
@@ -1134,7 +1163,9 @@ async def test_automatic_module_device_addition_and_removal(
         assert entity_registry.async_get(entity_id)
 
     for device_id in ("child1", "child3", "child4"):
-        assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        assert device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_camera_config_entry.entry_id
+        )
 
     # Add the previously removed child device
     mock_device.children = [
@@ -1154,8 +1185,8 @@ async def test_automatic_module_device_addition_and_removal(
         assert entity_registry.async_get(entity_id)
 
     for device_id in ("child1", "child2", "child3", "child4"):
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_camera_config_entry.entry_id
         )
         assert device_entry
         assert device_entry.via_device_id == parent_device.id
@@ -1229,3 +1260,84 @@ async def test_automatic_device_addition_does_not_remove_disabled_default(
     check_entities("hub")
     for child_id in (1, 2, 3):
         check_entities(f"child_{child_id}")
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that strip child devices link to the parent via via_device_id."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    feature = _mocked_feature(
+        "consumption_this_month",
+        value=5.2,
+        type_=Feature.Type.Sensor,
+        category=Feature.Category.Primary,
+    )
+    parent = _mocked_device(
+        alias="my_plug",
+        features=[feature],
+        children=_mocked_strip_children(features=[feature]),
+        device_type=DeviceType.Strip,
+    )
+    with _patch_discovery(device=parent), _patch_connect(device=parent):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent.device_id), config_entry.entry_id
+    )
+    assert parent_device is not None
+
+    assert parent.children
+    for child in parent.children:
+        child_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, child.device_id), config_entry.entry_id
+        )
+        assert child_device is not None
+        assert child_device.id != parent_device.id
+        assert child_device.via_device_id == parent_device.id
+
+
+async def test_wall_switch_child_uses_connections(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that WallSwitch child devices merge with the parent via connections."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    feature = _mocked_feature(
+        "consumption_this_month",
+        value=5.2,
+        type_=Feature.Type.Sensor,
+        category=Feature.Category.Primary,
+    )
+    parent = _mocked_device(
+        alias="my_plug",
+        features=[feature],
+        children=_mocked_strip_children(features=[feature]),
+        device_type=DeviceType.WallSwitch,
+    )
+    with _patch_discovery(device=parent), _patch_connect(device=parent):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent.device_id), config_entry.entry_id
+    )
+    assert parent_device is not None
+    assert parent_device.via_device_id is None
+
+    assert parent.children
+    for child in parent.children:
+        # WallSwitch children merge into the parent device via the mac connection
+        child_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, child.device_id), config_entry.entry_id
+        )
+        assert child_device is not None
+        assert child_device.id == parent_device.id

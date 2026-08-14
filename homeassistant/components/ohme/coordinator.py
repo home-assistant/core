@@ -1,16 +1,15 @@
 """Ohme coordinators."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from ohme import ApiException, OhmeApiClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -23,7 +22,6 @@ class OhmeRuntimeData:
     """Dataclass to hold ohme coordinators."""
 
     charge_session_coordinator: OhmeChargeSessionCoordinator
-    advanced_settings_coordinator: OhmeAdvancedSettingsCoordinator
     device_info_coordinator: OhmeDeviceInfoCoordinator
 
 
@@ -53,6 +51,7 @@ class OhmeBaseCoordinator(DataUpdateCoordinator[None]):
         self.name = f"Ohme {self.coordinator_name}"
         self.client = client
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         try:
@@ -73,34 +72,10 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
     coordinator_name = "Charge Sessions"
     _default_update_interval = timedelta(seconds=30)
 
+    @override
     async def _internal_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_get_charge_session()
-
-
-class OhmeAdvancedSettingsCoordinator(OhmeBaseCoordinator):
-    """Coordinator to pull settings and charger state from the API."""
-
-    coordinator_name = "Advanced Settings"
-
-    def __init__(
-        self, hass: HomeAssistant, config_entry: OhmeConfigEntry, client: OhmeApiClient
-    ) -> None:
-        """Initialise coordinator."""
-        super().__init__(hass, config_entry, client)
-
-        @callback
-        def _dummy_listener() -> None:
-            pass
-
-        # This coordinator is used by the API library to determine whether the
-        # charger is online and available. It is therefore required even if no
-        # entities are using it.
-        self.async_add_listener(_dummy_listener)
-
-    async def _internal_update_data(self) -> None:
-        """Fetch data from API endpoint."""
-        await self.client.async_get_advanced_settings()
 
 
 class OhmeDeviceInfoCoordinator(OhmeBaseCoordinator):
@@ -109,6 +84,7 @@ class OhmeDeviceInfoCoordinator(OhmeBaseCoordinator):
     coordinator_name = "Device Info"
     _default_update_interval = timedelta(minutes=30)
 
+    @override
     async def _internal_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_update_device_info()

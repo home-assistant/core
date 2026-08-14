@@ -1,9 +1,8 @@
 """Dormakaba dKey integration binary sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from py_dormakaba_dkey.commands import DoorPosition, Notifications, UnlockStatus
 
@@ -36,8 +35,10 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key="security_locked",
         translation_key="deadbolt",
         device_class=BinarySensorDeviceClass.LOCK,
-        is_on=lambda state: state.unlock_status
-        not in (UnlockStatus.SECURITY_LOCKED, UnlockStatus.UNLOCKED_SECURITY_LOCKED),
+        is_on=lambda state: (
+            state.unlock_status
+            not in (UnlockStatus.SECURITY_LOCKED, UnlockStatus.UNLOCKED_SECURITY_LOCKED)
+        ),
     ),
 )
 
@@ -72,6 +73,7 @@ class DormakabaDkeyBinarySensor(DormakabaDkeyEntity, BinarySensorEntity):
         super().__init__(coordinator)
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         self._attr_is_on = self.entity_description.is_on(self.coordinator.lock.state)

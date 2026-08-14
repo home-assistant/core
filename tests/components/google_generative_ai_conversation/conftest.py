@@ -1,6 +1,6 @@
 """Tests helpers."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -11,6 +11,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
+    DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_STT_OPTIONS,
@@ -29,7 +30,7 @@ from tests.common import MockConfigEntry
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
-        domain="google_generative_ai_conversation",
+        domain=DOMAIN,
         title="Google Generative AI Conversation",
         data={
             "api_key": "bla",
@@ -108,13 +109,12 @@ async def mock_config_entry_with_google_search(
 @pytest.fixture
 async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: ConfigEntry
-) -> None:
+) -> AsyncGenerator[None]:
     """Initialize integration."""
     with patch("google.genai.models.AsyncModels.get"):
-        assert await async_setup_component(
-            hass, "google_generative_ai_conversation", {}
-        )
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
+        yield
 
 
 @pytest.fixture(autouse=True)

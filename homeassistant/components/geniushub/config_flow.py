@@ -1,11 +1,9 @@
 """Config flow for Geniushub integration."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 import socket
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from geniushubclient import GeniusService
@@ -40,6 +38,7 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -76,7 +75,7 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "invalid_host"
-            except (TimeoutError, aiohttp.ClientConnectionError):
+            except TimeoutError, aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -111,7 +110,7 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_host"
             except socket.gaierror:
                 errors["base"] = "invalid_host"
-            except (TimeoutError, aiohttp.ClientConnectionError):
+            except TimeoutError, aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

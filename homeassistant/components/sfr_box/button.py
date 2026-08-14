@@ -1,11 +1,9 @@
 """SFR Box button platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import Any, Concatenate, override
 
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxError
@@ -21,8 +19,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import SFRConfigEntry
 from .entity import SFREntity
+
+# Coordinator is used to centralize the data updates
+# but better to queue action calls to avoid conflicts
+PARALLEL_UPDATES = 1
 
 
 def with_error_wrapping[**_P, _R](
@@ -40,7 +43,11 @@ def with_error_wrapping[**_P, _R](
         try:
             return await func(self, *args, **kwargs)
         except SFRBoxError as err:
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     return wrapper
 
@@ -69,9 +76,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the buttons."""
     data = entry.runtime_data
+    if not data.has_authentication:
+        # All buttons currently require authentication
+        return
+
     system_info = data.system.data
-    if TYPE_CHECKING:
-        assert system_info is not None
 
     entities = [
         SFRBoxButton(data.box, description, system_info) for description in BUTTON_TYPES
@@ -95,6 +104,7 @@ class SFRBoxButton(SFREntity, ButtonEntity):
         self._box = box
 
     @with_error_wrapping
+    @override
     async def async_press(self) -> None:
         """Process the button press."""
         await self.entity_description.async_press(self._box)

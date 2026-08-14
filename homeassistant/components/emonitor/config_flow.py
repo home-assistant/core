@@ -1,7 +1,7 @@
 """Config flow for SiteSage Emonitor integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioemonitor import Emonitor
 import aiohttp
@@ -40,6 +40,7 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize Emonitor ConfigFlow."""
         self.discovered_ip: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -68,6 +69,7 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -81,7 +83,7 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             self.discovered_info = await fetch_mac_and_title(
                 self.hass, self.discovered_ip
             )
-        except Exception as ex:  # noqa: BLE001
+        except Exception as ex:
             _LOGGER.debug(
                 "Unable to fetch status, falling back to manual entry", exc_info=ex
             )

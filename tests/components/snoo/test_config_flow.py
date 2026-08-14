@@ -33,7 +33,7 @@ async def test_config_flow_success(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {
         CONF_USERNAME: "test-username",
@@ -72,7 +72,7 @@ async def test_form_auth_issues(
         },
     )
     # Reset auth back to the original
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_msg}
     bypass_api.authorize.side_effect = None
     result = await hass.config_entries.flow.async_configure(
@@ -83,7 +83,7 @@ async def test_form_auth_issues(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {
         CONF_USERNAME: "test-username",
@@ -92,8 +92,9 @@ async def test_form_auth_issues(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_account_already_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api: AsyncMock
+    hass: HomeAssistant, bypass_api: AsyncMock
 ) -> None:
     """Ensure we abort if the config flow already exists."""
     create_entry(hass)

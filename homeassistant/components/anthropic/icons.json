@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "ai_task": {
+      "ai_task_data": {
+        "default": "mdi:asterisk"
+      }
+    },
+    "conversation": {
+      "conversation": {
+        "default": "mdi:asterisk"
+      }
+    }
+  }
+}

@@ -1,7 +1,5 @@
 """Provides device actions for Network UPS Tools (NUT)."""
 
-from __future__ import annotations
-
 from typing import cast
 
 import voluptuous as vol
@@ -13,8 +11,8 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import NutConfigEntry, NutRuntimeData
 from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS
+from .coordinator import NutConfigEntry, NutRuntimeData
 
 ACTION_TYPES = {cmd.replace(".", "_") for cmd in INTEGRATION_SUPPORTED_COMMANDS}
 
@@ -72,7 +70,9 @@ def _get_runtime_data_from_device_id(
 ) -> NutRuntimeData | None:
     """Find the runtime data for device ID and return None on error."""
     device_registry = dr.async_get(hass)
-    if (device := device_registry.async_get(device_id)) is None:
+    if (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ) is None:
         return None
     return _get_runtime_data_for_device(hass, device)
 
@@ -100,7 +100,9 @@ def _get_runtime_data_from_device_id_exception_on_failure(
 ) -> NutRuntimeData | None:
     """Find the runtime data for device ID and raise exception on error."""
     device_registry = dr.async_get(hass)
-    if (device := device_registry.async_get(device_id)) is None:
+    if (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ) is None:
         raise InvalidDeviceAutomationConfig(
             translation_domain=DOMAIN,
             translation_key="device_not_found",

@@ -1,7 +1,5 @@
 """Provide the legacy TTS service provider interface."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Coroutine, Mapping
 from functools import partial
@@ -15,7 +13,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
@@ -153,7 +151,7 @@ async def async_setup_legacy(
             entity_ids = service.data[ATTR_ENTITY_ID]
 
             await hass.services.async_call(
-                DOMAIN_MP,
+                MP_DOMAIN,
                 SERVICE_PLAY_MEDIA,
                 {
                     ATTR_ENTITY_ID: entity_ids,

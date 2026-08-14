@@ -9,7 +9,7 @@ from homeassistant.components.weather import Forecast
 
 @dataclass
 class ProcessedCoordinatorData:
-    """Dataclass that will be exposed to the entities consuming data from an IrmKmiCoordinator."""
+    """Data exposed to entities consuming IrmKmiCoordinator data."""
 
     current_weather: CurrentWeatherData
     country: str

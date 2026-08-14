@@ -1,10 +1,8 @@
 """Component for monitoring activity on a folder."""
 
-from __future__ import annotations
-
 import logging
 import os
-from typing import cast
+from typing import cast, override
 
 from watchdog.events import (
     DirCreatedEvent,
@@ -105,22 +103,27 @@ class EventHandler(PatternMatchingEventHandler):
             signal = f"folder_watcher-{self.entry_id}"
             dispatcher_send(self.hass, signal, event.event_type, fireable)
 
+    @override
     def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
         """File modified."""
         self.process(event)
 
+    @override
     def on_moved(self, event: DirMovedEvent | FileMovedEvent) -> None:
         """File moved."""
         self.process(event, moved=True)
 
+    @override
     def on_created(self, event: DirCreatedEvent | FileCreatedEvent) -> None:
         """File created."""
         self.process(event)
 
+    @override
     def on_deleted(self, event: DirDeletedEvent | FileDeletedEvent) -> None:
         """File deleted."""
         self.process(event)
 
+    @override
     def on_closed(self, event: FileClosedEvent) -> None:
         """File closed."""
         self.process(event)

@@ -1,7 +1,5 @@
 """Tests for the Hyperion integration."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from hyperion import const
@@ -801,7 +799,9 @@ async def test_device_info(
 
     device_id = get_hyperion_device_id(TEST_SYSINFO_ID, TEST_INSTANCE)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), TEST_CONFIG_ENTRY_ID
+    )
     assert device
     assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
     assert device.identifiers == {(DOMAIN, device_id)}

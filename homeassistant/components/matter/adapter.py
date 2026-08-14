@@ -1,14 +1,11 @@
 """Matter to Home Assistant adapter."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.device_types import BridgedNode
 from matter_server.common.models import EventType, ServerInfoMessage
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -16,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
-from .helpers import get_device_id
+from .helpers import MatterConfigEntry, get_device_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -38,7 +35,7 @@ class MatterAdapter:
         self,
         hass: HomeAssistant,
         matter_client: MatterClient,
-        config_entry: ConfigEntry,
+        config_entry: MatterConfigEntry,
     ) -> None:
         """Initialize the adapter."""
         self.matter_client = matter_client
@@ -73,7 +70,12 @@ class MatterAdapter:
         def endpoint_added_callback(event: EventType, data: dict[str, int]) -> None:
             """Handle endpoint added event."""
             node = self.matter_client.get_node(data["node_id"])
-            self._setup_endpoint(node.endpoints[data["endpoint_id"]])
+            endpoint = node.endpoints[data["endpoint_id"]]
+            # Ensure the bridge device (endpoint 0) is registered before a
+            # bridged child endpoint resolves it as its via_device.
+            if endpoint.is_bridged_device and node.endpoints[0] != endpoint:
+                self._setup_endpoint(node.endpoints[0])
+            self._setup_endpoint(endpoint)
 
         def endpoint_removed_callback(event: EventType, data: dict[str, int]) -> None:
             """Handle endpoint removed event."""
@@ -91,7 +93,9 @@ class MatterAdapter:
                 node.endpoints[data["endpoint_id"]],
             )
             identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
-            if device := device_registry.async_get_device(identifiers={identifier}):
+            if device := device_registry.async_get_device_by_identifier(
+                identifier, self.config_entry.entry_id
+            ):
                 device_registry.async_remove_device(device.id)
 
         def node_removed_callback(event: EventType, node_id: int) -> None:
@@ -137,9 +141,12 @@ class MatterAdapter:
         """Set up an node."""
         LOGGER.debug("Setting up entities for node %s", node.node_id)
         try:
-            for endpoint in node.endpoints.values():
+            # Process endpoints in order so the bridge device (endpoint 0) is
+            # registered before any bridged child endpoint resolves it as its
+            # via_device.
+            for endpoint_id in sorted(node.endpoints):
                 # Node endpoints are translated into HA devices
-                self._setup_endpoint(endpoint)
+                self._setup_endpoint(node.endpoints[endpoint_id])
         except Exception as err:  # noqa: BLE001
             # We don't want to crash the whole setup when a single node fails to setup
             # for whatever reason, so we catch all exceptions here.
@@ -173,14 +180,20 @@ class MatterAdapter:
             or (device_type.__name__ if device_type else None)
         )
 
+        device_registry = dr.async_get(self.hass)
+
         # handle bridged devices
-        bridge_device_id = None
+        via_device_id: str | None = None
         if endpoint.is_bridged_device and endpoint.node.endpoints[0] != endpoint:
             bridge_device_id = get_device_id(
                 server_info,
                 endpoint.node.endpoints[0],
             )
-            bridge_device_id = f"{ID_TYPE_DEVICE_ID}_{bridge_device_id}"
+            via_device_id = dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{bridge_device_id}"),
+                config_entry_id=self.config_entry.entry_id,
+            )
 
         node_device_id = get_device_id(
             server_info,
@@ -215,7 +228,7 @@ class MatterAdapter:
         else:
             model_id = str(product_id) if (product_id := basic_info.productID) else None
 
-        dr.async_get(self.hass).async_get_or_create(
+        device_registry.async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
             identifiers=identifiers,
@@ -225,7 +238,7 @@ class MatterAdapter:
             model=model_name,
             model_id=model_id,
             serial_number=serial_number,
-            via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
+            via_device_id=via_device_id,
         )
 
     def _setup_endpoint(self, endpoint: MatterEndpoint) -> None:

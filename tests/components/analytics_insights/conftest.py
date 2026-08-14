@@ -8,7 +8,7 @@ from python_homeassistant_analytics import CurrentAnalytics
 from python_homeassistant_analytics.models import Addon, CustomIntegration, Integration
 
 from homeassistant.components.analytics_insights.const import (
-    CONF_TRACKED_ADDONS,
+    CONF_TRACKED_APPS,
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
@@ -44,9 +44,9 @@ def mock_analytics_client() -> Generator[AsyncMock]:
         client.get_current_analytics.return_value = CurrentAnalytics.from_json(
             load_fixture("analytics_insights/current_data.json")
         )
-        addons = load_json_object_fixture("analytics_insights/addons.json")
+        apps = load_json_object_fixture("analytics_insights/apps.json")
         client.get_addons.return_value = {
-            key: Addon.from_dict(value) for key, value in addons.items()
+            key: Addon.from_dict(value) for key, value in apps.items()
         }
         integrations = load_json_object_fixture("analytics_insights/integrations.json")
         client.get_integrations.return_value = {
@@ -70,8 +70,9 @@ def mock_config_entry() -> MockConfigEntry:
         title="Homeassistant Analytics",
         data={},
         options={
-            CONF_TRACKED_ADDONS: ["core_samba"],
+            CONF_TRACKED_APPS: ["core_samba"],
             CONF_TRACKED_INTEGRATIONS: ["youtube", "spotify", "myq"],
             CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
         },
+        version=2,
     )

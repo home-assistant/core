@@ -1,7 +1,5 @@
 """Support for the Nissan Leaf Carwings/Nissan Connect API."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -417,7 +415,7 @@ class LeafDataStore:
         except CarwingsError:
             _LOGGER.error("An error occurred getting battery status")
             return None
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             _LOGGER.error("An error occurred parsing response from server")
             return None
         return server_info

@@ -1,7 +1,5 @@
 """Diagnostics support for Backblaze B2."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -44,7 +42,7 @@ async def async_get_config_entry_diagnostics(
                 account_data["allowed"], TO_REDACT_ACCOUNT_DATA_ALLOWED
             )
 
-    except (AttributeError, TypeError, ValueError, KeyError):
+    except AttributeError, TypeError, ValueError, KeyError:
         bucket_info = {"name": "unknown", "id": "unknown"}
         account_data = {"error": "Failed to retrieve detailed account information"}
 

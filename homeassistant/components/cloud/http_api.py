@@ -1,11 +1,10 @@
 """The HTTP api to control the cloud integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress
 import dataclasses
+from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
 import json
@@ -26,12 +25,12 @@ from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
 )
+from homeassistant.components.frontend import DATA_THEMES
 from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.system_health import get_info as get_system_health_info
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -41,7 +40,9 @@ from homeassistant.loader import (
     async_get_custom_components,
     async_get_loaded_integration,
 )
+from homeassistant.util import dt as dt_util
 from homeassistant.util.location import async_detect_location_info
+from homeassistant.util.package import async_get_installed_packages
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
 from .assist_pipeline import async_create_cloud_pipeline
@@ -51,6 +52,7 @@ from .const import (
     DATA_CLOUD_LOG_HANDLER,
     EVENT_CLOUD_EVENT,
     LOGIN_MFA_TIMEOUT,
+    ONBOARDING_ITEMS,
     PREF_ALEXA_REPORT_STATE,
     PREF_DISABLE_2FA,
     PREF_ENABLE_ALEXA,
@@ -99,6 +101,9 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_hook_delete)
     websocket_api.async_register_command(hass, websocket_remote_connect)
     websocket_api.async_register_command(hass, websocket_remote_disconnect)
+    websocket_api.async_register_command(hass, websocket_webrtc_ice_servers)
+    websocket_api.async_register_command(hass, websocket_cloud_onboarding_postpone)
+    websocket_api.async_register_command(hass, websocket_cloud_onboarding_complete)
 
     websocket_api.async_register_command(hass, google_assistant_get)
     websocket_api.async_register_command(hass, google_assistant_list)
@@ -138,7 +143,8 @@ def async_setup(hass: HomeAssistant) -> None:
             ),
             MFAExpiredOrNotStarted: (
                 HTTPStatus.BAD_REQUEST,
-                "Multi-factor authentication expired, or not started. Please try again.",
+                "Multi-factor authentication expired,"
+                " or not started. Please try again.",
             ),
             AlreadyConnectedError: (
                 HTTPStatus.CONFLICT,
@@ -508,12 +514,23 @@ class DownloadSupportPackageView(HomeAssistantView):
             "custom_integrations": custom_integrations,
         }
 
+    @callback
+    def _get_themes_info(self, hass: HomeAssistant) -> dict[str, Any]:
+        """Collect information about user-installed custom themes."""
+        themes: dict[str, Any] = hass.data.get(DATA_THEMES, {})
+        return {
+            "count": len(themes),
+            "themes": sorted(themes),
+        }
+
     async def _generate_markdown(
         self,
         hass: HomeAssistant,
         hass_info: dict[str, Any],
         domains_info: dict[str, dict[str, str]],
     ) -> str:
+        cloud = hass.data[DATA_CLOUD]
+
         def get_domain_table_markdown(domain_info: dict[str, Any]) -> str:
             if len(domain_info) == 0:
                 return "No information available\n"
@@ -559,7 +576,31 @@ class DownloadSupportPackageView(HomeAssistantView):
                 markdown += "--- | --- | --- | ---\n"
                 for integration in integration_info["custom_integrations"]:
                     doc_url = integration.get("documentation") or "N/A"
-                    markdown += f"{integration['domain']} | {integration['name']} | {integration['version']} | {doc_url}\n"
+                    markdown += (
+                        f"{integration['domain']} | "
+                        f"{integration['name']} | "
+                        f"{integration['version']} | "
+                        f"{doc_url}\n"
+                    )
+                markdown += "\n</details>\n\n"
+
+        # Add custom themes information
+        try:
+            themes_info = self._get_themes_info(hass)
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            markdown += "## Custom Themes\n\n"
+            markdown += "Unable to collect themes information\n\n"
+        else:
+            markdown += "## Custom Themes\n\n"
+            markdown += f"Custom themes: {themes_info['count']}\n\n"
+
+            if themes_info["themes"]:
+                markdown += "<details><summary>Custom themes</summary>\n\n"
+                markdown += "Name\n"
+                markdown += "---\n"
+                for theme in themes_info["themes"]:
+                    markdown += f"{theme}\n"
                 markdown += "\n</details>\n\n"
 
         for domain, domain_info in domains_info.items():
@@ -569,6 +610,34 @@ class DownloadSupportPackageView(HomeAssistantView):
                 f"{domain_info_md}"
                 "</details>\n\n"
             )
+
+        # Add stored latency response if available
+        if locations := cloud.remote.latency_by_location:
+            markdown += "## Latency by location\n\n"
+            markdown += "Location | Latency (ms)\n"
+            markdown += "--- | ---\n"
+            for location in sorted(locations):
+                markdown += f"{location} | {locations[location]['avg'] or 'N/A'}\n"
+            markdown += "\n"
+
+        # Add installed packages section
+        try:
+            installed_packages = await async_get_installed_packages()
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            markdown += "## Installed packages\n\n"
+            markdown += "Unable to collect installed packages information\n\n"
+        else:
+            if installed_packages:
+                markdown += "## Installed packages\n\n"
+                markdown += (
+                    "<details><summary>Installed packages</summary>\n\n"
+                    "Package | Version\n"
+                    "--- | ---\n"
+                )
+                for pkg in sorted(installed_packages, key=lambda p: p["name"].lower()):
+                    markdown += f"{pkg['name']} | {pkg['version']}\n"
+                markdown += "\n</details>\n\n"
 
         log_handler = hass.data[DATA_CLOUD_LOG_HANDLER]
         logs = "\n".join(await log_handler.get_logs(hass))
@@ -583,6 +652,7 @@ class DownloadSupportPackageView(HomeAssistantView):
 
         return markdown
 
+    @require_admin
     async def get(self, request: web.Request) -> web.Response:
         """Download support package file."""
 
@@ -677,6 +747,7 @@ def _require_cloud_login(
     return with_cloud_auth
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
 @websocket_api.async_response
@@ -718,6 +789,7 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
     return value
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -758,7 +830,7 @@ async def websocket_update_prefs(
                 msg["id"], "alexa_timeout", "Timeout validating Alexa access token."
             )
             return
-        except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
+        except alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink:
             connection.send_error(
                 msg["id"],
                 "alexa_relink",
@@ -777,6 +849,49 @@ async def websocket_update_prefs(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.websocket_command({vol.Required("type"): "cloud/onboarding/postpone"})
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_cloud_onboarding_postpone(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request to postpone onboarding."""
+    cloud = hass.data[DATA_CLOUD]
+    postponed_until = (dt_util.utcnow() + timedelta(hours=24)).isoformat()
+    await cloud.client.prefs.async_update(onboarding_postponed_until=postponed_until)
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cloud/onboarding/complete",
+        vol.Required("items"): [vol.In(ONBOARDING_ITEMS)],
+    }
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_cloud_onboarding_complete(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request to complete onboarding items."""
+    cloud = hass.data[DATA_CLOUD]
+    onboarded_items = list(cloud.client.prefs.onboarded_items)
+    new_items = [item for item in msg["items"] if item not in onboarded_items]
+    if new_items:
+        onboarded_items.extend(dict.fromkeys(new_items))
+        await cloud.client.prefs.async_update(onboarded_items=onboarded_items)
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
+
+
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -797,6 +912,7 @@ async def websocket_hook_create(
     connection.send_message(websocket_api.result_message(msg["id"], hook))
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -861,6 +977,8 @@ async def _account_data(
         "google_local_connected": google_config.is_local_connected,
         "logged_in": True,
         "prefs": client.prefs.as_dict(),
+        "onboarding_completed": client.prefs.onboarding_completed,
+        "onboarding_postponed": client.prefs.onboarding_postponed,
         "remote_certificate": certificate,
         "remote_certificate_status": remote.certificate_status,
         "remote_connected": remote.is_connected,
@@ -932,7 +1050,7 @@ async def google_assistant_get(
         return
 
     entity = google_helpers.GoogleEntity(hass, gconf, state)
-    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity.is_supported():
+    if not entity.is_supported():
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,
@@ -1034,9 +1152,7 @@ async def alexa_get(
     """Get data for a single alexa entity."""
     entity_id: str = msg["entity_id"]
 
-    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity_supported_by_alexa(
-        hass, entity_id
-    ):
+    if not entity_supported_by_alexa(hass, entity_id):
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,
@@ -1107,6 +1223,7 @@ async def alexa_sync(
 
 
 @websocket_api.websocket_command({"type": "cloud/tts/info"})
+@callback
 def tts_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -1134,3 +1251,22 @@ def tts_info(
             )
 
     connection.send_result(msg["id"], {"languages": result})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cloud/webrtc/ice_servers",
+    }
+)
+@_require_cloud_login
+@callback
+def websocket_webrtc_ice_servers(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle get WebRTC ICE servers websocket command."""
+    connection.send_result(
+        msg["id"],
+        [server.to_dict() for server in hass.data[DATA_CLOUD].client.ice_servers],
+    )

@@ -2,8 +2,8 @@
 # name: test_states[my_device-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -28,7 +28,6 @@
     'model_id': None,
     'name': 'my_device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': '1.0.0',
     'via_device_id': None,
@@ -36,8 +35,9 @@
 # ---
 # name: test_states[sensor.my_device_alarm_source-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -55,6 +55,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm source',
     'options': dict({
     }),
     'original_device_class': None,
@@ -71,8 +72,9 @@
 # ---
 # name: test_states[sensor.my_device_auto_off_at-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -90,6 +92,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-off at',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -107,8 +110,8 @@
 # name: test_states[sensor.my_device_auto_off_at-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'my_device Auto-off at',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Auto-off at',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_auto_off_at',
@@ -120,11 +123,12 @@
 # ---
 # name: test_states[sensor.my_device_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -141,6 +145,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -158,10 +163,10 @@
 # name: test_states[sensor.my_device_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'my_device Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Battery',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_battery',
@@ -173,8 +178,9 @@
 # ---
 # name: test_states[sensor.my_device_charging_contacts_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -192,6 +198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging contacts remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -211,8 +218,9 @@
 # ---
 # name: test_states[sensor.my_device_charging_contacts_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -230,6 +238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging contacts used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -249,11 +258,12 @@
 # ---
 # name: test_states[sensor.my_device_cleaning_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -270,6 +280,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning area',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -293,10 +304,10 @@
 # name: test_states[sensor.my_device_cleaning_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'area',
-      'friendly_name': 'my_device Cleaning area',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Cleaning area',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_cleaning_area',
@@ -308,11 +319,12 @@
 # ---
 # name: test_states[sensor.my_device_cleaning_progress-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -329,6 +341,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning progress',
     'options': dict({
     }),
     'original_device_class': None,
@@ -345,8 +358,9 @@
 # ---
 # name: test_states[sensor.my_device_cleaning_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -364,6 +378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -387,9 +402,9 @@
 # name: test_states[sensor.my_device_cleaning_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'my_device Cleaning time',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Cleaning time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_cleaning_time',
@@ -401,11 +416,12 @@
 # ---
 # name: test_states[sensor.my_device_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -422,6 +438,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -442,10 +459,10 @@
 # name: test_states[sensor.my_device_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'my_device Current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'A',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_current',
@@ -457,11 +474,12 @@
 # ---
 # name: test_states[sensor.my_device_current_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -478,6 +496,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -498,10 +517,10 @@
 # name: test_states[sensor.my_device_current_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'my_device Current consumption',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'W',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Current consumption',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_current_consumption',
@@ -513,8 +532,9 @@
 # ---
 # name: test_states[sensor.my_device_device_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -532,6 +552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -548,11 +569,12 @@
 # ---
 # name: test_states[sensor.my_device_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'sidebrushstuck',
         'mainbrushstuck',
@@ -582,6 +604,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -599,9 +622,9 @@
 # name: test_states[sensor.my_device_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'my_device Error',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Error',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'sidebrushstuck',
         'mainbrushstuck',
@@ -626,8 +649,9 @@
 # ---
 # name: test_states[sensor.my_device_filter_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -645,6 +669,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -664,8 +689,9 @@
 # ---
 # name: test_states[sensor.my_device_filter_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -683,6 +709,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -702,11 +729,12 @@
 # ---
 # name: test_states[sensor.my_device_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -723,6 +751,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -740,10 +769,10 @@
 # name: test_states[sensor.my_device_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'my_device Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_humidity',
@@ -755,8 +784,9 @@
 # ---
 # name: test_states[sensor.my_device_last_clean_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -774,6 +804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last clean start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -790,8 +821,9 @@
 # ---
 # name: test_states[sensor.my_device_last_cleaned_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -809,6 +841,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last cleaned area',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
@@ -828,11 +861,12 @@
 # ---
 # name: test_states[sensor.my_device_last_cleaned_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -849,6 +883,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last cleaned time',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -868,8 +903,9 @@
 # ---
 # name: test_states[sensor.my_device_last_water_leak_alert-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -887,6 +923,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last water leak alert',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -904,8 +941,8 @@
 # name: test_states[sensor.my_device_last_water_leak_alert-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'my_device Last water leak alert',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Last water leak alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_last_water_leak_alert',
@@ -917,8 +954,9 @@
 # ---
 # name: test_states[sensor.my_device_main_brush_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -936,6 +974,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -955,8 +994,9 @@
 # ---
 # name: test_states[sensor.my_device_main_brush_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -974,6 +1014,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -993,8 +1034,9 @@
 # ---
 # name: test_states[sensor.my_device_on_since-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1012,6 +1054,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On since',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1028,8 +1071,9 @@
 # ---
 # name: test_states[sensor.my_device_report_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1047,6 +1091,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Report interval',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1063,8 +1108,9 @@
 # ---
 # name: test_states[sensor.my_device_sensor_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1082,6 +1128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1101,8 +1148,9 @@
 # ---
 # name: test_states[sensor.my_device_sensor_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1120,6 +1168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1139,8 +1188,9 @@
 # ---
 # name: test_states[sensor.my_device_side_brush_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1158,6 +1208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1177,8 +1228,9 @@
 # ---
 # name: test_states[sensor.my_device_side_brush_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1196,6 +1248,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1215,11 +1268,12 @@
 # ---
 # name: test_states[sensor.my_device_signal_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1236,6 +1290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1253,8 +1308,8 @@
 # name: test_states[sensor.my_device_signal_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Signal level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Signal level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_signal_level',
@@ -1266,11 +1321,12 @@
 # ---
 # name: test_states[sensor.my_device_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1287,6 +1343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -1303,8 +1360,9 @@
 # ---
 # name: test_states[sensor.my_device_ssid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1322,6 +1380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SSID',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1338,11 +1397,12 @@
 # ---
 # name: test_states[sensor.my_device_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1359,6 +1419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
@@ -1375,11 +1436,12 @@
 # ---
 # name: test_states[sensor.my_device_this_month_s_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1396,6 +1458,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "This month's consumption",
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1416,10 +1479,10 @@
 # name: test_states[sensor.my_device_this_month_s_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': "my_device This month's consumption",
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'kWh',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "my_device This month's consumption",
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_this_month_s_consumption',
@@ -1431,11 +1494,12 @@
 # ---
 # name: test_states[sensor.my_device_today_s_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1452,6 +1516,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "Today's consumption",
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1472,10 +1537,10 @@
 # name: test_states[sensor.my_device_today_s_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': "my_device Today's consumption",
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'kWh',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "my_device Today's consumption",
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_today_s_consumption',
@@ -1487,11 +1552,12 @@
 # ---
 # name: test_states[sensor.my_device_total_cleaning_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1508,6 +1574,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning area',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
@@ -1527,11 +1594,12 @@
 # ---
 # name: test_states[sensor.my_device_total_cleaning_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1548,6 +1616,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1564,11 +1633,12 @@
 # ---
 # name: test_states[sensor.my_device_total_cleaning_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1585,6 +1655,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -1604,11 +1675,12 @@
 # ---
 # name: test_states[sensor.my_device_total_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1625,6 +1697,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1645,10 +1718,10 @@
 # name: test_states[sensor.my_device_total_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'my_device Total consumption',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'kWh',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Total consumption',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_total_consumption',
@@ -1660,11 +1733,12 @@
 # ---
 # name: test_states[sensor.my_device_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1681,6 +1755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1701,10 +1776,10 @@
 # name: test_states[sensor.my_device_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'my_device Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'V',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_voltage',

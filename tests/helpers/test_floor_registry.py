@@ -1,6 +1,6 @@
 """Tests for the floor registry."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from functools import partial
 import re
 from typing import Any
@@ -478,11 +478,88 @@ async def test_migration_from_1_1(
             "floors": [
                 {
                     "floor_id": "12345A",
-                    "name": "mock",
+                    "name": "AA floor no level floor",
                     "aliases": [],
                     "icon": None,
                     "level": None,
-                }
+                },
+                {
+                    "floor_id": "12345B",
+                    "name": "CC floor no level floor",
+                    "aliases": [],
+                    "icon": None,
+                    "level": None,
+                },
+                {
+                    "floor_id": "12345C",
+                    "name": "bb floor no level floor",
+                    "aliases": [],
+                    "icon": None,
+                    "level": None,
+                },
+                {
+                    "floor_id": "12345D",
+                    "name": "AA floor level -1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": -1,
+                },
+                {
+                    "floor_id": "12345E",
+                    "name": "CC floor level -1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": -1,
+                },
+                {
+                    "floor_id": "12345F",
+                    "name": "bb floor level -1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": -1,
+                },
+                {
+                    "floor_id": "12345G",
+                    "name": "AA floor level 0",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 0,
+                },
+                {
+                    "floor_id": "12345H",
+                    "name": "CC floor level 0",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 0,
+                },
+                {
+                    "floor_id": "12345I",
+                    "name": "bb floor level 0",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 0,
+                },
+                {
+                    "floor_id": "12345J",
+                    "name": "AA floor level 1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 1,
+                },
+                {
+                    "floor_id": "12345K",
+                    "name": "CC floor level 1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 1,
+                },
+                {
+                    "floor_id": "12345L",
+                    "name": "bb floor level 1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 1,
+                },
             ]
         },
     }
@@ -491,8 +568,120 @@ async def test_migration_from_1_1(
     registry = fr.async_get(hass)
 
     # Test data was loaded
-    entry = registry.async_get_floor_by_name("mock")
+    entry = registry.async_get_floor_by_name("AA floor no level floor")
     assert entry.floor_id == "12345A"
+
+    # Check sort order
+    assert list(registry.async_list_floors()) == [
+        fr.FloorEntry(
+            name="AA floor level 1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345J",
+            icon=None,
+            level=1,
+        ),
+        fr.FloorEntry(
+            name="bb floor level 1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345L",
+            icon=None,
+            level=1,
+        ),
+        fr.FloorEntry(
+            name="CC floor level 1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345K",
+            icon=None,
+            level=1,
+        ),
+        fr.FloorEntry(
+            name="AA floor level 0",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345G",
+            icon=None,
+            level=0,
+        ),
+        fr.FloorEntry(
+            name="bb floor level 0",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345I",
+            icon=None,
+            level=0,
+        ),
+        fr.FloorEntry(
+            name="CC floor level 0",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345H",
+            icon=None,
+            level=0,
+        ),
+        fr.FloorEntry(
+            name="AA floor level -1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345D",
+            icon=None,
+            level=-1,
+        ),
+        fr.FloorEntry(
+            name="bb floor level -1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345F",
+            icon=None,
+            level=-1,
+        ),
+        fr.FloorEntry(
+            name="CC floor level -1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345E",
+            icon=None,
+            level=-1,
+        ),
+        fr.FloorEntry(
+            name="AA floor no level floor",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345A",
+            icon=None,
+            level=None,
+        ),
+        fr.FloorEntry(
+            name="bb floor no level floor",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345C",
+            icon=None,
+            level=None,
+        ),
+        fr.FloorEntry(
+            name="CC floor no level floor",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345B",
+            icon=None,
+            level=None,
+        ),
+    ]
 
     # Check we store migrated data
     await flush_store(registry._store)
@@ -504,13 +693,112 @@ async def test_migration_from_1_1(
             "floors": [
                 {
                     "aliases": [],
-                    "icon": None,
-                    "floor_id": "12345A",
-                    "level": None,
-                    "name": "mock",
                     "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345J",
+                    "icon": None,
+                    "level": 1,
                     "modified_at": "1970-01-01T00:00:00+00:00",
-                }
+                    "name": "AA floor level 1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345L",
+                    "icon": None,
+                    "level": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "bb floor level 1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345K",
+                    "icon": None,
+                    "level": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "CC floor level 1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345G",
+                    "icon": None,
+                    "level": 0,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "AA floor level 0",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345I",
+                    "icon": None,
+                    "level": 0,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "bb floor level 0",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345H",
+                    "icon": None,
+                    "level": 0,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "CC floor level 0",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345D",
+                    "icon": None,
+                    "level": -1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "AA floor level -1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345F",
+                    "icon": None,
+                    "level": -1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "bb floor level -1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345E",
+                    "icon": None,
+                    "level": -1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "CC floor level -1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345A",
+                    "icon": None,
+                    "level": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "AA floor no level floor",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345C",
+                    "icon": None,
+                    "level": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "bb floor no level floor",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345B",
+                    "icon": None,
+                    "level": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "CC floor no level floor",
+                },
             ]
         },
     }

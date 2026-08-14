@@ -33,6 +33,9 @@
     "get_recipes": {
       "service": "mdi:book-open-page-variant"
     },
+    "get_shopping_list_items": {
+      "service": "mdi:basket"
+    },
     "import_recipe": {
       "service": "mdi:map-search"
     },

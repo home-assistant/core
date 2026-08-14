@@ -1,7 +1,5 @@
 """Tests for the plaato binary sensors."""
 
-from unittest.mock import patch
-
 from pyplaato.models.device import PlaatoDeviceType
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -10,24 +8,23 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from tests.common import MockConfigEntry, snapshot_platform
 
-from tests.common import snapshot_platform
+
+@pytest.fixture
+def platform() -> Platform:
+    """Fixture to specify platform."""
+    return Platform.BINARY_SENSOR
 
 
 # note: PlaatoDeviceType.Airlock does not provide binary sensors
 @pytest.mark.parametrize("device_type", [PlaatoDeviceType.Keg])
+@pytest.mark.freeze_time("2024-05-24 12:00:00", tz_offset=0)
 async def test_binary_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    device_type: PlaatoDeviceType,
 ) -> None:
     """Test binary sensors."""
-    with patch(
-        "homeassistant.components.plaato.PLATFORMS",
-        [Platform.BINARY_SENSOR],
-    ):
-        entry = await init_integration(hass, device_type)
-
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)

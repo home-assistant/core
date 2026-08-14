@@ -1,6 +1,6 @@
 """Constants used in modbus integration."""
 
-from enum import Enum
+from enum import StrEnum
 import logging
 
 from homeassistant.const import (
@@ -116,7 +116,7 @@ ATTR_SLAVE = "slave"
 ATTR_VALUE = "value"
 
 
-class DataType(str, Enum):
+class DataType(StrEnum):
     """Data types used by sensor etc."""
 
     CUSTOM = "custom"
@@ -188,4 +188,4 @@ LIGHT_MODBUS_INVALID_VALUE = 0xFFFF
 DEFAULT_SCALE = 1.0
 DEFAULT_OFFSET = 0
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)

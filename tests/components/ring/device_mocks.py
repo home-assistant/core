@@ -1,8 +1,10 @@
 """Module for ring device mocks.
 
-Creates a MagicMock for all device families, i.e. chimes, doorbells, stickup_cams and other.
+Creates a MagicMock for all device families, i.e. chimes,
+doorbells, stickup_cams and other.
 
-Each device entry in the devices.json will have a MagicMock instead of the RingObject.
+Each device entry in the devices.json will have a MagicMock
+instead of the RingObject.
 
 Mocks the api calls on the devices such as history() and health().
 """
@@ -147,8 +149,8 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
         mock_device.configure_mock(
             motion_detection=device_dict["settings"].get("motion_detection_enabled"),
         )
-        mock_device.async_set_motion_detection.side_effect = (
-            lambda i: mock_device.configure_mock(motion_detection=i)
+        mock_device.async_set_motion_detection.side_effect = lambda i: (
+            mock_device.configure_mock(motion_detection=i)
         )
 
     if has_capability(RingCapability.LIGHT):
@@ -190,8 +192,8 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
                 "chime_settings"
             ].get("enable", False)
         )
-        mock_device.async_set_existing_doorbell_type_enabled.side_effect = (
-            lambda i: mock_device.configure_mock(existing_doorbell_type_enabled=i)
+        mock_device.async_set_existing_doorbell_type_enabled.side_effect = lambda i: (
+            mock_device.configure_mock(existing_doorbell_type_enabled=i)
         )
 
     if device_family == "other":

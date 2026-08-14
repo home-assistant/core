@@ -1,9 +1,7 @@
 """Home Assistant Hardware integration helpers."""
 
-from __future__ import annotations
-
 from collections import defaultdict
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import logging
 from typing import TYPE_CHECKING, Protocol, TypedDict
@@ -218,7 +216,8 @@ class HardwareInfoDispatcher:
         if self._active_firmware_updates[device] != source_domain:
             current_domain = self._active_firmware_updates[device]
             raise ValueError(
-                f"Firmware update for {device} is owned by {current_domain}, not {source_domain}"
+                f"Firmware update for {device} is owned by"
+                f" {current_domain}, not {source_domain}"
             )
 
         del self._active_firmware_updates[device]
@@ -281,7 +280,7 @@ def async_is_firmware_update_in_progress(hass: HomeAssistant, device: str) -> bo
 @asynccontextmanager
 async def async_firmware_update_context(
     hass: HomeAssistant, device: str, source_domain: str
-) -> AsyncIterator[None]:
+) -> AsyncGenerator[None]:
     """Register a device as having its firmware being actively updated."""
     async_register_firmware_update_in_progress(hass, device, source_domain)
 

@@ -1,9 +1,7 @@
 """Config flow for the Seko PoolDose integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
@@ -45,17 +43,17 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the host and return (serial_number, api_versions, errors)."""
         client = PooldoseClient(host, websession=async_get_clientsession(self.hass))
         client_status = await client.connect()
-        if client_status == RequestStatus.HOST_UNREACHABLE:
+        if client_status is RequestStatus.HOST_UNREACHABLE:
             return None, None, {"base": "cannot_connect"}
-        if client_status == RequestStatus.PARAMS_FETCH_FAILED:
+        if client_status is RequestStatus.PARAMS_FETCH_FAILED:
             return None, None, {"base": "params_fetch_failed"}
-        if client_status != RequestStatus.SUCCESS:
+        if client_status is not RequestStatus.SUCCESS:
             return None, None, {"base": "cannot_connect"}
 
         api_status, api_versions = client.check_apiversion_supported()
-        if api_status == RequestStatus.NO_DATA:
+        if api_status is RequestStatus.NO_DATA:
             return None, None, {"base": "api_not_set"}
-        if api_status == RequestStatus.API_VERSION_UNSUPPORTED:
+        if api_status is RequestStatus.API_VERSION_UNSUPPORTED:
             return None, api_versions, {"base": "api_not_supported"}
 
         device_info = client.device_info
@@ -67,6 +65,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return serial_number, None, None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -110,36 +109,81 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=SCHEMA_DEVICE,
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            serial_number, api_versions, errors = await self._validate_host(host)
+            if errors:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=SCHEMA_DEVICE,
+                    errors=errors,
+                    # Handle API version info for error display;
+                    # pass version info when available or None
+                    # when api_versions is None to avoid
+                    # displaying version details
+                    description_placeholders={
+                        "api_version_is": api_versions.get("api_version_is") or "",
+                        "api_version_should": api_versions.get("api_version_should")
+                        or "",
+                    }
+                    if api_versions
+                    else None,
+                )
+
+            await self.async_set_unique_id(serial_number, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=f"PoolDose {serial_number}",
+                data={CONF_HOST: host},
             )
 
-        host = user_input[CONF_HOST]
-        serial_number, api_versions, errors = await self._validate_host(host)
-        if errors:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=SCHEMA_DEVICE,
-                errors=errors,
-                # Handle API version info for error display; pass version info when available
-                # or None when api_versions is None to avoid displaying version details
-                description_placeholders={
-                    "api_version_is": api_versions.get("api_version_is") or "",
-                    "api_version_should": api_versions.get("api_version_should") or "",
-                }
-                if api_versions
-                else None,
+        return self.async_show_form(
+            step_id="user",
+            data_schema=SCHEMA_DEVICE,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfigure to change the device host/IP for an existing entry."""
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            serial_number, api_versions, errors = await self._validate_host(host)
+            if errors:
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=SCHEMA_DEVICE,
+                    errors=errors,
+                    # Handle API version info for error display
+                    # identical to other steps
+                    description_placeholders={
+                        "api_version_is": api_versions.get("api_version_is") or "",
+                        "api_version_should": api_versions.get("api_version_should")
+                        or "",
+                    }
+                    if api_versions
+                    else None,
+                )
+
+            # Ensure new serial number matches the existing
+            # entry unique_id (serial number)
+            if serial_number != self._get_reconfigure_entry().unique_id:
+                return self.async_abort(reason="wrong_device")
+
+            # Update the existing config entry with the new host and schedule reload
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data_updates={CONF_HOST: host}
             )
 
-        await self.async_set_unique_id(serial_number, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=f"PoolDose {serial_number}",
-            data={CONF_HOST: host},
+        return self.async_show_form(
+            step_id="reconfigure",
+            # Pre-fill with current host from the entry being reconfigured
+            data_schema=self.add_suggested_values_to_schema(
+                SCHEMA_DEVICE, self._get_reconfigure_entry().data
+            ),
         )

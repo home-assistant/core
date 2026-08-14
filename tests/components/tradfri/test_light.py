@@ -166,22 +166,22 @@ async def test_light_available(
         (
             "bulb_ws",
             "light.test_ws",
-            {"color_temp": 250},
-            {"color_temp": 250},
+            {"color_temp_kelvin": 4000},
+            {"color_temp_kelvin": 4000},
         ),
-        # color_temp < 250
+        # color_temp_kelvin > 4000
         (
             "bulb_ws",
             "light.test_ws",
-            {"color_temp": 1},
-            {"color_temp": 250},
+            {"color_temp_kelvin": 1000000},
+            {"color_temp_kelvin": 4000},
         ),
-        # color_temp > 454
+        # color_temp_kelvin < 2202
         (
             "bulb_ws",
             "light.test_ws",
-            {"color_temp": 1000},
-            {"color_temp": 454},
+            {"color_temp_kelvin": 1000},
+            {"color_temp_kelvin": 2202},
         ),
         # hs_color
         (
@@ -194,21 +194,21 @@ async def test_light_available(
         (
             "bulb_ws",
             "light.test_ws",
-            {"color_temp": 250, "brightness": 200},
-            {"color_temp": 250, "brightness": 200},
+            {"color_temp_kelvin": 4000, "brightness": 200},
+            {"color_temp_kelvin": 4000, "brightness": 200},
         ),
         # ct + brightness (no temp support)
         (
             "bulb_cws",
             "light.test_cws",
-            {"color_temp": 250, "brightness": 200},
+            {"color_temp_kelvin": 4000, "brightness": 200},
             {"hs_color": [26.807, 34.869], "brightness": 200},
         ),
         # ct + brightness (no temp or color support)
         (
             "bulb_w",
             "light.test_w",
-            {"color_temp": 250, "brightness": 200},
+            {"color_temp_kelvin": 4000, "brightness": 200},
             {"brightness": 200},
         ),
         # hs + brightness
@@ -225,9 +225,9 @@ async def test_light_available(
         "brightness > 0",
         "brightness == 1",
         "brightness > 254",
-        "color_temp",
-        "color_temp < 250",
-        "color_temp > 454",
+        "color_temp_kelvin",
+        "color_temp_kelvin > 4000",
+        "color_temp_kelvin < 2202",
         "hs_color",
         "ct + brightness",
         "ct + brightness (no temp support)",

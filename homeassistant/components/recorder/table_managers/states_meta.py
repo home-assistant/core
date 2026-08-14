@@ -1,7 +1,5 @@
 """Support managing StatesMeta."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, cast
 
@@ -130,7 +128,7 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         self._pending[entity_id] = db_states_meta
 
     def post_commit_pending(self) -> None:
-        """Call after commit to load the metadata_ids of the new StatesMeta into the LRU.
+        """Call after commit to load new StatesMeta into the LRU.
 
         This call is not thread-safe and must be called from the
         recorder thread.

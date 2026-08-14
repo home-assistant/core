@@ -1,11 +1,9 @@
 """Support for TP-Link thermostats."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from kasa import Device, Module
 from kasa.smart.modules.temperaturecontrol import ThermostatState
@@ -147,6 +145,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @async_refresh_after
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
         await self._thermostat_module.set_target_temperature(
@@ -154,6 +153,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
         )
 
     @async_refresh_after
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode (heat/off)."""
         if hvac_mode is HVACMode.HEAT:
@@ -162,16 +162,19 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
             await self._thermostat_module.set_state(False)
 
     @async_refresh_after
+    @override
     async def async_turn_on(self) -> None:
         """Turn heating on."""
         await self._thermostat_module.set_state(True)
 
     @async_refresh_after
+    @override
     async def async_turn_off(self) -> None:
         """Turn heating off."""
         await self._thermostat_module.set_state(False)
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_current_temperature = self._thermostat_module.temperature
@@ -181,15 +184,14 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
             HVACMode.HEAT if self._thermostat_module.state else HVACMode.OFF
         )
 
-        if (
-            self._thermostat_module.mode not in STATE_TO_ACTION
-            and self._attr_hvac_action is not HVACAction.OFF
-        ):
-            _LOGGER.warning(
-                "Unknown thermostat state, defaulting to OFF: %s",
-                self._thermostat_module.mode,
-            )
-            self._attr_hvac_action = HVACAction.OFF
+        if self._thermostat_module.mode not in STATE_TO_ACTION:
+            # Report a warning on the first non-default unknown mode
+            if self._attr_hvac_action is not HVACAction.OFF:
+                _LOGGER.warning(
+                    "Unknown thermostat state, defaulting to OFF: %s",
+                    self._thermostat_module.mode,
+                )
+                self._attr_hvac_action = HVACAction.OFF
             return True
 
         self._attr_hvac_action = STATE_TO_ACTION[self._thermostat_module.mode]

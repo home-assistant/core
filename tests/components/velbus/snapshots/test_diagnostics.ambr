@@ -20,7 +20,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': None,
-      'version': 2,
+      'version': 3,
     }),
     'modules': list([
       dict({

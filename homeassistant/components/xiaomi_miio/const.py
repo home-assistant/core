@@ -27,10 +27,6 @@ CONF_MANUAL = "manual"
 # Options flow
 CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 
-
-# Attributes
-ATTR_AVAILABLE = "available"
-
 # Status
 SUCCESS = ["ok"]
 
@@ -92,6 +88,7 @@ MODEL_FAN_1C = "dmaker.fan.1c"
 MODEL_FAN_P10 = "dmaker.fan.p10"
 MODEL_FAN_P11 = "dmaker.fan.p11"
 MODEL_FAN_P18 = "dmaker.fan.p18"
+MODEL_FAN_P33 = "dmaker.fan.p33"
 MODEL_FAN_P5 = "dmaker.fan.p5"
 MODEL_FAN_P9 = "dmaker.fan.p9"
 MODEL_FAN_SA1 = "zhimi.fan.sa1"
@@ -117,6 +114,7 @@ MODELS_FAN_MIOT = [
     MODEL_FAN_P10,
     MODEL_FAN_P11,
     MODEL_FAN_P18,
+    MODEL_FAN_P33,
     MODEL_FAN_P9,
     MODEL_FAN_ZA5,
 ]
@@ -280,6 +278,16 @@ SERVICE_SET_EXTRA_FEATURES = "fan_set_extra_features"
 SERVICE_SET_DRY = "set_dry"
 SERVICE_SET_MOTOR_SPEED = "fan_set_motor_speed"
 
+# Fan/Humidifier data
+FAN_DATA_KEY = "fan.xiaomi_miio"
+
+# Light data
+LIGHT_DATA_KEY = "light.xiaomi_miio"
+ATTR_SCENE = "scene"
+
+# Switch data
+SWITCH_DATA_KEY = "switch.xiaomi_miio"
+
 # Light Services
 SERVICE_SET_SCENE = "light_set_scene"
 SERVICE_SET_DELAYED_TURN_OFF = "light_set_delayed_turn_off"
@@ -301,14 +309,6 @@ SERVICE_SET_WIFI_LED_OFF = "switch_set_wifi_led_off"
 SERVICE_SET_POWER_MODE = "switch_set_power_mode"
 SERVICE_SET_POWER_PRICE = "switch_set_power_price"
 
-# Vacuum Services
-SERVICE_MOVE_REMOTE_CONTROL = "vacuum_remote_control_move"
-SERVICE_MOVE_REMOTE_CONTROL_STEP = "vacuum_remote_control_move_step"
-SERVICE_START_REMOTE_CONTROL = "vacuum_remote_control_start"
-SERVICE_STOP_REMOTE_CONTROL = "vacuum_remote_control_stop"
-SERVICE_CLEAN_SEGMENT = "vacuum_clean_segment"
-SERVICE_CLEAN_ZONE = "vacuum_clean_zone"
-SERVICE_GOTO = "vacuum_goto"
 
 # Features
 FEATURE_SET_BUZZER = 1

@@ -1,7 +1,5 @@
 """The tests for RFXCOM RFXtrx device triggers."""
 
-from __future__ import annotations
-
 from typing import Any, NamedTuple
 
 import pytest
@@ -27,35 +25,37 @@ class EventTestData(NamedTuple):
     """Test data linked to a device."""
 
     code: str
-    device_identifiers: set[tuple[str, str, str, str]]
+    device_identifier: tuple[str, str, str, str]
     type: str
     subtype: str
 
 
-DEVICE_LIGHTING_1 = {("rfxtrx", "10", "0", "E5")}
+DEVICE_LIGHTING_1 = ("rfxtrx", "10", "0", "E5")
 EVENT_LIGHTING_1 = EventTestData("0710002a45050170", DEVICE_LIGHTING_1, "command", "On")
 
-DEVICE_ROLLERTROL_1 = {("rfxtrx", "19", "0", "009ba8:1")}
+DEVICE_ROLLERTROL_1 = ("rfxtrx", "19", "0", "009ba8:1")
 EVENT_ROLLERTROL_1 = EventTestData(
     "09190000009ba8010100", DEVICE_ROLLERTROL_1, "command", "Down"
 )
 
-DEVICE_FIREALARM_1 = {("rfxtrx", "20", "3", "a10900:32")}
+DEVICE_FIREALARM_1 = ("rfxtrx", "20", "3", "a10900:32")
 EVENT_FIREALARM_1 = EventTestData(
     "08200300a109000670", DEVICE_FIREALARM_1, "status", "Panic"
 )
 
 
-async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> None:
+async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> MockConfigEntry:
     """Construct a config setup."""
     entry_data = create_rfx_test_cfg(devices=devices)
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
     await hass.async_start()
+
+    return mock_entry
 
 
 @pytest.mark.parametrize(
@@ -86,20 +86,22 @@ async def test_get_triggers(
     expected,
 ) -> None:
     """Test we get the expected triggers from a rfxtrx."""
-    await setup_entry(hass, {event.code: {}})
+    mock_entry = await setup_entry(hass, {event.code: {}})
 
-    device_entry = device_registry.async_get_device(
-        identifiers=event.device_identifiers
+    device_entry = device_registry.async_get_device_by_identifier(
+        event.device_identifier, mock_entry.entry_id
     )
     assert device_entry
 
     # Add alternate identifiers, to make sure we can handle future formats
-    identifiers: list[str] = list(*event.device_identifiers)
+    identifiers: list[str] = list(event.device_identifier)
     device_registry.async_update_device(
-        device_entry.id, merge_identifiers={(identifiers[0], "_".join(identifiers[1:]))}
+        device_entry.id,
+        new_identifiers=device_entry.identifiers
+        | {(identifiers[0], "_".join(identifiers[1:]))},
     )
-    device_entry = device_registry.async_get_device(
-        identifiers=event.device_identifiers
+    device_entry = device_registry.async_get_device_by_identifier(
+        event.device_identifier, mock_entry.entry_id
     )
     assert device_entry
 
@@ -134,10 +136,10 @@ async def test_firing_event(
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
 
-    await setup_entry(hass, {event.code: {"fire_event": True}})
+    mock_entry = await setup_entry(hass, {event.code: {"fire_event": True}})
 
-    device_entry = device_registry.async_get_device(
-        identifiers=event.device_identifiers
+    device_entry = device_registry.async_get_device_by_identifier(
+        event.device_identifier, mock_entry.entry_id
     )
     assert device_entry
 
@@ -180,10 +182,11 @@ async def test_invalid_trigger(
     """Test for invalid actions."""
     event = EVENT_LIGHTING_1
 
-    await setup_entry(hass, {event.code: {"fire_event": True}})
+    mock_entry = await setup_entry(hass, {event.code: {"fire_event": True}})
 
-    device_identifiers: Any = event.device_identifiers
-    device_entry = device_registry.async_get_device(identifiers=device_identifiers)
+    device_entry = device_registry.async_get_device_by_identifier(
+        event.device_identifier, mock_entry.entry_id
+    )
     assert device_entry
 
     assert await async_setup_component(

@@ -1,11 +1,9 @@
 """Support for Tado sensors for each zone."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,7 +16,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import TadoConfigEntry
 from .const import (
     CONDITIONS_MAP,
     SENSOR_DATA_CATEGORY_GEOFENCE,
@@ -27,7 +24,7 @@ from .const import (
     TYPE_HEATING,
     TYPE_HOT_WATER,
 )
-from .coordinator import TadoDataUpdateCoordinator
+from .coordinator import TadoConfigEntry, TadoDataUpdateCoordinator
 from .entity import TadoHomeEntity, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +56,7 @@ def get_tado_mode(data: dict[str, str]) -> str | None:
 
 
 def get_automatic_geofencing(data: dict[str, str]) -> bool:
-    """Return whether Automatic Geofencing is enabled based on Presence Locked attribute."""
+    """Return whether Automatic Geofencing is enabled."""
     if "presenceLocked" in data:
         if data["presenceLocked"]:
             return False
@@ -197,7 +194,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado sensor platform."""
 
-    tado = entry.runtime_data.coordinator
+    tado = entry.runtime_data
     zones = tado.zones
     entities: list[SensorEntity] = []
 
@@ -243,6 +240,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         self._attr_unique_id = f"{entity_description.key} {coordinator.home_id}"
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
@@ -285,6 +283,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:

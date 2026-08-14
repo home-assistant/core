@@ -1,7 +1,5 @@
 """The Z-Wave JS integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import contextlib
@@ -9,7 +7,6 @@ import logging
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, RemoveNodeReason
 from zwave_js_server.exceptions import (
@@ -20,6 +17,7 @@ from zwave_js_server.exceptions import (
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
+    BatteryNotification,
     EntryControlNotification,
     MultilevelSwitchNotification,
     NotificationNotification,
@@ -71,6 +69,7 @@ from .const import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPE_LABEL,
     ATTR_HOME_ID,
+    ATTR_HOME_ID_HEX,
     ATTR_LABEL,
     ATTR_NODE_ID,
     ATTR_PARAMETERS,
@@ -81,6 +80,7 @@ from .const import (
     ATTR_STATUS,
     ATTR_TEST_NODE_ID,
     ATTR_TYPE,
+    ATTR_URGENCY,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     CONF_ADDON_DEVICE,
@@ -93,7 +93,6 @@ from .const import (
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_ADDON_SOCKET,
     CONF_DATA_COLLECTION_OPTED_IN,
-    CONF_INSTALLER_MODE,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
@@ -109,6 +108,8 @@ from .const import (
     DOMAIN,
     ESPHOME_ADDON_VERSION,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_METADATA_UPDATED,
+    EVENT_VALUE_ADDED,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
     LOGGER,
@@ -123,6 +124,7 @@ from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
     async_enable_statistics,
+    format_home_id_for_display,
     get_device_id,
     get_device_id_ext,
     get_network_identifier_for_notification,
@@ -136,16 +138,8 @@ from .services import async_setup_services
 CONNECT_TIMEOUT = 10
 DRIVER_READY_TIMEOUT = 60
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_INSTALLER_MODE, default=False): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 MIN_CONTROLLER_FIRMWARE_SDK_VERSION = AwesomeVersion("6.50.0")
 
 PLATFORMS = [
@@ -169,7 +163,6 @@ PLATFORMS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
-    hass.data[DOMAIN] = config.get(DOMAIN, {})
     for entry in hass.config_entries.async_entries(DOMAIN):
         if not isinstance(entry.unique_id, str):
             hass.config_entries.async_update_entry(
@@ -408,8 +401,10 @@ class DriverEvents:
             if (
                 (own_node := driver.controller.own_node)
                 and (
-                    controller_device_entry := device_registry.async_get_device(
-                        identifiers={get_device_id(driver, own_node)}
+                    controller_device_entry := (
+                        device_registry.async_get_device_by_identifier(
+                            get_device_id(driver, own_node), self.config_entry.entry_id
+                        )
                     )
                 )
                 and (model := controller_device_entry.model)
@@ -447,7 +442,9 @@ class DriverEvents:
             self.dev_reg, self.config_entry.entry_id
         )
         known_devices = [
-            self.dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
+            self.dev_reg.async_get_device_by_identifier(
+                get_device_id(driver, node), self.config_entry.entry_id
+            )
             for node in controller.nodes.values()
         ]
         provisioned_devices = [
@@ -568,7 +565,9 @@ class ControllerEvents:
         reason: RemoveNodeReason = event["reason"]
         # grab device in device registry attached to this node
         dev_id = get_device_id(self.driver_events.driver, node)
-        device = self.dev_reg.async_get_device(identifiers={dev_id})
+        device = self.dev_reg.async_get_device_by_identifier(
+            dev_id, self.config_entry.entry_id
+        )
         # We assert because we know the device exists
         assert device
         if reason in (RemoveNodeReason.REPLACED, RemoveNodeReason.PROXY_REPLACED):
@@ -608,6 +607,7 @@ class ControllerEvents:
                 f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}",
             )
 
+        self.node_events.value_updates_disc_info.pop(node.node_id, None)
         self.remove_device(device)
 
     @callback
@@ -616,7 +616,9 @@ class ControllerEvents:
         # Get node device
         node: ZwaveNode = event["node"]
         dev_id = get_device_id(self.driver_events.driver, node)
-        device = self.dev_reg.async_get_device(identifiers={dev_id})
+        device = self.dev_reg.async_get_device_by_identifier(
+            dev_id, self.config_entry.entry_id
+        )
         assert device
         device_name = device.name_by_user or device.name or f"Node {node.node_id}"
         # In case the user has multiple networks, we should give them more information
@@ -664,13 +666,17 @@ class ControllerEvents:
             if device_id_ext:
                 new_identifiers.add(device_id_ext)
 
-            if self.dev_reg.async_get_device(identifiers=new_identifiers):
+            if self.dev_reg.async_get_device_by_identifier(
+                device_id, self.config_entry.entry_id
+            ) or (
+                device_id_ext
+                and self.dev_reg.async_get_device_by_identifier(
+                    device_id_ext, self.config_entry.entry_id
+                )
+            ):
                 # If a device entry is registered with the node ID based identifiers,
                 # just remove the device entry with the DSK identifier.
-                self.dev_reg.async_update_device(
-                    pre_provisioned_device.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                self.dev_reg.async_remove_device(pre_provisioned_device.id)
             else:
                 # Add the node ID based identifiers to the device entry
                 # with the DSK identifier and remove the DSK identifier.
@@ -684,12 +690,18 @@ class ControllerEvents:
         driver = self.driver_events.driver
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
-        node_id_device = self.dev_reg.async_get_device(identifiers={device_id})
-        via_identifier = None
+        node_id_device = self.dev_reg.async_get_device_by_identifier(
+            device_id, self.config_entry.entry_id
+        )
+        via_device_id: str | None = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
         if controller.own_node and controller.own_node != node:
-            via_identifier = get_device_id(driver, controller.own_node)
+            via_device_id = dr.async_get_device_id_by_identifier(
+                self.hass,
+                get_device_id(driver, controller.own_node),
+                config_entry_id=self.config_entry.entry_id,
+            )
 
         if device_id_ext:
             # If there is a device with this node ID but with a different hardware
@@ -715,8 +727,8 @@ class ControllerEvents:
             # based identifier, add the node ID based identifier to the orphaned
             # device.
             if (
-                hardware_device := self.dev_reg.async_get_device(
-                    identifiers={device_id_ext}
+                hardware_device := self.dev_reg.async_get_device_by_identifier(
+                    device_id_ext, self.config_entry.entry_id
                 )
             ) and len(hardware_device.identifiers) == 1:
                 new_identifiers = hardware_device.identifiers.copy()
@@ -735,8 +747,8 @@ class ControllerEvents:
             name=node.name or node.device_config.description or f"Node {node.node_id}",
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
-            suggested_area=node.location if node.location else UNDEFINED,
-            via_device=via_identifier,
+            suggested_area=node.location or UNDEFINED,
+            via_device_id=via_device_id,
         )
 
         async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
@@ -765,6 +777,9 @@ class NodeEvents:
         self.dev_reg = controller_events.dev_reg
         self.ent_reg = er.async_get(hass)
         self.hass = hass
+        self.value_updates_disc_info: dict[
+            int, dict[str, PlatformZwaveDiscoveryInfo]
+        ] = {}
 
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
@@ -775,29 +790,23 @@ class NodeEvents:
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
 
+        # Store the discovery info so it can be reused when re-discovering entities
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo] = {}
+        self.value_updates_disc_info[node.node_id] = value_updates_disc_info
 
         # run discovery on all node values and create/update entities
-        await asyncio.gather(
-            *(
-                self.async_handle_discovery_info(
-                    device, disc_info, value_updates_disc_info
-                )
-                for disc_info in async_discover_node_values(
-                    node, device, self.controller_events.discovered_value_ids
-                )
-            )
-        )
+        for disc_info in async_discover_node_values(
+            node, device, self.controller_events.discovered_value_ids
+        ):
+            self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
         # add listeners to handle new values that get added later
-        for event in ("value added", EVENT_VALUE_UPDATED, "metadata updated"):
+        for event in (EVENT_VALUE_ADDED, EVENT_VALUE_UPDATED, EVENT_METADATA_UPDATED):
             self.config_entry.async_on_unload(
                 node.on(
                     event,
-                    lambda event: self.hass.async_create_task(
-                        self.async_on_value_added(
-                            value_updates_disc_info, event["value"]
-                        )
+                    lambda event: self.async_on_value_added(
+                        value_updates_disc_info, event["value"]
                     ),
                 )
             )
@@ -840,21 +849,29 @@ class NodeEvents:
         # After ensuring the node is set up in HA, we should check if the node's
         # device config has changed, and if so, issue a repair registry entry for a
         # possible reinterview
-        if not node.is_controller_node and await node.async_has_device_config_changed():
-            device_name = device.name_by_user or device.name or "Unnamed device"
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"device_config_file_changed.{device.id}",
-                data={"device_id": device.id, "device_name": device_name},
-                is_fixable=True,
-                is_persistent=False,
-                translation_key="device_config_file_changed",
-                translation_placeholders={"device_name": device_name},
-                severity=IssueSeverity.WARNING,
-            )
+        if not node.is_controller_node:
+            issue_id = f"device_config_file_changed.{device.id}"
+            if await node.async_has_device_config_changed():
+                device_name = device.name_by_user or device.name or "Unnamed device"
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    issue_id,
+                    data={"device_id": device.id, "device_name": device_name},
+                    is_fixable=True,
+                    is_persistent=False,
+                    translation_key="device_config_file_changed",
+                    translation_placeholders={"device_name": device_name},
+                    severity=IssueSeverity.WARNING,
+                )
+            else:
+                # Clear any existing repair issue if the device config is not considered
+                # changed. This can happen when the original issue was created by
+                # an upstream bug, or the change has been reverted.
+                async_delete_issue(self.hass, DOMAIN, issue_id)
 
-    async def async_handle_discovery_info(
+    @callback
+    def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
         disc_info: PlatformZwaveDiscoveryInfo,
@@ -899,43 +916,43 @@ class NodeEvents:
             )
         )
 
-    async def async_on_value_added(
+    @callback
+    def async_on_value_added(
         self,
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
         value: Value,
     ) -> None:
-        """Fire value updated event."""
-        # If node isn't ready or a device for this node doesn't already exist, we can
-        # let the node ready event handler perform discovery. If a value has already
-        # been processed, we don't need to do it again
+        """Run discovery when a value is added, updated or its metadata is changed."""
+        # If node isn't ready or a device for this node doesn't already
+        # exist, we can let the node ready event handler perform discovery.
+        # If a value has already been processed, we don't need to do it
+        # again
         device_id = get_device_id(
             self.controller_events.driver_events.driver, value.node
         )
         if (
             not value.node.ready
-            or not (device := self.dev_reg.async_get_device(identifiers={device_id}))
+            or not (
+                device := self.dev_reg.async_get_device_by_identifier(
+                    device_id, self.config_entry.entry_id
+                )
+            )
             or value.value_id in self.controller_events.discovered_value_ids[device.id]
         ):
             return
 
         LOGGER.debug("Processing node %s added value %s", value.node, value)
-        await asyncio.gather(
-            *(
-                self.async_handle_discovery_info(
-                    device, disc_info, value_updates_disc_info
-                )
-                for disc_info in async_discover_single_value(
-                    value, device, self.controller_events.discovered_value_ids
-                )
-            )
-        )
+        for disc_info in async_discover_single_value(
+            value, device, self.controller_events.discovered_value_ids
+        ):
+            self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
     @callback
     def async_on_value_notification(self, notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         driver = self.controller_events.driver_events.driver
-        device = self.dev_reg.async_get_device(
-            identifiers={get_device_id(driver, notification.node)}
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, notification.node), self.config_entry.entry_id
         )
         # We assert because we know the device exists
         assert device
@@ -948,6 +965,7 @@ class NodeEvents:
                 ATTR_DOMAIN: DOMAIN,
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
+                ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
                 ATTR_ENDPOINT: notification.endpoint,
                 ATTR_DEVICE_ID: device.id,
                 ATTR_COMMAND_CLASS: notification.command_class,
@@ -971,13 +989,14 @@ class NodeEvents:
 
         driver = self.controller_events.driver_events.driver
         notification: (
-            EntryControlNotification
+            BatteryNotification
+            | EntryControlNotification
             | NotificationNotification
             | PowerLevelNotification
             | MultilevelSwitchNotification
         ) = event["notification"]
-        device = self.dev_reg.async_get_device(
-            identifiers={get_device_id(driver, notification.node)}
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, notification.node), self.config_entry.entry_id
         )
         # We assert because we know the device exists
         assert device
@@ -985,12 +1004,21 @@ class NodeEvents:
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: driver.controller.home_id,
+            ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
             ATTR_ENDPOINT: notification.endpoint_idx,
             ATTR_DEVICE_ID: device.id,
             ATTR_COMMAND_CLASS: notification.command_class,
         }
 
-        if isinstance(notification, EntryControlNotification):
+        if isinstance(notification, BatteryNotification):
+            event_data.update(
+                {
+                    ATTR_COMMAND_CLASS_NAME: "Battery",
+                    ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_URGENCY: notification.urgency,
+                }
+            )
+        elif isinstance(notification, EntryControlNotification):
             event_data.update(
                 {
                     ATTR_COMMAND_CLASS_NAME: "Entry Control",
@@ -1050,8 +1078,8 @@ class NodeEvents:
         driver = self.controller_events.driver_events.driver
         disc_info = value_updates_disc_info[value.value_id]
 
-        device = self.dev_reg.async_get_device(
-            identifiers={get_device_id(driver, value.node)}
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, value.node), self.config_entry.entry_id
         )
         # We assert because we know the device exists
         assert device
@@ -1070,6 +1098,7 @@ class NodeEvents:
             {
                 ATTR_NODE_ID: value.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
+                ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
                 ATTR_DEVICE_ID: device.id,
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_COMMAND_CLASS: value.command_class,
@@ -1211,14 +1240,14 @@ async def async_ensure_addon_running(
     if addon_has_esphome and socket_path is not None:
         addon_config[CONF_ADDON_SOCKET] = socket_path
 
-    if addon_state == AddonState.NOT_INSTALLED:
+    if addon_state is AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
             addon_config,
             catch_error=True,
         )
         raise ConfigEntryNotReady
 
-    if addon_state == AddonState.NOT_RUNNING:
+    if addon_state is AddonState.NOT_RUNNING:
         addon_manager.async_schedule_setup_addon(
             addon_config,
             catch_error=True,

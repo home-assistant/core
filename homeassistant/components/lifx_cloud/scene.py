@@ -1,11 +1,9 @@
 """Support for LIFX Cloud scenes."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION
@@ -51,7 +49,7 @@ async def async_setup_platform(
         async with asyncio.timeout(timeout):
             scenes_resp = await httpsession.get(url, headers=headers)
 
-    except (TimeoutError, aiohttp.ClientError):
+    except TimeoutError, aiohttp.ClientError:
         _LOGGER.exception("Error on %s", url)
         return
 
@@ -80,10 +78,12 @@ class LifxCloudScene(Scene):
         self._uuid = scene_data["uuid"]
 
     @property
+    @override
     def name(self):
         """Return the name of the scene."""
         return self._name
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         url = f"https://api.lifx.com/v1/scenes/scene_id:{self._uuid}/activate"
@@ -93,5 +93,6 @@ class LifxCloudScene(Scene):
             async with asyncio.timeout(self._timeout):
                 await httpsession.put(url, headers=self._headers)
 
-        except (TimeoutError, aiohttp.ClientError):
+        # pylint: disable-next=home-assistant-action-swallowed-exception
+        except TimeoutError, aiohttp.ClientError:
             _LOGGER.exception("Error on %s", url)

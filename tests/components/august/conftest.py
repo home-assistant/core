@@ -6,6 +6,7 @@ import pytest
 from yalexs.manager.ratelimit import _RateLimitChecker
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -100,13 +101,31 @@ def load_migration_jwt_fixture() -> str:
 def load_reauth_jwt_wrong_account_fixture() -> str:
     """Load JWT fixture data for wrong account during reauth."""
     # Different userId, no email match
-    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpbnN0YWxsSWQiOiIiLCJyZWdpb24iOiJpcmVsYW5kLXByb2QtYXdzIiwiYXBwbGljYXRpb25JZCI6IiIsInVzZXJJZCI6ImRpZmZlcmVudC11c2VyLWlkIiwidkluc3RhbGxJZCI6ZmFsc2UsInZQYXNzd29yZCI6dHJ1ZSwidkVtYWlsIjp0cnVlLCJ2UGhvbmUiOnRydWUsImhhc0luc3RhbGxJZCI6ZmFsc2UsImhhc1Bhc3N3b3JkIjpmYWxzZSwiaGFzRW1haWwiOmZhbHNlLCJoYXNQaG9uZSI6ZmFsc2UsImlzTG9ja2VkT3V0IjpmYWxzZSwiY2FwdGNoYSI6IiIsImVtYWlsIjpbImRpZmZlcmVudEBlbWFpbC50bGQiXSwicGhvbmUiOltdLCJleHBpcmVzQXQiOiIyMDI0LTEyLTE4VDEzOjU0OjA1LjEzNFoiLCJ0ZW1wb3JhcnlBY2NvdW50Q3JlYXRpb25QYXNzd29yZExpbmsiOiIiLCJpYXQiOjE3MjQxNjIwNDUsImV4cCI6MTczNDUzMDA0NSwib2F1dGgiOnsiYXBwX25hbWUiOiJIb21lIEFzc2lzdGFudCIsImNsaWVudF9pZCI6ImIzY2QzZjBiLWZiOTctNGQ2Yy1iZWU5LWFmN2FiMDQ3NThjNyIsInJlZGlyZWN0X3VyaSI6Imh0dHBzOi8vYWNjb3VudC1saW5rLm5hYnVjYXNhLmNvbS9hdXRob3JpemVfY2FsbGJhY2siLCJwYXJ0bmVyX2lkIjoiNjU3OTc0ODgxMDY2Y2E0OGM5OWMwODI2In19.mK9nTAv7glYgtpLIkVF_dsrjrkRKYemdKfKMkgnafCU"
+    return (
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+        "eyJpbnN0YWxsSWQiOiIiLCJyZWdpb24iOiJpcmVsYW5kLXByb2QtYXdzIi"
+        "wiYXBwbGljYXRpb25JZCI6IiIsInVzZXJJZCI6ImRpZmZlcmVudC11c2Vy"
+        "LWlkIiwidkluc3RhbGxJZCI6ZmFsc2UsInZQYXNzd29yZCI6dHJ1ZSwidk"
+        "VtYWlsIjp0cnVlLCJ2UGhvbmUiOnRydWUsImhhc0luc3RhbGxJZCI6ZmFs"
+        "c2UsImhhc1Bhc3N3b3JkIjpmYWxzZSwiaGFzRW1haWwiOmZhbHNlLCJoYX"
+        "NQaG9uZSI6ZmFsc2UsImlzTG9ja2VkT3V0IjpmYWxzZSwiY2FwdGNoYSI6"
+        "IiIsImVtYWlsIjpbImRpZmZlcmVudEBlbWFpbC50bGQiXSwicGhvbmUiOl"
+        "tdLCJleHBpcmVzQXQiOiIyMDI0LTEyLTE4VDEzOjU0OjA1LjEzNFoiLCJ0"
+        "ZW1wb3JhcnlBY2NvdW50Q3JlYXRpb25QYXNzd29yZExpbmsiOiIiLCJpYX"
+        "QiOjE3MjQxNjIwNDUsImV4cCI6MTczNDUzMDA0NSwib2F1dGgiOnsiYXBw"
+        "X25hbWUiOiJIb21lIEFzc2lzdGFudCIsImNsaWVudF9pZCI6ImIzY2QzZj"
+        "BiLWZiOTctNGQ2Yy1iZWU5LWFmN2FiMDQ3NThjNyIsInJlZGlyZWN0X3Vy"
+        "aSI6Imh0dHBzOi8vYWNjb3VudC1saW5rLm5hYnVjYXNhLmNvbS9hdXRob3"
+        "JpemVfY2FsbGJhY2siLCJwYXJ0bmVyX2lkIjoiNjU3OTc0ODgxMDY2Y2E0"
+        "OGM5OWMwODI2In19."
+        "mK9nTAv7glYgtpLIkVF_dsrjrkRKYemdKfKMkgnafCU"
+    )
 
 
 @pytest.fixture(name="client_credentials", autouse=True)
 async def mock_client_credentials_fixture(hass: HomeAssistant) -> None:
     """Mock client credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,

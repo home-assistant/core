@@ -1,8 +1,6 @@
 """Config flow for Google Maps Travel Time integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -12,7 +10,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
@@ -24,9 +22,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
-    ALL_LANGUAGES,
     ARRIVAL_TIME,
-    AVOID_OPTIONS,
     CONF_ARRIVAL_TIME,
     CONF_AVOID,
     CONF_DEPARTURE_TIME,
@@ -41,12 +37,7 @@ from .const import (
     DEFAULT_NAME,
     DEPARTURE_TIME,
     DOMAIN,
-    TIME_TYPES,
-    TRAFFIC_MODELS,
-    TRANSIT_PREFS,
-    TRANSPORT_TYPES,
     TRAVEL_MODES,
-    UNITS,
     UNITS_IMPERIAL,
     UNITS_METRIC,
 )
@@ -56,8 +47,17 @@ from .helpers import (
     UnknownException,
     validate_config_entry,
 )
+from .schemas import (
+    AVOID_SELECTOR,
+    LANGUAGE_SELECTOR,
+    TIME_TYPE_SELECTOR,
+    TRAFFIC_MODEL_SELECTOR,
+    TRANSIT_MODE_SELECTOR,
+    TRANSIT_ROUTING_PREFERENCE_SELECTOR,
+    UNITS_SELECTOR,
+)
 
-RECONFIGURE_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
@@ -65,14 +65,15 @@ RECONFIGURE_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = RECONFIGURE_SCHEMA.extend(
-    {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
 OPTIONS_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_LANGUAGE): LANGUAGE_SELECTOR,
+        vol.Optional(CONF_AVOID): AVOID_SELECTOR,
+        vol.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
+        vol.Optional(CONF_TRANSIT_MODE): TRANSIT_MODE_SELECTOR,
+        vol.Optional(
+            CONF_TRANSIT_ROUTING_PREFERENCE
+        ): TRANSIT_ROUTING_PREFERENCE_SELECTOR,
         vol.Required(CONF_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=TRAVEL_MODES,
@@ -81,62 +82,9 @@ OPTIONS_SCHEMA = vol.Schema(
                 translation_key=CONF_MODE,
             )
         ),
-        vol.Optional(CONF_LANGUAGE): SelectSelector(
-            SelectSelectorConfig(
-                options=sorted(ALL_LANGUAGES),
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_LANGUAGE,
-            )
-        ),
-        vol.Optional(CONF_AVOID): SelectSelector(
-            SelectSelectorConfig(
-                options=AVOID_OPTIONS,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_AVOID,
-            )
-        ),
-        vol.Required(CONF_UNITS): SelectSelector(
-            SelectSelectorConfig(
-                options=UNITS,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_UNITS,
-            )
-        ),
-        vol.Required(CONF_TIME_TYPE): SelectSelector(
-            SelectSelectorConfig(
-                options=TIME_TYPES,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_TIME_TYPE,
-            )
-        ),
+        vol.Required(CONF_UNITS): UNITS_SELECTOR,
+        vol.Required(CONF_TIME_TYPE): TIME_TYPE_SELECTOR,
         vol.Optional(CONF_TIME): TimeSelector(),
-        vol.Optional(CONF_TRAFFIC_MODEL): SelectSelector(
-            SelectSelectorConfig(
-                options=TRAFFIC_MODELS,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_TRAFFIC_MODEL,
-            )
-        ),
-        vol.Optional(CONF_TRANSIT_MODE): SelectSelector(
-            SelectSelectorConfig(
-                options=TRANSPORT_TYPES,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_TRANSIT_MODE,
-            )
-        ),
-        vol.Optional(CONF_TRANSIT_ROUTING_PREFERENCE): SelectSelector(
-            SelectSelectorConfig(
-                options=TRANSIT_PREFS,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_TRANSIT_ROUTING_PREFERENCE,
-            )
-        ),
     }
 )
 
@@ -212,12 +160,14 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> GoogleOptionsFlow:
         """Get the options flow for this handler."""
         return GoogleOptionsFlow()
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] | None = None
@@ -226,7 +176,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await validate_input(self.hass, user_input)
             if not errors:
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    title=DEFAULT_NAME,
                     data=user_input,
                     options=default_options(self.hass),
                 )
@@ -252,7 +202,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                RECONFIGURE_SCHEMA, self._get_reconfigure_entry().data
+                CONFIG_SCHEMA, self._get_reconfigure_entry().data
             ),
             errors=errors,
         )

@@ -1,14 +1,12 @@
 """Timer implementation for intents."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -30,6 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 TIMER_NOT_FOUND_RESPONSE = "timer_not_found"
 MULTIPLE_TIMERS_MATCHED_RESPONSE = "multiple_timers_matched"
 NO_TIMER_SUPPORT_RESPONSE = "no_timer_support"
+NO_TIMER_COMMAND_RESPONSE = "no_timer_command"
 
 
 @dataclass
@@ -192,8 +191,22 @@ class MultipleTimersMatchedError(intent.IntentHandleError):
         super().__init__("Multiple timers matched", MULTIPLE_TIMERS_MATCHED_RESPONSE)
 
 
+class NoTimerCommandError(intent.IntentHandleError):
+    """Error when a conversation command does not match any intent."""
+
+    def __init__(self, command: str) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Intent not recognized: {command}",
+            NO_TIMER_COMMAND_RESPONSE,
+        )
+
+
 class TimersNotSupportedError(intent.IntentHandleError):
-    """Error when a timer intent is used from a device that isn't registered to handle timer events."""
+    """Error when a timer intent is used from an unregistered device.
+
+    The device isn't registered to handle timer events.
+    """
 
     def __init__(self, device_id: str | None = None) -> None:
         """Initialize error."""
@@ -281,11 +294,10 @@ class TimerManager:
         # Fill in area/floor info
         device_registry = dr.async_get(self.hass)
         if device_id and (device := device_registry.async_get(device_id)):
-            timer.area_id = device.area_id
+            area_id = dr.async_get_effective_area_id(self.hass, device)
+            timer.area_id = area_id
             area_registry = ar.async_get(self.hass)
-            if device.area_id and (
-                area := area_registry.async_get_area(device.area_id)
-            ):
+            if area_id and (area := area_registry.async_get_area(area_id)):
                 timer.area_name = _normalize_name(area.name)
                 timer.floor_id = area.floor_id
 
@@ -298,7 +310,8 @@ class TimerManager:
         if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.STARTED, timer)
         _LOGGER.debug(
-            "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
+            "Timer started: id=%s, name=%s, hours=%s,"
+            " minutes=%s, seconds=%s, device_id=%s",
             timer_id,
             name,
             hours,
@@ -608,8 +621,8 @@ def _find_timer(
         area_registry = ar.async_get(hass)
         if (
             (device := device_registry.async_get(device_id))
-            and device.area_id
-            and (area := area_registry.async_get_area(device.area_id))
+            and (area_id := dr.async_get_effective_area_id(hass, device))
+            and (area := area_registry.async_get_area(area_id))
         ):
             # Try area
             matching_area_timers = [
@@ -631,7 +644,8 @@ def _find_timer(
         raise MultipleTimersMatchedError
 
     _LOGGER.warning(
-        "Timer not found: name=%s, area=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
+        "Timer not found: name=%s, area=%s, hours=%s,"
+        " minutes=%s, seconds=%s, device_id=%s",
         name,
         area_name,
         start_hours,
@@ -714,11 +728,14 @@ def _find_timers(
     # Use device id to order remaining timers
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
-    if (device is None) or (device.area_id is None):
+    if device is None:
+        return matching_timers
+    area_id = dr.async_get_effective_area_id(hass, device)
+    if area_id is None:
         return matching_timers
 
     area_registry = ar.async_get(hass)
-    area = area_registry.async_get_area(device.area_id)
+    area = area_registry.async_get_area(area_id)
     if area is None:
         return matching_timers
 
@@ -817,6 +834,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
         vol.Optional("conversation_command"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -835,6 +853,12 @@ class StartTimerIntentHandler(intent.IntentHandler):
         ):
             # Fail early if this is not a delayed command
             raise TimersNotSupportedError(intent_obj.device_id)
+
+        # Validate conversation command if provided
+        if conversation_command and not await self._validate_conversation_command(
+            intent_obj, conversation_command
+        ):
+            raise NoTimerCommandError(conversation_command)
 
         name: str | None = None
         if "name" in slots:
@@ -865,6 +889,48 @@ class StartTimerIntentHandler(intent.IntentHandler):
 
         return intent_obj.create_response()
 
+    async def _validate_conversation_command(
+        self, intent_obj: intent.Intent, conversation_command: str
+    ) -> bool:
+        """Validate that a conversation command can be executed."""
+        from homeassistant.components.conversation import (  # noqa: PLC0415
+            ConversationInput,
+            async_get_agent,
+            default_agent,
+        )
+
+        # Only validate if using the default agent
+        conversation_agent = async_get_agent(
+            intent_obj.hass, intent_obj.conversation_agent_id
+        )
+
+        if conversation_agent is None or not isinstance(
+            conversation_agent, default_agent.DefaultAgent
+        ):
+            return True  # Skip validation
+
+        test_input = ConversationInput(
+            text=conversation_command,
+            context=intent_obj.context,
+            conversation_id=None,
+            device_id=intent_obj.device_id,
+            satellite_id=intent_obj.satellite_id,
+            language=intent_obj.language,
+            agent_id=conversation_agent.entity_id,
+        )
+
+        # check for sentence trigger
+        if (
+            await conversation_agent.async_recognize_sentence_trigger(test_input)
+        ) is not None:
+            return True
+
+        # check for intent
+        if (await conversation_agent.async_recognize_intent(test_input)) is not None:
+            return True
+
+        return False
+
 
 class CancelTimerIntentHandler(intent.IntentHandler):
     """Intent handler for cancelling a timer."""
@@ -877,6 +943,7 @@ class CancelTimerIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -897,6 +964,7 @@ class CancelAllTimersIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -930,6 +998,7 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -954,6 +1023,7 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -977,6 +1047,7 @@ class PauseTimerIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -1001,6 +1072,7 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -1025,6 +1097,7 @@ class TimerStatusIntentHandler(intent.IntentHandler):
         vol.Optional("area"): cv.string,
     }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass

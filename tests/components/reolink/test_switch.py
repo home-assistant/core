@@ -6,8 +6,9 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import ReolinkError
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
+from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -21,10 +22,58 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
 from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with patch(
+        "homeassistant.components.reolink.PLATFORMS",
+        [Platform.SWITCH],
+    ):
+        await setup_integration(hass, config_entry)
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")
+async def test_all_entities_dual_lens(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    reolink_host: MagicMock,
+) -> None:
+    """Test all entities."""
+
+    def mock_supported(ch, capability):
+        if capability == "privacy_mask":
+            return True
+        if ch is not None and ch > 0:
+            return False
+        return True
+
+    reolink_host.is_nvr = False
+    reolink_host.is_dual_lens = True
+    reolink_host.stream_channels = [0, 1]
+    reolink_host.supported = mock_supported
+
+    with patch(
+        "homeassistant.components.reolink.PLATFORMS",
+        [Platform.SWITCH],
+    ):
+        await setup_integration(hass, config_entry)
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_switch(
@@ -45,7 +94,7 @@ async def test_switch(
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.audio_record.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -91,7 +140,7 @@ async def test_switch(
     reolink_host.set_audio.reset_mock(side_effect=True)
 
     reolink_host.camera_online.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -118,7 +167,7 @@ async def test_host_switch(
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.email_enabled.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -183,7 +232,7 @@ async def test_chime_switch(
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_chime.led_state = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -248,7 +297,7 @@ async def test_rule_switch(
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.baichuan.rule_enabled.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

@@ -1,7 +1,7 @@
 """Support for Tado hot water zones."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -15,7 +15,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import TadoConfigEntry
 from .const import (
     CONST_HVAC_HEAT,
     CONST_MODE_AUTO,
@@ -27,7 +26,7 @@ from .const import (
     CONST_OVERLAY_TIMER,
     TYPE_HOT_WATER,
 )
-from .coordinator import TadoDataUpdateCoordinator
+from .coordinator import TadoConfigEntry, TadoDataUpdateCoordinator
 from .entity import TadoZoneEntity
 from .helper import decide_duration, decide_overlay_mode
 from .repairs import manage_water_heater_fallback_issue
@@ -67,8 +66,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado water heater platform."""
 
-    data = entry.runtime_data
-    coordinator = data.coordinator
+    coordinator = entry.runtime_data
     entities = await _generate_entities(coordinator)
 
     platform = entity_platform.async_get_current_platform()
@@ -169,36 +167,43 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         self._async_update_data()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_data()
         super()._handle_coordinator_update()
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current readable operation mode."""
         return WATER_HEATER_MAP_TADO.get(self._current_tado_hvac_mode)
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._tado_zone_data.target_temp
 
     @property
+    @override
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
         return self._tado_zone_data.is_away
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._min_temperature
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._max_temperature
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         mode = None
@@ -223,6 +228,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)

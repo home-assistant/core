@@ -191,7 +191,7 @@ async def test_moving_todo_item(
     assert resp.get("success")
     assert resp.get("result") is None
 
-    assert mock_mealie_client.update_shopping_item.call_count == 3
+    assert mock_mealie_client.update_shopping_item.call_count == 4
     calls = mock_mealie_client.update_shopping_item.mock_calls
 
     assert calls[0] == call(

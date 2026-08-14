@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[binary_sensor.output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
@@ -37,8 +39,8 @@
 # name: test_binary_sensors[binary_sensor.output-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'Output',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Output',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.output',
@@ -50,8 +52,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.zone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -86,8 +90,8 @@
 # name: test_binary_sensors[binary_sensor.zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'Zone',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zone',
@@ -100,8 +104,8 @@
 # name: test_binary_sensors[device-output]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -122,17 +126,16 @@
     'model_id': None,
     'name': 'Output',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_binary_sensors[device-zone]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -153,9 +156,8 @@
     'model_id': None,
     'name': 'Zone',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---

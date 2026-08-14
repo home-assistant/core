@@ -9,7 +9,6 @@ from miio import DeviceException
 import pytest
 
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_ICON,
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
     DOMAIN as VACUUM_DOMAIN,
@@ -28,10 +27,7 @@ from homeassistant.components.xiaomi_miio.const import (
     DOMAIN,
     MODELS_VACUUM,
 )
-from homeassistant.components.xiaomi_miio.vacuum import (
-    ATTR_ERROR,
-    ATTR_TIMERS,
-    CONF_DEVICE,
+from homeassistant.components.xiaomi_miio.services import (
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
@@ -40,9 +36,11 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     SERVICE_START_REMOTE_CONTROL,
     SERVICE_STOP_REMOTE_CONTROL,
 )
+from homeassistant.components.xiaomi_miio.vacuum import ATTR_ERROR, ATTR_TIMERS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
@@ -264,9 +262,8 @@ async def test_xiaomi_vacuum_services(
     state = hass.states.get(entity_id)
 
     assert state.state == VacuumActivity.ERROR
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 14204
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 14140
     assert state.attributes.get(ATTR_ERROR) == "Error message"
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-80"
     assert state.attributes.get(ATTR_TIMERS) == [
         {
             "enabled": True,
@@ -450,9 +447,8 @@ async def test_xiaomi_specific_services(
     # Check state attributes
     state = hass.states.get(entity_id)
     assert state.state == VacuumActivity.CLEANING
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 14204
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 14140
     assert state.attributes.get(ATTR_ERROR) is None
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-30"
     assert state.attributes.get(ATTR_TIMERS) == [
         {
             "enabled": True,

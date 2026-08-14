@@ -1,9 +1,10 @@
 """Tests for the lifx integration config flow."""
 
+from collections.abc import Generator
 from ipaddress import ip_address
 import socket
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -42,6 +43,15 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.lifx.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 async def test_discovery(hass: HomeAssistant) -> None:
@@ -358,7 +368,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
 
 
 async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
-    """Test we get the form with discovery and abort for dhcp source when we get both."""
+    """Test we get discovery form and abort for dhcp source."""
 
     with _patch_discovery(), _patch_config_flow_try_connect():
         result = await hass.config_entries.flow.async_init(
@@ -591,6 +601,7 @@ async def test_refuse_relays(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.parametrize("mock_setup_entry", [None])  # Disable the autouse fixture
 async def test_suggested_area(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
@@ -629,7 +640,7 @@ async def test_suggested_area(
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_lifx_group_my_bulb"
     entity = entity_registry.async_get(entity_id)
 
     device = device_registry.async_get(entity.device_id)

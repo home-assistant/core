@@ -1,6 +1,6 @@
 """Application credentials platform for senz."""
 
-from aiosenz import AUTHORIZATION_ENDPOINT, TOKEN_ENDPOINT
+from pysenz import AUTHORIZATION_ENDPOINT, TOKEN_ENDPOINT
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant

@@ -64,14 +64,18 @@ from tests.common import snapshot_platform
         ),
         (
             {
-                "topic": "tnsaxis:CameraApplicationPlatform/MotionGuard/Camera1Profile1",
+                "topic": (
+                    "tnsaxis:CameraApplicationPlatform/MotionGuard/Camera1Profile1"
+                ),
                 "data_type": "active",
                 "data_value": "1",
             }
         ),
         (
             {
-                "topic": "tnsaxis:CameraApplicationPlatform/LoiteringGuard/Camera1Profile1",
+                "topic": (
+                    "tnsaxis:CameraApplicationPlatform/LoiteringGuard/Camera1Profile1"
+                ),
                 "data_type": "active",
                 "data_value": "1",
             }
@@ -85,7 +89,9 @@ from tests.common import snapshot_platform
         ),
         (
             {
-                "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario1",
+                "topic": (
+                    "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario1"
+                ),
                 "data_type": "active",
                 "data_value": "1",
             }
@@ -100,7 +106,9 @@ from tests.common import snapshot_platform
         ),
         (
             {
-                "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario8",
+                "topic": (
+                    "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario8"
+                ),
                 "data_type": "active",
                 "data_value": "1",
             }
@@ -149,7 +157,9 @@ async def test_binary_sensors(
             "data_value": "1",
         },
         {
-            "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1ScenarioANY",
+            "topic": (
+                "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1ScenarioANY"
+            ),
             "data_type": "active",
             "data_value": "1",
         },

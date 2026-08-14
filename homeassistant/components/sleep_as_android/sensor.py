@@ -1,9 +1,8 @@
 """Sensor platform for Sleep as Android integration."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -60,14 +59,13 @@ class SleepAsAndroidSensorEntity(SleepAsAndroidEntity, RestoreSensor):
     entity_description: SensorEntityDescription
 
     @callback
+    @override
     def _async_handle_event(self, webhook_id: str, data: dict[str, str]) -> None:
         """Handle the Sleep as Android event."""
 
         if webhook_id == self.webhook_id and data[ATTR_EVENT] in (
             "alarm_snooze_clicked",
             "alarm_snooze_canceled",
-            "alarm_alert_start",
-            "alarm_alert_dismiss",
             "alarm_skip_next",
             "show_skip_next_alarm",
             "alarm_rescheduled",
@@ -93,6 +91,7 @@ class SleepAsAndroidSensorEntity(SleepAsAndroidEntity, RestoreSensor):
 
             self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore entity state."""
         state = await self.async_get_last_sensor_data()

@@ -14,8 +14,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_dio_chacon_client: AsyncMock
+    hass: HomeAssistant, mock_dio_chacon_client: AsyncMock
 ) -> None:
     """Test the full flow."""
 
@@ -52,9 +53,9 @@ async def test_full_flow(
         (DIOChaconAPIError, {"base": "cannot_connect"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_dio_chacon_client: AsyncMock,
     exception: Exception,
     expected: dict[str, str],

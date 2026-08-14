@@ -1,6 +1,6 @@
 """Config flow for syncthing integration."""
 
-from typing import Any
+from typing import Any, override
 
 import aiosyncthing
 import voluptuous as vol
@@ -21,7 +21,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
     try:
@@ -44,6 +44,7 @@ class SyncThingConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

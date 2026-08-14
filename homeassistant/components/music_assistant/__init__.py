@@ -1,23 +1,35 @@
 """Music Assistant (music-assistant.io) integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from music_assistant_client import MusicAssistantClient
-from music_assistant_client.exceptions import CannotConnect, InvalidServerVersion
+from music_assistant_client.exceptions import (
+    CannotConnect,
+    InvalidServerVersion,
+    MusicAssistantClientException,
+)
 from music_assistant_models.config_entries import PlayerConfig
 from music_assistant_models.enums import EventType
-from music_assistant_models.errors import ActionUnavailable, MusicAssistantError
+from music_assistant_models.errors import (
+    ActionUnavailable,
+    AuthenticationFailed,
+    AuthenticationRequired,
+    InvalidToken,
+    MusicAssistantError,
+)
 from music_assistant_models.player import Player
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_TOKEN, CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
@@ -27,14 +39,22 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DOMAIN, LOGGER
-from .services import get_music_assistant_client, register_actions
+from .helpers import get_music_assistant_client
+from .services import register_actions
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
 
     from homeassistant.helpers.typing import ConfigType
 
-PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SWITCH,
+    Platform.TEXT,
+]
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
@@ -58,6 +78,7 @@ class MusicAssistantEntryData:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Music Assistant component."""
     register_actions(hass)
+
     return True
 
 
@@ -67,7 +88,9 @@ async def async_setup_entry(  # noqa: C901
     """Set up Music Assistant from a config entry."""
     http_session = async_get_clientsession(hass, verify_ssl=False)
     mass_url = entry.data[CONF_URL]
-    mass = MusicAssistantClient(mass_url, http_session)
+    # Get token from config entry (for schema >= AUTH_SCHEMA_VERSION)
+    token = entry.data.get(CONF_TOKEN)
+    mass = MusicAssistantClient(mass_url, http_session, token=token)
 
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT):
@@ -86,6 +109,23 @@ async def async_setup_entry(  # noqa: C901
             translation_key="invalid_server_version",
         )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
+    except (AuthenticationRequired, AuthenticationFailed, InvalidToken) as err:
+        assert mass.server_info is not None
+        # Users cannot reauthenticate when running as Home Assistant addon,
+        # so raising ConfigEntryAuthFailed in that case would be incorrect.
+        # Instead we should wait until the addon discovery is completed,
+        # as that will set up authentication and reload the entry automatically.
+        if mass.server_info.homeassistant_addon:
+            raise ConfigEntryError(
+                "Authentication failed, addon discovery not completed yet"
+            ) from err
+        raise ConfigEntryAuthFailed(
+            f"Authentication failed for {mass_url}: {err}"
+        ) from err
+    except MusicAssistantClientException as err:
+        raise ConfigEntryNotReady(
+            f"Failed to connect to music assistant server {mass_url}: {err}"
+        ) from err
     except MusicAssistantError as err:
         LOGGER.exception("Failed to connect to music assistant server", exc_info=err)
         raise ConfigEntryNotReady(
@@ -140,10 +180,10 @@ async def async_setup_entry(  # noqa: C901
         if player_id in entry.runtime_data.discovered_players:
             entry.runtime_data.discovered_players.remove(player_id)
         dev_reg = dr.async_get(hass)
-        if hass_device := dev_reg.async_get_device({(DOMAIN, player_id)}):
-            dev_reg.async_update_device(
-                hass_device.id, remove_config_entry_id=entry.entry_id
-            )
+        if hass_device := dev_reg.async_get_device_by_identifier(
+            (DOMAIN, player_id), entry.entry_id
+        ):
+            dev_reg.async_remove_device(hass_device.id)
 
     # register listener for new players
     def handle_player_added(event: MassEvent) -> None:
@@ -178,7 +218,8 @@ async def async_setup_entry(  # noqa: C901
         mass.subscribe(handle_player_removed, EventType.PLAYER_REMOVED)
     )
 
-    # register listener for player configs (to handle toggling of the 'expose_to_ha' setting)
+    # register listener for player configs
+    # (to handle toggling of the 'expose_to_ha' setting)
     def handle_player_config_updated(event: MassEvent) -> None:
         """Handle Mass Player Config Updated event."""
         if event.object_id is None or not event.data:
@@ -207,9 +248,7 @@ async def async_setup_entry(  # noqa: C901
     for device in dev_entries:
         for identifier in device.identifiers:
             if identifier[0] == DOMAIN and identifier[1] not in player_ids:
-                dev_reg.async_update_device(
-                    device.id, remove_config_entry_id=entry.entry_id
-                )
+                dev_reg.async_remove_device(device.id)
 
     return True
 
@@ -224,12 +263,12 @@ async def _client_listen(
     try:
         await mass.start_listening(init_ready)
     except MusicAssistantError as err:
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             raise
         LOGGER.error("Failed to listen: %s", err)
     except Exception as err:  # pylint: disable=broad-except
         # We need to guard against unknown exceptions to not crash this task.
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             raise
         LOGGER.exception("Unexpected exception: %s", err)
 

@@ -1,12 +1,10 @@
 """The tests for the Rfxtrx component."""
 
-from __future__ import annotations
-
 from unittest.mock import ANY, call
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
+from homeassistant.components.rfxtrx.const import DOMAIN, EVENT_RFXTRX_EVENT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -23,7 +21,7 @@ async def test_fire_event(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, rfxtrx
 ) -> None:
     """Test fire event."""
-    await setup_rfx_test_cfg(
+    mock_entry = await setup_rfx_test_cfg(
         hass,
         device="/dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
         automatic_add=True,
@@ -46,13 +44,13 @@ async def test_fire_event(
     await rfxtrx.signal("0b1100cd0213c7f210010f51")
     await rfxtrx.signal("0716000100900970")
 
-    device_id_1 = device_registry.async_get_device(
-        identifiers={("rfxtrx", "11", "0", "213c7f2:16")}
+    device_id_1 = device_registry.async_get_device_by_identifier(
+        ("rfxtrx", "11", "0", "213c7f2:16"), mock_entry.entry_id
     )
     assert device_id_1
 
-    device_id_2 = device_registry.async_get_device(
-        identifiers={("rfxtrx", "16", "0", "00:90")}
+    device_id_2 = device_registry.async_get_device_by_identifier(
+        ("rfxtrx", "16", "0", "00:90"), mock_entry.entry_id
     )
     assert device_id_2
 
@@ -83,7 +81,7 @@ async def test_send(hass: HomeAssistant, rfxtrx) -> None:
     await setup_rfx_test_cfg(hass, device="/dev/null", devices={})
 
     await hass.services.async_call(
-        "rfxtrx", "send", {"event": "0a520802060101ff0f0269"}, blocking=True
+        DOMAIN, "send", {"event": "0a520802060101ff0f0269"}, blocking=True
     )
 
     assert rfxtrx.transport.send.mock_calls == [
@@ -107,19 +105,22 @@ async def test_ws_device_remove(
         },
     )
 
-    device_entry = device_registry.async_get_device(
-        identifiers={("rfxtrx", *device_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("rfxtrx", *device_id), mock_entry.entry_id
     )
     assert device_entry
 
     # Ask to remove existing device
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, mock_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     # Verify device entry is removed
     assert (
-        device_registry.async_get_device(identifiers={("rfxtrx", *device_id)}) is None
+        device_registry.async_get_device_by_identifier(
+            ("rfxtrx", *device_id), mock_entry.entry_id
+        )
+        is None
     )
 
     # Verify that the config entry has removed the device

@@ -1,7 +1,5 @@
 """Support for PlayStation 4 consoles."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 import os
@@ -126,9 +124,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "media_player",
                 DOMAIN,
                 unique_id,
-                suggested_object_id=new_id,
                 config_entry=entry,
                 device_id=e_entry.device_id,
+                object_id_base=new_id,
             )
             _LOGGER.debug(
                 "PlayStation 4 identifier for entity: %s has changed",

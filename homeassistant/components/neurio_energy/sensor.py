@@ -1,9 +1,8 @@
 """Support for monitoring a Neurio energy sensor."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 import neurio
 import requests.exceptions
@@ -29,9 +28,13 @@ CONF_SENSOR_ID = "sensor_id"
 
 ACTIVE_NAME = "Energy Usage"
 DAILY_NAME = "Daily Energy Usage"
+ACTIVE_GENERATION_NAME = "Energy Production"
+DAILY_GENERATION_NAME = "Daily Energy Production"
 
 ACTIVE_TYPE = "active"
 DAILY_TYPE = "daily"
+ACTIVE_GENERATION_TYPE = "active_generation"
+DAILY_GENERATION_TYPE = "daily_generation"
 
 
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=150)
@@ -76,6 +79,18 @@ def setup_platform(
     add_entities([NeurioEnergy(data, ACTIVE_NAME, ACTIVE_TYPE, update_active)])
     # Daily power sensor
     add_entities([NeurioEnergy(data, DAILY_NAME, DAILY_TYPE, update_daily)])
+    # Active generation sensor
+    add_entities(
+        [
+            NeurioEnergy(
+                data, ACTIVE_GENERATION_NAME, ACTIVE_GENERATION_TYPE, update_active
+            )
+        ]
+    )
+    # Daily generation sensor
+    add_entities(
+        [NeurioEnergy(data, DAILY_GENERATION_NAME, DAILY_GENERATION_TYPE, update_daily)]
+    )
 
 
 class NeurioData:
@@ -89,6 +104,8 @@ class NeurioData:
 
         self._daily_usage = None
         self._active_power = None
+        self._daily_generation = None
+        self._active_generation = None
 
         self._state = None
 
@@ -105,17 +122,29 @@ class NeurioData:
         """Return latest active power value."""
         return self._active_power
 
+    @property
+    def daily_generation(self):
+        """Return latest daily generation value."""
+        return self._daily_generation
+
+    @property
+    def active_generation(self):
+        """Return latest active generation value."""
+        return self._active_generation
+
     def get_active_power(self) -> None:
-        """Return current power value."""
+        """Update current power values."""
         try:
             sample = self.neurio_client.get_samples_live_last(self.sensor_id)
             self._active_power = sample["consumptionPower"]
-        except (requests.exceptions.RequestException, ValueError, KeyError):
+            self._active_generation = sample.get("generationPower")
+        except requests.exceptions.RequestException, ValueError, KeyError:
             _LOGGER.warning("Could not update current power usage")
 
     def get_daily_usage(self) -> None:
-        """Return current daily power usage."""
+        """Update current daily power usage and generation."""
         kwh = 0
+        gen_kwh = 0
         start_time = dt_util.start_of_local_day().astimezone(dt_util.UTC).isoformat()
         end_time = dt_util.utcnow().isoformat()
 
@@ -125,14 +154,16 @@ class NeurioData:
             history = self.neurio_client.get_samples_stats(
                 self.sensor_id, start_time, "days", end_time
             )
-        except (requests.exceptions.RequestException, ValueError, KeyError):
+        except requests.exceptions.RequestException, ValueError, KeyError:
             _LOGGER.warning("Could not update daily power usage")
             return
 
         for result in history:
             kwh += result["consumptionEnergy"] / 3600000
+            gen_kwh += result.get("generationEnergy", 0) / 3600000
 
         self._daily_usage = round(kwh, 2)
+        self._daily_generation = round(gen_kwh, 2)
 
 
 class NeurioEnergy(SensorEntity):
@@ -156,18 +187,31 @@ class NeurioEnergy(SensorEntity):
             self._unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        elif sensor_type == ACTIVE_GENERATION_TYPE:
+            self._attr_icon = "mdi:solar-power"
+            self._unit_of_measurement = UnitOfPower.WATT
+            self._attr_device_class = SensorDeviceClass.POWER
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif sensor_type == DAILY_GENERATION_TYPE:
+            self._attr_icon = "mdi:solar-power"
+            self._unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+            self._attr_device_class = SensorDeviceClass.ENERGY
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
@@ -180,3 +224,7 @@ class NeurioEnergy(SensorEntity):
             self._state = self._data.active_power
         elif self._sensor_type == DAILY_TYPE:
             self._state = self._data.daily_usage
+        elif self._sensor_type == ACTIVE_GENERATION_TYPE:
+            self._state = self._data.active_generation
+        elif self._sensor_type == DAILY_GENERATION_TYPE:
+            self._state = self._data.daily_generation

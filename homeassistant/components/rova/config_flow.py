@@ -1,6 +1,6 @@
 """Config flow for the Rova platform."""
 
-from typing import Any
+from typing import Any, override
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from rova.rova import Rova
@@ -16,6 +16,7 @@ class RovaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -36,7 +37,7 @@ class RovaConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 if not await self.hass.async_add_executor_job(api.is_rova_area):
                     errors = {"base": "invalid_rova_area"}
-            except (ConnectTimeout, HTTPError):
+            except ConnectTimeout, HTTPError:
                 errors = {"base": "cannot_connect"}
 
             if not errors:

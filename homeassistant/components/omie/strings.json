@@ -1,0 +1,63 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "es_spot_price": {
+        "name": "Spain spot price"
+      },
+      "pt_spot_price": {
+        "name": "Portugal spot price"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error connecting to the OMIE API."
+    },
+    "data_not_available": {
+      "message": "Prices for {date} have not been published yet."
+    },
+    "date_before_market_start": {
+      "message": "No quarter-hourly prices exist for {date}. Prices are available from {start_date} onwards."
+    },
+    "entry_not_loaded": {
+      "message": "The OMIE integration is not loaded."
+    }
+  },
+  "selector": {
+    "country": {
+      "options": {
+        "es": "Spain",
+        "pt": "Portugal"
+      }
+    }
+  },
+  "services": {
+    "get_prices_for_date": {
+      "description": "Retrieves the electricity spot prices (in €/kWh) for a specific date. Prices for the next day are published daily at around 13:30 CET.",
+      "fields": {
+        "countries": {
+          "description": "The countries to get the prices for.",
+          "name": "Countries"
+        },
+        "date": {
+          "description": "The date to get the prices for.",
+          "name": "Date"
+        }
+      },
+      "name": "Get prices for date"
+    }
+  }
+}

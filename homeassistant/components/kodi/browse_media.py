@@ -70,7 +70,7 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
         media_content_id=search_id,
         media_content_type=search_type,
         title=title,
-        can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
+        can_play=bool(search_type in PLAYABLE_MEDIA_TYPES and search_id),
         can_expand=True,
         children=children,
         thumbnail=thumbnail,
@@ -219,7 +219,7 @@ async def library_payload(hass):
     )
 
     for child in library_info.children:
-        child.thumbnail = "https://brands.home-assistant.io/_/kodi/logo.png"
+        child.thumbnail = "/api/brands/integration/kodi/logo.png"
 
     with contextlib.suppress(BrowseError):
         item = await media_source.async_browse_media(

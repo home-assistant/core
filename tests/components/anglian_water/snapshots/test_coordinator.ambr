@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_coordinator_first_run
+  defaultdict({
+    'anglian_water:171266493_testsn_usage': list([
+      dict({
+        'end': 1717268400.0,
+        'start': 1717264800.0,
+        'state': 0.01,
+        'sum': 10.0,
+      }),
+      dict({
+        'end': 1717272000.0,
+        'start': 1717268400.0,
+        'state': 0.015,
+        'sum': 25.0,
+      }),
+      dict({
+        'end': 1717275600.0,
+        'start': 1717272000.0,
+        'state': 0.025,
+        'sum': 50.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_coordinator_subsequent_run
+  defaultdict({
+    'anglian_water:171266493_testsn_usage': list([
+      dict({
+        'end': 1717268400.0,
+        'start': 1717264800.0,
+        'state': 0.01,
+        'sum': 10.0,
+      }),
+      dict({
+        'end': 1717272000.0,
+        'start': 1717268400.0,
+        'state': 0.015,
+        'sum': 25.0,
+      }),
+      dict({
+        'end': 1717275600.0,
+        'start': 1717272000.0,
+        'state': 0.025,
+        'sum': 50.0,
+      }),
+    ]),
+  })
+# ---

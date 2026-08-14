@@ -1,7 +1,5 @@
 """Constants for the cloud component."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import TYPE_CHECKING, Any
 
@@ -48,6 +46,9 @@ PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
 PREF_GOOGLE_CONNECTED = "google_connected"
 PREF_REMOTE_ALLOW_REMOTE_ENABLE = "remote_allow_remote_enable"
 PREF_ENABLE_CLOUD_ICE_SERVERS = "cloud_ice_servers_enabled"
+PREF_ONBOARDED_ITEMS = "onboarded_items"
+PREF_ONBOARDING_POSTPONED_UNTIL = "onboarding_postponed_until"
+ONBOARDING_ITEMS = {"remote", "backup", "voice", "streaming"}
 DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "JennyNeural")
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = True
@@ -76,9 +77,9 @@ CONF_GOOGLE_ACTIONS = "google_actions"
 CONF_USER_POOL_ID = "user_pool_id"
 
 CONF_ACCOUNT_LINK_SERVER = "account_link_server"
-CONF_ACCOUNTS_SERVER = "accounts_server"
 CONF_ACME_SERVER = "acme_server"
 CONF_API_SERVER = "api_server"
+CONF_DISCOVERY_SERVICE_ACTIONS = "discovery_service_actions"
 CONF_RELAYER_SERVER = "relayer_server"
 CONF_REMOTESTATE_SERVER = "remotestate_server"
 CONF_SERVICEHANDLERS_SERVER = "servicehandlers_server"
@@ -90,6 +91,8 @@ DISPATCHER_REMOTE_UPDATE: SignalType[Any] = SignalType("cloud_remote_update")
 
 STT_ENTITY_UNIQUE_ID = "cloud-speech-to-text"
 TTS_ENTITY_UNIQUE_ID = "cloud-text-to-speech"
+AI_TASK_ENTITY_UNIQUE_ID = "cloud-ai-task"
+CONVERSATION_ENTITY_UNIQUE_ID = "cloud-conversation-agent"
 
 LOGIN_MFA_TIMEOUT = 60
 

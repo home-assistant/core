@@ -1,15 +1,17 @@
 """Test service for Tibber integration."""
 
 import datetime as dt
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
+import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+import tibber
 
 from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.components.tibber.services import PRICE_SERVICE_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 START_TIME = dt.datetime.fromtimestamp(1615766400).replace(tzinfo=dt.UTC)
 
@@ -259,6 +261,40 @@ async def test_get_prices_invalid_input(
             DOMAIN,
             PRICE_SERVICE_NAME,
             {"start": "test"},
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(tibber.InvalidLoginError(401), id="invalid_login"),
+        pytest.param(tibber.RetryableHttpExceptionError(503), id="retryable_http"),
+        pytest.param(tibber.FatalHttpExceptionError(500), id="fatal_http"),
+        pytest.param(aiohttp.ClientError("connection failed"), id="client_error"),
+    ],
+)
+async def test_get_prices_refresh_raises_handled_exception(
+    mock_tibber_setup: MagicMock,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """When price refresh fails with handled exceptions, raise HomeAssistantError."""
+    freezer.move_to(START_TIME)
+    mock_home = MagicMock()
+    mock_home.name = "home"
+    mock_home.price_total = {}
+    mock_home.update_info_and_price_info = AsyncMock(side_effect=exception)
+    mock_tibber_setup.get_homes.return_value = [mock_home]
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            PRICE_SERVICE_NAME,
+            {},
             blocking=True,
             return_response=True,
         )

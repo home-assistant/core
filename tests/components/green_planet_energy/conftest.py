@@ -1,0 +1,136 @@
+"""Test fixtures for Green Planet Energy integration."""
+
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from homeassistant.components.green_planet_energy.const import DOMAIN
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Create a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id=DOMAIN,
+    )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Create a mocked Green Planet Energy API."""
+    with patch(
+        "homeassistant.components.green_planet_energy.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_api() -> Generator[MagicMock]:
+    """Create a mocked Green Planet Energy API."""
+    with (
+        patch(
+            "homeassistant.components.green_planet_energy.coordinator.GreenPlanetEnergyAPI",
+            autospec=True,
+        ) as mock_api_class,
+        patch(
+            "homeassistant.components.green_planet_energy.config_flow.GreenPlanetEnergyAPI",
+            new=mock_api_class,
+        ),
+    ):
+        # Use MagicMock instead of AsyncMock for sync methods
+        mock_api_instance = MagicMock()
+
+        # Mock the API response data
+        # API returns prices in Cent/kWh (e.g., 25.0 Cent/kWh = 0.25 €/kWh)
+        # Today's prices: 20 + (hour * 1) Cent/kWh
+        today_prices = {
+            f"gpe_price_{hour:02d}": 20.0 + (hour * 1.0) for hour in range(24)
+        }
+        # Tomorrow's prices: 25 + (hour * 1) Cent/kWh (slightly different for testing)
+        tomorrow_prices = {
+            f"gpe_price_{hour:02d}_tomorrow": 25.0 + (hour * 1.0) for hour in range(24)
+        }
+
+        # 15-minute resolution data for today and tomorrow.
+        # Each quarter-hour slot within an hour carries a slight offset so tests
+        # can distinguish individual slots:
+        #   HH:00 → base + 0.00, HH:15 → base + 0.15, HH:30 → base + 0.30, HH:45 → base + 0.45
+        today_quarter_prices = {
+            f"gpe_price_{hour:02d}_{minute:02d}": round(20.0 + hour + minute / 100, 2)
+            for hour in range(24)
+            for minute in (0, 15, 30, 45)
+        }
+        tomorrow_quarter_prices = {
+            f"gpe_price_{hour:02d}_{minute:02d}_tomorrow": round(
+                25.0 + hour + minute / 100, 2
+            )
+            for hour in range(24)
+            for minute in (0, 15, 30, 45)
+        }
+
+        # Combine all prices — 15-min keys take priority but hourly keys are also present.
+        all_prices = {
+            **today_prices,
+            **tomorrow_prices,
+            **today_quarter_prices,
+            **tomorrow_quarter_prices,
+        }
+
+        # Make get_electricity_prices async since coordinator uses it
+        mock_api_instance.get_electricity_prices = AsyncMock(return_value=all_prices)
+
+        # Mock the calculation methods to return actual values in
+        # Cent/kWh (not coroutines)
+        # Highest price today: 20 + (23 * 1) = 43 Cent/kWh at hour 23
+        mock_api_instance.get_highest_price_today.return_value = 43.0
+        mock_api_instance.get_highest_price_today_with_hour.return_value = (43.0, 23)
+
+        # Lowest price day (6-22): 20 + (6 * 1) = 26 Cent/kWh at hour 6
+        mock_api_instance.get_lowest_price_day.return_value = 26.0
+        mock_api_instance.get_lowest_price_day_with_hour.return_value = (26.0, 6)
+
+        # Lowest price night (22-6): 20 + (0 * 1) = 20 Cent/kWh at hour 0
+        mock_api_instance.get_lowest_price_night.return_value = 20.0
+        mock_api_instance.get_lowest_price_night_with_hour.return_value = (20.0, 0)
+
+        # Current price depends on the hour passed to the method
+        # Mock get_current_price to return the price for the requested hour in Cent/kWh
+        def get_current_price_mock(data, hour):
+            """Return price for a specific hour in Cent/kWh."""
+            return 20.0 + (hour * 1.0)
+
+        mock_api_instance.get_current_price.side_effect = get_current_price_mock
+
+        # Mock cheapest duration methods
+        # For full day (0-24), provide a default mocked return value.
+        mock_api_instance.get_cheapest_duration.return_value = (25.0, 12)
+
+        # For day period (6-18), cheapest 2.5h window would be starting at hour 6
+        # Use a representative mocked average value in Cent/kWh.
+        mock_api_instance.get_cheapest_duration_day.return_value = (26.6, 6)
+
+        # For night period (18-6), cheapest 2.5h window would be early morning
+        # Average of hours 0, 1, and half of 2 tomorrow in Cent/kWh:
+        # (25.0 + 26.0 + 27.0 * 0.5) / 2.5 = 25.8 Cent/kWh
+        mock_api_instance.get_cheapest_duration_night.return_value = (25.8, 0)
+
+        mock_api_class.return_value = mock_api_instance
+        yield mock_api_instance
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> MockConfigEntry:
+    """Set up the Green Planet Energy integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_config_entry

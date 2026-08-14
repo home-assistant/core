@@ -1,4 +1,7 @@
-"""The tests for LG NEtcast device triggers."""
+"""The tests for LG Netcast device triggers."""
+
+from collections.abc import Generator
+from unittest.mock import patch
 
 import pytest
 
@@ -19,13 +22,22 @@ from . import ENTITY_ID, UNIQUE_ID, setup_lgnetcast
 from tests.common import MockConfigEntry, async_get_device_automations
 
 
+@pytest.fixture(autouse=True)
+def mock_lg_netcast() -> Generator[None]:
+    """Mock LG Netcast library."""
+    with patch("homeassistant.components.lg_netcast.LgNetCastClient"):
+        yield
+
+
 async def test_get_triggers(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test we get the expected triggers."""
-    await setup_lgnetcast(hass)
+    entry = await setup_lgnetcast(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIQUE_ID), entry.entry_id
+    )
     assert device is not None
 
     turn_on_trigger = {
@@ -48,9 +60,11 @@ async def test_if_fires_on_turn_on_request(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for turn_on triggers firing."""
-    await setup_lgnetcast(hass)
+    entry = await setup_lgnetcast(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIQUE_ID), entry.entry_id
+    )
     assert device is not None
 
     assert await async_setup_component(

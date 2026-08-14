@@ -1,20 +1,16 @@
 """Support for Rain Bird Irrigation system LNK Wi-Fi Module."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyrainbird.exceptions import RainbirdApiException, RainbirdDeviceBusyException
-import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_DURATION, CONF_IMPORTED_NAMES, DOMAIN, MANUFACTURER
@@ -22,12 +18,6 @@ from .coordinator import RainbirdUpdateCoordinator
 from .types import RainbirdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_START_IRRIGATION = "start_irrigation"
-
-SERVICE_SCHEMA_IRRIGATION: VolDictType = {
-    vol.Required(ATTR_DURATION): cv.positive_float,
-}
 
 
 async def async_setup_entry(
@@ -45,13 +35,6 @@ async def async_setup_entry(
             config_entry.data.get(CONF_IMPORTED_NAMES, {}).get(str(zone)),
         )
         for zone in coordinator.data.zones
-    )
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_START_IRRIGATION,
-        SERVICE_SCHEMA_IRRIGATION,
-        "async_turn_on",
     )
 
 
@@ -84,14 +67,20 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
                 name=device_name,
                 identifiers={(DOMAIN, self._attr_unique_id)},
                 manufacturer=MANUFACTURER,
-                via_device=(DOMAIN, coordinator.unique_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, coordinator.unique_id),
+                    config_entry_id=coordinator.config_entry.entry_id,
+                ),
             )
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
         return {"zone": self._zone}
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         try:
@@ -112,6 +101,7 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
@@ -131,6 +121,7 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         await self.coordinator.async_request_refresh()
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._zone in self.coordinator.data.active_zones

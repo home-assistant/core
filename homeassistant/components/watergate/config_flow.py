@@ -1,6 +1,7 @@
 """Config flow for Watergate."""
 
 import logging
+from typing import override
 
 import voluptuous as vol
 from watergate_local_api.watergate_api import (
@@ -11,6 +12,7 @@ from watergate_local_api.watergate_api import (
 from homeassistant.components.webhook import async_generate_id as webhook_generate_id
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -27,6 +29,7 @@ WATERGATE_SCHEMA = vol.Schema(
 class WatergateConfigFlow(ConfigFlow, domain=DOMAIN):
     """Watergate config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -34,7 +37,8 @@ class WatergateConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             watergate_client = WatergateLocalApiClient(
-                self.prepare_ip_address(user_input[CONF_IP_ADDRESS])
+                base_url=self.prepare_ip_address(user_input[CONF_IP_ADDRESS]),
+                session=async_get_clientsession(self.hass),
             )
             try:
                 state = await watergate_client.async_get_device_state()

@@ -2,45 +2,45 @@
 # name: test_async_beolink_allstandby
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -50,46 +50,46 @@
 # name: test_async_beolink_expand[all_discovered-True-None-log_messages0-3]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095935>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095935>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -99,46 +99,46 @@
 # name: test_async_beolink_expand[all_discovered-True-expand_side_effect1-log_messages1-3]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095935>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095935>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -148,46 +148,46 @@
 # name: test_async_beolink_expand[beolink_jids-parameter_value2-None-log_messages2-2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095935>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095935>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -197,46 +197,46 @@
 # name: test_async_beolink_expand[beolink_jids-parameter_value3-expand_side_effect3-log_messages3-2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095935>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095935>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -246,45 +246,45 @@
 # name: test_async_beolink_join[service_parameters0-method_parameters0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -294,45 +294,45 @@
 # name: test_async_beolink_join[service_parameters1-method_parameters1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -342,45 +342,45 @@
 # name: test_async_beolink_join[service_parameters2-method_parameters2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -390,45 +390,45 @@
 # name: test_async_beolink_join_invalid[service_parameters0-expected_result0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -438,45 +438,45 @@
 # name: test_async_beolink_join_invalid[service_parameters1-expected_result1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -486,45 +486,45 @@
 # name: test_async_beolink_join_invalid[service_parameters2-expected_result2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -534,45 +534,45 @@
 # name: test_async_beolink_unexpand
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -582,46 +582,46 @@
 # name: test_async_join_players[group_members0-1-0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095935>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095935>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -631,46 +631,46 @@
 # name: test_async_join_players[group_members0-1-0].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beoconnect_core_22222222',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
-      'volume_level': 0.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beoconnect_core_22222222',
+    'entity_id': 'media_player.laundry_room_core',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -680,46 +680,46 @@
 # name: test_async_join_players[group_members1-0-1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095935>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095935>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -729,46 +729,46 @@
 # name: test_async_join_players[group_members1-0-1].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beoconnect_core_22222222',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
-      'volume_level': 0.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beoconnect_core_22222222',
+    'entity_id': 'media_player.laundry_room_core',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -778,47 +778,47 @@
 # name: test_async_join_players_invalid[source0-group_members0-expected_result0-invalid_source]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'media_position': 0,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 0,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Line-In',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Line-In',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -828,46 +828,46 @@
 # name: test_async_join_players_invalid[source0-group_members0-expected_result0-invalid_source].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beoconnect_core_22222222',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
-      'volume_level': 0.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beoconnect_core_22222222',
+    'entity_id': 'media_player.laundry_room_core',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -877,46 +877,46 @@
 # name: test_async_join_players_invalid[source1-group_members1-expected_result1-invalid_grouping_entity]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095935>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095935>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -926,46 +926,46 @@
 # name: test_async_join_players_invalid[source1-group_members1-expected_result1-invalid_grouping_entity].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beoconnect_core_22222222',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
-      'volume_level': 0.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beoconnect_core_22222222',
+    'entity_id': 'media_player.laundry_room_core',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -975,45 +975,45 @@
 # name: test_async_unjoin_player
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1023,43 +1023,43 @@
 # name: test_async_update_beolink_listener
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'leader': dict({
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LEADER: 'leader'>: dict({
           'Laundry room Core': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beoconnect_core_22222222',
-        'media_player.beosound_balance_11111111',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.laundry_room_core',
+        'media_player.living_room_balance',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_11111111',
+    'entity_id': 'media_player.living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1069,46 +1069,46 @@
 # name: test_async_update_beolink_listener.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+      <BeoAttribute.BEOLINK: 'beolink'>: dict({
+        <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
-          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
-      'device_class': 'speaker',
-      'entity_picture_local': None,
-      'friendly_name': 'Living room Balance',
-      'group_members': list([
-        'media_player.beoconnect_core_22222222',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Balance',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2095933>,
-      'volume_level': 0.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2095933>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beoconnect_core_22222222',
+    'entity_id': 'media_player.laundry_room_core',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

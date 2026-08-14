@@ -1,9 +1,7 @@
 """Config flow for qBittorrent."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from qbittorrentapi import APIConnectionError, Forbidden403Error, LoginFailed
 import voluptuous as vol
@@ -29,6 +27,7 @@ USER_DATA_SCHEMA = vol.Schema(
 class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for the qBittorrent integration."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -45,7 +44,7 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                     user_input[CONF_VERIFY_SSL],
                 )
-            except (LoginFailed, Forbidden403Error):
+            except LoginFailed, Forbidden403Error:
                 errors = {"base": "invalid_auth"}
             except APIConnectionError:
                 errors = {"base": "cannot_connect"}

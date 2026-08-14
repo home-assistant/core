@@ -50,8 +50,9 @@ async def test_state(
         entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry == snapshot
         sub_device_entry = device_registry.async_get(entity_entry.device_id)
+        assert isinstance(sub_device_entry, dr.ChildDeviceEntry)
         assert sub_device_entry == snapshot
-        main_device_entry = device_registry.async_get(sub_device_entry.via_device_id)
+        main_device_entry = device_registry.async_get(sub_device_entry.parent_device_id)
         assert main_device_entry == snapshot
 
 
@@ -64,6 +65,7 @@ async def test_turn_on(hass: HomeAssistant, switch_entity_id: str) -> None:
         {ATTR_ENTITY_ID: switch_entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(switch_entity_id)
     assert state.state == STATE_OFF
@@ -74,6 +76,7 @@ async def test_turn_on(hass: HomeAssistant, switch_entity_id: str) -> None:
         {ATTR_ENTITY_ID: switch_entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(switch_entity_id)
     assert state.state == STATE_ON
@@ -88,6 +91,7 @@ async def test_turn_off(hass: HomeAssistant, switch_entity_id: str) -> None:
         {ATTR_ENTITY_ID: switch_entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(switch_entity_id)
     assert state.state == STATE_ON
@@ -98,6 +102,7 @@ async def test_turn_off(hass: HomeAssistant, switch_entity_id: str) -> None:
         {ATTR_ENTITY_ID: switch_entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(switch_entity_id)
     assert state.state == STATE_OFF

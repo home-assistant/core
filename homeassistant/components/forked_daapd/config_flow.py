@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyforked_daapd import ForkedDaapdAPI
 import voluptuous as vol
@@ -110,6 +110,7 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ForkedDaapdConfigEntry,
     ) -> ForkedDaapdOptionsFlowHandler:
@@ -130,6 +131,7 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return validate_result
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -159,6 +161,7 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=vol.Schema(DATA_SCHEMA_DICT), errors={}
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

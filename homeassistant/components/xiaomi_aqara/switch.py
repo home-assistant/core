@@ -1,16 +1,15 @@
 """Support for Xiaomi Aqara binary sensors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from xiaomi_gateway import XiaomiGateway
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, GATEWAYS_KEY
+from . import XiaomiAqaraConfigEntry
 from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,12 +29,12 @@ IN_USE = "inuse"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiAqaraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
-    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
+    gateway = config_entry.runtime_data
     for device in gateway.devices["switch"]:
         model = device["model"]
         if model == "plug":
@@ -145,7 +144,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         data_key: str,
         supports_power_consumption: bool,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiPlug."""
         self._data_key = data_key
@@ -158,38 +157,41 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
-    def icon(self):
+    @override
+    def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         if self._data_key == "status":
             return "mdi:power-plug"
         return "mdi:power-socket"
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self._supports_power_consumption:
-            attrs = {
+            return {
                 ATTR_IN_USE: self._in_use,
                 ATTR_LOAD_POWER: self._load_power,
                 ATTR_POWER_CONSUMED: self._power_consumed,
+                **self._attr_extra_state_attributes,
             }
-        else:
-            attrs = {}
-        attrs.update(super().extra_state_attributes)
-        return attrs
+        return self._attr_extra_state_attributes
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._write_to_hub(self._sid, **{self._data_key: "on"}):
             self._attr_is_on = True
             self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self._write_to_hub(self._sid, **{self._data_key: "off"}):
             self._attr_is_on = False
             self.schedule_update_ha_state()
 
+    @override
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if IN_USE in data:

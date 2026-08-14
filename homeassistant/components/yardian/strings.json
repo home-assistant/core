@@ -22,8 +22,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "freeze_prevent": {
-        "name": "Freeze prevent"
+      "freeze_prevent_enabled": {
+        "name": "Freeze prevent enabled"
       },
       "standby": {
         "name": "Standby"
@@ -32,7 +32,27 @@
         "name": "Watering running"
       },
       "zone_enabled": {
-        "name": "Zone {zone} enabled"
+        "name": "Enabled"
+      }
+    },
+    "button": {
+      "stop_irrigation": {
+        "name": "Stop irrigation"
+      }
+    },
+    "sensor": {
+      "active_zone_count": {
+        "name": "Active zones",
+        "unit_of_measurement": "zones"
+      },
+      "rain_delay": {
+        "name": "Rain delay"
+      },
+      "water_hammer_duration": {
+        "name": "Water hammer duration"
+      },
+      "zone_delay": {
+        "name": "Zone delay"
       }
     }
   },

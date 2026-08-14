@@ -55,8 +55,14 @@
       "altitude": {
         "name": "Altitude"
       },
+      "battery": {
+        "name": "Battery voltage"
+      },
       "geofence": {
         "name": "Geofence"
+      },
+      "power": {
+        "name": "Supply voltage"
       }
     }
   },

@@ -18,25 +18,32 @@
       }
     }
   },
+  "exceptions": {
+    "app_not_supported": {
+      "message": "App {app_name} is not supported"
+    }
+  },
   "options": {
-    "error": {
-      "invalid_known_hosts": "[%key:component::cast::config::error::invalid_known_hosts%]"
-    },
     "step": {
-      "advanced_options": {
-        "data": {
-          "ignore_cec": "Ignore CEC",
-          "uuid": "Allowed UUIDs"
-        },
-        "description": "Allowed UUIDs - A comma-separated list of UUIDs of Cast devices to add to Home Assistant. Use only if you don’t want to add all available cast devices.\nIgnore CEC - A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be passed to pychromecast.IGNORE_CEC.",
-        "title": "Advanced Google Cast configuration"
-      },
-      "basic_options": {
+      "init": {
         "data": {
           "known_hosts": "[%key:component::cast::config::step::config::data::known_hosts%]"
         },
         "data_description": {
           "known_hosts": "[%key:component::cast::config::step::config::data_description::known_hosts%]"
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "ignore_cec": "Ignore CEC",
+              "uuid": "Allowed UUIDs"
+            },
+            "data_description": {
+              "ignore_cec": "A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be passed to pychromecast.IGNORE_CEC.",
+              "uuid": "A comma-separated list of UUIDs of Cast devices to add to Home Assistant. Use only if you don’t want to add all available cast devices."
+            },
+            "name": "More options"
+          }
         },
         "title": "[%key:component::cast::config::step::config::title%]"
       }
@@ -44,10 +51,10 @@
   },
   "services": {
     "show_lovelace_view": {
-      "description": "Shows a dashboard view on a Chromecast device.",
+      "description": "Shows a dashboard view on a Google Cast device.",
       "fields": {
         "dashboard_path": {
-          "description": "The URL path of the dashboard to show, defaults to lovelace if not specified.",
+          "description": "The URL path of the dashboard to show, defaults to `lovelace` if not specified.",
           "name": "Dashboard path"
         },
         "entity_id": {
@@ -59,7 +66,7 @@
           "name": "View path"
         }
       },
-      "name": "Show dashboard view"
+      "name": "Show dashboard view via Google Cast"
     }
   }
 }

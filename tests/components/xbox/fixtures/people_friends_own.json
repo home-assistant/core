@@ -118,7 +118,7 @@
     },
     {
       "xuid": "2533274913657542",
-      "isFavorite": true,
+      "isFavorite": false,
       "isFollowingCaller": true,
       "isFollowedByCaller": true,
       "isIdentityShared": false,

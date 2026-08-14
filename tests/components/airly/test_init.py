@@ -5,7 +5,7 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.components.airly.coordinator import set_update_interval
 from homeassistant.config_entries import ConfigEntryState
@@ -43,7 +43,6 @@ async def test_config_not_ready(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
             "use_nearest": True,
         },
     )
@@ -65,7 +64,6 @@ async def test_config_without_unique_id(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
         },
     )
 
@@ -90,7 +88,6 @@ async def test_config_with_turned_off_station(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
         },
     )
 
@@ -122,7 +119,6 @@ async def test_update_interval(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
         },
     )
 
@@ -157,7 +153,6 @@ async def test_update_interval(
             "api_key": "foo",
             "latitude": 66.66,
             "longitude": 111.11,
-            "name": "Work",
         },
     )
 
@@ -216,7 +211,6 @@ async def test_migrate_device_entry(
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
         },
     )
 
@@ -245,7 +239,7 @@ async def test_remove_air_quality_entities(
 ) -> None:
     """Test remove air_quality entities from registry."""
     entity_registry.async_get_or_create(
-        AIR_QUALITY_PLATFORM,
+        AIR_QUALITY_DOMAIN,
         DOMAIN,
         "123-456",
         suggested_object_id="home",

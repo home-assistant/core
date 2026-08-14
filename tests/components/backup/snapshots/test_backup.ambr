@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_delete_backup[found_backups0-abc123-1-unlink_path0]
+# name: test_delete_backup[available_backups0-abc123-1-unlink_path0]
   dict({
     'id': 1,
     'result': dict({
@@ -10,7 +10,7 @@
     'type': 'result',
   })
 # ---
-# name: test_delete_backup[found_backups1-def456-1-unlink_path1]
+# name: test_delete_backup[available_backups1-def456-1-unlink_path1]
   dict({
     'id': 1,
     'result': dict({
@@ -21,7 +21,7 @@
     'type': 'result',
   })
 # ---
-# name: test_delete_backup[found_backups2-abc123-0-None]
+# name: test_delete_backup[available_backups2-abc123-0-None]
   dict({
     'id': 1,
     'result': dict({
@@ -32,7 +32,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[mock_read_backup]
+# name: test_load_backups[read_backup-available_backups0]
   dict({
     'id': 1,
     'result': dict({
@@ -47,7 +47,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[mock_read_backup].1
+# name: test_load_backups[read_backup-available_backups0].1
   dict({
     'id': 2,
     'result': dict({
@@ -65,7 +65,7 @@
           'agents': dict({
             'backup.local': dict({
               'protected': False,
-              'size': 0,
+              'size': 10240,
             }),
           }),
           'backup_id': 'abc123',
@@ -96,7 +96,7 @@
           'agents': dict({
             'backup.local': dict({
               'protected': False,
-              'size': 1,
+              'size': 10240,
             }),
           }),
           'backup_id': 'def456',
@@ -133,7 +133,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[side_effect1]
+# name: test_load_backups[side_effect1-available_backups0]
   dict({
     'id': 1,
     'result': dict({
@@ -148,7 +148,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[side_effect1].1
+# name: test_load_backups[side_effect1-available_backups0].1
   dict({
     'id': 2,
     'result': dict({
@@ -167,7 +167,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[side_effect2]
+# name: test_load_backups[side_effect2-available_backups0]
   dict({
     'id': 1,
     'result': dict({
@@ -182,7 +182,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[side_effect2].1
+# name: test_load_backups[side_effect2-available_backups0].1
   dict({
     'id': 2,
     'result': dict({
@@ -201,7 +201,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[side_effect3]
+# name: test_load_backups[side_effect3-available_backups0]
   dict({
     'id': 1,
     'result': dict({
@@ -216,7 +216,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[side_effect3].1
+# name: test_load_backups[side_effect3-available_backups0].1
   dict({
     'id': 2,
     'result': dict({
@@ -235,7 +235,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[side_effect4]
+# name: test_load_backups[side_effect4-available_backups0]
   dict({
     'id': 1,
     'result': dict({
@@ -250,7 +250,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[side_effect4].1
+# name: test_load_backups[side_effect4-available_backups0].1
   dict({
     'id': 2,
     'result': dict({

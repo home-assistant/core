@@ -82,7 +82,7 @@ async def test_sensors_disappearing(
         sensor = hass.states.get("sensor.station_a_relative_pressure")
         assert sensor is not None
         assert sensor.state == "unavailable"
-        assert caplog.text.count("Cannot connect to Ambient Network") == 1
+        assert caplog.text.count("Cannot connect to Ambient Network") == 3
 
     # Network comes back. Sensor should start reporting again. Log message
     # should only show up once.

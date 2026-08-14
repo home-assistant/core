@@ -131,7 +131,7 @@ async def test_entities_removed_after_reload(
     hass_storage: dict[str, Any],
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test entities and their registry entry are removed when static info changes after a reload."""
+    """Test entities are removed when static info changes after reload."""
     entity_info = [
         BinarySensorInfo(
             object_id="mybinary_sensor",
@@ -472,7 +472,7 @@ async def test_entity_without_name_device_with_friendly_name(
     hass_storage: dict[str, Any],
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test name and entity_id for a device a friendly name and an entity without a name."""
+    """Test name and entity_id for device with friendly name."""
     entity_info = [
         BinarySensorInfo(
             object_id="mybinary_sensor",
@@ -489,7 +489,7 @@ async def test_entity_without_name_device_with_friendly_name(
         states=states,
         device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
     )
-    state = hass.states.get("binary_sensor.mixer")
+    state = hass.states.get("binary_sensor.the_best_mixer")
     assert state is not None
     assert state.state == STATE_ON
     # Make sure we have set the name to `None` as otherwise
@@ -601,13 +601,13 @@ async def test_entity_id_preserved_on_upgrade_when_in_storage(
         states=states,
         device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
     )
-    state = hass.states.get("binary_sensor.mixer_my")
+    state = hass.states.get("binary_sensor.the_best_mixer_my")
     assert state is not None
     # now rename the entity
     ent_reg_entry = entity_registry.async_get_or_create(
         Platform.BINARY_SENSOR,
         DOMAIN,
-        "11:22:33:44:55:AA-binary_sensor-my",
+        "11:22:33:44:55:AA/0/binary_sensor/my",
     )
     entity_registry.async_update_entity(
         ent_reg_entry.entity_id,
@@ -707,7 +707,7 @@ async def test_entity_assignment_to_sub_device(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test entities are assigned to correct sub devices."""
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Define sub devices
     sub_devices = [
@@ -758,8 +758,9 @@ async def test_entity_assignment_to_sub_device(
     )
 
     # Check main device
-    main_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    main_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address),
+        device.entry.entry_id,
     )
     assert main_device is not None
 
@@ -769,8 +770,8 @@ async def test_entity_assignment_to_sub_device(
     assert main_sensor.device_id == main_device.id
 
     # Check sub device 1 entity
-    sub_device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    sub_device_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
 
@@ -779,8 +780,8 @@ async def test_entity_assignment_to_sub_device(
     assert motion_sensor.device_id == sub_device_1.id
 
     # Check sub device 2 entity
-    sub_device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    sub_device_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
 
@@ -874,8 +875,8 @@ async def test_entity_friendly_names_with_empty_device_names(
     )
 
     # Check entity friendly name on sub-device with empty name
-    # Since sub device has empty name, it falls back to main device name "test"
-    state_1 = hass.states.get("binary_sensor.test_motion_detected")
+    # Since sub device has empty name, it falls back to main device name "Main device"
+    state_1 = hass.states.get("binary_sensor.main_device_motion_detected")
     assert state_1 is not None
     # With has_entity_name, friendly name is "{device_name} {entity_name}"
     # Since sub-device falls back to main device name: "Main Device Motion Detected"
@@ -894,7 +895,7 @@ async def test_entity_friendly_names_with_empty_device_names(
     assert state_3.attributes[ATTR_FRIENDLY_NAME] == "Kitchen Light"
 
     # Test entity on main device
-    state_4 = hass.states.get("binary_sensor.test_main_status")
+    state_4 = hass.states.get("binary_sensor.main_device_main_status")
     assert state_4 is not None
     assert state_4.attributes[ATTR_FRIENDLY_NAME] == "Main Device Main Status"
 
@@ -939,8 +940,9 @@ async def test_entity_switches_between_devices(
     )
 
     # Verify entity is on main device
-    main_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    main_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address),
+        device.entry.entry_id,
     )
     assert main_device is not None
 
@@ -970,8 +972,8 @@ async def test_entity_switches_between_devices(
     await device.mock_connect()
 
     # Verify entity is now on sub device 1
-    sub_device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    sub_device_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
 
@@ -999,8 +1001,8 @@ async def test_entity_switches_between_devices(
     await device.mock_connect()
 
     # Verify entity is now on sub device 2
-    sub_device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    sub_device_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
 
@@ -1050,6 +1052,7 @@ async def test_entity_id_uses_sub_device_name(
     device_info = {
         "devices": sub_devices,
         "name": "main_device",
+        "friendly_name": "Main Device",
     }
 
     # Create entities that belong to different devices
@@ -1122,7 +1125,7 @@ async def test_entity_id_with_empty_sub_device_name(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test entity_id when sub device has empty name (falls back to main device name)."""
+    """Test entity_id when sub device has empty name."""
     # Define sub device with empty name
     sub_devices = [
         SubDeviceInfo(device_id=11111111, name="", area_id=0),  # Empty name
@@ -1131,6 +1134,7 @@ async def test_entity_id_with_empty_sub_device_name(
     device_info = {
         "devices": sub_devices,
         "name": "main_device",
+        "friendly_name": "Main Device",
     }
 
     # Create entity on sub device with empty name
@@ -1159,6 +1163,58 @@ async def test_entity_id_with_empty_sub_device_name(
     assert hass.states.get("binary_sensor.main_device_sensor") is not None
 
 
+async def test_legacy_unique_id_migrated_to_v3_sub_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a legacy sub-device unique id is migrated to the version 3 format."""
+    sub_devices = [
+        SubDeviceInfo(device_id=22222222, name="kitchen_controller", area_id=0),
+    ]
+    device_info = {"name": "test", "devices": sub_devices}
+    entity_info = [
+        BinarySensorInfo(
+            object_id="temperature",
+            key=1,
+            name="Temperature",
+            device_id=22222222,
+        ),
+    ]
+    states = [BinarySensorState(key=1, state=True, missing_state=False)]
+
+    # Seed a registry entry in the legacy format with the @device_id suffix
+    legacy_entry = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        "11:22:33:44:55:AA-binary_sensor-temperature@22222222",
+        suggested_object_id="kitchen_controller_temperature",
+    )
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    entity_entry = entity_registry.async_get(legacy_entry.entity_id)
+    assert entity_entry is not None
+    # The legacy id is renamed to version 3, keeping the same entity
+    assert (
+        entity_entry.unique_id == "11:22:33:44:55:AA/22222222/binary_sensor/Temperature"
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR,
+            DOMAIN,
+            "11:22:33:44:55:AA-binary_sensor-temperature@22222222",
+        )
+        is None
+    )
+
+
 async def test_unique_id_migration_when_entity_moves_between_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1166,7 +1222,7 @@ async def test_unique_id_migration_when_entity_moves_between_devices(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that unique_id is migrated when entity moves between devices while entity_id stays the same."""
+    """Test unique_id is migrated when entity moves between devices."""
     # Initial setup: entity on main device
     device_info = {
         "name": "test",
@@ -1202,8 +1258,8 @@ async def test_unique_id_migration_when_entity_moves_between_devices(
     entity_entry = entity_registry.async_get("binary_sensor.test_temperature")
     assert entity_entry is not None
     initial_unique_id = entity_entry.unique_id
-    # Initial unique_id should not have @device_id suffix since it's on main device
-    assert "@" not in initial_unique_id
+    # Main device entities use device_id 0 in the unique id
+    assert "/0/" in initial_unique_id
 
     # Add sub-device to device info
     sub_devices = [
@@ -1258,8 +1314,8 @@ async def test_unique_id_migration_when_entity_moves_between_devices(
     # Wait for entity to be updated
     await hass.async_block_till_done()
 
-    # The entity_id doesn't change when moving between devices
-    # Only the unique_id gets updated with @device_id suffix
+    # The entity_id doesn't change when moving between devices,
+    # only the device segment of the unique_id changes
     state = hass.states.get("binary_sensor.test_temperature")
     assert state is not None
 
@@ -1267,14 +1323,13 @@ async def test_unique_id_migration_when_entity_moves_between_devices(
     entity_entry = entity_registry.async_get("binary_sensor.test_temperature")
     assert entity_entry is not None
 
-    # Unique ID should have been migrated to include @device_id
-    # This is done by our build_device_unique_id wrapper
-    expected_unique_id = f"{initial_unique_id}@22222222"
+    # Unique ID device segment should now be the sub-device id
+    expected_unique_id = initial_unique_id.replace("/0/", "/22222222/")
     assert entity_entry.unique_id == expected_unique_id
 
     # Entity should now be associated with the sub-device
-    sub_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    sub_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device is not None
     assert entity_entry.device_id == sub_device.id
@@ -1287,7 +1342,7 @@ async def test_unique_id_migration_sub_device_to_main_device(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that unique_id is migrated when entity moves from sub-device to main device."""
+    """Test unique_id is migrated when entity moves to main device."""
     # Initial setup: entity on sub-device
     sub_devices = [
         SubDeviceInfo(device_id=22222222, name="kitchen_controller", area_id=0),
@@ -1329,8 +1384,8 @@ async def test_unique_id_migration_sub_device_to_main_device(
     )
     assert entity_entry is not None
     initial_unique_id = entity_entry.unique_id
-    # Initial unique_id should have @device_id suffix since it's on sub-device
-    assert "@22222222" in initial_unique_id
+    # Sub-device entities carry the sub-device id in the unique id
+    assert "/22222222/" in initial_unique_id
 
     # Update entity info - move to main device
     new_entity_info = [
@@ -1363,13 +1418,14 @@ async def test_unique_id_migration_sub_device_to_main_device(
     )
     assert entity_entry is not None
 
-    # Unique ID should have been migrated to remove @device_id suffix
-    expected_unique_id = initial_unique_id.replace("@22222222", "")
+    # Unique ID device segment should now be the main device id 0
+    expected_unique_id = initial_unique_id.replace("/22222222/", "/0/")
     assert entity_entry.unique_id == expected_unique_id
 
     # Entity should now be associated with the main device
-    main_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    main_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address),
+        device.entry.entry_id,
     )
     assert main_device is not None
     assert entity_entry.device_id == main_device.id
@@ -1425,8 +1481,8 @@ async def test_unique_id_migration_between_sub_devices(
     )
     assert entity_entry is not None
     initial_unique_id = entity_entry.unique_id
-    # Initial unique_id should have @22222222 suffix
-    assert "@22222222" in initial_unique_id
+    # Sub-device entities carry the sub-device id in the unique id
+    assert "/22222222/" in initial_unique_id
 
     # Update entity info - move to second sub-device
     new_entity_info = [
@@ -1459,13 +1515,13 @@ async def test_unique_id_migration_between_sub_devices(
     )
     assert entity_entry is not None
 
-    # Unique ID should have been migrated from @22222222 to @33333333
-    expected_unique_id = initial_unique_id.replace("@22222222", "@33333333")
+    # Unique ID device segment should have moved from 22222222 to 33333333
+    expected_unique_id = initial_unique_id.replace("/22222222/", "/33333333/")
     assert entity_entry.unique_id == expected_unique_id
 
     # Entity should now be associated with the second sub-device
-    bedroom_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+    bedroom_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_33333333"), device.entry.entry_id
     )
     assert bedroom_device is not None
     assert entity_entry.device_id == bedroom_device.id
@@ -1478,7 +1534,7 @@ async def test_entity_device_id_rename_in_yaml(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that entities are re-added as new when user renames device_id in YAML config."""
+    """Test entities re-added when user renames device_id in YAML."""
     # Initial setup: entity on sub-device with device_id 11111111
     sub_devices = [
         SubDeviceInfo(device_id=11111111, name="old_device", area_id=0),
@@ -1522,8 +1578,8 @@ async def test_entity_device_id_rename_in_yaml(
     entity_entry = entity_registry.async_get("binary_sensor.old_device_sensor")
     assert entity_entry is not None
     initial_unique_id = entity_entry.unique_id
-    # Should have @11111111 suffix
-    assert "@11111111" in initial_unique_id
+    # Sub-device entities carry the sub-device id in the unique id
+    assert "/11111111/" in initial_unique_id
 
     # Simulate user renaming device_id in YAML config
     # The device_id hash changes from 11111111 to 99999999
@@ -1585,14 +1641,13 @@ async def test_entity_device_id_rename_in_yaml(
     entity_entry = entity_registry.async_get("binary_sensor.renamed_device_sensor")
     assert entity_entry is not None
 
-    # Unique ID should have the new device_id
-    base_unique_id = initial_unique_id.replace("@11111111", "")
-    expected_unique_id = f"{base_unique_id}@99999999"
+    # Unique ID device segment should have the new device_id
+    expected_unique_id = initial_unique_id.replace("/11111111/", "/99999999/")
     assert entity_entry.unique_id == expected_unique_id
 
     # Entity should be associated with the new device
-    renamed_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_99999999")}
+    renamed_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_99999999"), device.entry.entry_id
     )
     assert renamed_device is not None
     assert entity_entry.device_id == renamed_device.id

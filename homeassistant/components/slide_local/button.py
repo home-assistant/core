@@ -1,6 +1,6 @@
 """Support for Slide button."""
 
-from __future__ import annotations
+from typing import override
 
 from goslideapi.goslideapi import (
     AuthenticationFailed,
@@ -45,6 +45,7 @@ class SlideButton(SlideEntity, ButtonEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.data['mac']}-calibrate"
 
+    @override
     async def async_press(self) -> None:
         """Send out a calibrate command."""
         try:

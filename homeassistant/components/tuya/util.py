@@ -1,104 +1,92 @@
 """Utility methods for the Tuya integration."""
 
-from __future__ import annotations
-
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice
 
+from homeassistant.const import UnitOfTemperature
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, DPCode, DPType
+from .const import CELSIUS_ALIASES, DOMAIN, FAHRENHEIT_ALIASES, DPCode
 
-_DPTYPE_MAPPING: dict[str, DPType] = {
-    "bitmap": DPType.BITMAP,
-    "bool": DPType.BOOLEAN,
-    "enum": DPType.ENUM,
-    "json": DPType.JSON,
-    "raw": DPType.RAW,
-    "string": DPType.STRING,
-    "value": DPType.INTEGER,
+_TEMP_UNIT_CONVERT_MAPPING = {
+    "c": UnitOfTemperature.CELSIUS,
+    "f": UnitOfTemperature.FAHRENHEIT,
 }
 
 
-def get_dpcode(
-    device: CustomerDevice, dpcodes: str | DPCode | tuple[DPCode, ...] | None
-) -> DPCode | None:
-    """Get the first matching DPCode from the device or return None."""
-    if dpcodes is None:
-        return None
+def get_temperature_unit(
+    device: CustomerDevice, dpcode_uom: str | None
+) -> UnitOfTemperature | None:
+    """Convert the DPCode unit of measurement to a temperature unit."""
+    if not dpcode_uom:
+        return get_device_temp_unit_convert(device)
 
-    if isinstance(dpcodes, DPCode):
-        dpcodes = (dpcodes,)
-    elif isinstance(dpcodes, str):
-        dpcodes = (DPCode(dpcodes),)
-
-    for dpcode in dpcodes:
-        if (
-            dpcode in device.function
-            or dpcode in device.status
-            or dpcode in device.status_range
-        ):
-            return dpcode
-
+    dpcode_uom = dpcode_uom.lower()
+    if dpcode_uom in CELSIUS_ALIASES:
+        return UnitOfTemperature.CELSIUS
+    if dpcode_uom in FAHRENHEIT_ALIASES:
+        return UnitOfTemperature.FAHRENHEIT
     return None
 
 
-def get_dptype(
-    device: CustomerDevice, dpcode: DPCode | None, *, prefer_function: bool = False
-) -> DPType | None:
-    """Find a matching DPType type information for this device DPCode."""
-    if dpcode is None:
-        return None
-
-    lookup_tuple = (
-        (device.function, device.status_range)
-        if prefer_function
-        else (device.status_range, device.function)
-    )
-
-    for device_specs in lookup_tuple:
-        if current_definition := device_specs.get(dpcode):
-            current_type = current_definition.type
-            try:
-                return DPType(current_type)
-            except ValueError:
-                # Sometimes, we get ill-formed DPTypes from the cloud,
-                # this fixes them and maps them to the correct DPType.
-                return _DPTYPE_MAPPING.get(current_type)
-
+def get_device_temp_unit_convert(device: CustomerDevice) -> UnitOfTemperature | None:
+    """Return the temperature unit from TEMP_UNIT_CONVERT, or None if unrecognised."""
+    if temp_unit_convert := device.status.get(DPCode.TEMP_UNIT_CONVERT):
+        return _TEMP_UNIT_CONVERT_MAPPING.get(temp_unit_convert)
     return None
-
-
-def remap_value(
-    value: float,
-    from_min: float = 0,
-    from_max: float = 255,
-    to_min: float = 0,
-    to_max: float = 255,
-    reverse: bool = False,
-) -> float:
-    """Remap a value from its current range, to a new range."""
-    if reverse:
-        value = from_max - value + from_min
-    return ((value - from_min) / (from_max - from_min)) * (to_max - to_min) + to_min
 
 
 class ActionDPCodeNotFoundError(ServiceValidationError):
     """Custom exception for action DP code not found errors."""
 
     def __init__(
-        self, device: CustomerDevice, expected: str | DPCode | tuple[DPCode, ...] | None
+        self, device: CustomerDevice, expected: str | tuple[str, ...] | None
     ) -> None:
         """Initialize the error with device and expected DP codes."""
         if expected is None:
             expected = ()  # empty tuple for no expected codes
-        elif isinstance(expected, str):
-            expected = (DPCode(expected),)
+        elif not isinstance(expected, tuple):
+            expected = (expected,)
 
         super().__init__(
             translation_domain=DOMAIN,
             translation_key="action_dpcode_not_found",
             translation_placeholders={
-                "expected": str(sorted([dp.value for dp in expected])),
+                "expected": str(
+                    sorted(
+                        [dp.value if isinstance(dp, DPCode) else dp for dp in expected]
+                    )
+                ),
                 "available": str(sorted(device.function.keys())),
             },
         )
+
+
+def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceInfo:
+    """Get device info."""
+    manufacturer = "Tuya"
+    model: str | None = device.product_name
+    model_id: str | None = device.product_id
+
+    if initial:
+        # Note: the model is overridden via entity.device_info property
+        # when the entity is created. If no entities are generated, it will
+        # stay as unsupported
+        model = f"{device.product_name} (unsupported)"
+
+    if (
+        quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)
+    ) and quirk.manufacturer:
+        # If the manufacturer is not set, we cannot trust the model/model_id
+        manufacturer = quirk.manufacturer
+        model = quirk.model
+        model_id = quirk.model_id
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, device.id)},
+        manufacturer=manufacturer,
+        name=device.name,
+        model=model,
+        model_id=model_id,
+    )

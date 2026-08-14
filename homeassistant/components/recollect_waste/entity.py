@@ -1,26 +1,23 @@
 """Define a base ReCollect Waste entity."""
 
-from aiorecollect.client import PickupEvent
+from typing import override
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN
+from .coordinator import RecollectWasteConfigEntry, ReCollectWasteDataUpdateCoordinator
 
 
-class ReCollectWasteEntity(CoordinatorEntity[DataUpdateCoordinator[list[PickupEvent]]]):
+class ReCollectWasteEntity(CoordinatorEntity[ReCollectWasteDataUpdateCoordinator]):
     """Define a base ReCollect Waste entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[PickupEvent]],
-        entry: ConfigEntry,
+        coordinator: ReCollectWasteDataUpdateCoordinator,
+        entry: RecollectWasteConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -36,6 +33,7 @@ class ReCollectWasteEntity(CoordinatorEntity[DataUpdateCoordinator[list[PickupEv
         self._attr_extra_state_attributes = {}
         self._entry = entry
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()

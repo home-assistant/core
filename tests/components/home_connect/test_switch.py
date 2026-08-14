@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohomeconnect.model import (
     ArrayOfEvents,
     ArrayOfSettings,
+    Event,
     EventMessage,
     EventType,
     GetSetting,
@@ -31,11 +32,13 @@ from homeassistant.components.home_connect.const import (
     BSH_POWER_ON,
     BSH_POWER_STANDBY,
     DOMAIN,
+    EventKey,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_RESTORED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -51,7 +54,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.SWITCH]
 
@@ -66,11 +69,13 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert entity_entries
@@ -86,7 +91,9 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert not device
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
@@ -103,7 +110,9 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     for entity_entry in entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id)
 
@@ -150,7 +159,9 @@ async def test_connected_devices(
     assert config_entry.state is ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     for key in keys_to_check:
         assert not entity_registry.async_get_entity_id(
@@ -187,11 +198,22 @@ async def test_switch_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if switch entities availability are based on the appliance connection state."""
+    """Test switch entities availability based on appliance connection."""
     entity_ids = [
         "switch.dishwasher_power",
         "switch.dishwasher_child_lock",
+        "switch.dishwasher_half_load",
     ]
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_HALF_LOAD, "Boolean"
+                )
+            ],
+        )
+    )
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -609,7 +631,7 @@ async def test_power_switch_service_validation_errors(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     exception_match: str,
     entity_id: str,
-    allowed_values: list[str | None] | None | HomeConnectError,
+    allowed_values: list[str | None] | HomeConnectError | None,
     service: str,
 ) -> None:
     """Test power switch functionality validation errors."""
@@ -735,3 +757,172 @@ async def test_options_functionality(
         "value": True,
     }
     assert hass.states.is_state(entity_id, STATE_ON)
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+async def test_options_unavailable_when_option_is_missing(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test that option entities become unavailable when the option is missing."""
+    entity_id = "switch.dishwasher_half_load"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_HALF_LOAD, "Boolean"
+                )
+            ],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            options=[],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            0,
+                            level="info",
+                            handling="auto",
+                            value=ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    "event_key",
+    [
+        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+    ],
+)
+async def test_options_available_when_program_is_null(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    event_key: EventKey,
+) -> None:
+    """Test that option entities still available when the active program becomes null.
+
+    This can happen when the appliance starts or finish the program; the appliance first
+    updates the non-null program, and then the null program value.
+    This test ensures that the options defined by the non-null program are not removed
+    from the coordinator and therefore, the entities remain available.
+    """
+    entity_id = "switch.dishwasher_half_load"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_HALF_LOAD, "Boolean"
+                )
+            ],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            event_key,
+                            event_key.value,
+                            0,
+                            level="info",
+                            handling="auto",
+                            value=None,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+async def test_restore_option_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test restoration of option entities when program options are missing.
+
+    This test ensures that number entities representing options are restored
+    to the entity registry and set to unavailable if the current available
+    program does not include them, but they existed previously.
+    """
+    entity_id = "switch.dishwasher_half_load"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[],
+        )
+    )
+
+    entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"{appliance.ha_id}-{OptionKey.DISHCARE_DISHWASHER_HALF_LOAD}",
+        suggested_object_id="dishwasher_half_load",
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert not state.attributes.get(ATTR_RESTORED)

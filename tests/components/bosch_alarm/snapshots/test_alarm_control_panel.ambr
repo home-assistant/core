@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_alarm_control_panel[None-amax_3000][alarm_control_panel.area1-entry]
+# name: test_alarm_control_panel[amax_3000-None][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -34,14 +36,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_control_panel[None-amax_3000][alarm_control_panel.area1-state]
+# name: test_alarm_control_panel[amax_3000-None][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': None,
-      'code_arm_required': False,
-      'code_format': None,
-      'friendly_name': 'Area1',
-      'supported_features': <AlarmControlPanelEntityFeature: 3>,
+      <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+      <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+      <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <AlarmControlPanelEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'alarm_control_panel.area1',
@@ -51,10 +53,11 @@
     'state': 'disarmed',
   })
 # ---
-# name: test_alarm_control_panel[None-b5512][alarm_control_panel.area1-entry]
+# name: test_alarm_control_panel[b5512-None][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -72,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -86,14 +90,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_control_panel[None-b5512][alarm_control_panel.area1-state]
+# name: test_alarm_control_panel[b5512-None][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': None,
-      'code_arm_required': False,
-      'code_format': None,
-      'friendly_name': 'Area1',
-      'supported_features': <AlarmControlPanelEntityFeature: 3>,
+      <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+      <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+      <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <AlarmControlPanelEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'alarm_control_panel.area1',
@@ -103,10 +107,11 @@
     'state': 'disarmed',
   })
 # ---
-# name: test_alarm_control_panel[None-solution_3000][alarm_control_panel.area1-entry]
+# name: test_alarm_control_panel[solution_3000-None][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -124,6 +129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -138,14 +144,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_control_panel[None-solution_3000][alarm_control_panel.area1-state]
+# name: test_alarm_control_panel[solution_3000-None][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': None,
-      'code_arm_required': False,
-      'code_format': None,
-      'friendly_name': 'Area1',
-      'supported_features': <AlarmControlPanelEntityFeature: 3>,
+      <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+      <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+      <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <AlarmControlPanelEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'alarm_control_panel.area1',

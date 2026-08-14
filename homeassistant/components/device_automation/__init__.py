@@ -1,7 +1,5 @@
 """Helpers for device automations."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass
@@ -164,7 +162,8 @@ async def async_get_device_automation_platform(
 ) -> DeviceAutomationPlatformType:
     """Load device automation platform for integration.
 
-    Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
+    Throws InvalidDeviceAutomationConfig if the integration is not found
+    or does not support device automation.
     """
     platform_name = automation_type.value.section
     try:
@@ -311,7 +310,7 @@ async def _async_get_device_automation_capabilities(
 
     try:
         capabilities = await getattr(platform, function_name)(hass, automation)
-    except (EntityNotFound, InvalidDeviceAutomationConfig):
+    except EntityNotFound, InvalidDeviceAutomationConfig:
         return {}
 
     capabilities = capabilities.copy()

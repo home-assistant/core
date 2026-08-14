@@ -1,12 +1,11 @@
 """Config flow for the Home Assistant Yellow integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, final
+from typing import TYPE_CHECKING, Any, Protocol, final, override
 
+from universal_silabs_flasher.flasher import YellowFlasher
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
@@ -25,7 +24,6 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
-    ResetTarget,
     probe_silabs_firmware_info,
 )
 from homeassistant.config_entries import (
@@ -82,7 +80,8 @@ else:
 class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Yellow firmware methods."""
 
-    BOOTLOADER_RESET_METHODS = [ResetTarget.YELLOW]
+    ZIGBEE_BAUDRATE = 115200
+    _flasher_cls = YellowFlasher
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -127,6 +126,7 @@ class HomeAssistantYellowConfigFlow(
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
@@ -146,7 +146,10 @@ class HomeAssistantYellowConfigFlow(
         assert self._device is not None
 
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
-        self._probed_firmware_info = await probe_silabs_firmware_info(self._device)
+        self._probed_firmware_info = await probe_silabs_firmware_info(
+            self._device,
+            flasher_cls=self._flasher_cls,
+        )
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
         if (
@@ -162,6 +165,7 @@ class HomeAssistantYellowConfigFlow(
 
         return self._async_flow_finished()
 
+    @override
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
         return self.async_create_entry(
@@ -273,6 +277,7 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
 ):
     """Handle a multi-PAN options flow for Home Assistant Yellow."""
 
+    @override
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the main menu."""
         return self.async_show_menu(
@@ -291,6 +296,7 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
             self, user_input
         )
 
+    @override
     async def _async_serial_port_settings(
         self,
     ) -> MultiprotocolSerialPortSettings:
@@ -301,6 +307,7 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
             flow_control=True,
         )
 
+    @override
     async def _async_zha_physical_discovery(self) -> dict[str, Any]:
         """Return ZHA discovery data when multiprotocol FW is not used.
 
@@ -309,14 +316,33 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
         """
         return {"hw": ZHA_HW_DISCOVERY_DATA}
 
+    @override
     def _zha_name(self) -> str:
         """Return the ZHA name."""
         return "Yellow Multiprotocol"
 
+    @override
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
         return BOARD_NAME
 
+    @override
+    def _firmware_update_url(self) -> str:
+        """Return the firmware update manifest URL."""
+        return NABU_CASA_FIRMWARE_RELEASES_URL
+
+    @override
+    def _zigbee_firmware_type(self) -> str:
+        """Return the zigbee firmware type identifier."""
+        return "yellow_zigbee_ncp"
+
+    @property
+    @override
+    def _flasher_cls(self) -> type:
+        """Return the hardware-specific flasher class."""
+        return YellowFlasher  # type: ignore[no-any-return]
+
+    @override
     async def async_step_flashing_complete(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -357,6 +383,7 @@ class HomeAssistantYellowOptionsFlowHandler(
         # Regenerate the translation placeholders
         self._get_translation_placeholders()
 
+    @override
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the main menu."""
         return self.async_show_menu(
@@ -373,6 +400,7 @@ class HomeAssistantYellowOptionsFlowHandler(
         """Handle firmware configuration settings."""
         return await super().async_step_pick_firmware()
 
+    @override
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._probed_firmware_info is not None

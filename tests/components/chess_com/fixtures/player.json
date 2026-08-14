@@ -1,0 +1,17 @@
+{
+  "avatar": "https://images.chesscomfiles.com/uploads/v1/user/532748851.d5fefa92.200x200o.da2274e46acd.jpg",
+  "player_id": 532748851,
+  "@id": "https://api.chess.com/pub/player/joostlek",
+  "url": "https://www.chess.com/member/joostlek",
+  "name": "Joost",
+  "username": "joostlek",
+  "followers": 2,
+  "country": "https://api.chess.com/pub/country/NL",
+  "location": "Utrecht",
+  "last_online": 1772800379,
+  "joined": 1771584494,
+  "status": "basic",
+  "is_streamer": false,
+  "verified": false,
+  "streaming_platforms": []
+}

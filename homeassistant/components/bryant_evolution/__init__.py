@@ -1,7 +1,5 @@
 """The Bryant Evolution integration."""
 
-from __future__ import annotations
-
 import logging
 
 from evolutionhttp import BryantEvolutionLocalClient
@@ -37,7 +35,7 @@ async def async_setup_entry(
     # Add a device for the SAM itself.
     sam_uid = names.sam_device_uid(entry)
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    sam_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, sam_uid)},
         manufacturer="Bryant",
@@ -48,7 +46,8 @@ async def async_setup_entry(
     for sys_id in (1, 2):
         if not any(sz[0] == sys_id for sz in entry.data[CONF_SYSTEM_ZONE]):
             _LOGGER.debug(
-                "Skipping system %s because it is not configured for this integration: %s",
+                "Skipping system %s because it is not configured"
+                " for this integration: %s",
                 sys_id,
                 entry.data[CONF_SYSTEM_ZONE],
             )
@@ -56,7 +55,7 @@ async def async_setup_entry(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, names.system_device_uid(sam_uid, sys_id))},
-            via_device=(DOMAIN, names.sam_device_uid(entry)),
+            via_device_id=sam_device.id,
             manufacturer="Bryant",
             name=f"System {sys_id}",
         )

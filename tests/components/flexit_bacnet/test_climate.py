@@ -4,6 +4,8 @@ import asyncio
 from unittest.mock import AsyncMock
 
 from flexit_bacnet import (
+    OPERATION_MODE_COOKER_HOOD,
+    OPERATION_MODE_TEMPORARY_HIGH,
     VENTILATION_MODE_AWAY,
     VENTILATION_MODE_HOME,
     VENTILATION_MODE_STOP,
@@ -15,6 +17,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
+    DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_HOME,
     SERVICE_SET_HVAC_MODE,
@@ -23,7 +26,10 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.flexit_bacnet.const import PRESET_TO_VENTILATION_MODE_MAP
+from homeassistant.components.flexit_bacnet.const import (
+    PRESET_HIGH,
+    PRESET_TO_VENTILATION_MODE_MAP,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -59,8 +65,9 @@ async def test_set_hvac_preset_mode(
 
     # Set preset mode to away
     mock_flexit_bacnet.ventilation_mode = VENTILATION_MODE_AWAY
+    mock_flexit_bacnet.operation_mode = 2  # OPERATION_MODE_AWAY
     await hass.services.async_call(
-        Platform.CLIMATE,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -78,8 +85,9 @@ async def test_set_hvac_preset_mode(
 
     # Set preset mode to home
     mock_flexit_bacnet.ventilation_mode = VENTILATION_MODE_HOME
+    mock_flexit_bacnet.operation_mode = 3  # OPERATION_MODE_HOME
     await hass.services.async_call(
-        Platform.CLIMATE,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -98,7 +106,7 @@ async def test_set_hvac_preset_mode(
     mock_flexit_bacnet.set_ventilation_mode.side_effect = asyncio.TimeoutError
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
@@ -121,8 +129,9 @@ async def test_set_hvac_mode(
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     mock_flexit_bacnet.ventilation_mode = VENTILATION_MODE_STOP
+    mock_flexit_bacnet.operation_mode = 1  # OPERATION_MODE_OFF
     await hass.services.async_call(
-        Platform.CLIMATE,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
         blocking=True,
@@ -137,7 +146,7 @@ async def test_set_hvac_mode(
     mock_flexit_bacnet.set_ventilation_mode.side_effect = asyncio.TimeoutError
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
             blocking=True,
@@ -180,7 +189,7 @@ async def test_set_temperature(
     # Set ventilation mode to HOME and set temperature to 22.5°C
     mock_flexit_bacnet.ventilation_mode = VENTILATION_MODE_HOME
     await hass.services.async_call(
-        Platform.CLIMATE,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -195,7 +204,7 @@ async def test_set_temperature(
     # Change ventilation mode to AWAY and set temperature
     mock_flexit_bacnet.ventilation_mode = VENTILATION_MODE_AWAY
     await hass.services.async_call(
-        Platform.CLIMATE,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -211,7 +220,7 @@ async def test_set_temperature(
     mock_flexit_bacnet.set_air_temp_setpoint_away.side_effect = ConnectionError
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
@@ -219,3 +228,27 @@ async def test_set_temperature(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("operation_mode", "expected_preset"),
+    [
+        pytest.param(OPERATION_MODE_TEMPORARY_HIGH, PRESET_HIGH, id="temporary_high"),
+        pytest.param(OPERATION_MODE_COOKER_HOOD, PRESET_HIGH, id="cooker_hood"),
+    ],
+)
+async def test_transient_operation_modes(
+    hass: HomeAssistant,
+    mock_flexit_bacnet: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    operation_mode: int,
+    expected_preset: str,
+) -> None:
+    """Test that transient operation modes report the correct preset."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    mock_flexit_bacnet.operation_mode = operation_mode
+    await entity_component.async_update_entity(hass, ENTITY_ID)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_PRESET_MODE] == expected_preset

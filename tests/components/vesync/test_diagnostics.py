@@ -72,8 +72,8 @@ async def test_async_get_device_diagnostics__single_fan(
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "fan")},
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "fan"), config_entry.entry_id
     )
     assert device is not None
 
@@ -86,33 +86,10 @@ async def test_async_get_device_diagnostics__single_fan(
     assert diag == snapshot(
         matcher=path_type(
             {
-                "home_assistant.entities.0.state.last_changed": (str,),
-                "home_assistant.entities.0.state.last_reported": (str,),
-                "home_assistant.entities.0.state.last_updated": (str,),
-                "home_assistant.entities.1.state.last_changed": (str,),
-                "home_assistant.entities.1.state.last_reported": (str,),
-                "home_assistant.entities.1.state.last_updated": (str,),
-                "home_assistant.entities.2.state.last_changed": (str,),
-                "home_assistant.entities.2.state.last_reported": (str,),
-                "home_assistant.entities.2.state.last_updated": (str,),
-                "home_assistant.entities.3.state.last_changed": (str,),
-                "home_assistant.entities.3.state.last_reported": (str,),
-                "home_assistant.entities.3.state.last_updated": (str,),
-                "home_assistant.entities.4.state.last_changed": (str,),
-                "home_assistant.entities.4.state.last_reported": (str,),
-                "home_assistant.entities.4.state.last_updated": (str,),
-                "home_assistant.entities.5.state.last_changed": (str,),
-                "home_assistant.entities.5.state.last_reported": (str,),
-                "home_assistant.entities.5.state.last_updated": (str,),
-                "home_assistant.entities.6.state.last_changed": (str,),
-                "home_assistant.entities.6.state.last_reported": (str,),
-                "home_assistant.entities.6.state.last_updated": (str,),
-                "home_assistant.entities.7.state.last_changed": (str,),
-                "home_assistant.entities.7.state.last_reported": (str,),
-                "home_assistant.entities.7.state.last_updated": (str,),
-                "home_assistant.entities.8.state.last_updated": (str,),
-                "home_assistant.entities.8.state.last_changed": (str,),
-                "home_assistant.entities.8.state.last_reported": (str,),
-            }
+                r".*\.last_changed$": (str,),
+                r".*\.last_updated$": (str,),
+                r".*\.last_reported$": (str,),
+            },
+            regex=True,
         )
     )

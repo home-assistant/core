@@ -16,7 +16,7 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_UPDATE_PERCENTAGE,
-    DOMAIN as PLATFORM,
+    DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
@@ -113,7 +113,7 @@ async def test_update_firmware(
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -167,7 +167,7 @@ async def test_update_zigbee2_firmware(
     assert state.attributes[ATTR_LATEST_VERSION] == "20240716"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -212,7 +212,7 @@ async def test_update_legacy_firmware_v2(
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -253,7 +253,7 @@ async def test_update_firmware_failed(
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -300,7 +300,7 @@ async def test_update_reboot_timeout(
         ),
     ):
         await hass.services.async_call(
-            PLATFORM,
+            UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: entity_id},
             blocking=False,
@@ -391,3 +391,40 @@ async def test_update_blank_release_notes(
     result = await ws_client.receive_json()
     await hass.async_block_till_done()
     assert result["result"] is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_ultima_client")
+async def test_zwave_update_naming(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test Z-Wave radio (index 2) update entity naming."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("update.mock_title_z_wave_firmware")
+    assert state is not None
+    assert state.name == "Mock Title Z-Wave firmware"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_zwave_update_naming_mr10(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test Z-Wave radio (index 1) update entity naming for MR10/MRW10."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        MAC="AA:BB:CC:DD:EE:FF",
+        model="SLZB-MRW10",
+        u_device=True,
+        radios=[
+            Radio(zb_type=0, chip_index=0),
+            Radio(zb_type=5, chip_index=1),
+        ],
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("update.mock_title_z_wave_firmware")
+    assert state is not None
+    assert state.name == "Mock Title Z-Wave firmware"

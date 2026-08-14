@@ -1,7 +1,5 @@
 """The tests for RFXCOM RFXtrx device actions."""
 
-from __future__ import annotations
-
 from typing import Any, NamedTuple
 
 import pytest
@@ -24,17 +22,17 @@ class DeviceTestData(NamedTuple):
     """Test data linked to a device."""
 
     code: str
-    device_identifiers: set[tuple[str, str, str, str]]
+    device_identifier: tuple[str, str, str, str]
 
 
-DEVICE_LIGHTING_1 = DeviceTestData("0710002a45050170", {("rfxtrx", "10", "0", "E5")})
+DEVICE_LIGHTING_1 = DeviceTestData("0710002a45050170", ("rfxtrx", "10", "0", "E5"))
 
 DEVICE_BLINDS_1 = DeviceTestData(
-    "09190000009ba8010100", {("rfxtrx", "19", "0", "009ba8:1")}
+    "09190000009ba8010100", ("rfxtrx", "19", "0", "009ba8:1")
 )
 
 DEVICE_TEMPHUM_1 = DeviceTestData(
-    "0a52080705020095220269", {("rfxtrx", "52", "8", "05:02")}
+    "0a52080705020095220269", ("rfxtrx", "52", "8", "05:02")
 )
 
 
@@ -42,21 +40,26 @@ DEVICE_TEMPHUM_1 = DeviceTestData(
 async def test_device_test_data(rfxtrx, device: DeviceTestData) -> None:
     """Verify that our testing data remains correct."""
     pkt: RFXtrx.lowlevel.Packet = RFXtrx.lowlevel.parse(bytearray.fromhex(device.code))
-    assert device.device_identifiers == {
-        ("rfxtrx", f"{pkt.packettype:x}", f"{pkt.subtype:x}", pkt.id_string)
-    }
+    assert device.device_identifier == (
+        "rfxtrx",
+        f"{pkt.packettype:x}",
+        f"{pkt.subtype:x}",
+        pkt.id_string,
+    )
 
 
-async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> None:
+async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> MockConfigEntry:
     """Construct a config setup."""
     entry_data = create_rfx_test_cfg(devices=devices)
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
     await hass.async_start()
+
+    return mock_entry
 
 
 def _get_expected_actions(data):
@@ -85,20 +88,22 @@ async def test_get_actions(
     expected,
 ) -> None:
     """Test we get the expected actions from a rfxtrx."""
-    await setup_entry(hass, {device.code: {}})
+    mock_entry = await setup_entry(hass, {device.code: {}})
 
-    device_entry = device_registry.async_get_device(
-        identifiers=device.device_identifiers
+    device_entry = device_registry.async_get_device_by_identifier(
+        device.device_identifier, mock_entry.entry_id
     )
     assert device_entry
 
     # Add alternate identifiers, to make sure we can handle future formats
     identifiers: list[str] = list(*device_entry.identifiers)
     device_registry.async_update_device(
-        device_entry.id, merge_identifiers={(identifiers[0], "_".join(identifiers[1:]))}
+        device_entry.id,
+        new_identifiers=device_entry.identifiers
+        | {(identifiers[0], "_".join(identifiers[1:]))},
     )
-    device_entry = device_registry.async_get_device(
-        identifiers=device.device_identifiers
+    device_entry = device_registry.async_get_device_by_identifier(
+        device.device_identifier, mock_entry.entry_id
     )
     assert device_entry
 
@@ -145,10 +150,10 @@ async def test_action(
 ) -> None:
     """Test for actions."""
 
-    await setup_entry(hass, {device.code: {}})
+    mock_entry = await setup_entry(hass, {device.code: {}})
 
-    device_entry = device_registry.async_get_device(
-        identifiers=device.device_identifiers
+    device_entry = device_registry.async_get_device_by_identifier(
+        device.device_identifier, mock_entry.entry_id
     )
     assert device_entry
 
@@ -186,10 +191,11 @@ async def test_invalid_action(
     """Test for invalid actions."""
     device = DEVICE_LIGHTING_1
 
-    await setup_entry(hass, {device.code: {}})
+    mock_entry = await setup_entry(hass, {device.code: {}})
 
-    device_identifiers: Any = device.device_identifiers
-    device_entry = device_registry.async_get_device(identifiers=device_identifiers)
+    device_entry = device_registry.async_get_device_by_identifier(
+        device.device_identifier, mock_entry.entry_id
+    )
     assert device_entry
 
     assert await async_setup_component(

@@ -7,17 +7,18 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "id_missing": "This Samsung device doesn't have a serial number to identify it.",
       "not_supported": "This Samsung device is currently not supported.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]",
-      "invalid_host": "Host is invalid, please try again.",
-      "invalid_pin": "PIN is invalid, please try again."
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_pin": "The PIN is invalid. Please try again."
     },
     "flow_title": "{device}",
     "step": {
       "confirm": {
-        "description": "Do you want to set up {device}? If you never connected Home Assistant before you should see a popup on your TV asking for authorization."
+        "description": "Do you want to set up {device}? If you have never connected Home Assistant before, you should see a popup on your TV asking for authorization."
       },
       "encrypted_pairing": {
         "data": {
@@ -43,6 +44,15 @@
         },
         "description": "[%key:component::samsungtv::config::step::encrypted_pairing::description%]"
       },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::samsungtv::config::step::user::data_description::host%]"
+        },
+        "description": "Update the hostname or IP address of your Samsung TV."
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -52,7 +62,7 @@
           "host": "The hostname or IP address of your TV.",
           "name": "The name of your TV. This will be used to identify the device in Home Assistant."
         },
-        "description": "Enter your Samsung TV information. If you never connected Home Assistant before you should see a popup on your TV asking for authorization."
+        "description": "Enter your Samsung TV information. If you have never connected Home Assistant before, you should see a popup on your TV asking for authorization."
       }
     }
   },
@@ -71,6 +81,12 @@
     "error_set_volume": {
       "message": "Unable to set volume level on {host}: {error}"
     },
+    "invalid_device": {
+      "message": "Device with ID {device_id} is invalid or not found."
+    },
+    "media_id_invalid": {
+      "message": "Media ID must be a positive integer."
+    },
     "service_unsupported": {
       "message": "Entity {entity} does not support this action."
     },
@@ -79,6 +95,12 @@
     },
     "unhandled_trigger_type": {
       "message": "Unhandled trigger type {trigger_type}."
+    }
+  },
+  "issues": {
+    "deprecated_implicit_wake_on_lan": {
+      "description": "Implicit Wake-On-LAN is deprecated and will be removed in a future version of Home Assistant. Please create an explicit Wake-On-LAN automation to turn on your TV, targeting MAC address `{mac_address}`.\n\nFor more information, see the [Wake-On-LAN documentation]({wol_documentation_url}).",
+      "title": "Implicit Wake-On-LAN is deprecated"
     }
   }
 }

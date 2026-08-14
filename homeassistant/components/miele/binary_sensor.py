@@ -1,11 +1,9 @@
 """Binary sensor platform for Miele integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Final, cast
+from typing import Final, cast, override
 
 from pymiele import MieleDevice
 
@@ -264,7 +262,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the binary sensor platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     added_devices: set[str] = set()
 
     def _async_add_new_devices() -> None:
@@ -290,6 +288,7 @@ class MieleBinarySensor(MieleEntity, BinarySensorEntity):
     entity_description: MieleBinarySensorDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return cast(bool, self.entity_description.value_fn(self.device))

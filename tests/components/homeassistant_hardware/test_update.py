@@ -1,16 +1,20 @@
 """Test Home Assistant Hardware firmware update entity."""
 
-from __future__ import annotations
-
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Sequence
+from collections.abc import AsyncGenerator, Callable
 import dataclasses
 import logging
 from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
+from universal_silabs_flasher.flasher import DeviceSpecificFlasher, Zbt1Flasher
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.components.homeassistant_hardware import DOMAIN
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -27,7 +31,6 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
     OwningIntegration,
-    ResetTarget,
 )
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -173,7 +176,7 @@ async def mock_async_setup_update_entities(
 class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Mock SkyConnect firmware update entity."""
 
-    bootloader_reset_methods = []
+    _flasher_cls = Zbt1Flasher
 
     def __init__(
         self,
@@ -222,8 +225,8 @@ async def mock_update_config_entry(
     hass: HomeAssistant,
 ) -> AsyncGenerator[ConfigEntry]:
     """Set up a mock Home Assistant Hardware firmware update entity."""
-    await async_setup_component(hass, "homeassistant", {})
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await async_setup_component(hass, DOMAIN, {})
 
     mock_integration(
         hass,
@@ -318,11 +321,9 @@ async def test_update_entity_installation(
         hass: HomeAssistant,
         device: str,
         fw_data: bytes,
+        flasher_cls: type[DeviceSpecificFlasher],
         expected_installed_firmware_type: ApplicationType,
-        bootloader_reset_methods: Sequence[ResetTarget] = (),
         progress_callback: Callable[[int, int], None] | None = None,
-        *,
-        domain: str = "homeassistant_hardware",
     ) -> FirmwareInfo:
         await asyncio.sleep(0)
         progress_callback(0, 100)
@@ -394,8 +395,8 @@ async def test_update_entity_installation_failure(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {"entity_id": TEST_UPDATE_ENTITY_ID},
         blocking=True,
     )
@@ -438,8 +439,8 @@ async def test_update_entity_installation_probe_failure(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {"entity_id": TEST_UPDATE_ENTITY_ID},
         blocking=True,
     )
@@ -574,7 +575,10 @@ async def test_update_entity_graceful_firmware_type_callback_errors(
             FirmwareInfo(
                 device=TEST_DEVICE,
                 firmware_type=ApplicationType.SPINEL,
-                firmware_version="SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57",
+                firmware_version=(
+                    "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4;"
+                    " EFR32; Oct 21 2024 14:40:57"
+                ),
                 owners=[],
                 source="probe",
             ),
@@ -606,7 +610,8 @@ async def test_early_firmware_check_on_unknown_state(
     )
     await hass.async_block_till_done()
 
-    # The entity should immediately show update available (no manual update_entity call needed)
+    # The entity should immediately show update available (no manual update_entity call
+    # needed)
     state = hass.states.get(TEST_UPDATE_ENTITY_ID)
     assert state is not None
     assert state.state == "on"

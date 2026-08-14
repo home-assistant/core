@@ -2,20 +2,24 @@
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
+from uuid import UUID
 
 from mozart_api.models import (
     Action,
+    BatteryState,
     BeolinkPeer,
     BeolinkSelf,
     ContentItem,
     ListeningMode,
     ListeningModeFeatures,
     ListeningModeRef,
+    ListeningModeTrigger,
+    PairedRemote,
+    PairedRemoteResponse,
     PlaybackContentMetadata,
     PlaybackProgress,
     PlaybackState,
     PlayQueueSettings,
-    PowerLinkTrigger,
     ProductState,
     RemoteMenuItem,
     RenderingState,
@@ -32,9 +36,13 @@ from homeassistant.components.bang_olufsen.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .const import (
+    TEST_BATTERY,
     TEST_DATA_CREATE_ENTRY,
     TEST_DATA_CREATE_ENTRY_2,
+    TEST_DATA_CREATE_ENTRY_3,
+    TEST_DATA_CREATE_ENTRY_4,
     TEST_FRIENDLY_NAME,
+    TEST_FRIENDLY_NAME_2,
     TEST_FRIENDLY_NAME_3,
     TEST_FRIENDLY_NAME_4,
     TEST_HOST_3,
@@ -42,10 +50,11 @@ from .const import (
     TEST_JID_1,
     TEST_JID_3,
     TEST_JID_4,
-    TEST_NAME,
-    TEST_NAME_2,
+    TEST_REMOTE_SERIAL,
     TEST_SERIAL_NUMBER,
     TEST_SERIAL_NUMBER_2,
+    TEST_SERIAL_NUMBER_3,
+    TEST_SERIAL_NUMBER_4,
     TEST_SOUND_MODE,
     TEST_SOUND_MODE_2,
     TEST_SOUND_MODE_NAME,
@@ -61,7 +70,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER,
         data=TEST_DATA_CREATE_ENTRY,
-        title=TEST_NAME,
+        title=TEST_FRIENDLY_NAME,
     )
 
 
@@ -72,7 +81,29 @@ def mock_config_entry_core() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER_2,
         data=TEST_DATA_CREATE_ENTRY_2,
-        title=TEST_NAME_2,
+        title=TEST_FRIENDLY_NAME_2,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_premiere() -> MockConfigEntry:
+    """Mock config entry for Beosound Premiere."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SERIAL_NUMBER_3,
+        data=TEST_DATA_CREATE_ENTRY_3,
+        title=TEST_FRIENDLY_NAME_3,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_a5() -> MockConfigEntry:
+    """Mock config entry for Beosound A5."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SERIAL_NUMBER_4,
+        data=TEST_DATA_CREATE_ENTRY_4,
+        title=TEST_FRIENDLY_NAME_4,
     )
 
 
@@ -94,6 +125,7 @@ async def mock_websocket_connection(
     playback_metadata_callback = (
         mock_mozart_client.get_playback_metadata_notifications.call_args[0][0]
     )
+    battery_callback = mock_mozart_client.get_battery_notifications.call_args[0][0]
 
     # Trigger callbacks. Try to use existing data
     volume_callback(mock_mozart_client.get_product_state.return_value.volume)
@@ -106,6 +138,10 @@ async def mock_websocket_connection(
     playback_metadata_callback(
         mock_mozart_client.get_product_state.return_value.playback.metadata
     )
+
+    # This should not affect non-battery devices.
+    battery_callback(TEST_BATTERY)
+
     await hass.async_block_till_done()
 
 
@@ -219,8 +255,8 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 dynamic_list=None,
                 first_child_menu_item_id=None,
                 label="Yle Radio Suomi Helsinki",
-                next_sibling_menu_item_id="0b4552f8-7ac6-5046-9d44-5410a815b8d6",
-                parent_menu_item_id="eee0c2d0-2b3a-4899-a708-658475c38926",
+                next_sibling_menu_item_id=UUID("0b4552f8-7ac6-5046-9d44-5410a815b8d6"),
+                parent_menu_item_id=UUID("eee0c2d0-2b3a-4899-a708-658475c38926"),
                 available=None,
                 content=ContentItem(
                     categories=["music"],
@@ -229,7 +265,7 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                     source=SourceTypeEnum(value="netRadio"),
                 ),
                 fixed=True,
-                id="b355888b-2cde-5f94-8592-d47b71d52a27",
+                id=UUID("b355888b-2cde-5f94-8592-d47b71d52a27"),
             ),
             # Has "hdmi" as category, so should be included in video sources
             "b6591565-80f4-4356-bcd9-c92ca247f0a9": RemoteMenuItem(
@@ -258,8 +294,8 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 dynamic_list="none",
                 first_child_menu_item_id=None,
                 label="HDMI A",
-                next_sibling_menu_item_id="0ba98974-7b1f-40dc-bc48-fbacbb0f1793",
-                parent_menu_item_id="b66c835b-6b98-4400-8f84-6348043792c7",
+                next_sibling_menu_item_id=UUID("0ba98974-7b1f-40dc-bc48-fbacbb0f1793"),
+                parent_menu_item_id=UUID("b66c835b-6b98-4400-8f84-6348043792c7"),
                 available=True,
                 content=ContentItem(
                     categories=["hdmi"],
@@ -268,22 +304,23 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                     source=SourceTypeEnum(value="tv"),
                 ),
                 fixed=False,
-                id="b6591565-80f4-4356-bcd9-c92ca247f0a9",
+                id=UUID("b6591565-80f4-4356-bcd9-c92ca247f0a9"),
             ),
-            # The parent remote menu item. Has the TV label and should therefore not be included in video sources
+            # The parent remote menu item. Has the TV label and
+            # should therefore not be included in video sources
             "b66c835b-6b98-4400-8f84-6348043792c7": RemoteMenuItem(
                 action_list=[],
                 scene_list=None,
                 disabled=False,
                 dynamic_list="none",
-                first_child_menu_item_id="b6591565-80f4-4356-bcd9-c92ca247f0a9",
+                first_child_menu_item_id=UUID("b6591565-80f4-4356-bcd9-c92ca247f0a9"),
                 label="TV",
-                next_sibling_menu_item_id="0c4547fe-d3cc-4348-a425-473595b8c9fb",
+                next_sibling_menu_item_id=UUID("0c4547fe-d3cc-4348-a425-473595b8c9fb"),
                 parent_menu_item_id=None,
                 available=True,
                 content=None,
                 fixed=True,
-                id="b66c835b-6b98-4400-8f84-6348043792c7",
+                id=UUID("b66c835b-6b98-4400-8f84-6348043792c7"),
             ),
             # Has an empty content, so should not be included
             "64c9da45-3682-44a4-8030-09ed3ef44160": RemoteMenuItem(
@@ -294,11 +331,11 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 first_child_menu_item_id=None,
                 label="ListeningPosition",
                 next_sibling_menu_item_id=None,
-                parent_menu_item_id="0c4547fe-d3cc-4348-a425-473595b8c9fb",
+                parent_menu_item_id=UUID("0c4547fe-d3cc-4348-a425-473595b8c9fb"),
                 available=True,
                 content=None,
                 fixed=True,
-                id="64c9da45-3682-44a4-8030-09ed3ef44160",
+                id=UUID("64c9da45-3682-44a4-8030-09ed3ef44160"),
             ),
         }
         client.get_beolink_peers = AsyncMock()
@@ -307,11 +344,13 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 friendly_name=TEST_FRIENDLY_NAME_3,
                 jid=TEST_JID_3,
                 ip_address=TEST_HOST_3,
+                audio_transport="v2",
             ),
             BeolinkPeer(
                 friendly_name=TEST_FRIENDLY_NAME_4,
                 jid=TEST_JID_4,
                 ip_address=TEST_HOST_4,
+                audio_transport="v2",
             ),
         ]
         client.get_beolink_listeners = AsyncMock()
@@ -320,11 +359,13 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 friendly_name=TEST_FRIENDLY_NAME_3,
                 jid=TEST_JID_3,
                 ip_address=TEST_HOST_3,
+                audio_transport="v2",
             ),
             BeolinkPeer(
                 friendly_name=TEST_FRIENDLY_NAME_4,
                 jid=TEST_JID_4,
                 ip_address=TEST_HOST_4,
+                audio_transport="v2",
             ),
         ]
 
@@ -334,19 +375,19 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 id=TEST_SOUND_MODE,
                 name=TEST_SOUND_MODE_NAME,
                 features=ListeningModeFeatures(),
-                triggers=[PowerLinkTrigger()],
+                triggers=[ListeningModeTrigger()],
             ),
             ListeningMode(
                 id=TEST_SOUND_MODE_2,
                 name=TEST_SOUND_MODE_NAME,
                 features=ListeningModeFeatures(),
-                triggers=[PowerLinkTrigger()],
+                triggers=[ListeningModeTrigger()],
             ),
             ListeningMode(
                 id=345,
                 name=f"{TEST_SOUND_MODE_NAME} 2",
                 features=ListeningModeFeatures(),
-                triggers=[PowerLinkTrigger()],
+                triggers=[ListeningModeTrigger()],
             ),
         ]
         client.get_active_listening_mode = AsyncMock()
@@ -359,7 +400,27 @@ def mock_mozart_client() -> Generator[AsyncMock]:
             repeat="none",
             shuffle=False,
         )
-
+        client.get_bluetooth_remotes = AsyncMock()
+        client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
+            items=[
+                PairedRemote(
+                    address="",
+                    app_version="1.0.0",
+                    battery_level=50,
+                    connected=True,
+                    serial_number=TEST_REMOTE_SERIAL,
+                    name="BEORC",
+                )
+            ]
+        )
+        client.get_battery_state = AsyncMock()
+        client.get_battery_state.return_value = BatteryState(
+            battery_level=0,
+            is_charging=False,
+            remaining_charging_time_minutes=0,
+            remaining_playing_time_minutes=0,
+            state="BatteryNotPresent",
+        )
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()
         client.set_volume_mute = AsyncMock()

@@ -254,7 +254,7 @@ async def test_async_step_reconfigure_options(hass: HomeAssistant) -> None:
     assert entry.data[CONF_MEDIUM_TYPE] == MediumType.AIR.value
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema: vol.Schema = result["data_schema"]
     medium_type_key = next(
@@ -266,7 +266,7 @@ async def test_async_step_reconfigure_options(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={CONF_MEDIUM_TYPE: MediumType.FRESH_WATER.value},
     )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     # Verify the new configuration
     assert entry.data[CONF_MEDIUM_TYPE] == MediumType.FRESH_WATER.value

@@ -4,8 +4,6 @@ This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
@@ -17,7 +15,16 @@ import pathlib
 import sys
 import time
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, cast, final
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    Protocol,
+    TypedDict,
+    cast,
+    final,
+    override,
+)
 
 from awesomeversion import (
     AwesomeVersion,
@@ -124,6 +131,12 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # Added in 2025.10.0 because of
     # https://github.com/frenck/spook/issues/1066
     "spook": BlockedIntegration(AwesomeVersion("4.0.0"), "breaks the template engine"),
+    # Added in 2025.12.1 because of
+    # https://github.com/JaccoR/hass-entso-e/issues/263
+    "entsoe": BlockedIntegration(
+        AwesomeVersion("0.7.1"),
+        "crashes Home Assistant when it can't connect to the API",
+    ),
 }
 
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
@@ -266,6 +279,7 @@ class Manifest(TypedDict, total=False):
     loggers: list[str]
     import_executor: bool
     single_config_entry: bool
+    preview_features: dict[str, dict[str, str]]
 
 
 def async_setup(hass: HomeAssistant) -> None:
@@ -392,9 +406,13 @@ class ComponentProtocol(Protocol):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        device_entry: dr.DeviceEntry,
+        device_entry: dr.AnyDeviceEntry,
     ) -> bool:
-        """Remove a config entry device."""
+        """Remove a config entry device.
+
+        Only integrations that register child devices can receive a
+        ChildDeviceEntry. Removing a parent device also removes its child devices.
+        """
 
     async def async_reset_platform(
         self, hass: HomeAssistant, integration_name: str
@@ -760,6 +778,7 @@ class Integration:
         self.pkg_path = pkg_path
         self.file_path = file_path
         self.manifest = manifest
+        self.logger = logging.getLogger(pkg_path)
         manifest["is_built_in"] = self.is_built_in
         manifest["overwrites_built_in"] = self.overwrites_built_in
 
@@ -876,6 +895,11 @@ class Integration:
         return "translations" in self._top_level_files
 
     @cached_property
+    def has_branding(self) -> bool:
+        """Return if the integration has brand assets."""
+        return "brand" in self._top_level_files
+
+    @cached_property
     def has_triggers(self) -> bool:
         """Return if the integration has triggers."""
         return "triggers.yaml" in self._top_level_files
@@ -899,6 +923,11 @@ class Integration:
     def bluetooth(self) -> list[dict[str, str | int]] | None:
         """Return Integration bluetooth entries."""
         return self.manifest.get("bluetooth")
+
+    @property
+    def preview_features(self) -> dict[str, dict[str, str]] | None:
+        """Return Integration preview features entries."""
+        return self.manifest.get("preview_features")
 
     @property
     def dhcp(self) -> list[dict[str, str | bool]] | None:
@@ -1156,8 +1185,9 @@ class Integration:
                             load_executor_platforms,
                             exc_info=ex,
                         )
-                        # If importing in the executor deadlocks because there is a circular
-                        # dependency, we fall back to the event loop.
+                        # If importing in the executor deadlocks
+                        # because there is a circular dependency,
+                        # we fall back to the event loop.
                         load_event_loop_platforms.extend(load_executor_platforms)
 
                 if load_event_loop_platforms:
@@ -1294,6 +1324,7 @@ class Integration:
         """
         return importlib.import_module(f"{self.pkg_path}.{platform_name}")
 
+    @override
     def __repr__(self) -> str:
         """Text representation of class."""
         return f"<Integration {self.domain}: {self.pkg_path}>"
@@ -1400,8 +1431,7 @@ async def async_get_integrations(
             future.set_result(integration)
 
     for domain in results:
-        if domain in needed:
-            del needed[domain]
+        needed.pop(domain, None)
 
     # Now the rest use resolve_from_root
     if needed:
@@ -1444,9 +1474,11 @@ class _ResolveDependenciesCacheProtocol(Protocol):
 class _ResolveDependenciesCache(_ResolveDependenciesCacheProtocol):
     """Cache for resolve_integrations_dependencies."""
 
+    @override
     def get(self, itg: Integration) -> set[str] | Exception | None:
         return itg._all_dependencies  # noqa: SLF001
 
+    @override
     def __setitem__(
         self, itg: Integration, all_dependencies: set[str] | Exception
     ) -> None:
@@ -1496,11 +1528,12 @@ async def _resolve_integrations_dependencies(
     integrations: Iterable[Integration],
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
     ignore_exceptions: bool,
 ) -> dict[str, set[str]]:
-    """Resolve all dependencies, possibly including after_dependencies, for integrations.
+    """Resolve all dependencies for integrations.
 
+    Possibly includes after_dependencies.
     Detects circular dependencies and missing integrations.
     """
 
@@ -1538,7 +1571,7 @@ async def _resolve_integration_dependencies(
     itg: Integration,
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
     ignore_exceptions: bool = False,
 ) -> set[str]:
     """Recursively resolve all dependencies.

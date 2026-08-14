@@ -1,9 +1,12 @@
 """Tests helpers."""
 
 from collections.abc import AsyncGenerator, Generator, Iterable
-from unittest.mock import AsyncMock, patch
+import datetime
+from unittest.mock import DEFAULT, AsyncMock, patch
 
+from anthropic.pagination import AsyncPage
 from anthropic.types import (
+    Container,
     Message,
     MessageDeltaUsage,
     RawContentBlockStartEvent,
@@ -11,28 +14,25 @@ from anthropic.types import (
     RawMessageStartEvent,
     RawMessageStopEvent,
     RawMessageStreamEvent,
+    ServerToolUseBlock,
     ToolUseBlock,
     Usage,
 )
 from anthropic.types.raw_message_delta_event import Delta
 import pytest
 
-from homeassistant.components.anthropic import CONF_CHAT_MODEL
 from homeassistant.components.anthropic.const import (
-    CONF_WEB_SEARCH,
-    CONF_WEB_SEARCH_CITY,
-    CONF_WEB_SEARCH_COUNTRY,
-    CONF_WEB_SEARCH_MAX_USES,
-    CONF_WEB_SEARCH_REGION,
-    CONF_WEB_SEARCH_TIMEZONE,
-    CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
 )
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from . import model_list
 
 from tests.common import MockConfigEntry
 
@@ -42,7 +42,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
         title="Claude",
-        domain="anthropic",
+        domain=DOMAIN,
         data={
             "api_key": "bla",
         },
@@ -80,51 +80,16 @@ def mock_config_entry_with_assist(
 
 
 @pytest.fixture
-def mock_config_entry_with_extended_thinking(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with extended thinking."""
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-3-7-sonnet-latest",
-        },
-    )
-    return mock_config_entry
-
-
-@pytest.fixture
-def mock_config_entry_with_web_search(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with server tools enabled."""
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-sonnet-4-5",
-            CONF_WEB_SEARCH: True,
-            CONF_WEB_SEARCH_MAX_USES: 5,
-            CONF_WEB_SEARCH_USER_LOCATION: True,
-            CONF_WEB_SEARCH_CITY: "San Francisco",
-            CONF_WEB_SEARCH_REGION: "California",
-            CONF_WEB_SEARCH_COUNTRY: "US",
-            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-        },
-    )
-    return mock_config_entry
-
-
-@pytest.fixture
 async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> AsyncGenerator[None]:
     """Initialize integration."""
-    with patch("anthropic.resources.models.AsyncModels.retrieve"):
-        assert await async_setup_component(hass, "anthropic", {})
+    with patch(
+        "anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+        return_value=AsyncPage(data=model_list),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield
 
@@ -135,6 +100,22 @@ async def setup_ha(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "homeassistant", {})
 
 
+@pytest.fixture(autouse=True, scope="package")
+def build_anthropic_pydantic_schemas() -> None:
+    """Build Pydantic Container schema before freezegun patches datetime."""
+    Container.model_rebuild(force=True)
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setup entry."""
+    with patch(
+        "homeassistant.components.anthropic.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        yield mock_setup
+
+
 @pytest.fixture
 def mock_create_stream() -> Generator[AsyncMock]:
     """Mock stream response."""
@@ -142,7 +123,12 @@ def mock_create_stream() -> Generator[AsyncMock]:
     async def mock_generator(events: Iterable[RawMessageStreamEvent], **kwargs):
         """Create a stream of messages with the specified content blocks."""
         stop_reason = "end_turn"
-        refusal_magic_string = "ANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_1FAEFB6177B4672DEE07F9D3AFC62588CCD2631EDCF22E8CCC1FB35B501C9C86"
+        container = None
+        refusal_magic_string = (
+            "ANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_"
+            "1FAEFB6177B4672DEE07F9D3AFC62588"
+            "CCD2631EDCF22E8CCC1FB35B501C9C86"
+        )
         for message in kwargs.get("messages"):
             if message["role"] != "user":
                 continue
@@ -164,7 +150,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 id="msg_1234567890ABCDEFGHIJKLMN",
                 content=[],
                 role="assistant",
-                model="claude-3-5-sonnet-20240620",
+                model=kwargs["model"],
                 usage=Usage(input_tokens=0, output_tokens=0),
             ),
             type="message_start",
@@ -174,10 +160,29 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 event.content_block, ToolUseBlock
             ):
                 stop_reason = "tool_use"
+            elif (
+                isinstance(event, RawContentBlockStartEvent)
+                and isinstance(event.content_block, ServerToolUseBlock)
+                and event.content_block.name
+                in [
+                    "code_execution",
+                    "bash_code_execution",
+                    "text_editor_code_execution",
+                ]
+            ):
+                container = Container(
+                    id=kwargs.get("container_id", "container_1234567890ABCDEFGHIJKLMN"),
+                    expires_at=dt_util.utcnow() + datetime.timedelta(minutes=5),
+                )
+
             yield event
         yield RawMessageDeltaEvent(
             type="message_delta",
-            delta=Delta(stop_reason=stop_reason, stop_sequence=""),
+            delta=Delta(
+                stop_reason=stop_reason,
+                stop_sequence="",
+                container=container,
+            ),
             usage=MessageDeltaUsage(output_tokens=0),
         )
         yield RawMessageStopEvent(type="message_stop")
@@ -186,8 +191,10 @@ def mock_create_stream() -> Generator[AsyncMock]:
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
     ) as mock_create:
-        mock_create.side_effect = lambda **kwargs: mock_generator(
-            mock_create.return_value.pop(0), **kwargs
+        mock_create.side_effect = lambda **kwargs: (
+            mock_generator(mock_create.return_value.pop(0), **kwargs)
+            if isinstance(mock_create.return_value, list)
+            else DEFAULT
         )
 
         yield mock_create

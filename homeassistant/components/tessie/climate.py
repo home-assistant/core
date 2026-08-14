@@ -1,8 +1,6 @@
 """Climate platform for Tessie integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from tessie_api import (
     set_climate_keeper_mode,
@@ -69,6 +67,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
         super().__init__(vehicle, "primary")
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         if self.get("climate_state_is_climate_on"):
@@ -76,35 +75,42 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get("climate_state_inside_temp")
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.get("climate_state_driver_temp_setting")
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self.get("climate_state_max_avail_temp", self._attr_max_temp)
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self.get("climate_state_min_avail_temp", self._attr_min_temp)
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         return self.get("climate_state_climate_keeper_mode")
 
+    @override
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
         await self.run(start_climate_preconditioning)
         self.set(("climate_state_is_climate_on", True))
 
+    @override
     async def async_turn_off(self) -> None:
         """Set the climate state to off."""
         await self.run(stop_climate)
@@ -113,6 +119,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
             ("climate_state_climate_keeper_mode", "off"),
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
         if mode := kwargs.get(ATTR_HVAC_MODE):
@@ -122,6 +129,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
             await self.run(set_temperature, temperature=temp)
             self.set(("climate_state_driver_temp_setting", temp))
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
         if hvac_mode == HVACMode.OFF:
@@ -129,6 +137,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
         else:
             await self.async_turn_on()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the climate preset mode."""
         await self.run(

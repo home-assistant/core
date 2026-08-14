@@ -1,21 +1,20 @@
 """Tests for miele climate module."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
-from aiohttp import ClientError
+from aiohttp import ClientResponseError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-TEST_PLATFORM = CLIMATE_DOMAIN
-pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
+pytestmark = pytest.mark.parametrize("platforms", [(Platform.CLIMATE,)])
 
 ENTITY_ID = "climate.freezer"
 SERVICE_SET_TEMPERATURE = "set_temperature"
@@ -90,7 +89,7 @@ async def test_set_target(
     """Test the climate can be turned on/off."""
 
     await hass.services.async_call(
-        TEST_PLATFORM,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: -17},
         blocking=True,
@@ -107,13 +106,15 @@ async def test_api_failure(
     setup_platform: MockConfigEntry,
 ) -> None:
     """Test handling of exception from API."""
-    mock_miele_client.set_target_temperature.side_effect = ClientError
+    mock_miele_client.set_target_temperature.side_effect = ClientResponseError(
+        Mock(), Mock()
+    )
 
     with pytest.raises(
         HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
     ):
         await hass.services.async_call(
-            TEST_PLATFORM,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: -17},
             blocking=True,

@@ -1,6 +1,7 @@
 """Tests for the zimi config flow."""
 
-from unittest.mock import MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from zcc import (
@@ -44,6 +45,15 @@ def discovery_mock():
         yield mock
 
 
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.zimi.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 async def test_user_discovery_success(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
@@ -78,7 +88,7 @@ async def test_user_discovery_success_selection(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
 ) -> None:
-    """Test user form transitions via selection to creation if zcc discovery succeeds has multiple hosts."""
+    """Test user form to creation when discovery finds multiple hosts."""
 
     discovery_mock.discovers.return_value = [
         ControlPointDescription(host=INPUT_HOST, port=INPUT_PORT),
