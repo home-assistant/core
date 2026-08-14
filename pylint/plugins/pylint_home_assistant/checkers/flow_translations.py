@@ -133,8 +133,10 @@ def _extract_items_from_node(
         try:
             _, assigns = node.lookup(node.name)
             for assign in assigns:
-                if isinstance(assign, nodes.AssignName) and isinstance(
-                    assign.parent, nodes.Assign
+                if (
+                    isinstance(assign, nodes.AssignName)
+                    and isinstance(assign.parent, (nodes.Assign, nodes.AnnAssign))
+                    and assign.parent.value is not None
                 ):
                     result = _extract_items_from_node(assign.parent.value)
                     if result:
