@@ -129,6 +129,7 @@ from .helpers import (
     get_network_identifier_for_notification,
     get_unique_id,
     get_valueless_base_unique_id,
+    value_requires_endpoint_device,
 )
 from .migrate import async_migrate_discovered_value
 from .models import PlatformZwaveDiscoveryInfo, ZwaveJSConfigEntry, ZwaveJSData
@@ -477,7 +478,7 @@ class ControllerEvents:
         self.node_events = NodeEvents(hass, self)
 
     @callback
-    def remove_device(self, device: dr.DeviceEntry) -> None:
+    def remove_device(self, device: dr.AnyDeviceEntry) -> None:
         """Remove device from registry."""
         # note: removal of entity registry entry is handled by core
         self.dev_reg.async_remove_device(device.id)
@@ -789,10 +790,23 @@ class NodeEvents:
         self.value_updates_disc_info[node.node_id] = value_updates_disc_info
 
         # run discovery on all node values and create/update entities
+        driver = self.controller_events.driver_events.driver
+        endpoint_device_ids: set[tuple[str, str]] = set()
         for disc_info in async_discover_node_values(
             node, device, self.controller_events.discovered_value_ids
         ):
+            primary_value = disc_info.primary_value
+            if value_requires_endpoint_device(node, primary_value):
+                endpoint_device_ids.add(
+                    get_device_id(driver, node, primary_value.endpoint)
+                )
             self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
+
+        # Prune endpoint child devices that no longer have any entities, e.g. after a
+        # re-interview removed an endpoint or its colliding values.
+        for child_device in dr.async_entries_for_parent_device(self.dev_reg, device.id):
+            if not child_device.identifiers & endpoint_device_ids:
+                self.controller_events.remove_device(child_device)
 
         # add listeners to handle new values that get added later
         for event in (EVENT_VALUE_ADDED, EVENT_VALUE_UPDATED, EVENT_METADATA_UPDATED):
@@ -1072,16 +1086,26 @@ class NodeEvents:
         driver = self.controller_events.driver_events.driver
         disc_info = value_updates_disc_info[value.value_id]
 
-        device = self.dev_reg.async_get_device_by_identifier(
-            get_device_id(driver, value.node), self.config_entry.entry_id
-        )
-        # We assert because we know the device exists
-        assert device
-
         unique_id = get_unique_id(driver, disc_info.primary_value.value_id)
         entity_id = self.ent_reg.async_get_entity_id(
             disc_info.platform, DOMAIN, unique_id
         )
+
+        # Use the device the entity belongs to, which may be an endpoint child device,
+        # so the event's device_id matches where the entity lives.
+        device = None
+        if (
+            entity_id
+            and (entity_entry := self.ent_reg.async_get(entity_id))
+            and entity_entry.device_id
+        ):
+            device = self.dev_reg.async_get(entity_entry.device_id)
+        # Fall back to the node device when the value has no entity (e.g. a discovery
+        # collision), so the event payload always carries a device id.
+        if device is None:
+            device = self.dev_reg.async_get_device_by_identifier(
+                get_device_id(driver, value.node), self.config_entry.entry_id
+            )
 
         raw_value = value_ = value.value
         if value.metadata.states:
@@ -1093,7 +1117,7 @@ class NodeEvents:
                 ATTR_NODE_ID: value.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
                 ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
-                ATTR_DEVICE_ID: device.id,
+                ATTR_DEVICE_ID: device.id if device else None,
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_COMMAND_CLASS: value.command_class,
                 ATTR_COMMAND_CLASS_NAME: value.command_class_name,

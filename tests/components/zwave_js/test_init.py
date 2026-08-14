@@ -464,7 +464,7 @@ async def test_new_entity_on_value_added(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.multisensor_6_ultraviolet_10") is not None
+    assert hass.states.get("sensor.multisensor_6_ultraviolet_2") is not None
 
 
 async def test_on_node_added_ready(
@@ -905,7 +905,9 @@ async def test_null_name(
 ) -> None:
     """Test that node without a name gets a generic node name."""
     node = null_name_check
-    assert hass.states.get(f"switch.node_{node.node_id}")
+    # The switches live on endpoint child devices, but the node-level entities still
+    # reflect the generic node name.
+    assert hass.states.get(f"sensor.node_{node.node_id}_node_status")
 
 
 @pytest.mark.usefixtures("addon_installed", "addon_info")
@@ -1529,6 +1531,105 @@ async def test_node_removed(
     assert not device_registry.async_get(old_device.id)
     # Assert value_updates_disc_info has been cleaned up
     assert node.node_id not in node_events.value_updates_disc_info
+
+
+async def test_endpoint_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that colliding endpoint values are split into endpoint child devices."""
+    node = vision_security_zl7432
+    driver = client.driver
+
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert node_device
+
+    # The relays on endpoints 1 and 2 collide, so each gets its own child device.
+    endpoint_1_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(driver, node, 1), integration.entry_id
+    )
+    assert endpoint_1_device
+    assert isinstance(endpoint_1_device, dr.ChildDeviceEntry)
+    assert endpoint_1_device.parent_device_id == node_device.id
+    assert endpoint_1_device.name == "In Wall Dual Relay Switch Binary Power Switch (1)"
+
+    endpoint_2_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(driver, node, 2), integration.entry_id
+    )
+    assert endpoint_2_device
+    assert isinstance(endpoint_2_device, dr.ChildDeviceEntry)
+    assert endpoint_2_device.parent_device_id == node_device.id
+    assert endpoint_2_device.name == "In Wall Dual Relay Switch Binary Power Switch (2)"
+
+    # Both child devices appear in the parent's children list.
+    children = dr.async_entries_for_parent_device(device_registry, node_device.id)
+    assert {child.id for child in children} == {
+        endpoint_1_device.id,
+        endpoint_2_device.id,
+    }
+
+    # Each relay lives on its endpoint child device, not on the node device.
+    entity_1 = entity_registry.async_get(
+        "switch.in_wall_dual_relay_switch_binary_power_switch_1"
+    )
+    assert entity_1
+    assert entity_1.device_id == endpoint_1_device.id
+    entity_2 = entity_registry.async_get(
+        "switch.in_wall_dual_relay_switch_binary_power_switch_2"
+    )
+    assert entity_2
+    assert entity_2.device_id == endpoint_2_device.id
+
+    # Removing the node cascades and removes the child devices along with the node device.
+    client.driver.controller.emit("node removed", {"node": node, "reason": 0})
+    await hass.async_block_till_done()
+    assert device_registry.async_get(node_device.id) is None
+    assert device_registry.async_get(endpoint_1_device.id) is None
+    assert device_registry.async_get(endpoint_2_device.id) is None
+
+
+async def test_endpoint_child_device_pruned_on_reinterview(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    vision_security_zl7432_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that a stale endpoint child device is removed when an endpoint stops colliding."""
+    node = vision_security_zl7432
+    driver = client.driver
+
+    endpoint_2_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(driver, node, 2), integration.entry_id
+    )
+    assert endpoint_2_device
+
+    # Re-interview the node without any values on endpoint 2.
+    new_state = deepcopy(vision_security_zl7432_state)
+    new_state["values"] = [
+        value for value in new_state["values"] if value["endpoint"] != 2
+    ]
+    node.receive_event(
+        Event(
+            "ready",
+            {
+                "source": "node",
+                "event": "ready",
+                "nodeId": node.node_id,
+                "nodeState": new_state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(endpoint_2_device.id) is None
 
 
 async def test_replace_same_node(
