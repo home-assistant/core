@@ -2715,6 +2715,7 @@ async def test_entity_moved_while_new_entity_takes_old_slot_listed_first(
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a move where a new entity takes the old slot and is listed first.
 
@@ -2764,8 +2765,11 @@ async def test_entity_moved_while_new_entity_takes_old_slot_listed_first(
             device_id=11111111,
         ),
     ]
-    await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
+    with caplog.at_level(logging.DEBUG, "homeassistant.components.esphome"):
+        await reconnect_with_updated_entity_info(hass, device, updated_entity_info)
 
+    # Every candidate slot was occupied, so the ambiguous fallback ran
+    assert "Ambiguous move for Foo" in caplog.text
     new_entry_foo = entity_registry.async_get("binary_sensor.test_foo")
     assert new_entry_foo is not None
     assert new_entry_foo.id == entry_foo.id
