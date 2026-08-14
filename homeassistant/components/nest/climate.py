@@ -407,6 +407,7 @@ class ThermostatEntity(ClimateEntity):
         """Cancel and discard the pending temperature command, if any."""
         self._cancel_scheduled_temperature()
         self._clear_unconfirmed_temperature()
+        self._executing_temperature = None
         if self._pending_temperature:
             self._pending_temperature = None
             self.async_write_ha_state()

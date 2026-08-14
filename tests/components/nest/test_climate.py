@@ -59,7 +59,7 @@ from .common import (
 )
 from .conftest import FakeAuth
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.climate import common
 
 type CreateEvent = Callable[[dict[str, Any]], Awaitable[None]]
@@ -941,6 +941,56 @@ async def test_temperature_and_mode_commands_are_serialized(
         "temperature_finished",
         "mode_started",
     ]
+
+
+async def test_entity_removal_during_temperature_command(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
+    create_device: CreateDevice,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test command completion does not schedule a timer after entity removal."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+            },
+        }
+    )
+    await setup_platform()
+
+    temperature_started = asyncio.Event()
+    release_temperature = asyncio.Event()
+
+    async def async_set_heat(
+        _trait: nest_climate.ThermostatTemperatureSetpointTrait, temperature: float
+    ) -> None:
+        assert temperature == 20.0
+        temperature_started.set()
+        await release_temperature.wait()
+
+    monkeypatch.setattr(
+        nest_climate.ThermostatTemperatureSetpointTrait, "set_heat", async_set_heat
+    )
+
+    await common.async_set_temperature(hass, temperature=20.0)
+    temperature_task = asyncio.create_task(async_fire_temperature_debounce(hass))
+    await temperature_started.wait()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    mock_call_later = Mock()
+    monkeypatch.setattr(nest_climate, "async_call_later", mock_call_later)
+
+    release_temperature.set()
+    await temperature_task
+
+    mock_call_later.assert_not_called()
 
 
 async def test_thermostat_set_temperature_hvac_mode(
