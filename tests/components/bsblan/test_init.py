@@ -403,6 +403,33 @@ async def test_slow_interval_poll_does_not_retry_unsupported_schedule(
     assert mock_bsblan.hot_water_schedule.call_count == 1
 
 
+async def test_slow_interval_poll_does_not_retry_unsupported_heating_schedule_after_write(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an unsupported heating schedule does not retry after a write."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    mock_bsblan.heating_schedule.side_effect = BSBLANUnsupportedFeatureError(
+        "No heating schedule parameters available"
+    )
+
+    await slow_coordinator.async_refresh_heating_schedule_after_write(1)
+    assert mock_bsblan.heating_schedule.call_count == 2
+
+    for _ in range(2):
+        freezer.tick(delta=timedelta(minutes=5, seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_bsblan.heating_schedule.call_count == 2
+
+
 async def test_slow_interval_poll_stops_retrying_unsupported_schedule(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
