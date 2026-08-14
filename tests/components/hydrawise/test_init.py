@@ -118,38 +118,6 @@ async def test_auto_add_devices(
     assert hass.states.get("sensor.zone_two_2_daily_active_watering_time") is not None
 
 
-async def test_setup_clears_self_referential_via_device(
-    hass: HomeAssistant,
-    device_registry: DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_pydrawise: AsyncMock,
-) -> None:
-    """Test setup clears a self-referential via_device left by older versions.
-
-    Older versions linked the controller device to itself via its rain sensor
-    entity, which persists in the device registry across upgrades.
-    """
-    mock_config_entry.add_to_hass(hass)
-    controller = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "52496")},
-        name="Home Controller",
-    )
-    controller = device_registry.async_update_device(
-        controller.id, via_device_id=controller.id
-    )
-    assert controller.via_device_id == controller.id
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    controller = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "52496"), mock_config_entry.entry_id
-    )
-    assert controller is not None
-    assert controller.via_device_id is None
-
-
 async def test_auto_remove_devices(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,

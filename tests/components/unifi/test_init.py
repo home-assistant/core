@@ -182,7 +182,7 @@ async def test_remove_config_entry_device(
     device_entry = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"]), config_entry.entry_id
     )
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"]
     assert not device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"]), config_entry.entry_id
@@ -192,7 +192,7 @@ async def test_remove_config_entry_device(
     device_entry = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"]), config_entry.entry_id
     )
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
     assert not response["success"]
     assert device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"]), config_entry.entry_id
@@ -206,7 +206,7 @@ async def test_remove_config_entry_device(
     device_entry = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"]), config_entry.entry_id
     )
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"]
     assert not device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"]), config_entry.entry_id
