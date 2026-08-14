@@ -529,7 +529,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 )
             _LOGGER.debug("Playing %s using websocket audioclip", media_id)
             try:
-                self.speaker.last_announce_id = None
                 assert self.speaker.websocket
                 response, data = await self.speaker.websocket.play_clip(
                     async_process_play_media_url(self.hass, media_id),

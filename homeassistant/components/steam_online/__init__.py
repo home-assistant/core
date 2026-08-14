@@ -10,7 +10,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import CONF_ACCOUNTS, DOMAIN, SUBENTRY_TYPE_FRIEND
 from .coordinator import SteamConfigEntry, SteamDataUpdateCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.IMAGE, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SteamConfigEntry) -> bool:
