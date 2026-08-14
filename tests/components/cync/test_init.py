@@ -66,7 +66,7 @@ async def test_migrate_unique_ids(
     switch_entry = entity_registry.async_get_or_create(
         Platform.SWITCH,
         DOMAIN,
-        "1000-1101",
+        "10000-1101",
         config_entry=mock_config_entry,
         device_id=switch_device_entry.id,
     )
@@ -97,7 +97,7 @@ async def test_migrate_unique_ids(
 
     current_switch = entity_registry.async_get(switch_entry.entity_id)
     assert current_switch is not None
-    assert current_switch.unique_id == "1000-1101"
+    assert current_switch.unique_id == "10000-1101"
     current_switch_device = device_registry.async_get(switch_device_entry.id)
     assert current_switch_device is not None
     assert (DOMAIN, "1000-1006") in current_switch_device.identifiers
