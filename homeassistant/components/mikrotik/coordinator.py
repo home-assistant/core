@@ -5,6 +5,7 @@ import ssl
 from typing import Any, override
 
 import librouteros
+from librouteros.exceptions import ConnectionClosed
 from librouteros.login import plain as login_plain, token as login_token
 
 from homeassistant.config_entries import ConfigEntry
@@ -53,6 +54,8 @@ from .errors import CannotConnect, LoginError
 from .utils import calculate_uptime, mikrotik_config_entry_errors, percentage
 
 type MikrotikConfigEntry = ConfigEntry[MikrotikDataUpdateCoordinator]
+
+CONNECTION_ERRORS = (ConnectionClosed, OSError, TimeoutError)
 
 
 class MikrotikData:
@@ -234,9 +237,6 @@ class MikrotikData:
         device_list = {}
         wireless_devices = {}
         with mikrotik_config_entry_errors():
-            # Check if connection/login are still valid
-            self.api = get_api(dict(self.config_entry.data))
-
             # Retrieve data
             self.all_devices = self.get_list_from_interface(DHCP)
             if self.support_capsman:
@@ -334,9 +334,20 @@ class MikrotikData:
         with mikrotik_config_entry_errors(
             suppress_errors=suppress_errors, during_setup=during_setup
         ):
-            if params:
-                return list(self.api(cmd, **params))
-            return list(self.api(cmd))
+            try:
+                if params:
+                    return list(self.api(cmd, **params))
+                return list(self.api(cmd))
+            except CONNECTION_ERRORS as err:
+                LOGGER.debug(
+                    "Mikrotik %s - connection dropped (%s), reconnecting",
+                    self._host,
+                    err,
+                )
+                self.api = get_api(dict(self.config_entry.data))
+                if params:
+                    return list(self.api(cmd, **params))
+                return list(self.api(cmd))
 
 
 class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):

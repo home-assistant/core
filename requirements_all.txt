@@ -133,7 +133,7 @@ WSDiscovery==2.1.2
 accuweather==5.1.0
 
 # homeassistant.components.actron_air
-actron-neo-api==0.5.12
+actron-neo-api==0.5.13
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -669,7 +669,7 @@ bleak-smlight==1.1.0
 bleak==3.0.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.6
+blebox-uniapi==2.5.7
 
 # homeassistant.components.blink
 blinkpy==0.25.9
@@ -1589,7 +1589,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==7.0.0
+midea-local==8.0.1
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -2116,7 +2116,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.18.5
+pydaikin==2.19.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
