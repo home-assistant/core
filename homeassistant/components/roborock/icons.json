@@ -4,9 +4,6 @@
       "clean_fluid_empty": {
         "default": "mdi:spray-bottle"
       },
-      "dust_collection_status": {
-        "default": "mdi:delete-empty"
-      },
       "in_cleaning": {
         "default": "mdi:vacuum"
       },
@@ -24,9 +21,6 @@
       }
     },
     "button": {
-      "empty_dustbin": {
-        "default": "mdi:delete-empty"
-      },
       "reset_air_filter_consumable": {
         "default": "mdi:air-filter"
       },

@@ -1,23 +1,19 @@
 """Test Roborock Binary Sensor."""
 
 import copy
-from datetime import timedelta
 from typing import Any
 
 import pytest
-from roborock.data import RoborockDockTypeCode, RoborockStateCode
-from roborock.device_features import RoborockDockFeatures
 from roborock.exceptions import RoborockException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -126,50 +122,3 @@ async def test_zeo_request_protocols_filtered_by_schema(
     # Verify that the second Zeo device has detergent entities but NOT softener entities
     assert hass.states.get("binary_sensor.zeo_two_detergent") is not None
     assert hass.states.get("binary_sensor.zeo_two_softener") is None
-
-
-async def test_emptying_dust_bin_follows_pushed_state(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    fake_vacuum: FakeDevice,
-) -> None:
-    """Test the emptying sensor follows the pushed vacuum state."""
-    entity_id = "binary_sensor.roborock_s7_maxv_dock_emptying_dust_bin"
-    assert hass.states.get(entity_id).state == "off"
-
-    # Stop the mock trait from restoring the status template on every refresh.
-    fake_vacuum.v1_properties.status.refresh.side_effect = None
-    fake_vacuum.v1_properties.status.state = RoborockStateCode.emptying_the_bin
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == "on"
-
-
-@pytest.fixture
-def dock_type(request: pytest.FixtureRequest, fake_vacuum: FakeDevice) -> None:
-    """Report the parametrized dock type for the fake vacuum."""
-    fake_vacuum.v1_properties.device_features.dock_features = (
-        RoborockDockFeatures.from_dock_type(request.param)
-    )
-
-
-@pytest.mark.parametrize(
-    ("dock_type", "expected"),
-    [
-        pytest.param(RoborockDockTypeCode.o1_dock, True, id="collect-only"),
-        pytest.param(RoborockDockTypeCode.o2_dock, False, id="wash-only"),
-        pytest.param(RoborockDockTypeCode.shell_e_dock, True, id="collect-wash-dry"),
-        pytest.param(RoborockDockTypeCode.o0_dock, False, id="no-dock"),
-    ],
-    indirect=["dock_type"],
-)
-@pytest.mark.usefixtures("dock_type")
-async def test_emptying_dust_bin_requires_collectable_dock(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    expected: bool,
-) -> None:
-    """Test the emptying sensor only exists for a dock that can empty."""
-    entity_id = "binary_sensor.roborock_s7_maxv_dock_emptying_dust_bin"
-    assert (hass.states.get(entity_id) is not None) == expected

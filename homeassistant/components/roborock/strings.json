@@ -70,9 +70,6 @@
       "dirty_box_full": {
         "name": "Dirty water box"
       },
-      "dust_collection_status": {
-        "name": "Emptying dust bin"
-      },
       "in_cleaning": {
         "name": "Cleaning"
       },

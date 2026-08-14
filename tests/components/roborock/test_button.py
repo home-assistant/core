@@ -3,9 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
-from roborock import RoborockCommand, RoborockException
-from roborock.data import RoborockDockTypeCode
-from roborock.device_features import RoborockDockFeatures
+from roborock import RoborockException
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockTimeout
 from syrupy.assertion import SnapshotAssertion
@@ -47,11 +45,8 @@ async def test_buttons(
 
 @pytest.fixture
 def non_wash_n_fill_dock(fake_vacuum: FakeDevice) -> None:
-    """Report a dock type without any wash, empty or dry functions."""
+    """Disable wash towel mode to indicate this device has no wash functions."""
     fake_vacuum.v1_properties.wash_towel_mode = None
-    fake_vacuum.v1_properties.device_features.dock_features = (
-        RoborockDockFeatures.from_dock_type(RoborockDockTypeCode.o0_dock)
-    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -82,74 +77,6 @@ async def test_dock_buttons_absent_for_non_wash_n_fill_dock(
         )
         is None
     )
-
-
-EMPTY_DUST_BIN_ENTITY_ID = "button.roborock_s7_maxv_dock_empty_dustbin"
-
-
-async def test_press_empty_dust_bin_button(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    fake_vacuum: FakeDevice,
-) -> None:
-    """Test the empty dust bin button sends its command."""
-    assert hass.states.get(EMPTY_DUST_BIN_ENTITY_ID) is not None
-    await hass.services.async_call(
-        "button",
-        SERVICE_PRESS,
-        blocking=True,
-        target={"entity_id": EMPTY_DUST_BIN_ENTITY_ID},
-    )
-    fake_vacuum.v1_properties.command.send.assert_called_once_with(
-        RoborockCommand.APP_START_COLLECT_DUST, params=None
-    )
-
-
-async def test_empty_dustbin_button_failure(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    fake_vacuum: FakeDevice,
-) -> None:
-    """Test a failing dock command is raised to the user."""
-    fake_vacuum.v1_properties.command.send.side_effect = RoborockException
-
-    with pytest.raises(
-        HomeAssistantError, match="Error while calling APP_START_COLLECT_DUST"
-    ):
-        await hass.services.async_call(
-            "button",
-            SERVICE_PRESS,
-            blocking=True,
-            target={"entity_id": EMPTY_DUST_BIN_ENTITY_ID},
-        )
-
-
-@pytest.fixture
-def dock_type(request: pytest.FixtureRequest, fake_vacuum: FakeDevice) -> None:
-    """Report the parametrized dock type for the fake vacuum."""
-    fake_vacuum.v1_properties.device_features.dock_features = (
-        RoborockDockFeatures.from_dock_type(request.param)
-    )
-
-
-@pytest.mark.parametrize(
-    ("dock_type", "expected"),
-    [
-        pytest.param(RoborockDockTypeCode.o1_dock, True, id="collect-only"),
-        pytest.param(RoborockDockTypeCode.o2_dock, False, id="wash-only"),
-        pytest.param(RoborockDockTypeCode.shell_e_dock, True, id="collect-wash-dry"),
-        pytest.param(RoborockDockTypeCode.o0_dock, False, id="no-dock"),
-    ],
-    indirect=["dock_type"],
-)
-@pytest.mark.usefixtures("dock_type")
-async def test_empty_dust_bin_button_requires_collectable_dock(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    expected: bool,
-) -> None:
-    """Test the empty dust bin button only exists for a dock that can empty."""
-    assert (hass.states.get(EMPTY_DUST_BIN_ENTITY_ID) is not None) == expected
 
 
 @pytest.fixture(name="consumeables_trait", autouse=True)

@@ -68,15 +68,6 @@ BINARY_SENSOR_DESCRIPTIONS = [
         ),
     ),
     RoborockBinarySensorDescription(
-        key="dust_collection_status",
-        translation_key="dust_collection_status",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.status.state is RoborockStateCode.emptying_the_bin,
-        is_dock_entity=True,
-        support_fn=lambda api: api.device_features.dock_features.is_collectable,
-    ),
-    RoborockBinarySensorDescription(
         key="water_box_carriage_status",
         translation_key="mop_attached",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
