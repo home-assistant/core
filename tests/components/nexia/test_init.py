@@ -39,25 +39,24 @@ async def test_device_remove_devices(
     """Test we can only remove a device that no longer exists."""
     await async_setup_component(hass, "config", {})
     config_entry = await setup_integration(hass, patch_nexia_home)
-    entry_id = config_entry.entry_id
 
     entity = entity_registry.entities["sensor.nick_office_nick_office_temperature"]
 
     live_zone_device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(live_zone_device_entry.id, entry_id)
+    response = await client.remove_device(live_zone_device_entry.id)
     assert not response["success"]
 
     entity = entity_registry.entities["sensor.master_suite_humidity"]
     live_thermostat_device_entry = device_registry.async_get(entity.device_id)
-    response = await client.remove_device(live_thermostat_device_entry.id, entry_id)
+    response = await client.remove_device(live_thermostat_device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "unused")},
     )
-    response = await client.remove_device(dead_device_entry.id, entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 
@@ -76,3 +75,25 @@ async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:
         assert entry.version == 1
         assert entry.minor_version == 2
         assert entry.unique_id == "123456"
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    patch_nexia_home: NexiaHome,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a zone device links to its thermostat via via_device_id."""
+    config_entry = await setup_integration(hass, patch_nexia_home)
+
+    thermostat_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, 2000000),  # type: ignore[arg-type] # until fix issue #139773
+        config_entry.entry_id,
+    )
+    assert thermostat_device is not None
+
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, 100),  # type: ignore[arg-type] # until fix issue #139773
+        config_entry.entry_id,
+    )
+    assert zone_device is not None
+    assert zone_device.via_device_id == thermostat_device.id

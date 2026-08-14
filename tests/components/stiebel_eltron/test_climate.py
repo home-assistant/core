@@ -60,8 +60,8 @@ async def test_climate_entity(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Verify entity is correctly assigned to device
-    device_entry = device_registry.async_get_device(
-        identifiers={("stiebel_eltron", mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("stiebel_eltron", mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(

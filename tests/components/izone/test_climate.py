@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pizone import Controller, ControllerCommandError, Zone
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -21,11 +22,17 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.components.izone.climate import (
+    ATTR_AIRFLOW,
+    IZONE_SERVICE_AIRFLOW_MAX,
+    IZONE_SERVICE_AIRFLOW_MIN,
+)
 from homeassistant.components.izone.const import DOMAIN
 from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
@@ -63,6 +70,24 @@ async def test_climate_entities(
     # used by the rest of this module still resolve after setup.
     assert hass.states.get(CONTROLLER_ENTITY) is not None
     assert hass.states.get(ZONE_ENTITY) is not None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_zone_device_linked_to_controller(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The zone device is linked to the controller device via via_device_id."""
+    controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "000000001"), mock_config_entry.entry_id
+    )
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "000000001", 0),  # type:ignore[arg-type]
+        mock_config_entry.entry_id,
+    )
+    assert controller_device is not None
+    assert zone_device is not None
+    assert zone_device.via_device_id == controller_device.id
 
 
 @pytest.mark.parametrize(
@@ -604,3 +629,32 @@ async def test_command_connection_error_recovers_on_coordinator_refresh(
 
     assert hass.states.get(CONTROLLER_ENTITY).state == HVACMode.COOL
     assert hass.states.get(ZONE_ENTITY).state == HVACMode.HEAT_COOL
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("service", "airflow"),
+    [
+        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 41, id="min-int"),
+        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 41, id="max-int"),
+        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 40.9, id="min-float"),
+        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 40.9, id="max-float"),
+    ],
+)
+async def test_airflow_rejects_non_multiples_of_five(
+    hass: HomeAssistant,
+    mock_zones: list[Mock],
+    service: str,
+    airflow: float,
+) -> None:
+    """Airflow services reject values that are not multiples of 5."""
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ZONE_ENTITY, ATTR_AIRFLOW: airflow},
+            blocking=True,
+        )
+
+    mock_zones[0].set_airflow_min.assert_not_called()
+    mock_zones[0].set_airflow_max.assert_not_called()

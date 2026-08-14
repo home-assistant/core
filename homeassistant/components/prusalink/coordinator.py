@@ -41,9 +41,9 @@ T = TypeVar(
     bound=PrinterStatus
     | LegacyPrinterStatus
     | JobInfo
-    | None
     | PrinterInfo
-    | VersionInfo,
+    | VersionInfo
+    | None,
 )
 
 
