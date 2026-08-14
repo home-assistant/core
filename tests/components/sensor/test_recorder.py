@@ -6933,13 +6933,7 @@ async def test_compile_statistics_with_unusable_stored_unit(
     caplog: pytest.LogCaptureFixture,
     stored_unit: str,
 ) -> None:
-    """Test one sensor with an unusable stored unit does not stop the others.
-
-    The unit recorded in the metadata is fed to the converter as the target of
-    the conversion, and an unusable one makes it raise. That exception used to
-    travel up and abandon the whole run, so a single bad row took the statistics
-    of every other sensor down with it.
-    """
+    """Test one sensor with an unusable stored unit does not stop the others."""
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
