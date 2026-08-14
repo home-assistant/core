@@ -62,7 +62,7 @@ def get_device_endpoint(endpoint: MatterEndpoint) -> MatterEndpoint:
 
     All endpoints of a composed device are represented by a single HA device, derived
     from the compose parent.
-    example: Philips Hue motion sensor on Hue Hub (bridged to Matter)
+    Example: Philips Hue motion sensor on Hue Hub (bridged to Matter).
     """
     return endpoint.node.get_compose_parent(endpoint.endpoint_id) or endpoint
 
