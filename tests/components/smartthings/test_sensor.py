@@ -155,6 +155,34 @@ async def test_appliance_values_clear_on_idle_update(
     assert hass.states.get(completion_time).state == "2025-04-26T10:00:00+00:00"
 
 
+@pytest.mark.parametrize("device_fixture", ["da_wm_wm_01011"])
+async def test_finished_job_state_overrides_running_machine_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a finished job clears values while the machine still reports running."""
+    await setup_integration(hass, mock_config_entry)
+
+    freezer.move_to("2025-04-25T10:20:00Z")
+    await trigger_update(
+        hass,
+        devices,
+        "b854ca5f-dc54-140d-6349-758b4d973c41",
+        Capability.WASHER_OPERATING_STATE,
+        Attribute.WASHER_JOB_STATE,
+        "finish",
+    )
+
+    assert (
+        hass.states.get("sensor.machine_a_laver_completion_time").state
+        == "2025-04-25T10:20:00+00:00"
+    )
+    assert hass.states.get("sensor.machine_a_laver_washer_remaining_time").state == "0"
+    assert hass.states.get("sensor.machine_a_laver_washing_progress").state == "0"
+
+
 @pytest.mark.parametrize("device_fixture", ["da_wm_wd_01011"])
 async def test_idle_appliance_values(
     hass: HomeAssistant,

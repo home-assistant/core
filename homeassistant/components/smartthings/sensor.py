@@ -209,6 +209,7 @@ DRYER_CYCLES = [
 ]
 
 APPLIANCE_IDLE_OPERATING_STATES = {"ready", "stop"}
+APPLIANCE_FINISHED_JOB_STATES = {"finish", "finished"}
 APPLIANCE_IDLE_JOB_STATES = {"finish", "finished", "none"}
 APPLIANCE_IDLE_VALUE_ATTRIBUTES = {
     Attribute.COMPLETION_TIME,
@@ -1679,6 +1680,14 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             return None
 
         state_attribute, job_state_attribute = state_attributes
+        job_status = capability_status.get(job_state_attribute)
+        if (
+            job_status is not None
+            and job_status.value is not None
+            and str(job_status.value).lower() in APPLIANCE_FINISHED_JOB_STATES
+        ):
+            return job_state_attribute, job_status
+
         if (
             state_status := capability_status.get(state_attribute)
         ) is not None and state_status.value is not None:
@@ -1689,7 +1698,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             )
 
         if (
-            (job_status := capability_status.get(job_state_attribute)) is not None
+            job_status is not None
             and job_status.value is not None
             and str(job_status.value).lower() in APPLIANCE_IDLE_JOB_STATES
         ):
