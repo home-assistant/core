@@ -144,7 +144,6 @@ UNIT_DESCRIPTIONS: Final[dict[str, SensorEntityDescription]] = {
         (LIGHT_LUX, SensorDeviceClass.ILLUMINANCE, 0),
         (UnitOfConductivity.MILLISIEMENS_PER_CM, SensorDeviceClass.CONDUCTIVITY, 2),
         (UnitOfConductivity.MICROSIEMENS_PER_CM, SensorDeviceClass.CONDUCTIVITY, 0),
-        ("pH", None, 1),
         (UnitOfPressure.BAR, SensorDeviceClass.PRESSURE, 2),
         (UnitOfPressure.MBAR, SensorDeviceClass.PRESSURE, 0),
         (UnitOfPressure.HPA, SensorDeviceClass.PRESSURE, 0),
@@ -157,7 +156,9 @@ UNIT_DESCRIPTIONS: Final[dict[str, SensorEntityDescription]] = {
         (UnitOfMass.KILOGRAMS, SensorDeviceClass.WEIGHT, 1),
         (UnitOfMass.GRAMS, SensorDeviceClass.WEIGHT, 0),
     )
+} | {
+    # pH is dimensionless (a logarithmic ratio), so SensorDeviceClass.PH takes no unit.
+    "pH": SensorEntityDescription(
+        key="pH", device_class=SensorDeviceClass.PH, suggested_display_precision=1
+    )
 }
-
-# pH has no device class on purpose: SensorDeviceClass.PH accepts no unit, and
-# keeping the "pH" unit is worth more than the class.
