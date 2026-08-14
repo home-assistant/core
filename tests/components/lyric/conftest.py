@@ -5,6 +5,7 @@ from time import time
 from unittest.mock import MagicMock, patch
 
 from aiolyric.objects.location import LyricLocation
+from aiolyric.objects.priority import LyricPriority
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -16,7 +17,11 @@ from homeassistant.components.lyric.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_json_array_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -59,14 +64,15 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_lyric_api() -> Generator[MagicMock]:
-    """Mock the aiolyric client, backed by a real Location and directly-set priority data.
+    """Mock the aiolyric client, backed by a real Location and a real LyricPriority.
 
-    rooms_dict/priorities_dict are set directly rather than parsed from
-    real LyricPriority objects: LyricPriority.status/current_priority
-    currently read the wrong JSON keys (aiolyric#165), and that parsing
-    bug is aiolyric's own test suite's concern, not this integration's.
-    The second device has room data but no priority entry, exercising
-    both branches of LyricPriorityStatusSensor.native_value.
+    priorities_dict holds a real LyricPriority parsed from priority.json,
+    exercising the same priorityStatus key aiolyric's own
+    get_thermostat_rooms() parses production responses into. rooms_dict
+    only needs to be a truthy per-device gate for LyricPriorityStatusSensor
+    creation, so it stays a MagicMock placeholder. The second device has
+    room data but no priority entry, exercising both branches of
+    LyricPriorityStatusSensor.native_value.
     """
     with patch("homeassistant.components.lyric.Lyric", autospec=True) as mock_lyric_cls:
         lyric = mock_lyric_cls.return_value
@@ -79,7 +85,8 @@ def mock_lyric_api() -> Generator[MagicMock]:
             location.location_id: location for location in lyric.locations
         }
 
-        lyric.priorities_dict = {MAC_ID: MagicMock(status="NoHold")}
+        priority_json = load_json_object_fixture("priority.json", DOMAIN)
+        lyric.priorities_dict = {MAC_ID: LyricPriority(priority_json)}
         lyric.rooms_dict = {
             MAC_ID: {1: MagicMock()},
             NO_PRIORITY_DATA_MAC_ID: {1: MagicMock()},
