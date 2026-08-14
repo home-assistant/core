@@ -6,6 +6,7 @@ from unittest.mock import patch
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
+from midealocal.devices.db import DeviceAttributes as DBAttributes
 from midealocal.devices.e8 import DeviceAttributes as E8Attributes
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -77,6 +78,34 @@ from tests.common import MockConfigEntry, snapshot_platform
             ),
             id="e8",
         ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.DB,
+                attributes={
+                    DBAttributes.power: True,
+                    DBAttributes.mode: "normal",
+                    DBAttributes.temperature: 22.0,
+                    DBAttributes.wash_time: 65,
+                    DBAttributes.dehydration_time: 30,
+                    DBAttributes.program: "cotton",
+                },
+            ),
+            id="db",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.DB,
+                attributes={
+                    DBAttributes.power: False,
+                    DBAttributes.mode: "unknown",
+                    DBAttributes.temperature: 22.0,
+                    DBAttributes.wash_time: 65,
+                    DBAttributes.dehydration_time: 30,
+                    DBAttributes.program: "unknown",
+                },
+            ),
+            id="db_unknown_attributes",
+        ),
     ],
 )
 async def test_all_entities(
@@ -108,13 +137,14 @@ async def test_sensor_state_update(
             ACAttributes.indoor_temperature: 21.0,
             ACAttributes.indoor_humidity: 50,
             ACAttributes.full_dust: False,
+            ACAttributes.outdoor_temperature: "unknown",
         },
     )
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry, device)
 
-    assert len(entity_entries(hass, config_entry)) == 2
+    assert len(entity_entries(hass, config_entry)) == 3
     entity_entry = entity_entries(hass, config_entry)[
         f"{TEST_DEVICE_ID}_indoor_temperature"
     ]
@@ -129,3 +159,10 @@ async def test_sensor_state_update(
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
     assert state.state == "19.5"
+
+    entity_entry = entity_entries(hass, config_entry)[
+        f"{TEST_DEVICE_ID}_outdoor_temperature"
+    ]
+    state = hass.states.get(entity_entry.entity_id)
+    assert state is not None
+    assert state.state == "unknown"
