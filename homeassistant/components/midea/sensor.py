@@ -708,20 +708,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
-        key="wash_time_value",
-        translation_key="wash_time_value",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    MideaSensorEntityDescription(
-        key="dehydration_time_value",
-        translation_key="dehydration_time_value",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    MideaSensorEntityDescription(
         key="dry_temperature",
         translation_key="dry_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,

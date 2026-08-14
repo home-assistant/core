@@ -140,9 +140,6 @@
       "dehydration_time": {
         "name": "Dehydration Time"
       },
-      "dehydration_time_value": {
-        "name": "Dehydration Time Value"
-      },
       "discharge_pipe_temperature": {
         "name": "Discharge Pipe Temperature"
       },
@@ -428,9 +425,6 @@
       },
       "wash_time": {
         "name": "Wash Time"
-      },
-      "wash_time_value": {
-        "name": "Wash Time Value"
       },
       "water_consumption": {
         "name": "Water Consumption"
