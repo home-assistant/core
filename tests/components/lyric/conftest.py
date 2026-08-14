@@ -1,6 +1,6 @@
 """Fixtures for the Honeywell Lyric integration tests."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -19,7 +19,11 @@ from homeassistant.components.lyric.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -32,6 +36,13 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     await async_import_client_credential(
         hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), DOMAIN
     )
+
+
+@pytest.fixture(autouse=True)
+def mock_room_priority_retry_delay() -> Generator[None]:
+    """Skip the real delay between GetPriorityFailed retries in the coordinator."""
+    with patch("homeassistant.components.lyric.coordinator.asyncio.sleep"):
+        yield
 
 
 @pytest.fixture
@@ -162,4 +173,26 @@ async def mock_lyric_mixed_devices() -> AsyncGenerator[MagicMock]:
     lyric.get_thermostat_rooms = AsyncMock(side_effect=get_thermostat_rooms)
 
     with patch("homeassistant.components.lyric.Lyric", return_value=lyric):
+        yield lyric
+
+
+@pytest.fixture
+def mock_lyric_api() -> Generator[MagicMock]:
+    """Mock the aiolyric client, backed by a real Location parsed from a live-shaped fixture.
+
+    get_thermostat_rooms is left as an autospec'd no-op: this test only
+    covers device-level sensors, not the room/priority data it would
+    otherwise populate.
+    """
+    with patch("homeassistant.components.lyric.Lyric", autospec=True) as mock_lyric_cls:
+        lyric = mock_lyric_cls.return_value
+
+        locations_json = load_json_array_fixture("locations.json", DOMAIN)
+        lyric.locations = [
+            LyricLocation(MagicMock(), location) for location in locations_json
+        ]
+        lyric.locations_dict = {
+            location.location_id: location for location in lyric.locations
+        }
+
         yield lyric

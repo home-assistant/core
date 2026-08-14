@@ -7,6 +7,7 @@ from aiolyric import Lyric
 from aiolyric.objects.location import LyricLocation
 from aiolyric.objects.priority import LyricRoom
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lyric.api import LyricLocalOAuth2Implementation
 from homeassistant.components.lyric.const import DOMAIN
@@ -18,7 +19,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 _MAC = "AABBCCDDEEFF"
 
@@ -80,6 +81,20 @@ async def test_room_sensors_created_regardless_of_device_id_prefix(
         )
     )
     assert unsupported_device_sensor.state == "21.5"
+
+
+@pytest.mark.usefixtures("setup_credentials", "mock_lyric_api")
+async def test_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Lyric sensor platform via a real config entry setup."""
+    with patch("homeassistant.components.lyric.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 def _mock_lyric() -> MagicMock:
