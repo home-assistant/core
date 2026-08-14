@@ -28,6 +28,7 @@ from homeassistant.components.statistics.sensor import (
     STAT_MEAN,
     StatisticsSensor,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -1671,6 +1672,77 @@ async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.cputest")
+
+
+async def test_setup_entry_zero_sampling_size(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a config entry with sampling_size 0 sets up without crashing.
+
+    The number selector returns a float, so a sampling_size of 0 is stored as
+    0.0. Regression test for a falsy-check that skipped the int() coercion and
+    passed 0.0 to deque(maxlen=...), raising TypeError during setup and leaving
+    an undeletable, unregistered helper.
+    """
+    statistics_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "Statistics",
+            "entity_id": "sensor.test_monitored",
+            "state_characteristic": "value_max",
+            "keep_last_sample": False,
+            "percentile": 50.0,
+            "precision": 2.0,
+            "sampling_size": 0.0,
+            "max_age": {"hours": 1, "minutes": 0, "seconds": 0},
+        },
+        title="Statistics",
+    )
+    statistics_config_entry.add_to_hass(hass)
+
+    # Pre-fill the recorder so the sensor has a sample to process on setup.
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+    hass.states.async_set(
+        "sensor.test_monitored",
+        "5",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    assert await hass.config_entries.async_setup(statistics_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Setup must complete and register the entity; previously it crashed here.
+    assert statistics_config_entry.state is ConfigEntryState.LOADED
+    assert entity_registry.async_get("sensor.statistics") is not None
+
+    hass.states.async_set(
+        "sensor.test_monitored",
+        "8",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.statistics")
+    assert state is not None
+    # A zero-length buffer means the usage ratio cannot be computed; it must be
+    # absent rather than raising ZeroDivisionError.
+    assert "buffer_usage_ratio" not in state.attributes
+
+    # The original bug left an unregistered helper that could not be deleted from
+    # the UI. Verify the entry can be unloaded and fully removed.
+    assert await hass.config_entries.async_unload(statistics_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert statistics_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    await hass.config_entries.async_remove(statistics_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("sensor.statistics") is None
 
 
 async def test_device_id(

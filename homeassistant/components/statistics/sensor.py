@@ -622,7 +622,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Statistics sensor entry."""
     sampling_size = entry.options.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
-    if sampling_size:
+    if sampling_size is not None:
         sampling_size = int(sampling_size)
 
     max_age = None
@@ -1079,7 +1079,7 @@ class StatisticsSensor(SensorEntity):
 
     def _update_extra_state_attributes(self) -> None:
         """Calculate and update the various attributes."""
-        if self._samples_max_buffer_size is not None:
+        if self._samples_max_buffer_size:
             self._attr_extra_state_attributes[STAT_BUFFER_USAGE_RATIO] = round(
                 len(self.states) / self._samples_max_buffer_size, 2
             )

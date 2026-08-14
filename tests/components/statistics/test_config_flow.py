@@ -22,7 +22,7 @@ from homeassistant.components.statistics.sensor import (
 )
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -75,6 +75,43 @@ async def test_form_sensor(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_sampling_size_zero_rejected(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the options step rejects a sampling_size of 0.
+
+    The selector enforces a minimum of 1, so a submitted 0 must fail schema
+    validation rather than create a wedged helper with a zero-length buffer.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: "sensor.test_monitored",
+        },
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STATE_CHARACTERISTIC: STAT_VALUE_MAX,
+        },
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SAMPLES_MAX_BUFFER_SIZE: 0,
+                CONF_MAX_AGE: {"hours": 1, "minutes": 0, "seconds": 0},
+            },
+        )
 
 
 async def test_form_binary_sensor(
