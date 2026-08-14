@@ -4,8 +4,8 @@ import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
-import pytest
 from async_upnp_client.client import UpnpError
+import pytest
 
 from homeassistant.components.media_player import DATA_COMPONENT
 from homeassistant.components.openhome.const import DOMAIN
@@ -116,6 +116,15 @@ async def test_async_update_error(
     assert state.state == STATE_UNAVAILABLE
     assert f"Error updating {ENTITY_ID}" in caplog.text
     assert message in caplog.text
+    error_records = [
+        record
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.openhome")
+        and "Error updating" in record.getMessage()
+    ]
+    assert error_records
+    assert error_records[-1].levelno == logging.DEBUG
+    assert error_records[-1].exc_info is not None
 
 
 async def test_async_update_recovers(hass: HomeAssistant) -> None:
@@ -123,12 +132,10 @@ async def test_async_update_recovers(hass: HomeAssistant) -> None:
     device = _mock_device()
     await setup_integration(hass, device)
 
-    # First update fails and the entity becomes unavailable
     device.transport_state = AsyncMock(side_effect=UpnpError("device down"))
     await _async_update_entity(hass)
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-    # Second update succeeds and the entity recovers
     device.transport_state = AsyncMock(return_value="Playing")
     await _async_update_entity(hass)
     state = hass.states.get(ENTITY_ID)
