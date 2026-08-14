@@ -1,7 +1,8 @@
 """Tests for the Cync integration setup."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from pycync import CyncLight
 from pycync.exceptions import CyncError
 
 from homeassistant.components.cync.const import DOMAIN
@@ -159,4 +160,70 @@ async def test_resume_partial_unique_id_migration(
     assert migrated_device is not None
     assert (DOMAIN, "10000-1") in migrated_device.identifiers
     assert (DOMAIN, "10000-1101") not in migrated_device.identifiers
+    assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
+
+
+async def test_migrate_overlapping_unique_ids(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    cync_client: MagicMock,
+) -> None:
+    """Test migration handles overlapping legacy and mesh IDs."""
+    home = cync_client.get_homes()[0]
+    lights = [
+        device
+        for device in home.get_flattened_device_list()
+        if isinstance(device, CyncLight)
+    ]
+    lights[1].mesh_device_id = 1101
+
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            "mesh_unique_ids_migration_pending": True,
+        },
+    )
+    chained_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "1000-1111")},
+    )
+    chained_entity = entity_registry.async_get_or_create(
+        Platform.LIGHT,
+        DOMAIN,
+        "1000-1111",
+        config_entry=mock_config_entry,
+        device_id=chained_device.id,
+    )
+    first_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "1000-1101")},
+    )
+    first_entity = entity_registry.async_get_or_create(
+        Platform.LIGHT,
+        DOMAIN,
+        "1000-1101",
+        config_entry=mock_config_entry,
+        device_id=first_device.id,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    migrated_chained_entity = entity_registry.async_get(chained_entity.entity_id)
+    assert migrated_chained_entity is not None
+    assert migrated_chained_entity.unique_id == "1000-1101"
+    migrated_first_entity = entity_registry.async_get(first_entity.entity_id)
+    assert migrated_first_entity is not None
+    assert migrated_first_entity.unique_id == "1000-1"
+    migrated_chained_device = device_registry.async_get(chained_device.id)
+    assert migrated_chained_device is not None
+    assert (DOMAIN, "1000-1101") in migrated_chained_device.identifiers
+    migrated_first_device = device_registry.async_get(first_device.id)
+    assert migrated_first_device is not None
+    assert (DOMAIN, "1000-1") in migrated_first_device.identifiers
     assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data

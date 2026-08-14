@@ -22,6 +22,7 @@ from .coordinator import CyncConfigEntry, CyncCoordinator
 _PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
 _MESH_UNIQUE_IDS_MIGRATION_PENDING = "mesh_unique_ids_migration_pending"
+_MESH_UNIQUE_ID_MIGRATION_PREFIX = "__cync_mesh_id_migration__"
 
 
 def _migrate_unique_ids(
@@ -39,6 +40,11 @@ def _migrate_unique_ids(
         if isinstance(device, CyncLight)
         and f"{device.parent_home_id}-{device.device_id}" != device.unique_id
     }
+    temporary_id_map = {
+        f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{old_unique_id}": new_unique_id
+        for old_unique_id, new_unique_id in id_map.items()
+    }
+    migration_id_map = id_map | temporary_id_map
 
     if not id_map:
         return
@@ -46,22 +52,40 @@ def _migrate_unique_ids(
     entity_registry = er.async_get(hass)
     migrated_device_ids = set()
     migrated_unique_ids = set(id_map.values())
+    entity_migrations = []
     for entity_entry in er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
     ):
         if entity_entry.platform != DOMAIN or entity_entry.domain != Platform.LIGHT:
             continue
-        if new_unique_id := id_map.get(entity_entry.unique_id):
-            entity_registry.async_update_entity(
-                entity_entry.entity_id,
-                new_unique_id=new_unique_id,
-            )
+        if new_unique_id := migration_id_map.get(entity_entry.unique_id):
+            entity_migrations.append((entity_entry.entity_id, new_unique_id))
         elif entity_entry.unique_id not in migrated_unique_ids:
             continue
         if entity_entry.device_id is not None:
             migrated_device_ids.add(entity_entry.device_id)
 
+    for entity_id, _ in entity_migrations:
+        current_entity_entry = entity_registry.async_get(entity_id)
+        if (
+            current_entity_entry is not None
+            and current_entity_entry.unique_id in id_map
+        ):
+            entity_registry.async_update_entity(
+                entity_id,
+                new_unique_id=(
+                    f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}"
+                    f"{current_entity_entry.unique_id}"
+                ),
+            )
+    for entity_id, new_unique_id in entity_migrations:
+        entity_registry.async_update_entity(
+            entity_id,
+            new_unique_id=new_unique_id,
+        )
+
     device_registry = dr.async_get(hass)
+    device_migrations = []
     for device_id in migrated_device_ids:
         device_entry = device_registry.async_get(device_id)
         if device_entry is None:
@@ -69,15 +93,38 @@ def _migrate_unique_ids(
         new_identifiers = {
             (
                 domain,
-                id_map.get(identifier, identifier) if domain == DOMAIN else identifier,
+                migration_id_map.get(identifier, identifier)
+                if domain == DOMAIN
+                else identifier,
             )
             for domain, identifier in device_entry.identifiers
         }
         if new_identifiers != device_entry.identifiers:
+            device_migrations.append((device_entry.id, new_identifiers))
+
+    for device_id, _ in device_migrations:
+        device_entry = device_registry.async_get(device_id)
+        if device_entry is None:
+            continue
+        temporary_identifiers = {
+            (
+                domain,
+                f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{identifier}"
+                if domain == DOMAIN and identifier in id_map
+                else identifier,
+            )
+            for domain, identifier in device_entry.identifiers
+        }
+        if temporary_identifiers != device_entry.identifiers:
             device_registry.async_update_device(
                 device_entry.id,
-                new_identifiers=new_identifiers,
+                new_identifiers=temporary_identifiers,
             )
+    for device_id, new_identifiers in device_migrations:
+        device_registry.async_update_device(
+            device_id,
+            new_identifiers=new_identifiers,
+        )
 
 
 async def _async_create_cync(hass: HomeAssistant, entry: CyncConfigEntry) -> Cync:
