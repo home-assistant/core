@@ -39,8 +39,8 @@
 # name: test_all_entities[binary_sensor.nursery_yoto_bluetooth_audio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Nursery Yoto Bluetooth audio',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Bluetooth audio',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nursery_yoto_bluetooth_audio',
@@ -90,8 +90,8 @@
 # name: test_all_entities[binary_sensor.nursery_yoto_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Nursery Yoto Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nursery_yoto_charging',
@@ -141,8 +141,8 @@
 # name: test_all_entities[binary_sensor.nursery_yoto_headphones-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Nursery Yoto Headphones',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Headphones',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nursery_yoto_headphones',

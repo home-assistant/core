@@ -1,5 +1,7 @@
 """Support for Velbus Binary Sensors."""
 
+from typing import override
+
 from velbusaio.channels import Button as VelbusButton
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -31,6 +33,7 @@ class VelbusBinarySensor(VelbusEntity, BinarySensorEntity):
     _channel: VelbusButton
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the sensor is on."""
         return self._channel.is_closed()

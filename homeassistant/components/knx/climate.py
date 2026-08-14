@@ -1,6 +1,6 @@
 """Support for KNX climate entities."""
 
-from typing import Any
+from typing import Any, override
 
 from xknx import XKNX
 from xknx.devices import (
@@ -25,13 +25,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_ENTITY_CATEGORY,
-    CONF_NAME,
-    Platform,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -52,6 +46,7 @@ from .entity import (
     KnxUiEntityPlatformController,
     KnxYamlEntity,
     _KnxEntityBase,
+    build_yaml_unique_id,
 )
 from .knx_module import KNXModule
 from .schema import ClimateSchema
@@ -119,6 +114,7 @@ async def async_setup_entry(
 
 def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX."""
+    sync_state = config[CONF_SYNC_STATE]
     climate_mode = XknxClimateMode(
         xknx,
         name=f"{config[CONF_NAME]} Mode",
@@ -156,6 +152,7 @@ def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
         group_address_heat_cool_state=config.get(
             ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS
         ),
+        sync_state=sync_state,
         operation_modes=config.get(ClimateConf.OPERATION_MODES),
         controller_modes=config.get(ClimateConf.CONTROLLER_MODES),
     )
@@ -187,6 +184,7 @@ def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
         group_address_command_value_state=config.get(
             ClimateSchema.CONF_COMMAND_VALUE_STATE_ADDRESS
         ),
+        sync_state=sync_state,
         min_temp=config.get(ClimateConf.MIN_TEMP),
         max_temp=config.get(ClimateConf.MAX_TEMP),
         mode=climate_mode,
@@ -400,27 +398,32 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
         self._attr_target_temperature_step = device.temperature_step
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.temperature.value
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._device.target_temperature.value
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         temp = self._device.target_temperature_min
         return temp if temp is not None else super().min_temp
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         temp = self._device.target_temperature_max
         return temp if temp is not None else super().max_temp
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         if self._device.supports_on_off:
@@ -437,6 +440,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             await self._device.mode.set_controller_mode(knx_controller_mode)
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         if self._device.supports_on_off:
@@ -451,6 +455,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             await self._device.mode.set_controller_mode(HVACControllerMode.OFF)
             self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -459,6 +464,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             self.async_write_ha_state()
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         if self._device.supports_on_off and not self._device.is_on:
@@ -470,6 +476,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
         return self.default_hvac_mode
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation/controller modes."""
         ha_controller_modes: list[HVACMode | None] = []
@@ -491,6 +498,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
         )
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported.
 
@@ -506,6 +514,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             return CURRENT_HVAC_ACTIONS.get(self.hvac_mode, HVACAction.IDLE)
         return None
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set controller mode."""
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
@@ -521,6 +530,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
         self.async_write_ha_state()
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp.
 
@@ -530,6 +540,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             return self._device.mode.operation_mode.name.lower()
         return None
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if (
@@ -542,6 +553,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             self.async_write_ha_state()
 
     @property
+    @override
     def fan_mode(self) -> str:
         """Return the fan setting."""
 
@@ -562,6 +574,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             self._fan_modes_percentages.index(closest_percentage)
         ]
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
 
@@ -576,15 +589,18 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
 
         await self._device.set_fan_speed(self._fan_modes_percentages[fan_mode_index])
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing setting."""
         await self._device.set_swing(swing_mode == SWING_ON)
 
+    @override
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set the horizontal swing setting."""
         await self._device.set_horizontal_swing(swing_horizontal_mode == SWING_ON)
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
         if self._device.swing.value is not None:
@@ -592,6 +608,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
         return None
 
     @property
+    @override
     def swing_horizontal_mode(self) -> str | None:
         """Return the horizontal swing setting."""
         if self._device.horizontal_swing.value is not None:
@@ -599,11 +616,13 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
         return None
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self._device.humidity.value
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes."""
         attr: dict[str, Any] = {}
@@ -612,6 +631,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             attr[ATTR_COMMAND_VALUE] = self._device.command_value.value
         return attr
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Store register state change callback and start device object."""
         await super().async_added_to_hass()
@@ -619,6 +639,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             self._device.mode.register_device_updated_cb(self.after_update_callback)
             self._device.mode.xknx.devices.async_add(self._device.mode)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         if self._device.mode is not None:
@@ -626,6 +647,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             self._device.mode.xknx.devices.async_remove(self._device.mode)
         await super().async_will_remove_from_hass()
 
+    @override
     def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
@@ -647,14 +669,13 @@ class KnxYamlClimate(_KnxClimate, KnxYamlEntity):
         self._device = _create_climate_yaml(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            unique_id=(
-                f"{self._device.temperature.group_address_state}_"
-                f"{self._device.target_temperature.group_address_state}_"
-                f"{self._device.target_temperature.group_address}_"
-                f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
+            unique_id=build_yaml_unique_id(
+                self._device.temperature.group_address_state,
+                self._device.target_temperature.group_address_state,
+                self._device.target_temperature.group_address,
+                self._device._setpoint_shift.group_address,  # noqa: SLF001
             ),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         default_hvac_mode: HVACMode = config[ClimateConf.DEFAULT_CONTROLLER_MODE]
         fan_max_step = config[ClimateConf.FAN_MAX_STEP]

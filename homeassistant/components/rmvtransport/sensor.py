@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from RMVtransport import RMVtransport
 from RMVtransport.rmvtransport import (
@@ -151,16 +151,19 @@ class RMVDepartureSensor(SensorEntity):
         self._attr_icon = ICONS[None]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._state is not None
 
     @property
+    @override
     def native_value(self):
         """Return the next departure time."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         try:

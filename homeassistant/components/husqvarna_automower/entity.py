@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate, overload
+from typing import Any, Concatenate, overload, override
 
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
@@ -136,6 +136,7 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         return self.coordinator.data[self.mower_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the device is available."""
         return super().available and self.mower_id in self.coordinator.data
@@ -145,6 +146,7 @@ class AutomowerControlEntity(AutomowerBaseEntity):
     """Replies available when the mower is connected."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the device is available."""
         return (
@@ -168,21 +170,26 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
         self.work_area_id = work_area_id
 
     @property
-    def work_areas(self) -> dict[int, WorkArea]:
+    def work_areas(self) -> dict[int, WorkArea] | None:
         """Get the work areas from the mower attributes."""
-        if TYPE_CHECKING:
-            assert self.mower_attributes.work_areas is not None
         return self.mower_attributes.work_areas
 
     @property
-    def work_area_attributes(self) -> WorkArea:
+    def work_area_attributes(self) -> WorkArea | None:
         """Get the work area attributes of the current work area."""
-        return self.work_areas[self.work_area_id]
+        if (work_areas := self.work_areas) is None:
+            return None
+        return work_areas.get(self.work_area_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the work area is available and the mower has no errors."""
-        return super().available and self.work_area_id in self.work_areas
+        return (
+            super().available
+            and self.work_areas is not None
+            and self.work_area_id in self.work_areas
+        )
 
 
 class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerControlEntity):

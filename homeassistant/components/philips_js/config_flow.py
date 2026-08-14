@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import platform
-from typing import Any
+from typing import Any, override
 
 from haphilipsjs import (
     DEFAULT_API_VERSION,
@@ -177,6 +177,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._current[CONF_API_VERSION] = entry_data[CONF_API_VERSION]
         return await self.async_step_user()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -214,6 +215,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: name},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -236,6 +238,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:

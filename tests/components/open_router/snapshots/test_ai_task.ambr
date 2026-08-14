@@ -42,8 +42,8 @@
 # name: test_all_entities[ai_task.gemini_2_5_flash_image-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gemini 2.5 Flash Image',
-      'supported_features': <AITaskEntityFeature: 7>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gemini 2.5 Flash Image',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <AITaskEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'ai_task.gemini_2_5_flash_image',

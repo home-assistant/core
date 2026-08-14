@@ -1,7 +1,7 @@
 """Support for the Microsoft Cognitive Services text-to-speech service."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pycsspeechtts import pycsspeechtts
 from requests.exceptions import HTTPError
@@ -91,25 +91,30 @@ class MicrosoftProvider(Provider):
         self.name = "Microsoft"
 
     @property
+    @override
     def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return list(SUPPORTED_LANGUAGES)
 
     @property
+    @override
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
         return [CONF_GENDER, CONF_TYPE]
 
     @property
+    @override
     def default_options(self) -> dict[str, Any]:
         """Return a dict include default options."""
         return {CONF_GENDER: self._gender, CONF_TYPE: self._type}
 
+    @override
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

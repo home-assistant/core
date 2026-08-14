@@ -3,6 +3,7 @@
 import base64
 from json import JSONDecodeError
 import logging
+from typing import override
 
 from python_open_router import Modality
 
@@ -54,6 +55,7 @@ class OpenRouterAITaskEntity(
         if Modality.IMAGE in subentry.data.get(CONF_OUTPUT_MODALITIES, []):
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,
@@ -86,6 +88,7 @@ class OpenRouterAITaskEntity(
             data=data,
         )
 
+    @override
     async def _async_generate_image(
         self,
         task: ai_task.GenImageTask,

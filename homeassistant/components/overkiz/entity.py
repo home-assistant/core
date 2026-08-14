@@ -1,10 +1,11 @@
 """Parent class for every Overkiz device."""
 
-from typing import cast
+from typing import cast, override
 
 from pyoverkiz.enums import APIType, OverkizAttribute, OverkizCommandParam, OverkizState
 from pyoverkiz.models import Device
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -19,6 +20,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
 
     _attr_has_entity_name = True
     _attr_name: str | None = None
+    _attr_device_info: DeviceInfo | None = None
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -38,6 +40,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self._attr_device_info = self.generate_device_info()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.device.available:
@@ -74,16 +77,18 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             )
 
         manufacturer = (
-            self.executor.select_attribute(OverkizAttribute.CORE_MANUFACTURER)
-            or self.executor.select_state(OverkizState.CORE_MANUFACTURER_NAME)
+            self.device.attributes.get_value(OverkizAttribute.CORE_MANUFACTURER)
+            or self.device.states.get_value(OverkizState.CORE_MANUFACTURER_NAME)
             or self.coordinator.client.server_config.manufacturer
         )
 
         model = (
-            self.executor.select_state(
-                OverkizState.CORE_MODEL,
-                OverkizState.CORE_PRODUCT_MODEL_NAME,
-                OverkizState.IO_MODEL,
+            self.device.states.first_value(
+                [
+                    OverkizState.CORE_MODEL,
+                    OverkizState.CORE_PRODUCT_MODEL_NAME,
+                    OverkizState.IO_MODEL,
+                ]
             )
             or self.device.ui_class.value
         )
@@ -101,12 +106,18 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             model=str(model),
             sw_version=cast(
                 str,
-                self.executor.select_attribute(OverkizAttribute.CORE_FIRMWARE_REVISION),
+                self.device.attributes.get_value(
+                    OverkizAttribute.CORE_FIRMWARE_REVISION
+                ),
             ),
             model_id=self.device.widget,
             hw_version=self.device.controllable_name,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, self.device.identifier.gateway_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, self.device.identifier.gateway_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             configuration_url=self.coordinator.client.server_config.configuration_url,
         )
 
@@ -126,8 +137,9 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
 
         if self.device.identifier.is_sub_device:
-            # In case of sub device, use the provided label
-            # and append the name of the type of entity
-            self._attr_name = f"{self.device.label} {description.name}"
+            if isinstance(description.name, str):
+                self._attr_name = f"{self.device.label} {description.name}"
+            else:
+                self._attr_name = self.device.label
         elif isinstance(description.name, str):
             self._attr_name = description.name

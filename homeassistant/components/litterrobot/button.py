@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any, Generic, override
 
 from pylitterbot import FeederRobot, LitterRobot3, LitterRobot4, LitterRobot5, Robot
 
@@ -90,6 +90,7 @@ class LitterRobotButtonEntity(LitterRobotEntity[_WhiskerEntityT], ButtonEntity):
     entity_description: RobotButtonEntityDescription[_WhiskerEntityT]
 
     @whisker_command
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.robot)

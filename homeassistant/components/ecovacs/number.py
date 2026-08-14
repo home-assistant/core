@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from deebot_client.capabilities import CapabilityNumber, CapabilitySet
 from deebot_client.device import Device
@@ -125,6 +126,7 @@ class EcovacsNumberEntity[EventT: Event](
             self._attr_native_min_value = capability.min
             self._attr_native_max_value = capability.max
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -137,6 +139,7 @@ class EcovacsNumberEntity[EventT: Event](
 
         self._subscribe(self._capability.event, on_event)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self._device.execute_command(self._capability.set(int(value)))

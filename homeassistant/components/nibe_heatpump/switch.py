@@ -1,6 +1,6 @@
 """The Nibe Heat Pump switch."""
 
-from typing import Any
+from typing import Any, override
 
 from nibe.coil import Coil, CoilData
 
@@ -40,13 +40,16 @@ class Switch(CoilEntity, SwitchEntity):
         self._on_value = coil.get_mapping_for(1)
         self._off_value = coil.get_mapping_for(0)
 
+    @override
     def _async_read_coil(self, data: CoilData) -> None:
         self._attr_is_on = data.value == self._on_value
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._async_write_coil(self._on_value)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._async_write_coil(self._off_value)

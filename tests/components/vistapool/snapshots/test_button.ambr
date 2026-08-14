@@ -39,7 +39,7 @@
 # name: test_all_entities[button.my_pool_led_next_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool LED next color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool LED next color',
     }),
     'context': <ANY>,
     'entity_id': 'button.my_pool_led_next_color',

@@ -1,7 +1,7 @@
 """Support for interacting with and controlling the cmus music player."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pycmus import exceptions, remote
 import voluptuous as vol
@@ -140,14 +140,17 @@ class CmusDevice(MediaPlayerEntity):
 
         _LOGGER.warning("Received no status from cmus")
 
+    @override
     def turn_off(self) -> None:
         """Service to send the CMUS the command to stop playing."""
         self._remote.cmus.player_stop()
 
+    @override
     def turn_on(self) -> None:
         """Service to send the CMUS the command to start playing."""
         self._remote.cmus.player_play()
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._remote.cmus.set_volume(int(volume * 100))
@@ -176,6 +179,7 @@ class CmusDevice(MediaPlayerEntity):
         if current_volume <= 100:
             self._remote.cmus.set_volume(int(current_volume) - 5)
 
+    @override
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -190,26 +194,32 @@ class CmusDevice(MediaPlayerEntity):
                 MediaType.PLAYLIST,
             )
 
+    @override
     def media_pause(self) -> None:
         """Send the pause command."""
         self._remote.cmus.player_pause()
 
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         self._remote.cmus.player_next()
 
+    @override
     def media_previous_track(self) -> None:
         """Send next track command."""
         self._remote.cmus.player_prev()
 
+    @override
     def media_seek(self, position: float) -> None:
         """Send seek command."""
         self._remote.cmus.seek(position)
 
+    @override
     def media_play(self) -> None:
         """Send the play command."""
         self._remote.cmus.player_play()
 
+    @override
     def media_stop(self) -> None:
         """Send the stop command."""
         self._remote.cmus.stop()

@@ -12,13 +12,14 @@ import pathlib
 import re
 import sys
 from types import CodeType
-from typing import TYPE_CHECKING, Any, Literal, Self, overload
+from typing import TYPE_CHECKING, Any, Literal, Self, overload, override
 import weakref
 
 import jinja2
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
+from lru import LRU
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -73,6 +74,7 @@ from .states import (
     StateAttrTranslated,
     StateTranslated,
     TemplateState as TemplateState,
+    TemplateStateBase,
     TemplateStateFromEntityId as TemplateStateFromEntityId,
 )
 
@@ -98,6 +100,12 @@ _HASS_LOADER = "template.hass_loader"
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
 EVAL_CACHE_SIZE = 512
+
+# Number of recently compiled template code objects to keep alive per
+# environment, so short-lived Template objects (REST API, config validation)
+# can reuse them via the weak cache. Bounded so one-off template strings
+# (like template editor keystrokes) cannot grow it indefinitely.
+COMPILED_CODE_PIN_SIZE = 256
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
 MAX_TEMPLATE_OUTPUT = 256 * 1024  # 256KiB
@@ -188,6 +196,7 @@ def gen_result_wrapper(kls: type[dict | list | set]) -> type:
             super().__init__(*args)
             self.render_result = render_result
 
+        @override
         def __str__(self) -> str:
             if self.render_result is None:
                 # Can't get set repr to work
@@ -216,6 +225,7 @@ class TupleWrapper(tuple, ResultWrapper):
         """Initialize a new tuple class."""
         self.render_result = render_result
 
+    @override
     def __str__(self) -> str:
         """Return string representation."""
         if self.render_result is None:
@@ -229,8 +239,31 @@ RESULT_WRAPPERS: dict[type, type] = {kls: gen_result_wrapper(kls) for kls in _ty
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
-@lru_cache(maxsize=EVAL_CACHE_SIZE)
 def _parse_result(render_result: str) -> Any:
+    """Parse a rendered result.
+
+    Continuously changing numeric results, like sensor values, produce
+    a new string on every render and would always miss the eval cache,
+    paying for a full literal_eval. Convert them directly instead.
+    Anything the fast path cannot convert falls through to the cached
+    path, which handles the edge cases ("", ".", "+") identically.
+    """
+    if _IS_NUMERIC.match(render_result):
+        if "." in render_result:
+            try:
+                return float(render_result)
+            except ValueError:
+                pass
+        else:
+            try:
+                return int(render_result)
+            except ValueError:
+                pass
+    return _cached_parse_result(render_result)
+
+
+@lru_cache(maxsize=EVAL_CACHE_SIZE)
+def _cached_parse_result(render_result: str) -> Any:
     """Parse a result and cache the result."""
     # lru_cache does not memoize raised exceptions. The most common template
     # results, plain string states such as "on", "off" or "unavailable", are
@@ -325,14 +358,20 @@ class Template:
         if self.is_static or self._compiled_code is not None:
             return
 
-        if compiled := self._env.template_cache.get(self.template):
+        env = self._env
+        if compiled := env.template_cache.get(self.template):
             self._compiled_code = compiled
+            # Refresh recency only when the pin is what keeps this code
+            # alive, so templates that are alive anyway do not take up
+            # pin slots.
+            if self.template in env.compiled_code_pin:
+                env.compiled_code_pin[self.template] = compiled
             return
 
         with template_context_manager as cm:
             cm.set_template(self.template, "compiling")
             try:
-                self._compiled_code = self._env.compile(self.template)
+                self._compiled_code = env.compile(self.template)
             except jinja2.TemplateError as err:
                 raise TemplateError(err) from err
 
@@ -605,6 +644,7 @@ class Template:
 
         return self._compiled
 
+    @override
     def __eq__(self, other):
         """Compare template with another."""
         return (
@@ -613,10 +653,12 @@ class Template:
             and self.hass == other.hass
         )
 
+    @override
     def __hash__(self) -> int:
         """Hash code for template."""
         return self._hash_cache
 
+    @override
     def __repr__(self) -> str:
         """Representation of Template."""
         return f"Template<template=({self.template}) renders={self._renders}>"
@@ -657,6 +699,7 @@ def make_logging_undefined(
         def _log_message(self) -> None:
             _log_fn(logging.WARNING, self._undefined_message)
 
+        @override
         def _fail_with_undefined_error(self, *args, **kwargs):
             try:
                 return super()._fail_with_undefined_error(*args, **kwargs)
@@ -664,16 +707,19 @@ def make_logging_undefined(
                 _log_fn(logging.ERROR, self._undefined_message)
                 raise
 
+        @override
         def __str__(self) -> str:
             """Log undefined __str___."""
             self._log_message()
             return super().__str__()
 
+        @override
         def __iter__(self):
             """Log undefined __iter___."""
             self._log_message()
             return super().__iter__()
 
+        @override
         def __bool__(self) -> bool:
             """Log undefined __bool___."""
             self._log_message()
@@ -726,6 +772,7 @@ class HassLoader(jinja2.BaseLoader):
         self._sources = value
         self._reload += 1
 
+    @override
     def get_source(
         self, environment: jinja2.Environment, template: str
     ) -> tuple[str, str | None, Callable[[], bool] | None]:
@@ -753,6 +800,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.template_cache: weakref.WeakValueDictionary[
             str | jinja2.nodes.Template, CodeType | None
         ] = weakref.WeakValueDictionary()
+        self.compiled_code_pin: LRU[str | jinja2.nodes.Template, CodeType] = LRU(
+            COMPILED_CODE_PIN_SIZE
+        )
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
         self.add_extension(AreaExtension)
@@ -780,16 +830,25 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             # to enable imports.
             self.loader = _get_hass_loader(hass)
 
+    @override
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
         return isinstance(
             obj, (AllStates, StateAttrTranslated, StateTranslated)
         ) or super().is_safe_callable(obj)
 
+    @override
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         if isinstance(
-            obj, (AllStates, DomainStates, TemplateState, LoopContext, AsyncLoopContext)
+            obj,
+            (
+                AllStates,
+                DomainStates,
+                TemplateStateBase,
+                LoopContext,
+                AsyncLoopContext,
+            ),
         ):
             return attr[0] != "_"
 
@@ -818,6 +877,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         defer_init: bool = False,
     ) -> str: ...
 
+    @override
     def compile(
         self,
         source: str | jinja2.nodes.Template,
@@ -846,4 +906,5 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         compiled = super().compile(source)
         self.template_cache[source] = compiled
+        self.compiled_code_pin[source] = compiled
         return compiled

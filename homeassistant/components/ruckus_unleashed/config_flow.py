@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import logging
 import operator
-from typing import Any
+from typing import Any, override
 
 from aioruckus import AjaxSession, SystemStat
 from aioruckus.exceptions import AuthenticationError, SchemaError
@@ -79,12 +79,14 @@ class RuckusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> RuckusOptionsFlowHandler:
         """Get the options flow for this handler."""
         return RuckusOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

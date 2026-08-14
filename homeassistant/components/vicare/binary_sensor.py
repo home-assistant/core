@@ -4,6 +4,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -23,13 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixin
-from .utils import (
-    get_burners,
-    get_circuits,
-    get_compressors,
-    get_device_serial,
-    is_supported,
-)
+from .utils import get_burners, get_circuits, get_compressors, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -156,7 +151,7 @@ def _build_entities(
         entities.extend(
             ViCareBinarySensor(
                 description,
-                get_device_serial(device.api),
+                device.serial,
                 device.config,
                 device.api,
             )
@@ -172,7 +167,7 @@ def _build_entities(
             entities.extend(
                 ViCareBinarySensor(
                     description,
-                    get_device_serial(device.api),
+                    device.serial,
                     device.config,
                     device.api,
                     component,
@@ -218,6 +213,7 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_is_on is not None

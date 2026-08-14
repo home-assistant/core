@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import logging
+from typing import override
 
 from govee_local_api import GoveeController, GoveeDevice
 
@@ -111,6 +112,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             devices = devices + controller.devices
         return devices
 
+    @override
     async def _async_update_data(self) -> list[GoveeDevice]:
         for controller in self._controllers:
             controller.send_update_message()

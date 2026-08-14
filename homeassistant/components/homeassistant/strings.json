@@ -66,6 +66,12 @@
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."
     },
+    "service_found_multiple_config_entry_for_domain": {
+      "message": "Found multiple config entries for integration {domain}."
+    },
+    "service_found_no_config_entry_for_domain": {
+      "message": "Could not find config entry for integration {domain}."
+    },
     "service_lacks_response_request": {
       "message": "The action requires responses and must be called with {return_response}."
     },
@@ -134,6 +140,10 @@
     "deprecated_system_packages_yaml_integration": {
       "description": "The {integration_title} integration is being removed as it depends on system packages that can only be installed on systems running a deprecated architecture. To resolve this, remove the {domain} entry from your configuration.yaml file and restart Home Assistant.",
       "title": "The {integration_title} integration is being removed"
+    },
+    "deprecated_trigger_behavior": {
+      "description": "An automation, script or template entity uses the trigger behavior option `{deprecated_behavior}`, which has been renamed to `{new_behavior}`. The old value still works for now, but support for it will be removed in a future release.\n\nTo fix this issue, open each affected automation or script in the editor and save it again; Home Assistant will automatically detect and update the deprecated option. Alternatively, edit your configuration files (for example `automations.yaml`) directly and change `behavior: {deprecated_behavior}` to `behavior: {new_behavior}`. Restart Home Assistant afterwards.",
+      "title": "Deprecated trigger behavior option in use"
     },
     "deprecated_yaml": {
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",

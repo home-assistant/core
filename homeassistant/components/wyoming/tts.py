@@ -4,10 +4,12 @@ from collections import defaultdict
 from collections.abc import AsyncGenerator
 import io
 import logging
+from typing import override
 import wave
 
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
+from wyoming.error import Error
 from wyoming.tts import (
     Synthesize,
     SynthesizeChunk,
@@ -19,11 +21,12 @@ from wyoming.tts import (
 
 from homeassistant.components import tts
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_SPEAKER
 from .data import WyomingService
-from .error import WyomingError
+from .error import WyomingError, error_event_message
 from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,13 +88,15 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
             self._attr_default_language = self._attr_supported_languages[0]
 
         self._attr_name = self._tts_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-tts"
+        self._attr_unique_id = f"{config_entry.entry_id}-tts"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
         """Return a list of supported voices for a language."""
         return self._voices.get(language)
 
+    @override
     async def async_get_tts_audio(self, message, language, options):
         """Load TTS from TCP socket."""
         voice_name: str | None = options.get(tts.ATTR_VOICE)
@@ -113,6 +118,11 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
                         if event is None:
                             _LOGGER.debug("Connection lost")
                             return (None, None)
+
+                        if Error.is_type(event.type):
+                            raise HomeAssistantError(
+                                error_event_message(Error.from_event(event))
+                            )
 
                         if AudioStop.is_type(event.type):
                             break
@@ -137,10 +147,12 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
 
         return ("wav", data)
 
+    @override
     def async_supports_streaming_input(self) -> bool:
         """Return if the TTS engine supports streaming input."""
         return self._tts_service.supports_synthesize_streaming
 
+    @override
     async def async_stream_tts_audio(
         self, request: tts.TTSAudioRequest
     ) -> tts.TTSAudioResponse:
@@ -208,6 +220,11 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
 
         try:
             while event := await client.read_event():
+                if Error.is_type(event.type):
+                    raise HomeAssistantError(
+                        error_event_message(Error.from_event(event))
+                    )
+
                 if wav_header_sent and AudioChunk.is_type(event.type):
                     # PCM audio
                     yield AudioChunk.from_event(event).audio

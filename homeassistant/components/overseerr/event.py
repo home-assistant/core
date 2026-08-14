@@ -1,7 +1,7 @@
 """Support for Overseerr events."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import Platform
@@ -76,6 +76,7 @@ class OverseerrEvent(OverseerrEntity, EventEntity):
         self.entity_description = description
         self._attr_available = True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         await super().async_added_to_hass()
@@ -95,12 +96,14 @@ class OverseerrEvent(OverseerrEntity, EventEntity):
             self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         if super().available != self._attr_available:
             self._attr_available = super().available
             super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_available and self.coordinator.push

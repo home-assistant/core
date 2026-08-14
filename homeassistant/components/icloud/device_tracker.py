@@ -1,6 +1,6 @@
 """Support for tracking for iCloud devices."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -67,6 +67,7 @@ class IcloudTrackerEntity(TrackerEntity):
         self._attr_unique_id = device.unique_id
 
     @property
+    @override
     def location_accuracy(self) -> float:
         """Return the location accuracy of the device."""
         if TYPE_CHECKING:
@@ -74,6 +75,7 @@ class IcloudTrackerEntity(TrackerEntity):
         return self._device.location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
 
     @property
+    @override
     def latitude(self) -> float:
         """Return latitude value of the device."""
         if TYPE_CHECKING:
@@ -81,6 +83,7 @@ class IcloudTrackerEntity(TrackerEntity):
         return self._device.location[DEVICE_LOCATION_LATITUDE]
 
     @property
+    @override
     def longitude(self) -> float:
         """Return longitude value of the device."""
         if TYPE_CHECKING:
@@ -88,16 +91,19 @@ class IcloudTrackerEntity(TrackerEntity):
         return self._device.location[DEVICE_LOCATION_LONGITUDE]
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon."""
         return icon_for_icloud_device(self._device)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return self._device.extra_state_attributes
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
@@ -108,12 +114,14 @@ class IcloudTrackerEntity(TrackerEntity):
             name=self._device.name,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass, self._account.signal_device_update, self.async_write_ha_state
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
         if self._unsub_dispatcher:

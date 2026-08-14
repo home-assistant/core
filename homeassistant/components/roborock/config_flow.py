@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from roborock.data import UserData
@@ -69,6 +69,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username: str | None = None
         self._client: RoborockApiClient | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -210,17 +211,20 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow started by a dhcp discovery."""
         await self._async_handle_discovery_without_unique_id()
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(
+        devices = device_registry.async_get_devices(
             connections={(dr.CONNECTION_NETWORK_MAC, discovery_info.macaddress)}
         )
-        if device is not None and any(
-            identifier[0] == DOMAIN for identifier in device.identifiers
+        if any(
+            identifier[0] == DOMAIN
+            for device in devices
+            for identifier in device.identifiers
         ):
             return self.async_abort(reason="already_configured")
         return await self.async_step_user()
@@ -264,6 +268,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: RoborockConfigEntry,
     ) -> RoborockOptionsFlowHandler:

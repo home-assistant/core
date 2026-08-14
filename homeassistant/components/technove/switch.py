@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from technove import Station as TechnoVEStation
 
@@ -16,6 +16,8 @@ from .const import DOMAIN
 from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 from .helpers import technove_exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 async def _set_charging_enabled(
@@ -102,17 +104,20 @@ class TechnoVESwitchEntity(TechnoVEEntity, SwitchEntity):
         super().__init__(coordinator, description.key)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the TechnoVE switch."""
 
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     @technove_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the TechnoVE switch."""
         await self.entity_description.turn_on_fn(self.coordinator)
 
     @technove_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the TechnoVE switch."""
         await self.entity_description.turn_off_fn(self.coordinator)

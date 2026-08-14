@@ -4,10 +4,9 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import call, patch
 
 import pytest
+from zhaquirks.builder import NumberDeviceClass, QuirkBuilder
 from zigpy.device import Device
 from zigpy.profiles import zha
-from zigpy.quirks.v2 import QuirkBuilder
-from zigpy.quirks.v2.homeassistant.number import NumberDeviceClass
 from zigpy.typing import UNDEFINED
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f

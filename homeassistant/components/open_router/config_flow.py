@@ -1,7 +1,7 @@
 """Config flow for OpenRouter integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from python_open_router import (
     Model,
@@ -25,7 +25,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
-    BooleanSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -48,10 +47,11 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenRouter."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -61,6 +61,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
             "ai_task_data": AITaskDataFlowHandler,
         }
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -220,7 +221,22 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                             CONF_WEB_SEARCH,
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_WEB_SEARCH],
                         ),
-                    ): BooleanSelector(),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                "off",
+                                "plugin",
+                                "tool",
+                                "tool_native",
+                                "tool_exa",
+                                "tool_firecrawl",
+                                "tool_parallel",
+                                "tool_perplexity",
+                            ],
+                            translation_key="web_search_modes",
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
                 }
             ),
         )

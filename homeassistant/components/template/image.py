@@ -1,7 +1,7 @@
 """Support for image which integrates with other components."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -9,6 +9,7 @@ from homeassistant.components.image import (
     DOMAIN as IMAGE_DOMAIN,
     ENTITY_ID_FORMAT,
     ImageEntity,
+    ImageEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
@@ -27,7 +28,7 @@ from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -44,8 +45,8 @@ IMAGE_YAML_SCHEMA = vol.Schema(
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 ).extend(
-    make_template_entity_common_modern_attributes_schema(
-        IMAGE_DOMAIN, DEFAULT_NAME
+    make_template_entity_common_schema(
+        IMAGE_DOMAIN, DEFAULT_NAME, ImageEntityStateAttribute
     ).schema
 )
 
@@ -135,6 +136,7 @@ class StateImageEntity(TemplateEntity, AbstractTemplateImage):
         AbstractTemplateImage.__init__(self, hass, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if self._has_picture_template:
@@ -159,6 +161,7 @@ class TriggerImageEntity(TriggerEntity, AbstractTemplateImage):
         AbstractTemplateImage.__init__(self, hass, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if self._has_picture_template:

@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from inkbird_ble import INKBIRDBluetoothDeviceData, SensorUpdate
 
@@ -31,8 +31,9 @@ FALLBACK_POLL_INTERVAL = timedelta(seconds=180)
 
 # IBS-TH2 broadcasts every ~20-30s and only carries sensor data in the scan
 # response, so the default 10s active window misses the device most cycles.
-# 25s covers one full broadcast interval with margin to absorb jitter.
-ACTIVE_SCAN_DURATION = 25.0
+# 30s is the longest active window habluetooth allows (AUTO_WINDOW_MAX_DURATION)
+# and spans a full broadcast interval even at the 30s end of the range.
+ACTIVE_SCAN_DURATION = 30.0
 
 
 class INKBIRDActiveBluetoothProcessorCoordinator(
@@ -98,6 +99,7 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
         await self._data.async_start(service_info, service_info.device)
         self._entry.async_on_unload(self._data.async_stop)
 
+    @override
     async def _async_poll_data(
         self, last_service_info: BluetoothServiceInfoBleak
     ) -> SensorUpdate:

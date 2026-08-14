@@ -1,7 +1,7 @@
 """Config flow to configure the Arcam FMJ component."""
 
 import socket
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from arcam.fmj import ConnectionFailed
@@ -55,6 +55,7 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
             await client.stop()
         return {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -138,6 +139,7 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

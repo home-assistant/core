@@ -1,6 +1,7 @@
 """Support for Vilfo Router sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -89,6 +90,7 @@ class VilfoRouterSensor(SensorEntity):
         self._attr_unique_id = f"{api.unique_id}_{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the sensor is available or not."""
         return self.api.available

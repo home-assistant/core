@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 import logging
 import sys
-from typing import Any
+from typing import Any, override
 
 import httpx
 import ollama
@@ -118,7 +118,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
                     str(err),
                 )
                 errors["base"] = "unknown"
-        except TimeoutError, httpx.ConnectError:
+        except TimeoutError, ConnectionError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
@@ -126,6 +126,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -228,6 +229,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -276,7 +278,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
                 downloaded_models: set[str] = {
                     model_info["model"] for model_info in response.get("models", [])
                 }
-            except TimeoutError, httpx.ConnectError, httpx.HTTPError:
+            except TimeoutError, httpx.HTTPError, ConnectionError:
                 _LOGGER.exception("Failed to get models from Ollama server")
                 return self.async_abort(reason="cannot_connect")
 
