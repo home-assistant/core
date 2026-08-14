@@ -371,7 +371,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         if self._check_hangup_task is not None:
             self._check_hangup_task.cancel()
             self._check_hangup_task = None
-        # Clean up announcement state
         self.voip_device.set_is_active(False)
         self._announcement = None
         if self._run_pipeline_task is not None:
@@ -381,7 +380,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self._call_end_future.set_result(None)
         self._last_chunk_time = None
         self._rtp_port = None
-        _LOGGER.debug("VOIP disconnected")
+        _LOGGER.debug("VoIP disconnected")
 
     def connection_made(self, transport):
         """Server is ready."""

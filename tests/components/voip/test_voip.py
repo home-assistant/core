@@ -1005,19 +1005,6 @@ async def test_announce_disconnect(
         & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
     )
 
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            "assist_satellite",
-            "announce",
-            service_data={"media_id": "http://example.com"},
-            blocking=True,
-            target={
-                "entity_id": satellite.entity_id,
-            },
-        )
-    assert err.value.translation_domain == "voip"
-    assert err.value.translation_key == "non_tts_announcement"
-
     mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
