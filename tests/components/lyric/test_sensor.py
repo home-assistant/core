@@ -46,11 +46,7 @@ async def test_room_sensors_created_regardless_of_device_id_prefix(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Room/accessory sensors are created for supported devices whether or not their ID starts with LCC.
-
-    An unsupported device (GetPriorityFailed 400) shouldn't get room
-    sensors, but must not block setup or the other devices' sensors either.
-    """
+    """Room/accessory sensors are created regardless of device ID prefix."""
     with patch("homeassistant.components.lyric.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 

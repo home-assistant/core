@@ -20,11 +20,7 @@ async def test_room_priority_select_created_regardless_of_device_id_prefix(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """The room priority select is created for supported devices whether or not their ID starts with LCC.
-
-    An unsupported device (GetPriorityFailed 400) shouldn't get a room
-    priority select, since it has no room data to choose between.
-    """
+    """The room priority select is created regardless of device ID prefix."""
     with patch("homeassistant.components.lyric.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, mock_config_entry)
 

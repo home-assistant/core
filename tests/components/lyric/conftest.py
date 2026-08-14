@@ -124,15 +124,7 @@ OFFICE_ROOM_JSON = {
 
 @pytest.fixture
 async def mock_lyric_mixed_devices() -> AsyncGenerator[MagicMock]:
-    """Yield a mocked Lyric client with an LCC device, a non-LCC device, and an unsupported device.
-
-    Room priority support depends on the thermostat model, not on whether
-    its device ID happens to start with "LCC" (see the T9/T10 regression
-    this integration guards against), so this fixture exercises a
-    supported device on each prefix. ``get_thermostat_rooms`` populates
-    ``rooms_dict`` as a side effect, mirroring the real library, so a
-    device that the coordinator skips calling never gets room data.
-    """
+    """Yield a mocked Lyric client with an LCC device, a non-LCC device, and an unsupported device."""
     location = LyricLocation(
         MagicMock(),
         location_json(
