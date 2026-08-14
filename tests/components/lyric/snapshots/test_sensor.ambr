@@ -107,6 +107,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor[sensor.bedroom_thermostat_schedule_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bedroom_thermostat_schedule_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Schedule status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Schedule status',
+    'platform': 'lyric',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'schedule_status',
+    'unique_id': '5CFCE1B67036_schedule_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.bedroom_thermostat_schedule_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Thermostat Schedule status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bedroom_thermostat_schedule_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Resume',
+  })
+# ---
 # name: test_sensor[sensor.ocala_thermostat_indoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -213,5 +263,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'NoHold',
+  })
+# ---
+# name: test_sensor[sensor.ocala_thermostat_schedule_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ocala_thermostat_schedule_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Schedule status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Schedule status',
+    'platform': 'lyric',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'schedule_status',
+    'unique_id': '5CFCE1B67035_schedule_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.ocala_thermostat_schedule_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ocala Thermostat Schedule status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ocala_thermostat_schedule_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Resume',
   })
 # ---

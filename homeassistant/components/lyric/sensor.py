@@ -102,6 +102,13 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
         ),
     ),
     LyricSensorEntityDescription(
+        key="schedule_status",
+        translation_key="schedule_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.schedule_status,
+        suitable_fn=lambda device: device.schedule_status,
+    ),
+    LyricSensorEntityDescription(
         key="setpoint_status",
         translation_key="setpoint_status",
         value_fn=lambda device: get_setpoint_status(

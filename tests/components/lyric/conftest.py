@@ -26,9 +26,6 @@ from tests.common import (
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
-# Matches the values baked into fixtures/locations.json.
-LOCATION_ID = 35202000168931
-DEVICE_ID = "LCC-7f86b153-8480-f111-b78f-6045bdb25006"
 MAC_ID = "5CFCE1B67035"
 # Second device: has room data but no priority data yet, exercising the
 # defensive "no priority entry" branch of LyricPriorityStatusSensor.
