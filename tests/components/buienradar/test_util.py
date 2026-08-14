@@ -1,20 +1,30 @@
 """Tests for the Buienradar utilities."""
 
-from unittest.mock import AsyncMock, patch
+import datetime
+from http import HTTPStatus
+from unittest.mock import patch
 
-from buienradar.constants import CONTENT, MESSAGE, STATUS_CODE, SUCCESS
+from buienradar.constants import MESSAGE, SUCCESS
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.buienradar.util import BrData
+from homeassistant.components.buienradar.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
+
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+TEST_LATITUDE = 51.5
+TEST_LONGITUDE = 5.5
+TEST_CFG_DATA = {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE}
 
 WARNING = "Unable to parse data from Buienradar"
 
 
 @pytest.mark.parametrize(
-    ("frozen_time", "expect_warning"),
+    ("update_at", "expect_warning"),
     [
         ("2026-01-14T23:00:00+00:00", False),
         ("2026-01-14T23:59:59+00:00", False),
@@ -32,9 +42,10 @@ WARNING = "Unable to parse data from Buienradar"
 )
 async def test_unparsable_data_is_quiet_during_the_midnight_hour(
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
-    frozen_time: str,
+    update_at: str,
     expect_warning: bool,
 ) -> None:
     """Test the parse failure warning is suppressed in the midnight hour.
@@ -46,23 +57,39 @@ async def test_unparsable_data_is_quiet_during_the_midnight_hour(
     every case below in a different hour locally than in Amsterdam.
 
     The times are UTC. The first three pin the edges of the quiet hour in CET,
-    the fourth repeats it in CEST so the offset is not hardcoded, and the last
-    one is the quiet hour in America/Regina rather than in Amsterdam, so it must
+    the fourth repeats it in CEST so the offset is not assumed, and the last one
+    is the quiet hour in America/Regina rather than in Amsterdam, so it must
     still warn.
     """
     await hass.config.async_set_time_zone("America/Regina")
-    freezer.move_to(frozen_time)
+    aioclient_mock.get(
+        "https://data.buienradar.nl/2.0/feed/json", status=HTTPStatus.OK, text="{}"
+    )
+    aioclient_mock.get(
+        f"https://gps.buienradar.nl/getrr.php?lat={TEST_LATITUDE}&lon={TEST_LONGITUDE}",
+        status=HTTPStatus.OK,
+        text="",
+    )
 
-    data = BrData(hass, {CONF_LATITUDE: 51.5, CONF_LONGITUDE: 5.5}, 60, [])
-    fetched = {SUCCESS: True, CONTENT: "{}", STATUS_CODE: 200}
+    update = dt_util.parse_datetime(update_at)
+    assert update is not None
+    # A failed update reschedules itself two minutes later, which is the update
+    # the assertion below is about.
+    freezer.move_to(update - datetime.timedelta(minutes=2))
 
-    with (
-        patch.object(BrData, "get_data", new=AsyncMock(return_value=fetched)),
-        patch(
-            "homeassistant.components.buienradar.util.parse_data",
-            return_value={SUCCESS: False, MESSAGE: "no data"},
-        ),
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=TEST_CFG_DATA)
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.buienradar.util.parse_data",
+        return_value={SUCCESS: False, MESSAGE: "no data"},
     ):
-        assert await data._async_update() is None
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        caplog.clear()
+        freezer.move_to(update)
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
 
     assert (WARNING in caplog.text) is expect_warning
