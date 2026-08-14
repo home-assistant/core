@@ -227,7 +227,12 @@ def _resolve_field_name(node: nodes.NodeNG) -> str | None:
     """Resolve a schema key to a field name string."""
     if isinstance(node, nodes.Call) and node.args:
         match node.func:
-            case nodes.Attribute(attrname="Required" | "Optional"):
+            case (
+                nodes.Attribute(
+                    attrname="Required" | "Optional" | "Inclusive" | "Exclusive"
+                )
+                | nodes.Name(name="Required" | "Optional" | "Inclusive" | "Exclusive")
+            ):
                 return _resolve_field_name(node.args[0])
 
     match node:

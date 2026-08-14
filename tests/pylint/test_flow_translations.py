@@ -835,6 +835,80 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
         walker.walk(root_node)
 
 
+def test_inclusive_exclusive_markers_resolved(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """Fields marked vol.Inclusive/vol.Exclusive are checked."""
+    integration_dir = _make_integration(
+        tmp_path,
+        {"config": {"step": {"user": {"data": {"password": "Password"}}}}},
+    )
+
+    root_node = astroid.parse(
+        """
+class MyConfigFlow(ConfigFlow, domain=DOMAIN):
+    async def async_step_user(self, user_input=None):
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({
+                vol.Inclusive("password", "encrypted"): str,
+                vol.Exclusive("missing", "auth"): str,
+            }),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-config-flow-field-not-translated"
+    assert messages[0].args[0] == "missing"
+
+
+def test_bare_marker_names_resolved(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """Markers imported directly from voluptuous are checked."""
+    integration_dir = _make_integration(
+        tmp_path,
+        {"config": {"step": {"user": {"data": {"host": "Host"}}}}},
+    )
+
+    root_node = astroid.parse(
+        """
+class MyConfigFlow(ConfigFlow, domain=DOMAIN):
+    async def async_step_user(self, user_input=None):
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({
+                Required("host"): str,
+                Optional("missing"): str,
+            }),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-config-flow-field-not-translated"
+    assert messages[0].args[0] == "missing"
+
+
 def test_constant_field_names_resolved(
     linter: UnittestLinter,
     flow_translations_checker: ConfigFlowTranslationsChecker,
