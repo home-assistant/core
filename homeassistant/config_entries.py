@@ -753,7 +753,8 @@ class ConfigEntry[_DataT = Any]:
                 auth_message,
             )
             logger.debug("Full exception", exc_info=True)  # noqa: LOG014
-            self.async_start_reauth_if_available(hass)
+            if not migration:
+                self.async_start_reauth_if_available(hass)
 
         elif isinstance(exc, ConfigEntryNotReady):
             message = str(exc)
