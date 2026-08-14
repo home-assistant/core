@@ -848,65 +848,6 @@ class LocatorTrait(_Trait):
 
 
 @register_trait
-class EnergyStorageTrait(_Trait):
-    """Trait to offer EnergyStorage functionality.
-
-    https://developers.google.com/actions/smarthome/traits/energystorage
-    """
-
-    name = TRAIT_ENERGY_STORAGE
-    commands = [COMMAND_CHARGE]
-
-    @staticmethod
-    @override
-    def supported(domain, features, device_class, _):
-        """Test if state is supported."""
-        return domain == VACUUM_DOMAIN and features & VacuumEntityFeature.BATTERY
-
-    @override
-    def sync_attributes(self) -> dict[str, Any]:
-        """Return EnergyStorage attributes for a sync request."""
-        return {
-            "isRechargeable": True,
-            "queryOnlyEnergyStorage": True,
-        }
-
-    @override
-    def query_attributes(self) -> dict[str, Any]:
-        """Return EnergyStorage query attributes."""
-        battery_level = self.state.attributes.get(ATTR_BATTERY_LEVEL)
-        if battery_level is None:
-            return {}
-        if battery_level == 100:
-            descriptive_capacity_remaining = "FULL"
-        elif 75 <= battery_level < 100:
-            descriptive_capacity_remaining = "HIGH"
-        elif 50 <= battery_level < 75:
-            descriptive_capacity_remaining = "MEDIUM"
-        elif 25 <= battery_level < 50:
-            descriptive_capacity_remaining = "LOW"
-        elif 0 <= battery_level < 25:
-            descriptive_capacity_remaining = "CRITICALLY_LOW"
-        return {
-            "descriptiveCapacityRemaining": descriptive_capacity_remaining,
-            "capacityRemaining": [{"rawValue": battery_level, "unit": "PERCENTAGE"}],
-            "capacityUntilFull": [
-                {"rawValue": 100 - battery_level, "unit": "PERCENTAGE"}
-            ],
-            "isCharging": self.state.state == vacuum.VacuumActivity.DOCKED,
-            "isPluggedIn": self.state.state == vacuum.VacuumActivity.DOCKED,
-        }
-
-    @override
-    async def execute(self, command, data, params, challenge):
-        """Execute a dock command."""
-        raise SmartHomeError(
-            ERR_FUNCTION_NOT_SUPPORTED,
-            "Controlling charging of a vacuum is not yet supported",
-        )
-
-
-@register_trait
 class StartStopTrait(_Trait):
     """Trait to offer StartStop functionality.
 
