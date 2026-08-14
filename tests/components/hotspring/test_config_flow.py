@@ -166,3 +166,36 @@ async def test_full_reconfigure_flow_unique_id_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_reconfigure_flow_connection_error_and_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hotspring: MagicMock,
+) -> None:
+    """Test reconfigure flow with connection error and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+
+    mock_hotspring.update.side_effect = HotSpringConnectionError
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_hotspring.update.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"

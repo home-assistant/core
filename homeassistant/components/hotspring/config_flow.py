@@ -1,5 +1,6 @@
 """Config flow for Hot Spring."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 from hotspring import HotSpring, HotSpringConnectionError, HotSpringError, Spa
@@ -75,16 +76,16 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        data_schema = STEP_USER_DATA_SCHEMA
-        if self.source == SOURCE_RECONFIGURE:
-            data_schema = self.add_suggested_values_to_schema(
-                data_schema,
-                self._get_reconfigure_entry().data,
-            )
+        suggested_values: Mapping[str, Any] | None = user_input
+        if suggested_values is None and self.source == SOURCE_RECONFIGURE:
+            suggested_values = self._get_reconfigure_entry().data
 
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                suggested_values,
+            ),
             errors=errors,
         )
 
