@@ -499,25 +499,30 @@ async def test_migrate_from_higher_version_not_supported(
 
 
 @pytest.mark.parametrize(
-    ("exception", "state", "log_message"),
+    ("mock_migrate_entry", "state", "log_message"),
     [
         (
-            ConfigEntryError,
+            AsyncMock(side_effect=ConfigEntryError()),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Error setting up entry Mock Title for comp during config entry migration",
         ),
         (
-            ConfigEntryAuthFailed,
+            AsyncMock(side_effect=ConfigEntryAuthFailed()),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Config entry 'Mock Title' for comp integration could not authenticate",
         ),
         (
-            ConfigEntryNotReady,
+            AsyncMock(side_effect=ConfigEntryNotReady()),
             config_entries.ConfigEntryState.SETUP_RETRY,
             "Config entry migration 'Mock Title' for comp integration not ready yet",
         ),
         (
-            HomeAssistantError,
+            AsyncMock(side_effect=HomeAssistantError()),
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            "Error migrating entry Mock Title for comp",
+        ),
+        (
+            AsyncMock(return_value=False),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
             "Error migrating entry Mock Title for comp",
         ),
@@ -526,7 +531,7 @@ async def test_migrate_from_higher_version_not_supported(
 async def test_migrate_handle_exceptions(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    exception: type[Exception],
+    mock_migrate_entry: AsyncMock,
     state: config_entries.ConfigEntryState,
     log_message: str,
 ) -> None:
@@ -535,12 +540,6 @@ async def test_migrate_handle_exceptions(
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
-    async def async_migrate_entry(
-        hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ):
-        """Mock migrate entry."""
-        raise exception
-
     mock_setup_entry = AsyncMock(return_value=True)
 
     mock_integration(
@@ -548,7 +547,7 @@ async def test_migrate_handle_exceptions(
         MockModule(
             "comp",
             async_setup_entry=mock_setup_entry,
-            async_migrate_entry=async_migrate_entry,
+            async_migrate_entry=mock_migrate_entry,
         ),
     )
     mock_platform(hass, "comp.config_flow", None)

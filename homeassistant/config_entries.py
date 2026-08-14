@@ -949,7 +949,20 @@ class ConfigEntry[_DataT = Any]:
                 return
 
             if not migration_result:
-                self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
+                (
+                    error_reason,
+                    error_reason_translation_key,
+                    error_reason_translation_placeholders,
+                ) = self.__async_handle_config_entry_setup_error(
+                    hass, integration, Exception(), True
+                )
+                self._async_set_state(
+                    hass,
+                    ConfigEntryState.MIGRATION_ERROR,
+                    error_reason,
+                    error_reason_translation_key,
+                    error_reason_translation_placeholders,
+                )
                 return
 
             setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
