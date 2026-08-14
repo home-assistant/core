@@ -20,7 +20,7 @@ The expected translation paths are::
 
 import astroid
 from astroid import nodes
-from pylint.checkers import BaseChecker
+from pylint.checkers import BaseChecker, utils
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.module_info import get_module_platform
@@ -37,16 +37,9 @@ def _extract_step_id(call: nodes.Call) -> str | None:
     """
     for kw in call.keywords:
         if kw.arg == "step_id":
-            match kw.value:
-                case nodes.Const(value=str() as value):
-                    return value
-            try:
-                for inferred in kw.value.infer():
-                    match inferred:
-                        case nodes.Const(value=str() as value):
-                            return value
-            except _InferenceError:
-                pass
+            inferred = utils.safe_infer(kw.value, compare_constants=True)
+            if isinstance(inferred, nodes.Const) and isinstance(inferred.value, str):
+                return str(inferred.value)
             return None
 
     # No step_id keyword: infer from enclosing async_step_* method

@@ -677,6 +677,41 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     assert "missing" in messages[0].args[0]
 
 
+def test_ambiguous_step_id_skipped(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """No warning when step_id can infer to more than one value."""
+    integration_dir = _make_integration(
+        tmp_path,
+        {"config": {"step": {"user": {"data": {"host": "Host"}}}}},
+    )
+
+    root_node = astroid.parse(
+        """
+class MyConfigFlow(ConfigFlow, domain=DOMAIN):
+    async def async_step_user(self, user_input=None):
+        if user_input:
+            step = "user"
+        else:
+            step = "other"
+        return self.async_show_form(
+            step_id=step,
+            data_schema=vol.Schema({vol.Required("missing"): str}),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
 def test_section_fields_translated_ok(
     linter: UnittestLinter,
     flow_translations_checker: ConfigFlowTranslationsChecker,
