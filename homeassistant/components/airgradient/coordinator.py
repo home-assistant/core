@@ -62,6 +62,7 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
         # Track writes to avoid publishing a pre-write config response.
         self._config_write_generation = 0
         self._pending_config_writes = 0
+        self._config_refresh_pending = False
 
     @override
     async def _async_setup(self) -> None:
@@ -100,12 +101,14 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
         self._pending_config_writes += 1
         try:
             await write
+            self._config_refresh_pending = True
             await sleep(V1_CONFIG_APPLY_DELAY)
         finally:
             self._pending_config_writes -= 1
-
-        if not self._pending_config_writes:
-            await self.async_refresh()
+            # Refresh accepted writes even if the final overlapping write failed.
+            if not self._pending_config_writes and self._config_refresh_pending:
+                self._config_refresh_pending = False
+                await self.async_refresh()
 
     @override
     async def _async_update_data(self) -> AirGradientData:
