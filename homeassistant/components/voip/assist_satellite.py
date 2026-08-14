@@ -387,6 +387,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Server is ready."""
         super().connection_made(transport)
         self.voip_device.set_is_active(True)
+        # If announcement isn't set, assume it was an incoming call and
+        # initialize the chunk time for checking if the caller hung up
+        if self._announcement is None:
+            self._last_chunk_time = time.monotonic()
         # Check if caller hung up
         self._check_hangup_task = self.config_entry.async_create_background_task(
             self.hass,
