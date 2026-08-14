@@ -623,14 +623,14 @@
       "dust_collection": {
         "name": "Dust collection"
       },
-      "empty_dustbin": {
-        "name": "[%key:component::roborock::entity::button::empty_dustbin::name%]"
+      "dust_emptying": {
+        "name": "Dust emptying"
       },
       "mop_drying": {
         "name": "Mop drying"
       },
-      "mop_wash": {
-        "name": "Mop wash"
+      "mop_washing": {
+        "name": "Mop washing"
       },
       "off_peak_switch": {
         "name": "Off-peak charging"

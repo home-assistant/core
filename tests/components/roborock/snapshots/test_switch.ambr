@@ -300,7 +300,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switches[switch.roborock_s7_2_dock_empty_dustbin-entry]
+# name: test_switches[switch.roborock_s7_2_dock_dust_emptying-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -314,7 +314,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.roborock_s7_2_dock_empty_dustbin',
+    'entity_id': 'switch.roborock_s7_2_dock_dust_emptying',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -322,28 +322,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Empty dustbin',
+    'object_id_base': 'Dust emptying',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Empty dustbin',
+    'original_name': 'Dust emptying',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'empty_dustbin',
-    'unique_id': 'empty_dustbin_device_2',
+    'translation_key': 'dust_emptying',
+    'unique_id': 'dust_emptying_device_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.roborock_s7_2_dock_empty_dustbin-state]
+# name: test_switches[switch.roborock_s7_2_dock_dust_emptying-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Empty dustbin',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Dust emptying',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.roborock_s7_2_dock_empty_dustbin',
+    'entity_id': 'switch.roborock_s7_2_dock_dust_emptying',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -400,7 +400,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.roborock_s7_2_dock_mop_wash-entry]
+# name: test_switches[switch.roborock_s7_2_dock_mop_washing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -414,7 +414,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.roborock_s7_2_dock_mop_wash',
+    'entity_id': 'switch.roborock_s7_2_dock_mop_washing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -422,28 +422,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mop wash',
+    'object_id_base': 'Mop washing',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Mop wash',
+    'original_name': 'Mop washing',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'mop_wash',
-    'unique_id': 'mop_wash_device_2',
+    'translation_key': 'mop_washing',
+    'unique_id': 'mop_washing_device_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.roborock_s7_2_dock_mop_wash-state]
+# name: test_switches[switch.roborock_s7_2_dock_mop_washing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Mop wash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Mop washing',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.roborock_s7_2_dock_mop_wash',
+    'entity_id': 'switch.roborock_s7_2_dock_mop_washing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -650,7 +650,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switches[switch.roborock_s7_maxv_dock_empty_dustbin-entry]
+# name: test_switches[switch.roborock_s7_maxv_dock_dust_emptying-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -664,7 +664,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.roborock_s7_maxv_dock_empty_dustbin',
+    'entity_id': 'switch.roborock_s7_maxv_dock_dust_emptying',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -672,28 +672,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Empty dustbin',
+    'object_id_base': 'Dust emptying',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Empty dustbin',
+    'original_name': 'Dust emptying',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'empty_dustbin',
-    'unique_id': 'empty_dustbin_abc123',
+    'translation_key': 'dust_emptying',
+    'unique_id': 'dust_emptying_abc123',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.roborock_s7_maxv_dock_empty_dustbin-state]
+# name: test_switches[switch.roborock_s7_maxv_dock_dust_emptying-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Empty dustbin',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Dust emptying',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.roborock_s7_maxv_dock_empty_dustbin',
+    'entity_id': 'switch.roborock_s7_maxv_dock_dust_emptying',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -750,7 +750,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.roborock_s7_maxv_dock_mop_wash-entry]
+# name: test_switches[switch.roborock_s7_maxv_dock_mop_washing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -764,7 +764,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.roborock_s7_maxv_dock_mop_wash',
+    'entity_id': 'switch.roborock_s7_maxv_dock_mop_washing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -772,28 +772,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mop wash',
+    'object_id_base': 'Mop washing',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Mop wash',
+    'original_name': 'Mop washing',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'mop_wash',
-    'unique_id': 'mop_wash_abc123',
+    'translation_key': 'mop_washing',
+    'unique_id': 'mop_washing_abc123',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.roborock_s7_maxv_dock_mop_wash-state]
+# name: test_switches[switch.roborock_s7_maxv_dock_mop_washing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Mop wash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Mop washing',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.roborock_s7_maxv_dock_mop_wash',
+    'entity_id': 'switch.roborock_s7_maxv_dock_mop_washing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -95,8 +95,8 @@ async def test_update_success(
 
 
 DOCK_SWITCH_ENTITY_IDS = {
-    "switch.roborock_s7_maxv_dock_empty_dustbin",
-    "switch.roborock_s7_maxv_dock_mop_wash",
+    "switch.roborock_s7_maxv_dock_dust_emptying",
+    "switch.roborock_s7_maxv_dock_mop_washing",
     "switch.roborock_s7_maxv_dock_mop_drying",
 }
 
@@ -105,25 +105,25 @@ DOCK_SWITCH_ENTITY_IDS = {
     ("entity_id", "service", "expected_command", "expected_params"),
     [
         (
-            "switch.roborock_s7_maxv_dock_empty_dustbin",
+            "switch.roborock_s7_maxv_dock_dust_emptying",
             SERVICE_TURN_ON,
             RoborockCommand.APP_START_COLLECT_DUST,
             None,
         ),
         (
-            "switch.roborock_s7_maxv_dock_empty_dustbin",
+            "switch.roborock_s7_maxv_dock_dust_emptying",
             SERVICE_TURN_OFF,
             RoborockCommand.APP_STOP_COLLECT_DUST,
             None,
         ),
         (
-            "switch.roborock_s7_maxv_dock_mop_wash",
+            "switch.roborock_s7_maxv_dock_mop_washing",
             SERVICE_TURN_ON,
             RoborockCommand.APP_START_WASH,
             None,
         ),
         (
-            "switch.roborock_s7_maxv_dock_mop_wash",
+            "switch.roborock_s7_maxv_dock_mop_washing",
             SERVICE_TURN_OFF,
             RoborockCommand.APP_STOP_WASH,
             None,
@@ -168,13 +168,13 @@ async def test_dock_switch_commands(
     ("entity_id", "status_field", "value"),
     [
         pytest.param(
-            "switch.roborock_s7_maxv_dock_mop_wash",
+            "switch.roborock_s7_maxv_dock_mop_washing",
             "state",
             RoborockStateCode.washing_the_mop,
             id="wash-from-pushed-state",
         ),
         pytest.param(
-            "switch.roborock_s7_maxv_dock_mop_wash",
+            "switch.roborock_s7_maxv_dock_mop_washing",
             "state",
             RoborockStateCode.washing_the_mop_2,
             id="wash-from-alternate-pushed-state",
@@ -217,7 +217,7 @@ async def test_dock_switch_follows_pushed_dps(
     Emptying only lasts a few seconds, so the switch relies on the device
     pushing the state rather than on the next refresh.
     """
-    entity_id = "switch.roborock_s7_maxv_dock_empty_dustbin"
+    entity_id = "switch.roborock_s7_maxv_dock_dust_emptying"
     assert hass.states.get(entity_id).state == "off"
 
     fake_vacuum.v1_properties.status.update_from_dps(
@@ -235,7 +235,7 @@ async def test_dock_switch_follows_pushed_dps(
     assert hass.states.get(entity_id).state == "off"
 
 
-async def test_mop_wash_ignores_going_to_wash_state(
+async def test_mop_washing_ignores_going_to_wash_state(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
@@ -246,19 +246,19 @@ async def test_mop_wash_ignores_going_to_wash_state(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.roborock_s7_maxv_dock_mop_wash").state == "off"
+    assert hass.states.get("switch.roborock_s7_maxv_dock_mop_washing").state == "off"
 
 
 @pytest.mark.parametrize(
     ("entity_id", "service", "expected_command"),
     [
         (
-            "switch.roborock_s7_maxv_dock_mop_wash",
+            "switch.roborock_s7_maxv_dock_mop_washing",
             SERVICE_TURN_ON,
             "APP_START_WASH",
         ),
         (
-            "switch.roborock_s7_maxv_dock_mop_wash",
+            "switch.roborock_s7_maxv_dock_mop_washing",
             SERVICE_TURN_OFF,
             "APP_STOP_WASH",
         ),
@@ -309,19 +309,19 @@ def dock_type(request: pytest.FixtureRequest, fake_vacuum: FakeDevice) -> None:
     [
         pytest.param(
             RoborockDockTypeCode.o1_dock,
-            {"switch.roborock_s7_maxv_dock_empty_dustbin"},
+            {"switch.roborock_s7_maxv_dock_dust_emptying"},
             id="collect-only",
         ),
         pytest.param(
             RoborockDockTypeCode.o2_dock,
-            {"switch.roborock_s7_maxv_dock_mop_wash"},
+            {"switch.roborock_s7_maxv_dock_mop_washing"},
             id="wash-only-no-dry",
         ),
         pytest.param(
             RoborockDockTypeCode.o3_dock,
             {
-                "switch.roborock_s7_maxv_dock_empty_dustbin",
-                "switch.roborock_s7_maxv_dock_mop_wash",
+                "switch.roborock_s7_maxv_dock_dust_emptying",
+                "switch.roborock_s7_maxv_dock_mop_washing",
             },
             id="collect-and-wash-no-dry",
         ),

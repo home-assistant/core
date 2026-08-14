@@ -140,13 +140,13 @@
       "dust_collection": {
         "default": "mdi:delete"
       },
-      "empty_dustbin": {
+      "dust_emptying": {
         "default": "mdi:delete-empty"
       },
       "mop_drying": {
         "default": "mdi:heat-wave"
       },
-      "mop_wash": {
+      "mop_washing": {
         "default": "mdi:water-sync"
       },
       "off_peak_switch": {

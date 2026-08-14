@@ -111,16 +111,16 @@ WASHING_STATES = {
 
 DOCK_SWITCH_DESCRIPTIONS: list[RoborockDockSwitchDescription] = [
     RoborockDockSwitchDescription(
-        key="empty_dustbin",
-        translation_key="empty_dustbin",
+        key="dust_emptying",
+        translation_key="dust_emptying",
         turn_on_command=RoborockCommand.APP_START_COLLECT_DUST,
         turn_off_command=RoborockCommand.APP_STOP_COLLECT_DUST,
         value_fn=lambda data: data.status.state is RoborockStateCode.emptying_the_bin,
         is_supported=lambda dock_features: dock_features.is_collectable,
     ),
     RoborockDockSwitchDescription(
-        key="mop_wash",
-        translation_key="mop_wash",
+        key="mop_washing",
+        translation_key="mop_washing",
         turn_on_command=RoborockCommand.APP_START_WASH,
         turn_off_command=RoborockCommand.APP_STOP_WASH,
         value_fn=lambda data: data.status.state in WASHING_STATES,
