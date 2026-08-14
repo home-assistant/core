@@ -63,13 +63,8 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_lyric_api() -> Generator[MagicMock]:
     """Mock the aiolyric client, backed by a real Location and a real LyricPriority.
 
-    priorities_dict holds a real LyricPriority parsed from priority.json,
-    exercising the same priorityStatus key aiolyric's own
-    get_thermostat_rooms() parses production responses into. rooms_dict
-    only needs to be a truthy per-device gate for LyricPriorityStatusSensor
-    creation, so it stays a MagicMock placeholder. The second device has
-    room data but no priority entry, exercising both branches of
-    LyricPriorityStatusSensor.native_value.
+    priorities_dict is a real LyricPriority (from priority.json) to exercise
+    aiolyric's priorityStatus parsing; rooms_dict is just a truthy gate.
     """
     with patch("homeassistant.components.lyric.Lyric", autospec=True) as mock_lyric_cls:
         lyric = mock_lyric_cls.return_value
