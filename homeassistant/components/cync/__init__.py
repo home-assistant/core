@@ -21,6 +21,8 @@ from .coordinator import CyncConfigEntry, CyncCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
+_MESH_UNIQUE_IDS_MIGRATION_PENDING = "mesh_unique_ids_migration_pending"
+
 
 def _migrate_unique_ids(
     hass: HomeAssistant, entry: CyncConfigEntry, cync: Cync
@@ -103,7 +105,11 @@ async def _async_create_cync(hass: HomeAssistant, entry: CyncConfigEntry) -> Cyn
 async def async_migrate_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
     """Migrate an existing Cync config entry."""
     if entry.version == 1:
-        hass.config_entries.async_update_entry(entry, version=2)
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, _MESH_UNIQUE_IDS_MIGRATION_PENDING: True},
+            version=2,
+        )
 
     return True
 
@@ -119,7 +125,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
     await devices_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = devices_coordinator
 
-    _migrate_unique_ids(hass, entry, cync)
+    if entry.data.get(_MESH_UNIQUE_IDS_MIGRATION_PENDING):
+        _migrate_unique_ids(hass, entry, cync)
+        data = dict(entry.data)
+        data.pop(_MESH_UNIQUE_IDS_MIGRATION_PENDING)
+        hass.config_entries.async_update_entry(entry, data=data)
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

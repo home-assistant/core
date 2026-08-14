@@ -25,6 +25,7 @@ async def test_migrate_entry_does_not_connect(
 
     assert mock_config_entry.version == 2
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.data["mesh_unique_ids_migration_pending"] is True
 
 
 async def test_migrate_unique_ids(
@@ -78,6 +79,7 @@ async def test_migrate_unique_ids(
     await hass.async_block_till_done()
 
     assert mock_config_entry.version == 2
+    assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
     migrated_entity = entity_registry.async_get(original_entity_id)
     assert migrated_entity is not None
     assert migrated_entity.entity_id == original_entity_id
@@ -102,10 +104,22 @@ async def test_migrate_unique_ids(
     assert current_switch_device is not None
     assert (DOMAIN, "1000-1006") in current_switch_device.identifiers
 
+    colliding_mesh_entry = entity_registry.async_get_or_create(
+        Platform.LIGHT,
+        DOMAIN,
+        "10000-1101",
+        config_entry=mock_config_entry,
+    )
+
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert entity_registry.async_get(original_entity_id) == migrated_entity
     reloaded_device = device_registry.async_get(original_device_id)
     assert reloaded_device is not None
     assert reloaded_device.identifiers == migrated_device.identifiers
+    assert (
+        entity_registry.async_get(colliding_mesh_entry.entity_id)
+        == colliding_mesh_entry
+    )
