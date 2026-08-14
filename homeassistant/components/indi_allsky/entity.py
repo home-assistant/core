@@ -21,6 +21,6 @@ class IndiAllSkyEntity(CoordinatorEntity[IndiAllSkyDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name="INDI Allsky",
+            name=entry.title,
             entry_type=DeviceEntryType.SERVICE,
         )

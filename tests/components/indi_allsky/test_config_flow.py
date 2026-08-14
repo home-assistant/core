@@ -46,6 +46,26 @@ async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_indi_allsky_client")
+async def test_form_custom_port_title(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test custom port is included in entry title."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 8443,
+            CONF_SSL: True,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "INDI Allsky (127.0.0.1:8443)"
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error_key"),
     [

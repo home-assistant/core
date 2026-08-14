@@ -117,8 +117,15 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                port = user_input[CONF_PORT]
+                default_port = 443 if user_input.get(CONF_SSL, True) else 80
+                host_str = (
+                    f"{user_input[CONF_HOST]}:{port}"
+                    if port != default_port
+                    else user_input[CONF_HOST]
+                )
                 return self.async_create_entry(
-                    title=f"INDI Allsky ({user_input[CONF_HOST]})",
+                    title=f"INDI Allsky ({host_str})",
                     data=user_input,
                 )
 

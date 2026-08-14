@@ -72,6 +72,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Fixture to cleanly create an INDI Allsky configuration entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        title="INDI Allsky",
         data={
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 443,
