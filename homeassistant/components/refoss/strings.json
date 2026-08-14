@@ -11,21 +11,21 @@
     },
     "step": {
       "reconfigure": {
-        "description": "Update how Home Assistant discovers Refoss devices.",
+        "description": "Add or remove Refoss devices, or leave the list empty to use automatic discovery.",
         "data": {
-          "host": "IP address"
+          "hosts": "IP addresses"
         },
         "data_description": {
-          "host": "The IPv4 address of a Refoss device on another network or VLAN. Leave blank to use automatic discovery."
+          "hosts": "Add the IPv4 address of each Refoss device on another network or VLAN."
         }
       },
       "user": {
-        "description": "Leave the IP address blank to discover Refoss devices automatically.",
+        "description": "Add the IP address of each Refoss device, or leave the list empty to discover devices automatically.",
         "data": {
-          "host": "IP address"
+          "hosts": "IP addresses"
         },
         "data_description": {
-          "host": "The IPv4 address of a Refoss device on another network or VLAN."
+          "hosts": "The IPv4 addresses of Refoss devices on another network or VLAN."
         }
       }
     }

@@ -24,6 +24,7 @@ class FakeDiscovery:
         self._listeners = []
         self.sock = None
         self.last_host = None
+        self.last_hosts = []
 
     def add_listener(self, listener: Listener) -> None:
         """Add an event listener."""
@@ -37,8 +38,13 @@ class FakeDiscovery:
         """Search for devices, return mocked data."""
 
         self.last_host = host
+        self.last_hosts.append(host)
 
-        mock_infos = self.mock_devices
+        mock_infos = {
+            uuid: info
+            for uuid, info in self.mock_devices.items()
+            if host is None or info.inner_ip == host
+        }
         last_mock_infos = self.last_mock_infos
 
         new_infos = []
@@ -53,7 +59,7 @@ class FakeDiscovery:
                 if info.inner_ip != last_info.inner_ip:
                     updated_infos.append(info)
 
-        self.last_mock_infos = mock_infos
+        self.last_mock_infos.update(mock_infos)
         for listener in self._listeners:
             [await listener.device_found(x) for x in new_infos]
             [await listener.device_update(x) for x in updated_infos]
@@ -64,10 +70,10 @@ class FakeDiscovery:
         return new_infos
 
 
-def build_device_mock(name="r10", ip="1.1.1.1", mac="aabbcc112233"):
+def build_device_mock(name="r10", ip="1.1.1.1", mac="aabbcc112233", uuid="abc"):
     """Build mock device object."""
     return Mock(
-        uuid="abc",
+        uuid=uuid,
         dev_name=name,
         device_type="r10",
         fmware_version="1.1.1",
