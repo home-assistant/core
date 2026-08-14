@@ -17,6 +17,7 @@ from aiohomeconnect.model import (
 from aiohomeconnect.model.error import HomeConnectApiError, TooManyRequestsError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.home_connect.const import (
     BSH_DOOR_STATE_CLOSED,
@@ -28,6 +29,7 @@ from homeassistant.components.home_connect.const import (
     DOMAIN,
 )
 from homeassistant.components.home_connect.coordinator import HomeConnectError
+from homeassistant.components.home_connect.sensor import EVENT_SENSORS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -898,3 +900,14 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.attributes["unit_of_measurement"] == unit
+
+
+def test_no_event_sensor_removed(snapshot: SnapshotAssertion) -> None:
+    """Ensure no event sensor is accidentally removed.
+
+    Event sensors all share the same logic and only differ by their event key,
+    so rather than testing each one individually the full set of registered
+    event keys is snapshotted to guard against a sensor being dropped
+    unintentionally.
+    """
+    assert sorted(desc.key.value for desc in EVENT_SENSORS) == snapshot
