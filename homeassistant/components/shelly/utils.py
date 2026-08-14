@@ -72,7 +72,7 @@ from .const import (
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
-    SHELLY_WALL_DISPLAY_MODELS,
+    SHELLY_WALL_DISPLAY_MODEL_PREFIX,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     VIRTUAL_COMPONENTS,
     VIRTUAL_COMPONENTS_MAP,
@@ -565,7 +565,7 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
-    if model in SHELLY_WALL_DISPLAY_MODELS:
+    if SHELLY_WALL_DISPLAY_MODEL_PREFIX in model:
         return WALL_DISPLAY_RELEASE_URL
 
     if beta:
