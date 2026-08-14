@@ -17,3 +17,9 @@ DEV_PROFILE_RGBW = "RGBW"
 
 # Minimum version required to support effects
 MIN_EFFECT_VERSION = "2.7.1"
+
+# ttls defaults to a 3 second total timeout, which covers connection setup as
+# well as the response. Devices poll every 30 seconds and their radio is idle
+# in between, so the first request of a cycle has to wake it inside that
+# budget - and frequently does not. See https://github.com/home-assistant/core/issues/160154
+DEVICE_TIMEOUT = 10
