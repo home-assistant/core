@@ -29,13 +29,12 @@ from homeassistant.components.home_connect.const import (
     DOMAIN,
 )
 from homeassistant.components.home_connect.coordinator import HomeConnectError
-from homeassistant.components.home_connect.sensor import EVENT_SENSORS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 TEST_HC_APP = "Dishwasher"
 
@@ -902,11 +901,16 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
     assert entity_state.attributes["unit_of_measurement"] == unit
 
 
-def test_no_event_sensor_removed(snapshot: SnapshotAssertion) -> None:
-    """Ensure no event sensor is accidentally removed.
-
-    Event sensors all share the same state-handling logic, so rather than
-    testing each one individually the full set of registered event keys is
-    snapshotted to guard against a sensor being dropped unintentionally.
-    """
-    assert sorted(desc.key.value for desc in EVENT_SENSORS) == snapshot
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot all sensor entities to fixate the full set and their attributes."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
