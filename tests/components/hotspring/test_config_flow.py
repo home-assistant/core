@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError, HotSpringError, Spa, SpaBrand, SpaInfo
+from hotspring import HotSpringConnectionError, HotSpringError, Spa
 import pytest
 
 from homeassistant.components.hotspring.const import DOMAIN
@@ -97,20 +97,7 @@ async def test_form_no_mac_address(
     hass: HomeAssistant, mock_hotspring: MagicMock, device_fixture: Spa
 ) -> None:
     """Test we show user form on missing MAC address and recover."""
-    valid_info = device_fixture.info
-    device_fixture.info = SpaInfo(
-        hostname="ConnectedSpa_DDEEFF",
-        root_topic="unknownTopic123",
-        sna_ready=True,
-        brand=SpaBrand.HOTSPRING,
-        brand_name="Hot Spring",
-        collection="Highlife",
-        model_name="Relay",
-        brand_id="1",
-        collection_id="1",
-        model_id="1",
-        volume=335,
-    )
+    device_fixture.info.root_topic = "unknownTopic123"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -123,7 +110,7 @@ async def test_form_no_mac_address(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
-    device_fixture.info = valid_info
+    device_fixture.info.root_topic = "mySpaAABBCCDDEEFF"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.100"}
     )
@@ -166,21 +153,7 @@ async def test_full_reconfigure_flow_unique_id_mismatch(
 ) -> None:
     """Test reconfiguration failure when the unique ID changes."""
     mock_config_entry.add_to_hass(hass)
-
-    # Change mac address by changing root topic on device info
-    device_fixture.info = SpaInfo(
-        hostname="ConnectedSpa_112233",
-        root_topic="mySpa112233445566",
-        sna_ready=True,
-        brand=SpaBrand.HOTSPRING,
-        brand_name="Hot Spring",
-        collection="Highlife",
-        model_name="Relay",
-        brand_id="1",
-        collection_id="1",
-        model_id="1",
-        volume=335,
-    )
+    device_fixture.info.root_topic = "mySpa112233445566"
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
