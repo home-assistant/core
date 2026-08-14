@@ -448,6 +448,8 @@ async def test_rgb_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
         on=True,
         segment_id=0,
     )
+
+
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
 async def test_main_light_group_updates_when_segments_change(
     hass: HomeAssistant,

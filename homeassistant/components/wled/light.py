@@ -200,6 +200,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return self._attr_color_mode
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the color value."""
         if not (color := self.coordinator.data.state.segments[self._segment].color):
@@ -242,6 +243,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return (r, g, b, cw, ww)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in K."""
         cct = self.coordinator.data.state.segments[self._segment].cct
