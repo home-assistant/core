@@ -88,12 +88,7 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
         return self.lyric
 
     async def _get_thermostat_rooms(self, location_id: int, device_id: str) -> None:
-        """Fetch room/priority data for a single thermostat.
-
-        Devices that don't support this endpoint return a GetPriorityFailed
-        400, which is expected and shouldn't fail the whole coordinator
-        update. Any other error is re-raised.
-        """
+        """Fetch room/priority data, suppressing an unsupported device's GetPriorityFailed 400."""
         try:
             await self.lyric.get_thermostat_rooms(location_id, device_id)
         except LyricAuthenticationException:
