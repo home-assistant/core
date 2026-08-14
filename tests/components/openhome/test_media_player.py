@@ -5,14 +5,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 from async_upnp_client.client import UpnpError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.media_player import DATA_COMPONENT
+from homeassistant.components.media_player import SCAN_INTERVAL
 from homeassistant.components.openhome.const import DOMAIN
 from homeassistant.const import CONF_HOST, STATE_PLAYING, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "media_player.friendly_name"
 
@@ -62,15 +63,14 @@ async def setup_integration(hass: HomeAssistant, device: MagicMock) -> None:
         await hass.async_block_till_done()
 
 
-async def _async_update_entity(hass: HomeAssistant) -> None:
-    """Force an update of the media player entity."""
-    entity = hass.data[DATA_COMPONENT].get_entity(ENTITY_ID)
-    assert entity is not None
-    await entity.async_update()
-    entity.async_write_ha_state()
+async def _trigger_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Advance time to trigger the platform polling update naturally."""
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test the entity stays available after a successful update."""
     await setup_integration(hass, _mock_device())
 
@@ -78,7 +78,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == STATE_PLAYING
 
-    await _async_update_entity(hass)
+    await _trigger_update(hass, freezer)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_PLAYING
@@ -100,6 +100,7 @@ async def test_setup(hass: HomeAssistant) -> None:
 )
 async def test_async_update_error(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     exc: Exception,
     message: str,
@@ -110,7 +111,7 @@ async def test_async_update_error(
     await setup_integration(hass, device)
 
     with caplog.at_level(logging.DEBUG, logger="homeassistant.components.openhome"):
-        await _async_update_entity(hass)
+        await _trigger_update(hass, freezer)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_UNAVAILABLE
@@ -127,17 +128,19 @@ async def test_async_update_error(
     assert error_records[-1].exc_info is not None
 
 
-async def test_async_update_recovers(hass: HomeAssistant) -> None:
+async def test_async_update_recovers(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test the entity recovers after a failed update."""
     device = _mock_device()
     await setup_integration(hass, device)
 
     device.transport_state = AsyncMock(side_effect=UpnpError("device down"))
-    await _async_update_entity(hass)
+    await _trigger_update(hass, freezer)
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
     device.transport_state = AsyncMock(return_value="Playing")
-    await _async_update_entity(hass)
+    await _trigger_update(hass, freezer)
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_PLAYING
     assert state.attributes["source"] == "Radio"
