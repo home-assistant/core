@@ -1,4 +1,140 @@
 {
+  "helper": {
+    "counter": {
+      "integration_type": "helper",
+      "config_flow": false
+    },
+    "derivative": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "filter": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "generic_hygrostat": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "generic_thermostat": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "group": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "history_stats": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "input_boolean": {
+      "integration_type": "helper",
+      "config_flow": false
+    },
+    "input_button": {
+      "integration_type": "helper",
+      "config_flow": false
+    },
+    "input_datetime": {
+      "integration_type": "helper",
+      "config_flow": false
+    },
+    "input_number": {
+      "integration_type": "helper",
+      "config_flow": false
+    },
+    "input_select": {
+      "integration_type": "helper",
+      "config_flow": false
+    },
+    "input_text": {
+      "integration_type": "helper",
+      "config_flow": false
+    },
+    "integration": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "manual": {
+      "name": "Manual Alarm Control Panel",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "calculated"
+    },
+    "min_max": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "mold_indicator": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "otp": {
+      "name": "One-Time Password (OTP)",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "random": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "schedule": {
+      "integration_type": "helper",
+      "config_flow": false
+    },
+    "statistics": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "switch_as_x": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "template": {
+      "name": "Template",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "threshold": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "timer": {
+      "integration_type": "helper",
+      "config_flow": false
+    },
+    "tod": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "trend": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "utility_meter": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_push"
+    }
+  },
   "integration": {
     "3_day_blinds": {
       "name": "3 Day Blinds",
@@ -2114,7 +2250,7 @@
       "iot_class": "cloud_polling"
     },
     "fjaraskupan": {
-      "name": "Fj\u00e4r\u00e5skupan",
+      "name": "Fjäråskupan",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -2493,7 +2629,7 @@
       "iot_class": "cloud_polling"
     },
     "gios": {
-      "name": "GIO\u015a",
+      "name": "GIOŚ",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -2522,19 +2658,19 @@
       "iot_class": "local_polling"
     },
     "globalcache": {
-      "name": "Global Cach\u00e9",
+      "name": "Global Caché",
       "integrations": {
         "gc100": {
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "local_polling",
-          "name": "Global Cach\u00e9 GC-100"
+          "name": "Global Caché GC-100"
         },
         "itach": {
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "assumed_state",
-          "name": "Global Cach\u00e9 iTach TCP/IP to IR"
+          "name": "Global Caché iTach TCP/IP to IR"
         }
       }
     },
@@ -3215,7 +3351,7 @@
       "iot_class": "cloud_polling"
     },
     "ign_sismologia": {
-      "name": "IGN Sismolog\u00eda",
+      "name": "IGN Sismología",
       "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -3239,7 +3375,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_polling",
-          "name": "IKEA TR\u00c5DFRI"
+          "name": "IKEA TRÅDFRI"
         },
         "idasen_desk": {
           "integration_type": "device",
@@ -3400,7 +3536,7 @@
       "iot_class": "local_polling"
     },
     "ipma": {
-      "name": "Instituto Portugu\u00eas do Mar e Atmosfera (IPMA)",
+      "name": "Instituto Português do Mar e Atmosfera (IPMA)",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4089,7 +4225,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_push",
-          "name": "Lutron Cas\u00e9ta"
+          "name": "Lutron Caséta"
         },
         "homeworks": {
           "integration_type": "hub",
@@ -4270,13 +4406,13 @@
       "iot_class": "cloud_polling"
     },
     "met_eireann": {
-      "name": "Met \u00c9ireann",
+      "name": "Met Éireann",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "meteo_france": {
-      "name": "M\u00e9t\u00e9o-France",
+      "name": "Météo-France",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4791,7 +4927,7 @@
       "supported_by": "hypontech"
     },
     "nexity": {
-      "name": "Nexity Eug\u00e9nie",
+      "name": "Nexity Eugénie",
       "integration_type": "virtual",
       "supported_by": "overkiz"
     },
@@ -4891,7 +5027,7 @@
       "iot_class": "cloud_polling"
     },
     "nobo_hub": {
-      "name": "Nob\u00f8 Ecohub",
+      "name": "Nobø Ecohub",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -7533,12 +7669,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "tsun": {
-      "name": "TSUN",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "tuya": {
       "name": "Tuya",
       "integration_type": "hub",
@@ -7746,7 +7876,7 @@
       "iot_class": "local_polling"
     },
     "vagner_pool": {
-      "name": "V\u00c1GNER POOL",
+      "name": "VÁGNER POOL",
       "integration_type": "virtual",
       "supported_by": "pooldose"
     },
@@ -7757,7 +7887,7 @@
       "iot_class": "local_polling"
     },
     "vasttrafik": {
-      "name": "V\u00e4sttrafik",
+      "name": "Västtrafik",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -7969,7 +8099,7 @@
       "iot_class": "cloud_polling"
     },
     "wattwaechter": {
-      "name": "WattW\u00e4chter Plus",
+      "name": "WattWächter Plus",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -8424,142 +8554,6 @@
       "iot_class": "local_push"
     }
   },
-  "helper": {
-    "counter": {
-      "integration_type": "helper",
-      "config_flow": false
-    },
-    "derivative": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "calculated"
-    },
-    "filter": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
-    "generic_hygrostat": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "generic_thermostat": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "group": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "calculated"
-    },
-    "history_stats": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "input_boolean": {
-      "integration_type": "helper",
-      "config_flow": false
-    },
-    "input_button": {
-      "integration_type": "helper",
-      "config_flow": false
-    },
-    "input_datetime": {
-      "integration_type": "helper",
-      "config_flow": false
-    },
-    "input_number": {
-      "integration_type": "helper",
-      "config_flow": false
-    },
-    "input_select": {
-      "integration_type": "helper",
-      "config_flow": false
-    },
-    "input_text": {
-      "integration_type": "helper",
-      "config_flow": false
-    },
-    "integration": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
-    "manual": {
-      "name": "Manual Alarm Control Panel",
-      "integration_type": "helper",
-      "config_flow": false,
-      "iot_class": "calculated"
-    },
-    "min_max": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "calculated"
-    },
-    "mold_indicator": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "calculated"
-    },
-    "otp": {
-      "name": "One-Time Password (OTP)",
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "random": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "calculated"
-    },
-    "schedule": {
-      "integration_type": "helper",
-      "config_flow": false
-    },
-    "statistics": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "switch_as_x": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "calculated"
-    },
-    "template": {
-      "name": "Template",
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
-    "threshold": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "timer": {
-      "integration_type": "helper",
-      "config_flow": false
-    },
-    "tod": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "calculated"
-    },
-    "trend": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "calculated"
-    },
-    "utility_meter": {
-      "integration_type": "helper",
-      "config_flow": true,
-      "iot_class": "local_push"
-    }
-  },
   "translated_name": [
     "alert",
     "aurora",
@@ -8624,5 +8618,11 @@
     "waze_travel_time",
     "workday",
     "zodiac"
-  ]
+  ],
+  "tsun": {
+    "name": "TSUN",
+    "integration_type": "device",
+    "config_flow": true,
+    "iot_class": "local_polling"
+  }
 }
