@@ -1,6 +1,9 @@
 """Constants used in the Mikrotik components."""
 
+import logging
 from typing import Final
+
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN: Final = "mikrotik"
 DEFAULT_NAME: Final = "Mikrotik"

@@ -336,7 +336,7 @@ aiolifx==1.2.2
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==2.1.1
+aiolyric==2.1.2
 
 # homeassistant.components.mealie
 aiomealie==2.0.0
@@ -387,7 +387,7 @@ aiopulse==0.4.7
 aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==3.4.0
+aiopvapi==3.4.1
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
@@ -666,7 +666,7 @@ bleak-smlight==1.1.0
 bleak==3.0.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.5
+blebox-uniapi==2.5.7
 
 # homeassistant.components.blink
 blinkpy==0.25.9
@@ -979,7 +979,7 @@ eurotronic-cometblue-ha==1.4.0
 # evdev==1.9.3
 
 # homeassistant.components.evohome
-evohome-async==2.0.1
+evohome-async==2.1.0
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.19
@@ -1278,7 +1278,7 @@ hole==0.9.2
 holidays==0.101
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260729.6
+home-assistant-frontend==20260729.7
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.7.30
@@ -1290,7 +1290,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.0.5
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.13.4
+homematicip==2.15.0
 
 # homeassistant.components.homevolt
 homevolt==0.5.0
@@ -1326,7 +1326,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==14.0.1
+ical==14.1.0
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1359,7 +1359,7 @@ imeon_inverter_api==0.4.0
 imgw_pib==2.5.1
 
 # homeassistant.components.incomfort
-incomfort-client==0.7.0
+incomfort-client==0.7.1
 
 # homeassistant.components.indevolt
 indevolt-api==1.8.6
@@ -1531,7 +1531,7 @@ lw12==0.9.2
 lxml==6.1.1
 
 # homeassistant.components.lyngdorf
-lyngdorf==1.4.4
+lyngdorf==1.4.9
 
 # homeassistant.components.matrix
 matrix-nio==0.26.0
@@ -1586,7 +1586,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==6.11.1
+midea-local==7.0.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -1953,7 +1953,7 @@ py-nextbusnext==2.3.0
 py-nightscout==1.2.2
 
 # homeassistant.components.mta
-py-nymta==0.4.0
+py-nymta==0.4.1
 
 # homeassistant.components.opendisplay
 py-opendisplay==7.15.0
@@ -2647,7 +2647,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==6.1.6
+python-bsblan==6.1.8
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -3409,7 +3409,7 @@ wyoming==1.10.0
 xiaomi-ble==1.11.0
 
 # homeassistant.components.knx
-xknx==3.18.0
+xknx==3.19.0
 
 # homeassistant.components.knx
 xknxproject==3.10.0
