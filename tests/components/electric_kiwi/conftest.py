@@ -80,6 +80,45 @@ def electrickiwi_api() -> Generator[AsyncMock]:
         yield client
 
 
+@pytest.fixture(autouse=True)
+def electrickiwi_no_connection_api() -> Generator[AsyncMock]:
+    """Mock ek api and return values."""
+    with (
+        patch(
+            "homeassistant.components.electric_kiwi.ElectricKiwiApi",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.electric_kiwi.config_flow.ElectricKiwiApi",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.customer_number = 123456
+        client.electricity = Service(
+            identifier="00000000DDA",
+            service="electricity",
+            service_status="Y",
+            is_primary_service=True,
+        )
+        client.get_active_session.return_value = Session.from_dict(
+            load_json_value_fixture("session.json", DOMAIN)
+        )
+        client.get_hop_intervals.return_value = HopIntervals.from_dict(
+            load_json_value_fixture("hop_intervals.json", DOMAIN)
+        )
+        client.get_hop.return_value = Hop.from_dict(
+            load_json_value_fixture("get_hop.json", DOMAIN)
+        )
+        client.get_account_summary.return_value = AccountSummary.from_dict(
+            load_json_value_fixture("account_summary_no_connections.json", DOMAIN)
+        )
+        client.get_connection_details.return_value = CustomerConnection.from_dict(
+            load_json_value_fixture("connection_details.json", DOMAIN)
+        )
+        yield client
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create mocked config entry."""
