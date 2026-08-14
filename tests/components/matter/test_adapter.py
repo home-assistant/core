@@ -261,16 +261,18 @@ async def test_device_registry_composed_bridged_device(
     assert bridge_entry is not None
     assert bridge_entry.name == "Mock Bridge"
 
-    for endpoint_id in (2, 3, 4):
-        device_entry = device_registry.async_get_device_by_identifier(
-            identifier_for(matter_client, matter_node, endpoint_id), entry_id
-        )
-        assert device_entry is not None
-        assert device_entry.id != bridge_entry.id
-        assert device_entry.via_device_id == bridge_entry.id
-        assert device_entry.name == "Kitchen Plug"
-        assert device_entry.model == "Mock Bridged Plug"
-        assert device_entry.serial_number == "MBP-5678"
+    # the part endpoints 3 and 4 are represented by the device of their compose parent
+    identifier = identifier_for(matter_client, matter_node, 2)
+    assert identifier_for(matter_client, matter_node, 3) == identifier
+    assert identifier_for(matter_client, matter_node, 4) == identifier
+
+    device_entry = device_registry.async_get_device_by_identifier(identifier, entry_id)
+    assert device_entry is not None
+    assert device_entry.id != bridge_entry.id
+    assert device_entry.via_device_id == bridge_entry.id
+    assert device_entry.name == "Kitchen Plug"
+    assert device_entry.model == "Mock Bridged Plug"
+    assert device_entry.serial_number == "MBP-5678"
 
     assert len(device_registry.devices) == 2
     assert hass.states.get("switch.kitchen_plug")
