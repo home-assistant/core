@@ -58,6 +58,7 @@
           },
           "data_description": {
             "keep_alive": "[%key:component::ollama::config_subentries::conversation::step::set_options::data_description::keep_alive%]",
+            "max_history": "[%key:component::ollama::config_subentries::conversation::step::set_options::data_description::max_history%]",
             "num_ctx": "[%key:component::ollama::config_subentries::conversation::step::set_options::data_description::num_ctx%]",
             "prompt": "[%key:component::ollama::config_subentries::conversation::step::set_options::data_description::prompt%]",
             "think": "[%key:component::ollama::config_subentries::conversation::step::set_options::data_description::think%]"
@@ -97,6 +98,7 @@
           },
           "data_description": {
             "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never.",
+            "max_history": "Number of previous conversation rounds (question and answer) to send with each request. 0 = send the entire conversation history, -1 = send no history (only the current message).",
             "num_ctx": "Maximum number of text tokens the model can process. Lower to reduce Ollama RAM, or increase for a large number of exposed entities.",
             "prompt": "Instruct how the LLM should respond. This can be a template.",
             "think": "If enabled, the LLM will think before responding. This can improve response quality but may increase latency."
