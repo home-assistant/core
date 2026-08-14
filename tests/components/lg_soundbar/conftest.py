@@ -35,7 +35,7 @@ def mock_temescal() -> Generator[MagicMock]:
             autospec=True,
         ) as mock_temescal,
         patch(
-            "homeassistant.components.lg_soundbar.config_flow.test_connect",
+            "homeassistant.components.lg_soundbar.test_connect",
             return_value={"name": "LG Soundbar", "uuid": "uuid"},
         ),
     ):
