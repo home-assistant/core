@@ -61,11 +61,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_lyric_api() -> Generator[MagicMock]:
-    """Mock the aiolyric client, backed by a real Location and a real LyricPriority.
-
-    priorities_dict is a real LyricPriority (from priority.json) to exercise
-    aiolyric's priorityStatus parsing; rooms_dict is just a truthy gate.
-    """
+    """Mock the aiolyric client, backed by a real Location and a real LyricPriority."""
     with patch("homeassistant.components.lyric.Lyric", autospec=True) as mock_lyric_cls:
         lyric = mock_lyric_cls.return_value
 
