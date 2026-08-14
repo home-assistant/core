@@ -53,6 +53,7 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_TOKEN,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     EntityCategory,
     UnitOfRatio,
 )
@@ -278,18 +279,18 @@ async def test_xiaomi_vacuum_battery_sensor(
     assert state.state == "64"
 
 
-async def test_xiaomi_vacuum_battery_sensor_unavailable(
+async def test_xiaomi_vacuum_battery_sensor_unknown(
     hass: HomeAssistant, mock_mirobo_is_on: MagicMock
 ) -> None:
-    """Test the battery sensor becomes unavailable for an invalid value."""
+    """Test the battery sensor becomes unknown for an invalid value."""
     mock_mirobo_is_on.status().battery = None
-    entity_name = "test_vacuum_cleaner_battery_unavailable"
+    entity_name = "test_vacuum_cleaner_battery_unknown"
     await setup_component(hass, entity_name)
     battery_entity_id = f"sensor.{entity_name}_battery"
 
     state = hass.states.get(battery_entity_id)
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
     future = dt_util.utcnow() + timedelta(seconds=60)
     mock_mirobo_is_on.status().battery = 48
@@ -306,7 +307,7 @@ async def test_xiaomi_vacuum_battery_sensor_unavailable(
 
     state = hass.states.get(battery_entity_id)
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_xiaomi_vacuum_battery_sensor_missing(
@@ -323,7 +324,7 @@ async def test_xiaomi_vacuum_battery_sensor_missing(
 
     state = hass.states.get(f"sensor.{entity_name}_battery")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_xiaomi_exceptions(

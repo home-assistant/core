@@ -734,7 +734,7 @@ def _setup_vacuum_sensors(
     """Set up the Xiaomi vacuum sensors."""
     device = config_entry.runtime_data.device
     coordinator = config_entry.runtime_data.device_coordinator
-    # Keep battery registered even when its initial value is unavailable.
+    # Keep battery registered even when its initial value is unknown.
     entities: list[SensorEntity] = [
         XiaomiMiioVacuumBatterySensor(
             device,
@@ -879,12 +879,6 @@ class XiaomiMiioVacuumBatterySensor(
             return self.coordinator.data.status.battery
         except KeyError, TypeError, ValueError:
             return None
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return whether the sensor is available."""
-        return super().available and self.native_value is not None
 
 
 class XiaomiGenericSensor(
