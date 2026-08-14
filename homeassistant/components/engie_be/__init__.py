@@ -20,7 +20,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_REFRESH_TOKEN
+from .const import CONF_REFRESH_TOKEN, DOMAIN
 from .coordinator import EngieBePricesCoordinator, household_device_info
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -76,7 +76,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
         if agreement.active
     }
     if not agreements:
-        raise ConfigEntryError("No active ENGIE Belgium business agreements found")
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_active_agreements",
+        )
 
     device_registry = dr.async_get(hass)
     for ban, agreement in agreements.items():

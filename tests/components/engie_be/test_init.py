@@ -218,6 +218,7 @@ async def test_setup_no_active_agreements(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "no_active_agreements"
 
 
 async def test_device_created_for_household_without_prices(
