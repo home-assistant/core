@@ -21,11 +21,6 @@ from tests.common import MockConfigEntry, load_json_array_fixture
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
-# Matches the values baked into fixtures/locations.json.
-LOCATION_ID = 35202000168931
-DEVICE_ID = "LCC-7f86b153-8480-f111-b78f-6045bdb25006"
-MAC_ID = "5CFCE1B67035"
-
 
 @pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
@@ -56,7 +51,12 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_lyric_api() -> Generator[MagicMock]:
-    """Mock the aiolyric client, backed by a real Location parsed from a live-shaped fixture."""
+    """Mock the aiolyric client, backed by a real Location parsed from a live-shaped fixture.
+
+    get_thermostat_rooms is left as an autospec'd no-op: this test only
+    covers device-level sensors, not the room/priority data it would
+    otherwise populate.
+    """
     with patch("homeassistant.components.lyric.Lyric", autospec=True) as mock_lyric_cls:
         lyric = mock_lyric_cls.return_value
 
