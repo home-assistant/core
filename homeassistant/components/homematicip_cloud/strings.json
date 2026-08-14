@@ -38,6 +38,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "arming_blocked": {
+        "name": "Arming blocked"
+      },
       "chamber_degraded": {
         "name": "Chamber degraded"
       },
@@ -139,6 +142,17 @@
     },
     "alarm_activation_failed": {
       "message": "The alarm system did not accept the requested state"
+    },
+    "alarm_activation_outdated": {
+      "message": "The alarm system was not armed because the blocking devices changed since the last attempt: {devices}"
+    }
+  },
+  "selector": {
+    "arm_anyway_mode": {
+      "options": {
+        "away": "Away",
+        "home": "Home"
+      }
     }
   },
   "services": {
@@ -187,6 +201,16 @@
         }
       },
       "name": "Activate vacation"
+    },
+    "arm_anyway": {
+      "description": "Arms the alarm system although sensors report a problem. The blocking entry points stay unmonitored.",
+      "fields": {
+        "mode": {
+          "description": "Arm the internal and external zone (away) or only the external one (home).",
+          "name": "Mode"
+        }
+      },
+      "name": "Arm anyway"
     },
     "deactivate_eco_mode": {
       "description": "Deactivates the eco mode immediately.",
