@@ -1873,6 +1873,50 @@ async def test_device_id(
     assert helper_entity.device_id == source_entity.device_id
 
 
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured thermostat."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("switch", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "heater": "switch.test_source",
+                "target_sensor": ENT_SENSOR,
+                "unique_id": "generic_thermostat_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    helper_entity = entity_registry.async_get("climate.test")
+    assert helper_entity is not None
+    assert helper_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
+
+
 @pytest.mark.usefixtures("setup_comp_1")
 async def test_hvac_mode_change_user_context(
     hass: HomeAssistant, hass_admin_user: MockUser

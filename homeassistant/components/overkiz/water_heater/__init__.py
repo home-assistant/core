@@ -8,6 +8,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .. import OverkizDataConfigEntry
 from ..entity import OverkizEntity
+from .atlantic_domestic_hot_water_production_io_component import (
+    AtlanticDomesticHotWaterProductionIOComponent,
+)
 from .atlantic_domestic_hot_water_production_mlb_component import (
     AtlanticDomesticHotWaterProductionMBLComponent,
 )
@@ -57,6 +60,9 @@ WIDGET_TO_WATER_HEATER_ENTITY = {
 }
 
 CONTROLLABLE_NAME_TO_WATER_HEATER_ENTITY = {
+    "io:AtlanticDomesticHotWaterProductionIOComponent": (
+        AtlanticDomesticHotWaterProductionIOComponent
+    ),
     "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": (
         AtlanticDomesticHotWaterProductionMBLComponent
     ),

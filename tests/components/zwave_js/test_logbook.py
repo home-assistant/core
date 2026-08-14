@@ -22,8 +22,8 @@ async def test_humanifying_zwave_js_notification_event(
     integration,
 ) -> None:
     """Test humanifying Z-Wave JS notification events."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -123,8 +123,8 @@ async def test_humanifying_zwave_js_value_notification_event(
     integration,
 ) -> None:
     """Test humanifying Z-Wave JS value notification events."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
