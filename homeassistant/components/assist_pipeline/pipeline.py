@@ -1413,7 +1413,7 @@ class PipelineRun:
             if device_entry is None:
                 return False
 
-            area_id = device_entry.area_id
+            area_id = dr.async_get_effective_area_id(self.hass, device_entry)
             if area_id is None:
                 return False
 
@@ -1433,7 +1433,9 @@ class PipelineRun:
                 if target_device_entry is None:
                     return False
 
-                target_area_id = target_device_entry.area_id
+                target_area_id = dr.async_get_effective_area_id(
+                    self.hass, target_device_entry
+                )
 
             if target_area_id != area_id:
                 return False
