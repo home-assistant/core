@@ -54,7 +54,12 @@ def _mock_lyric() -> MagicMock:
                     "macID": _MAC,
                     "name": "Thermostat",
                     "deviceModel": "T5-T6",
-                }
+                },
+                {
+                    "deviceID": "leak-detector-id",
+                    "deviceClass": "LeakDetector",
+                    "userDefinedDeviceName": "Leak detector",
+                },
             ],
         },
     )

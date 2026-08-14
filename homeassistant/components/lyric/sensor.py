@@ -15,7 +15,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -29,7 +34,7 @@ from .const import (
     PRESET_VACATION_HOLD,
 )
 from .coordinator import LyricConfigEntry, LyricDataUpdateCoordinator
-from .entity import LyricAccessoryEntity, LyricDeviceEntity
+from .entity import LyricAccessoryEntity, LyricDeviceEntity, LyricLeakDetectorEntity
 
 LYRIC_SETPOINT_STATUS_NAMES = {
     PRESET_NO_HOLD: "Following Schedule",
@@ -143,6 +148,50 @@ ACCESSORY_SENSORS: list[LyricSensorAccessoryEntityDescription] = [
     ),
 ]
 
+LEAK_DETECTOR_SENSORS: tuple[LyricSensorEntityDescription, ...] = (
+    LyricSensorEntityDescription(
+        key="temperature",
+        translation_key="leak_detector_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda device: device.current_sensor_readings.temperature,
+        suitable_fn=lambda device: (
+            device.current_sensor_readings.temperature is not None
+        ),
+    ),
+    LyricSensorEntityDescription(
+        key="humidity",
+        translation_key="leak_detector_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda device: device.current_sensor_readings.humidity,
+        suitable_fn=lambda device: device.current_sensor_readings.humidity is not None,
+    ),
+    LyricSensorEntityDescription(
+        key="battery",
+        translation_key="leak_detector_battery",
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.battery_remaining,
+        suitable_fn=lambda device: device.battery_remaining is not None,
+    ),
+    LyricSensorEntityDescription(
+        key="signal_strength",
+        translation_key="leak_detector_signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.wifi_signal_strength,
+        suitable_fn=lambda device: device.wifi_signal_strength not in (None, 0),
+    ),
+)
+
 
 def get_setpoint_status(status: str, time: str) -> str | None:
     """Get status of the setpoint."""
@@ -181,6 +230,7 @@ async def async_setup_entry(
         )
         for location in coordinator.data.locations
         for device in location.devices
+        if device.device_class == "Thermostat"
         for device_sensor in DEVICE_SENSORS
         if device_sensor.suitable_fn(device)
     )
@@ -191,10 +241,25 @@ async def async_setup_entry(
         )
         for location in coordinator.data.locations
         for device in location.devices
+        if device.device_class == "Thermostat"
         for room in coordinator.data.rooms_dict.get(device.mac_id, {}).values()
         for accessory in room.accessories
         for accessory_sensor in ACCESSORY_SENSORS
         if accessory_sensor.suitable_fn(room, accessory)
+    )
+
+    async_add_entities(
+        LyricLeakDetectorSensor(
+            coordinator,
+            description,
+            location,
+            device,
+        )
+        for location in coordinator.data.locations
+        for device in location.devices
+        if device.device_class == "LeakDetector" and device.device_id
+        for description in LEAK_DETECTOR_SENSORS
+        if description.suitable_fn(device)
     )
 
 
@@ -266,3 +331,26 @@ class LyricAccessorySensor(LyricAccessoryEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.room, self.accessory)
+
+
+class LyricLeakDetectorSensor(LyricLeakDetectorEntity, SensorEntity):
+    """Define a Honeywell Lyric leak detector sensor."""
+
+    entity_description: LyricSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: LyricDataUpdateCoordinator,
+        description: LyricSensorEntityDescription,
+        location: LyricLocation,
+        device: LyricDevice,
+    ) -> None:
+        """Initialize the leak detector sensor."""
+        super().__init__(coordinator, location, device, description.key)
+        self.entity_description = description
+
+    @property
+    @override
+    def native_value(self) -> StateType | datetime:
+        """Return the state."""
+        return self.entity_description.value_fn(self.device)
