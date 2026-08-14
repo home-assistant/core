@@ -58,12 +58,13 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
     "core_state",
     [CoreState.not_running, CoreState.starting],
 )
+
+
 async def test_binary_expose_does_not_send_initial_state_during_startup(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    core_state: CoreState,
 ) -> None:
-    """Test an initial state during startup is not exposed to KNX."""
+    """Test only the initial state during startup is not exposed to KNX."""
     entity_id = "binary_sensor.fake"
     await knx.setup_integration(
         {
@@ -74,10 +75,9 @@ async def test_binary_expose_does_not_send_initial_state_during_startup(
             }
         },
     )
+    hass.set_state(CoreState.starting)
 
-    hass.set_state(core_state)
-
-    # Restored/initial state during startup initializes the expose value only.
+    # The first known value initializes the exposure without sending.
     hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
@@ -86,8 +86,7 @@ async def test_binary_expose_does_not_send_initial_state_during_startup(
     await knx.receive_read("1/1/8")
     await knx.assert_response("1/1/8", True)
 
-    # Once startup is complete, actual state changes are exposed normally.
-    hass.set_state(CoreState.running)
+    # A subsequent state change is exposed even while HA is still starting.
     hass.states.async_set(entity_id, "off", {})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", False)
