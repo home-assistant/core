@@ -15,10 +15,18 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
-@pytest.mark.parametrize("api_version", [1, 2, 3])
+@pytest.mark.parametrize(
+    ("api_version", "expected_quantity"),
+    [
+        pytest.param(1, 12, id="generation-1"),
+        pytest.param(2, 12, id="generation-2"),
+        pytest.param(3, 0, id="generation-3-unsupported"),
+    ],
+)
 async def test_switch_quantity(
     hass: HomeAssistant,
     api_version: int,
+    expected_quantity: int,
 ) -> None:
     """Test that schedule switches are created."""
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
@@ -26,11 +34,7 @@ async def test_switch_quantity(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    if api_version == 3:
-        # gen 3 cannot edit state of automations, so no switches are created
-        assert hass.states.async_entity_ids_count(SWITCH_DOMAIN) == 0
-    else:
-        assert hass.states.async_entity_ids_count(SWITCH_DOMAIN) == 12
+    assert hass.states.async_entity_ids_count(SWITCH_DOMAIN) == expected_quantity
 
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
