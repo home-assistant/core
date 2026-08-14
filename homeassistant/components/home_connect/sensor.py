@@ -75,10 +75,15 @@ BSH_PROGRAM_SENSORS = (
     ),
 )
 
-ACTIVE_PROGRAM_SENSORS = (
+PROGRAM_KEY_SENSORS = (
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
         translation_key="active_program",
+        appliance_types=APPLIANCES_WITH_PROGRAMS,
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+        translation_key="selected_program",
         appliance_types=APPLIANCES_WITH_PROGRAMS,
     ),
 )
@@ -539,8 +544,8 @@ def _get_entities_for_appliance(
             and appliance_coordinator.data.info.type in desc.appliance_types
         ],
         *[
-            HomeConnectActiveProgramSensor(appliance_coordinator, desc)
-            for desc in ACTIVE_PROGRAM_SENSORS
+            HomeConnectProgramKeySensor(appliance_coordinator, desc)
+            for desc in PROGRAM_KEY_SENSORS
             if desc.appliance_types
             and appliance_coordinator.data.info.type in desc.appliance_types
         ],
@@ -668,10 +673,10 @@ class HomeConnectProgramSensor(HomeConnectSensor):
             self._update_native_value(event.value)
 
 
-class HomeConnectActiveProgramSensor(HomeConnectEntity, SensorEntity):
-    """Sensor class for the Home Connect active program, including non-selectable ones.
+class HomeConnectProgramKeySensor(HomeConnectEntity, SensorEntity):
+    """Sensor class for a Home Connect program key, including non-selectable programs.
 
-    Unlike the active program select entity, this reports every program the
+    Unlike the program select entities, this reports every program the
     appliance sends back, even those that cannot be selected by the user,
     such as an auto-started rinse or cleaning cycle.
     """
@@ -682,8 +687,8 @@ class HomeConnectActiveProgramSensor(HomeConnectEntity, SensorEntity):
 
     @override
     def update_native_value(self) -> None:
-        """Update the sensor's value from the active program event."""
-        event = self.appliance.events.get(EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM)
+        """Update the sensor's value from the program event."""
+        event = self.appliance.events.get(EventKey(self.bsh_key))
         value = event.value if event else None
         if not isinstance(value, str):
             self._raw_value = None
