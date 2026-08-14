@@ -22,6 +22,11 @@
         "default": "mdi:stop"
       }
     },
+    "number": {
+      "target_temperature": {
+        "default": "mdi:thermometer"
+      }
+    },
     "sensor": {
       "appliance_state": {
         "default": "mdi:information-outline"

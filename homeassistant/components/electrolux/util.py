@@ -1,6 +1,11 @@
 """Utility functions used by the Electrolux integration."""
 
 
+def round_to_multiple_of_step(value: float, step: float) -> float:
+    """Utility function for rounding a value to the closest multiple of a step."""
+    return round(value / step) * step
+
+
 def round_to_valid_step_int(value: float, minimum: int, step: int) -> int:
     """Utility function for rounding a value to the closest multiple of a step."""
     return round((value - minimum) / step) * step + minimum
