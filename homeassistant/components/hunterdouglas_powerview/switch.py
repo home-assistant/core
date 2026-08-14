@@ -45,8 +45,6 @@ async def async_setup_entry(
                     pv_entry.device_info,
                     room_name,
                     automation,
-                    # automation_name,
-                    # schedule_index,
                 )
             )
     async_add_entities(entities)
