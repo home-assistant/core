@@ -54,13 +54,11 @@ WATERHEATER_TYPES = (
     PlugwiseWaterHeaterEntityDescription(
         key=BOILER_TEMP,
         translation_key=BOILER_TEMP,
-        entity_category=EntityCategory.CONFIG,
         options_key=None,
     ),
     PlugwiseWaterHeaterEntityDescription(
         key=DHW_TEMP,
         translation_key=DHW_TEMP,
-        entity_category=EntityCategory.CONFIG,
         options_key=DHW_MODES,
     ),
 )
