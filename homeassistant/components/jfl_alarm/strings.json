@@ -1,0 +1,565 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "JFL panels dial out to Home Assistant, so this integration listens and waits. Choose the TCP port to listen on; it must match the reporting destination programmed into the panel. Everything else — model, partitions, zones and the electric fence — is detected from the panel itself.",
+        "data": {
+          "port": "Listening port",
+          "host": "Listening address"
+        },
+        "data_description": {
+          "port": "The panel connects to this port. It must be reachable from the panel's network.",
+          "host": "Leave 0.0.0.0 to listen on every network interface. A specific address is only needed on a machine with several networks."
+        }
+      },
+      "reconfigure": {
+        "description": "Changing the port means reprogramming the panel to match, or it will stop reporting.",
+        "data": {
+          "port": "Listening port",
+          "host": "Listening address"
+        },
+        "data_description": {
+          "port": "The panel connects to this port. It must be reachable from the panel's network.",
+          "host": "Leave 0.0.0.0 to listen on every network interface."
+        }
+      }
+    },
+    "error": {
+      "port_in_use": "Another service is already listening on that port.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "A JFL Alarm listener is already configured on that port.",
+      "reconfigure_successful": "The listening address was updated.",
+      "wrong_listener": "That port belongs to a different JFL Alarm listener."
+    }
+  },
+  "config_subentries": {
+    "panel": {
+      "initiate_flow": {
+        "user": "Add a panel"
+      },
+      "entry_type": "Panel",
+      "step": {
+        "user": {
+          "description": "Panels that have already reported in are listed below and need nothing else. Add one by hand only if it is not powered up yet, or if the listener is set to hold unknown panels for approval.",
+          "data": {
+            "serial": "Panel serial number",
+            "read_only": "Read-only mode",
+            "zone_policy": "Which zones to create",
+            "code": "Code to arm and disarm (optional)",
+            "code_arm_required": "Also ask for the code when arming",
+            "fence_pgm": "PGM that powers the electric fence"
+          },
+          "data_description": {
+            "serial": "The ten-character serial the panel reports. Pick a panel from the list if it has already connected.",
+            "read_only": "While read-only mode is on, the integration observes the panel and never sends it a command. Status is still requested, because the panel only reports its state when asked.",
+            "zone_policy": "Only zones the panel reports as in use, or every zone the model can have.",
+            "code": "Leave empty for no code. This is a Home Assistant code, not a panel user code — it is never sent to the panel. It stops a tablet on the wall from disarming the house with one tap.",
+            "code_arm_required": "Disarming always asks for the code once one is set. Turn this off if you would rather arm without typing it.",
+            "fence_pgm": "Normally leave this at 0: reading the panel's programming detects the energiser's output on its own (function 18 at addresses 821-824), moves its switch onto the electric fence's device and marks it as the fence's power supply. Give a number only to override that — for instance if a relay wired downstream of another output is what really switches your energiser."
+          }
+        },
+        "reconfigure": {
+          "description": "Settings for panel {serial}. The serial number identifies the panel and cannot be changed.",
+          "data": {
+            "read_only": "Read-only mode",
+            "zone_policy": "Which zones to create",
+            "code": "Code to arm and disarm (optional)",
+            "code_arm_required": "Also ask for the code when arming",
+            "fence_pgm": "PGM that powers the electric fence"
+          },
+          "data_description": {
+            "read_only": "While read-only mode is on, the integration observes the panel and never sends it a command.",
+            "zone_policy": "Only zones the panel reports as in use, or every zone the model can have.",
+            "code": "Leave empty for no code. This is a Home Assistant code, not a panel user code — it is never sent to the panel.",
+            "code_arm_required": "Disarming always asks for the code once one is set. Turn this off if you would rather arm without typing it.",
+            "fence_pgm": "Normally leave this at 0: reading the panel's programming detects the energiser's output on its own (function 18 at addresses 821-824). Give a number only to override what it finds."
+          }
+        }
+      },
+      "error": {
+        "invalid_serial": "Enter the panel's serial number."
+      },
+      "abort": {
+        "already_configured": "That panel has already been added.",
+        "reconfigure_successful": "The panel settings were saved."
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "JFL Alarm options",
+        "description": "These settings apply to the listener and to every panel that reports to it.",
+        "data": {
+          "keepalive_minutes": "Keep-alive interval (minutes)",
+          "unknown_panels": "Panels that are not configured yet",
+          "log_raw_frames": "Log raw frames",
+          "programming_read_interval": "Programming read interval (minutes)"
+        },
+        "data_description": {
+          "keepalive_minutes": "How often the panel is told to check in. A panel that says nothing for two and a half times this long is treated as gone.",
+          "unknown_panels": "What to do when a panel reports in that has not been added yet.",
+          "log_raw_frames": "Adds the bytes of every frame to the debug log. Only useful when investigating a decoding problem, and it only appears if debug logging is enabled for this integration.",
+          "programming_read_interval": "How often to re-read the panel's programming, which is where zone and partition names live. A panel is always read once automatically when it first connects, so names appear without pressing anything; this only controls the repeat. Set to 0 to read once and never again. A re-read costs nothing when the programming has not changed — the panel publishes a checksum that says so."
+        }
+      }
+    }
+  },
+  "selector": {
+    "unknown_panels": {
+      "options": {
+        "accept": "Add them automatically",
+        "hold": "Hold them for approval",
+        "reject": "Refuse the connection"
+      }
+    },
+    "zone_policy": {
+      "options": {
+        "programmed": "Only zones in use",
+        "all": "Every zone the model supports"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connectivity": {
+        "name": "Panel connection"
+      },
+      "problem": {
+        "name": "Panel status"
+      },
+      "siren": {
+        "name": "Siren"
+      },
+      "updating": {
+        "name": "Panel updating"
+      },
+      "zone": {
+        "name": "Zone {zone}"
+      },
+      "zone_problem": {
+        "name": "Sensor"
+      },
+      "zone_tamper": {
+        "name": "Tamper"
+      },
+      "problem_wireless_low_battery": {
+        "name": "Wireless sensor battery"
+      },
+      "problem_sensor_supervision": {
+        "name": "Sensor supervision"
+      },
+      "problem_auxiliary_output": {
+        "name": "Auxiliary output"
+      },
+      "problem_tamper": {
+        "name": "Panel tamper"
+      },
+      "problem_dhcp": {
+        "name": "DHCP"
+      },
+      "problem_network_cable": {
+        "name": "Network cable"
+      },
+      "problem_cellular_module": {
+        "name": "Cellular module"
+      },
+      "problem_sms": {
+        "name": "SMS"
+      },
+      "problem_ethernet": {
+        "name": "Ethernet"
+      },
+      "problem_gprs": {
+        "name": "Mobile data"
+      },
+      "problem_telephone_line": {
+        "name": "Telephone line"
+      },
+      "problem_short": {
+        "name": "Short circuit"
+      },
+      "problem_keypad": {
+        "name": "Keypad"
+      },
+      "problem_siren": {
+        "name": "Siren circuit"
+      },
+      "problem_battery": {
+        "name": "Battery"
+      },
+      "problem_ac_mains": {
+        "name": "Mains power"
+      },
+      "problem_battery_reversed": {
+        "name": "Battery reversed"
+      },
+      "problem_destination_ip_2": {
+        "name": "Reporting destination 2"
+      },
+      "problem_destination_ip_1": {
+        "name": "Reporting destination 1"
+      },
+      "problem_dns_server": {
+        "name": "DNS server"
+      },
+      "problem_keypad_ac": {
+        "name": "Keypad mains power"
+      },
+      "problem_siren_supervision": {
+        "name": "Siren supervision"
+      },
+      "problem_wireless_password": {
+        "name": "Wireless password"
+      },
+      "problem_wireless_authentication": {
+        "name": "Wireless authentication"
+      },
+      "problem_ssid_not_found": {
+        "name": "Wi-Fi network not found"
+      },
+      "problem_ip_conflict": {
+        "name": "IP address conflict"
+      },
+      "problem_bus": {
+        "name": "Expansion bus"
+      },
+      "problem_ddns": {
+        "name": "Dynamic DNS"
+      },
+      "problem_notification": {
+        "name": "Notification service"
+      },
+      "problem_ethernet_module": {
+        "name": "Ethernet module"
+      },
+      "problem_signal_level": {
+        "name": "Mobile signal level"
+      },
+      "problem_sim_card": {
+        "name": "SIM card"
+      },
+      "fence_alarm": {
+        "name": "Alarm"
+      },
+      "zone_battery": {
+        "name": "Battery"
+      },
+      "zone_connectivity": {
+        "name": "Connection"
+      }
+    },
+    "button": {
+      "refresh_status": {
+        "name": "Refresh status"
+      },
+      "read_programming": {
+        "name": "Read programming"
+      }
+    },
+    "event": {
+      "panel_event": {
+        "name": "Panel events",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alarm": "Alarm",
+              "alarm_restore": "Alarm restored",
+              "arm": "Armed",
+              "disarm": "Disarmed",
+              "fence_alarm": "Electric fence alarm",
+              "fence_alarm_restore": "Electric fence alarm restored",
+              "fence_arm": "Electric fence armed",
+              "fence_disarm": "Electric fence disarmed",
+              "bypass": "Zone bypassed",
+              "bypass_restore": "Bypass removed",
+              "trouble": "Trouble",
+              "trouble_restore": "Trouble restored",
+              "panic": "Panic",
+              "medical": "Medical",
+              "fire": "Fire",
+              "tamper": "Tamper",
+              "test": "Test",
+              "system": "System",
+              "unknown": "Unknown"
+            }
+          }
+        }
+      },
+      "partition_event": {
+        "name": "Events",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alarm": "Alarm",
+              "alarm_restore": "Alarm restored",
+              "arm": "Armed",
+              "disarm": "Disarmed",
+              "fence_alarm": "Electric fence alarm",
+              "fence_alarm_restore": "Electric fence alarm restored",
+              "fence_arm": "Electric fence armed",
+              "fence_disarm": "Electric fence disarmed",
+              "bypass": "Zone bypassed",
+              "bypass_restore": "Bypass removed",
+              "trouble": "Trouble",
+              "trouble_restore": "Trouble restored",
+              "panic": "Panic",
+              "medical": "Medical",
+              "fire": "Fire",
+              "tamper": "Tamper",
+              "test": "Test",
+              "system": "System",
+              "unknown": "Unknown"
+            }
+          }
+        }
+      },
+      "fence_event": {
+        "name": "Events",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alarm": "Alarm",
+              "alarm_restore": "Alarm restored",
+              "arm": "Armed",
+              "disarm": "Disarmed",
+              "fence_alarm": "Alarm",
+              "fence_alarm_restore": "Alarm restored",
+              "fence_arm": "Armed",
+              "fence_disarm": "Disarmed",
+              "bypass": "Zone bypassed",
+              "bypass_restore": "Bypass removed",
+              "trouble": "Trouble",
+              "trouble_restore": "Trouble restored",
+              "panic": "Panic",
+              "medical": "Medical",
+              "fire": "Fire",
+              "tamper": "Tamper",
+              "test": "Test",
+              "system": "System",
+              "unknown": "Unknown"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "last_event": {
+        "name": "Last event"
+      },
+      "last_connected": {
+        "name": "Last connected"
+      },
+      "last_seen": {
+        "name": "Last heard from"
+      },
+      "signal": {
+        "name": "Mobile signal"
+      },
+      "panel_clock": {
+        "name": "Panel clock"
+      },
+      "programming_checksum": {
+        "name": "Programming checksum"
+      },
+      "fence_state": {
+        "name": "State",
+        "state": {
+          "disarmed": "Disarmed",
+          "armed": "Armed",
+          "triggered": "Alarm",
+          "not_ready": "Not ready"
+        }
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "zone_signal": {
+        "name": "Signal",
+        "state": {
+          "none": "No signal",
+          "weak": "Weak",
+          "good": "Good",
+          "very_good": "Very good",
+          "excellent": "Excellent"
+        }
+      },
+      "zone_last_transmission": {
+        "name": "Last transmission"
+      },
+      "timer_entry_1": {
+        "name": "Entry delay 1"
+      },
+      "timer_entry_2": {
+        "name": "Entry delay 2"
+      },
+      "timer_exit_1": {
+        "name": "Exit delay 1"
+      },
+      "timer_exit_2": {
+        "name": "Exit delay 2"
+      },
+      "timer_open_door": {
+        "name": "Open door time"
+      },
+      "timer_smart_zone": {
+        "name": "Smart zone window"
+      },
+      "timer_ac_loss": {
+        "name": "Mains loss delay"
+      },
+      "timer_line_loss": {
+        "name": "Line loss delay"
+      }
+    },
+    "switch": {
+      "commands_enabled": {
+        "name": "Allow commands"
+      },
+      "pgm": {
+        "name": "PGM {number}"
+      },
+      "pgm_fence": {
+        "name": "PGM {number} (triggers the electric fence)"
+      },
+      "zone_bypass": {
+        "name": "Bypass"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_bind": {
+      "message": "Could not listen on {host}:{port}: {error}"
+    },
+    "panel_not_connected": {
+      "message": "Panel {serial} is not connected, so the command was not sent."
+    },
+    "read_only": {
+      "message": "Panel {serial} is in read-only mode, so nothing was sent. Turn read-only mode off in the panel's settings to allow arming and disarming."
+    },
+    "commands_disabled": {
+      "message": "Commands are switched off for panel {serial}, so nothing was sent. Turn the \"Allow commands\" switch back on."
+    },
+    "not_permitted": {
+      "message": "Panel {serial} does not allow this operation from a monitoring connection. Check the panel's programming at address {address}."
+    },
+    "invalid_code": {
+      "message": "Wrong code."
+    },
+    "no_status_yet": {
+      "message": "Panel {serial} has not reported its status yet, so there is nothing to change."
+    },
+    "unknown_device": {
+      "message": "Device {device_id} does not belong to a loaded JFL panel."
+    }
+  },
+  "issues": {
+    "panel_never_connected": {
+      "title": "No JFL panel has connected",
+      "description": "Nothing has reported to {host}:{port} in {minutes} minutes.\n\nJFL panels dial out to Home Assistant rather than the other way round, so the panel has to be programmed to report here:\n\n1. In the panel's programming, set a **free** reporting destination IP to this machine's address and the port above. Do not overwrite the slot your monitoring company uses.\n2. Enable dual reporting at address 700, TECLA8, so the existing monitoring connection keeps working.\n3. Check the permissions at address 300.\n\nIf the panel is on a different network, make sure this port is reachable from it."
+    },
+    "unsupported_model": {
+      "title": "Panel model not tested",
+      "description": "Panel {serial} reports as a {model} ({model_byte}). This integration implements that model from JFL's specification, but nobody has verified it against real hardware — only the Active 32 Duo has been.\n\nEverything should work. If something does not, please report it: the model byte and a diagnostics download are exactly what is needed to fix it."
+    },
+    "remote_access_blocked": {
+      "title": "Panel rejected a password",
+      "description": "Panel {serial} answered a command with \"wrong password\", and this integration has stopped sending anything that carries one.\n\n**Five wrong passwords block remote operation at the panel** until somebody performs a valid operation on the keypad, so no further attempt will be made automatically.\n\nThis should not be possible: none of the commands this integration sends carries a password. Please report it with a diagnostics download — it means a genuine bug, and the frames in that download are what will identify it."
+    },
+    "unknown_model": {
+      "title": "Unrecognised panel model",
+      "description": "Panel {serial} reports model byte {model_byte}, which is not in this integration's model table.\n\nThe integration has assumed a permissive set of capabilities so that entities still appear, which may mean partitions or zones that do not really exist. Please report the model byte and the panel's commercial name so it can be added."
+    },
+    "fence_pgm_conflict": {
+      "title": "Electric fence PGM setting disagrees with the panel",
+      "description": "You set PGM {configured} as the electric fence's power for panel {serial}, but the panel's own programming says PGM {detected} drives it.\n\nYour setting is being honoured — nothing has changed. But one of the two is wrong: either the programming reads a function you did not expect, or the number in the settings is a mistake. Check which output really switches your energiser and set it accordingly."
+    },
+    "fence_pgm_detected": {
+      "title": "A PGM output powers the electric fence",
+      "description": "This issue is retired — the integration now places and marks the switch itself instead of asking you to. Kept here only so an installation upgrading from an older version can still show and dismiss the one it already raised."
+    }
+  },
+  "device": {
+    "partition": {
+      "name": "Partition {number}"
+    },
+    "fence": {
+      "name": "Electric fence"
+    },
+    "zone": {
+      "name": "Zone {number}"
+    },
+    "zone_named": {
+      "name": "Zone {number} {name}"
+    }
+  },
+  "services": {
+    "sync_time": {
+      "name": "Set the panel clock",
+      "description": "Sets the panel's clock to Home Assistant's local time. Worth doing occasionally: the panel timestamps every event it reports from its own clock, so a panel that has drifted files today's alarm under yesterday.",
+      "fields": {
+        "device_id": {
+          "name": "Panel",
+          "description": "Which panel to set. A partition or fence sub-device resolves to the panel it is on."
+        }
+      }
+    },
+    "refresh_status": {
+      "name": "Refresh status",
+      "description": "Asks the panel for a status frame now. The panel reports its state only when asked, so this is how you get an immediate update. It reads and never changes anything, so it works in read-only mode.",
+      "fields": {
+        "device_id": {
+          "name": "Panel",
+          "description": "Which panel to ask."
+        }
+      }
+    },
+    "set_bypass_mask": {
+      "name": "Set the whole bypass list",
+      "description": "Replaces the panel's manual bypass list with exactly the zones given, in one command. The per-zone bypass switches are the ordinary way in; this exists for clearing every bypass at once, which an empty list does.",
+      "fields": {
+        "device_id": {
+          "name": "Panel",
+          "description": "Which panel to set."
+        },
+        "zones": {
+          "name": "Zones to bypass",
+          "description": "Every zone that should be inhibited afterwards. Zones not listed are brought back into the alarm. An empty list clears all bypasses."
+        }
+      }
+    },
+    "read_event_buffer": {
+      "name": "Read the panel's event buffer",
+      "description": "Returns the panel's own event memory — every arm, disarm, alarm, bypass and trouble it recorded, including while Home Assistant was off. It only reads, so it works in read-only mode. These events are returned as data and are deliberately NOT replayed onto the event entities: replaying a stored panic would run every automation listening for one.",
+      "fields": {
+        "device_id": {
+          "name": "Panel",
+          "description": "Which panel to read."
+        },
+        "since_serial": {
+          "name": "Resume from serial",
+          "description": "The event serial to page forward from. The buffer is read oldest first and there is no way to ask for the newest, so keep the 'next_serial' a call returns and pass it back here to read only what is new. 0 starts at the oldest record the panel still holds."
+        },
+        "limit": {
+          "name": "Maximum events",
+          "description": "How many records to return at most. The panel pages eight at a time, so a large limit is a long conversation on a link that is also polling the status."
+        }
+      }
+    },
+    "read_programming": {
+      "name": "Read the panel's programming",
+      "description": "Reads the panel's programming and returns it — the zone and partition names above all, which is where they live. It takes a few seconds: the panel is asked in paced blocks so the read does not starve the status poll or the keypad. It only reads, so it works in read-only mode, and it never returns a user's access code.",
+      "fields": {
+        "device_id": {
+          "name": "Panel",
+          "description": "Which panel to read."
+        }
+      }
+    }
+  }
+}

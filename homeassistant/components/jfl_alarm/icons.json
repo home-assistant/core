@@ -1,0 +1,105 @@
+{
+  "entity": {
+    "switch": {
+      "commands_enabled": {
+        "default": "mdi:shield-lock-open",
+        "state": {
+          "off": "mdi:shield-lock"
+        }
+      },
+      "pgm": {
+        "default": "mdi:electric-switch",
+        "state": {
+          "on": "mdi:electric-switch-closed"
+        }
+      },
+      "pgm_fence": {
+        "default": "mdi:alert-octagon"
+      },
+      "zone_bypass": {
+        "default": "mdi:motion-sensor",
+        "state": {
+          "on": "mdi:motion-sensor-off"
+        }
+      }
+    },
+    "sensor": {
+      "fence_state": {
+        "default": "mdi:fence",
+        "state": {
+          "armed": "mdi:fence-electric",
+          "triggered": "mdi:fence-electric",
+          "not_ready": "mdi:fence"
+        }
+      },
+      "battery_voltage": {
+        "default": "mdi:car-battery"
+      },
+      "panel_clock": {
+        "default": "mdi:clock-outline"
+      },
+      "programming_checksum": {
+        "default": "mdi:fingerprint"
+      },
+      "signal": {
+        "default": "mdi:signal"
+      },
+      "zone_signal": {
+        "default": "mdi:signal"
+      },
+      "last_connected": {
+        "default": "mdi:transit-connection-variant"
+      },
+      "last_seen": {
+        "default": "mdi:ear-hearing"
+      },
+      "zone_last_transmission": {
+        "default": "mdi:ear-hearing"
+      },
+      "last_event": {
+        "default": "mdi:history"
+      }
+    },
+    "binary_sensor": {
+      "fence_alarm": {
+        "default": "mdi:flash-alert"
+      }
+    },
+    "event": {
+      "panel_event": {
+        "default": "mdi:bell-ring-outline"
+      },
+      "partition_event": {
+        "default": "mdi:bell-outline"
+      },
+      "fence_event": {
+        "default": "mdi:fence-electric"
+      }
+    },
+    "button": {
+      "refresh_status": {
+        "default": "mdi:refresh"
+      },
+      "read_programming": {
+        "default": "mdi:file-download-outline"
+      }
+    }
+  },
+  "services": {
+    "sync_time": {
+      "service": "mdi:clock-check-outline"
+    },
+    "refresh_status": {
+      "service": "mdi:refresh"
+    },
+    "set_bypass_mask": {
+      "service": "mdi:motion-sensor-off"
+    },
+    "read_programming": {
+      "service": "mdi:file-download-outline"
+    },
+    "read_event_buffer": {
+      "service": "mdi:history"
+    }
+  }
+}
