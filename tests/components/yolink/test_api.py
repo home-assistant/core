@@ -113,18 +113,29 @@ async def test_uac_token_request_http_error(
     assert err.value.message == "Bad credentials"
 
 
-async def test_uac_token_request_http_error_without_json_body(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize(
+    ("status", "response_kwargs"),
+    [
+        pytest.param(502, {"text": "<html>Bad gateway</html>"}, id="undecodable_body"),
+        pytest.param(500, {"json": []}, id="body_is_not_an_object"),
+    ],
+)
+async def test_uac_token_request_http_error_without_usable_body(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    status: int,
+    response_kwargs: dict[str, Any],
 ) -> None:
-    """Test an HTTP error carrying an unparsable body."""
-    aioclient_mock.post(OAUTH2_TOKEN, status=502, text="<html>Bad gateway</html>")
+    """Test an HTTP error whose body reports no error."""
+    aioclient_mock.post(OAUTH2_TOKEN, status=status, **response_kwargs)
     auth = _uac_auth(hass)
 
     with pytest.raises(YoLinkClientError) as err:
         await auth.check_and_refresh_token()
 
+    assert type(err.value) is YoLinkClientError
     assert err.value.code == "unknown"
-    assert err.value.message == "HTTP 502"
+    assert err.value.message == f"HTTP {status}"
 
 
 @pytest.mark.parametrize(
@@ -283,7 +294,7 @@ async def test_uac_failed_refresh_keeps_cached_token(
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a failing refresh leaves the cached token usable."""
+    """Test a failing refresh keeps serving the cached token until it expires."""
     aioclient_mock.post(
         OAUTH2_TOKEN, json={"access_token": "token-1", "expires_in": 7200}
     )
@@ -295,10 +306,13 @@ async def test_uac_failed_refresh_keeps_cached_token(
     aioclient_mock.post(OAUTH2_TOKEN, status=500, text="<html>Bad gateway</html>")
 
     freezer.tick(3601)
-    with pytest.raises(YoLinkClientError):
-        await auth.check_and_refresh_token()
-
+    assert await auth.check_and_refresh_token() == "token-1"
     assert auth.access_token() == "token-1"
+    assert aioclient_mock.call_count == 1
+
+    freezer.tick(3598)
+    assert await auth.check_and_refresh_token() == "token-1"
+    assert aioclient_mock.call_count == 2
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
@@ -306,6 +320,58 @@ async def test_uac_failed_refresh_keeps_cached_token(
     )
 
     assert await auth.check_and_refresh_token() == "token-2"
+    assert auth.access_token() == "token-2"
+
+
+async def test_uac_failed_refresh_raises_once_the_token_expired(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failing refresh is raised once the cached token is worthless."""
+    aioclient_mock.post(
+        OAUTH2_TOKEN, json={"access_token": "token-1", "expires_in": 7200}
+    )
+    auth = _uac_auth(hass)
+
+    assert await auth.check_and_refresh_token() == "token-1"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(OAUTH2_TOKEN, status=500, text="<html>Bad gateway</html>")
+
+    freezer.tick(7201)
+    with pytest.raises(YoLinkClientError) as err:
+        await auth.check_and_refresh_token()
+
+    assert type(err.value) is YoLinkClientError
+    assert err.value.message == "HTTP 500"
+
+
+async def test_uac_refresh_refused_is_raised_with_a_cached_token(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test refused credentials are raised even while the cached token is valid."""
+    aioclient_mock.post(
+        OAUTH2_TOKEN, json={"access_token": "token-1", "expires_in": 7200}
+    )
+    auth = _uac_auth(hass)
+
+    assert await auth.check_and_refresh_token() == "token-1"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        status=401,
+        json={"error": "invalid_client", "error_description": "Bad credentials"},
+    )
+
+    freezer.tick(3601)
+    with pytest.raises(YoLinkAuthFailError) as err:
+        await auth.check_and_refresh_token()
+
+    assert err.value.message == "Bad credentials"
 
 
 async def test_static_token_auth(hass: HomeAssistant) -> None:

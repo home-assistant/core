@@ -130,13 +130,31 @@ class UACAuth(YoLinkAuthMgr):
     async def check_and_refresh_token(self) -> str:
         """Check and refresh the token if needed."""
         async with self._token_lock:
-            if self._token is None or self._token["refresh_at"] <= time.time():
+            cached = self._token
+            if cached is not None and time.time() < cached["refresh_at"]:
+                return cached["access_token"]
+            try:
                 token = await self._token_request()
-                # Refresh once half the lifetime has passed, so a failing token
-                # endpoint can be retried while the current token still works.
-                token["refresh_at"] = time.time() + token["expires_in"] / 2
-                self._token = token
-            return self._token["access_token"]
+            except YoLinkAuthFailError:
+                # The credentials were refused, retrying cannot fix that.
+                raise
+            except YoLinkClientError as err:
+                # A cached token stays usable for the rest of its lifetime, so a
+                # transient failure of the token endpoint interrupts nothing.
+                if cached is None or time.time() >= cached["expires_at"]:
+                    raise
+                _LOGGER.debug(
+                    "UAC token refresh failed, keeping the cached token: %s",
+                    err.message,
+                )
+                return cached["access_token"]
+            now = time.time()
+            # Refresh once half the lifetime has passed, so a failing token
+            # endpoint can be retried while the current token still works.
+            token["refresh_at"] = now + token["expires_in"] / 2
+            token["expires_at"] = now + token["expires_in"]
+            self._token = token
+            return token["access_token"]
 
     async def _token_request(self) -> dict[str, Any]:
         """Request a new access token from the yolink token endpoint."""
@@ -156,6 +174,9 @@ class UACAuth(YoLinkAuthMgr):
                     try:
                         error_response = await resp.json()
                     except ClientError, ValueError:
+                        error_response = None
+                    if not isinstance(error_response, dict):
+                        # A body that is not a JSON object carries no error.
                         error_response = {}
                     error_code = error_response.get("error", "unknown")
                     error_desc = error_response.get(
