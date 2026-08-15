@@ -4,8 +4,8 @@ from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyportainer import PortainerEventListenerResult
-from pyportainer.models.docker import DockerEvent, DockerEventActor
 from pyportainer.models.docker_inspect import DockerInspect
+from pyportainer.models.event import DockerEvent, DockerEventActor
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
