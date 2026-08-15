@@ -281,6 +281,11 @@ async def test_entity_registration(
     assert entity is not None
     assert entity.unique_id == str(mock_roller.id)
 
+    # Verify device_id property on entity instance
+    cover_entity = hass.data[COVER_DOMAIN].get_entity("cover.roller")
+    assert cover_entity is not None
+    assert cover_entity.device_id == str(mock_roller.id)
+
     # Verify device info
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, str(mock_roller.id)), mock_config_entry.entry_id
@@ -296,7 +301,8 @@ async def test_entity_notify_update(
     mock_hub: MagicMock,
     mock_roller: MagicMock,
 ) -> None:
-    """Test entity subscribes to roller callback."""
+    """Test entity state updates when roller fires callback."""
+    mock_roller.closed_percent = 50
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -304,5 +310,17 @@ async def test_entity_notify_update(
     notify_update(aiopulse.UpdateType.rollers)
     await hass.async_block_till_done()
 
-    # Verify the entity subscribed to the roller's callback
-    mock_roller.callback_subscribe.assert_called()
+    # Verify entity state reflects roller position
+    state = hass.states.get("cover.roller")
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+
+    # Update roller position and fire roller callback
+    roller_callback = mock_roller.callback_subscribe.call_args[0][0]
+    mock_roller.closed_percent = 75
+    roller_callback()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.roller")
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_POSITION] == 25

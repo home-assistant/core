@@ -43,7 +43,7 @@ async def test_hub_reset(
 
 
 @pytest.mark.parametrize(
-    ("update_type", "should_update"),
+    ("update_type", "should_create_entities"),
     [
         (aiopulse.UpdateType.rollers, True),
         (aiopulse.UpdateType.info, False),
@@ -55,23 +55,30 @@ async def test_async_notify_update(
     mock_hub: MagicMock,
     mock_roller: MagicMock,
     update_type: aiopulse.UpdateType,
-    should_update: bool,
+    should_create_entities: bool,
 ) -> None:
-    """Test async_notify_update behavior for different update types."""
+    """Test async_notify_update creates entities for roller updates only."""
+    # Start with no rollers
+    mock_hub.rollers = {}
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+    # Verify no entities initially
+    assert hass.states.get("cover.roller") is None
 
-    with patch("homeassistant.components.acmeda.hub.update_devices") as mock_update:
-        notify_update(update_type)
-        await hass.async_block_till_done()
-        if should_update:
-            mock_update.assert_called_once_with(
-                hass, mock_config_entry, mock_hub.rollers
-            )
-        else:
-            mock_update.assert_not_called()
+    # Add roller and notify
+    mock_hub.rollers = {mock_roller.id: mock_roller}
+    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+    notify_update(update_type)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.roller")
+    if should_create_entities:
+        assert state is not None
+        assert state.domain == "cover"
+        assert state.name == mock_roller.name
+    else:
+        assert state is None
 
 
 async def test_hub_api_none_paths(
