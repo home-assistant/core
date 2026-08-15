@@ -10,11 +10,7 @@ from pytewke.error import (
     PyTewkeUnknownError,
 )
 
-from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 
 from .const import DOMAIN, LOGGER
@@ -62,16 +58,6 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": display_name}
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, str] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
-        entry = self._get_reconfigure_entry()
-        self._discovered_host = entry.data[CONF_HOST]
-        self._discovered_name = entry.data[CONF_NAME]
-        self._room_name = entry.options.get("room_name")
-        return await self.async_step_zeroconf_confirm()
-
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -117,12 +103,7 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        expected_unique_id = (
-            self._get_reconfigure_entry().unique_id
-            if self.source == SOURCE_RECONFIGURE
-            else self.unique_id
-        )
-        if tap.wall_dock_id != expected_unique_id:
+        if tap.wall_dock_id != self.unique_id:
             await tap.close()
             self._tap = None
             return self.async_abort(reason="cannot_connect")
@@ -132,17 +113,6 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME: self._discovered_name,
         }
         options = {"room_name": self._room_name} if self._room_name else {}
-
-        if self.source == SOURCE_RECONFIGURE:
-            entry = self._get_reconfigure_entry()
-            await tap.close()
-            self._tap = None
-
-            return self.async_update_reload_and_abort(
-                entry,
-                data=data,
-                options=dict(entry.options),
-            )
 
         await tap.close()
         self._tap = None
