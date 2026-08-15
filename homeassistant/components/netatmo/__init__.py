@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     required_scopes = set(api.get_api_scopes(entry.data["auth_implementation"]))
     raw_token_scopes = session.token["scope"]
     token_scopes = (
-        set(raw_token_scopes.split(" "))
+        set(raw_token_scopes.split())
         if isinstance(raw_token_scopes, str)
         else set(raw_token_scopes)
     )
