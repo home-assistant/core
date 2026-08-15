@@ -685,3 +685,39 @@ async def test_climate_entity_attribute_current_temperature_unsupported(
     state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+
+
+async def test_climate_entity_single_setpoint_target_temp_in_auto_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a single-setpoint climate entity target temperature in auto mode."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            supports_current_temperature=True,
+            visual_min_temperature=10.0,
+            visual_max_temperature=30.0,
+            supported_modes=[ClimateMode.COOL, ClimateMode.HEAT, ClimateMode.AUTO],
+        )
+    ]
+    states = [
+        ClimateState(
+            key=1,
+            mode=ClimateMode.AUTO,
+            current_temperature=26.5,
+            target_temperature=24.0,
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.state == HVACMode.AUTO
+    assert state.attributes[ATTR_TEMPERATURE] == 24.0
