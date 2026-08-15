@@ -8,7 +8,11 @@ import pytest
 
 @pytest.fixture
 def mock_concord232_client_class() -> Generator[MagicMock]:
-    """Mock the concord232 Client class for easier testing."""
+    """Mock the concord232 Client class for easier testing.
+
+    Both platform import paths are patched to the same mock, so constructor
+    calls from either platform are visible on the yielded class mock.
+    """
     with (
         patch(
             "homeassistant.components.concord232.alarm_control_panel.concord232_client.Client",

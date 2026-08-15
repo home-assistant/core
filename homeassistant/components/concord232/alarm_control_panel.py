@@ -62,9 +62,9 @@ def setup_platform(
     mode: str = config[CONF_MODE]
     host: str = config[CONF_HOST]
     port: int = config[CONF_PORT]
-    ssl: bool = config[CONF_SSL]
+    use_ssl: bool = config[CONF_SSL]
 
-    protocol = "https" if ssl else "http"
+    protocol = "https" if use_ssl else "http"
     url = f"{protocol}://{host}:{port}"
 
     try:

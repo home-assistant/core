@@ -58,12 +58,12 @@ def setup_platform(
 
     host: str = config[CONF_HOST]
     port: int = config[CONF_PORT]
-    ssl: bool = config[CONF_SSL]
+    use_ssl: bool = config[CONF_SSL]
     exclude: list[int] = config[CONF_EXCLUDE_ZONES]
     zone_types: dict[int, BinarySensorDeviceClass] = config[CONF_ZONE_TYPES]
     sensors = []
 
-    protocol = "https" if ssl else "http"
+    protocol = "https" if use_ssl else "http"
 
     try:
         _LOGGER.debug("Initializing client")
