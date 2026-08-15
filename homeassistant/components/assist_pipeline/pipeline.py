@@ -993,30 +993,6 @@ class PipelineRun:
                 code="stt-no-text-recognized", message="No text recognized"
             )
 
-        # When the provider handles VAD internally and pipeline VAD is enabled,
-        # no VAD events are emitted by the external segmenter; synthesize them
-        # from the first/last chunk timestamps.
-        if (
-            self.audio_settings.is_vad_enabled
-            and not self.stt_provider.audio_processing.requires_external_vad
-        ):
-            start_ts = self._first_chunk_timestamp
-            end_ts = self._last_chunk_timestamp
-            if start_ts is not None:
-                self.process_event(
-                    PipelineEvent(
-                        PipelineEventType.STT_VAD_START,
-                        {"timestamp": start_ts},
-                    )
-                )
-            if end_ts is not None:
-                self.process_event(
-                    PipelineEvent(
-                        PipelineEventType.STT_VAD_END,
-                        {"timestamp": end_ts},
-                    )
-                )
-
         self.process_event(
             PipelineEvent(
                 PipelineEventType.STT_END,
@@ -1039,12 +1015,27 @@ class PipelineRun:
     ) -> AsyncGenerator[bytes]:
         """Yield audio chunks until VAD detects silence or speech-to-text completes."""
         sent_vad_start = False
-        self._first_chunk_timestamp: int | None = None
-        self._last_chunk_timestamp: int | None = None
+        # When the provider handles VAD internally (no external segmenter) and
+        # pipeline VAD is enabled, synthesize STT_VAD_* events here so they
+        # arrive during streaming rather than after transcription completes.
+        synthesize_vad = (
+            self.audio_settings.is_vad_enabled
+            and not self.stt_provider.audio_processing.requires_external_vad
+        )
+        self._first_chunk_timestamp = None
+        self._last_chunk_timestamp = None
         async for chunk in audio_stream:
+            self._last_chunk_timestamp = chunk.timestamp_ms
             if self._first_chunk_timestamp is None:
                 self._first_chunk_timestamp = chunk.timestamp_ms
-            self._last_chunk_timestamp = chunk.timestamp_ms
+                if synthesize_vad:
+                    self.process_event(
+                        PipelineEvent(
+                            PipelineEventType.STT_VAD_START,
+                            {"timestamp": chunk.timestamp_ms},
+                        )
+                    )
+                    sent_vad_start = True
             self._capture_chunk(chunk.audio)
 
             if stt_vad is not None:
@@ -1070,6 +1061,14 @@ class PipelineRun:
                     sent_vad_start = True
 
             yield chunk.audio
+
+        if synthesize_vad and sent_vad_start:
+            self.process_event(
+                PipelineEvent(
+                    PipelineEventType.STT_VAD_END,
+                    {"timestamp": self._last_chunk_timestamp},
+                )
+            )
 
     async def prepare_recognize_intent(self, session: chat_session.ChatSession) -> None:
         """Prepare recognizing an intent."""

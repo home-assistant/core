@@ -2421,9 +2421,13 @@ async def test_stt_vad_events_emitted_when_requires_external_vad_false(
     assert assist_pipeline.PipelineEventType.STT_VAD_START in event_types
     assert assist_pipeline.PipelineEventType.STT_VAD_END in event_types
     assert assist_pipeline.PipelineEventType.STT_END in event_types
-    # STT_VAD_START should come before STT_VAD_END
+    # Synthetic STT_VAD_* events are emitted from _speech_to_text_stream
+    # (STT_VAD_START on the first chunk, STT_VAD_END when the stream exhausts),
+    # so both arrive before STT_END which is emitted after transcription.
     vad_start_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_START)
     vad_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_END)
+    stt_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_END)
+    assert vad_start_idx < stt_end_idx
     assert vad_start_idx < vad_end_idx
     # Synthetic VAD events use the first/last chunk timestamps from the stream
     # (two 10ms chunks => 0ms and 10ms)
