@@ -41,7 +41,6 @@ from .const import (
     CONF_RADAR_OPACITY,
     CONF_RADAR_RADIUS,
     CONF_RADAR_TIMESTAMP,
-    CONF_RADAR_WEBP,
     CONF_STATION,
     CONF_TITLE,
     DEFAULT_RADAR_COLORS,
@@ -54,7 +53,6 @@ from .const import (
     DEFAULT_RADAR_OPACITY,
     DEFAULT_RADAR_RADIUS,
     DEFAULT_RADAR_TIMESTAMP,
-    DEFAULT_RADAR_WEBP,
     DOMAIN,
     RADAR_COLOR_OPTIONS,
     RADAR_LAYERS,
@@ -318,12 +316,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                                     min=1, max=30, step=1, unit_of_measurement="fps"
                                 )
                             ),
-                            vol.Required(
-                                CONF_RADAR_WEBP,
-                                default=options.get(
-                                    CONF_RADAR_WEBP, DEFAULT_RADAR_WEBP
-                                ),
-                            ): BooleanSelector(),
                         }
                     ),
                     {"collapsed": True},

@@ -20,7 +20,6 @@ from homeassistant.components.environment_canada.const import (
     CONF_RADAR_OPACITY,
     CONF_RADAR_RADIUS,
     CONF_RADAR_TIMESTAMP,
-    CONF_RADAR_WEBP,
     CONF_STATION,
     DEFAULT_RADAR_COLORS,
     DEFAULT_RADAR_DURATION,
@@ -32,7 +31,6 @@ from homeassistant.components.environment_canada.const import (
     DEFAULT_RADAR_OPACITY,
     DEFAULT_RADAR_RADIUS,
     DEFAULT_RADAR_TIMESTAMP,
-    DEFAULT_RADAR_WEBP,
     DOMAIN,
     SECTION_IMAGE,
     SECTION_MAP,
@@ -298,7 +296,6 @@ async def test_options_flow_form(hass: HomeAssistant, ec_data: dict[str, Any]) -
     assert _section_field_names(data_schema, SECTION_IMAGE) == {
         CONF_RADAR_INTERPOLATION,
         CONF_RADAR_FPS,
-        CONF_RADAR_WEBP,
     }
 
 
@@ -324,7 +321,6 @@ async def test_options_flow_save(hass: HomeAssistant, ec_data: dict[str, Any]) -
         SECTION_IMAGE: {
             CONF_RADAR_INTERPOLATION: True,
             CONF_RADAR_FPS: 10,
-            CONF_RADAR_WEBP: True,
         },
     }
     with patch(
@@ -348,7 +344,6 @@ async def test_options_flow_save(hass: HomeAssistant, ec_data: dict[str, Any]) -
         CONF_RADAR_TIMESTAMP: False,
         CONF_RADAR_INTERPOLATION: True,
         CONF_RADAR_FPS: 10,
-        CONF_RADAR_WEBP: True,
     }
     assert mock_setup_entry.called
 
@@ -368,7 +363,6 @@ async def test_options_flow_prefills_saved_options(
         CONF_RADAR_FPS: 15,
         CONF_RADAR_COLORS: "8",
         CONF_RADAR_INTERPOLATION: True,
-        CONF_RADAR_WEBP: True,
     }
     config_entry = await init_integration(hass, ec_data, options=saved_options)
 
@@ -390,7 +384,6 @@ async def test_options_flow_prefills_saved_options(
     assert time_defaults[CONF_RADAR_TIMESTAMP] is False
     assert image_defaults[CONF_RADAR_INTERPOLATION] is True
     assert image_defaults[CONF_RADAR_FPS] == 15
-    assert image_defaults[CONF_RADAR_WEBP] is True
 
 
 @pytest.mark.parametrize(
@@ -409,7 +402,6 @@ async def test_options_flow_prefills_saved_options(
                 "fps": DEFAULT_RADAR_FPS,
                 "colors": int(DEFAULT_RADAR_COLORS),
                 "interpolation": DEFAULT_RADAR_INTERPOLATION,
-                "webp": DEFAULT_RADAR_WEBP,
             },
             id="defaults",
         ),
@@ -425,7 +417,6 @@ async def test_options_flow_prefills_saved_options(
                 CONF_RADAR_FPS: 10.0,
                 CONF_RADAR_COLORS: "8",
                 CONF_RADAR_INTERPOLATION: True,
-                CONF_RADAR_WEBP: True,
             },
             {
                 "layer": "snow",
@@ -438,7 +429,6 @@ async def test_options_flow_prefills_saved_options(
                 "fps": 10,
                 "colors": 8,
                 "interpolation": True,
-                "webp": True,
             },
             id="custom",
         ),
@@ -472,4 +462,3 @@ async def test_ecmap_built_from_options(
     assert kwargs["colors"] == expected["colors"]
     assert isinstance(kwargs["colors"], int)
     assert kwargs["interpolation"] is expected["interpolation"]
-    assert kwargs["webp"] is expected["webp"]

@@ -16,7 +16,6 @@ CONF_RADAR_DURATION = "radar_duration"
 CONF_RADAR_FPS = "radar_fps"
 CONF_RADAR_COLORS = "radar_colors"
 CONF_RADAR_INTERPOLATION = "radar_interpolation"
-CONF_RADAR_WEBP = "radar_webp"
 CONF_RADAR_FUTURE_MINUTES = "radar_future_minutes"
 
 RADAR_LAYERS = ["rain", "snow", "precip_type"]
@@ -41,6 +40,5 @@ DEFAULT_RADAR_FPS = 5
 # WMS server's single default style.
 DEFAULT_RADAR_COLORS = "14"
 DEFAULT_RADAR_INTERPOLATION = False
-DEFAULT_RADAR_WEBP = False
 # 0 means no extrapolation frames are added; only affects rain/snow layers.
 DEFAULT_RADAR_FUTURE_MINUTES = 0

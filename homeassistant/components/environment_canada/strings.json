@@ -124,13 +124,11 @@
           "image": {
             "data": {
               "radar_fps": "Loop frame rate",
-              "radar_interpolation": "Smooth radar image",
-              "radar_webp": "Use WebP images"
+              "radar_interpolation": "Smooth radar image"
             },
             "data_description": {
               "radar_fps": "Frame rate of the radar animation",
-              "radar_interpolation": "Smooth the radar image instead of leaving it pixelated (uses more bandwidth)",
-              "radar_webp": "Request radar images as WebP instead of PNG to reduce bandwidth, at the cost of higher latency"
+              "radar_interpolation": "Smooth the radar image instead of leaving it pixelated (uses more bandwidth)"
             },
             "name": "Image"
           },

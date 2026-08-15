@@ -22,7 +22,6 @@ from .const import (
     CONF_RADAR_OPACITY,
     CONF_RADAR_RADIUS,
     CONF_RADAR_TIMESTAMP,
-    CONF_RADAR_WEBP,
     CONF_STATION,
     DEFAULT_RADAR_COLORS,
     DEFAULT_RADAR_DURATION,
@@ -34,7 +33,6 @@ from .const import (
     DEFAULT_RADAR_OPACITY,
     DEFAULT_RADAR_RADIUS,
     DEFAULT_RADAR_TIMESTAMP,
-    DEFAULT_RADAR_WEBP,
     DOMAIN,
 )
 from .coordinator import ECConfigEntry, ECDataUpdateCoordinator, ECRuntimeData
@@ -93,7 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) ->
         interpolation=options.get(
             CONF_RADAR_INTERPOLATION, DEFAULT_RADAR_INTERPOLATION
         ),
-        webp=options.get(CONF_RADAR_WEBP, DEFAULT_RADAR_WEBP),
         future_minutes=int(
             options.get(CONF_RADAR_FUTURE_MINUTES, DEFAULT_RADAR_FUTURE_MINUTES)
         ),
