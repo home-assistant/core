@@ -62,7 +62,14 @@
         "name": "Outdoor temperature"
       },
       "priority_status": {
-        "name": "Priority status"
+        "name": "Priority status",
+        "state": {
+          "no_hold": "No hold",
+          "temporary_hold": "Temporary hold",
+          "hold_until": "Hold until",
+          "permanent_hold": "Permanent hold",
+          "vacation_hold": "Vacation hold"
+        }
       },
       "room_average_temperature": {
         "name": "Room average temperature"

@@ -38,6 +38,14 @@ LYRIC_SETPOINT_STATUS_NAMES = {
     PRESET_VACATION_HOLD: "Holiday",
 }
 
+PRIORITY_STATUS_OPTIONS = {
+    PRESET_NO_HOLD: "no_hold",
+    PRESET_TEMPORARY_HOLD: "temporary_hold",
+    PRESET_HOLD_UNTIL: "hold_until",
+    PRESET_PERMANENT_HOLD: "permanent_hold",
+    PRESET_VACATION_HOLD: "vacation_hold",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class LyricSensorEntityDescription(SensorEntityDescription):
@@ -288,6 +296,8 @@ class LyricPriorityStatusSensor(LyricDeviceEntity, SensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "priority_status"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = list(PRIORITY_STATUS_OPTIONS.values())
 
     def __init__(
         self,
@@ -305,9 +315,9 @@ class LyricPriorityStatusSensor(LyricDeviceEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> str | None:
         """Return the state."""
         priority = self.coordinator.data.priorities_dict.get(self._mac_id)
         if priority is None:
             return None
-        return priority.status
+        return PRIORITY_STATUS_OPTIONS.get(priority.status)
