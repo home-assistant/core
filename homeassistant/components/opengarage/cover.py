@@ -113,7 +113,6 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
             return 0
         if self._state == CoverState.OPEN:
             return 100
-        # If opening/closing, return None to indicate transition
         return None
 
     async def _push_button(self):
