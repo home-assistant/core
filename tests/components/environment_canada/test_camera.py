@@ -11,10 +11,7 @@ from homeassistant.components.environment_canada.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import UTC
 
-from . import build_mocks, init_integration
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
+from . import init_integration
 
 
 async def test_camera_entity(hass: HomeAssistant, ec_data: dict[str, Any]) -> None:
@@ -24,50 +21,6 @@ async def test_camera_entity(hass: HomeAssistant, ec_data: dict[str, Any]) -> No
     state = hass.states.get("camera.home_radar")
     # Camera is disabled by default, so state should be None
     assert state is None
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize(
-    ("webp", "expected_content_type"),
-    [
-        (False, "image/gif"),
-        (True, "image/webp"),
-    ],
-)
-async def test_camera_content_type(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    ec_data: dict[str, Any],
-    mock_config_entry: MockConfigEntry,
-    webp: bool,
-    expected_content_type: str,
-) -> None:
-    """Test the camera's content type matches the radar object's webp setting."""
-    mock_config_entry.add_to_hass(hass)
-    weather_mock, aqhi_mock, radar_mock = build_mocks(ec_data)
-    radar_mock.webp = webp
-
-    with (
-        patch(
-            "homeassistant.components.environment_canada.ECWeather",
-            return_value=weather_mock,
-        ),
-        patch(
-            "homeassistant.components.environment_canada.ECAirQuality",
-            return_value=aqhi_mock,
-        ),
-        patch(
-            "homeassistant.components.environment_canada.ECMap",
-            return_value=radar_mock,
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    client = await hass_client()
-    resp = await client.get("/api/camera_proxy/camera.home_radar")
-
-    assert resp.content_type == expected_content_type
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

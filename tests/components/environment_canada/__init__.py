@@ -44,7 +44,6 @@ def build_mocks(ec_data) -> tuple[MagicMock, MagicMock, MagicMock]:
     radar_mock.layer = "precip_type"
     radar_mock.metadata = {"attribution": "Data provided by Environment Canada"}
     radar_mock.clear_cache = MagicMock()
-    radar_mock.webp = False
 
     return weather_mock, mock_ec(), radar_mock
 

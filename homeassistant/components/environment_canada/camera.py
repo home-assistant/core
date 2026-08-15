@@ -64,7 +64,7 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):
         self._attr_entity_registry_enabled_default = False
         self._attr_device_info = coordinator.device_info
 
-        self.content_type = "image/webp" if self.radar_object.webp else "image/gif"
+        self.content_type = "image/gif"
 
     @override
     async def async_added_to_hass(self) -> None:
