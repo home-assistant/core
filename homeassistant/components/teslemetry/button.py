@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
@@ -24,6 +25,7 @@ class TeslemetryButtonEntityDescription(ButtonEntityDescription):
     """Describes a Teslemetry Button entity."""
 
     func: Callable[[TeslemetryButtonEntity], Awaitable[Any]]
+    available_firmware: str | None = None
 
 
 DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
@@ -40,6 +42,20 @@ DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
     TeslemetryButtonEntityDescription(
         key="enable_keyless_driving",
         func=lambda self: handle_vehicle_command(self.api.remote_start_drive()),
+    ),
+    TeslemetryButtonEntityDescription(
+        key="enable_keep_accessory_power_mode",
+        func=lambda self: handle_vehicle_command(
+            self.api.set_keep_accessory_power_mode(True)
+        ),
+        available_firmware="2025.38",
+    ),
+    TeslemetryButtonEntityDescription(
+        key="disable_keep_accessory_power_mode",
+        func=lambda self: handle_vehicle_command(
+            self.api.set_keep_accessory_power_mode(False)
+        ),
+        available_firmware="2025.38",
     ),
     TeslemetryButtonEntityDescription(
         key="boombox",
@@ -69,6 +85,10 @@ async def async_setup_entry(
         for vehicle in entry.runtime_data.vehicles
         for description in DESCRIPTIONS
         if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
+        and (
+            description.available_firmware is None
+            or firmware_at_least(vehicle.firmware, description.available_firmware)
+        )
     )
 
 
