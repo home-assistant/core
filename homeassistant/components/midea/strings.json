@@ -108,6 +108,9 @@
     }
   },
   "exceptions": {
+    "device_communication_error": {
+      "message": "Error communicating with the device: {error}"
+    },
     "unsupported_hvac_mode": {
       "message": "HVAC mode {hvac_mode} is not supported by this device."
     }
