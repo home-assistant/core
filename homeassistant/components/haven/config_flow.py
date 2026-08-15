@@ -26,7 +26,6 @@ class HavenConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
-        self.info: DeviceInfo | None = None
 
     @override
     async def async_step_zeroconf(
@@ -37,7 +36,7 @@ class HavenConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data = {CONF_HOST: host}
 
         try:
-            self.info = await self._async_fetch_info(host)
+            info = await self._async_fetch_info(host)
         except HavenUnsupportedApiVersionError:
             return self.async_abort(reason="unsupported_api_version")
         except HavenUnsupportedProductError:
@@ -45,27 +44,28 @@ class HavenConfigFlow(ConfigFlow, domain=DOMAIN):
         except HavenApiError:
             return self.async_abort(reason="cannot_connect")
 
-        await self.async_set_unique_id(self.info.serial_number)
+        await self.async_set_unique_id(info.serial_number)
         self._abort_if_unique_id_configured(updates=self.data)
 
-        self.context["title_placeholders"] = {"name": self._entry_title(self.info)}
+        self.context["title_placeholders"] = {"name": self._entry_title(info)}
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovered HAVEN device."""
-        assert self.info is not None
+        if (title_placeholders := self.context.get("title_placeholders")) is None:
+            return self.async_abort(reason="unknown")
+
+        title = title_placeholders["name"]
 
         if user_input is not None:
-            return self.async_create_entry(
-                title=self._entry_title(self.info), data=self.data
-            )
+            return self.async_create_entry(title=title, data=self.data)
 
         self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders={"name": self._entry_title(self.info)},
+            description_placeholders=title_placeholders,
         )
 
     @override

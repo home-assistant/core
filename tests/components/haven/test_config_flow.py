@@ -169,6 +169,7 @@ async def test_zeroconf_flow_success(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Room Air Monitor {TEST_SERIAL}"
     assert result["data"] == {CONF_HOST: TEST_HOST}
     assert result["result"].unique_id == TEST_SERIAL
 
