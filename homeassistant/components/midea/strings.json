@@ -105,9 +105,53 @@
       "climate_zone2": {
         "name": "Zone 2 thermostat"
       }
+    },
+    "select": {
+      "detect_mode": {
+        "name": "Detect mode"
+      },
+      "direction": {
+        "name": "Direction"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "oscillation_angle": {
+        "name": "Oscillation angle"
+      },
+      "oscillation_mode": {
+        "name": "Oscillation mode"
+      },
+      "rate_select": {
+        "name": "Power rate limit"
+      },
+      "screen_display": {
+        "name": "Screen display"
+      },
+      "silent_level": {
+        "name": "Silent level"
+      },
+      "tilting_angle": {
+        "name": "Tilting angle"
+      },
+      "water_level_set": {
+        "name": "Water level setting"
+      },
+      "wind_lr_angle": {
+        "name": "Airflow horizontal"
+      },
+      "wind_ud_angle": {
+        "name": "Airflow vertical"
+      }
     }
   },
   "exceptions": {
+    "device_communication_error": {
+      "message": "Error communicating with the device: {error}"
+    },
     "unsupported_hvac_mode": {
       "message": "HVAC mode {hvac_mode} is not supported by this device."
     }
