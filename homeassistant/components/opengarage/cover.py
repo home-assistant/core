@@ -103,6 +103,19 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         else:
             self._state = state
 
+    @property
+    @override
+    def current_cover_position(self) -> int | None:
+        """Return current position of cover (0=closed, 100=open)."""
+        if self._state is None:
+            return None
+        if self._state == CoverState.CLOSED:
+            return 0
+        if self._state == CoverState.OPEN:
+            return 100
+        # If opening/closing, return None to indicate transition
+        return None
+
     async def _push_button(self):
         """Send commands to API."""
         result = await self.coordinator.open_garage_connection.push_button()
