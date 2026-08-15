@@ -3,6 +3,11 @@ on:
   workflow_run:
     workflows: ["Check requirements (deterministic)"]
     types: [completed]
+  # On workflow_run the actor is the PR author, so the default role gate
+  # (admin/maintainer/write) skips every PR from an outside contributor — which is
+  # exactly who this review is for. The job is read-only and its single safe-output
+  # is a sanitized comment on the PR recorded in the trusted upstream artifact.
+  roles: all
 permissions:
   contents: read
   actions: read
