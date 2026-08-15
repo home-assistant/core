@@ -10,22 +10,12 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    STATE_OFF,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DHW_TEMP,
-    DOMAIN,
-    LOWER_BOUND,
-    UPPER_BOUND,
-    WaterHeaterType,
-)
+from .const import DHW_TEMP, DOMAIN, LOWER_BOUND, UPPER_BOUND, WaterHeaterType
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
@@ -34,6 +24,7 @@ PARALLEL_UPDATES = 0
 
 FAIL_SET_TEMP: Final = "temperature_out_of_range"
 OPERATION_LIST: Final[list[str]] = [STATE_ELECTRIC, STATE_GAS, STATE_OFF]
+
 
 @dataclass(frozen=True, kw_only=True)
 class PlugwiseWaterHeaterEntityDescription(WaterHeaterEntityDescription):
