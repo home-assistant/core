@@ -1,6 +1,6 @@
 """Tests for the Acmeda hub module."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import aiopulse
 import pytest
@@ -63,10 +63,12 @@ async def test_setup_fails_when_async_setup_returns_false(
     mock_hub: MagicMock,
 ) -> None:
     """Test integration setup fails when hub.async_setup returns False."""
-    mock_hub.async_setup = AsyncMock(return_value=False)
-
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.acmeda.hub.PulseHub.async_setup",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     # Verify no entities created
     assert hass.states.get("cover.roller") is None
