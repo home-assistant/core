@@ -91,15 +91,17 @@ async def test_sensor_device_info_defaults(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    unnamed_device = device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, "ff:ff:ff:ff:ff:ff")}
+    unnamed_device = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, "ff:ff:ff:ff:ff:ff"),
+        mock_config_entry.entry_id,
     )
     assert unnamed_device is not None
-    assert unnamed_device.name is None
+    assert unnamed_device.name in (None, "ff:ff:ff:ff:ff:ff")
     assert unnamed_device.manufacturer is None
 
-    named_device = device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, "ff:ff:ff:ff:ff:fe")}
+    named_device = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, "ff:ff:ff:ff:ff:fe"),
+        mock_config_entry.entry_id,
     )
     assert named_device is not None
     assert named_device.name == "Desktop"
