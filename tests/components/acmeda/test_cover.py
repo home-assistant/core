@@ -1,6 +1,6 @@
 """Tests for the Acmeda cover module."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import aiopulse
 import pytest
@@ -178,10 +178,10 @@ async def test_cover_services(
     mock_roller: MagicMock,
 ) -> None:
     """Test cover services call correct roller methods."""
-    mock_roller.move_down = MagicMock()
-    mock_roller.move_up = MagicMock()
-    mock_roller.move_stop = MagicMock()
-    mock_roller.move_to = MagicMock()
+    mock_roller.move_down = AsyncMock()
+    mock_roller.move_up = AsyncMock()
+    mock_roller.move_stop = AsyncMock()
+    mock_roller.move_to = AsyncMock()
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -222,10 +222,10 @@ async def test_cover_tilt_services(
 ) -> None:
     """Test cover tilt services call correct roller methods."""
     mock_roller.type = 7
-    mock_roller.move_down = MagicMock()
-    mock_roller.move_up = MagicMock()
-    mock_roller.move_stop = MagicMock()
-    mock_roller.move_to = MagicMock()
+    mock_roller.move_down = AsyncMock()
+    mock_roller.move_up = AsyncMock()
+    mock_roller.move_stop = AsyncMock()
+    mock_roller.move_to = AsyncMock()
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
