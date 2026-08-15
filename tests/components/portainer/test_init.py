@@ -1,7 +1,7 @@
 """Test the Portainer initial specific behavior."""
 
 from typing import Any, cast
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
@@ -405,6 +405,25 @@ async def test_new_endpoint_callback(
     )
     assert stack_device is not None
     assert stack_device.via_device_id == endpoint_device.id
+
+
+async def test_removed_endpoint_stops_event_listener(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_event_listeners: dict[int, MagicMock],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a removed endpoint's Docker event listener is stopped and dropped."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert 1 in coordinator._event_listeners
+
+    mock_portainer_client.get_endpoints.return_value = []
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    mock_portainer_event_listeners[1].stop.assert_called_once()
+    assert 1 not in coordinator._event_listeners
 
 
 async def test_new_container_callback(
