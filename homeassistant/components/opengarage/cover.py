@@ -78,6 +78,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
             return
         self._state_before_move = self._state
         self._state = CoverState.CLOSING
+        self.async_write_ha_state()
         await self._push_button()
 
     @override
@@ -87,6 +88,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
             return
         self._state_before_move = self._state
         self._state = CoverState.OPENING
+        self.async_write_ha_state()
         await self._push_button()
 
     @callback
@@ -130,3 +132,4 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
 
         self._state = self._state_before_move
         self._state_before_move = None
+        self.async_write_ha_state()
