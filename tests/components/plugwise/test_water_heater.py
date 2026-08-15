@@ -1,30 +1,20 @@
 """Tests for the Plugwise water_heater platform."""
 
-from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
-    ATTR_OPERATION_MODE,
     DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-HA_PLUGWISE_SMILE_ASYNC_UPDATE = (
-    "homeassistant.components.plugwise.coordinator.Smile.async_update"
-)
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize("platforms", [(WATER_HEATER_DOMAIN,)])
@@ -51,14 +41,9 @@ async def test_adam_water_heater_setpoint_change(
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
-            ATTR_OPERATION_MODE: "comfort",
             ATTR_TEMPERATURE: 55,
         },
         blocking=True,
-    )
-    assert mock_smile_adam_jip.set_dhw_mode.call_count == 1
-    mock_smile_adam_jip.set_dhw_mode.assert_called_with(
-        "dhw_mode", "e4684553153b44afbef2200885f379dc", "comfort", 2
     )
     assert mock_smile_adam_jip.set_number.call_count == 1
     mock_smile_adam_jip.set_number.assert_called_with(
@@ -79,57 +64,17 @@ async def test_adam_water_heater_setpoint_change(
         )
     assert mock_smile_adam_jip.set_number.call_count == 1
 
-    await hass.services.async_call(
-        WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: "water_heater.opentherm_boiler",
-            ATTR_TEMPERATURE: 85,
-        },
-        blocking=True,
-    )
-    assert mock_smile_adam_jip.set_number.call_count == 2
-    mock_smile_adam_jip.set_number.assert_called_with(
-        "e4684553153b44afbef2200885f379dc",
-        "boiler_temperature",
-        85.0,
-    )
-
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.opentherm_boiler",
+                ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
                 ATTR_TEMPERATURE: 15,
             },
             blocking=True,
         )
-    assert mock_smile_adam_jip.set_number.call_count == 2
-
-    with pytest.raises(ServiceNotSupported):
-        await hass.services.async_call(
-            WATER_HEATER_DOMAIN,
-            SERVICE_SET_OPERATION_MODE,
-            {
-                ATTR_ENTITY_ID: "water_heater.opentherm_boiler",
-                ATTR_OPERATION_MODE: "eco",
-            },
-            blocking=True,
-        )
-    assert mock_smile_adam_jip.set_dhw_mode.call_count == 1
-
-    # Test setting to the same operation_mode, will not be executed
-    await hass.services.async_call(
-        WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {
-            ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
-            ATTR_OPERATION_MODE: "eco",
-        },
-        blocking=True,
-    )
-    assert mock_smile_adam_jip.set_dhw_mode.call_count == 1
+    assert mock_smile_adam_jip.set_number.call_count == 1
 
 
 @pytest.mark.parametrize("chosen_env", ["anna_loria_cooling_active"], indirect=True)
@@ -145,63 +90,3 @@ async def test_anna_water_heater_snapshot(
 ) -> None:
     """Test Anna water_heater snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
-
-
-@pytest.mark.parametrize("chosen_env", ["anna_loria_cooling_active"], indirect=True)
-@pytest.mark.parametrize("cooling_present", [False], indirect=True)
-async def test_anna_water_heater_mode_change(
-    hass: HomeAssistant,
-    mock_smile_anna: MagicMock,
-    init_integration: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test Anna water_heater dhw_mode changes."""
-    await hass.services.async_call(
-        WATER_HEATER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {
-            ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
-        },
-        blocking=True,
-    )
-    assert mock_smile_anna.set_dhw_mode.call_count == 1
-    mock_smile_anna.set_dhw_mode.assert_called_with(
-        "dhw_mode", "bfb5ee0a88e14e5f97bfa725a760cc49", "off", 5
-    )
-
-    data = mock_smile_anna.async_update.return_value
-    data["bfb5ee0a88e14e5f97bfa725a760cc49"]["dhw_mode"] = "off"
-    with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
-        freezer.tick(timedelta(minutes=1))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-        await hass.services.async_call(
-            WATER_HEATER_DOMAIN,
-            SERVICE_TURN_ON,
-            {
-                ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
-            },
-            blocking=True,
-        )
-        assert mock_smile_anna.set_dhw_mode.call_count == 2
-        mock_smile_anna.set_dhw_mode.assert_called_with(
-            "dhw_mode", "bfb5ee0a88e14e5f97bfa725a760cc49", "eco", 5
-        )
-
-        await hass.services.async_call(
-            WATER_HEATER_DOMAIN,
-            SERVICE_SET_OPERATION_MODE,
-            {
-                ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
-                ATTR_OPERATION_MODE: "boost",
-            },
-            blocking=True,
-        )
-        assert mock_smile_anna.set_dhw_mode.call_count == 3
-        mock_smile_anna.set_dhw_mode.assert_called_with(
-            "dhw_mode",
-            "bfb5ee0a88e14e5f97bfa725a760cc49",
-            "boost",
-            5,
-        )
