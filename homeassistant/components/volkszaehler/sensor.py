@@ -119,7 +119,7 @@ async def async_setup_platform(
                 "domain": DOMAIN,
                 "integration_title": DEFAULT_NAME,
             },
-            breaks_in_ha_version="2027.1.0",
+            breaks_in_ha_version="2027.3.0",
         )
         return
 
@@ -135,7 +135,7 @@ async def async_setup_platform(
             "domain": DOMAIN,
             "integration_title": DEFAULT_NAME,
         },
-        breaks_in_ha_version="2027.1.0",
+        breaks_in_ha_version="2027.3.0",
     )
 
 
