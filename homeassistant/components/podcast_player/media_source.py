@@ -13,6 +13,7 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, MAX_BROWSE_EPISODES
@@ -59,10 +60,14 @@ class PodcastMediaSource(MediaSource):
         """Return loaded podcast entries."""
         return self.hass.config_entries.async_loaded_entries(DOMAIN)
 
+    def _entries(self) -> list[PodcastConfigEntry]:
+        """Return configured podcast entries."""
+        return self.hass.config_entries.async_entries(DOMAIN)
+
     def _entry(self, entry_id: str) -> PodcastConfigEntry | None:
-        """Return a loaded podcast entry by entry ID."""
+        """Return a configured podcast entry by entry ID."""
         return next(
-            (entry for entry in self._loaded_entries() if entry.entry_id == entry_id),
+            (entry for entry in self._entries() if entry.entry_id == entry_id),
             None,
         )
 
@@ -73,7 +78,9 @@ class PodcastMediaSource(MediaSource):
         if not entries:
             raise BrowseError(
                 translation_domain=DOMAIN,
-                translation_key="not_configured",
+                translation_key=(
+                    "feed_unavailable" if self._entries() else "not_configured"
+                ),
             )
 
         if not item.identifier:
@@ -108,6 +115,11 @@ class PodcastMediaSource(MediaSource):
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="path_not_found",
+            )
+        if entry.state is not ConfigEntryState.LOADED:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="feed_unavailable",
             )
 
         await entry.runtime_data.async_refresh()
@@ -153,6 +165,11 @@ class PodcastMediaSource(MediaSource):
             raise Unresolvable(
                 translation_domain=DOMAIN,
                 translation_key="episode_unavailable",
+            )
+        if entry.state is not ConfigEntryState.LOADED:
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="feed_unavailable",
             )
 
         episode = _find_episode(entry.runtime_data.data, episode_id)

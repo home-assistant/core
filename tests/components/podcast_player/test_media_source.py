@@ -138,17 +138,52 @@ async def test_browse_without_configured_feed(hass: HomeAssistant) -> None:
     assert error.value.translation_key == "not_configured"
 
 
+async def test_browse_with_only_unloaded_feed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test browsing when the configured podcast feed is not loaded."""
+    mock_config_entry.add_to_hass(hass)
+    source = await async_get_media_source(hass)
+
+    with pytest.raises(BrowseError) as error:
+        await source.async_browse_media(MediaSourceItem(hass, DOMAIN, "", None))
+
+    assert error.value.translation_key == "feed_unavailable"
+
+
+async def test_browse_unloaded_feed(
+    hass: HomeAssistant,
+    init_integration: PodcastConfigEntry,
+) -> None:
+    """Test browsing a configured podcast feed that is not loaded."""
+    unloaded_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Unavailable Podcast",
+        data={},
+    )
+    unloaded_entry.add_to_hass(hass)
+    source = await async_get_media_source(hass)
+
+    with pytest.raises(BrowseError) as error:
+        await source.async_browse_media(
+            MediaSourceItem(hass, DOMAIN, unloaded_entry.entry_id, None)
+        )
+
+    assert error.value.translation_key == "feed_unavailable"
+
+
+@pytest.mark.parametrize("identifier", ["unknown", "unknown/path"])
 async def test_browse_unknown_path(
     hass: HomeAssistant,
     init_integration: PodcastConfigEntry,
+    identifier: str,
 ) -> None:
     """Test browsing an unknown podcast path."""
     source = await async_get_media_source(hass)
 
     with pytest.raises(BrowseError) as error:
-        await source.async_browse_media(
-            MediaSourceItem(hass, DOMAIN, "unknown/path", None)
-        )
+        await source.async_browse_media(MediaSourceItem(hass, DOMAIN, identifier, None))
 
     assert error.value.translation_key == "path_not_found"
 
@@ -188,6 +223,27 @@ async def test_resolve_unknown_episode(
         )
 
     assert error.value.translation_key == "episode_unavailable"
+
+
+async def test_resolve_unloaded_feed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test resolving an episode from a feed that is not loaded."""
+    mock_config_entry.add_to_hass(hass)
+    source = await async_get_media_source(hass)
+
+    with pytest.raises(Unresolvable) as error:
+        await source.async_resolve_media(
+            MediaSourceItem(
+                hass,
+                DOMAIN,
+                f"{mock_config_entry.entry_id}/episode",
+                None,
+            )
+        )
+
+    assert error.value.translation_key == "feed_unavailable"
 
 
 async def test_resolve_unavailable_feed(
