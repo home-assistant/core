@@ -1798,11 +1798,8 @@ async def test_cleanup_device_manual(
         assert state is not None
 
     # Remove MQTT from the device
-    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     mock_debouncer.clear()
-    response = await ws_client.remove_device(
-        device_entry.id, mqtt_config_entry.entry_id
-    )
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"]
     await mock_debouncer.wait()
     await hass.async_block_till_done()
@@ -2127,9 +2124,7 @@ async def test_cleanup_device_multiple_config_entries(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    response = await ws_client.remove_device(
-        mqtt_device_entry.id, mqtt_config_entry.entry_id
-    )
+    response = await ws_client.remove_device(mqtt_device_entry.id)
     assert response["success"]
 
     await hass.async_block_till_done()

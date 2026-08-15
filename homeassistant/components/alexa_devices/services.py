@@ -44,7 +44,11 @@ def async_get_entry_id_for_service_call(
     """Get the entry ID related to a service call (by device ID)."""
     device_registry = dr.async_get(call.hass)
     device_id = call.data[ATTR_DEVICE_ID]
-    if (device_entry := device_registry.async_get(device_id)) is None:
+    if (
+        device_entry := device_registry.async_get(
+            device_id, include_child_devices=False
+        )
+    ) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_device_id",

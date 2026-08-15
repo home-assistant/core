@@ -87,7 +87,9 @@ def _get_entry_for_device(call: ServiceCall) -> OpenDisplayConfigEntry:
     device_id: str = call.data[ATTR_DEVICE_ID]
     device_registry = dr.async_get(call.hass)
 
-    if (device := device_registry.async_get(device_id)) is None:
+    if (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_device_id",
