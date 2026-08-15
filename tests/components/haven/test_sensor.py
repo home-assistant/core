@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from haveniaq import DeviceInfo, SensorData
+from haveniaq import DeviceInfo, HavenApiError, SensorData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -112,3 +112,26 @@ async def test_missing_measurement_is_unknown(
     temp_state = hass.states.get(temp_entity)
     assert temp_state is not None
     assert temp_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_unavailable_after_refresh_failure(
+    hass: HomeAssistant,
+    mock_haven_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensors become unavailable after a refresh failure."""
+    await setup_integration(hass, mock_config_entry)
+    mock_haven_client.get_sensors.side_effect = HavenApiError("Unable to connect")
+
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    temp_entity = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "TEST-RAM-0001_temperature_c"
+    )
+    assert temp_entity is not None
+    temp_state = hass.states.get(temp_entity)
+    assert temp_state is not None
+    assert temp_state.state == STATE_UNAVAILABLE

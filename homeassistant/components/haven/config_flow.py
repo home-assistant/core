@@ -55,8 +55,7 @@ class HavenConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovered HAVEN device."""
-        if self.info is None:
-            return self.async_abort(reason="unknown")
+        assert self.info is not None
 
         if user_input is not None:
             return self.async_create_entry(

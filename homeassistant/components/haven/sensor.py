@@ -48,7 +48,6 @@ class HavenSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[HavenCoordinatorData], StateType]
     products: frozenset[ProductType] | None = None
-    requires_sensor_ready: bool = False
 
 
 SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
@@ -59,7 +58,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         products=AIR_QUALITY_PRODUCTS,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.temperature_c,
     ),
     HavenSensorEntityDescription(
@@ -69,7 +67,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         products=AIR_QUALITY_PRODUCTS,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.humidity_pct,
     ),
     HavenSensorEntityDescription(
@@ -79,7 +76,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         products=RAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.dew_point_c,
     ),
     HavenSensorEntityDescription(
@@ -89,7 +85,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPressure.KPA,
         state_class=SensorStateClass.MEASUREMENT,
         products=CAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.pressure_kpa,
     ),
     HavenSensorEntityDescription(
@@ -99,7 +94,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         products=AIR_QUALITY_PRODUCTS,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.co2_ppm,
     ),
     HavenSensorEntityDescription(
@@ -107,7 +101,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         translation_key="tvoc_index",
         state_class=SensorStateClass.MEASUREMENT,
         products=RAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.tvoc_index,
     ),
     HavenSensorEntityDescription(
@@ -117,7 +110,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         products=CAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.tvoc_ppb,
     ),
     HavenSensorEntityDescription(
@@ -125,7 +117,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         translation_key="nox_index",
         state_class=SensorStateClass.MEASUREMENT,
         products=RAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.nox_index,
     ),
     HavenSensorEntityDescription(
@@ -135,7 +126,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         products=RAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.pm1_ugm3,
     ),
     HavenSensorEntityDescription(
@@ -145,7 +135,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         products=AIR_QUALITY_PRODUCTS,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.pm25_ugm3,
     ),
     HavenSensorEntityDescription(
@@ -155,7 +144,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         products=RAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.pm4_ugm3,
     ),
     HavenSensorEntityDescription(
@@ -165,7 +153,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         products=AIR_QUALITY_PRODUCTS,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.pm10_ugm3,
     ),
     HavenSensorEntityDescription(
@@ -174,7 +161,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_MILLILITER,
         state_class=SensorStateClass.MEASUREMENT,
         products=RAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.pm05_count_cm3,
     ),
     HavenSensorEntityDescription(
@@ -183,7 +169,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_MILLILITER,
         state_class=SensorStateClass.MEASUREMENT,
         products=RAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.pm1_count_cm3,
     ),
     HavenSensorEntityDescription(
@@ -192,7 +177,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_MILLILITER,
         state_class=SensorStateClass.MEASUREMENT,
         products=AIR_QUALITY_PRODUCTS,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.pm25_count_cm3,
     ),
     HavenSensorEntityDescription(
@@ -201,7 +185,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_MILLILITER,
         state_class=SensorStateClass.MEASUREMENT,
         products=RAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.pm4_count_cm3,
     ),
     HavenSensorEntityDescription(
@@ -210,7 +193,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTICLES_PER_MILLILITER,
         state_class=SensorStateClass.MEASUREMENT,
         products=AIR_QUALITY_PRODUCTS,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.pm10_count_cm3,
     ),
     HavenSensorEntityDescription(
@@ -220,7 +202,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         products=CAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.airflow_mps,
     ),
     HavenSensorEntityDescription(
@@ -230,7 +211,6 @@ SENSOR_DESCRIPTIONS: tuple[HavenSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         products=CAM_ONLY,
-        requires_sensor_ready=True,
         value_fn=lambda data: data.sensors.airflow_duration_s,
     ),
 )
@@ -276,8 +256,4 @@ class HavenSensor(HavenEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return whether the entity has current data."""
-        if not super().available:
-            return False
-        if not self.entity_description.requires_sensor_ready:
-            return True
-        return self.coordinator.data.sensors.sensor_ready
+        return super().available and self.coordinator.data.sensors.sensor_ready

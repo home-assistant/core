@@ -77,14 +77,22 @@ async def test_user_flow_cannot_connect_then_recovers(
 @pytest.mark.parametrize(
     ("error", "expected"),
     [
-        (HavenUnsupportedApiVersionError, "unsupported_api_version"),
-        (HavenUnsupportedProductError, "unsupported_product"),
+        pytest.param(
+            HavenUnsupportedApiVersionError("Unsupported API version"),
+            "unsupported_api_version",
+            id="unsupported-api-version",
+        ),
+        pytest.param(
+            HavenUnsupportedProductError("Unsupported product"),
+            "unsupported_product",
+            id="unsupported-product",
+        ),
     ],
 )
 async def test_user_flow_rejects_unsupported_device(
     hass: HomeAssistant,
     mock_haven_client: AsyncMock,
-    error: type[Exception],
+    error: Exception,
     expected: str,
 ) -> None:
     """Test unsupported API and product errors remain actionable."""
@@ -190,15 +198,27 @@ async def test_zeroconf_updates_existing_entry(
 @pytest.mark.parametrize(
     ("error", "expected"),
     [
-        (HavenApiError, "cannot_connect"),
-        (HavenUnsupportedApiVersionError, "unsupported_api_version"),
-        (HavenUnsupportedProductError, "unsupported_product"),
+        pytest.param(
+            HavenApiError("Unable to connect"),
+            "cannot_connect",
+            id="cannot-connect",
+        ),
+        pytest.param(
+            HavenUnsupportedApiVersionError("Unsupported API version"),
+            "unsupported_api_version",
+            id="unsupported-api-version",
+        ),
+        pytest.param(
+            HavenUnsupportedProductError("Unsupported product"),
+            "unsupported_product",
+            id="unsupported-product",
+        ),
     ],
 )
 async def test_zeroconf_aborts_on_device_errors(
     hass: HomeAssistant,
     mock_haven_client: AsyncMock,
-    error: type[Exception],
+    error: Exception,
     expected: str,
 ) -> None:
     """Test discovery failures abort with specific reasons."""

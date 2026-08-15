@@ -2,7 +2,11 @@
 
 from unittest.mock import ANY, AsyncMock, MagicMock
 
-from haveniaq import HavenUnsupportedApiVersionError, HavenUnsupportedProductError
+from haveniaq import (
+    HavenApiError,
+    HavenUnsupportedApiVersionError,
+    HavenUnsupportedProductError,
+)
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -51,3 +55,16 @@ async def test_setup_unsupported_device(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_retry(
+    hass: HomeAssistant,
+    mock_haven_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test retrying setup after a transient connection failure."""
+    mock_haven_client.get_info.side_effect = HavenApiError("Unable to connect")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
