@@ -3178,7 +3178,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.9.0
+tesla-fleet-api==1.10.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3300,7 +3300,7 @@ uvcclient==0.12.1
 vacuum-map-parser-roborock==0.1.5
 
 # homeassistant.components.vallox
-vallox-websocket-api==6.0.0
+vallox-websocket-api==6.1.0
 
 # homeassistant.components.vegehub
 vegehub==0.1.26
