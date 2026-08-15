@@ -38,7 +38,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -199,7 +199,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         unit_time: UnitOfTime,
         max_sub_interval: timedelta | None,
         unique_id: str | None,
-        device: DeviceEntry | None = None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the derivative sensor."""
         self._attr_unique_id = unique_id

@@ -37,6 +37,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "device_pairing_enabled": {
+        "name": "Device pairing enabled"
+      }
+    },
     "select": {
       "room_priority": {
         "name": "Room priority",
@@ -69,6 +74,9 @@
       },
       "room_temperature": {
         "name": "Room temperature"
+      },
+      "schedule_status": {
+        "name": "Schedule status"
       },
       "setpoint_status": {
         "name": "Setpoint status"

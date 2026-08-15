@@ -43,14 +43,19 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
 async def test_user_device_exists_abort(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_technove: MagicMock,
 ) -> None:
     """Test we abort the config flow if TechnoVE station is already configured."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.123"},
+    )
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
     )
 
     assert result.get("type") is FlowResultType.ABORT
@@ -63,7 +68,13 @@ async def test_connection_error(hass: HomeAssistant, mock_technove: MagicMock) -
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "example.com"},
+    )
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "example.com"}
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -203,12 +214,18 @@ async def test_zeroconf_connection_error(
 async def test_user_station_exists_abort(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test we abort zeroconf flow if TechnoVE station already configured."""
+    """Test we abort user flow if TechnoVE station already configured."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.123"},
+    )
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
     )
 
     assert result.get("type") is FlowResultType.ABORT
