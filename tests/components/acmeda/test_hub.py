@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch
 import aiopulse
 import pytest
 
+from homeassistant.components.acmeda.helpers import async_add_acmeda_entities
+from homeassistant.components.acmeda.hub import PulseHub
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -71,3 +73,33 @@ async def test_async_notify_update(
             )
         else:
             mock_update.assert_not_called()
+
+
+async def test_hub_api_none_paths(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test hub behavior when api is None."""
+    hub = PulseHub(hass, mock_config_entry)
+
+    # title returns host when api is None
+    assert hub.title == "127.0.0.1"
+
+    # async_start returns early when api is None (no api.run() called)
+    await hub.async_start()
+
+    # async_reset returns False when api is None
+    assert await hub.async_reset() is False
+
+    # async_notify_update returns early when api is None (no update_devices called)
+    with patch("homeassistant.components.acmeda.hub.update_devices") as mock_update:
+        await hub.async_notify_update(aiopulse.UpdateType.rollers)
+        mock_update.assert_not_called()
+
+    # async_add_acmeda_entities returns early when api is None
+    mock_config_entry.runtime_data = hub
+    mock_add_entities = MagicMock()
+    async_add_acmeda_entities(
+        hass, MagicMock(), mock_config_entry, set(), mock_add_entities
+    )
+    mock_add_entities.assert_not_called()
