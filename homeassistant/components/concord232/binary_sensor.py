@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,6 +29,7 @@ CONF_ZONE_TYPES = "zone_types"
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Alarm"
 DEFAULT_PORT = 5007
+DEFAULT_SSL = False
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
@@ -41,6 +42,7 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
     }
 )
@@ -56,13 +58,16 @@ def setup_platform(
 
     host: str = config[CONF_HOST]
     port: int = config[CONF_PORT]
+    ssl: bool = config[CONF_SSL]
     exclude: list[int] = config[CONF_EXCLUDE_ZONES]
     zone_types: dict[int, BinarySensorDeviceClass] = config[CONF_ZONE_TYPES]
     sensors = []
 
+    protocol = "https" if ssl else "http"
+
     try:
         _LOGGER.debug("Initializing client")
-        client = concord232_client.Client(f"http://{host}:{port}")
+        client = concord232_client.Client(f"{protocol}://{host}:{port}")
         client.zones = client.list_zones()
         client.last_zone_update = dt_util.utcnow()
 

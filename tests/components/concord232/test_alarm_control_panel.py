@@ -1,5 +1,6 @@
 """Tests for the Concord232 alarm control panel platform."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -21,6 +22,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_PORT,
+    CONF_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -56,6 +58,16 @@ VALID_CONFIG_SILENT_MODE = {
     }
 }
 
+VALID_CONFIG_SSL = {
+    ALARM_DOMAIN: {
+        "platform": "concord232",
+        CONF_HOST: "localhost",
+        CONF_PORT: 5007,
+        CONF_NAME: "Test Alarm",
+        CONF_SSL: True,
+    }
+}
+
 
 async def test_setup_platform(
     hass: HomeAssistant, mock_concord232_client: MagicMock
@@ -67,6 +79,26 @@ async def test_setup_platform(
     state = hass.states.get("alarm_control_panel.test_alarm")
     assert state is not None
     assert state.state == AlarmControlPanelState.DISARMED
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_url"),
+    [
+        pytest.param(VALID_CONFIG, "http://localhost:5007", id="default"),
+        pytest.param(VALID_CONFIG_SSL, "https://localhost:5007", id="ssl"),
+    ],
+)
+async def test_client_url(
+    hass: HomeAssistant,
+    mock_concord232_client_class: MagicMock,
+    config: dict[str, Any],
+    expected_url: str,
+) -> None:
+    """Test the client is created with a URL matching the ssl option."""
+    await async_setup_component(hass, ALARM_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    mock_concord232_client_class.assert_called_once_with(expected_url)
 
 
 async def test_setup_platform_connection_error(

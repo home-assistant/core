@@ -1,6 +1,7 @@
 """Tests for the Concord232 binary sensor platform."""
 
 import datetime
+from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -15,7 +16,7 @@ from homeassistant.components.concord232.binary_sensor import (
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -46,6 +47,35 @@ VALID_CONFIG_WITH_ZONE_TYPES = {
         CONF_ZONE_TYPES: {1: "door", 2: "window"},
     }
 }
+
+VALID_CONFIG_SSL = {
+    BINARY_SENSOR_DOMAIN: {
+        "platform": "concord232",
+        CONF_HOST: "localhost",
+        CONF_PORT: 5007,
+        CONF_SSL: True,
+    }
+}
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_url"),
+    [
+        pytest.param(VALID_CONFIG, "http://localhost:5007", id="default"),
+        pytest.param(VALID_CONFIG_SSL, "https://localhost:5007", id="ssl"),
+    ],
+)
+async def test_client_url(
+    hass: HomeAssistant,
+    mock_concord232_client_class: MagicMock,
+    config: dict[str, Any],
+    expected_url: str,
+) -> None:
+    """Test the client is created with a URL matching the ssl option."""
+    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    mock_concord232_client_class.assert_called_once_with(expected_url)
 
 
 async def test_setup_platform(

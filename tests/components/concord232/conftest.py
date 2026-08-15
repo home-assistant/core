@@ -7,8 +7,8 @@ import pytest
 
 
 @pytest.fixture
-def mock_concord232_client() -> Generator[MagicMock]:
-    """Mock the concord232 Client for easier testing."""
+def mock_concord232_client_class() -> Generator[MagicMock]:
+    """Mock the concord232 Client class for easier testing."""
     with (
         patch(
             "homeassistant.components.concord232.alarm_control_panel.concord232_client.Client",
@@ -28,4 +28,10 @@ def mock_concord232_client() -> Generator[MagicMock]:
             {"number": 2, "name": "Zone 2", "state": "Normal"},
         ]
 
-        yield mock_instance
+        yield mock_client_class
+
+
+@pytest.fixture
+def mock_concord232_client(mock_concord232_client_class: MagicMock) -> MagicMock:
+    """Return the mocked concord232 client instance."""
+    return mock_concord232_client_class.return_value

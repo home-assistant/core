@@ -15,7 +15,14 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_MODE,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,6 +34,7 @@ DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "CONCORD232"
 DEFAULT_PORT = 5007
 DEFAULT_MODE = "audible"
+DEFAULT_SSL = False
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
@@ -37,6 +45,7 @@ PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_CODE): cv.string,
         vol.Optional(CONF_MODE, default=DEFAULT_MODE): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     }
 )
 
@@ -53,8 +62,10 @@ def setup_platform(
     mode: str = config[CONF_MODE]
     host: str = config[CONF_HOST]
     port: int = config[CONF_PORT]
+    ssl: bool = config[CONF_SSL]
 
-    url = f"http://{host}:{port}"
+    protocol = "https" if ssl else "http"
+    url = f"{protocol}://{host}:{port}"
 
     try:
         add_entities([Concord232Alarm(url, name, code, mode)], True)
