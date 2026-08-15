@@ -73,6 +73,25 @@ AMBIENT_LIGHT_COLOR_TEMPERATURE_ENUM = {
     },
 }
 
+STATIC_PROGRAM_KEY_MAPPINGS = [
+    {
+        PROGRAMS_TRANSLATION_KEYS_MAP[translation_key]
+        for translation_key in static_mapping_key
+    }
+    for static_mapping_key in (
+        {
+            ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR,
+            ProgramKey.COOKING_OVEN_HEATING_MODE_3D_HOT_AIR,
+            ProgramKey.COOKING_OVEN_HEATING_MODE_2_D_HOT_AIR,
+        },
+        {
+            ProgramKey.LAUNDRY_CARE_WASHER_DRUM_CLEAN,
+            # ProgramKey.LAUNDRY_CARE_WASHER_DRUM_CLEAN_DRUM_CLEAN,
+            # ProgramKey.LAUNDRY_CARE_WASHER_DRUM_CLEAN_70_DRUM_CLEAN_70,
+        },
+    )
+]
+
 
 @dataclass(frozen=True, kw_only=True)
 class HomeConnectProgramSelectEntityDescription(
@@ -399,7 +418,6 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             appliance_coordinator,
             desc,
         )
-        self.set_options()
 
     def set_options(self) -> None:
         """Set the options for the entity."""
@@ -453,6 +471,29 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self._attr_current_option = (
             PROGRAMS_TRANSLATION_KEYS_MAP.get(program_key) if program_key else None
         )
+
+        if not hasattr(self, "_attr_options"):
+            self.set_options()
+        if (
+            self._attr_current_option is not None
+            and self._attr_current_option not in self._attr_options
+        ):
+            # If the current option is not in the options, maybe it is
+            # a key that is in one of the static mapping groups.
+            for static_mapping_group in STATIC_PROGRAM_KEY_MAPPINGS:
+                if self._attr_current_option in static_mapping_group:
+                    # If the current option is in a static mapping group,
+                    # set the current option to the one that it is also
+                    # in the entity options.
+                    self._attr_current_option = next(
+                        (
+                            key
+                            for key in static_mapping_group
+                            if key in self._attr_options
+                        ),
+                        None,
+                    )
+                    break
 
     @override
     async def async_select_option(self, option: str) -> None:
