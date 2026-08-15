@@ -401,3 +401,95 @@ async def test_validation_grid_power_recorder_untracked(
         "device_consumption": [],
         "device_consumption_water": [],
     }
+
+
+async def test_validation_ev_power_valid(
+    hass: HomeAssistant, mock_energy_manager, mock_get_metadata
+) -> None:
+    """Test validating EV with valid power sensor."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "ev",
+                    "stat_energy_from": "sensor.ev_charging",
+                    "stat_rate": "sensor.ev_power",
+                }
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.ev_charging",
+        "123",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.ev_power",
+        "1.5",
+        {
+            "device_class": "power",
+            "unit_of_measurement": UnitOfPower.KILO_WATT,
+            "state_class": "measurement",
+        },
+    )
+
+    result = await validate.async_validate(hass)
+    assert result.as_dict() == {
+        "energy_sources": [[]],
+        "device_consumption": [],
+        "device_consumption_water": [],
+    }
+
+
+async def test_validation_ev_power_wrong_unit(
+    hass: HomeAssistant, mock_energy_manager, mock_get_metadata
+) -> None:
+    """Test validating EV with power sensor having wrong unit."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "ev",
+                    "stat_energy_from": "sensor.ev_charging",
+                    "stat_rate": "sensor.ev_power",
+                }
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.ev_charging",
+        "123",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.ev_power",
+        "1.5",
+        {
+            "device_class": "power",
+            "unit_of_measurement": "beers",
+            "state_class": "measurement",
+        },
+    )
+
+    result = await validate.async_validate(hass)
+    assert result.as_dict() == {
+        "energy_sources": [
+            [
+                {
+                    "type": "entity_unexpected_unit_power",
+                    "affected_entities": {("sensor.ev_power", "beers")},
+                    "translation_placeholders": {"power_units": POWER_UNITS_STRING},
+                }
+            ]
+        ],
+        "device_consumption": [],
+        "device_consumption_water": [],
+    }
