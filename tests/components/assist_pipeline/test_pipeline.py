@@ -1,6 +1,6 @@
 """Websocket tests for Voice Assistant integration."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, AsyncIterable, Generator
 from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
@@ -2435,6 +2435,92 @@ async def test_stt_vad_events_emitted_when_requires_external_vad_false(
     # (two 10ms chunks start at 0 and increment by MS_PER_CHUNK).
     assert events[vad_start_idx].data["timestamp"] == 0
     assert events[vad_end_idx].data["timestamp"] == MS_PER_CHUNK
+
+
+async def test_stt_vad_end_emitted_when_provider_abandons_stream_early(
+    hass: HomeAssistant,
+    mock_stt_provider_entity: MockSTTProviderEntity,
+    mock_chat_session: chat_session.ChatSession,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+) -> None:
+    """Test STT_VAD_END fires from ``finally`` when the provider stops consuming early."""
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    async def stt_audio_stream() -> AsyncGenerator[bytes]:
+        yield make_10ms_chunk(b"speech!")
+        yield make_10ms_chunk(b"speech!")
+        yield make_10ms_chunk(b"speech!")
+        yield b""
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    mock_stt_provider_entity._audio_processing = stt.SpeechAudioProcessing(
+        requires_external_vad=False,
+        prefers_auto_gain_enabled=True,
+        prefers_noise_reduction_enabled=True,
+    )
+
+    # Simulate an STT provider that abandons the stream early: consume only the
+    # first chunk, then break out of the loop and return a result without
+    # exhausting the async generator. The ``finally`` block in
+    # ``_speech_to_text_stream`` must still emit STT_VAD_END.
+    async def _abandon_early(
+        metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> stt.SpeechResult:
+        async for _chunk in stream:
+            break  # consume only the first chunk, then stop
+        return stt.SpeechResult("test_result", stt.SpeechResultState.SUCCESS)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        session=mock_chat_session,
+        device_id=None,
+        stt_metadata=stt.SpeechMetadata(
+            language="en-US",
+            format=stt.AudioFormats.WAV,
+            codec=stt.AudioCodecs.PCM,
+            bit_rate=stt.AudioBitRates.BITRATE_16,
+            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+            channel=stt.AudioChannels.CHANNEL_MONO,
+        ),
+        stt_stream=stt_audio_stream(),
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.STT,
+            end_stage=assist_pipeline.PipelineStage.STT,
+            event_callback=events.append,
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
+        ),
+    )
+    with patch.object(
+        mock_stt_provider_entity,
+        "async_process_audio_stream",
+        side_effect=_abandon_early,
+    ):
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+    event_types = [e.type for e in events]
+    assert assist_pipeline.PipelineEventType.STT_VAD_START in event_types
+    assert assist_pipeline.PipelineEventType.STT_VAD_END in event_types
+    assert assist_pipeline.PipelineEventType.STT_END in event_types
+    # STT_VAD_END is emitted from the ``finally`` block when the generator is
+    # torn down as the provider's frame unwinds (it abandons the stream after
+    # one chunk). That teardown happens while ``async_process_audio_stream``
+    # is still running, so STT_VAD_END still precedes STT_END.
+    vad_start_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_START)
+    vad_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_END)
+    stt_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_END)
+    assert vad_start_idx < stt_end_idx
+    assert vad_end_idx < stt_end_idx
+    assert vad_start_idx < vad_end_idx
+    # Only the first chunk was consumed; STT_VAD_END reuses its timestamp.
+    assert events[vad_start_idx].data["timestamp"] == 0
+    assert events[vad_end_idx].data["timestamp"] == 0
 
 
 async def test_invalid_pipeline_does_not_create_tts_stream(

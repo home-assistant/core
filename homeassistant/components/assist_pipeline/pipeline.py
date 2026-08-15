@@ -597,6 +597,10 @@ class PipelineRun:
     _streamed_response_text = False
     """If the conversation agent streamed response text to TTS result."""
 
+    _synthetic_vad_close = False
+    """Flag set by ``speech_to_text`` so ``_speech_to_text_stream``'s finally
+    block emits STT_VAD_END on early abandonment after a successful STT call."""
+
     def __post_init__(self) -> None:
         """Set language for pipeline."""
         self.language = self.pipeline.language or self.hass.config.language
@@ -956,10 +960,30 @@ class PipelineRun:
                     silence_seconds=self.audio_settings.silence_seconds
                 )
 
-            result = await self.stt_provider.async_process_audio_stream(
-                metadata,
-                self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
+            stt_stream = self._speech_to_text_stream(
+                audio_stream=stream, stt_vad=stt_vad
             )
+            try:
+                result = await self.stt_provider.async_process_audio_stream(
+                    metadata, stt_stream
+                )
+            except BaseException:
+                # Provider raised or was cancelled: do not emit a synthetic
+                # STT_VAD_END during ``aclose()`` (a VAD end did not occur).
+                self._synthetic_vad_close = False
+                raise
+            else:
+                # The STT provider returned successfully. If it stopped
+                # consuming the stream early (it may), the generator is still
+                # suspended at a yield; tell its ``finally`` block to emit the
+                # synthetic STT_VAD_END when we close it now.
+                self._synthetic_vad_close = True
+            finally:
+                # Close the async generator now so its ``finally`` block runs
+                # before STT_END is emitted. On the natural-exhaustion path
+                # the generator is already done and ``aclose`` is a no-op.
+                await stt_stream.aclose()
+                self._synthetic_vad_close = False
         except asyncio.CancelledError, TimeoutError:
             raise  # expected
         except hass_nabucasa.auth.Unauthenticated as src_error:
@@ -1016,21 +1040,26 @@ class PipelineRun:
             self.audio_settings.is_vad_enabled
             and not self.stt_provider.audio_processing.requires_external_vad
         )
-        first_ts: int | None = None
         last_ts: int | None = None
+        # Set to True only when the stream is exhausted naturally (the async for
+        # loop completes without breaking). The ``finally`` block uses this to
+        # emit the synthetic STT_VAD_END on clean exhaustion and suppress it on
+        # cancellation, exceptions, or early abandonment. For early abandonment
+        # on a successful STT call, the caller sets ``_synthetic_vad_close`` so
+        # the ``finally`` emits the VAD_END during ``aclose()``.
+        normal_end = False
         try:
             async for chunk in audio_stream:
                 last_ts = chunk.timestamp_ms
-                if first_ts is None:
-                    first_ts = chunk.timestamp_ms
-                    if synthesize_vad:
-                        self.process_event(
-                            PipelineEvent(
-                                PipelineEventType.STT_VAD_START,
-                                {"timestamp": chunk.timestamp_ms},
-                            )
+                if synthesize_vad and not sent_vad_start:
+                    # Emit synthetic STT_VAD_START on the first chunk.
+                    self.process_event(
+                        PipelineEvent(
+                            PipelineEventType.STT_VAD_START,
+                            {"timestamp": chunk.timestamp_ms},
                         )
-                        sent_vad_start = True
+                    )
+                    sent_vad_start = True
                 self._capture_chunk(chunk.audio)
 
                 if stt_vad is not None:
@@ -1056,16 +1085,27 @@ class PipelineRun:
                         sent_vad_start = True
 
                 yield chunk.audio
+            # The stream was fully consumed (natural exhaustion).
+            normal_end = True
         finally:
-            # Emit synthetic STT_VAD_END in finally so it fires even if the STT
-            # provider stops consuming and closes the async generator early.
-            if synthesize_vad and sent_vad_start and last_ts is not None:
+            # Emit the synthetic STT_VAD_END on clean exhaustion, or on
+            # ``aclose()`` after the STT provider returned (it may have stopped
+            # consuming early). ``normal_end`` covers natural exhaustion;
+            # ``self._synthetic_vad_close`` covers clean abandonment after a
+            # successful STT call. Both are suppressed on cancellation or
+            # exceptions, where a VAD end did not semantically occur.
+            if (
+                synthesize_vad
+                and (normal_end or self._synthetic_vad_close)
+                and sent_vad_start
+            ):
                 self.process_event(
                     PipelineEvent(
                         PipelineEventType.STT_VAD_END,
                         {"timestamp": last_ts},
                     )
                 )
+            self._synthetic_vad_close = False
 
     async def prepare_recognize_intent(self, session: chat_session.ChatSession) -> None:
         """Prepare recognizing an intent."""
