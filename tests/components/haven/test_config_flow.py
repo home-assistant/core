@@ -10,17 +10,15 @@ from haveniaq import (
 )
 import pytest
 
-from homeassistant.components.haven.const import DEFAULT_PATH, DEFAULT_PORT, DOMAIN
+from homeassistant.components.haven.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     TEST_HOST,
     TEST_INFO,
-    TEST_PATH,
-    TEST_PORT,
     TEST_SERIAL,
     TEST_UNSUPPORTED_CONTROLLER_INFO,
     ZEROCONF_DISCOVERY,
@@ -46,11 +44,7 @@ async def test_user_flow_success(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Room Air Monitor {TEST_SERIAL}"
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_PATH: DEFAULT_PATH,
-    }
+    assert result["data"] == {CONF_HOST: TEST_HOST}
     assert result["result"].unique_id == TEST_SERIAL
 
 
@@ -158,8 +152,6 @@ async def test_zeroconf_flow_success(
     mock_haven_client_class.assert_called_once_with(
         TEST_HOST,
         session=ANY,
-        port=TEST_PORT,
-        path=TEST_PATH,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
@@ -169,11 +161,7 @@ async def test_zeroconf_flow_success(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-        CONF_PATH: TEST_PATH,
-    }
+    assert result["data"] == {CONF_HOST: TEST_HOST}
     assert result["result"].unique_id == TEST_SERIAL
 
 
@@ -196,11 +184,7 @@ async def test_zeroconf_updates_existing_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-        CONF_PATH: TEST_PATH,
-    }
+    assert entry.data == {CONF_HOST: TEST_HOST}
 
 
 @pytest.mark.parametrize(

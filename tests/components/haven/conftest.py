@@ -7,9 +7,9 @@ from haveniaq import DeviceInfo, SensorData
 import pytest
 
 from homeassistant.components.haven.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
+from homeassistant.const import CONF_HOST
 
-from . import TEST_HOST, TEST_INFO, TEST_PATH, TEST_PORT, TEST_SENSORS, TEST_SERIAL
+from . import TEST_HOST, TEST_INFO, TEST_SENSORS, TEST_SERIAL
 
 from tests.common import MockConfigEntry
 
@@ -54,10 +54,6 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Room Air Monitor",
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-            CONF_PATH: TEST_PATH,
-        },
+        data={CONF_HOST: TEST_HOST},
         unique_id=TEST_SERIAL,
     )

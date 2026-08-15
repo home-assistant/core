@@ -13,13 +13,13 @@ from haveniaq import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_PATH, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
 type HavenConfigEntry = ConfigEntry[HavenDataUpdateCoordinator]
 
@@ -44,12 +44,7 @@ class HavenDataUpdateCoordinator(DataUpdateCoordinator[HavenCoordinatorData]):
             update_interval=DEFAULT_SCAN_INTERVAL,
             config_entry=entry,
         )
-        self.client = HavenClient(
-            host,
-            session=async_get_clientsession(hass),
-            port=entry.data.get(CONF_PORT, DEFAULT_PORT),
-            path=entry.data.get(CONF_PATH, DEFAULT_PATH),
-        )
+        self.client = HavenClient(host, session=async_get_clientsession(hass))
         self.info: DeviceInfo
 
     @override

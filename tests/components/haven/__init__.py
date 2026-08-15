@@ -8,8 +8,8 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from tests.common import MockConfigEntry
 
 TEST_HOST = "192.0.2.1"
-TEST_PORT = 8080
-TEST_PATH = "/haven/api/v1"
+TEST_PORT = 80
+TEST_PATH = "/api/v1"
 TEST_SERIAL = "TEST-RAM-0001"
 TEST_CAM_SERIAL = "TEST-CAM-0001"
 

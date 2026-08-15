@@ -13,11 +13,11 @@ from haveniaq import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DEFAULT_MODEL, DEFAULT_PATH, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_MODEL, DOMAIN
 
 
 class HavenConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -34,16 +34,10 @@ class HavenConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
-        port = discovery_info.port or DEFAULT_PORT
-        path = discovery_info.properties.get(CONF_PATH, DEFAULT_PATH)
-        self.data = {
-            CONF_HOST: host,
-            CONF_PORT: port,
-            CONF_PATH: path,
-        }
+        self.data = {CONF_HOST: host}
 
         try:
-            self.info = await self._async_fetch_info(host, port=port, path=path)
+            self.info = await self._async_fetch_info(host)
         except HavenUnsupportedApiVersionError:
             return self.async_abort(reason="unsupported_api_version")
         except HavenUnsupportedProductError:
@@ -99,11 +93,7 @@ class HavenConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=self._entry_title(info),
-                    data={
-                        CONF_HOST: host,
-                        CONF_PORT: DEFAULT_PORT,
-                        CONF_PATH: DEFAULT_PATH,
-                    },
+                    data={CONF_HOST: host},
                 )
 
         return self.async_show_form(
@@ -112,15 +102,9 @@ class HavenConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_fetch_info(
-        self,
-        host: str,
-        *,
-        port: int = DEFAULT_PORT,
-        path: str = DEFAULT_PATH,
-    ) -> DeviceInfo:
+    async def _async_fetch_info(self, host: str) -> DeviceInfo:
         session = async_get_clientsession(self.hass)
-        client = HavenClient(host, session=session, port=port, path=path)
+        client = HavenClient(host, session=session)
         info = await client.get_info()
         if not info.supports(Capability.AIR_QUALITY):
             raise HavenUnsupportedProductError(

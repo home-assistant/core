@@ -25,8 +25,6 @@ async def test_setup_unload_ram_entry(
     mock_haven_client_class.assert_called_once_with(
         mock_config_entry.data["host"],
         session=ANY,
-        port=mock_config_entry.data["port"],
-        path=mock_config_entry.data["path"],
     )
     mock_haven_client.get_sensors.assert_awaited_once()
     mock_haven_client.get_status.assert_not_awaited()
