@@ -1,217 +1,258 @@
 """Tests for the Acmeda cover module."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
+import aiopulse
 import pytest
 
-from homeassistant.components.acmeda.const import DOMAIN
-from homeassistant.components.acmeda.cover import AcmedaCover
-from homeassistant.components.cover import CoverEntityFeature
-from homeassistant.const import CONF_HOST
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    CoverEntityFeature,
+    CoverState,
+)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "127.0.0.1"},
-    )
-    mock_config_entry.add_to_hass(hass)
-    return mock_config_entry
-
-
-@pytest.fixture
-def mock_roller() -> MagicMock:
-    """Return a mocked Acmeda roller."""
-    roller = MagicMock()
-    roller.id = 1234567890123
-    roller.name = "Test Roller"
-    roller.type = 1
-    roller.closed_percent = 50
-    return roller
-
-
-@pytest.fixture
-def acmeda_cover(mock_roller: MagicMock) -> AcmedaCover:
-    """Return an AcmedaCover instance."""
-    return AcmedaCover(mock_roller)
-
-
-async def test_current_cover_position_with_value(acmeda_cover: AcmedaCover) -> None:
-    """Test current_cover_position returns correct position when value is set."""
-    acmeda_cover.roller.closed_percent = 50
-    assert acmeda_cover.current_cover_position == 50
-
-
-async def test_current_cover_position_when_closed(acmeda_cover: AcmedaCover) -> None:
-    """Test current_cover_position returns 0 when cover is closed."""
-    acmeda_cover.roller.closed_percent = 100
-    assert acmeda_cover.current_cover_position == 0
-
-
-async def test_current_cover_position_when_open(acmeda_cover: AcmedaCover) -> None:
-    """Test current_cover_position returns 100 when cover is open."""
-    acmeda_cover.roller.closed_percent = 0
-    assert acmeda_cover.current_cover_position == 100
-
-
-async def test_current_cover_position_when_none(acmeda_cover: AcmedaCover) -> None:
-    """Test current_cover_position returns None when closed_percent is None."""
-    acmeda_cover.roller.closed_percent = None
-    assert acmeda_cover.current_cover_position is None
-
-
-async def test_current_cover_tilt_position_with_value(
-    acmeda_cover: AcmedaCover,
+@pytest.mark.parametrize(
+    ("closed_percent", "expected_position"),
+    [
+        (50, 50),
+        (100, 0),
+        (0, 100),
+        (None, None),
+    ],
+)
+async def test_cover_position(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+    mock_roller: MagicMock,
+    closed_percent: int | None,
+    expected_position: int | None,
 ) -> None:
-    """Test current_cover_tilt_position returns correct position when value is set."""
-    acmeda_cover.roller.closed_percent = 50
-    assert acmeda_cover.current_cover_tilt_position == 50
+    """Test cover position is reported correctly."""
+    mock_roller.closed_percent = closed_percent
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+    notify_update(aiopulse.UpdateType.rollers)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.roller")
+    assert state is not None
+    if expected_position is None:
+        assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    else:
+        assert state.attributes[ATTR_CURRENT_POSITION] == expected_position
 
 
-async def test_current_cover_tilt_position_when_closed(
-    acmeda_cover: AcmedaCover,
+@pytest.mark.parametrize(
+    ("closed_percent", "expected_position"),
+    [
+        (50, 50),
+        (100, 0),
+        (0, 100),
+        (None, None),
+    ],
+)
+async def test_cover_tilt_position(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+    mock_roller: MagicMock,
+    closed_percent: int | None,
+    expected_position: int | None,
 ) -> None:
-    """Test current_cover_tilt_position returns 0 when cover is closed."""
-    acmeda_cover.roller.closed_percent = 100
-    assert acmeda_cover.current_cover_tilt_position == 0
+    """Test cover tilt position is reported correctly."""
+    mock_roller.closed_percent = closed_percent
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+    notify_update(aiopulse.UpdateType.rollers)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.roller")
+    assert state is not None
+    if expected_position is None:
+        assert state.attributes.get(ATTR_CURRENT_TILT_POSITION) is None
+    else:
+        assert state.attributes[ATTR_CURRENT_TILT_POSITION] == expected_position
 
 
-async def test_current_cover_tilt_position_when_open(
-    acmeda_cover: AcmedaCover,
+@pytest.mark.parametrize(
+    ("roller_type", "expected_features"),
+    [
+        (
+            1,
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION,
+        ),
+        (
+            7,
+            CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT
+            | CoverEntityFeature.SET_TILT_POSITION,
+        ),
+        (
+            10,
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT
+            | CoverEntityFeature.SET_TILT_POSITION,
+        ),
+    ],
+)
+async def test_supported_features(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+    mock_roller: MagicMock,
+    roller_type: int,
+    expected_features: CoverEntityFeature,
 ) -> None:
-    """Test current_cover_tilt_position returns 100 when cover is open."""
-    acmeda_cover.roller.closed_percent = 0
-    assert acmeda_cover.current_cover_tilt_position == 100
+    """Test supported_features for different roller types."""
+    mock_roller.type = roller_type
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+    notify_update(aiopulse.UpdateType.rollers)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.roller")
+    assert state is not None
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == expected_features
 
 
-async def test_current_cover_tilt_position_when_none(
-    acmeda_cover: AcmedaCover,
+@pytest.mark.parametrize(
+    ("closed_percent", "expected_state"),
+    [
+        (100, CoverState.CLOSED),
+        (0, CoverState.OPEN),
+        (50, CoverState.OPEN),
+        (None, STATE_UNKNOWN),
+    ],
+)
+async def test_cover_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+    mock_roller: MagicMock,
+    closed_percent: int | None,
+    expected_state: str,
 ) -> None:
-    """Test current_cover_tilt_position returns None when closed_percent is None."""
-    acmeda_cover.roller.closed_percent = None
-    assert acmeda_cover.current_cover_tilt_position is None
+    """Test cover state is reported correctly."""
+    mock_roller.closed_percent = closed_percent
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+    notify_update(aiopulse.UpdateType.rollers)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.roller")
+    assert state is not None
+    assert state.state == expected_state
 
 
-async def test_supported_features_type_not_7(acmeda_cover: AcmedaCover) -> None:
-    """Test supported_features for roller type not 7."""
-    acmeda_cover.roller.type = 1
-    expected = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
-        | CoverEntityFeature.SET_POSITION
+async def test_cover_services(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+    mock_roller: MagicMock,
+) -> None:
+    """Test cover services call correct roller methods."""
+    mock_roller.move_down = MagicMock()
+    mock_roller.move_up = MagicMock()
+    mock_roller.move_stop = MagicMock()
+    mock_roller.move_to = MagicMock()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+    notify_update(aiopulse.UpdateType.rollers)
+    await hass.async_block_till_done()
+
+    entity_id = "cover.roller"
+    await hass.services.async_call(
+        COVER_DOMAIN, "close_cover", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    assert acmeda_cover.supported_features == expected
+    mock_roller.move_down.assert_called_once()
 
-
-async def test_supported_features_type_7(acmeda_cover: AcmedaCover) -> None:
-    """Test supported_features for roller type 7."""
-    acmeda_cover.roller.type = 7
-    expected = (
-        CoverEntityFeature.OPEN_TILT
-        | CoverEntityFeature.CLOSE_TILT
-        | CoverEntityFeature.STOP_TILT
-        | CoverEntityFeature.SET_TILT_POSITION
+    await hass.services.async_call(
+        COVER_DOMAIN, "open_cover", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    assert acmeda_cover.supported_features == expected
+    mock_roller.move_up.assert_called_once()
 
-
-async def test_supported_features_type_10(acmeda_cover: AcmedaCover) -> None:
-    """Test supported_features for roller type 10."""
-    acmeda_cover.roller.type = 10
-    expected = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
-        | CoverEntityFeature.SET_POSITION
-        | CoverEntityFeature.OPEN_TILT
-        | CoverEntityFeature.CLOSE_TILT
-        | CoverEntityFeature.STOP_TILT
-        | CoverEntityFeature.SET_TILT_POSITION
+    await hass.services.async_call(
+        COVER_DOMAIN, "stop_cover", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    assert acmeda_cover.supported_features == expected
+    mock_roller.move_stop.assert_called_once()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        "set_cover_position",
+        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 75},
+        blocking=True,
+    )
+    mock_roller.move_to.assert_called_once_with(25)
 
 
-async def test_is_closed_when_closed(acmeda_cover: AcmedaCover) -> None:
-    """Test is_closed returns True when cover is closed."""
-    acmeda_cover.roller.closed_percent = 100
-    assert acmeda_cover.is_closed is True
+async def test_cover_tilt_services(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+    mock_roller: MagicMock,
+) -> None:
+    """Test cover tilt services call correct roller methods."""
+    mock_roller.type = 7
+    mock_roller.move_down = MagicMock()
+    mock_roller.move_up = MagicMock()
+    mock_roller.move_stop = MagicMock()
+    mock_roller.move_to = MagicMock()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
+    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+    notify_update(aiopulse.UpdateType.rollers)
+    await hass.async_block_till_done()
 
-async def test_is_closed_when_open(acmeda_cover: AcmedaCover) -> None:
-    """Test is_closed returns False when cover is open."""
-    acmeda_cover.roller.closed_percent = 0
-    assert acmeda_cover.is_closed is False
+    entity_id = "cover.roller"
+    await hass.services.async_call(
+        COVER_DOMAIN, "close_cover_tilt", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    mock_roller.move_down.assert_called_once()
 
+    await hass.services.async_call(
+        COVER_DOMAIN, "open_cover_tilt", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    mock_roller.move_up.assert_called_once()
 
-async def test_is_closed_when_partially_open(acmeda_cover: AcmedaCover) -> None:
-    """Test is_closed returns False when cover is partially open."""
-    acmeda_cover.roller.closed_percent = 50
-    assert acmeda_cover.is_closed is False
+    await hass.services.async_call(
+        COVER_DOMAIN, "stop_cover_tilt", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    mock_roller.move_stop.assert_called_once()
 
-
-async def test_is_closed_when_none(acmeda_cover: AcmedaCover) -> None:
-    """Test is_closed returns None when closed_percent is None."""
-    acmeda_cover.roller.closed_percent = None
-    assert acmeda_cover.is_closed is None
-
-
-async def test_async_close_cover(acmeda_cover: AcmedaCover) -> None:
-    """Test async_close_cover calls move_down."""
-    acmeda_cover.roller.move_down = AsyncMock()
-    await acmeda_cover.async_close_cover()
-    acmeda_cover.roller.move_down.assert_called_once()
-
-
-async def test_async_open_cover(acmeda_cover: AcmedaCover) -> None:
-    """Test async_open_cover calls move_up."""
-    acmeda_cover.roller.move_up = AsyncMock()
-    await acmeda_cover.async_open_cover()
-    acmeda_cover.roller.move_up.assert_called_once()
-
-
-async def test_async_stop_cover(acmeda_cover: AcmedaCover) -> None:
-    """Test async_stop_cover calls move_stop."""
-    acmeda_cover.roller.move_stop = AsyncMock()
-    await acmeda_cover.async_stop_cover()
-    acmeda_cover.roller.move_stop.assert_called_once()
-
-
-async def test_async_set_cover_position(acmeda_cover: AcmedaCover) -> None:
-    """Test async_set_cover_position calls move_to with correct position."""
-    acmeda_cover.roller.move_to = AsyncMock()
-    await acmeda_cover.async_set_cover_position(position=75)
-    acmeda_cover.roller.move_to.assert_called_once_with(25)
-
-
-async def test_async_close_cover_tilt(acmeda_cover: AcmedaCover) -> None:
-    """Test async_close_cover_tilt calls move_down."""
-    acmeda_cover.roller.move_down = AsyncMock()
-    await acmeda_cover.async_close_cover_tilt()
-    acmeda_cover.roller.move_down.assert_called_once()
-
-
-async def test_async_open_cover_tilt(acmeda_cover: AcmedaCover) -> None:
-    """Test async_open_cover_tilt calls move_up."""
-    acmeda_cover.roller.move_up = AsyncMock()
-    await acmeda_cover.async_open_cover_tilt()
-    acmeda_cover.roller.move_up.assert_called_once()
-
-
-async def test_async_stop_cover_tilt(acmeda_cover: AcmedaCover) -> None:
-    """Test async_stop_cover_tilt calls move_stop."""
-    acmeda_cover.roller.move_stop = AsyncMock()
-    await acmeda_cover.async_stop_cover_tilt()
-    acmeda_cover.roller.move_stop.assert_called_once()
-
-
-async def test_async_set_cover_tilt_position(acmeda_cover: AcmedaCover) -> None:
-    """Test async_set_cover_tilt_position calls move_to with correct position."""
-    acmeda_cover.roller.move_to = AsyncMock()
-    await acmeda_cover.async_set_cover_tilt_position(position=75)
-    acmeda_cover.roller.move_to.assert_called_once_with(25)
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        "set_cover_tilt_position",
+        {ATTR_ENTITY_ID: entity_id, ATTR_TILT_POSITION: 75},
+        blocking=True,
+    )
+    mock_roller.move_to.assert_called_once_with(25)
