@@ -3344,6 +3344,9 @@ volkszaehler==0.4.0
 # homeassistant.components.volvo
 volvocarsapi==0.4.3
 
+# homeassistant.components.vrchat
+vrchatapi-async==1.20.8
+
 # homeassistant.components.verisure
 vsure==2.10.0
 
