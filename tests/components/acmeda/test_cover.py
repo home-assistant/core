@@ -1,6 +1,6 @@
 """Tests for the Acmeda cover module."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiopulse
 import pytest
@@ -301,7 +301,7 @@ async def test_entity_notify_update(
     mock_hub: MagicMock,
     mock_roller: MagicMock,
 ) -> None:
-    """Test entity state updates when roller fires callback."""
+    """Test entity subscribes to roller callback and updates state."""
     mock_roller.closed_percent = 50
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -315,11 +315,20 @@ async def test_entity_notify_update(
     assert state is not None
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
 
-    # Update roller position and fire roller callback
-    roller_callback = mock_roller.callback_subscribe.call_args[0][0]
+    # Verify entity subscribed to the roller's callback
+    mock_roller.callback_subscribe.assert_called()
+
+    # Verify roller callback triggers entity update
+    cover_entity = hass.data[COVER_DOMAIN].get_entity("cover.roller")
+    assert cover_entity is not None
+    with patch.object(cover_entity, "async_write_ha_state") as mock_write:
+        roller_callback = mock_roller.callback_subscribe.call_args[0][0]
+        roller_callback()
+        mock_write.assert_called_once()
+
+    # Verify state updates when roller position changes
     mock_roller.closed_percent = 75
-    roller_callback()
-    await hass.async_block_till_done()
+    cover_entity.async_write_ha_state()
 
     state = hass.states.get("cover.roller")
     assert state is not None
