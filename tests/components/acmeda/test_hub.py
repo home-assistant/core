@@ -1,6 +1,6 @@
 """Tests for the Acmeda hub module."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiopulse
 import pytest
@@ -40,6 +40,36 @@ async def test_hub_reset(
 
     mock_hub.callback_unsubscribe.assert_called()
     mock_hub.stop.assert_called_once()
+
+
+async def test_hub_reset_fails_when_api_is_none(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+) -> None:
+    """Test unload fails when hub.api is None."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hub = mock_config_entry.runtime_data
+    hub.api = None
+
+    assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+
+async def test_setup_fails_when_async_setup_returns_false(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+) -> None:
+    """Test integration setup fails when hub.async_setup returns False."""
+    mock_hub.async_setup = AsyncMock(return_value=False)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify no entities created
+    assert hass.states.get("cover.roller") is None
 
 
 @pytest.mark.parametrize(
