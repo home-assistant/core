@@ -585,10 +585,10 @@ class PipelineRun:
     _satellite_id: str | None = None
     """Optional satellite id set during run start."""
 
-    _first_chunk_timestamp: int | None = None
+    _first_chunk_timestamp: int | None = field(init=False, default=None, repr=False)
     """Timestamp of the first audio chunk processed by the STT stage."""
 
-    _last_chunk_timestamp: int | None = None
+    _last_chunk_timestamp: int | None = field(init=False, default=None, repr=False)
     """Timestamp of the last audio chunk processed by the STT stage."""
 
     _conversation_data: PipelineConversationData | None = None
@@ -993,9 +993,13 @@ class PipelineRun:
                 code="stt-no-text-recognized", message="No text recognized"
             )
 
-        # When the provider handles VAD internally no VAD events are emitted;
-        # synthesize them from the first/last chunk timestamps.
-        if not self.stt_provider.audio_processing.requires_external_vad:
+        # When the provider handles VAD internally and pipeline VAD is enabled,
+        # no VAD events are emitted by the external segmenter; synthesize them
+        # from the first/last chunk timestamps.
+        if (
+            self.audio_settings.is_vad_enabled
+            and not self.stt_provider.audio_processing.requires_external_vad
+        ):
             start_ts = self._first_chunk_timestamp
             end_ts = self._last_chunk_timestamp
             if start_ts is not None:
