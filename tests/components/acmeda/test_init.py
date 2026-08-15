@@ -1,5 +1,6 @@
 """Tests for the Acmeda integration."""
 
+import asyncio
 from collections.abc import Generator
 import threading
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -124,8 +125,8 @@ async def test_hub_callback_from_worker_thread(
         target=lambda: (notify_update(aiopulse.UpdateType.rollers), event.set())
     )
     thread.start()
-    event.wait(timeout=5)
-    thread.join(timeout=5)
+    await asyncio.to_thread(event.wait, 5)
+    await asyncio.to_thread(thread.join, 5)
     await hass.async_block_till_done()
 
     entities = er.async_entries_for_config_entry(
