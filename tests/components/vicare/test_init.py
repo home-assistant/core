@@ -472,3 +472,30 @@ async def test_device_via_device_links(
     )
     assert channel_device is not None
     assert channel_device.via_device_id == gateway_device.id
+
+
+async def test_device_via_device_missing_gateway(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a zigbee channel without its gateway sets up and stays unlinked."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:fhtChannel"}, "vicare/FHTChannel.json", gateway_id="gateway0"),
+    ]
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(fixtures).as_vicare_data(),
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    channel_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"gateway0_zigbee_{ZIGBEE_IEEE}_2"), mock_config_entry.entry_id
+    )
+    assert channel_device is not None
+    assert channel_device.via_device_id is None
