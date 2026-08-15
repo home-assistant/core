@@ -106,9 +106,12 @@ async def test_hub_api_none_paths(
         mock_update.assert_not_called()
 
     # async_add_acmeda_entities returns early when api is None
+    class DummyEntity:
+        """Dummy entity class for async_add_acmeda_entities tests."""
+
     mock_config_entry.runtime_data = hub
     mock_add_entities = MagicMock()
     async_add_acmeda_entities(
-        hass, type("FakeEntity", (), {}), mock_config_entry, set(), mock_add_entities
+        hass, DummyEntity, mock_config_entry, set(), mock_add_entities
     )
     mock_add_entities.assert_not_called()
