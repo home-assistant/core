@@ -24,6 +24,7 @@ from homeassistant.components.assist_pipeline.const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
     DOMAIN,
+    MS_PER_CHUNK,
 )
 from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
@@ -2373,7 +2374,7 @@ async def test_stt_vad_events_emitted_when_requires_external_vad_false(
     """Test that STT_VAD_START/STT_VAD_END events are emitted when requires_external_vad=False."""
     events: list[assist_pipeline.PipelineEvent] = []
 
-    async def audio_data() -> AsyncGenerator[bytes]:
+    async def stt_audio_stream() -> AsyncGenerator[bytes]:
         yield make_10ms_chunk(b"speech!")
         yield make_10ms_chunk(b"speech!")
         yield b""
@@ -2402,7 +2403,7 @@ async def test_stt_vad_events_emitted_when_requires_external_vad_false(
             sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
             channel=stt.AudioChannels.CHANNEL_MONO,
         ),
-        stt_stream=audio_data(),
+        stt_stream=stt_audio_stream(),
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
@@ -2428,11 +2429,12 @@ async def test_stt_vad_events_emitted_when_requires_external_vad_false(
     vad_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_END)
     stt_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_END)
     assert vad_start_idx < stt_end_idx
+    assert vad_end_idx < stt_end_idx
     assert vad_start_idx < vad_end_idx
     # Synthetic VAD events use the first/last chunk timestamps from the stream
-    # (two 10ms chunks => 0ms and 10ms)
+    # (two 10ms chunks start at 0 and increment by MS_PER_CHUNK).
     assert events[vad_start_idx].data["timestamp"] == 0
-    assert events[vad_end_idx].data["timestamp"] == 10
+    assert events[vad_end_idx].data["timestamp"] == MS_PER_CHUNK
 
 
 async def test_invalid_pipeline_does_not_create_tts_stream(

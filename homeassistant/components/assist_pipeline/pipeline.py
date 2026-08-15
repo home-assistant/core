@@ -585,12 +585,6 @@ class PipelineRun:
     _satellite_id: str | None = None
     """Optional satellite id set during run start."""
 
-    _first_chunk_timestamp: int | None = field(init=False, default=None, repr=False)
-    """Timestamp of the first audio chunk processed by the STT stage."""
-
-    _last_chunk_timestamp: int | None = field(init=False, default=None, repr=False)
-    """Timestamp of the last audio chunk processed by the STT stage."""
-
     _conversation_data: PipelineConversationData | None = None
     """Data tied to the conversation ID."""
 
@@ -1022,53 +1016,56 @@ class PipelineRun:
             self.audio_settings.is_vad_enabled
             and not self.stt_provider.audio_processing.requires_external_vad
         )
-        self._first_chunk_timestamp = None
-        self._last_chunk_timestamp = None
-        async for chunk in audio_stream:
-            self._last_chunk_timestamp = chunk.timestamp_ms
-            if self._first_chunk_timestamp is None:
-                self._first_chunk_timestamp = chunk.timestamp_ms
-                if synthesize_vad:
-                    self.process_event(
-                        PipelineEvent(
-                            PipelineEventType.STT_VAD_START,
-                            {"timestamp": chunk.timestamp_ms},
+        first_ts: int | None = None
+        last_ts: int | None = None
+        try:
+            async for chunk in audio_stream:
+                last_ts = chunk.timestamp_ms
+                if first_ts is None:
+                    first_ts = chunk.timestamp_ms
+                    if synthesize_vad:
+                        self.process_event(
+                            PipelineEvent(
+                                PipelineEventType.STT_VAD_START,
+                                {"timestamp": chunk.timestamp_ms},
+                            )
                         )
-                    )
-                    sent_vad_start = True
-            self._capture_chunk(chunk.audio)
+                        sent_vad_start = True
+                self._capture_chunk(chunk.audio)
 
-            if stt_vad is not None:
-                chunk_seconds = (len(chunk.audio) // sample_width) / sample_rate
-                if not stt_vad.process(chunk_seconds, chunk.speech_probability):
-                    # Silence detected at the end of voice command
-                    self.process_event(
-                        PipelineEvent(
-                            PipelineEventType.STT_VAD_END,
-                            {"timestamp": chunk.timestamp_ms},
+                if stt_vad is not None:
+                    chunk_seconds = (len(chunk.audio) // sample_width) / sample_rate
+                    if not stt_vad.process(chunk_seconds, chunk.speech_probability):
+                        # Silence detected at the end of voice command
+                        self.process_event(
+                            PipelineEvent(
+                                PipelineEventType.STT_VAD_END,
+                                {"timestamp": chunk.timestamp_ms},
+                            )
                         )
-                    )
-                    break
+                        break
 
-                if stt_vad.in_command and (not sent_vad_start):
-                    # Speech detected at start of voice command
-                    self.process_event(
-                        PipelineEvent(
-                            PipelineEventType.STT_VAD_START,
-                            {"timestamp": chunk.timestamp_ms},
+                    if stt_vad.in_command and (not sent_vad_start):
+                        # Speech detected at start of voice command
+                        self.process_event(
+                            PipelineEvent(
+                                PipelineEventType.STT_VAD_START,
+                                {"timestamp": chunk.timestamp_ms},
+                            )
                         )
+                        sent_vad_start = True
+
+                yield chunk.audio
+        finally:
+            # Emit synthetic STT_VAD_END in finally so it fires even if the STT
+            # provider stops consuming and closes the async generator early.
+            if synthesize_vad and sent_vad_start and last_ts is not None:
+                self.process_event(
+                    PipelineEvent(
+                        PipelineEventType.STT_VAD_END,
+                        {"timestamp": last_ts},
                     )
-                    sent_vad_start = True
-
-            yield chunk.audio
-
-        if synthesize_vad and sent_vad_start:
-            self.process_event(
-                PipelineEvent(
-                    PipelineEventType.STT_VAD_END,
-                    {"timestamp": self._last_chunk_timestamp},
                 )
-            )
 
     async def prepare_recognize_intent(self, session: chat_session.ChatSession) -> None:
         """Prepare recognizing an intent."""
