@@ -1,4 +1,6 @@
-"""Test button conditions."""
+"""Test datetime conditions."""
+
+from datetime import datetime
 
 import pytest
 
@@ -124,3 +126,48 @@ async def test_datetime_condition_entity_reference(hass: HomeAssistant) -> None:
 
     # Target is before reference
     assert condition.async_check() is True
+
+
+async def test_alternate_domains(hass: HomeAssistant) -> None:
+    """Test datetime condition."""
+    target_id = "sensor.datetime"
+    reference_id = "input_datetime.reference"
+
+    target_time = "2026-07-01T12:00:00+00:00"
+    hass.states.async_set(
+        target_id, target_time, attributes={"device_class": "timestamp"}
+    )
+
+    ts = int(datetime.fromisoformat("2026-07-01T12:00:00+00:00").timestamp())
+    hass.states.async_set(
+        reference_id, "state dont care", attributes={"timestamp": ts + 1}
+    )
+
+    await hass.async_block_till_done()
+
+    condition = await create_target_condition(
+        hass,
+        condition="datetime.is_before",
+        target={CONF_ENTITY_ID: target_id},
+        condition_options={"reference": reference_id},
+        behavior="any",
+    )
+
+    # Target < Reference
+    assert condition.async_check() is True
+
+    hass.states.async_set(
+        reference_id, "state dont care", attributes={"timestamp": ts - 1}
+    )
+    await hass.async_block_till_done()
+
+    condition = await create_target_condition(
+        hass,
+        condition="datetime.is_before",
+        target={CONF_ENTITY_ID: target_id},
+        condition_options={"reference": reference_id},
+        behavior="any",
+    )
+
+    # Reference < Target
+    assert condition.async_check() is False

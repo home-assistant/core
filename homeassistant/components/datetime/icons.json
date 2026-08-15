@@ -1,8 +1,5 @@
 {
   "conditions": {
-    "is_after": {
-      "condition": "mdi:calendar-clock"
-    },
     "is_before": {
       "condition": "mdi:calendar-clock"
     }
