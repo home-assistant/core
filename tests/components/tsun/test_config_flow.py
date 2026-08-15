@@ -1,6 +1,6 @@
 """Tests for the TSUN config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock
 
 import pytest
 from tsun_local_api import LoggerMetadata, TsunConnectionError, TsunProtocolError
@@ -39,6 +39,7 @@ async def test_user_flow(
     assert result["data"][CONF_LOGGER_SN] == LOGGER_SN
     assert result["data"][CONF_HOST] == HOST
     assert result["result"].unique_id == str(LOGGER_SN)
+    config_flow.async_read_logger_metadata.assert_awaited_once_with(ANY, HOST)
 
 
 async def test_manual_logger_sn_fallback(
@@ -89,6 +90,23 @@ async def test_manual_logger_sn_bypasses_metadata_error(
         result["flow_id"], {**USER_INPUT, CONF_LOGGER_SN: LOGGER_SN}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_metadata_unexpected_error(
+    hass: HomeAssistant,
+    mock_tsun_client: AsyncMock,
+) -> None:
+    """Test an unexpected metadata discovery error."""
+    config_flow.async_read_logger_metadata.side_effect = RuntimeError("unexpected")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 @pytest.mark.parametrize(

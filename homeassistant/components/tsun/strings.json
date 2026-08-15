@@ -1,20 +1,20 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "cannot_detect_logger_sn": "The numeric SN could not be read automatically. Enter it manually.",
       "invalid_response": "The device returned an unsupported or invalid response",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "data": {
-          "host": "Host",
+          "host": "[%key:common::config_flow::data::host%]",
           "logger_sn": "SN",
-          "port": "Port"
+          "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
           "host": "IP address or hostname of the micro-inverter logger.",
@@ -34,12 +34,12 @@
       "ac_frequency": { "name": "AC frequency" },
       "ac_power": { "name": "AC power" },
       "ac_voltage": { "name": "AC voltage" },
-      "current": { "name": "PV{input} current" },
+      "current": { "name": "PV{pv_input} current" },
       "dc_power_total": { "name": "Total DC power" },
-      "energy_today": { "name": "PV{input} energy today" },
-      "energy_total": { "name": "PV{input} energy total" },
-      "power": { "name": "PV{input} power" },
-      "voltage": { "name": "PV{input} voltage" }
+      "energy_today": { "name": "PV{pv_input} energy today" },
+      "energy_total": { "name": "PV{pv_input} energy total" },
+      "power": { "name": "PV{pv_input} power" },
+      "voltage": { "name": "PV{pv_input} voltage" }
     }
   }
 }

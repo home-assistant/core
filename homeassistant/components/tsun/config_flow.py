@@ -26,7 +26,6 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from .coordinator import get_poll_lock
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ def _connection_schema(*, request_logger_sn: bool = False) -> vol.Schema:
 
 
 async def _async_validate(
-    hass: HomeAssistant, data: dict[str, Any], metadata: LoggerMetadata
+    data: dict[str, Any], metadata: LoggerMetadata
 ) -> str:
     client = TsunClient(
         data[CONF_HOST],
@@ -54,8 +53,7 @@ async def _async_validate(
         port=data[CONF_PORT],
         metadata=metadata,
     )
-    async with get_poll_lock(hass):
-        telemetry = await client.async_read()
+    telemetry = await client.async_read()
     return telemetry.device.model
 
 
@@ -82,7 +80,6 @@ class TsunConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 metadata = await async_read_logger_metadata(
                     async_get_clientsession(self.hass),
                     str(data[CONF_HOST]),
-                    port=int(data[CONF_PORT]),
                 )
             except TsunError:
                 if automatically_detected:
@@ -107,7 +104,7 @@ class TsunConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     mac_address=metadata.mac_address,
                 )
                 try:
-                    model = await _async_validate(self.hass, data, metadata)
+                    model = await _async_validate(data, metadata)
                 except TsunConnectionError:
                     errors["base"] = "cannot_connect"
                 except TsunError:

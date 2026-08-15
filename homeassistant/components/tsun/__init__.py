@@ -11,36 +11,33 @@ from .const import (
     CONF_INVERTER_SN,
     CONF_LOGGER_SN,
     CONF_MAC_ADDRESS,
-    DEFAULT_SCAN_INTERVAL,
 )
-from .coordinator import TsunDataUpdateCoordinator, get_poll_lock
+from .coordinator import TsunDataUpdateCoordinator
 
 PLATFORMS = (Platform.SENSOR,)
 
 type TsunConfigEntry = ConfigEntry[TsunDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TsunConfigEntry) -> bool:
-    """Set up TSUN from a config entry."""
-    metadata = LoggerMetadata(
+def _metadata_from_entry(entry: TsunConfigEntry) -> LoggerMetadata:
+    """Restore logger metadata saved during the config flow."""
+    return LoggerMetadata(
         logger_sn=entry.data[CONF_LOGGER_SN],
         inverter_serial_number=entry.data.get(CONF_INVERTER_SN),
         firmware_version=entry.data.get(CONF_FIRMWARE_VERSION),
         mac_address=entry.data.get(CONF_MAC_ADDRESS),
     )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: TsunConfigEntry) -> bool:
+    """Set up TSUN from a config entry."""
     client = TsunClient(
         entry.data[CONF_HOST],
         entry.data[CONF_LOGGER_SN],
         port=entry.data[CONF_PORT],
-        metadata=metadata,
+        metadata=_metadata_from_entry(entry),
     )
-    coordinator = TsunDataUpdateCoordinator(
-        hass,
-        entry,
-        client,
-        poll_lock=get_poll_lock(hass),
-        update_interval=DEFAULT_SCAN_INTERVAL,
-    )
+    coordinator = TsunDataUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
