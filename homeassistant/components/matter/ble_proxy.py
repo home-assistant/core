@@ -33,6 +33,10 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
 _LOGGER = logging.getLogger(__name__)
 
+# Replayed history entries older than this are dropped to avoid stale rotating
+# MACs from previous commissioning cycles becoming spurious connect candidates.
+_MAX_STALE_ADVERTISEMENT_SECONDS = 30
+
 
 class HaBluetoothScanSource(BleScanSource):
     """`BleScanSource` backed by Home Assistant's bluetooth component.
@@ -54,9 +58,6 @@ class HaBluetoothScanSource(BleScanSource):
         if self._cancel is not None:
             return
 
-        # Drop HA's synchronous replay of stale history on register; otherwise a
-        # rotating peripheral's old addresses each become a parallel connect candidate.
-        # `MONOTONIC_TIME` is the clock that stamps `service_info.time`.
         scan_start = MONOTONIC_TIME()
 
         @callback
@@ -64,7 +65,7 @@ class HaBluetoothScanSource(BleScanSource):
             service_info: BluetoothServiceInfoBleak,
             _change: object,
         ) -> None:
-            if service_info.time < scan_start:
+            if scan_start - service_info.time > _MAX_STALE_ADVERTISEMENT_SECONDS:
                 return
             try:
                 callback_fn(_to_advertisement_data(service_info))

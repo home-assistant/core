@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -543,7 +544,8 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
         """Initialize the power flow sensor."""
         super().__init__(sensor_type, data_service)
 
-        self._attr_native_unit_of_measurement = data_service.unit
+        if data_service.unit is not None:
+            self._attr_native_unit_of_measurement = data_service.unit
 
     @property
     @override
@@ -571,7 +573,8 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
         """Initialize the power flow sensor."""
         super().__init__(description, data_service)
 
-        self._attr_native_unit_of_measurement = data_service.unit
+        if data_service.unit is not None:
+            self._attr_native_unit_of_measurement = data_service.unit
 
     @property
     @override
@@ -614,7 +617,11 @@ class SolarEdgeBatterySensor(SolarEdgeSensorEntity):
             manufacturer="SolarEdge",
             name=f"Battery {serial}",
             serial_number=serial,
-            via_device=(DOMAIN, data_service.site_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, data_service.site_id),
+                config_entry_id=data_service.config_entry.entry_id,
+            ),
         )
 
     @property

@@ -6,14 +6,13 @@ from pathlib import Path
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.entity_unique_id_format import (
     EntityUniqueIdFormatChecker,
 )
 from pylint_home_assistant.helpers.integration import clear_caches
 import pytest
 
-from . import assert_adds_messages, assert_no_messages
+from . import assert_adds_messages, assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="checker")
@@ -84,6 +83,21 @@ def _expect_redundant_domain(value_node: nodes.NodeNG, class_name: str) -> Messa
         end_line=value_node.end_lineno,
         end_col_offset=value_node.end_col_offset,
         args=(class_name,),
+    )
+
+
+def _expect_redundant_platform(
+    value_node: nodes.NodeNG, class_name: str, platform: str
+) -> MessageTest:
+    """Build the expected MessageTest for a platform-in-unique_id violation."""
+    return MessageTest(
+        msg_id="home-assistant-entity-unique-id-redundant-platform",
+        node=value_node,
+        line=value_node.lineno,
+        col_offset=value_node.col_offset,
+        end_line=value_node.end_lineno,
+        end_col_offset=value_node.end_col_offset,
+        args=(class_name, platform),
     )
 
 
@@ -181,10 +195,8 @@ def test_redundant_domain_fires(
 
     root_node = _parse(code, integration_dir)
     value_node = _find_attr_value_node(root_node)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_adds_messages(linter, _expect_redundant_domain(value_node, "MySensor")):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 def test_redundant_domain_fires_in_both_branches(
@@ -223,14 +235,12 @@ class MySensor(Entity):
         )
     ]
     assert len(value_nodes) == 2
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_adds_messages(
         linter,
         _expect_redundant_domain(value_nodes[0], "MySensor"),
         _expect_redundant_domain(value_nodes[1], "MySensor"),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -280,10 +290,8 @@ def test_redundant_domain_does_not_fire(
     integration_dir = _make_integration(tmp_path)
 
     root_node = _parse(code, integration_dir)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -370,9 +378,7 @@ def test_redundant_domain_literal_fires(
     integration_dir = _make_integration(tmp_path, domain="myhub")
 
     root_node = _parse(code, integration_dir)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
-    walker.walk(root_node)
+    walk_checker(linter, checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-entity-unique-id-redundant-domain"
@@ -410,9 +416,7 @@ class MySensor(Entity):
 """,
         integration_dir,
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
-    walker.walk(root_node)
+    walk_checker(linter, checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == (1 if fires else 0)
 
@@ -480,6 +484,36 @@ class MySensor(Entity):
 """,
             id="domain_followed_by_digit",
         ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, prefix, key):
+        self._attr_unique_id = f"{prefix}myhub-{key}"
+""",
+            id="domain_at_const_start_after_fstring_expr",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, suffix, key):
+        self._attr_unique_id = f"-myhub{suffix}-{key}"
+""",
+            id="domain_at_const_end_before_fstring_expr",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"myhub{key}"
+""",
+            id="domain_at_fstring_start_then_expr",
+        ),
     ],
 )
 def test_redundant_domain_literal_does_not_fire_on_word_substrings(
@@ -492,10 +526,8 @@ def test_redundant_domain_literal_does_not_fire_on_word_substrings(
     integration_dir = _make_integration(tmp_path, domain="myhub")
 
     root_node = _parse(code, integration_dir)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -539,12 +571,10 @@ def test_redundant_domain_fires_in_unique_id_property(
 
     root_node = _parse(code, integration_dir)
     return_node = next(root_node.nodes_of_class(nodes.Return))
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_adds_messages(
         linter, _expect_redundant_domain(return_node.value, "MySensor")
     ):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -591,10 +621,8 @@ def test_out_of_scope_ignored(
     root_node = _parse(
         code, integration_dir, module_name=module_name, file_name=file_name
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -640,10 +668,8 @@ class MyEntity(Entity):
         file_name=file_name,
     )
     value_node = _find_attr_value_node(root_node)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_adds_messages(linter, _expect_redundant_domain(value_node, "MyEntity")):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 def test_same_module_mixin_base_fires(
@@ -674,9 +700,257 @@ class MyConcreteSensor(MyBaseSensor):
         integration_dir,
     )
     value_node = _find_attr_value_node(root_node)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_adds_messages(
         linter, _expect_redundant_domain(value_node, "MyBaseSensor")
     ):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
+
+
+@pytest.mark.parametrize(
+    ("code", "platform", "module_name", "file_name"),
+    [
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"sensor_{key}"
+""",
+            "sensor",
+            "homeassistant.components.test_integration.sensor",
+            "sensor.py",
+            id="sensor_prefix_underscore",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MyLight(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"{key}-light"
+""",
+            "light",
+            "homeassistant.components.test_integration.light",
+            "light.py",
+            id="light_suffix_dash",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MyBinarySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"{key}_binary_sensor_{key}"
+""",
+            "binary_sensor",
+            "homeassistant.components.test_integration.binary_sensor",
+            "binary_sensor.py",
+            id="binary_sensor_embedded_segment",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySwitch(Entity):
+    _attr_unique_id = "switch-static"
+""",
+            "switch",
+            "homeassistant.components.test_integration.switch",
+            "switch.py",
+            id="switch_class_body_literal",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"sensor_{key}"
+""",
+            "sensor",
+            "homeassistant.components.test_integration.sensor.helpers",
+            "sensor/helpers.py",
+            id="platform_package_submodule",
+        ),
+    ],
+)
+def test_redundant_platform_fires(
+    linter: UnittestLinter,
+    checker: EntityUniqueIdFormatChecker,
+    tmp_path: Path,
+    code: str,
+    platform: str,
+    module_name: str,
+    file_name: str,
+) -> None:
+    """W7427 fires when _attr_unique_id embeds the platform name as a delimited segment."""
+    integration_dir = _make_integration(tmp_path)
+
+    root_node = _parse(
+        code, integration_dir, module_name=module_name, file_name=file_name
+    )
+    value_node = _find_attr_value_node(root_node)
+    class_node = next(root_node.nodes_of_class(nodes.ClassDef))
+    with assert_adds_messages(
+        linter, _expect_redundant_platform(value_node, class_node.name, platform)
+    ):
+        walk_checker(linter, checker, root_node)
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MyLight(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"lighter_{key}"
+""",
+            id="non_delimited_substring_in_word",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MyLight(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"highlight-{key}"
+""",
+            id="platform_appears_inside_other_word",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MyLight(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"{key}_brightness"
+""",
+            id="no_platform_reference",
+        ),
+    ],
+)
+def test_redundant_platform_does_not_fire(
+    linter: UnittestLinter,
+    checker: EntityUniqueIdFormatChecker,
+    tmp_path: Path,
+    code: str,
+) -> None:
+    """W7427 does not fire when the platform name is absent or not delimited."""
+    integration_dir = _make_integration(tmp_path)
+
+    root_node = _parse(
+        code,
+        integration_dir,
+        module_name="homeassistant.components.test_integration.light",
+        file_name="light.py",
+    )
+    with assert_no_messages(linter):
+        walk_checker(linter, checker, root_node)
+
+
+@pytest.mark.parametrize(
+    ("module_name", "file_name"),
+    [
+        pytest.param(
+            "homeassistant.components.test_integration.entity",
+            "entity.py",
+            id="entity_module",
+        ),
+        pytest.param(
+            "homeassistant.components.test_integration",
+            "__init__.py",
+            id="init_module",
+        ),
+        pytest.param(
+            "homeassistant.components.test_integration.coordinator",
+            "coordinator.py",
+            id="non_platform_submodule",
+        ),
+    ],
+)
+def test_redundant_platform_does_not_fire_outside_platform_module(
+    linter: UnittestLinter,
+    checker: EntityUniqueIdFormatChecker,
+    tmp_path: Path,
+    module_name: str,
+    file_name: str,
+) -> None:
+    """W7427 only fires in platform modules; entity.py / __init__.py / other are out of scope."""
+    integration_dir = _make_integration(tmp_path)
+
+    root_node = _parse(
+        """
+from homeassistant.helpers.entity import Entity
+
+class MyEntity(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"sensor_{key}"
+""",
+        integration_dir,
+        module_name=module_name,
+        file_name=file_name,
+    )
+    with assert_no_messages(linter):
+        walk_checker(linter, checker, root_node)
+
+
+def test_redundant_platform_fires_in_unique_id_property(
+    linter: UnittestLinter,
+    checker: EntityUniqueIdFormatChecker,
+    tmp_path: Path,
+) -> None:
+    """W7427 fires when a ``unique_id`` property returns a value embedding the platform."""
+    integration_dir = _make_integration(tmp_path)
+
+    root_node = _parse(
+        """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    @property
+    def unique_id(self) -> str:
+        return f"sensor_{self._key}"
+""",
+        integration_dir,
+        module_name="homeassistant.components.test_integration.sensor",
+        file_name="sensor.py",
+    )
+    return_node = next(root_node.nodes_of_class(nodes.Return))
+    with assert_adds_messages(
+        linter, _expect_redundant_platform(return_node.value, "MySensor", "sensor")
+    ):
+        walk_checker(linter, checker, root_node)
+
+
+def test_redundant_domain_and_platform_both_fire(
+    linter: UnittestLinter,
+    checker: EntityUniqueIdFormatChecker,
+    tmp_path: Path,
+) -> None:
+    """W7425 and W7427 both fire when the value embeds DOMAIN and the platform name."""
+    integration_dir = _make_integration(tmp_path)
+
+    root_node = _parse(
+        """
+from .const import DOMAIN
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"{DOMAIN}_sensor_{key}"
+""",
+        integration_dir,
+        module_name="homeassistant.components.test_integration.sensor",
+        file_name="sensor.py",
+    )
+    value_node = _find_attr_value_node(root_node)
+    with assert_adds_messages(
+        linter,
+        _expect_redundant_domain(value_node, "MySensor"),
+        _expect_redundant_platform(value_node, "MySensor", "sensor"),
+    ):
+        walk_checker(linter, checker, root_node)

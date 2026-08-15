@@ -69,7 +69,7 @@ from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
 from . import COMBINED_SCHEMA
 from .const import (
-    CONF_ADVANCED,
+    CONF_ADDITIONAL,
     CONF_AUTH,
     CONF_ENCODING,
     CONF_INDEX,
@@ -118,7 +118,7 @@ RESOURCE_SETUP = vol.Schema(
             ),
             data_entry_flow.SectionConfig(collapsed=True),
         ),
-        vol.Required(CONF_ADVANCED): data_entry_flow.section(
+        vol.Required(CONF_ADDITIONAL): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_HEADERS): ObjectSelector(),
@@ -147,7 +147,7 @@ SENSOR_SETTINGS = vol.Schema(
             ),
             vol.Coerce(int),
         ),
-        vol.Required(CONF_ADVANCED): data_entry_flow.section(
+        vol.Required(CONF_ADDITIONAL): data_entry_flow.section(
             vol.Schema(
                 {
                     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
@@ -200,7 +200,7 @@ async def validate_rest_setup(
 ) -> dict[str, Any]:
     """Validate rest setup."""
     config = deepcopy(user_input)
-    config.update(config.pop(CONF_ADVANCED, {}))
+    config.update(config.pop(CONF_ADDITIONAL, {}))
     config.update(config.pop(CONF_AUTH, {}))
     rest_config: dict[str, Any] = COMBINED_SCHEMA(config)
     try:
@@ -217,7 +217,7 @@ async def validate_rest_setup(
 class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Scrape configuration flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     @staticmethod
     @callback
@@ -303,6 +303,7 @@ class ScrapeSubentryFlowHandler(ConfigSubentryFlow):
             title = user_input.pop("name")
             return self.async_create_entry(data=user_input, title=title)
 
+        # pylint: disable-next=home-assistant-subentry-flow-field-not-translated
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(

@@ -120,8 +120,8 @@ class SignalNotificationService(BaseNotificationService):
             self._signal_cli_rest_api.send_message(
                 message,
                 recipients,
-                filenames,
-                attachments_as_bytes,
+                filenames=filenames,
+                attachments_as_bytes=attachments_as_bytes,
                 text_mode="normal" if data is None else data.get(ATTR_TEXTMODE),
             )
         except SignalCliRestApiError as ex:

@@ -15,12 +15,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
     EntityCategory,
+    UnitOfDensity,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -54,7 +54,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="filter-life",
         translation_key="filter_life",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.state.filter_life,
@@ -71,7 +71,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="pm1",
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.pm1,
         exists_fn=lambda device: rgetattr(device, "state.pm1") is not None,
@@ -79,7 +79,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="pm10",
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.pm10,
         exists_fn=lambda device: rgetattr(device, "state.pm10") is not None,
@@ -87,7 +87,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="pm25",
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.pm25,
         exists_fn=lambda device: rgetattr(device, "state.pm25") is not None,
@@ -155,7 +155,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.humidity,
         exists_fn=is_humidifier,

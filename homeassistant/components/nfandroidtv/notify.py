@@ -83,6 +83,7 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
         self.entry = entry
         self.client = entry.runtime_data
 
+    @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
         try:

@@ -131,7 +131,7 @@ async def test_remove_interface_device(
     assert knx_devices[0].name == "KNX Interface"
     device_id = knx_devices[0].id
     # interface device can't be removed
-    res = await client.remove_device(device_id, knx.mock_config_entry.entry_id)
+    res = await client.remove_device(device_id)
     assert not res["success"]
     assert (
         res["error"]["message"]

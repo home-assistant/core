@@ -16,16 +16,11 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_STATE,
-    CONF_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_STATE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -44,7 +39,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -82,11 +77,7 @@ SENSOR_YAML_SCHEMA = vol.All(
         }
     )
     .extend(SENSOR_COMMON_SCHEMA.schema)
-    .extend(
-        make_template_entity_common_modern_attributes_schema(
-            SENSOR_DOMAIN, DEFAULT_NAME
-        ).schema
-    ),
+    .extend(make_template_entity_common_schema(SENSOR_DOMAIN, DEFAULT_NAME).schema),
     validate_last_reset,
 )
 
@@ -186,6 +177,8 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_STATE
+    _restore_state_extra_data = SensorExtraStoredData
+    _restore_state_properties = ("_attr_native_value",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -230,6 +223,13 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
 
         return validate_datetime(self, CONF_STATE, self.device_class)(result)
 
+    @override
+    def restore_extra_data(self, extra_data: SensorExtraStoredData) -> None:
+        """Restore the extra data."""
+        # Do not restore native_unit_of_measurement, this is always pulled from the
+        # sensor configuration.
+        self._attr_native_value = extra_data.native_value
+
 
 class StateSensorEntity(TemplateEntity, AbstractTemplateSensor):
     """Representation of a Template Sensor."""
@@ -262,18 +262,3 @@ class TriggerSensorEntity(TriggerEntity, AbstractTemplateSensor):
         """Initialize."""
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateSensor.__init__(self, config)
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        if (
-            (last_state := await self.async_get_last_state()) is not None
-            and (extra_data := await self.async_get_last_sensor_data()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            # The trigger might have fired already while we waited for stored data,
-            # then we should not restore state
-            and CONF_STATE not in self._rendered
-        ):
-            self._attr_native_value = extra_data.native_value
-            self.restore_attributes(last_state)

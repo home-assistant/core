@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+import contextlib
 import io
 import logging
 import time
@@ -109,6 +110,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self._client: AsyncTcpClient | None = None
         self._chunk_converter = AudioChunkConverter(rate=16000, width=2, channels=1)
         self._is_pipeline_running = False
+        self._pipeline_error = False
         self._pipeline_ended_event = asyncio.Event()
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._pipeline_id: str | None = None
@@ -315,7 +317,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     f"{self.entity_id} {event.type}",
                 )
         elif event.type == assist_pipeline.PipelineEventType.ERROR:
-            # Pipeline error
+            # Pipeline error. Prevents an "always on" satellite from restarting
+            # a failing pipeline in a tight loop (e.g. on a config error).
+            self._pipeline_error = True
             if event.data:
                 self.config_entry.async_create_background_task(
                     self.hass,
@@ -416,10 +420,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         # Stop existing pipeline
         self._audio_queue.put_nowait(None)
 
-        # Tell satellite to stop running
-        self._send_pause()
-
-        # Stop task loop
+        # Stop task loop. The satellite is paused and disconnected in run()'s
+        # teardown so the pause is reliably sent before the socket is closed.
         self.is_running = False
 
         # Unblock waiting for unmuted
@@ -474,6 +476,17 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
             # Ensure sensor is off (before stop)
             self.device.set_is_active(False)
+
+            # Pause the satellite, then close the connection. The pause is sent
+            # and flushed before disconnecting so the satellite reliably sees
+            # it. Without an explicit disconnect the socket is only released
+            # when the client is garbage collected, which leaves satellites
+            # that allow a single connection unable to reconnect when
+            # re-enabled.
+            if self._client is not None:
+                with contextlib.suppress(ConnectionError, OSError):
+                    await self._client.write_event(PauseSatellite().event())
+            await self._disconnect()
 
             await self.on_stopped()
 
@@ -613,11 +626,23 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     # Clear last wake word detection
                     wake_word_phrase = None
 
-                    if (run_pipeline is not None) and run_pipeline.restart_on_end:
+                    if (
+                        (run_pipeline is not None)
+                        and run_pipeline.restart_on_end
+                        and not self._pipeline_error
+                    ):
                         # Automatically restart pipeline.
                         # Used with "always on" streaming satellites.
                         self._run_pipeline_once(run_pipeline)
                         continue
+
+                    if self._pipeline_error:
+                        # Don't restart a failing pipeline in a tight loop; wait
+                        # for the satellite to request a new run.
+                        _LOGGER.debug(
+                            "Not restarting pipeline after error; "
+                            "waiting for next satellite request"
+                        )
 
                 if client_event_task not in done:
                     continue
@@ -637,9 +662,27 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     # Satellite requested pipeline run
                     run_pipeline = RunPipeline.from_event(client_event)
                     self._run_pipeline_once(run_pipeline, wake_word_phrase)
-                elif (
-                    AudioChunk.is_type(client_event.type) and self._is_pipeline_running
+                elif AudioChunk.is_type(client_event.type) and (
+                    self._is_pipeline_running or (wake_word_phrase is not None)
                 ):
+                    if not self._is_pipeline_running:
+                        # Some satellites report a local wake word detection and
+                        # then start streaming audio without sending a
+                        # RunPipeline event. Start a pipeline so the audio isn't
+                        # silently dropped. Begin at ASR since the wake word was
+                        # already detected on the satellite.
+                        _LOGGER.debug(
+                            "Received audio after detection without RunPipeline; "
+                            "starting a pipeline automatically"
+                        )
+                        self._run_pipeline_once(
+                            RunPipeline(
+                                start_stage=PipelineStage.ASR,
+                                end_stage=PipelineStage.TTS,
+                            ),
+                            wake_word_phrase,
+                        )
+
                     # Microphone audio
                     chunk = AudioChunk.from_event(client_event)
                     chunk = self._chunk_converter.convert(chunk)
@@ -708,6 +751,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self._audio_queue = asyncio.Queue()
 
         self._is_pipeline_running = True
+        self._pipeline_error = False
         self._pipeline_ended_event.clear()
         self.config_entry.async_create_background_task(
             self.hass,

@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'tracking_type': <TrackingType.POSITION: 'position'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,14 +41,14 @@
 # name: test_device_tracker[device_tracker.mock_model-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mock model',
-      'gps_accuracy': 0,
-      'in_zones': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      'latitude': 25.0,
-      'longitude': -71.0,
-      'source_type': <SourceType.GPS: 'gps'>,
-      'tracking_type': <TrackingType.POSITION: 'position'>,
+      <EntityStateAttribute.LATITUDE: 'latitude'>: 25.0,
+      <EntityStateAttribute.LONGITUDE: 'longitude'>: -71.0,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.mock_model',

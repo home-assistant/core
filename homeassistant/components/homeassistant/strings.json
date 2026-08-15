@@ -142,7 +142,7 @@
       "title": "The {integration_title} integration is being removed"
     },
     "deprecated_trigger_behavior": {
-      "description": "An automation, script or template entity uses the trigger behavior option `{deprecated_behavior}`, which has been renamed to `{new_behavior}`. The old value still works for now, but support for it will be removed in a future release.\n\nTo fix this issue, edit the affected automations and scripts and change the behavior option from `behavior: {deprecated_behavior}` to `behavior: {new_behavior}`, then restart Home Assistant.",
+      "description": "An automation, script or template entity uses the trigger behavior option `{deprecated_behavior}`, which has been renamed to `{new_behavior}`. The old value still works for now, but support for it will be removed in a future release.\n\nTo fix this issue, open each affected automation or script in the editor and save it again; Home Assistant will automatically detect and update the deprecated option. Alternatively, edit your configuration files (for example `automations.yaml`) directly and change `behavior: {deprecated_behavior}` to `behavior: {new_behavior}`. Restart Home Assistant afterwards.",
       "title": "Deprecated trigger behavior option in use"
     },
     "deprecated_yaml": {

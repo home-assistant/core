@@ -39,8 +39,8 @@
 # name: test_locks[lock.front_door_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Front Door Lock',
-      'supported_features': <LockEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Lock',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.front_door_lock',

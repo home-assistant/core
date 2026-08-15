@@ -22,6 +22,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{username}",
+    "progress": {
+      "login": "Logging in and scanning for Alexa devices. This can take several minutes if you have many devices linked to your Amazon account."
+    },
     "step": {
       "reauth_confirm": {
         "data": {
@@ -76,6 +79,16 @@
       },
       "speak": {
         "name": "Speak"
+      }
+    },
+    "select": {
+      "dropin": {
+        "name": "Drop In",
+        "state": {
+          "all": "Allow drop in from anyone",
+          "home": "Allow drop in from household members",
+          "off": "Don't allow drop in"
+        }
       }
     },
     "sensor": {
@@ -139,6 +152,9 @@
     },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
+    },
+    "select_option_not_found": {
+      "message": "Selected option not found: {option}"
     },
     "unknown_exception": {
       "message": "Unknown error occurred: {error}"

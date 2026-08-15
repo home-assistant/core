@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
@@ -349,13 +349,13 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
-        floor_id: str | None | UndefinedType = UNDEFINED,
-        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        floor_id: str | UndefinedType | None = UNDEFINED,
+        humidity_entity_id: str | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
-        picture: str | None | UndefinedType = UNDEFINED,
-        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
+        picture: str | UndefinedType | None = UNDEFINED,
+        temperature_entity_id: str | UndefinedType | None = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(
@@ -385,13 +385,13 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
-        floor_id: str | None | UndefinedType = UNDEFINED,
-        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        floor_id: str | UndefinedType | None = UNDEFINED,
+        humidity_entity_id: str | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
-        picture: str | None | UndefinedType = UNDEFINED,
-        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
+        picture: str | UndefinedType | None = UNDEFINED,
+        temperature_entity_id: str | UndefinedType | None = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         old = self.areas[area_id]
@@ -581,7 +581,8 @@ def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
 
     if (
         state.domain != "sensor"
-        or state.attributes.get(ATTR_DEVICE_CLASS) != SensorDeviceClass.TEMPERATURE
+        or state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+        != SensorDeviceClass.TEMPERATURE
     ):
         raise ValueError(f"Entity {entity_id} is not a temperature sensor")
 
@@ -595,6 +596,7 @@ def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> None:
 
     if (
         state.domain != "sensor"
-        or state.attributes.get(ATTR_DEVICE_CLASS) != SensorDeviceClass.HUMIDITY
+        or state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+        != SensorDeviceClass.HUMIDITY
     ):
         raise ValueError(f"Entity {entity_id} is not a humidity sensor")

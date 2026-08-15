@@ -179,7 +179,7 @@ class TemperatureSensor(BaseSensorEntity):
         """Initialize TemperatureSensor entity."""
         super().__init__(coordinator)
         self._temp_sensor = nasweb_temp_sensor
-        self._attr_unique_id = f"{DOMAIN}.{self._temp_sensor.webio_serial}.temp_sensor"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+        self._attr_unique_id = f"{DOMAIN}.{self._temp_sensor.webio_serial}.temp_sensor"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._temp_sensor.webio_serial)}
         )

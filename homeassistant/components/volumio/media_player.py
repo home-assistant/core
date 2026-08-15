@@ -57,7 +57,6 @@ class Volumio(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
-        | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PLAY_MEDIA
