@@ -1233,7 +1233,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda _, status, key: (
-            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+            DRIVER_MISSING_ERROR in (status[key].get("errors") or [])
         ),
     ),
     "rssi": RpcSensorDescription(
@@ -1264,7 +1264,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda _, status, key: (
-            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+            DRIVER_MISSING_ERROR in (status[key].get("errors") or [])
         ),
     ),
     "battery": RpcSensorDescription(
