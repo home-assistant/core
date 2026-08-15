@@ -1,7 +1,7 @@
 """Tests for the Podcast Player media source."""
 
 from dataclasses import replace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiopodcast import Podcast, PodcastConnectionError, PodcastEnclosure
 import pytest
@@ -78,22 +78,31 @@ async def test_resolve_episode_with_inferred_mime_type(
     podcast: Podcast,
 ) -> None:
     """Test inferring an episode MIME type from its URL."""
-    enclosure = replace(podcast.episodes[0].enclosure, mime_type=None)
+    enclosure = replace(
+        podcast.episodes[0].enclosure,
+        url="https://cdn.example.com/episode.mp3?token=secret#fragment",
+        mime_type=None,
+    )
     episode = replace(podcast.episodes[0], enclosure=enclosure)
     mock_client.async_fetch.return_value = replace(podcast, episodes=(episode,))
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     source = await async_get_media_source(hass)
-    feed = await source.async_browse_media(
-        MediaSourceItem(hass, DOMAIN, mock_config_entry.entry_id, None)
-    )
-    assert feed.children is not None
-    result = await source.async_resolve_media(
-        MediaSourceItem(hass, DOMAIN, feed.children[0].identifier, None)
-    )
+    with patch(
+        "homeassistant.components.podcast_player.media_source.mimetypes.guess_type",
+        return_value=("audio/mpeg", None),
+    ) as mock_guess_type:
+        feed = await source.async_browse_media(
+            MediaSourceItem(hass, DOMAIN, mock_config_entry.entry_id, None)
+        )
+        assert feed.children is not None
+        result = await source.async_resolve_media(
+            MediaSourceItem(hass, DOMAIN, feed.children[0].identifier, None)
+        )
 
     assert result.mime_type == "audio/mpeg"
+    mock_guess_type.assert_called_with("/episode.mp3")
 
 
 async def test_browse_limits_episode_count(

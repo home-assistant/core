@@ -2,6 +2,7 @@
 
 import mimetypes
 from typing import override
+from urllib.parse import urlsplit
 
 from aiopodcast import Podcast, PodcastEpisode
 
@@ -30,7 +31,7 @@ def _episode_mime_type(episode: PodcastEpisode) -> str:
     """Return the episode MIME type."""
     if episode.enclosure.mime_type:
         return episode.enclosure.mime_type.partition(";")[0].strip()
-    mime_type, _ = mimetypes.guess_type(episode.enclosure.url)
+    mime_type, _ = mimetypes.guess_type(urlsplit(episode.enclosure.url).path)
     return mime_type or "audio/mpeg"
 
 
