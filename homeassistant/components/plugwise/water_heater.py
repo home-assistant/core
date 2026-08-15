@@ -15,7 +15,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DHW_TEMP, DOMAIN, LOWER_BOUND, UPPER_BOUND, WaterHeaterType
+from .const import (
+    DHW_TEMP,
+    DOMAIN,
+    LOWER_BOUND,
+    UPPER_BOUND,
+    BinarySensorType,
+    WaterHeaterType,
+)
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
@@ -31,7 +38,7 @@ class PlugwiseWaterHeaterEntityDescription(WaterHeaterEntityDescription):
     """Class describing Plugwise WaterHeater entities."""
 
     key: WaterHeaterType
-    state_key: str
+    state_key: BinarySensorType
 
 
 WATERHEATER_TYPES = (

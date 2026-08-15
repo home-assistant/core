@@ -47,6 +47,8 @@ ZEROCONF_MAP: Final[dict[str, str]] = {
     "stretch": "Stretch",
 }
 
+type BinarySensorType = Literal["dhw_state"]
+
 type NumberType = Literal[
     "boiler_temperature",
     "dhw_temperature",
