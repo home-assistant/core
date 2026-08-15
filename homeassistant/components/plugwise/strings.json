@@ -307,7 +307,6 @@
       }
     },
     "water_heater": {
-      },
       "dhw_temperature": {
         "name": "Domestic hot water"
         }
