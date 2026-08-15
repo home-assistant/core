@@ -3,7 +3,7 @@
 from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -22,6 +22,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.coordinator
     tracked_trackers: set[str] = set()
 
+    @callback
     def _async_add_new_entities() -> None:
         """Add entities for newly discovered devices."""
         if not coordinator.data:
