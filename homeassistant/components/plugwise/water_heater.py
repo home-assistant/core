@@ -96,7 +96,10 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     @override
     def current_operation(self) -> str:
         """Return current readable operation mode."""
-        if self.device["binary_sensors"][self.entity_description.state_key]:
+        if (
+            (binary_sensors := self.device.get("binary_sensors", {}))
+            and binary_sensors.get(self.entity_description.state_key, False)
+        ):
             if "outdoor_air_temperature" in self.device:
                 return STATE_ELECTRIC
 
