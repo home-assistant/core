@@ -113,6 +113,7 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(
             step_id=CONF_USER, data_schema=schema, errors=errors or {}
         )

@@ -107,7 +107,7 @@ async def async_setup_entry(
         )
         and (existing_entry := ent_reg.async_get(existing_entity_id))
         and (device_id := existing_entry.device_id)
-        and (device_entry := dev_reg.async_get(device_id))
+        and (device_entry := dev_reg.async_get(device_id, include_child_devices=False))
         and (dr.CONNECTION_UPNP, udn) not in device_entry.connections
     ):
         # If the existing device is missing the udn connection, add it
