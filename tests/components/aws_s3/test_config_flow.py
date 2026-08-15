@@ -1,28 +1,41 @@
 """Test the AWS S3 config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from botocore.exceptions import (
     ClientError,
     EndpointConnectionError,
+    NoCredentialsError,
     ParamValidationError,
 )
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.aws_s3.const import CONF_BUCKET, CONF_ENDPOINT_URL, DOMAIN
+from homeassistant.components.aws_s3.const import (
+    CONF_ACCESS_KEY_ID,
+    CONF_BUCKET,
+    CONF_ENDPOINT_URL,
+    CONF_SECRET_ACCESS_KEY,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import CONFIG_ENTRY_DATA, USER_INPUT
+from .const import (
+    CONFIG_ENTRY_DATA,
+    CONFIG_ENTRY_DATA_DEFAULT_CREDENTIALS,
+    USER_INPUT,
+    USER_INPUT_DEFAULT_CREDENTIALS,
+)
 
 from tests.common import MockConfigEntry
 
 
 async def _async_start_flow(
     hass: HomeAssistant,
-    user_input: dict[str, str] | None = None,
+    user_input: dict[str, Any] | None = None,
 ) -> FlowResultType:
     """Initialize the config flow."""
     if user_input is None:
@@ -86,12 +99,78 @@ async def test_flow(
 
 
 @pytest.mark.parametrize(
+    ("user_input", "expected_title", "expected_data"),
+    [
+        (
+            USER_INPUT_DEFAULT_CREDENTIALS,
+            "test",
+            CONFIG_ENTRY_DATA_DEFAULT_CREDENTIALS,
+        ),
+        (
+            USER_INPUT_DEFAULT_CREDENTIALS
+            | {
+                CONF_ACCESS_KEY_ID: "TestTestTestTestTest",
+                CONF_SECRET_ACCESS_KEY: "TestTestTestTestTestTestTestTestTestTest",
+            },
+            "test",
+            CONFIG_ENTRY_DATA_DEFAULT_CREDENTIALS,
+        ),
+    ],
+    ids=["without_keys", "keys_are_discarded"],
+)
+async def test_flow_default_credentials(
+    hass: HomeAssistant,
+    user_input: dict,
+    expected_title: str,
+    expected_data: dict,
+) -> None:
+    """Test config flow letting Boto3 resolve the credentials."""
+    result = await _async_start_flow(hass, user_input)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == expected_title
+    assert result["data"] == expected_data
+
+
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        {key: value for key, value in USER_INPUT.items() if key != CONF_ACCESS_KEY_ID},
+        {
+            key: value
+            for key, value in USER_INPUT.items()
+            if key != CONF_SECRET_ACCESS_KEY
+        },
+    ],
+    ids=["without_access_key_id", "without_secret_access_key"],
+)
+async def test_flow_missing_credentials(
+    hass: HomeAssistant,
+    user_input: dict,
+) -> None:
+    """Test config flow without keys and without using the default credentials."""
+    result = await _async_start_flow(hass, user_input)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "credentials_required"}
+
+    # Fix and finish the test
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test"
+    assert result["data"] == CONFIG_ENTRY_DATA
+
+
+@pytest.mark.parametrize(
     ("exception", "errors"),
     [
         (
             ParamValidationError(report="Invalid bucket name"),
             {CONF_BUCKET: "invalid_bucket_name"},
         ),
+        (NoCredentialsError(), {"base": "invalid_credentials"}),
         (ValueError(), {CONF_ENDPOINT_URL: "invalid_endpoint_url"}),
         (
             EndpointConnectionError(endpoint_url="http://example.com"),

@@ -4,7 +4,12 @@ from typing import Any, override
 from urllib.parse import urlparse
 
 from aiobotocore.session import AioSession
-from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
+from botocore.exceptions import (
+    ClientError,
+    ConnectionError,
+    NoCredentialsError,
+    ParamValidationError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -22,6 +27,7 @@ from .const import (
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
     CONF_SECRET_ACCESS_KEY,
+    CONF_USE_DEFAULT_CREDENTIALS,
     DEFAULT_ENDPOINT_URL,
     DESCRIPTION_AWS_S3_DOCS_URL,
     DESCRIPTION_BOTO3_DOCS_URL,
@@ -30,8 +36,9 @@ from .const import (
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ACCESS_KEY_ID): cv.string,
-        vol.Required(CONF_SECRET_ACCESS_KEY): TextSelector(
+        vol.Required(CONF_USE_DEFAULT_CREDENTIALS, default=False): cv.boolean,
+        vol.Optional(CONF_ACCESS_KEY_ID): cv.string,
+        vol.Optional(CONF_SECRET_ACCESS_KEY): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         vol.Required(CONF_BUCKET): cv.string,
@@ -54,6 +61,7 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            use_default_credentials = user_input[CONF_USE_DEFAULT_CREDENTIALS]
             normalized_prefix = user_input.get(CONF_PREFIX, "").strip("/")
             # Check for existing entries, treating missing prefix as empty
             for entry in self._async_current_entries(include_ignore=False):
@@ -69,17 +77,27 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
             hostname = urlparse(user_input[CONF_ENDPOINT_URL]).hostname
             if not hostname or not hostname.endswith(AWS_DOMAIN):
                 errors[CONF_ENDPOINT_URL] = "invalid_endpoint_url"
+            elif not use_default_credentials and not (
+                user_input.get(CONF_ACCESS_KEY_ID)
+                and user_input.get(CONF_SECRET_ACCESS_KEY)
+            ):
+                errors["base"] = "credentials_required"
             else:
                 try:
                     session = AioSession()
-                    async with session.create_client(
-                        "s3",
-                        endpoint_url=user_input.get(CONF_ENDPOINT_URL),
-                        aws_secret_access_key=user_input[CONF_SECRET_ACCESS_KEY],
-                        aws_access_key_id=user_input[CONF_ACCESS_KEY_ID],
-                    ) as client:
+                    client_kwargs: dict[str, Any] = {
+                        "endpoint_url": user_input.get(CONF_ENDPOINT_URL)
+                    }
+                    if not use_default_credentials:
+                        client_kwargs["aws_secret_access_key"] = user_input[
+                            CONF_SECRET_ACCESS_KEY
+                        ]
+                        client_kwargs["aws_access_key_id"] = user_input[
+                            CONF_ACCESS_KEY_ID
+                        ]
+                    async with session.create_client("s3", **client_kwargs) as client:
                         await client.head_bucket(Bucket=user_input[CONF_BUCKET])
-                except ClientError:
+                except ClientError, NoCredentialsError:
                     errors["base"] = "invalid_credentials"
                 except ParamValidationError as err:
                     if "Invalid bucket name" in str(err):
@@ -90,6 +108,13 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_ENDPOINT_URL] = "cannot_connect"
                 else:
                     data = dict(user_input)
+                    if use_default_credentials:
+                        # Credentials are resolved at runtime, nothing to store
+                        data.pop(CONF_ACCESS_KEY_ID, None)
+                        data.pop(CONF_SECRET_ACCESS_KEY, None)
+                    else:
+                        # Do not persist default values
+                        data.pop(CONF_USE_DEFAULT_CREDENTIALS)
                     if not normalized_prefix:
                         # Do not persist empty optional values
                         data.pop(CONF_PREFIX, None)

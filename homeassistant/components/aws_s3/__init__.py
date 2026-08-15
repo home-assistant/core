@@ -1,10 +1,15 @@
 """The AWS S3 integration."""
 
 import logging
-from typing import cast
+from typing import Any, cast
 
 from aiobotocore.session import AioSession
-from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
+from botocore.exceptions import (
+    ClientError,
+    ConnectionError,
+    NoCredentialsError,
+    ParamValidationError,
+)
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -15,6 +20,7 @@ from .const import (
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
     CONF_SECRET_ACCESS_KEY,
+    CONF_USE_DEFAULT_CREDENTIALS,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
@@ -31,15 +37,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     data = cast(dict, entry.data)
     try:
         session = AioSession()
+        client_kwargs: dict[str, Any] = {"endpoint_url": data.get(CONF_ENDPOINT_URL)}
+        if not data.get(CONF_USE_DEFAULT_CREDENTIALS, False):
+            # Without explicit keys, botocore resolves credentials itself
+            client_kwargs["aws_secret_access_key"] = data[CONF_SECRET_ACCESS_KEY]
+            client_kwargs["aws_access_key_id"] = data[CONF_ACCESS_KEY_ID]
         # pylint: disable-next=unnecessary-dunder-call
-        client = await session.create_client(
-            "s3",
-            endpoint_url=data.get(CONF_ENDPOINT_URL),
-            aws_secret_access_key=data[CONF_SECRET_ACCESS_KEY],
-            aws_access_key_id=data[CONF_ACCESS_KEY_ID],
-        ).__aenter__()
+        client = await session.create_client("s3", **client_kwargs).__aenter__()
         await client.head_bucket(Bucket=data[CONF_BUCKET])
-    except ClientError as err:
+    except (ClientError, NoCredentialsError) as err:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",

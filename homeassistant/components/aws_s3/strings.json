@@ -5,6 +5,7 @@
     },
     "error": {
       "cannot_connect": "[%key:component::aws_s3::exceptions::cannot_connect::message%]",
+      "credentials_required": "Access key ID and secret access key are required when not using the default AWS credentials.",
       "invalid_bucket_name": "[%key:component::aws_s3::exceptions::invalid_bucket_name::message%]",
       "invalid_credentials": "[%key:component::aws_s3::exceptions::invalid_credentials::message%]",
       "invalid_endpoint_url": "[%key:component::aws_s3::exceptions::invalid_endpoint_url::message%]"
@@ -16,14 +17,16 @@
           "bucket": "Bucket name",
           "endpoint_url": "Endpoint URL",
           "prefix": "Prefix",
-          "secret_access_key": "Secret access key"
+          "secret_access_key": "Secret access key",
+          "use_default_credentials": "Use default AWS credentials"
         },
         "data_description": {
-          "access_key_id": "Access key ID to connect to AWS S3 API",
+          "access_key_id": "Access key ID to connect to AWS S3 API. Not needed when using the default AWS credentials.",
           "bucket": "Bucket must already exist and be writable by the provided credentials.",
           "endpoint_url": "Endpoint URL provided to [Boto3 Session]({boto3_docs_url}). Region-specific [AWS S3 endpoints]({aws_s3_docs_url}) are available in their docs.",
           "prefix": "Folder or prefix to store backups in, for example `backups`",
-          "secret_access_key": "Secret access key to connect to AWS S3 API"
+          "secret_access_key": "Secret access key to connect to AWS S3 API. Not needed when using the default AWS credentials.",
+          "use_default_credentials": "Let Boto3 resolve credentials from the environment instead of storing an access key: environment variables, a shared credentials file, an EC2 instance profile or a container role."
         },
         "title": "Add AWS S3 bucket"
       }
@@ -47,7 +50,7 @@
       "message": "Invalid bucket name"
     },
     "invalid_credentials": {
-      "message": "Bucket cannot be accessed using provided combination of access key ID and secret access key."
+      "message": "Bucket cannot be accessed using the configured credentials."
     },
     "invalid_endpoint_url": {
       "message": "Invalid endpoint URL. Please make sure it's a valid AWS S3 endpoint URL."
