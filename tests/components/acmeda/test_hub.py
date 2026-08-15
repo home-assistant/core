@@ -93,7 +93,9 @@ async def test_hub_api_none_paths(
     assert hub.title == "127.0.0.1"
 
     # async_start returns early when api is None (no api.run() called)
+    mock_hub.run.reset_mock()
     await hub.async_start()
+    mock_hub.run.assert_not_called()
 
     # async_reset returns False when api is None
     assert await hub.async_reset() is False

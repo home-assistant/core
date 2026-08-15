@@ -309,7 +309,7 @@ async def test_entity_notify_update(
     mock_hub: MagicMock,
     mock_roller: MagicMock,
 ) -> None:
-    """Test entity state updates when notify_update is called."""
+    """Test entity state updates when roller callback fires."""
     mock_roller.closed_percent = 50
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -322,9 +322,10 @@ async def test_entity_notify_update(
     assert state is not None
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
 
-    # Update the roller position and notify
+    # The entity subscribes to the roller's callback in async_added_to_hass
+    roller_callback = mock_roller.callback_subscribe.call_args[0][0]
     mock_roller.closed_percent = 75
-    notify_update(aiopulse.UpdateType.rollers)
+    roller_callback()
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.roller")
