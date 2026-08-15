@@ -105,9 +105,17 @@
       "climate_zone2": {
         "name": "Zone 2 thermostat"
       }
+    },
+    "lock": {
+      "child_lock": {
+        "name": "Child lock"
+      }
     }
   },
   "exceptions": {
+    "device_communication_error": {
+      "message": "Error communicating with the device: {error}"
+    },
     "unsupported_hvac_mode": {
       "message": "HVAC mode {hvac_mode} is not supported by this device."
     }
