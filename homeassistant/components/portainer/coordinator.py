@@ -645,13 +645,9 @@ class PortainerCoordinator(
         """React to a single Docker event pushed by a per-endpoint listener."""
         event, endpoint_id = result.event, result.endpoint_id
 
-        if (
-            event.type != "container"
-            or event.action is None
-            or (
-                event.action not in CONTAINER_STATE_ACTIONS
-                and not event.action.startswith("health_status")
-            )
+        if event.action is None or (
+            event.action not in CONTAINER_STATE_ACTIONS
+            and not event.action.startswith("health_status")
         ):
             return
 
