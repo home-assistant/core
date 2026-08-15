@@ -6,7 +6,6 @@ import aiopulse
 import pytest
 
 from homeassistant.components.acmeda.helpers import async_add_acmeda_entities
-from homeassistant.components.acmeda.hub import PulseHub
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -78,9 +77,17 @@ async def test_async_notify_update(
 async def test_hub_api_none_paths(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
 ) -> None:
-    """Test hub behavior when api is None."""
-    hub = PulseHub(hass, mock_config_entry)
+    """Test hub behavior when api is None after unload."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hub = mock_config_entry.runtime_data
+
+    # Unload sets api to None
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # title returns host when api is None
     assert hub.title == "127.0.0.1"
@@ -97,7 +104,6 @@ async def test_hub_api_none_paths(
         mock_update.assert_not_called()
 
     # async_add_acmeda_entities returns early when api is None
-    mock_config_entry.runtime_data = hub
     mock_add_entities = MagicMock()
     async_add_acmeda_entities(
         hass, MagicMock(), mock_config_entry, set(), mock_add_entities

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import aiopulse
 import pytest
 
+from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
@@ -16,6 +17,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -256,3 +258,75 @@ async def test_cover_tilt_services(
         blocking=True,
     )
     mock_roller.move_to.assert_called_once_with(25)
+
+
+async def test_entity_device_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+    mock_roller: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity has correct device_id."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+    notify_update(aiopulse.UpdateType.rollers)
+    await hass.async_block_till_done()
+
+    entity = entity_registry.async_get("cover.roller")
+    assert entity is not None
+    assert entity.unique_id == str(mock_roller.id)
+
+
+async def test_entity_device_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+    mock_roller: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test entity has correct device_info."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+    notify_update(aiopulse.UpdateType.rollers)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(mock_roller.id)), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.manufacturer == "Rollease Acmeda"
+    assert device.name == mock_roller.name
+
+
+async def test_entity_notify_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+    mock_roller: MagicMock,
+) -> None:
+    """Test entity state updates when notify_update is called."""
+    mock_roller.closed_percent = 50
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+    notify_update(aiopulse.UpdateType.rollers)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.roller")
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+
+    # Update the roller position and notify
+    mock_roller.closed_percent = 75
+    notify_update(aiopulse.UpdateType.rollers)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.roller")
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_POSITION] == 25
