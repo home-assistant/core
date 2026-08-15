@@ -1,10 +1,12 @@
 """Tests for the Podcast Player config flow."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock
 
 from aiopodcast import (
     FeedTooLargeError,
     InvalidFeedError,
+    Podcast,
     PodcastConnectionError,
     PodcastHTTPError,
 )
@@ -117,6 +119,24 @@ async def test_invalid_url(hass: HomeAssistant, url: str) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_URL: "invalid_url"}
+
+
+async def test_invalid_canonical_url(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    podcast: Podcast,
+) -> None:
+    """Test rejecting a feed with an invalid canonical URL."""
+    mock_client.async_fetch.return_value = replace(podcast, canonical_url="not-a-url")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_URL: TEST_URL},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_feed"}
 
 
 @pytest.mark.parametrize(

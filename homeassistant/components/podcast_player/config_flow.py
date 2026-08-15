@@ -84,9 +84,10 @@ class PodcastPlayerConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._async_abort_entries_match({CONF_URL: url})
                 try:
                     podcast = await async_validate_input(self.hass, url)
+                    canonical_url = normalize_url(podcast.canonical_url)
                 except PodcastConnectionError, PodcastHTTPError:
                     errors["base"] = "cannot_connect"
-                except PodcastFeedError:
+                except PodcastFeedError, InvalidUrl:
                     errors["base"] = "invalid_feed"
                 except Exception:
                     _LOGGER.exception(
@@ -94,7 +95,7 @@ class PodcastPlayerConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     errors["base"] = "unknown"
                 else:
-                    await self.async_set_unique_id(normalize_url(podcast.canonical_url))
+                    await self.async_set_unique_id(canonical_url)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=podcast.title,
