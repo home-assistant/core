@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from librouteros.exceptions import ConnectionClosed, LibRouterosError
 import pytest
 
@@ -218,14 +219,18 @@ async def test_connection_lost_during_refresh_raises_update_failed(
 
 
 async def test_hub_reconnect_error_during_refresh_raises_update_failed(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntryFactory
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    mock_config_entry: MockConfigEntryFactory,
 ) -> None:
-    """Test a failed reconnect during a scheduled refresh is treated as UpdateFailed."""
+    """Test a dropped connection with a failed reconnect is treated as UpdateFailed."""
     entry = mock_config_entry()
     await setup_integration(hass, entry, command_responses={})
     assert entry.state is ConfigEntryState.LOADED
 
     coordinator = entry.runtime_data
+
+    mock_api.side_effect = ConnectionClosed()
 
     with patch("librouteros.connect", side_effect=OSError()):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
@@ -236,10 +241,63 @@ async def test_hub_reconnect_error_during_refresh_raises_update_failed(
     assert isinstance(coordinator.last_exception, UpdateFailed)
 
 
-async def test_unload_entry(
+async def test_connection_dropped_during_refresh_reconnects_and_succeeds(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    mock_config_entry: MockConfigEntryFactory,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a dropped connection triggers a single reconnect and the refresh succeeds."""
+    entry = mock_config_entry()
+    await setup_integration(hass, entry, command_responses={})
+    assert entry.state is ConfigEntryState.LOADED
+
+    calls = 0
+
+    def flaky_call(cmd: str, **params: Any) -> list[dict[str, Any]]:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise ConnectionClosed
+        return []
+
+    mock_api.side_effect = flaky_call
+
+    with patch(
+        "homeassistant.components.mikrotik.coordinator.get_api", return_value=mock_api
+    ) as mock_get_api:
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert mock_get_api.call_count == 1
+
+
+async def test_scheduled_refresh_reuses_persistent_connection(
     hass: HomeAssistant, mock_config_entry: MockConfigEntryFactory
 ) -> None:
-    """Test unloading an entry."""
+    """Test scheduled refreshes reuse the open connection instead of reconnecting."""
+    entry = mock_config_entry()
+    await setup_integration(hass, entry, command_responses={})
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch("librouteros.connect") as mock_connect:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    mock_connect.assert_not_called()
+
+
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
+    """Test unloading an entry closes the persistent connection."""
     entry = mock_config_entry()
     await setup_integration(hass, entry, command_responses={})
 
@@ -247,3 +305,4 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+    mock_api.close.assert_called_once()
