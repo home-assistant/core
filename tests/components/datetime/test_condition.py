@@ -138,7 +138,7 @@ async def test_alternate_domains(hass: HomeAssistant) -> None:
         target_id, target_time, attributes={"device_class": "timestamp"}
     )
 
-    ts = int(datetime.fromisoformat("2026-07-01T12:00:00+00:00").timestamp())
+    ts = int(datetime.fromisoformat(target_time).timestamp())
     hass.states.async_set(
         reference_id, "state dont care", attributes={"timestamp": ts + 1}
     )
