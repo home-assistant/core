@@ -237,6 +237,50 @@ async def test_migrate_entry_v1_3_to_v1_4_unknown_model(
     assert entry.subentries["ai_task_subentry"].data[CONF_OUTPUT_MODALITIES] == []
 
 
+async def test_migrate_entry_v1_3_to_v1_4_keeps_existing_modalities(
+    hass: HomeAssistant,
+    mock_open_router_client_setup: AsyncMock,
+) -> None:
+    """Test migration does not overwrite already stored output modalities."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "bla",
+        },
+        version=1,
+        minor_version=3,
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_MODEL: "openai/gpt-4",
+                    CONF_WEB_SEARCH: "off",
+                    CONF_OUTPUT_MODALITIES: ["text", "image"],
+                },
+                subentry_id="ai_task_subentry",
+                subentry_type="ai_task_data",
+                title="GPT-4",
+                unique_id=None,
+            ),
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.open_router.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.version == 1
+    assert entry.minor_version == 4
+    # The stored value is kept even though the model only outputs text
+    assert entry.subentries["ai_task_subentry"].data[CONF_OUTPUT_MODALITIES] == [
+        "text",
+        "image",
+    ]
+
+
 async def test_migrate_entry_v1_3_to_v1_4_api_error(
     hass: HomeAssistant,
     mock_open_router_client_setup: AsyncMock,
