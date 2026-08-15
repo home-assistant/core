@@ -70,3 +70,20 @@ async def test_button_setup_and_services(
 
     assert (state := hass.states.get(button_entity))
     assert state.state != STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_no_preferred_position_button_for_mhs1_shutter(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test no preferred position button is created for a BNAS shutter.
+
+    Confirmed against real BNAS hardware: the "move to preferred position"
+    command is rejected with API error code 5.
+    """
+    with selected_platforms([Platform.BUTTON]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    assert hass.states.get("button.mhs1_shutter_preferred_position") is None
