@@ -40,7 +40,7 @@ class AcmedaFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             hubs: list[aiopulse.Hub] = [
                 hub
-                async for hub in aiopulse.Hub.discover(timeout=5)
+                async for hub in aiopulse.Hub.discover()
                 if hub.id is not None and hub.id not in already_configured
             ]
         except TimeoutError:
