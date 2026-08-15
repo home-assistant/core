@@ -73,7 +73,7 @@ async def test_update_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "tesla_fleet_api.tessie.Vehicle.tessie_schedule_software_update",
-            side_effect=UnsupportedVehicle,
+            side_effect=UnsupportedVehicle(),
         ) as mock_update,
         pytest.raises(HomeAssistantError) as error,
     ):
