@@ -157,8 +157,6 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     config_entry.runtime_data = OPNsenseRuntimeData(
-        client=client,
-        tracker_interfaces=tracker_interfaces,
         coordinator=coordinator,
     )
 

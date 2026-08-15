@@ -34,8 +34,6 @@ type OPNsenseConfigEntry = ConfigEntry[OPNsenseRuntimeData]
 class OPNsenseRuntimeData:
     """Runtime data for OPNsense config entries."""
 
-    client: OPNsenseClient
-    tracker_interfaces: list[str]
     coordinator: OPNsenseCoordinator
 
 
