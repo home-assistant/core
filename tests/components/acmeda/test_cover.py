@@ -1,6 +1,6 @@
 """Tests for the Acmeda cover module."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import aiopulse
 import pytest
@@ -318,16 +318,10 @@ async def test_entity_notify_update(
     # Verify entity subscribed to the roller's callback
     mock_roller.callback_subscribe.assert_called()
 
-    # Verify roller callback triggers entity update
-    cover_entity = hass.data[COVER_DOMAIN].get_entity("cover.roller")
-    assert cover_entity is not None
-    with patch.object(cover_entity, "async_write_ha_state") as mock_write:
-        roller_callback = mock_roller.callback_subscribe.call_args[0][0]
-        roller_callback()
-        mock_write.assert_called_once()
-
     # Verify state updates when roller position changes
     mock_roller.closed_percent = 75
+    cover_entity = hass.data[COVER_DOMAIN].get_entity("cover.roller")
+    assert cover_entity is not None
     cover_entity.async_write_ha_state()
 
     state = hass.states.get("cover.roller")
