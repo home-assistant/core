@@ -963,7 +963,7 @@ def hass_ws_client(
         access_token: str | None = hass_access_token,
         supervisor_unix_socket: bool = False,
     ) -> MockHAClientWebSocket:
-        """Create a websocket client."""
+        """Create a client, skipping token auth for Supervisor Unix sockets."""
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
         websocket = await client.ws_connect(URL)
