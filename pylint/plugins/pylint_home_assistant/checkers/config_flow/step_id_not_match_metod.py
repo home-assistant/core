@@ -28,14 +28,18 @@ class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
     name = "home_assistant_enforce_config_entry_step_id_match_method"
     priority = -1
     msgs = {
-        "W7431": (
-            "The step_id '%s' does not match the method name '%s'; "
-            "the step_id should match the method name after"
-            " removing the 'async_step_' prefix.",
+        "W7434": (
+            (
+                "The step_id '%s' does not match the method name '%s'; "
+                "the step_id should match the method name after"
+                " removing the 'async_step_' prefix."
+            ),
             "home-assistant-step_id-match-method",
-            "Used when the step_id does not match the method name. "
-            "The step_id should match the method name after removing the "
-            "'async_step_' prefix. ",
+            (
+                "Used when the step_id does not match the method name. "
+                "The step_id should match the method name after removing the "
+                "'async_step_' prefix. "
+            ),
         ),
     }
     options = ()
