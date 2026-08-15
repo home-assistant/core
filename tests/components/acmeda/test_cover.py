@@ -260,14 +260,15 @@ async def test_cover_tilt_services(
     mock_roller.move_to.assert_called_once_with(25)
 
 
-async def test_entity_device_id(
+async def test_entity_registration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub: MagicMock,
     mock_roller: MagicMock,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test entity has correct device_id."""
+    """Test entity is registered with correct device info."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -275,26 +276,12 @@ async def test_entity_device_id(
     notify_update(aiopulse.UpdateType.rollers)
     await hass.async_block_till_done()
 
+    # Verify entity registration
     entity = entity_registry.async_get("cover.roller")
     assert entity is not None
     assert entity.unique_id == str(mock_roller.id)
 
-
-async def test_entity_device_info(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_hub: MagicMock,
-    mock_roller: MagicMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test entity has correct device_info."""
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    notify_update = mock_hub.callback_subscribe.call_args[0][0]
-    notify_update(aiopulse.UpdateType.rollers)
-    await hass.async_block_till_done()
-
+    # Verify device info
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, str(mock_roller.id)), mock_config_entry.entry_id
     )
