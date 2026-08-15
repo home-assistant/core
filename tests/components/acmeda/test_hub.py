@@ -85,7 +85,7 @@ async def test_hub_api_none_paths(
 
     hub = mock_config_entry.runtime_data
 
-    # Unload sets api to None
+    # Unload sets api to None and removes runtime_data
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -106,6 +106,7 @@ async def test_hub_api_none_paths(
         mock_update.assert_not_called()
 
     # async_add_acmeda_entities returns early when api is None
+    mock_config_entry.runtime_data = hub
     mock_add_entities = MagicMock()
     async_add_acmeda_entities(
         hass, MagicMock(), mock_config_entry, set(), mock_add_entities
