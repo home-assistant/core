@@ -20,16 +20,18 @@ from .coordinator import OPNsenseConfigEntry, OPNsenseCoordinator
 from .types import DeviceDetails
 
 type OPNsenseRawValue = str | int | bool
+type OPNsenseConvertedValue = datetime | str | None
 
 
-def _convert_expires(value: OPNsenseRawValue) -> datetime | str | None:
+def _convert_expires(value: OPNsenseRawValue) -> OPNsenseConvertedValue:
     """Convert expires value to a timestamp when possible."""
+    # Use exact type check to exclude bool, which is a subclass of int.
     if type(value) is int:
         return dt_util.utcnow() + timedelta(seconds=value)
     return None
 
 
-def _convert_interface(value: OPNsenseRawValue) -> datetime | str | None:
+def _convert_interface(value: OPNsenseRawValue) -> OPNsenseConvertedValue:
     """Convert interface value to a string."""
     if isinstance(value, str):
         return value
@@ -37,15 +39,15 @@ def _convert_interface(value: OPNsenseRawValue) -> datetime | str | None:
 
 
 @dataclass(frozen=True, kw_only=True)
-class OPNsenseSensorDescription(SensorEntityDescription):
+class OPNsenseSensorEntityDescription(SensorEntityDescription):
     """Description of an OPNsense sensor entity."""
 
     data_key: str
-    value_fn: abc.Callable[[OPNsenseRawValue], datetime | str | None]
+    value_fn: abc.Callable[[OPNsenseRawValue], OPNsenseConvertedValue]
 
 
-SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorDescription, ...] = (
-    OPNsenseSensorDescription(
+SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorEntityDescription, ...] = (
+    OPNsenseSensorEntityDescription(
         key="expires",
         translation_key="expires",
         data_key="expires",
@@ -53,7 +55,7 @@ SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
     ),
-    OPNsenseSensorDescription(
+    OPNsenseSensorEntityDescription(
         key="interface",
         translation_key="interface",
         data_key="intf_description",
@@ -104,13 +106,13 @@ class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity)
     """Representation of an OPNsense sensor for one tracked device."""
 
     _attr_has_entity_name = True
-    entity_description: OPNsenseSensorDescription
+    entity_description: OPNsenseSensorEntityDescription
 
     def __init__(
         self,
         coordinator: OPNsenseCoordinator,
         mac_address: str,
-        description: OPNsenseSensorDescription,
+        description: OPNsenseSensorEntityDescription,
     ) -> None:
         """Initialize the sensor entity."""
         super().__init__(coordinator)
@@ -122,10 +124,11 @@ class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity)
         )
         if self.available:
             device_data = self.device_data
-            if hostname := device_data.get("hostname"):
-                self._attr_device_info["default_name"] = str(hostname)
-            if manufacturer := device_data.get("manufacturer"):
-                self._attr_device_info["default_manufacturer"] = str(manufacturer)
+            if device_data is not None:
+                if hostname := device_data.get("hostname"):
+                    self._attr_device_info["default_name"] = str(hostname)
+                if manufacturer := device_data.get("manufacturer"):
+                    self._attr_device_info["default_manufacturer"] = str(manufacturer)
 
     @property
     @override
@@ -134,9 +137,9 @@ class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity)
         return super().available and self._mac_address in self.coordinator.data
 
     @property
-    def device_data(self) -> DeviceDetails:
+    def device_data(self) -> DeviceDetails | None:
         """Return device data for current device."""
-        return self.coordinator.data[self._mac_address]
+        return self.coordinator.data.get(self._mac_address)
 
     @property
     @override
@@ -145,7 +148,11 @@ class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity)
         if not self.available:
             return None
 
-        value = self.device_data.get(self.entity_description.data_key)
+        device_data = self.device_data
+        if device_data is None:
+            return None
+
+        value = device_data.get(self.entity_description.data_key)
         if value is None:
             return None
 
