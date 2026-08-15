@@ -43,9 +43,7 @@ def _connection_schema(*, request_logger_sn: bool = False) -> vol.Schema:
     return vol.Schema(schema)
 
 
-async def _async_validate(
-    data: dict[str, Any], metadata: LoggerMetadata
-) -> str:
+async def _async_validate(data: dict[str, Any], metadata: LoggerMetadata) -> str:
     client = TsunClient(
         data[CONF_HOST],
         data[CONF_LOGGER_SN],
