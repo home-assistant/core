@@ -70,8 +70,7 @@ async def test_button_press_starts_dishwasher(
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_start"]
 
-    state = hass.states.get(entity_entry.entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state != "unavailable"
 
     device.calls.clear()
@@ -107,8 +106,7 @@ async def test_button_unavailable_without_selected_mode(
         await setup_integration(hass, config_entry, device)
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_start"]
-    state = hass.states.get(entity_entry.entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == "unavailable"
 
 
