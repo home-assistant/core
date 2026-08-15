@@ -37,7 +37,7 @@ async def async_setup_entry(
     entry: OPNsenseConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up sensor entities for OPNsense."""
+    """Set up binary sensor entities for OPNsense."""
     coordinator = entry.runtime_data.coordinator
 
     @callback
@@ -83,7 +83,7 @@ class OPNsenseBinarySensorEntity(
         mac_address: str,
         description: OPNsenseBinarySensorEntityDescription,
     ) -> None:
-        """Initialize the sensor entity."""
+        """Initialize the binary sensor entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{mac_address}_{description.key}"
