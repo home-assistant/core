@@ -494,6 +494,11 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
     def _refresh_data(self) -> None:
         """Refresh cached data from the coordinator for this entity."""
         data = self.coordinator.data.get(self.entity_description.data_path or "", {})
+        if not isinstance(data, dict):
+            # Every get_* coordinator job populates this via parse_api(), which
+            # always returns a dict; guard anyway so a malformed entry can't
+            # crash the entity instead of just rendering unavailable.
+            data = {}
         self._data: dict[str, Any] = data.get(self._uid, {}) if self._uid else data
         if self._uid and not self._data:
             _LOGGER.debug(

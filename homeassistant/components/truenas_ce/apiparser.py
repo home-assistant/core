@@ -193,6 +193,10 @@ def parse_api(
 
     keymap = generate_keymap(data, key_search)
     for entry in source:
+        if not isinstance(entry, dict):
+            # A malformed API payload can mix in non-dict entries; skip them
+            # rather than letting the only/skip/vals lookups below raise.
+            continue
         if _should_skip_entry(entry, only, skip):
             continue
 
