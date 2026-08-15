@@ -30,6 +30,9 @@ async def async_setup_entry(
 
     @callback
     def _create_entity(netatmo_device: NetatmoDevice) -> None:
+        if not isinstance(netatmo_device.device, ShutterMixin):
+            return
+
         shutter = cast(ShutterMixin, netatmo_device.device)
         if not shutter.can_move_to_preferred_position:
             return

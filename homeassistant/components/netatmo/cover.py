@@ -35,9 +35,16 @@ async def async_setup_entry(
 
     @callback
     def _create_entity(netatmo_device: NetatmoDevice) -> None:
-        shutter = cast(ShutterMixin, netatmo_device.device)
+        device = netatmo_device.device
+        if not isinstance(device, ShutterMixin):
+            _LOGGER.debug(
+                "Skipping cover entity creation for unsupported device type: %s",
+                type(device).__name__,
+            )
+            return
+
         cover_class = (
-            NetatmoCover if shutter.can_report_position else NetatmoMovementOnlyCover
+            NetatmoCover if device.can_report_position else NetatmoMovementOnlyCover
         )
         entity = cover_class(netatmo_device)
         _LOGGER.debug("Adding cover %s", entity)
