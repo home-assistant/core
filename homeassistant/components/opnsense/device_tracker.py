@@ -8,7 +8,6 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import OPNsenseConfigEntry, OPNsenseCoordinator
 from .types import DeviceDetails
 
@@ -57,14 +56,6 @@ class OPNsenseDeviceTrackerEntity(
         """Initialize the device tracker entity."""
         super().__init__(coordinator)
         self._attr_mac_address = format_mac(mac_address)
-
-    @property
-    @override
-    def suggested_object_id(self) -> str | None:
-        """Return a stable object ID based on domain and MAC address."""
-        if self.mac_address is None:
-            return None
-        return f"{DOMAIN}_{self.mac_address.replace(':', '_')}"
 
     @property
     def device_data(self) -> DeviceDetails | None:
