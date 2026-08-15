@@ -4,7 +4,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, WARNINGS_URL
+from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
 from .coordinator import GeoSphereUpdateCoordinator
 
 
@@ -29,5 +29,5 @@ class GeoSphereEntity(CoordinatorEntity[GeoSphereUpdateCoordinator]):
             name=municipality.name,
             manufacturer=MANUFACTURER,
             entry_type=DeviceEntryType.SERVICE,
-            configuration_url=WARNINGS_URL,
+            configuration_url=coordinator.warnings_portal_url,
         )
