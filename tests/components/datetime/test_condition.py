@@ -171,3 +171,61 @@ async def test_alternate_domains(hass: HomeAssistant) -> None:
 
     # Reference < Target
     assert condition.async_check() is False
+
+
+@pytest.mark.parametrize(
+    ("entity", "state", "attributes"),
+    [
+        (
+            "sensor.timestamp",
+            "invalid",
+            {"device_class": "timestamp"},
+        ),
+        ("datetime.invalid", "invalid", {}),
+        ("input_datetime.invalid", "invalid", {"timestamp": "foo"}),
+        ("input_datetime.invalid", "invalid", {}),
+    ],
+)
+@pytest.mark.freeze_time("2026-07-01T12:00:00+00:00")
+async def test_invalid(hass: HomeAssistant, entity, state, attributes) -> None:
+    """Test datetime handling with invalid entities."""
+
+    hass.states.async_set(entity, state, attributes=attributes)
+    await hass.async_block_till_done()
+
+    condition = await create_target_condition(
+        hass,
+        condition="datetime.is_before",
+        target={CONF_ENTITY_ID: entity},
+        behavior="any",
+    )
+
+    assert condition.async_check() is False
+
+    condition = await create_target_condition(
+        hass,
+        condition="datetime.is_before",
+        target={CONF_ENTITY_ID: entity},
+        behavior="all",
+    )
+
+    assert condition.async_check() is False
+
+
+@pytest.mark.freeze_time("2026-07-01T12:00:00+00:00")
+async def test_invalid_2(hass: HomeAssistant) -> None:
+    """Test datetime handling with invalid reference entity."""
+
+    target_id = "datetime.target"
+    hass.states.async_set(target_id, "2026-07-01T20:00:00+00:00")
+    await hass.async_block_till_done()
+
+    condition = await create_target_condition(
+        hass,
+        condition="datetime.is_before",
+        target={CONF_ENTITY_ID: target_id},
+        condition_options={"reference": "datetime.i_dont_exist"},
+        behavior="any",
+    )
+
+    assert condition.async_check() is False
