@@ -218,57 +218,6 @@
     'state': '6000.0',
   })
 # ---
-# name: test_all_entities[sensor.manual_entry_wallet-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.manual_entry_wallet',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'monarch_money',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'owner',
-    'unique_id': '222260252323873333_186321412999033223_owner',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.manual_entry_wallet-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Manual entry Wallet',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.manual_entry_wallet',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_all_entities[sensor.manual_entry_wallet_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -377,7 +326,7 @@
     'state': '2024-08-16T14:22:10+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_bank_checking-entry]
+# name: test_all_entities[sensor.manual_entry_wallet_owner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -391,7 +340,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_bank_checking',
+    'entity_id': 'sensor.manual_entry_wallet_owner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -399,29 +348,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Owner',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Owner',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'owner',
-    'unique_id': '222260252323873333_900000002_owner',
+    'unique_id': '222260252323873333_186321412999033223_owner',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_bank_checking-state]
+# name: test_all_entities[sensor.manual_entry_wallet_owner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Bank Checking',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Manual entry Wallet Owner',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_bank_checking',
+    'entity_id': 'sensor.manual_entry_wallet_owner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -537,7 +486,7 @@
     'state': '2024-02-17T11:21:05+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_brokerage_brokerage-entry]
+# name: test_all_entities[sensor.rando_bank_checking_owner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -551,7 +500,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_brokerage_brokerage',
+    'entity_id': 'sensor.rando_bank_checking_owner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -559,29 +508,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Owner',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Owner',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'owner',
-    'unique_id': '222260252323873333_900000000_owner',
+    'unique_id': '222260252323873333_900000002_owner',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_brokerage_brokerage-state]
+# name: test_all_entities[sensor.rando_bank_checking_owner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Brokerage Brokerage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Bank Checking Owner',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_brokerage_brokerage',
+    'entity_id': 'sensor.rando_bank_checking_owner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -697,7 +646,7 @@
     'state': '2022-05-26T00:56:41+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_credit_credit_card-entry]
+# name: test_all_entities[sensor.rando_brokerage_brokerage_owner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -711,7 +660,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_credit_credit_card',
+    'entity_id': 'sensor.rando_brokerage_brokerage_owner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -719,29 +668,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Owner',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Owner',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'owner',
-    'unique_id': '222260252323873333_9000000007_owner',
+    'unique_id': '222260252323873333_900000000_owner',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_credit_credit_card-state]
+# name: test_all_entities[sensor.rando_brokerage_brokerage_owner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via FINICITY',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Credit Credit Card',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Brokerage Brokerage Owner',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_credit_credit_card',
+    'entity_id': 'sensor.rando_brokerage_brokerage_owner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -857,7 +806,7 @@
     'state': '2022-12-10T18:17:06+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_employer_investments_401_k-entry]
+# name: test_all_entities[sensor.rando_credit_credit_card_owner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -871,7 +820,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_employer_investments_401_k',
+    'entity_id': 'sensor.rando_credit_credit_card_owner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -879,29 +828,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Owner',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Owner',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'owner',
-    'unique_id': '222260252323873333_90000000022_owner',
+    'unique_id': '222260252323873333_9000000007_owner',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_employer_investments_401_k-state]
+# name: test_all_entities[sensor.rando_credit_credit_card_owner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via FINICITY',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Employer Investments 401.k',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Credit Credit Card Owner',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_employer_investments_401_k',
+    'entity_id': 'sensor.rando_credit_credit_card_owner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1017,7 +966,7 @@
     'state': '2024-02-17T08:13:10+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_investments_roth_ira-entry]
+# name: test_all_entities[sensor.rando_employer_investments_401_k_owner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1031,7 +980,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_investments_roth_ira',
+    'entity_id': 'sensor.rando_employer_investments_401_k_owner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1039,29 +988,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Owner',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Owner',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'owner',
-    'unique_id': '222260252323873333_900000000012_owner',
+    'unique_id': '222260252323873333_90000000022_owner',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_investments_roth_ira-state]
+# name: test_all_entities[sensor.rando_employer_investments_401_k_owner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Investments Roth IRA',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via FINICITY',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Employer Investments 401.k Owner',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_investments_roth_ira',
+    'entity_id': 'sensor.rando_employer_investments_401_k_owner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1177,7 +1126,7 @@
     'state': '2024-02-17T13:32:21+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_mortgage_mortgage-entry]
+# name: test_all_entities[sensor.rando_investments_roth_ira_owner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1191,7 +1140,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_mortgage_mortgage',
+    'entity_id': 'sensor.rando_investments_roth_ira_owner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1199,29 +1148,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Owner',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Owner',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'owner',
-    'unique_id': '222260252323873333_90000000030_owner',
+    'unique_id': '222260252323873333_900000000012_owner',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_mortgage_mortgage-state]
+# name: test_all_entities[sensor.rando_investments_roth_ira_owner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Mortgage Mortgage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Investments Roth IRA Owner',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_mortgage_mortgage',
+    'entity_id': 'sensor.rando_investments_roth_ira_owner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1337,7 +1286,7 @@
     'state': '2023-08-16T01:41:36+00:00',
   })
 # ---
-# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8-entry]
+# name: test_all_entities[sensor.rando_mortgage_mortgage_owner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1351,7 +1300,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.vinaudit_2050_toyota_rav8',
+    'entity_id': 'sensor.rando_mortgage_mortgage_owner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1359,29 +1308,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Owner',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Owner',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'owner',
-    'unique_id': '222260252323873333_121212192626186051_owner',
+    'unique_id': '222260252323873333_90000000030_owner',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8-state]
+# name: test_all_entities[sensor.rando_mortgage_mortgage_owner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via vin_audit',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VinAudit 2050 Toyota RAV8',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Mortgage Mortgage Owner',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.vinaudit_2050_toyota_rav8',
+    'entity_id': 'sensor.rando_mortgage_mortgage_owner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1440,6 +1389,57 @@
     'state': '2024-08-16T17:37:21+00:00',
   })
 # ---
+# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_owner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Owner',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Owner',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'owner',
+    'unique_id': '222260252323873333_121212192626186051_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_owner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via vin_audit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VinAudit 2050 Toyota RAV8 Owner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_owner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1495,57 +1495,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11075.58',
-  })
-# ---
-# name: test_all_entities[sensor.zillow_house-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zillow_house',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'monarch_money',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'owner',
-    'unique_id': '222260252323873333_90000000020_owner',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.zillow_house-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via zillow',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zillow House',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.zillow_house',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.zillow_house_balance-entry]
@@ -1655,5 +1604,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-02-12T09:00:25+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.zillow_house_owner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.zillow_house_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Owner',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Owner',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'owner',
+    'unique_id': '222260252323873333_90000000020_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.zillow_house_owner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via zillow',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zillow House Owner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zillow_house_owner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
