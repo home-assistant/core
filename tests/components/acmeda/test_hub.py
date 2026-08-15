@@ -109,6 +109,6 @@ async def test_hub_api_none_paths(
     mock_config_entry.runtime_data = hub
     mock_add_entities = MagicMock()
     async_add_acmeda_entities(
-        hass, MagicMock(), mock_config_entry, set(), mock_add_entities
+        hass, type("FakeEntity", (), {}), mock_config_entry, set(), mock_add_entities
     )
     mock_add_entities.assert_not_called()
