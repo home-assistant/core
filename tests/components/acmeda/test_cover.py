@@ -277,7 +277,6 @@ async def test_entity_registration(
     await hass.async_block_till_done()
 
     # Verify entity registration
-    # entity.unique_id and entity.device_id both return str(roller.id)
     entity = entity_registry.async_get("cover.roller")
     assert entity is not None
     assert entity.unique_id == str(mock_roller.id)
