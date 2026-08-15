@@ -773,13 +773,8 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     @override
     def hvac_action(self) -> HVACAction:
         """HVAC current action."""
-        output = self.status["output"]
-        if self._invert_output:
-            # Inverted output: the relay is on when the thermostat is idle
-            # and off when it is heating or cooling
-            output = not output
-
-        if not output:
+        # When inverted, relay on means idle; otherwise relay on means active.
+        if self.status["output"] == self._invert_output:
             return HVACAction.IDLE
 
         return (
