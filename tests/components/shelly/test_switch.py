@@ -4,7 +4,7 @@ from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_1PM, MODEL_MOTION
+from aioshelly.const import MODEL_1PM, MODEL_MOTION, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,7 +15,6 @@ from homeassistant.components.shelly.const import (
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
     MODEL_TOP_EV_CHARGER_EVE01,
-    MODEL_WALL_DISPLAY,
     MOTION_MODELS,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN

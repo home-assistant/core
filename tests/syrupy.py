@@ -104,6 +104,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data = cls._serializable_area_registry_entry(data)
         elif isinstance(data, dr.DeviceEntry):
             serializable_data = cls._serializable_device_registry_entry(data)
+        elif isinstance(data, dr.ChildDeviceEntry):
+            serializable_data = cls._serializable_child_device_registry_entry(data)
         elif isinstance(data, er.RegistryEntry):
             serializable_data = cls._serializable_entity_registry_entry(data)
         elif isinstance(data, ir.IssueEntry):
@@ -179,6 +181,25 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
 
         serialized["config_entry_id"] = ANY
         serialized["config_subentry_id"] = ANY
+
+        return cls._remove_created_and_modified_at(serialized)
+
+    @classmethod
+    def _serializable_child_device_registry_entry(
+        cls, data: dr.ChildDeviceEntry
+    ) -> SerializableData:
+        """Prepare a Home Assistant child device registry entry for serialization."""
+        serialized = DeviceRegistryEntrySnapshot(
+            attr.asdict(
+                data,
+                retain_collection_types=True,
+                filter=lambda attribute, _: not attribute.name.startswith("_"),
+            )
+            | {"id": ANY}
+        )
+        serialized["config_entry_id"] = ANY
+        serialized["config_subentry_id"] = ANY
+        serialized["parent_device_id"] = ANY
 
         return cls._remove_created_and_modified_at(serialized)
 

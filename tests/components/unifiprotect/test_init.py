@@ -61,10 +61,32 @@ async def test_setup_creates_nvr_device(
 
     # Verify NVR device was created
     nvr = ufp.api.bootstrap.nvr
-    nvr_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, nvr.mac)},
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, nvr.mac), ufp.entry.entry_id
     )
     assert nvr_device == snapshot
+
+
+async def test_device_links_to_nvr_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+) -> None:
+    """Test that a standard Protect device's via_device_id points at the NVR device."""
+    await init_entry(hass, ufp, [light])
+
+    nvr = ufp.api.bootstrap.nvr
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, nvr.mac), ufp.entry.entry_id
+    )
+    assert nvr_device is not None
+
+    light_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, light.mac), ufp.entry.entry_id
+    )
+    assert light_device is not None
+    assert light_device.via_device_id == nvr_device.id
 
 
 async def test_setup(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
@@ -371,14 +393,14 @@ async def test_device_remove_devices(
 
     live_device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(live_device_entry.id, entry_id)
+    response = await client.remove_device(live_device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "e9:88:e7:b8:b4:40")},
     )
-    response = await client.remove_device(dead_device_entry.id, entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 
@@ -394,11 +416,10 @@ async def test_device_remove_devices_nvr(
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
-    entry_id = ufp.entry.entry_id
 
     live_device_entry = list(device_registry.devices.values())[0]
     client = await hass_ws_client(hass)
-    response = await client.remove_device(live_device_entry.id, entry_id)
+    response = await client.remove_device(live_device_entry.id)
     assert not response["success"]
 
 
