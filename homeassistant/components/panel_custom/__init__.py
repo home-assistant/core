@@ -23,9 +23,11 @@ CONF_EMBED_IFRAME = "embed_iframe"
 CONF_TRUST_EXTERNAL_SCRIPT = "trust_external_script"
 CONF_URL_EXCLUSIVE_GROUP = "url_exclusive_group"
 CONF_REQUIRE_ADMIN = "require_admin"
+CONF_HANDLE_SAFE_AREA = "handle_safe_area"
 
 DEFAULT_EMBED_IFRAME = False
 DEFAULT_TRUST_EXTERNAL = False
+DEFAULT_HANDLE_SAFE_AREA = False
 
 DEFAULT_ICON = "mdi:bookmark"
 LEGACY_URL = "/api/panel_custom/{}"
@@ -59,6 +61,9 @@ CONFIG_SCHEMA = vol.Schema(
                             default=DEFAULT_TRUST_EXTERNAL,
                         ): cv.boolean,
                         vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
+                        vol.Optional(
+                            CONF_HANDLE_SAFE_AREA, default=DEFAULT_HANDLE_SAFE_AREA
+                        ): cv.boolean,
                     }
                 ),
             ],
@@ -92,6 +97,9 @@ async def async_register_panel(
     # If your panel is used to configure an integration,
     # needs the domain of the integration
     config_panel_domain: str | None = None,
+    # If your panel handles the safe area insets itself, opting out of the
+    # padding Home Assistant would otherwise add around it
+    handle_safe_area: bool = DEFAULT_HANDLE_SAFE_AREA,
 ) -> None:
     """Register a new custom panel."""
     if js_url is None and module_url is None:
@@ -103,6 +111,7 @@ async def async_register_panel(
         "name": webcomponent_name,
         "embed_iframe": embed_iframe,
         "trust_external": trust_external,
+        "handle_safe_area": handle_safe_area,
     }
 
     if js_url is not None:
@@ -148,6 +157,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "trust_external": panel[CONF_TRUST_EXTERNAL_SCRIPT],
             "embed_iframe": panel[CONF_EMBED_IFRAME],
             "require_admin": panel[CONF_REQUIRE_ADMIN],
+            "handle_safe_area": panel[CONF_HANDLE_SAFE_AREA],
         }
 
         if CONF_JS_URL in panel:
