@@ -15,12 +15,11 @@ from .helpers import update_devices
 class PulseHub:
     """Manages a single Pulse Hub."""
 
-    api: aiopulse.Hub | None
-
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
+        self.api: aiopulse.Hub | None = None
         self.cleanup_callbacks: list[Callable[[], None]] = []
 
     @property
