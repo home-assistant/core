@@ -6,7 +6,7 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN
@@ -28,7 +28,7 @@ async def async_setup_entry(
         "2_ch_power_strip",
     )
 
-    via_device_id = dr.async_get_device_id_by_identifier(
+    parent_device_id = dr.async_get_device_id_by_identifier(
         hass, (DOMAIN, "2_ch_power_strip"), config_entry_id=config_entry.entry_id
     )
 
@@ -40,7 +40,7 @@ async def async_setup_entry(
                 entity_name=None,
                 state=False,
                 assumed=False,
-                via_device_id=via_device_id,
+                parent_device_id=parent_device_id,
             ),
             DemoSwitch(
                 unique_id="outlet_2",
@@ -48,7 +48,7 @@ async def async_setup_entry(
                 entity_name=None,
                 state=True,
                 assumed=False,
-                via_device_id=via_device_id,
+                parent_device_id=parent_device_id,
             ),
         ]
     )
@@ -59,6 +59,7 @@ class DemoSwitch(SwitchEntity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_device_info: DeviceInfo | ChildDeviceInfo
 
     def __init__(
         self,
@@ -70,7 +71,7 @@ class DemoSwitch(SwitchEntity):
         assumed: bool,
         translation_key: str | None = None,
         device_class: SwitchDeviceClass | None = None,
-        via_device_id: str | None = None,
+        parent_device_id: str | None = None,
     ) -> None:
         """Initialize the Demo switch."""
         self._attr_assumed_state = assumed
@@ -78,12 +79,17 @@ class DemoSwitch(SwitchEntity):
         self._attr_translation_key = translation_key
         self._attr_is_on = state
         self._attr_unique_id = unique_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=device_name,
-        )
-        if via_device_id:
-            self._attr_device_info["via_device_id"] = via_device_id
+        if parent_device_id is not None:
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={(DOMAIN, unique_id)},
+                name=device_name,
+                parent_device_id=parent_device_id,
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, unique_id)},
+                name=device_name,
+            )
         self._attr_name = entity_name
 
     @override
