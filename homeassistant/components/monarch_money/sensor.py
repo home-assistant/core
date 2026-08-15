@@ -41,7 +41,11 @@ def _account_owner_name(account: MonarchAccount) -> str | None:
     """Return the account owner's display name."""
     if not account.account_owner:
         return None
-    return account.account_owner.get("displayName") or account.account_owner.get("name")
+    for key in ("displayName", "name"):
+        owner_name = account.account_owner.get(key)
+        if owner_name and (owner_name := owner_name.strip()):
+            return owner_name
+    return None
 
 
 # These sensors include assets like a boat that might have value
@@ -164,7 +168,6 @@ async def async_setup_entry(
             account,
         )
         for account in mm_coordinator.accounts
-        if _account_owner_name(account) is not None
         for sensor_description in MONARCH_MONEY_OWNER_SENSORS
     )
     entity_list.extend(
