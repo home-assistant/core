@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PREFIX
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
@@ -36,7 +37,7 @@ from .const import (
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USE_DEFAULT_CREDENTIALS, default=False): cv.boolean,
+        vol.Required(CONF_USE_DEFAULT_CREDENTIALS, default=False): BooleanSelector(),
         vol.Optional(CONF_ACCESS_KEY_ID): cv.string,
         vol.Optional(CONF_SECRET_ACCESS_KEY): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)

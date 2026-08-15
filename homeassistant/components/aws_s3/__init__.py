@@ -38,8 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     try:
         session = AioSession()
         client_kwargs: dict[str, Any] = {"endpoint_url": data.get(CONF_ENDPOINT_URL)}
+        # Passing no keys lets botocore resolve the credentials itself
         if not data.get(CONF_USE_DEFAULT_CREDENTIALS, False):
-            # Without explicit keys, botocore resolves credentials itself
             client_kwargs["aws_secret_access_key"] = data[CONF_SECRET_ACCESS_KEY]
             client_kwargs["aws_access_key_id"] = data[CONF_ACCESS_KEY_ID]
         # pylint: disable-next=unnecessary-dunder-call
