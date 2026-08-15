@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -35,21 +35,6 @@ async def async_generator(items):
 
 
 async def test_show_form_no_hubs(hass: HomeAssistant, mock_hub_discover) -> None:
-    """Test that flow aborts if no hubs are discovered."""
-    mock_hub_discover.return_value = async_generator([])
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-    # Check we performed the discovery
-    assert len(mock_hub_discover.mock_calls) == 1
-
-
-async def test_timeout_fetching_hub(hass: HomeAssistant, mock_hub_discover) -> None:
     """Test that flow aborts if no hubs are discovered."""
     mock_hub_discover.return_value = async_generator([])
 
@@ -93,7 +78,7 @@ async def test_show_form_two_hubs(hass: HomeAssistant, mock_hub_discover) -> Non
     dummy_hub_1 = aiopulse.Hub(DUMMY_HOST1)
     dummy_hub_1.id = "ABC123"
 
-    dummy_hub_2 = aiopulse.Hub(DUMMY_HOST1)
+    dummy_hub_2 = aiopulse.Hub(DUMMY_HOST2)
     dummy_hub_2.id = "DEF456"
 
     mock_hub_discover.return_value = async_generator([dummy_hub_1, dummy_hub_2])
@@ -104,6 +89,10 @@ async def test_show_form_two_hubs(hass: HomeAssistant, mock_hub_discover) -> Non
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["data_schema"].schema[CONF_ID].container == {
+        "ABC123": "ABC123 127.0.0.1",
+        "DEF456": "DEF456 127.0.0.2",
+    }
 
     # Check we performed the discovery
     assert len(mock_hub_discover.mock_calls) == 1
@@ -154,31 +143,6 @@ async def test_already_configured(hass: HomeAssistant, mock_hub_discover) -> Non
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
-
-
-async def test_discovery_preserves_hubs_before_timeout(
-    hass: HomeAssistant, mock_hub_discover
-) -> None:
-    """Test that hubs discovered before timeout are preserved."""
-
-    dummy_hub_1 = aiopulse.Hub(DUMMY_HOST1)
-    dummy_hub_1.id = "ABC123"
-
-    dummy_hub_2 = aiopulse.Hub(DUMMY_HOST2)
-    dummy_hub_2.id = "DEF456"
-
-    async def discover_yields_then_ends(**kwargs: object):
-        yield dummy_hub_1
-        yield dummy_hub_2
-
-    mock_hub_discover.return_value = discover_yields_then_ends()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
 
 
 @pytest.mark.usefixtures("mock_hub_run")
