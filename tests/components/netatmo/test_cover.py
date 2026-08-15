@@ -82,7 +82,7 @@ async def test_position_reporting_cover_setup_and_services(
 
         await hass.async_block_till_done()
 
-    state = hass.states.get(cover_entity)
+    assert (state := hass.states.get(cover_entity))
     assert state.state == "closed"
     assert state.attributes["current_position"] == 0
     assert state.attributes["supported_features"] == (

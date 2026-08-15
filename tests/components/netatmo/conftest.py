@@ -94,7 +94,7 @@ def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
 def netatmo_auth(
     hass: HomeAssistant, request: pytest.FixtureRequest
 ) -> Generator[None]:
-    """Restrict loaded platforms to list given.
+    """Mock the Netatmo auth client used during config entry setup.
 
     Parametrize indirectly with a `msg_callback(payload: dict) -> None` to
     have it applied to every fixture payload `fake_post_request` returns,
