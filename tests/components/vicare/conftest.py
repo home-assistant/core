@@ -15,6 +15,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.components.vicare.types import ViCareData, ViCareDevice
+from homeassistant.components.vicare.utils import get_device_serial
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -29,6 +30,8 @@ class Fixture:
 
     roles: set[str]
     data_file: str
+    # Opt-in shared gateway serial; defaults to a per-fixture gateway when unset.
+    gateway_id: str | None = None
 
 
 class MockPyViCare:
@@ -39,7 +42,10 @@ class MockPyViCare:
         self.devices = []
         for idx, fixture in enumerate(fixtures):
             service = MockViCareService(
-                f"installation{idx}", f"gateway{idx}", f"deviceId{idx}", fixture
+                f"installation{idx}",
+                fixture.gateway_id or f"gateway{idx}",
+                f"deviceId{idx}",
+                fixture,
             )
             self.devices.append(
                 PyViCareDeviceConfig(
@@ -74,13 +80,13 @@ class MockPyViCare:
 
     def as_vicare_data(self) -> ViCareData:
         """Convert to ViCareData as returned by _setup_vicare_api."""
-        return ViCareData(
-            client=self,
-            devices=[
-                ViCareDevice(config=device, api=device.asAutoDetectDevice())
-                for device in self.devices
-            ],
-        )
+        devices = []
+        for device in self.devices:
+            api = device.asAutoDetectDevice()
+            devices.append(
+                ViCareDevice(config=device, api=api, serial=get_device_serial(api))
+            )
+        return ViCareData(client=self, devices=devices)
 
 
 class MockViCareService:

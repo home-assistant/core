@@ -892,9 +892,8 @@ async def test_rpc_update_entry_fw_ver(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.unique_id
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
     )
     assert device
     assert device.sw_version == "some fw string"
@@ -904,9 +903,8 @@ async def test_rpc_update_entry_fw_ver(
     mock_rpc_device.mock_update()
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
     )
     assert device
     assert device.sw_version == "99.0.0"
@@ -1145,9 +1143,8 @@ async def test_xmod_model_lookup(
     monkeypatch.setattr(mock_rpc_device, "xmod_info", {"n": xmod_model})
     entry = await init_integration(hass, 2)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
     )
     assert device
     assert device.model == xmod_model

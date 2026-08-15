@@ -19,6 +19,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DATA_APPS
@@ -31,6 +32,7 @@ from .const import (
     CONF_NAME_SPACE,
     CONF_VOLUME_STEP,
     DEFAULT_VOLUME_STEP,
+    DOMAIN,
     SUPPORTED_COMMANDS,
     VIZIO_AUDIO_SETTINGS,
     VIZIO_MUTE,
@@ -52,42 +54,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Vizio media player entry."""
     device_class = config_entry.data[CONF_DEVICE_CLASS]
-
-    # If config entry options not set up, set them up,
-    # otherwise assign values managed in options
-    volume_step = config_entry.options.get(
-        CONF_VOLUME_STEP, config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
-    )
-
-    params = {}
-    if not config_entry.options:
-        params["options"] = {CONF_VOLUME_STEP: volume_step}
-
-        include_or_exclude_key = next(
-            (
-                key
-                for key in config_entry.data.get(CONF_APPS, {})
-                if key in (CONF_INCLUDE, CONF_EXCLUDE)
-            ),
-            None,
-        )
-        if include_or_exclude_key:
-            params["options"][CONF_APPS] = {
-                include_or_exclude_key: config_entry.data[CONF_APPS][
-                    include_or_exclude_key
-                ].copy()
-            }
-
-    if not config_entry.data.get(CONF_VOLUME_STEP):
-        new_data = config_entry.data.copy()
-        new_data.update({CONF_VOLUME_STEP: volume_step})
-        params["data"] = new_data
-
-    if params:
-        hass.config_entries.async_update_entry(
-            config_entry,
-            **params,  # type: ignore[arg-type]
-        )
 
     entity = VizioDevice(
         config_entry,
@@ -146,7 +112,9 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
     @property
     def _volume_step(self) -> int:
         """Return the configured volume step."""
-        return cast(int, self._config_entry.options[CONF_VOLUME_STEP])
+        return cast(
+            int, self._config_entry.options.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
+        )
 
     @property
     def _conf_apps(self) -> dict[str, Any]:
@@ -267,6 +235,10 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
             self._device.set_setting(setting_type, setting_name, new_value)
         )
 
+    async def async_send_text(self, text: str) -> None:
+        """Type text into the focused on-screen field when send_text is called."""
+        await async_device_command(self._device.send_text(text))
+
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
@@ -351,12 +323,15 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        if sound_mode in (self._attr_sound_mode_list or ()):
-            await async_device_command(
-                self._device.set_setting(
-                    VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE, sound_mode
-                )
+        if sound_mode not in (self._attr_sound_mode_list or ()):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_mode",
+                translation_placeholders={"sound_mode": sound_mode},
             )
+        await async_device_command(
+            self._device.set_setting(VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE, sound_mode)
+        )
 
     @override
     async def async_turn_on(self) -> None:
@@ -407,6 +382,12 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
             )
         elif source in self._available_apps:
             await async_device_command(self._device.launch_app(source))
+        else:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={"source": source},
+            )
 
     @override
     async def async_volume_up(self) -> None:
@@ -431,16 +412,10 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
-        if self._attr_volume_level is not None:
-            if volume > self._attr_volume_level:
-                num = int(self._max_volume * (volume - self._attr_volume_level))
-                await async_device_command(self._device.volume_up(steps=num))
-                self._attr_volume_level = volume
-
-            elif volume < self._attr_volume_level:
-                num = int(self._max_volume * (self._attr_volume_level - volume))
-                await async_device_command(self._device.volume_down(steps=num))
-                self._attr_volume_level = volume
+        await async_device_command(
+            self._device.set_volume(round(volume * self._max_volume))
+        )
+        self._attr_volume_level = volume
 
     @override
     async def async_media_play(self) -> None:

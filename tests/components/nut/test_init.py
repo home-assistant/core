@@ -107,15 +107,15 @@ async def test_remove_device_valid(
     device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert device_registry is not None
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_serial_number)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_serial_number), config_entry.entry_id
     )
 
     assert device_entry is not None
     assert device_entry.serial_number == mock_serial_number
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
 
@@ -148,12 +148,12 @@ async def test_remove_device_stale(
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     # Verify that device entry is removed
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "remove-device-id")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "remove-device-id"), config_entry.entry_id
     )
     assert device_entry is None
 
@@ -228,7 +228,7 @@ async def test_serial_number(
 ) -> None:
     """Test for serial number set on device."""
     mock_serial_number = "A00000000000"
-    await async_init_integration(
+    config_entry = await async_init_integration(
         hass,
         username="someuser",
         password="somepassword",
@@ -237,8 +237,8 @@ async def test_serial_number(
         list_commands_return_value=[],
     )
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_serial_number)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_serial_number), config_entry.entry_id
     )
 
     assert device_entry is not None
@@ -253,7 +253,7 @@ async def test_device_location(
     """Test for suggested location on device."""
     mock_serial_number = "A00000000000"
     mock_device_location = "XYZ Location"
-    await async_init_integration(
+    config_entry = await async_init_integration(
         hass,
         username="someuser",
         password="somepassword",
@@ -265,8 +265,8 @@ async def test_device_location(
         list_commands_return_value=[],
     )
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_serial_number)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_serial_number), config_entry.entry_id
     )
 
     assert device_entry is not None
@@ -282,7 +282,7 @@ async def test_device_info_strips_whitespace(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that leading and trailing whitespace is stripped from device info fields."""
-    await async_init_integration(
+    config_entry = await async_init_integration(
         hass,
         username="someuser",
         password="somepassword",
@@ -301,8 +301,8 @@ async def test_device_info_strips_whitespace(
 
     # The device identifier is intentionally built from the raw (unstripped)
     # status values, as changing it would orphan existing device entries
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "Tripp Lite _Tripp Lite UPS _A00000000000")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "Tripp Lite _Tripp Lite UPS _A00000000000"), config_entry.entry_id
     )
 
     assert device_entry is not None
@@ -325,7 +325,7 @@ async def test_device_info_whitespace_only_values(
 ) -> None:
     """Test that whitespace-only device info fields are treated as missing."""
     mock_serial_number = "A00000000000"
-    await async_init_integration(
+    config_entry = await async_init_integration(
         hass,
         username="someuser",
         password="somepassword",
@@ -340,8 +340,8 @@ async def test_device_info_whitespace_only_values(
         list_commands_return_value=[],
     )
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_serial_number)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_serial_number), config_entry.entry_id
     )
 
     assert device_entry is not None
