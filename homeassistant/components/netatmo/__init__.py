@@ -78,7 +78,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
         else set(raw_token_scopes)
     )
     if not (token_scopes & required_scopes):
-        _LOGGER.warning("Session is missing scopes: %s", required_scopes - token_scopes)
+        _LOGGER.warning(
+            "Session is missing scopes: %s", sorted(required_scopes - token_scopes)
+        )
         raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
 
     # Some, but not all, required scopes are granted: the token still works,
@@ -92,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     if missing_scopes := required_scopes - token_scopes:
         _LOGGER.warning(
             "Session is missing scopes: %s; requesting reauthentication to grant them",
-            missing_scopes,
+            sorted(missing_scopes),
         )
         entry.async_start_reauth(hass)
 

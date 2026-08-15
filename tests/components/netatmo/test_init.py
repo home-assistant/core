@@ -500,7 +500,7 @@ async def test_setup_component_string_token_scope_missing_some(
     setup succeeds and a reauth flow is started to fill the gap.
     """
     config_entry = MockConfigEntry(
-        domain="netatmo",
+        domain=DOMAIN,
         data={
             "auth_implementation": "cloud",
             "token": {
@@ -543,7 +543,7 @@ async def test_setup_component_string_token_scope_missing_some(
     # Test a reauth flow is initiated to fill the scope gap
     assert len(list(config_entry.async_get_active_flows(hass, {"reauth"}))) == 1
 
-    for config_entry in hass.config_entries.async_entries("netatmo"):
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
         await hass.config_entries.async_remove(config_entry.entry_id)
 
 
@@ -557,7 +557,7 @@ async def test_setup_component_string_token_scope_no_overlap(
     for the string form.
     """
     config_entry = MockConfigEntry(
-        domain="netatmo",
+        domain=DOMAIN,
         data={
             "auth_implementation": "cloud",
             "token": {
@@ -588,7 +588,7 @@ async def test_setup_component_string_token_scope_no_overlap(
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    for config_entry in hass.config_entries.async_entries("netatmo"):
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
         await hass.config_entries.async_remove(config_entry.entry_id)
 
 
