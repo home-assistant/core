@@ -4,6 +4,7 @@ from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -146,4 +147,4 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Tilt the roller shutter to a specific position."""
-        await self.roller.move_to(100 - kwargs[ATTR_POSITION])
+        await self.roller.move_to(100 - kwargs[ATTR_TILT_POSITION])
