@@ -938,10 +938,11 @@ class ConfigEntry[_DataT = Any]:
                     if (task := asyncio.current_task()) and task.cancelling() > 0:
                         raise
                 if isinstance(exc, ConfigEntryNotReady):
+                    # Allow for retrying migration if the integration is not ready yet.
                     return
                 self._async_set_state(
                     hass,
-                    ConfigEntryState.SETUP_ERROR,
+                    ConfigEntryState.MIGRATION_ERROR,
                     error_reason,
                     error_reason_translation_key,
                     error_reason_translation_placeholders,
@@ -954,7 +955,7 @@ class ConfigEntry[_DataT = Any]:
                     error_reason_translation_key,
                     error_reason_translation_placeholders,
                 ) = self.__async_handle_config_entry_setup_error(
-                    hass, integration, Exception(), True
+                    hass, integration, HomeAssistantError(), True
                 )
                 self._async_set_state(
                     hass,
@@ -1243,7 +1244,12 @@ class ConfigEntry[_DataT = Any]:
     async def async_migrate(self, hass: HomeAssistant) -> bool:
         """Migrate an entry.
 
-        Returns True if config entry is up-to-date or has been migrated.
+        Returns:
+            True: if the config entry is up-to-date or has been migrated.
+            False: otherwise.
+
+        Raises:
+            Exception: Driven by the integration being migrated.
         """
         if (handler := HANDLERS.get(self.domain)) is None:
             self.logger.error(
@@ -1285,20 +1291,15 @@ class ConfigEntry[_DataT = Any]:
             )
             return False
 
-        try:
-            result = await component.async_migrate_entry(hass, self)
-            if not isinstance(result, bool):
-                self.logger.error(  # type: ignore[unreachable]
-                    "%s.async_migrate_entry did not return boolean", self.domain
-                )
-                return False
-            if result:
-                hass.config_entries._async_schedule_save()  # noqa: SLF001
-        except ConfigEntryNotReady:
-            raise
-        except Exception as exc:  # noqa: BLE001
-            self.__async_handle_config_entry_setup_error(hass, integration, exc, True)
+        result = await component.async_migrate_entry(hass, self)
+        if not isinstance(result, bool):
+            self.logger.error(  # type: ignore[unreachable]
+                "%s.async_migrate_entry did not return boolean", self.domain
+            )
             return False
+        if result:
+            hass.config_entries._async_schedule_save()  # noqa: SLF001
+
         return result
 
     def add_update_listener(self, listener: UpdateListenerType) -> CALLBACK_TYPE:
