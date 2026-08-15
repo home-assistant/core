@@ -164,6 +164,7 @@ async def async_setup_entry(
             account,
         )
         for account in mm_coordinator.accounts
+        if _account_owner_name(account) is not None
         for sensor_description in MONARCH_MONEY_OWNER_SENSORS
     )
     entity_list.extend(

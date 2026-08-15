@@ -62,7 +62,8 @@ async def test_account_owner_sensor(
     assert age_state is not None
     assert owner_state.state == "Alex"
     assert "account_owner" not in age_state.attributes
-    assert (
-        entity_registry.async_get(owner_entity_id).device_id
-        == entity_registry.async_get(age_entity_id).device_id
-    )
+    owner_entry = entity_registry.async_get(owner_entity_id)
+    age_entry = entity_registry.async_get(age_entity_id)
+    assert owner_entry is not None
+    assert age_entry is not None
+    assert owner_entry.device_id == age_entry.device_id
