@@ -572,6 +572,68 @@ async def test_migrate_handle_exceptions(
     assert hass.config_entries.flow.async_progress_by_handler("comp") == []
 
 
+async def test_migrate_raise_configentrynotready(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test migration can retry later when raise ConfigEntryNotReady."""
+    entry = MockConfigEntry(domain="comp", version=1, minor_version=1)
+    entry.add_to_hass(hass)
+    assert not entry.supports_unload
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    runs = 0
+
+    async def mock_migrate_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock migrate entry."""
+        nonlocal runs
+        if runs == 0:
+            runs += 1
+            raise config_entries.ConfigEntryNotReady("Migration not ready yet")
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_migrate_entry=mock_migrate_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 2
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await async_setup_component(hass, "comp", {})
+    assert result
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert (
+        "Config entry migration 'Mock Title' for comp integration not ready yet"
+        in caplog.text
+    )
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (2, 2)])
 async def test_call_async_migrate_entry_failure_not_supported(
     hass: HomeAssistant, major_version: int, minor_version: int
