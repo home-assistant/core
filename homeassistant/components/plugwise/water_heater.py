@@ -20,7 +20,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    BINARY_SENSORS,
     DHW_TEMP,
     DOMAIN,
     LOWER_BOUND,
