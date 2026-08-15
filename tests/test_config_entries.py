@@ -6260,6 +6260,57 @@ async def test_loading_old_data(
     assert entry.pref_disable_new_entities is True
 
 
+async def test_async_initialize_sets_event_with_empty_store(
+    hass: HomeAssistant,
+) -> None:
+    """The initialized event is set when there is no stored data to load.
+
+    The device registry waits on this event during its own load.
+    """
+    manager = config_entries.ConfigEntries(hass, {})
+    assert not manager._initialized.is_set()
+
+    with patch.object(manager._store, "async_load", return_value=None):
+        await manager.async_initialize()
+
+    assert manager._initialized.is_set()
+    await manager.async_wait_initialized()
+    assert manager.async_entries() == []
+
+
+async def test_async_initialize_sets_event_with_existing_store(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """The initialized event is set when loading an existing store.
+
+    The device registry waits on this event during its own load.
+    """
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "entries": [
+                {
+                    "version": 5,
+                    "domain": "my_domain",
+                    "entry_id": "mock-id",
+                    "data": {"my": "data"},
+                    "source": "user",
+                    "title": "Mock title",
+                    "system_options": {"disable_new_entities": True},
+                }
+            ]
+        },
+    }
+    manager = config_entries.ConfigEntries(hass, {})
+    assert not manager._initialized.is_set()
+
+    await manager.async_initialize()
+
+    assert manager._initialized.is_set()
+    await manager.async_wait_initialized()
+    assert len(manager.async_entries()) == 1
+
+
 async def test_deprecated_disabled_by_str_ctor() -> None:
     """Test deprecated str disabled_by constructor enumizes and logs a warning."""
     with pytest.raises(

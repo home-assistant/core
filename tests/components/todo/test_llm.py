@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant.components import llm as llm_component, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.todo import llm as todo_llm
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.setup import async_setup_component
@@ -39,14 +40,20 @@ def _llm_context() -> llm.LLMContext:
 async def test_get_tools_no_exposed_todo(hass: HomeAssistant) -> None:
     """Test no todo tool is offered when no to-do list is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
-    result = await llm_component.async_get_tools(hass, _llm_context())
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     assert "todo_get_items" not in [tool.name for tool in result.tools]
+    assert todo_llm.async_get_tools(hass, _llm_context(), "assist") is None
+
+
+async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
+    """Test the platform returns None for an unsupported API."""
+    assert todo_llm.async_get_tools(hass, _llm_context(), "other") is None
 
 
 async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     """Test the todo get items tool is exposed and works via the platform."""
     llm_context = _llm_context()
-    result = await llm_component.async_get_tools(hass, llm_context)
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next((tool for tool in result.tools if tool.name == "todo_get_items"), None)
     assert tool is not None
     assert tool.parameters.schema["todo_list"].container == ["Mock Todo List Name"]
@@ -80,18 +87,20 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("status", "expected"),
+    ("status", "expected_data"),
     [
-        ("all", ["needs_action", "completed"]),
-        ("completed", ["completed"]),
+        # "all" is sent without a status filter, so the service returns every item.
+        ("all", {"entity_id": [ENTITY_ID]}),
+        ("needs_action", {"entity_id": [ENTITY_ID], "status": ["needs_action"]}),
+        ("completed", {"entity_id": [ENTITY_ID], "status": ["completed"]}),
     ],
 )
 async def test_todo_get_items_status_filter(
-    hass: HomeAssistant, status: str, expected: list[str]
+    hass: HomeAssistant, status: str, expected_data: dict[str, list[str]]
 ) -> None:
     """Test the status filter is translated into the service call."""
     llm_context = _llm_context()
-    result = await llm_component.async_get_tools(hass, llm_context)
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next(tool for tool in result.tools if tool.name == "todo_get_items")
 
     calls = async_mock_service(
@@ -108,12 +117,12 @@ async def test_todo_get_items_status_filter(
         ),
         llm_context,
     )
-    assert calls[0].data == {"entity_id": [ENTITY_ID], "status": expected}
+    assert calls[0].data == expected_data
 
 
 async def test_todo_list_intents_exposed(hass: HomeAssistant) -> None:
     """Test the todo list intents are exposed as tools when a list is exposed."""
-    result = await llm_component.async_get_tools(hass, _llm_context())
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     names = {tool.name for tool in result.tools}
     assert "HassListAddItem" in names
     assert "HassListCompleteItem" in names

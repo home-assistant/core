@@ -62,9 +62,7 @@ async def async_setup_entry(
         if device.model == BeoModel.BEOREMOTE_ONE and device.serial_number not in {
             remote.serial_number for remote in remotes
         }:
-            device_registry.async_update_device(
-                device.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_registry.async_remove_device(device.id)
 
     async_add_entities(new_entities=entities)
 
