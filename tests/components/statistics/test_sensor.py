@@ -1730,8 +1730,11 @@ async def test_setup_entry_zero_sampling_size(
 
     state = hass.states.get("sensor.statistics")
     assert state is not None
-    # A zero-length buffer means the usage ratio cannot be computed; it must be
-    # absent rather than raising ZeroDivisionError.
+    # A legacy sampling size of 0 is normalized to None (limit disabled), so the
+    # sensor stays functional via max_age and reports the characteristic value...
+    assert state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+    assert float(state.state) == 8.0
+    # ...but with no buffer size limit there is no usage ratio to report.
     assert "buffer_usage_ratio" not in state.attributes
 
     # The original bug left an unregistered helper that could not be deleted from
