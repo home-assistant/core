@@ -20,6 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for OPNsense component."""
     coordinator = entry.runtime_data.coordinator
+    tracked_trackers: set[str] = set()
 
     def _async_add_new_entities() -> None:
         """Add entities for newly discovered devices."""
@@ -28,10 +29,10 @@ async def async_setup_entry(
 
         entities = []
         for mac_address in coordinator.data:
-            if mac_address in coordinator.tracked_devices:
+            if mac_address in tracked_trackers:
                 continue
             entity = OPNsenseDeviceTrackerEntity(coordinator, mac_address)
-            coordinator.tracked_devices.add(mac_address)
+            tracked_trackers.add(mac_address)
             entities.append(entity)
 
         if entities:
@@ -57,6 +58,7 @@ class OPNsenseDeviceTrackerEntity(
         self._attr_mac_address = format_mac(mac_address)
 
     @property
+    @override
     def suggested_object_id(self) -> str | None:
         """Return a stable object ID based on domain and MAC address."""
         if self.mac_address is None:

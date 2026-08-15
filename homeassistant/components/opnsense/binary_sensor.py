@@ -1,6 +1,7 @@
 """Binary sensor platform for OPNsense routers."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -39,6 +40,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensor entities for OPNsense."""
     coordinator = entry.runtime_data.coordinator
+    tracked_binary_sensors: set[str] = set()
 
     @callback
     def _async_add_new_entities() -> None:
@@ -50,7 +52,7 @@ async def async_setup_entry(
         for mac_address in coordinator.data:
             for sensor_description in BINARY_SENSOR_DESCRIPTIONS:
                 unique_id = f"{mac_address}_{sensor_description.key}"
-                if unique_id in coordinator.tracked_devices:
+                if unique_id in tracked_binary_sensors:
                     continue
                 entities.append(
                     OPNsenseBinarySensorEntity(
@@ -59,7 +61,7 @@ async def async_setup_entry(
                         sensor_description,
                     )
                 )
-                coordinator.tracked_devices.add(unique_id)
+                tracked_binary_sensors.add(unique_id)
 
         if entities:
             async_add_entities(entities)
@@ -99,6 +101,7 @@ class OPNsenseBinarySensorEntity(
                 self._attr_device_info["default_manufacturer"] = str(manufacturer)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._mac_address in self.coordinator.data
@@ -109,6 +112,7 @@ class OPNsenseBinarySensorEntity(
         return self.coordinator.data[self._mac_address]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         if not self.available:

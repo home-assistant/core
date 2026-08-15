@@ -3,6 +3,7 @@
 from collections import abc
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -68,6 +69,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensor entities for OPNsense."""
     coordinator = entry.runtime_data.coordinator
+    tracked_sensor_entities: set[str] = set()
 
     @callback
     def _async_add_new_entities() -> None:
@@ -79,7 +81,7 @@ async def async_setup_entry(
         for mac_address in coordinator.data:
             for sensor_description in SENSOR_DESCRIPTIONS:
                 unique_id = f"{mac_address}_{sensor_description.key}"
-                if unique_id in coordinator.tracked_devices:
+                if unique_id in tracked_sensor_entities:
                     continue
                 entities.append(
                     OPNsenseSensorEntity(
@@ -88,7 +90,7 @@ async def async_setup_entry(
                         sensor_description,
                     )
                 )
-                coordinator.tracked_devices.add(unique_id)
+                tracked_sensor_entities.add(unique_id)
 
         if entities:
             async_add_entities(entities)
@@ -126,6 +128,7 @@ class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity)
                 self._attr_device_info["default_manufacturer"] = str(manufacturer)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._mac_address in self.coordinator.data
@@ -136,6 +139,7 @@ class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity)
         return self.coordinator.data[self._mac_address]
 
     @property
+    @override
     def native_value(self) -> datetime | str | None:
         """Return sensor value."""
         if not self.available:

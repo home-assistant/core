@@ -59,7 +59,6 @@ class OPNsenseCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]):
         )
         self.client = client
         self.interfaces = interfaces
-        self.tracked_devices: set[str] = set()
 
     def _get_mac_addrs(self, devices: list[DeviceDetails]) -> DeviceDetailsByMAC:
         """Create dict with mac address keys from list of devices."""
