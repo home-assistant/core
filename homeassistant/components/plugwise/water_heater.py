@@ -1,7 +1,7 @@
 """Plugwise water heater component for Home Assistant."""
 
 from dataclasses import dataclass
-from typing import Any, Final, cast, override
+from typing import Any, Final, override
 
 from homeassistant.components.water_heater import (
     STATE_ELECTRIC,
@@ -120,8 +120,7 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = cast(float, kwargs[ATTR_TEMPERATURE])
-
+        temperature = float(kwargs[ATTR_TEMPERATURE])
         if temperature < self._attr_min_temp or temperature > self._attr_max_temp:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
