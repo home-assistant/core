@@ -132,14 +132,14 @@ PV_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 def _pv_sensors(pv_count: int) -> tuple[SensorEntityDescription, ...]:
     descriptions: list[SensorEntityDescription] = []
     for number in range(1, pv_count + 1):
-        for description in PV_SENSOR_TYPES:
-            descriptions.append(
-                replace(
-                    description,
-                    key=f"pv{number}_{description.key}",
-                    translation_placeholders={"pv_input": str(number)},
-                )
+        descriptions.extend(
+            replace(
+                description,
+                key=f"pv{number}_{description.key}",
+                translation_placeholders={"pv_input": str(number)},
             )
+            for description in PV_SENSOR_TYPES
+        )
     return tuple(descriptions)
 
 
