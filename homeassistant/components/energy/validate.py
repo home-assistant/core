@@ -759,6 +759,21 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 )
             )
 
+        elif source["type"] == "ev":
+            wanted_statistics_metadata.add(source["stat_energy_from"])
+            validate_calls.append(
+                functools.partial(
+                    _async_validate_usage_stat,
+                    hass,
+                    statistics_metadata,
+                    source["stat_energy_from"],
+                    ENERGY_USAGE_DEVICE_CLASSES,
+                    ENERGY_USAGE_UNITS,
+                    ENERGY_UNIT_ERROR,
+                    source_result,
+                )
+            )
+
         elif source["type"] == "battery":
             wanted_statistics_metadata.add(source["stat_energy_from"])
             validate_calls.append(
