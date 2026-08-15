@@ -46,7 +46,6 @@ class VacuumEntityFeature(IntFlag):
     STOP = 8
     RETURN_HOME = 16
     FAN_SPEED = 32
-    BATTERY = 64
     STATUS = 128  # Deprecated, not supported by StateVacuumEntity
     SEND_COMMAND = 256
     LOCATE = 512

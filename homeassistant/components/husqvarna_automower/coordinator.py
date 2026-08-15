@@ -234,10 +234,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                     (DOMAIN, mower_id), self.config_entry.entry_id
                 )
                 if dev is not None:
-                    device_registry.async_update_device(
-                        device_id=dev.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(dev.id)
 
         new_devices = current_devices - registered_devices
         if new_devices:
@@ -252,6 +249,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             for mower_id, mower_data in self.data.items()
             if mower_data.capabilities.stay_out_zones
             and mower_data.stay_out_zones is not None
+            and mower_data.stay_out_zones.zones is not None
         }
 
         entity_registry = er.async_get(self.hass)

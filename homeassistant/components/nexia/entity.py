@@ -5,12 +5,8 @@ from typing import TYPE_CHECKING, override
 from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
 
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
-    ATTR_VIA_DEVICE,
-)
+from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME, ATTR_SUGGESTED_AREA
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -32,6 +28,7 @@ class NexiaEntity(CoordinatorEntity[NexiaDataUpdateCoordinator]):
     """Base class for nexia entities."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_device_info: DeviceInfo | None = None
 
     def __init__(self, coordinator: NexiaDataUpdateCoordinator, unique_id: str) -> None:
         """Initialize the entity."""
@@ -113,7 +110,11 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
             ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
             ATTR_NAME: zone_name,
             ATTR_SUGGESTED_AREA: zone_name,
-            ATTR_VIA_DEVICE: (DOMAIN, zone.thermostat.thermostat_id),  # type: ignore[typeddict-item] # until fix issue #139773
+            "via_device_id": dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, zone.thermostat.thermostat_id),  # type: ignore[arg-type] # until fix issue #139773
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
         }
         self._zone_signal = f"{SIGNAL_ZONE_UPDATE}-{zone.zone_id}"
 
