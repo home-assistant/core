@@ -15,6 +15,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.tado import DOMAIN
+from homeassistant.components.tado.const import TYPE_HEATING
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -111,28 +112,39 @@ async def test_configuration_is_read_once(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_failed_read_is_not_retried(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test a failing heating circuit read skips the entities and is not retried."""
+async def test_failed_read_retries_the_setup(hass: HomeAssistant) -> None:
+    """Test a failing heating circuit read makes the config entry retry."""
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     with patch(
         "PyTado.interface.api.my_tado.Tado.get_heating_circuits",
         side_effect=RequestException("Boom"),
-    ) as mock_circuits:
+    ):
         await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert mock_circuits.call_count == 1
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-        freezer.tick(config_entry.runtime_data.update_interval + timedelta(seconds=1))
-        async_fire_time_changed(hass)
+
+@pytest.mark.usefixtures("init_integration")
+async def test_no_circuits_read_without_heating_zones(hass: HomeAssistant) -> None:
+    """Test homes without a heating zone do not read the circuits at all."""
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    zones = [
+        zone for zone in config_entry.runtime_data.zones if zone["type"] != TYPE_HEATING
+    ]
+
+    with (
+        patch("PyTado.interface.api.my_tado.Tado.get_zones", return_value=zones),
+        patch(
+            "PyTado.interface.api.my_tado.Tado.get_heating_circuits"
+        ) as mock_circuits,
+    ):
+        await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert mock_circuits.call_count == 1
-
-    assert config_entry.state is ConfigEntryState.LOADED
+    mock_circuits.assert_not_called()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
