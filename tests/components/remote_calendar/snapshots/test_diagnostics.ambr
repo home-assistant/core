@@ -11,6 +11,7 @@
       END:VCALENDAR
     ''',
     'now': '2023-06-04T18:00:00-06:00',
+    'system_timezone': 'tzlocal()',
     'timezone': 'America/Regina',
   })
 # ---
