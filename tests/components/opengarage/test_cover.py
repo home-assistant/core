@@ -12,10 +12,25 @@ from homeassistant.components.cover import (
     SERVICE_TOGGLE,
     CoverState,
 )
+from homeassistant.components.opengarage.coordinator import (
+    OpenGarageDataUpdateCoordinator,
+)
 from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, STATE_OPEN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+
+async def _simulate_door_state(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    coordinator: OpenGarageDataUpdateCoordinator,
+    door_state: int,
+) -> None:
+    """Simulate the OpenGarage device reporting a new door state."""
+    mock_opengarage.update_state.return_value = {"door": door_state, "name": "abcdef"}
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -37,9 +52,7 @@ async def test_cover_position(
     """Test that current_cover_position reflects the door state."""
     mock_opengarage.push_button.return_value = 1
     coordinator = init_integration.runtime_data
-    coordinator.async_set_updated_data({"door": door_state, "name": "abcdef"})
-
-    await hass.async_block_till_done()
+    await _simulate_door_state(hass, mock_opengarage, coordinator, door_state)
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == expected_state
@@ -54,9 +67,7 @@ async def test_cover_position_during_transition(
     """Test that current_cover_position is None during opening/closing transition."""
     mock_opengarage.push_button.return_value = 1
     coordinator = init_integration.runtime_data
-    coordinator.async_set_updated_data({"door": 0, "name": "abcdef"})
-
-    await hass.async_block_till_done()
+    await _simulate_door_state(hass, mock_opengarage, coordinator, 0)
 
     # Open the cover - will be in OPENING state before update
     await hass.services.async_call(
@@ -104,9 +115,7 @@ async def test_toggle_cover(
     """Test toggling the cover switches it to the opposite state."""
     mock_opengarage.push_button.return_value = 1
     coordinator = init_integration.runtime_data
-    coordinator.async_set_updated_data({"door": initial_door_state, "name": "abcdef"})
-
-    await hass.async_block_till_done()
+    await _simulate_door_state(hass, mock_opengarage, coordinator, initial_door_state)
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == initial_state
@@ -121,8 +130,7 @@ async def test_toggle_cover(
 
     assert mock_opengarage.push_button.call_count == 1
 
-    coordinator.async_set_updated_data({"door": final_door_state, "name": "abcdef"})
-    await hass.async_block_till_done()
+    await _simulate_door_state(hass, mock_opengarage, coordinator, final_door_state)
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == final_state
@@ -141,9 +149,7 @@ async def test_toggle_already_closed_does_not_close_again(
     """
     mock_opengarage.push_button.return_value = 1
     coordinator = init_integration.runtime_data
-    coordinator.async_set_updated_data({"door": 0, "name": "abcdef"})
-
-    await hass.async_block_till_done()
+    await _simulate_door_state(hass, mock_opengarage, coordinator, 0)
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == STATE_CLOSED
@@ -159,15 +165,13 @@ async def test_toggle_already_closed_does_not_close_again(
     assert mock_opengarage.push_button.call_count == 1
 
     # Simulate door opened
-    coordinator.async_set_updated_data({"door": 1, "name": "abcdef"})
-    await hass.async_block_till_done()
+    await _simulate_door_state(hass, mock_opengarage, coordinator, 1)
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == STATE_OPEN
 
     # Simulate someone manually closing it outside HA
-    coordinator.async_set_updated_data({"door": 0, "name": "abcdef"})
-    await hass.async_block_till_done()
+    await _simulate_door_state(hass, mock_opengarage, coordinator, 0)
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == STATE_CLOSED
@@ -186,8 +190,7 @@ async def test_toggle_already_closed_does_not_close_again(
     assert mock_opengarage.push_button.call_count == 2
 
     # Simulate door opening
-    coordinator.async_set_updated_data({"door": 1, "name": "abcdef"})
-    await hass.async_block_till_done()
+    await _simulate_door_state(hass, mock_opengarage, coordinator, 1)
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == STATE_OPEN
@@ -220,9 +223,7 @@ async def test_cover_command(
     """Test explicit open/close commands."""
     mock_opengarage.push_button.return_value = 1
     coordinator = init_integration.runtime_data
-    coordinator.async_set_updated_data({"door": initial_door_state, "name": "abcdef"})
-
-    await hass.async_block_till_done()
+    await _simulate_door_state(hass, mock_opengarage, coordinator, initial_door_state)
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -233,8 +234,7 @@ async def test_cover_command(
 
     assert mock_opengarage.push_button.call_count == 1
 
-    coordinator.async_set_updated_data({"door": final_door_state, "name": "abcdef"})
-    await hass.async_block_till_done()
+    await _simulate_door_state(hass, mock_opengarage, coordinator, final_door_state)
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == final_state
