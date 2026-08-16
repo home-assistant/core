@@ -2,8 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
+from libpyvivotek.vivotek import VivotekCameraError
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.vivotek.camera import VivotekCam
 from homeassistant.components.vivotek.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -54,3 +56,44 @@ async def test_camera_device_info(
     assert device.model == "FD9165-HT"
     assert device.serial_number == "ABCD1234"
     assert device.sw_version == "1.2.3"
+
+
+def test_camera_available_when_update_succeeds(
+    mock_vivotek_camera: AsyncMock,
+) -> None:
+    """Test camera is available when update probe succeeds."""
+    camera = VivotekCam(
+        mock_vivotek_camera,
+        "rtsp://example/live.sdp",
+        "11:22:33:44:55:66",
+        None,
+        None,
+        None,
+        2,
+        "Vivotek Camera",
+    )
+
+    camera.update()
+
+    assert camera.available
+
+
+def test_camera_unavailable_when_update_fails(
+    mock_vivotek_camera: AsyncMock,
+) -> None:
+    """Test camera is unavailable when update probe raises error."""
+    camera = VivotekCam(
+        mock_vivotek_camera,
+        "rtsp://example/live.sdp",
+        "11:22:33:44:55:66",
+        None,
+        None,
+        None,
+        2,
+        "Vivotek Camera",
+    )
+    mock_vivotek_camera.get_serial.side_effect = VivotekCameraError
+
+    camera.update()
+
+    assert not camera.available

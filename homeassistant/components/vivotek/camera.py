@@ -146,4 +146,9 @@ class VivotekCam(Camera):
 
     def update(self) -> None:
         """Update entity status."""
-        self._attr_available = True
+        try:
+            self._cam.get_serial()
+        except VivotekCameraError:
+            self._attr_available = False
+        else:
+            self._attr_available = True
