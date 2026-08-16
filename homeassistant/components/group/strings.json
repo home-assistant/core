@@ -1,6 +1,18 @@
 {
   "config": {
     "step": {
+      "automation": {
+        "data": {
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "all": "[%key:component::group::config::step::binary_sensor::data_description::all%]"
+        },
+        "title": "[%key:component::group::config::step::user::title%]"
+      },
       "binary_sensor": {
         "data": {
           "all": "All entities",
@@ -113,6 +125,7 @@
       "user": {
         "description": "Groups allow you to create a new entity that represents multiple entities of the same type.",
         "menu_options": {
+          "automation": "Automation group",
           "binary_sensor": "Binary sensor group",
           "button": "Button group",
           "cover": "Cover group",
@@ -184,6 +197,16 @@
   },
   "options": {
     "step": {
+      "automation": {
+        "data": {
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        },
+        "data_description": {
+          "all": "[%key:component::group::config::step::binary_sensor::data_description::all%]"
+        }
+      },
       "binary_sensor": {
         "data": {
           "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
