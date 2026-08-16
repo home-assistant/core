@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aiohttp import ClientError
@@ -779,8 +780,10 @@ async def test_external_url_cleanup_failure_is_retried_once(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test repeated URL updates share one remote cleanup retry."""
+    caplog.set_level(logging.INFO)
     await setup_integration(hass, polling_config_entry)
     monzo.user_account.list_account_webhooks.side_effect = [
         InvalidMonzoAPIResponseError(),
@@ -808,6 +811,8 @@ async def test_external_url_cleanup_failure_is_retried_once(
         call("old-current"),
         call("old-flex"),
     ]
+    assert caplog.text.count("Unable to remove obsolete Monzo webhooks") == 1
+    assert caplog.text.count("Successfully updated Monzo webhooks after retrying") == 1
 
 
 async def test_no_external_url_skips_remote_registration(
@@ -831,8 +836,10 @@ async def test_cloudhook_creation_failure_is_retried(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unavailable cloud connection schedules webhook registration retry."""
+    caplog.set_level(logging.INFO)
     with (
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch.object(cloud, "async_is_connected", return_value=True),
@@ -853,6 +860,47 @@ async def test_cloudhook_creation_failure_is_retried(
         call("acc_curr", CLOUDHOOK_URL),
         call("acc_flex", CLOUDHOOK_URL),
     ]
+    assert "Unable to create Monzo cloud webhook; retrying in 60 seconds" in caplog.text
+    assert "Successfully updated Monzo webhooks after retrying" in caplog.text
+
+
+async def test_retry_is_cancelled_when_callback_url_becomes_unavailable(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a retry is cancelled when there is no callback or previous URL."""
+    caplog.set_level(logging.INFO)
+    with (
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch.object(
+            cloud,
+            "async_get_or_create_cloudhook",
+            side_effect=cloud.CloudNotAvailable,
+        ),
+    ):
+        await setup_integration(hass, polling_config_entry)
+
+    with (
+        patch.object(cloud, "async_active_subscription", return_value=False),
+        patch(
+            "homeassistant.components.monzo.webhook.webhook.async_generate_url",
+            side_effect=NoURLAvailableError,
+        ) as generate_url,
+    ):
+        await hass.config.async_update(external_url=None)
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    generate_url.assert_called_once()
+    monzo.user_account.list_account_webhooks.assert_not_awaited()
+    assert "Successfully updated Monzo webhooks after retrying" not in caplog.text
 
 
 async def test_registration_auth_failure_starts_reauthentication(
@@ -902,9 +950,12 @@ async def test_registration_failure_is_retried(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a transient invalid response schedules another registration attempt."""
+    caplog.set_level(logging.INFO)
     monzo.user_account.list_account_webhooks.side_effect = [
+        InvalidMonzoAPIResponseError(),
         InvalidMonzoAPIResponseError(),
         [],
         [],
@@ -917,4 +968,10 @@ async def test_registration_failure_is_retried(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert monzo.user_account.register_webhook.await_count == 2
+    assert caplog.text.count("Unable to register Monzo webhooks") == 1
+    assert caplog.text.count("Successfully updated Monzo webhooks after retrying") == 1
