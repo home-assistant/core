@@ -53,7 +53,7 @@ rules:
 
   # Gold
   devices: todo
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
