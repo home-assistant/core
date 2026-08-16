@@ -43,7 +43,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -67,9 +67,7 @@ BINARY_SENSOR_COMMON_SCHEMA = vol.Schema(
 )
 
 BINARY_SENSOR_YAML_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_attributes_schema(
-        BINARY_SENSOR_DOMAIN, DEFAULT_NAME
-    ).schema
+    make_template_entity_common_schema(BINARY_SENSOR_DOMAIN, DEFAULT_NAME).schema
 )
 
 BINARY_SENSOR_CONFIG_ENTRY_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
