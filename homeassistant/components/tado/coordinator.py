@@ -137,17 +137,28 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # invalidated saved token and forced a full re-authentication.
             # Persisting in `finally` instead captures every rotation that
             # actually happened, regardless of what fails afterwards.
-            refresh_token = await self.hass.async_add_executor_job(
-                self._tado.get_refresh_token
-            )
-
-            if refresh_token and refresh_token != self._refresh_token:
-                _LOGGER.debug("New refresh token obtained from Tado")
-                self._refresh_token = refresh_token
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
+            # Fetching/persisting the token gets its own try/except so a
+            # failure here (e.g. the same rate limit or network error that
+            # caused the outer failure) only gets logged, instead of
+            # replacing - and hiding - whatever exception was already
+            # propagating out of the try block above.
+            try:
+                refresh_token = await self.hass.async_add_executor_job(
+                    self._tado.get_refresh_token
                 )
+            except RequestException as err:
+                _LOGGER.warning("Could not fetch refresh token from Tado: %s", err)
+            else:
+                if refresh_token and refresh_token != self._refresh_token:
+                    _LOGGER.debug("New refresh token obtained from Tado")
+                    self._refresh_token = refresh_token
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data={
+                            **self.config_entry.data,
+                            CONF_REFRESH_TOKEN: refresh_token,
+                        },
+                    )
 
         # Calculate the most recent update interval
         self._calculate_update_interval()
