@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.selector import TextSelector
 
 from .const import (
     CONF_MODBUS_ADDR,
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_HOST): TextSelector(),
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_MODBUS_ADDR, default=DEFAULT_MODBUS_ADDR): int,
         vol.Optional(CONF_READ_EPS, default=False): bool,
