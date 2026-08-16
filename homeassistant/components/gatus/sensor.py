@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .coordinator import GatusConfigEntry, GatusDataUpdateCoordinator
 from .entity import GatusEndpointEntity
@@ -28,7 +27,10 @@ PARALLEL_UPDATES = 0
 class GatusSensorEntityDescription(SensorEntityDescription):
     """Class describing Gatus sensor entities."""
 
-    value_fn: Callable[[EndpointStatus], datetime | float | int | str | None]
+    value_fn: Callable[
+        [GatusDataUpdateCoordinator, EndpointStatus],
+        datetime | float | int | str | None,
+    ]
 
 
 SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
@@ -38,7 +40,7 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda endpoint: (
+        value_fn=lambda coordinator, endpoint: (
             round(endpoint.results[-1].duration / 1_000_000, 2)
             if endpoint.results and endpoint.results[-1].duration is not None
             else None
@@ -48,7 +50,7 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         key="status_code",
         translation_key="status_code",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda endpoint: (
+        value_fn=lambda coordinator, endpoint: (
             endpoint.results[-1].status if endpoint.results else None
         ),
     ),
@@ -58,7 +60,7 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["start", "healthy", "unhealthy", "resolved"],
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda endpoint: (
+        value_fn=lambda coordinator, endpoint: (
             endpoint.events[-1].type.lower() if endpoint.events else None
         ),
     ),
@@ -67,10 +69,10 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         translation_key="certificate_expiration",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda endpoint: (
-            dt_util.utcnow().replace(microsecond=0, second=0)
+        value_fn=lambda coordinator, endpoint: (
+            coordinator.last_update_time
             + timedelta(
-                seconds=int(endpoint.results[-1].certificate_expiration / 1_000_000_000)
+                seconds=endpoint.results[-1].certificate_expiration // 1_000_000_000
             )
             if endpoint.results
             and endpoint.results[-1].certificate_expiration is not None
@@ -121,4 +123,4 @@ class GatusEndpointSensor(GatusEndpointEntity, SensorEntity):
     @override
     def native_value(self) -> datetime | float | int | str | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.endpoint_data)
+        return self.entity_description.value_fn(self.coordinator, self.endpoint_data)
