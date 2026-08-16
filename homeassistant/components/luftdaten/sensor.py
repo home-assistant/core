@@ -9,12 +9,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_SHOW_ON_MAP,
-    PERCENTAGE,
+    EntityStateAttribute,
+    UnitOfDensity,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -36,7 +35,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -55,13 +54,13 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="P1",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="P2",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -120,12 +119,12 @@ class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
         )
 
         if show_on_map:
-            self._attr_extra_state_attributes[ATTR_LONGITUDE] = coordinator.data[
-                "longitude"
-            ]
-            self._attr_extra_state_attributes[ATTR_LATITUDE] = coordinator.data[
-                "latitude"
-            ]
+            self._attr_extra_state_attributes[EntityStateAttribute.LONGITUDE] = (
+                coordinator.data["longitude"]
+            )
+            self._attr_extra_state_attributes[EntityStateAttribute.LATITUDE] = (
+                coordinator.data["latitude"]
+            )
 
     @property
     @override

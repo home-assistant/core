@@ -20,6 +20,7 @@ class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
     """Define a generic class for IntelliClima entities."""
 
     _attr_has_entity_name = True
+    _attr_device_info: DeviceInfo
 
     def __init__(
         self,
@@ -51,8 +52,6 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator, device)
-
-        self._attr_device_info: DeviceInfo = self.device_info or DeviceInfo()
 
         self._attr_device_info[ATTR_MODEL] = "ECOCOMFORT 2.0"
         self._attr_device_info[ATTR_SW_VERSION] = device.fw

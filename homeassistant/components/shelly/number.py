@@ -17,7 +17,7 @@ from homeassistant.components.number import (
     NumberMode,
     RestoreNumber,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -155,7 +155,12 @@ class RpcBluTrvNumber(RpcNumber):
         ble_addr: str = coordinator.device.config[key]["addr"]
         fw_ver = coordinator.device.status[key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            coordinator.device.config[key],
+            ble_addr,
+            coordinator.mac,
+            fw_ver,
         )
 
 
@@ -183,7 +188,7 @@ BLOCK_NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
         translation_key="valve_position",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
@@ -291,7 +296,7 @@ RPC_NUMBERS: Final = {
         native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         method="blu_trv_set_valve_position",
         removal_condition=lambda config, _, key: (
             config[key].get("enable", True) is True
@@ -307,7 +312,7 @@ RPC_NUMBERS: Final = {
         native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         method="cury_set",
         slot="left",
         available=lambda status: (
@@ -325,7 +330,7 @@ RPC_NUMBERS: Final = {
         native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         method="cury_set",
         slot="right",
         available=lambda status: (

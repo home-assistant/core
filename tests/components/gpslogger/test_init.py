@@ -64,7 +64,7 @@ async def setup_zones(hass: HomeAssistant) -> None:
 
 @pytest.fixture
 async def webhook_id(hass: HomeAssistant, gpslogger_client: TestClient) -> str:
-    """Initialize the GPSLogger component and get the webhook_id."""
+    """Initialize the GPSLogger integration and get the webhook_id."""
     await async_process_ha_core_config(
         hass,
         {"internal_url": "http://example.local:8123"},

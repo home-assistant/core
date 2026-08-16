@@ -9,7 +9,7 @@ from homeassistant import exceptions
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import _LOGGER, CONF_DOWNLOAD_DIR, DEFAULT_NAME, DOMAIN
+from .const import CONF_DOWNLOAD_DIR, DEFAULT_NAME, DOMAIN, LOGGER
 
 
 class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -49,7 +49,7 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
             download_path = self.hass.config.path(download_path)
 
         if not await self.hass.async_add_executor_job(os.path.isdir, download_path):
-            _LOGGER.error(
+            LOGGER.error(
                 "Download path %s does not exist. File Downloader not active",
                 download_path,
             )

@@ -6,22 +6,16 @@ from typing import TYPE_CHECKING, Any, override
 import voluptuous as vol
 
 from homeassistant.components.update import (
-    ATTR_INSTALLED_VERSION,
-    ATTR_LATEST_VERSION,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as UPDATE_DOMAIN,
     ENTITY_ID_FORMAT,
     UpdateEntity,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_NAME,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -40,7 +34,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -82,7 +76,12 @@ UPDATE_COMMON_SCHEMA = vol.Schema(
 )
 
 UPDATE_YAML_SCHEMA = UPDATE_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_schema(UPDATE_DOMAIN, DEFAULT_NAME).schema
+    make_template_entity_common_schema(
+        UPDATE_DOMAIN,
+        DEFAULT_NAME,
+        UpdateEntityStateAttribute,
+        block_device_class=True,
+    ).schema
 )
 
 UPDATE_CONFIG_ENTRY_SCHEMA = UPDATE_COMMON_SCHEMA.extend(
@@ -143,6 +142,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
     """Representation of a template update features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _restore_state_properties = ("_attr_installed_version", "_attr_latest_version")
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -245,6 +245,17 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             context=self._context,
         )
 
+    @override
+    def restore_last_state_state(self, last_state: State) -> bool:
+        """Restore the state from the last state."""
+        self._attr_installed_version = last_state.attributes[
+            UpdateEntityStateAttribute.INSTALLED_VERSION
+        ]
+        self._attr_latest_version = last_state.attributes[
+            UpdateEntityStateAttribute.LATEST_VERSION
+        ]
+        return True
+
 
 class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
     """Representation of a Template update."""
@@ -299,20 +310,6 @@ class TriggerUpdateEntity(TriggerEntity, AbstractTemplateUpdate):
         # Ensure the entity picture can resolve None to produce the default picture.
         if CONF_PICTURE in config:
             self._parse_result.add(CONF_PICTURE)
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        if (
-            (last_state := await self.async_get_last_state()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            and self._attr_installed_version is None
-            and self._attr_latest_version is None
-        ):
-            self._attr_installed_version = last_state.attributes[ATTR_INSTALLED_VERSION]
-            self._attr_latest_version = last_state.attributes[ATTR_LATEST_VERSION]
-            self.restore_attributes(last_state)
 
     @property
     @override

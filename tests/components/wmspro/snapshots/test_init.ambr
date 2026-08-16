@@ -2,8 +2,8 @@
 # name: test_device_setup[config_prod_awning_dimmer.json-status_prod_awning.json][device-19239]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -24,7 +24,6 @@
     'model_id': None,
     'name': 'Terrasse',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '19239',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -33,8 +32,8 @@
 # name: test_device_setup[config_prod_awning_dimmer.json-status_prod_awning.json][device-58717]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -55,7 +54,6 @@
     'model_id': None,
     'name': 'Markise',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '58717',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -64,8 +62,8 @@
 # name: test_device_setup[config_prod_awning_dimmer.json-status_prod_awning.json][device-97358]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -86,7 +84,6 @@
     'model_id': None,
     'name': 'Licht',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '97358',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -95,8 +92,8 @@
 # name: test_device_setup[config_prod_awning_dimmer.json-status_prod_dimmer.json][device-19239]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -117,7 +114,6 @@
     'model_id': None,
     'name': 'Terrasse',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '19239',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -126,8 +122,8 @@
 # name: test_device_setup[config_prod_awning_dimmer.json-status_prod_dimmer.json][device-58717]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -148,7 +144,6 @@
     'model_id': None,
     'name': 'Markise',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '58717',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -157,8 +152,8 @@
 # name: test_device_setup[config_prod_awning_dimmer.json-status_prod_dimmer.json][device-97358]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -179,7 +174,6 @@
     'model_id': None,
     'name': 'Licht',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '97358',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -188,8 +182,8 @@
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-116682]
   DeviceRegistryEntrySnapshot({
     'area_id': 'wohnbereich',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -210,7 +204,6 @@
     'model_id': None,
     'name': 'Wohnzimmer',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '116682',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -219,8 +212,8 @@
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-172555]
   DeviceRegistryEntrySnapshot({
     'area_id': 'wohnbereich',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -241,7 +234,6 @@
     'model_id': None,
     'name': 'Badezimmer',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '172555',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -250,8 +242,8 @@
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-18894]
   DeviceRegistryEntrySnapshot({
     'area_id': 'wohnbereich',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -272,7 +264,6 @@
     'model_id': None,
     'name': 'Wohnebene alle',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '18894',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -281,8 +272,8 @@
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-230952]
   DeviceRegistryEntrySnapshot({
     'area_id': 'wohnbereich',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -303,7 +294,6 @@
     'model_id': None,
     'name': 'Sportzimmer',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '230952',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -312,8 +302,8 @@
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-284942]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -334,7 +324,6 @@
     'model_id': None,
     'name': 'Terrasse',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '284942',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -343,8 +332,8 @@
 # name: test_device_setup[config_prod_roller_shutter.json-status_prod_roller_shutter.json][device-328518]
   DeviceRegistryEntrySnapshot({
     'area_id': 'alle',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -365,7 +354,6 @@
     'model_id': None,
     'name': 'alle Rollläden',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '328518',
     'sw_version': None,
     'via_device_id': <ANY>,

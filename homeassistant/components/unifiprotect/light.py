@@ -1,10 +1,11 @@
 """Component providing Lights for UniFi Protect."""
 
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 from uiprotect.data import Light, ModelType, ProtectAdoptableDeviceModel
 from uiprotect.data.devices import LightDeviceSettings
+from uiprotect.data.public_devices import PublicLight
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
@@ -60,15 +61,21 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_brightness")
+    # State comes from the public API; the base class primes the object and
+    # subscribes to the public devices websocket on this flag.
+    _ufp_uses_public = True
 
     @callback
     @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
-        updated_device = self.device
-        self._attr_is_on = updated_device.is_light_on
-        self._attr_brightness = unifi_brightness_to_hass(
-            updated_device.light_device_settings.led_level
+        if (public := self._ufp_public_obj) is None:
+            return
+        light = cast(PublicLight, public)
+        self._attr_is_on = light.is_light_on
+        led_level = light.light_device_settings.led_level
+        self._attr_brightness = (
+            None if led_level is None else unifi_brightness_to_hass(led_level)
         )
 
     @async_ufp_instance_command

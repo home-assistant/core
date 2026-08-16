@@ -17,6 +17,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_stop = entry.data[CONF_STOP]
     coordinator_key = f"{entry_agency}-{entry_stop}"
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator: NextBusDataUpdateCoordinator | None = hass.data.setdefault(
         DOMAIN, {}
     ).get(

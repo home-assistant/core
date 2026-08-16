@@ -14,6 +14,8 @@ from mastodon.Mastodon import (
     MastodonNotFoundError,
     MastodonUnauthorizedError,
     MediaAttachment,
+    ScheduledStatus,
+    Status,
 )
 import voluptuous as vol
 
@@ -48,12 +50,14 @@ from .const import (
     ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
+    ATTR_IN_REPLY_TO,
     ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,
     ATTR_NOTE,
     ATTR_QUOTE_APPROVAL_POLICY,
+    ATTR_QUOTED_STATUS,
     ATTR_STATUS,
     ATTR_VALUE,
     ATTR_VISIBILITY,
@@ -126,6 +130,8 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Optional(ATTR_MEDIA): str,
         vol.Optional(ATTR_MEDIA_DESCRIPTION): str,
         vol.Optional(ATTR_MEDIA_WARNING): bool,
+        vol.Optional(ATTR_IN_REPLY_TO): str,
+        vol.Optional(ATTR_QUOTED_STATUS): str,
     }
 )
 
@@ -173,7 +179,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=SERVICE_UNMUTE_ACCOUNT_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_POST, _async_post, schema=SERVICE_POST_SCHEMA
+        DOMAIN,
+        SERVICE_POST,
+        _async_post,
+        schema=SERVICE_POST_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,
@@ -313,6 +323,8 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
     media_path: str | None = call.data.get(ATTR_MEDIA)
     media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
     media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
+    in_reply_to: str | None = call.data.get(ATTR_IN_REPLY_TO)
+    quoted_status: str | None = call.data.get(ATTR_QUOTED_STATUS)
 
     if idempotency_key and len(idempotency_key) < 4:
         raise ServiceValidationError(
@@ -320,7 +332,7 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             translation_key="idempotency_key_too_short",
         )
 
-    await call.hass.async_add_executor_job(
+    response = await call.hass.async_add_executor_job(
         partial(
             _post,
             hass=call.hass,
@@ -334,13 +346,18 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             media_path=media_path,
             media_description=media_description,
             sensitive=media_warning,
+            in_reply_to_id=in_reply_to,
+            quoted_status_id=quoted_status,
         )
     )
-
+    if call.return_response:
+        return response
     return None
 
 
-def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
+def _post(
+    hass: HomeAssistant, client: Mastodon, **kwargs: Any
+) -> Status | ScheduledStatus:
     """Post to Mastodon."""
 
     media_data: MediaAttachment | None = None
@@ -377,12 +394,15 @@ def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
     if media_data:
         media_ids = media_data.id
     try:
-        client.status_post(media_ids=media_ids, **kwargs)
+        response: Status | ScheduledStatus = client.status_post(
+            media_ids=media_ids, **kwargs
+        )
     except MastodonAPIError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="unable_to_send_message",
         ) from err
+    return response
 
 
 async def _async_update_profile(call: ServiceCall) -> ServiceResponse | None:

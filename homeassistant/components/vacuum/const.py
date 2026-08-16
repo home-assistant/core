@@ -25,6 +25,18 @@ class VacuumActivity(StrEnum):
     ERROR = "error"
 
 
+class VacuumEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for vacuum devices."""
+
+    FAN_SPEED_LIST = "fan_speed_list"
+
+
+class VacuumEntityStateAttribute(StrEnum):
+    """State attributes for vacuum entities."""
+
+    FAN_SPEED = "fan_speed"
+
+
 class VacuumEntityFeature(IntFlag):
     """Supported features of the vacuum entity."""
 
@@ -34,7 +46,6 @@ class VacuumEntityFeature(IntFlag):
     STOP = 8
     RETURN_HOME = 16
     FAN_SPEED = 32
-    BATTERY = 64
     STATUS = 128  # Deprecated, not supported by StateVacuumEntity
     SEND_COMMAND = 256
     LOCATE = 512

@@ -2305,3 +2305,24 @@ async def test_rpc_sensor_driver_missing_error(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(entity_id) is None
+
+
+async def test_rpc_sensor_errors_none(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """RPC sensor with errors set to none."""
+    status = {
+        "temperature:0": {
+            "id": 0,
+            "tC": 11.1,
+            "errors": None,
+        }
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get("sensor.test_name_temperature"))
+    assert state.state == "11.1"

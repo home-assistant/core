@@ -394,7 +394,9 @@ async def handle_webhook(
     device_registry = dr.async_get(hass)
     device_id = data[ATTR_DEVICE_ID]
 
-    if not (device := device_registry.async_get(device_id)):
+    if not (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ):
         return Response(
             text=f"Device not found: {device_id}",
             status=HTTPStatus.BAD_REQUEST,
@@ -433,12 +435,15 @@ def _get_media_event_data(
     event_file_path: str,
     event_file_type: int,
 ) -> dict[str, str]:
-    config_entry_id = next(iter(device.config_entries), None)
-    if (
-        not config_entry_id
-        or not (entry := hass.config_entries.async_get_entry(config_entry_id))
-        or entry.state is not ConfigEntryState.LOADED
-    ):
+    for config_entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(config_entry_id)
+        if (
+            entry is not None
+            and entry.domain == DOMAIN
+            and entry.state is ConfigEntryState.LOADED
+        ):
+            break
+    else:
         return {}
 
     coordinator: MotionEyeUpdateCoordinator = entry.runtime_data

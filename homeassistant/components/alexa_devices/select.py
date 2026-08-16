@@ -1,7 +1,7 @@
 """Support for select entities."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 
 from aioamazondevices.structures import AmazonDropInStatus
 
@@ -69,6 +69,7 @@ class AmazonSelectEntity(AmazonEntity, SelectEntity):
     entity_description: AmazonSelectEntityDescription
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return a list of available options."""
         if TYPE_CHECKING:
@@ -81,6 +82,7 @@ class AmazonSelectEntity(AmazonEntity, SelectEntity):
         """Return the device."""
         return self.coordinator.data[self._serial_num]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last known option."""
         await super().async_added_to_hass()
@@ -88,6 +90,7 @@ class AmazonSelectEntity(AmazonEntity, SelectEntity):
             self.entity_description.key
         ].lower()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         method = getattr(self.coordinator.api, self.entity_description.method)
