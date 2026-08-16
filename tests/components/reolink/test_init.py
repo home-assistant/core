@@ -251,7 +251,7 @@ async def test_removing_disconnected_cams(
     expected_success = TEST_CAM_MODEL not in expected_models
     for device in device_entries:
         if device.model == TEST_CAM_MODEL:
-            response = await client.remove_device(device.id, config_entry.entry_id)
+            response = await client.remove_device(device.id)
             assert response["success"] == expected_success
 
     device_entries = dr.async_entries_for_config_entry(
@@ -328,7 +328,7 @@ async def test_removing_chime(
     expected_success = CHIME_MODEL not in expected_models
     for device in device_entries:
         if device.model == CHIME_MODEL:
-            response = await client.remove_device(device.id, config_entry.entry_id)
+            response = await client.remove_device(device.id)
             assert response["success"] == expected_success
             assert reolink_chime.remove.call_count == expected_remove_call_count
 
@@ -491,10 +491,15 @@ async def test_migrate_entity_ids(
     if original_id != new_id:
         assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id) is None
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, original_dev_id), config_entry.entry_id
+    )
     if new_dev_id != original_dev_id:
         assert (
-            device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)}) is None
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, new_dev_id), config_entry.entry_id
+            )
+            is None
         )
 
     # setup CH 0 and host entities/device
@@ -508,10 +513,14 @@ async def test_migrate_entity_ids(
 
     if new_dev_id != original_dev_id:
         assert (
-            device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, original_dev_id), config_entry.entry_id
+            )
             is None
         )
-    assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_dev_id), config_entry.entry_id
+    )
 
 
 async def test_migrate_entity_id_zoom(
@@ -616,8 +625,12 @@ async def test_migrate_with_already_existing_device(
         disabled_by=None,
     )
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, original_dev_id), config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_dev_id), config_entry.entry_id
+    )
 
     # setup CH 0 and host entities/device
     with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
@@ -625,10 +638,14 @@ async def test_migrate_with_already_existing_device(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, original_dev_id), config_entry.entry_id
+        )
         is None
     )
-    assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_dev_id), config_entry.entry_id
+    )
 
 
 @pytest.mark.parametrize(
@@ -731,7 +748,9 @@ async def test_cleanup_mac_connection(
     )
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.connections == {(CONNECTION_NETWORK_MAC, TEST_MAC)}
 
@@ -741,7 +760,9 @@ async def test_cleanup_mac_connection(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.connections == set()
 
@@ -783,7 +804,9 @@ async def test_cleanup_combined_with_NVR(
     )
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.identifiers == start_identifiers
 
@@ -793,10 +816,14 @@ async def test_cleanup_combined_with_NVR(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.identifiers == {(DOMAIN, dev_id)}
-    host_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_UID)})
+    host_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_UID), config_entry.entry_id
+    )
     assert host_device
     assert host_device.identifiers == {
         (DOMAIN, TEST_UID),
@@ -840,7 +867,9 @@ async def test_cleanup_hub_and_direct_connection(
     )
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.identifiers == start_identifiers
 
@@ -850,7 +879,9 @@ async def test_cleanup_hub_and_direct_connection(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.identifiers == start_identifiers
 
@@ -1255,7 +1286,7 @@ async def test_camera_wake_callback(
     with (
         patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]),
         patch(
-            "homeassistant.components.reolink.host.time",
+            "homeassistant.components.reolink.host.time_now",
             return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL,
         ),
     ):
@@ -1275,13 +1306,13 @@ async def test_camera_wake_callback(
     assert callback_mock.callback_func is not None
     with (
         patch(
-            "homeassistant.components.reolink.host.time",
+            "homeassistant.components.reolink.host.time_now",
             return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL
             + BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
             + 5,
         ),
         patch(
-            "homeassistant.components.reolink.time",
+            "homeassistant.components.reolink.time_now",
             return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL
             + BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
             + 5,

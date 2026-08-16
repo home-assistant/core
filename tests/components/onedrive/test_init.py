@@ -186,7 +186,9 @@ async def test_device(
 
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device({(DOMAIN, mock_drive.id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_drive.id), mock_config_entry.entry_id
+    )
     assert device
     assert device == snapshot
 

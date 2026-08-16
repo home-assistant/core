@@ -269,6 +269,8 @@ async def test_search(
             ]
         },
     )
+    # Scene entities are added by a task, wait for it to finish
+    await hass.async_block_till_done()
 
     # Automations
     assert await async_setup_component(
@@ -1217,3 +1219,143 @@ async def test_search_pre_migration_composite_device(
     }
     assert search(ItemType.AUTOMATION, "automation.composite") == expected_reverse
     assert search(ItemType.SCRIPT, "script.composite") == expected_reverse
+
+
+async def test_search_label_on_child_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    floor_registry: fr.FloorRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test searching a label that is carried by a child device.
+
+    A child device carrying a label is surfaced by a label search just like a
+    mains device (dr.async_entries_for_label includes child devices). Resolving
+    up the child yields the area it inherits from its parent (and that area's
+    floor), plus the child's config entry and integration. The parent device is
+    also returned: resolve-up follows the first-class child -> parent edge, which
+    here contributes the same area / config entry / integration.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    label = label_registry.async_create("Outlet")
+
+    ground_floor = floor_registry.async_create("Ground Floor")
+    utility_area = area_registry.async_create("Utility", floor_id=ground_floor.floor_id)
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_update_device(parent_device.id, area_id=utility_area.id)
+
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip-outlet-1")},
+        parent_device_id=parent_device.id,
+        name="Outlet 1",
+    )
+    device_registry.async_update_child_device(child_device.id, labels={label.label_id})
+
+    searcher = Searcher(hass, {})
+    assert searcher.async_search(ItemType.LABEL, label.label_id) == {
+        ItemType.DEVICE: {child_device.id, parent_device.id},
+        ItemType.AREA: {utility_area.id},
+        ItemType.FLOOR: {ground_floor.floor_id},
+        ItemType.CONFIG_ENTRY: {config_entry.entry_id},
+        ItemType.INTEGRATION: {"test"},
+    }
+
+
+async def test_search_child_devices(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test search surfaces the parent <-> child device relations.
+
+    A config entry search surfaces the entry's child devices, which
+    dr.async_entries_for_config_entry omits. Searching a parent device surfaces its
+    child devices and their entities. Searching a child device surfaces its parent
+    device (resolve-up), but not the parent's own entities: the parent is resolved
+    up, not fully searched, so unrelated sibling children are not pulled in.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ground_floor = floor_registry.async_create("Ground Floor")
+    utility_area = area_registry.async_create("Utility", floor_id=ground_floor.floor_id)
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_update_device(parent_device.id, area_id=utility_area.id)
+
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip-outlet-1")},
+        parent_device_id=parent_device.id,
+        name="Outlet 1",
+    )
+
+    parent_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "strip-power",
+        config_entry=config_entry,
+        device_id=parent_device.id,
+    )
+    child_entity = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "outlet-1-switch",
+        config_entry=config_entry,
+        device_id=child_device.id,
+    )
+
+    def search(item_type: ItemType, item_id: str) -> dict[str, set[str]]:
+        """Search."""
+        searcher = Searcher(hass, {})
+        return searcher.async_search(item_type, item_id)
+
+    # A config entry search surfaces both the mains device and its child device,
+    # together with the entities of each.
+    assert search(ItemType.CONFIG_ENTRY, config_entry.entry_id) == {
+        ItemType.DEVICE: {parent_device.id, child_device.id},
+        ItemType.ENTITY: {parent_entity.entity_id, child_entity.entity_id},
+        ItemType.AREA: {utility_area.id},
+        ItemType.FLOOR: {ground_floor.floor_id},
+        ItemType.INTEGRATION: {"test"},
+    }
+
+    # Searching the parent device surfaces its child device and the child's entity.
+    assert search(ItemType.DEVICE, parent_device.id) == {
+        ItemType.DEVICE: {child_device.id},
+        ItemType.ENTITY: {parent_entity.entity_id, child_entity.entity_id},
+        ItemType.AREA: {utility_area.id},
+        ItemType.FLOOR: {ground_floor.floor_id},
+        ItemType.CONFIG_ENTRY: {config_entry.entry_id},
+        ItemType.INTEGRATION: {"test"},
+    }
+
+    # Searching the child device surfaces its parent device, but not the parent's
+    # own entity: the parent is resolved up, not fully searched.
+    assert search(ItemType.DEVICE, child_device.id) == {
+        ItemType.DEVICE: {parent_device.id},
+        ItemType.ENTITY: {child_entity.entity_id},
+        ItemType.AREA: {utility_area.id},
+        ItemType.FLOOR: {ground_floor.floor_id},
+        ItemType.CONFIG_ENTRY: {config_entry.entry_id},
+        ItemType.INTEGRATION: {"test"},
+    }
