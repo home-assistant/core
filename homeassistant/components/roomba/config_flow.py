@@ -12,15 +12,22 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
 from .const import (
     CONF_BLID,
+    CONF_CONN_MODE,
     CONF_CONTINUOUS,
-    DEFAULT_CONTINUOUS,
+    CONNECTION_MODES,
     DEFAULT_DELAY,
+    DEFAULT_MODE,
     DOMAIN,
     ROOMBA_SESSION,
 )
@@ -31,7 +38,7 @@ ALL_ATTEMPTS = 2
 HOST_ATTEMPTS = 6
 ROOMBA_WAKE_TIME = 6
 
-DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
+DEFAULT_OPTIONS = {CONF_CONN_MODE: DEFAULT_MODE, CONF_DELAY: DEFAULT_DELAY}
 
 MAX_NUM_DEVICES_TO_DISCOVER = 25
 
@@ -52,7 +59,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             address=data[CONF_HOST],
             blid=data[CONF_BLID],
             password=data[CONF_PASSWORD],
-            continuous=True,
+            mode=CONF_CONTINUOUS,
             delay=data[CONF_DELAY],
         )
     )
@@ -71,7 +78,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Roomba configuration flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     name: str | None = None
     blid: str
@@ -324,10 +331,15 @@ class RoombaOptionsFlowHandler(OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_CONTINUOUS,
-                        default=options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
-                    ): bool,
+                    vol.Required(
+                        CONF_CONN_MODE,
+                        default=options.get(CONF_CONN_MODE, DEFAULT_MODE),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=CONNECTION_MODES,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
                     vol.Optional(
                         CONF_DELAY,
                         default=options.get(CONF_DELAY, DEFAULT_DELAY),
