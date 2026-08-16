@@ -1,5 +1,6 @@
 """Platform for the opengarage.io cover component."""
 
+import asyncio
 import logging
 from typing import Any, cast, override
 
@@ -47,6 +48,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         self._state: str | None = None
         self._state_before_move: str | None = None
         self._move_pending = False
+        self._move_lock = asyncio.Lock()
 
         super().__init__(coordinator, device_id)
 
@@ -77,24 +79,26 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if self._state in [CoverState.CLOSED, CoverState.CLOSING]:
-            return
-        self._state_before_move = self._state
-        self._move_pending = True
-        self._state = CoverState.CLOSING
-        self.async_write_ha_state()
-        await self._push_button()
+        async with self._move_lock:
+            if self._state in [CoverState.CLOSED, CoverState.CLOSING]:
+                return
+            self._state_before_move = self._state
+            self._move_pending = True
+            self._state = CoverState.CLOSING
+            self.async_write_ha_state()
+            await self._push_button()
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if self._state in [CoverState.OPEN, CoverState.OPENING]:
-            return
-        self._state_before_move = self._state
-        self._move_pending = True
-        self._state = CoverState.OPENING
-        self.async_write_ha_state()
-        await self._push_button()
+        async with self._move_lock:
+            if self._state in [CoverState.OPEN, CoverState.OPENING]:
+                return
+            self._state_before_move = self._state
+            self._move_pending = True
+            self._state = CoverState.OPENING
+            self.async_write_ha_state()
+            await self._push_button()
 
     @callback
     @override

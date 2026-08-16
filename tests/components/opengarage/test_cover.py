@@ -80,7 +80,6 @@ async def test_cover_position_during_transition(
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == CoverState.OPENING
-    # Position should be None during transition
     assert (
         ATTR_CURRENT_POSITION not in state.attributes
         or state.attributes[ATTR_CURRENT_POSITION] is None
