@@ -542,13 +542,18 @@ def validate_user_input(
     """
 
     async def _validate_user_input(
-        _: SchemaCommonFlowHandler,
+        handler: SchemaCommonFlowHandler,
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
         if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
+        if template_type == Platform.SWITCH:
+            # Can be removed when Wake on LAN import is removed in 2027.2
+            handler.parent_handler._async_abort_entries_match(  # noqa: SLF001
+                {CONF_ON_ACTION: user_input.get(CONF_ON_ACTION)}
+            )
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
@@ -661,6 +666,7 @@ CONFIG_FLOW = {
         description_placeholders=_get_forecast_description_place_holders,
     ),
     "import": SchemaFlowFormStep(
+        # Can be removed when Wake on LAN import is removed in 2027.2
         config_schema(Platform.SWITCH),
         validate_user_input=validate_user_input(Platform.SWITCH),
     ),

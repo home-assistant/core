@@ -17,12 +17,11 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_STATE,
+    CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import CONF_OFF_ACTION, CONF_ON_ACTION, DOMAIN
 
@@ -102,31 +101,39 @@ class MigrateSwitchFlow(RepairsFlow):
                 return self.async_abort(reason="could_not_get_ping_entity")
 
             # Import Wake on LAN config to get a config entry with a button entity
-            config = {
-                CONF_MAC: mac,
-                CONF_BROADCAST_ADDRESS: broadcast_address,
-                CONF_BROADCAST_PORT: broadcast_port,
-            }
-            import_result = await self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config,
-            )
-            if not (
-                import_result["type"] is FlowResultType.CREATE_ENTRY
-                or (
-                    import_result["type"] is FlowResultType.ABORT
-                    and import_result["reason"] == "already_configured"
+            wol_entry_id = None
+            wol_entries = self.hass.config_entries.async_entries(DOMAIN)
+            for entry in wol_entries:
+                if entry.options.get(CONF_MAC) == dr.format_mac(mac):
+                    wol_entry_id = entry.entry_id
+                    break
+            if not wol_entry_id:
+                wol_config: dict[str, Any] = {CONF_MAC: mac}
+                if broadcast_address is not None:
+                    wol_config[CONF_BROADCAST_ADDRESS] = broadcast_address
+                if broadcast_port is not None:
+                    wol_config[CONF_BROADCAST_PORT] = broadcast_port
+                import_result = await self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data=wol_config,
                 )
-            ):
-                return self.async_abort(reason="could_not_import_wol")
+                if not (
+                    import_result["type"] is FlowResultType.CREATE_ENTRY
+                    or (
+                        import_result["type"] is FlowResultType.ABORT
+                        and import_result["reason"] == "already_configured"
+                    )
+                ):
+                    return self.async_abort(reason="could_not_import_wol")
+                wol_entry_id = import_result["result"].entry_id
 
             wol_entity_id = None
             for _ in range(10):
                 # Wait for wol config entry entity to be created
                 if entities := er.async_entries_for_config_entry(
                     entity_reg,
-                    import_result["result"].entry_id,
+                    wol_entry_id,
                 ):
                     wol_entity_id = entities[0].entity_id
                     break
@@ -136,16 +143,17 @@ class MigrateSwitchFlow(RepairsFlow):
 
             template_config = {
                 CONF_NAME: name,
-                CONF_OPTIMISTIC: bool(ping_host),
-                CONF_ON_ACTION: {
-                    "action": "button.press",
-                    "target": {
-                        "entity_id": wol_entity_id,
-                    },
-                },
+                CONF_ON_ACTION: [
+                    {
+                        "action": "button.press",
+                        "target": {
+                            "entity_id": wol_entity_id,
+                        },
+                    }
+                ],
             }
             if ping_entity_id:
-                template_config[CONF_STATE] = (
+                template_config[CONF_VALUE_TEMPLATE] = (
                     "{{ is_state('" + ping_entity_id + "', 'on') }}"
                 )
             if turn_off_action:
@@ -165,12 +173,16 @@ class MigrateSwitchFlow(RepairsFlow):
             ):
                 return self.async_abort(reason="could_not_import_template")
 
-            return self.async_create_entry(data={})
+            return self.async_create_entry(
+                data={},
+                description="with_ping" if ping_host else "no_ping",
+                description_placeholders={"mac": mac, "host": ping_host or ""},
+            )
 
         return self.async_show_form(
             step_id="migrate",
             data_schema=vol.Schema({}),
-            description_placeholders={"title": name},
+            description_placeholders={"mac": mac},
         )
 
 

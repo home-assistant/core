@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_SECUREON_PASSWORD, DOMAIN, PLATFORMS
@@ -35,6 +36,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def send_magic_packet(call: ServiceCall) -> None:
         """Send magic packet to wake up a device."""
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "wol_service_deprecated",
+            breaks_in_ha_version="2027.2.0",
+            is_fixable=False,
+            is_persistent=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="wol_service_deprecated",
+        )
+
         mac_address: str = call.data[CONF_MAC]
         secureon_password = call.data.get(CONF_SECUREON_PASSWORD)
         broadcast_address = call.data.get(CONF_BROADCAST_ADDRESS)
