@@ -129,7 +129,8 @@ async def test_user_flow_aborts_duplicate(
     mock_haven_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test manual setup rejects an already configured device."""
+    """Test manual setup updates and rejects an already configured device."""
+    new_host = "192.0.2.2"
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -137,11 +138,12 @@ async def test_user_flow_aborts_duplicate(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST}
+        result["flow_id"], {CONF_HOST: new_host}
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == {CONF_HOST: new_host}
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -172,6 +174,27 @@ async def test_zeroconf_flow_success(
     assert result["title"] == f"Room Air Monitor {TEST_SERIAL}"
     assert result["data"] == {CONF_HOST: TEST_HOST}
     assert result["result"].unique_id == TEST_SERIAL
+
+
+async def test_discovery_confirm_aborts_without_state(
+    hass: HomeAssistant, mock_haven_client: AsyncMock
+) -> None:
+    """Test restored discovery aborts when its saved state is missing."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    flow["context"].pop("title_placeholders")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_zeroconf_updates_existing_entry(

@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.haven.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
-from . import TEST_HOST, TEST_INFO, TEST_SENSORS, TEST_SERIAL
+from . import TEST_CAM_SERIAL, TEST_HOST, TEST_INFO, TEST_SENSORS, TEST_SERIAL
 
 from tests.common import MockConfigEntry
 
@@ -56,4 +56,15 @@ def mock_config_entry() -> MockConfigEntry:
         title="Room Air Monitor",
         data={CONF_HOST: TEST_HOST},
         unique_id=TEST_SERIAL,
+    )
+
+
+@pytest.fixture
+def mock_cam_config_entry() -> MockConfigEntry:
+    """Return a Central Air Monitor config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Central Air Monitor",
+        data={CONF_HOST: TEST_HOST},
+        unique_id=TEST_CAM_SERIAL,
     )

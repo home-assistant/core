@@ -54,17 +54,19 @@ async def test_ram_sensors(
 async def test_cam_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_config_entry: MockConfigEntry,
+    mock_cam_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test CAM-specific entities replace RAM-only entities."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_cam_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_cam_config_entry.entry_id
+    )
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, TEST_CAM_SERIAL), mock_config_entry.entry_id
+        (DOMAIN, TEST_CAM_SERIAL), mock_cam_config_entry.entry_id
     )
     assert device is not None
     assert device == snapshot(name="cam-device")

@@ -89,7 +89,7 @@ class HavenConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(
                     info.serial_number, raise_on_progress=False
                 )
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
                     title=self._entry_title(info),
                     data={CONF_HOST: host},
