@@ -137,25 +137,26 @@ async def test_toggle_cover(
     assert state.attributes[ATTR_CURRENT_POSITION] == final_position
 
 
-async def test_toggle_already_closed_does_not_close_again(
+async def test_toggle_does_not_reuse_stale_close_direction(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test toggling when already closed doesn't send extra command.
+    """Test toggle direction is derived from position, not a stale cached direction.
 
-    This is the regression test for issue #115827.
-    When cover is closed (position=0), toggle should open it, not fail silently.
+    This is the regression test for issue #115827. A previous close records
+    the "closing" direction internally; if a later toggle relies on that
+    cached direction instead of the current position, it would incorrectly
+    open an already-open cover instead of closing it.
     """
     mock_opengarage.push_button.return_value = 1
     coordinator = init_integration.runtime_data
-    await _simulate_door_state(hass, mock_opengarage, coordinator, 0)
+    await _simulate_door_state(hass, mock_opengarage, coordinator, 1)
 
     state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.state == STATE_OPEN
 
-    # First toggle opens
+    # Toggle while open should close, recording the close direction.
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_TOGGLE,
@@ -164,36 +165,38 @@ async def test_toggle_already_closed_does_not_close_again(
     )
     assert mock_opengarage.push_button.call_count == 1
 
-    # Simulate door opened
+    state = hass.states.get("cover.garage_abcdef")
+    assert state.state == CoverState.CLOSING
+
+    # Door still reports open while physically closing.
+    await _simulate_door_state(hass, mock_opengarage, coordinator, 1)
+
+    state = hass.states.get("cover.garage_abcdef")
+    assert state.state == CoverState.CLOSING
+
+    # Door finishes closing.
+    await _simulate_door_state(hass, mock_opengarage, coordinator, 0)
+
+    state = hass.states.get("cover.garage_abcdef")
+    assert state.state == STATE_CLOSED
+
+    # Someone reopens the door outside of HA.
     await _simulate_door_state(hass, mock_opengarage, coordinator, 1)
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == STATE_OPEN
 
-    # Simulate someone manually closing it outside HA
-    await _simulate_door_state(hass, mock_opengarage, coordinator, 0)
-
-    state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
-
-    # After idle time (simulating the time-dependent bug), toggle again
-    # With current_cover_position available, this should reliably open
+    # Toggling now must close again, not reuse the stale close direction.
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_TOGGLE,
         {ATTR_ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
-
-    # Should have called push_button again (total 2 calls)
     assert mock_opengarage.push_button.call_count == 2
 
-    # Simulate door opening
-    await _simulate_door_state(hass, mock_opengarage, coordinator, 1)
-
     state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.CLOSING
 
 
 @pytest.mark.parametrize(
