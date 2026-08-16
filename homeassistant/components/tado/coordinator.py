@@ -70,7 +70,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.zones: list[dict[Any, Any]] = []
         self.devices: list[dict[Any, Any]] = []
         self.heating_circuits: dict[str, dict[str, Any]] = {}
-        self._heating_circuits_loaded = False
+        self._heating_circuits_load_attempted = False
         self.data: dict[str, Any] = {
             "device": {},
             "weather": {},
@@ -119,8 +119,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.home_name = tado_home["name"]
 
         # Heating circuits are configuration, so fetching them once is enough.
-        if not self._heating_circuits_loaded:
-            self._heating_circuits_loaded = True
+        if not self._heating_circuits_load_attempted:
+            self._heating_circuits_load_attempted = True
             await self._async_update_heating_circuits()
 
         devices = await self._async_update_devices()
