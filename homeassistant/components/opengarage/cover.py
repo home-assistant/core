@@ -46,6 +46,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         """Initialize the cover."""
         self._state: str | None = None
         self._state_before_move: str | None = None
+        self._move_pending = False
 
         super().__init__(coordinator, device_id)
 
@@ -79,6 +80,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         if self._state in [CoverState.CLOSED, CoverState.CLOSING]:
             return
         self._state_before_move = self._state
+        self._move_pending = True
         self._state = CoverState.CLOSING
         self.async_write_ha_state()
         await self._push_button()
@@ -89,6 +91,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         if self._state in [CoverState.OPEN, CoverState.OPENING]:
             return
         self._state_before_move = self._state
+        self._move_pending = True
         self._state = CoverState.OPENING
         self.async_write_ha_state()
         await self._push_button()
@@ -100,10 +103,10 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         status = self.coordinator.data
 
         state = STATES_MAP.get(status.get("door"))  # type: ignore[arg-type]
-        if self._state_before_move is not None:
+        if self._move_pending:
             if self._state_before_move != state:
                 self._state = state
-                self._state_before_move = None
+                self._move_pending = False
         else:
             self._state = state
 
@@ -139,8 +142,8 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
 
     def _restore_state_before_move(self) -> None:
         """Restore the state prior to this command, unless the coordinator already confirmed it."""
-        if self._state_before_move is None:
+        if not self._move_pending:
             return
         self._state = self._state_before_move
-        self._state_before_move = None
+        self._move_pending = False
         self.async_write_ha_state()
