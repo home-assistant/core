@@ -144,6 +144,21 @@ async def test_general_forecast_sensor_with_range(
     assert first_forecast.get("range_max") == 0.09
 
 
+@pytest.mark.usefixtures("mock_amber_client_general_forecasts")
+async def test_general_forecast_sensor_with_advanced_price(
+    hass: HomeAssistant, general_channel_config_entry: MockConfigEntry
+) -> None:
+    """Test the General Forecast sensor with an advanced price."""
+    await setup_integration(hass, general_channel_config_entry)
+    price = hass.states.get("sensor.mock_title_general_forecast")
+    assert price
+    attributes = price.attributes
+    first_forecast = attributes["forecasts"][0]
+    assert first_forecast.get("advanced_price_low") == 0.07
+    assert first_forecast.get("advanced_price_predicted") == 0.09
+    assert first_forecast.get("advanced_price_high") == 0.1
+
+
 @pytest.mark.usefixtures("mock_amber_client_general_and_controlled_load")
 async def test_controlled_load_forecast_sensor(
     hass: HomeAssistant,
