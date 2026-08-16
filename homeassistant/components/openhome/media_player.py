@@ -167,7 +167,8 @@ class OpenhomeDevice(MediaPlayerEntity):
                 self._attr_state = MediaPlayerState.PLAYING
 
             self._attr_available = True
-        except TimeoutError, aiohttp.ClientError, UpnpError:
+        except (TimeoutError, aiohttp.ClientError, UpnpError) as err:
+            _LOGGER.debug("Error updating %s: %s", self.entity_id, err, exc_info=True)
             self._attr_available = False
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
