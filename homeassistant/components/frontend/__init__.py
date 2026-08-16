@@ -382,7 +382,7 @@ def async_register_built_in_panel(
 
     panels = hass.data.setdefault(DATA_PANELS, {})
 
-    if not update and (existing := panels.get(panel.frontend_url_path)):
+    if not update and (existing := panels.get(panel.frontend_url_path)) is not None:
         raise ValueError(
             f"Overwriting panel {panel.frontend_url_path} owned by"
             f" {existing.component_name}"

@@ -760,7 +760,7 @@ async def test_async_panel_exists(hass: HomeAssistant) -> None:
 
 
 async def test_register_panel_collision_names_the_owner(hass: HomeAssistant) -> None:
-    """Test the collision error says which component holds the url path.
+    """Test that the collision error says which component holds the URL path.
 
     The path is often claimed by a dashboard or a custom panel rather than by
     the integration that fails, and the failure takes that integration down,
