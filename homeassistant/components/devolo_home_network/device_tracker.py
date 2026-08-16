@@ -75,6 +75,7 @@ async def async_setup_entry(
         async_add_entities(missing)
 
     restore_entities()
+    new_device_callback()
     entry.async_on_unload(
         coordinators[CONNECTED_WIFI_CLIENTS].async_add_listener(new_device_callback)
     )
