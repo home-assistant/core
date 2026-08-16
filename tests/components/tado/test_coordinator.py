@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from requests import RequestException
 
 from homeassistant.components.tado import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.components.tado.coordinator import TadoDataUpdateCoordinator
@@ -118,6 +119,61 @@ async def test_empty_refresh_token_does_not_clear_stored_token(
         await coordinator._async_update_data()
 
     assert entry.data[CONF_REFRESH_TOKEN] == "old-token"
+
+
+async def test_rate_limit_reached_raises_update_failed(
+    hass: HomeAssistant,
+) -> None:
+    """A RequestException with no rate limit remaining raises a rate-limit error.
+
+    ``_load_tado_data`` can fail outright (e.g. the initial ``get_me`` call),
+    in which case the coordinator checks Tado's rate limit to give a more
+    specific error message. This also exercises the ``finally`` block: even
+    though the initial call failed, the (possibly already rotated) refresh
+    token must still be persisted.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_REFRESH_TOKEN: "old-token"},
+        unique_id="1",
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    tado = MagicMock()
+    tado.get_me.side_effect = RequestException("boom")
+    tado.get_refresh_token.return_value = "new-token"
+    tado.rate_limit_info.return_value = {"remaining": "0"}
+
+    coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
+
+    with pytest.raises(UpdateFailed, match="rate limit reached"):
+        await coordinator._async_update_data()
+
+    assert entry.data[CONF_REFRESH_TOKEN] == "new-token"
+
+
+async def test_request_exception_without_rate_limit_raises_update_failed(
+    hass: HomeAssistant,
+) -> None:
+    """A RequestException with rate limit remaining raises a generic setup error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_REFRESH_TOKEN: "old-token"},
+        unique_id="1",
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    tado = MagicMock()
+    tado.get_me.side_effect = RequestException("boom")
+    tado.get_refresh_token.return_value = "old-token"
+    tado.rate_limit_info.return_value = {"remaining": "999"}
+
+    coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
+
+    with pytest.raises(UpdateFailed, match="Error during Tado setup"):
+        await coordinator._async_update_data()
 
 
 async def _return_empty_dict(*_args, **_kwargs) -> dict:
