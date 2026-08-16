@@ -93,6 +93,7 @@
     "step": {
       "init": {
         "data": {
+          "connection_mode": "Connection mode",
           "continuous": "Continuous",
           "delay": "Delay"
         }

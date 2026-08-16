@@ -133,28 +133,25 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate Roomba config entry."""
     _LOGGER.debug(
-        "Roomba configuration migration from version %s.",
+        "Roomba configuration migration from version %s",
         config_entry.version,
     )
 
     if config_entry.version < 2:
+        old_options = config_entry.options or config_entry.data
         new_conn_mode = (
-            "continuous"
-            if config_entry.options[CONF_CONTINUOUS] is True
-            else "periodic"
+            "continuous" if old_options[CONF_CONTINUOUS] is True else "periodic"
         )
         new_options = {
             CONF_CONN_MODE: new_conn_mode,
-            CONF_DELAY: config_entry.options[CONF_DELAY],
+            CONF_DELAY: old_options[CONF_DELAY],
         }
 
         hass.config_entries.async_update_entry(
             config_entry, options=new_options, version=2
         )
 
-        _LOGGER.debug(
-            "Roomba configuration was migrated to version %s successfully.", 2
-        )
+        _LOGGER.debug("Roomba configuration was migrated to version %s successfully", 2)
 
     return True
 
