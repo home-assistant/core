@@ -1897,7 +1897,7 @@ class SensorDeviceClassSelector(SelectSelector):
             vol.Optional("mode"): vol.All(
                 vol.Coerce(SelectSelectorMode), lambda val: val.value
             ),
-            vol.Optional("sort", default=False): cv.boolean,
+            vol.Optional("sort", default=True): cv.boolean,
         }
     )
 
