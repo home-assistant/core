@@ -1,5 +1,7 @@
 """Base entity for the LibreNMS integration."""
 
+from typing import override
+
 from aiolibrenms.devices.models import LibrenmsDeviceInfo
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -40,6 +42,12 @@ class LibrenmsDeviceEntity(CoordinatorEntity[LibrenmsDataUpdateCoordinator]):
             model=model,
             serial_number=self._data.serial,
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.device_id in self.coordinator.data.devices
 
     @property
     def _data(self) -> LibrenmsDeviceInfo:
