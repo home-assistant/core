@@ -31,6 +31,7 @@ async def test_camera_device_info(
     hass: HomeAssistant,
     mock_vivotek_camera: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the camera is linked to a device with expected metadata."""
@@ -46,11 +47,9 @@ async def test_camera_device_info(
     assert entity_entry is not None
     assert entity_entry.device_id is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entity_entry.device_id)
     assert device is not None
     assert (DOMAIN, "11:22:33:44:55:66") in device.identifiers
-    assert (dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:66") in device.connections
     assert device.manufacturer == "VIVOTEK"
     assert device.model == "FD9165-HT"
     assert device.serial_number == "ABCD1234"

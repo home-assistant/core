@@ -10,7 +10,7 @@ from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VivotekConfigEntry
@@ -113,7 +113,6 @@ class VivotekCam(Camera):
         self._stream_source = stream_source
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            connections={(CONNECTION_NETWORK_MAC, unique_id)},
             manufacturer=DEFAULT_CAMERA_BRAND,
             model=model,
             name=name,
