@@ -1,17 +1,14 @@
 """Reading the panel's programming through the coordinator, and what it changes in Home Assistant.
 
-Author: Jonis Maurin Ceará <jmceara AT gmail.com>
-Based on the code developed by Carlos Jose Fernandes,
-available at https://github.com/fernac03/JFL_ACTIVE
-
-Sprint 6, tasks 6.2 and 6.4. The frame-level parsing is covered in `tests/test_programming.py`
-against real captured bytes; these tests are about the round trip — thirty-odd requests paced over a
-live socket, correlated by their echoed selector, and the names that land on the partition sub-device
-at the other end.
+The frame-level parsing is covered by `pyjfl`'s own tests against real captured bytes; these are
+about the round trip — thirty-odd requests paced over a live socket, correlated by their echoed
+selector, and the names that land on the partition sub-device at the other end.
 """
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 from unittest.mock import patch
 
 from pyjfl.protocol.programming import REGIONS, plan_region
@@ -21,7 +18,6 @@ from homeassistant.components.jfl_alarm import coordinator as coordinator_module
 from homeassistant.components.jfl_alarm.const import CONF_READ_ONLY, DOMAIN
 from homeassistant.components.jfl_alarm.device import get_sub_device
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from .conftest import make_entry
 from .panel_sim import FakePanel
@@ -173,63 +169,13 @@ async def test_a_partition_takes_the_panels_own_name(
         await hass.async_block_till_done()
 
 
-async def test_a_wireless_zone_is_found_in_the_enrolment_table(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """The enrolment table at `0x1800` is the only place the panel says a zone is a radio device.
-
-    The zone-device placement of the radio's serial number is a `sensor.py`/`binary_sensor.py`
-    concern not part of this PR; what stays generic is the coordinator's own answer to "is this
-    zone wireless?", read from `JflProgramming.wireless_for_zone`.
-    """
-    panel = FakePanel(serial="RADIO00001", **NAMED_PANEL)
-    entry = await _entry_for(hass, port, panel)
-    try:
-        _, coordinator = await _bring_up(hass, entry, connect_panel, panel)
-        await coordinator.async_read_programming()
-
-        assert coordinator.programming.wireless_for_zone(9) is not None
-        assert coordinator.programming.wireless_for_zone(1) is None
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
 # --- 6.5: reads only, and no codes ---------------------------------------------------------------
-
-
-async def test_the_service_response_can_never_carry_an_access_code(
-    hass: HomeAssistant, port: int, connect_panel, device_registry: dr.DeviceRegistry
-) -> None:
-    """AGENTS.md §4. The parser discards codes, so the response cannot contain one to leak."""
-    panel = FakePanel(serial="NOCODES001", **NAMED_PANEL)
-    entry = await _entry_for(hass, port, panel)
-    try:
-        await _bring_up(hass, entry, connect_panel, panel)
-        device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, panel.serial), config_entry_id=entry.entry_id
-        )
-
-        response = await hass.services.async_call(
-            DOMAIN,
-            "read_programming",
-            {"device_id": device.id},
-            blocking=True,
-            return_response=True,
-        )
-        assert response["zones"]["1"] == "P Frente"
-        assert "code" not in repr(response).lower().replace("has_code", "")
-        for user in response["users"]:
-            assert set(user) == {"number", "name", "has_code"}
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
 
 
 async def test_nothing_in_this_sprint_can_write(
     hass: HomeAssistant, port: int, connect_panel
 ) -> None:
-    """Sprint 6 is reads only. `0x45` exists in no code path an entity or service can reach."""
+    """`0x45`, the programming *write*, exists in no code path this integration can reach."""
     source = (
         __import__("pathlib")
         .Path(coordinator_module.__file__)
@@ -246,3 +192,100 @@ def test_every_region_is_planned_from_the_documented_map(region: str) -> None:
     """A region whose plan does not start at its base would read somebody else's records."""
     requests = plan_region(region)
     assert requests[0].address == REGIONS[region][0]
+
+
+# --- the automatic read loop ----------------------------------------------------------------------
+
+
+NO_DELAY = patch.object(coordinator_module, "PROGRAMMING_READ_FIRST_DELAY", 0)
+"""The loop waits before its first read so the panel has introduced itself. The tests below have
+already brought a panel up, so there is nothing left to wait for."""
+
+
+async def _run_loop_once(coordinator, hass: HomeAssistant) -> None:
+    """Drive `_read_programming_forever` through exactly one tick, then stop it.
+
+    The loop is infinite, and every branch of it ends by sleeping for `_programming_sleep()`. So
+    that is where the tick is cut short: whatever it decided has already happened by then.
+    """
+    # The coordinator runs this loop itself, as a background task. Two of them would drive two
+    # programming reads down the same socket at once, so the real one is stopped first.
+    if coordinator._programming_task is not None:
+        coordinator._programming_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await coordinator._programming_task
+        coordinator._programming_task = None
+
+    with (
+        NO_DELAY,
+        patch.object(
+            coordinator, "_programming_sleep", side_effect=asyncio.CancelledError
+        ),
+        contextlib.suppress(asyncio.CancelledError),
+    ):
+        await coordinator._read_programming_forever()
+    await hass.async_block_till_done()
+
+
+async def test_the_loop_reads_a_panel_that_has_just_connected(
+    hass: HomeAssistant, port: int, connect_panel
+) -> None:
+    """The first read is automatic, so a fresh panel shows its own names without anyone asking."""
+    panel = FakePanel(serial="AUTOREAD01", **NAMED_PANEL)
+    entry = await _entry_for(hass, port, panel)
+    try:
+        _, coordinator = await _bring_up(hass, entry, connect_panel, panel)
+        assert coordinator.programming.read is False
+
+        await _run_loop_once(coordinator, hass)
+
+        assert coordinator.programming.read is True
+        assert coordinator.programming.partition_name(1) == "Interno"
+    finally:
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_the_loop_asks_a_silent_panel_once_and_then_leaves_it_alone(
+    hass: HomeAssistant,
+    port: int,
+    connect_panel,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A panel that does not implement `0x44` is flagged, and never asked again automatically."""
+    panel = FakePanel(serial="NOPROG0001")
+    entry = await _entry_for(hass, port, panel)
+    try:
+        connection = await connect_panel(panel)
+        await connection.introduce(hass)
+        coordinator = entry.runtime_data.coordinators[panel.serial]
+        await connection.report_status(hass, coordinator)
+        # Deliberately no `serve_programming()`: nothing answers.
+
+        with SHORT_TIMEOUT:
+            await _run_loop_once(coordinator, hass)
+        assert coordinator._programming_unreadable is True
+        assert "did not answer the programming read" in caplog.text
+    finally:
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_the_loop_skips_a_re_read_while_the_checksum_is_unchanged(
+    hass: HomeAssistant, port: int, connect_panel
+) -> None:
+    """`KP` changes only when the programming does, so an unchanged panel costs one comparison."""
+    panel = FakePanel(serial="SAMEKP0001", **NAMED_PANEL)
+    entry = await _entry_for(hass, port, panel)
+    try:
+        _, coordinator = await _bring_up(hass, entry, connect_panel, panel)
+        await coordinator.async_read_programming()
+        read_at = coordinator.programming.read_at
+
+        with patch.object(coordinator.link, "async_read_programming") as read_again:
+            await _run_loop_once(coordinator, hass)
+        read_again.assert_not_called()
+        assert coordinator.programming.read_at == read_at
+    finally:
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()

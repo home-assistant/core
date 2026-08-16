@@ -1,21 +1,8 @@
-"""The entity base class, the device tree, and the discovery helper every platform uses.
+"""The entity base class and the discovery helper the platform uses.
 
-Author: Jonis Maurin Ceará <jmceara AT gmail.com>
-Based on the code developed by Carlos Jose Fernandes,
-available at https://github.com/fernac03/JFL_ACTIVE
-
-Two things here are worth more than the code that implements them.
-
-**Discovery has to be repeatable.** A panel dials in ten to sixty seconds after Home Assistant
-starts, so at the moment a platform is set up there is usually nothing to create: no model byte, no
-partitions, no zones. `async_add_discovered` therefore runs on **every** coordinator update and adds
-only what is new. A platform that enumerates once at setup produces an empty integration that only
-fixes itself if the user reloads at the right moment.
-
-**Identity lives on the device, not in entities.** Model, firmware, serial and MAC are `DeviceInfo`
-fields — AGENTS.md §5 and `docs/development/entity-map.md`. Partitions and the fence get their own
-sub-devices linked back to the panel by `parent_device_id`, so a dashboard can show "Ground floor"
-without also showing everything else the panel knows.
+Discovery has to be repeatable: a panel dials in ten to sixty seconds after Home Assistant starts,
+so at setup time there is usually nothing to create. `async_add_discovered` therefore runs on every
+coordinator update and adds only what is new.
 """
 
 from typing import TYPE_CHECKING, cast, override
@@ -26,12 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import LOGGER
 from .coordinator import JflPanelCoordinator, JflPanelState
-from .device import (
-    build_fence_device,
-    build_panel_device,
-    build_partition_device,
-    build_zone_device,
-)
+from .device import build_panel_device, build_partition_device
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -84,7 +66,7 @@ class JflPartitionEntity(JflEntity):
     ) -> None:
         """Bind to *partition*, 1-based, on this panel.
 
-        The programmed name is passed through if one is already known — see `JflZoneEntity` for the
+        The programmed name is passed through if one is already known — see the note below on the
         defect that makes this necessary rather than merely tidy.
         """
         self.partition = partition
@@ -101,59 +83,6 @@ class JflPartitionEntity(JflEntity):
                 coordinator.serial,
                 partition,
                 name=coordinator.programming.partition_name(partition),
-            ),
-        )
-
-
-class JflFenceEntity(JflEntity):
-    """An entity that belongs to the electric fence sub-device."""
-
-    def __init__(self, coordinator: JflPanelCoordinator, key: str) -> None:
-        """Bind to the fence on this panel."""
-        super().__init__(coordinator, f"fence-{key}")
-        self._attr_device_info = cast(
-            "DeviceInfo",
-            build_fence_device(
-                coordinator.hass, coordinator.config_entry.entry_id, coordinator.serial
-            ),
-        )
-
-
-class JflZoneEntity(JflEntity):
-    """An entity that belongs to one zone's sub-device.
-
-    **The `unique_id` is unchanged from Sprint 2**, and that is the point: moving an entity to a
-    different device is a registry update, not a new entity, so an installation that ran Sprint 2
-    keeps its history, its customisations and its automations. `tests/integration/test_entities.py`
-    (this repository's own tree; the `core` publish target renames it to
-    `tests/components/jfl_alarm/test_entities.py`) holds a migration test that proves it rather than
-    assuming it.
-    """
-
-    def __init__(self, coordinator: JflPanelCoordinator, zone: int, key: str) -> None:
-        """Bind to *zone*, 1-based, on this panel.
-
-        **The programmed name and detector model are included if they are already known**, and that
-        is a bug fix, not a convenience. `DeviceInfo` is written to the registry every time an
-        entity is added, so a `build_zone_device` call with no name here *overwrites* the name that
-        `async_apply_programmed_names` had just written. The author saw exactly that: after pressing
-        *Read programming* a device correctly read *Zona 9 Porta 1*, and minutes later it was back
-        to *Zona 9* — because discovery ran again and added an entity carrying the nameless form.
-
-        Passing the coordinator's current answer makes every write agree, whenever it happens.
-        """
-        self.zone = zone
-        super().__init__(coordinator, f"zone{zone}-{key}")
-        radio = coordinator.programming.wireless_for_zone(zone)
-        self._attr_device_info = cast(
-            "DeviceInfo",
-            build_zone_device(
-                coordinator.hass,
-                coordinator.config_entry.entry_id,
-                coordinator.serial,
-                zone,
-                name=coordinator.programming.zone_name(zone),
-                model=(radio.model or "") if radio is not None else "",
             ),
         )
 

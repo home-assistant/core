@@ -1,16 +1,12 @@
 """Arming and disarming — everything this integration sends to a panel in this PR.
 
-Author: Jonis Maurin Ceará <jmceara AT gmail.com>
-Based on the code developed by Carlos Jose Fernandes,
-available at https://github.com/fernac03/JFL_ACTIVE
+These tests assert on the bytes that reach the socket rather than on a mock being called, because
+what can go wrong here is sending the wrong command to a real alarm on an occupied house. Every
+expected frame below was captured from the manufacturer's own software driving an Active 32 Duo, or
+is the same command with a different partition byte.
 
-Sprint 3. These tests assert on the **bytes that reach the socket**, not on a mock being called,
-because the thing that can go wrong here is sending the wrong command to a real alarm on an occupied
-house. Every expected frame below is one that was captured from ActiveNet driving the author's
-Active 32 Duo on 2026-08-08, or is the same command with a different partition byte.
-
-The two gates — `read_only` and the commands-enabled flag — are tested by asserting that **nothing
-at all** was written, which is the only assertion that means anything for a safety interlock.
+`read_only` is tested by asserting that nothing at all was written, which is the only assertion that
+means anything for a safety interlock.
 """
 
 from __future__ import annotations
@@ -24,13 +20,10 @@ from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.jfl_alarm.const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_READ_ONLY,
-    DOMAIN,
-    ISSUE_REMOTE_ACCESS_BLOCKED,
 )
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 
 from .conftest import make_entry, wait_until
 from .panel_sim import FakePanel
@@ -99,13 +92,13 @@ async def _wrote_nothing(connection, hass: HomeAssistant) -> bool:
         ("alarm_arm_home", Cmd.ARM_STAY),
         ("alarm_disarm", Cmd.DISARM),
         # "Armar AWAY" (`Cmd.ARM_AWAY`, the forced arm) is deliberately absent: it is still a valid
-        # protocol command but no longer a Home Assistant arm button — ADR-0016.
+        # protocol command but is not offered as a Home Assistant arm button.
     ],
 )
 async def test_each_arm_mode_sends_its_own_command(
     hass: HomeAssistant, port: int, connect_panel, service: str, expected_cmd: Cmd
 ) -> None:
-    """Each mode sends its own command — and the old integration sent `0x4E` for all of them."""
+    """Each mode sends its own command, rather than `0x4E` standing in for all of them."""
     panel = FakePanel(serial="ARMMODES01")
     entry = await _writable_entry(hass, port, panel)
     try:
@@ -127,7 +120,7 @@ async def test_each_arm_mode_sends_its_own_command(
 async def test_all_three_arm_modes_are_offered_on_the_one_entity(
     hass: HomeAssistant, port: int, connect_panel
 ) -> None:
-    """The user asked for the panel's three modes without three different entities."""
+    """Both arm modes live on one entity rather than on two."""
     panel = FakePanel(serial="FEATURES01")
     entry = await _writable_entry(hass, port, panel)
     try:
@@ -137,8 +130,8 @@ async def test_all_three_arm_modes_are_offered_on_the_one_entity(
         ]
         assert features & AlarmControlPanelEntityFeature.ARM_AWAY
         assert features & AlarmControlPanelEntityFeature.ARM_HOME
-        # Removed 2026-08-09 on the author's decision, after testing all three on the real panel:
-        # the forced arm is redundant with the plain arm and reports back identically. ADR-0016.
+        # Not offered: the forced arm is redundant with the plain arm from a user's point of view,
+        # and the panel reports both identically afterwards.
         assert not features & AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
         # Never invented: JFL has no night or vacation arming.
         assert not features & AlarmControlPanelEntityFeature.ARM_NIGHT
@@ -183,30 +176,7 @@ async def test_features_do_not_follow_the_state_dependent_permission_bits(
         await hass.async_block_till_done()
 
 
-async def test_the_partition_exposes_whether_it_can_be_armed(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """`P-PART` bit 4 is the panel's own "no open zones" — it decides whether a plain arm works."""
-    panel = FakePanel(
-        serial="READYBIT01", partition_permissions=[0x0F, 0x1F, 0x00, 0x00]
-    )
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        await _bring_up(hass, entry, connect_panel, panel)
-        assert (
-            hass.states.get("alarm_control_panel.partition_1").attributes["ready"]
-            is False
-        )
-        assert (
-            hass.states.get("alarm_control_panel.partition_2").attributes["ready"]
-            is True
-        )
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-# --- the two gates --------------------------------------------------------------------------------
+# --- read-only mode --------------------------------------------------------------------------------
 
 
 async def test_read_only_mode_sends_nothing_and_says_so(
@@ -232,11 +202,11 @@ async def test_a_command_to_a_disconnected_panel_fails_loudly(
     panel = FakePanel(serial="NOPANEL001")
     entry = await _writable_entry(hass, port, panel)
     try:
-        # The alarm entities need a status frame to exist at all, so the fence switch cannot be used
-        # here; the coordinator is called directly, which is the same path the entity takes.
+        # The alarm entities need a status frame to exist at all, so the coordinator is called
+        # directly, which is the same path the entity takes.
         coordinator = entry.runtime_data.coordinators[panel.serial]
         with pytest.raises(HomeAssistantError):
-            await coordinator.async_fence(arm=False)
+            await coordinator.async_disarm(1)
     finally:
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
@@ -334,38 +304,6 @@ async def test_the_code_can_be_required_for_disarming_only(
 # --- the lockout guard ----------------------------------------------------------------------------
 
 
-async def test_one_wrong_password_reply_blocks_and_raises_an_issue(
-    hass: HomeAssistant,
-    port: int,
-    connect_panel,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """AGENTS.md §6: stop on the **first** `0xA1`, not the fifth.
-
-    Nothing this integration sends carries a password, so this reply should be impossible — which is
-    exactly why the guard has to exist and be tested rather than assumed.
-    """
-    panel = FakePanel(serial="LOCKOUT001")
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        connection, coordinator = await _bring_up(hass, entry, connect_panel, panel)
-        assert coordinator.auth_blocked is False
-
-        # `7B 08 SEQ 37 03 C0 A1 K` — the panel saying "wrong password".
-        await connection.send(build_frame(0x40, Cmd.AUTH, bytes([0x03, 0xC0, 0xA1])))
-        await wait_until(hass, lambda: coordinator.auth_blocked)
-
-        assert (
-            issue_registry.async_get_issue(
-                DOMAIN, f"{ISSUE_REMOTE_ACCESS_BLOCKED}_{panel.serial}"
-            )
-            is not None
-        )
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
 async def test_an_ordinary_ack_does_not_latch_the_lockout(
     hass: HomeAssistant, port: int, connect_panel
 ) -> None:
@@ -390,7 +328,7 @@ async def test_an_ordinary_ack_does_not_latch_the_lockout(
 async def test_the_lockout_warning_fires_once_even_across_repeats(
     hass: HomeAssistant, port: int, connect_panel, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """AGENTS.md §6 says the flag latches on the first `0xA1` and is never cleared automatically.
+    """The flag latches on the first `0xA1` and is never cleared automatically.
 
     A second wrong-password reply after the flag is already set must not warn again or touch the
     repair issue a second time — the flag being `True` is what the early return is for.
@@ -418,76 +356,6 @@ async def test_the_lockout_warning_fires_once_even_across_repeats(
 
 
 # --- guards without a status frame yet ---------------------------------------------------------
-
-
-async def test_bypass_before_any_status_frame_refuses_clearly(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """`async_bypass` reads the bypass bitmap from the last status frame — there is none yet.
-
-    Called directly on the coordinator, the same way `_set_bypass_mask` in the service layer does:
-    there is no status frame at all here, which the switch platform's own bypass entities cannot
-    reach either, since they are not created until a status frame has named which zones exist.
-    """
-    panel = FakePanel(serial="BYPASSNOS1")
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        connection = await connect_panel(panel)
-        await connection.introduce(hass)
-        coordinator = entry.runtime_data.coordinators[panel.serial]
-
-        with pytest.raises(HomeAssistantError):
-            await coordinator.async_bypass(1, bypassed=True)
-        assert await _wrote_nothing(connection, hass)
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-async def test_bypassing_a_zone_p_inib_forbids_refuses_and_names_the_address(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """`P-INIB` clear for a zone means the panel would silently ignore `0x52` for it.
-
-    Unlike the switch platform — which does not create a bypass entity for a zone `P-INIB`
-    forbids, so a user can never press a button that would do this — `async_bypass` is also the
-    function `set_bypass_mask` calls, and that service takes any zone number at all.
-    """
-    panel = FakePanel(serial="BYPASSDENY", bypassable=bytes(13), zones={1: 0x8})
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        connection, coordinator = await _bring_up(hass, entry, connect_panel, panel)
-
-        with pytest.raises(ServiceValidationError):
-            await coordinator.async_bypass(1, bypassed=True)
-        assert await _wrote_nothing(connection, hass)
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-async def test_a_pgm_before_any_status_frame_is_permitted_by_default(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """`_require_pgm_permission` has nothing to check against yet, so it must not refuse.
-
-    Refusing here on our own guess would block a command the panel would have accepted — the same
-    reasoning the permissive partition and fence defaults use. The PGM switches themselves wait for
-    `pgm_functions_known`, so this calls the coordinator directly, the way the switch platform does.
-    """
-    panel = FakePanel(serial="PGMNOSTAT1")
-    entry = await _writable_entry(hass, port, panel)
-    try:
-        connection = await connect_panel(panel)
-        await connection.introduce(hass)
-        coordinator = entry.runtime_data.coordinators[panel.serial]
-
-        await coordinator.async_pgm(1, on=True)
-        frame = await _next_command(connection)
-        assert frame.cmd == Cmd.PGM_ON
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
 
 
 async def test_arming_before_any_status_frame_is_permitted_by_default(

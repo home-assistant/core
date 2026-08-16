@@ -1,9 +1,5 @@
 """The listener, exercised over real sockets.
 
-Author: Jonis Maurin Ceará <jmceara AT gmail.com>
-Based on the code developed by Carlos Jose Fernandes,
-available at https://github.com/fernac03/JFL_ACTIVE
-
 Every test here opens an actual TCP connection to an actual `asyncio.start_server`. That is
 deliberate: the sprint's acceptance criteria are all about socket behaviour, and a mocked socket
 cannot fail a single one of them.
@@ -12,19 +8,12 @@ cannot fail a single one of them.
 from __future__ import annotations
 
 import asyncio
-import logging
 import socket
 
-from pyjfl import Cmd, ConnectionInfo, FrameReader
+from pyjfl import Cmd, FrameReader
 import pytest
 
-from homeassistant.components.jfl_alarm import _ignore_discovery
-from homeassistant.components.jfl_alarm.const import (
-    CONF_UNKNOWN_PANELS,
-    DOMAIN,
-    UNKNOWN_HOLD,
-    UNKNOWN_REJECT,
-)
+from homeassistant.components.jfl_alarm.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -203,10 +192,6 @@ async def test_three_models_on_one_port_produce_three_independent_devices(
         assert len(coordinators["BBBBBBBBBB"].data.partitions) == 2
         assert len(coordinators["CCCCCCCCCC"].data.partitions) == 16
 
-        # The status frame itself tells the two panels apart, independently of any entity.
-        assert coordinators["AAAAAAAAAA"].data.fence.present is True
-        assert coordinators["BBBBBBBBBB"].data.fence.present is False
-
         for panel in panels:
             assert (
                 device_registry.async_get_device_by_identifier(
@@ -284,70 +269,6 @@ async def test_an_unknown_panel_is_added_automatically(
         if entry.state.recoverable:
             await hass.config_entries.async_unload(entry.entry_id)
             await hass.async_block_till_done()
-
-
-async def test_a_held_panel_stays_connected_but_creates_nothing(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """Holding is not refusing: the panel must stay connected so it can be offered to the user."""
-    entry = make_entry(port, serials=[], options={CONF_UNKNOWN_PANELS: UNKNOWN_HOLD})
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    try:
-        panel = FakePanel(serial="HELDPANEL1")
-        connection = await connect_panel(panel)
-        reply = await connection.introduce(hass)
-        assert _frames(reply)[0].payload[0] == 0x01
-
-        assert not entry.subentries
-        assert panel.serial in entry.runtime_data.server.pending_panels
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-async def test_a_rejected_panel_gets_result_zero(
-    hass: HomeAssistant, port: int, connect_panel
-) -> None:
-    """`RESULT = 0x00` is the protocol's way of saying go away, and the panel disconnects."""
-    entry = make_entry(port, serials=[], options={CONF_UNKNOWN_PANELS: UNKNOWN_REJECT})
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    try:
-        panel = FakePanel(serial="REJECTED01")
-        connection = await connect_panel(panel)
-        reply = await connection.introduce(hass)
-        assert _frames(reply)[0].payload[0] == 0x00
-        assert not entry.runtime_data.server.link(panel.serial).connected
-    finally:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-async def test_ignore_discovery_is_a_silent_no_op(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """`_ignore_discovery` itself — the callback registered for the *hold* and *reject* policies.
-
-    `pyjfl.JflServer.notify_connected` only ever calls the registered discovery callback when the
-    policy is *accept*; for *hold* and *reject* it never calls it at all, so this can never fire
-    through a real socket no matter what a test sends. It has no public equivalent to assert
-    through — it is a private module-level callback that only logs at debug — so it is exercised
-    directly, the accepted exception for exactly this case.
-    """
-    with caplog.at_level(logging.DEBUG):
-        _ignore_discovery(
-            ConnectionInfo(
-                serial="IGNOREME01", model_byte=0xA0, firmware="1", imei="", mac=""
-            )
-        )
-
-    assert "IGNOREME01" in caplog.text
-    assert "not configured" in caplog.text
 
 
 async def test_the_status_poll_asks_the_panel(

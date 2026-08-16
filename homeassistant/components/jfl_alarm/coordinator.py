@@ -1,55 +1,34 @@
 """One coordinator per panel, fed by pushes from the listener.
 
-Author: Jonis Maurin Ceará <jmceara AT gmail.com>
-Based on the code developed by Carlos Jose Fernandes,
-available at https://github.com/fernac03/JFL_ACTIVE
+`DataUpdateCoordinator` is used with `update_interval=None`: nothing polls on Home Assistant's
+schedule. The listener pushes and `async_set_updated_data` fans the new snapshot out. The panel is
+polled for status, but that poll belongs to the connection rather than to the update loop.
 
-`DataUpdateCoordinator` is used with `update_interval=None`: nothing here polls on Home Assistant's
-schedule. The listener pushes, and `async_set_updated_data` fans the new snapshot out. The panel
-*is* polled for status, but that poll belongs to the connection, not to Home Assistant's update
-loop — see pyjfl's `transport.py`.
+Four decisions here are deliberate and easy to undo by accident:
 
-Three decisions in this module are deliberate and easy to undo by accident:
-
-* **`data` is never `None`.** It starts as an empty snapshot and `async_config_entry_first_refresh`
-  is never called. A panel typically dials in ten to sixty seconds after Home Assistant starts, so
-  a first refresh would fail the entry setup for a panel that is merely still booting.
-* **Availability comes from the connection, not from `last_update_success`.** A coordinator that has
-  never been updated is not a panel in trouble; a panel whose socket went away is.
-* **Contact ID events do not go in the snapshot.** They go out on a dispatcher signal. A snapshot is
+* `data` is never `None`, and `async_config_entry_first_refresh` is never called. A panel typically
+  dials in ten to sixty seconds after a restart, so a first refresh would fail the entry setup for a
+  panel that is merely still booting.
+* Availability comes from the connection, not from `last_update_success`.
+* Contact ID events go out on a dispatcher signal rather than in the snapshot. A snapshot is
   replayed to every entity on every update and again after a restart, so an event kept in one would
-  re-fire — a panic button that presses itself. Only the *timestamp* of the last event is state.
-
-Sprint 3 added the command path, and it obeys three rules of its own:
-
-* **Nothing is optimistic.** A command never writes a state. It schedules two status re-reads and
-  the panel's own answer is what the entities show. The 2026-08-08 capture is the reason: arming
-  returned a status frame that still showed zone 9 open, and the panel auto-bypassed it a second
-  later.
-* **Two gates, both of which must open.** `read_only` is the deliberate opt-in, in the panel's
-  settings; the commands switch is the quick kill switch on the dashboard.
-* **Permissions are checked at the moment of the call**, never cached into `supported_features`.
-  `P-PART` is state-dependent — the same partition read `0x0B` disarmed and `0x1F` armed — so a
-  feature set derived from it would make Home Assistant's buttons appear and disappear on their own.
+  re-fire. Only the timestamp of the last event is state.
+* Nothing is optimistic. A command never writes a state; it schedules two status re-reads, and the
+  panel's own answer is what the entities show. Arming can return a status frame that still shows a
+  zone open, which the panel then auto-bypasses a second later.
 """
 
 import asyncio
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any
 
 from pyjfl import (
-    EVENTS_PER_PAGE,
     UNKNOWN_MODEL,
-    WIRELESS_PER_PAGE,
     ArmMode,
     CommandResponse,
     ConnectionInfo,
-    EventRecord,
-    FencePermissions,
-    FenceState,
     GlobalZoneOptions,
     HolidayRecord,
-    JflCapabilities,
     JflPanelLink,
     ModelSpec,
     Packet,
@@ -65,22 +44,12 @@ from pyjfl import (
     TimerSettings,
     UnknownPacket,
     UserRecord,
-    WirelessDevice,
     WirelessRecord,
-    ZoneAlert,
     ZoneRecord,
-    ZoneState,
-    ZoneStatus,
     build_arm,
     build_arm_away,
     build_arm_stay,
-    build_bypass_bitmap,
     build_disarm,
-    build_fence_arm,
-    build_fence_disarm,
-    build_pgm_off,
-    build_pgm_on,
-    build_set_datetime,
     parse_auto_arm_time,
     parse_global_zone_options,
     parse_holidays,
@@ -91,15 +60,10 @@ from pyjfl import (
     parse_wireless,
     parse_zones,
     plan_region,
-    zone_alert,
 )
 
-# `MAX_WIRELESS` and `REGIONS` are not re-exported from `pyjfl`'s top-level namespace (unlike
-# `WIRELESS_PER_PAGE` above, which is and is imported from there). Reaching into
-# `pyjfl.protocol.programming` for these two is a boundary compromise, tracked as a `pyjfl` library
-# gap rather than fixed here — narrowing this import needs a release of `pyjfl` that exports them
-# at the top level, which is out of this repository's control. See BACKLOG.md.
-from pyjfl.protocol.programming import MAX_WIRELESS, REGIONS
+# `MAX_WIRELESS` and `REGIONS` are not re-exported from `pyjfl`'s top-level namespace yet.
+from pyjfl.protocol.programming import REGIONS
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -109,14 +73,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_FENCE_PGM,
-    DEFAULT_EVENT_LIMIT,
-    DEFAULT_FENCE_PGM,
     DEFAULT_PROGRAMMING_READ_INTERVAL,
     DEFAULT_STATUS_INTERVAL,
     DOMAIN,
     LOGGER,
-    NO_FENCE_PGM,
     PROGRAMMING_READ_FIRST_DELAY,
     PROGRAMMING_READ_GAP,
     PROGRAMMING_READ_IDLE_SLEEP,
@@ -125,7 +85,6 @@ from .const import (
     signal_panel_event,
 )
 from .device import async_apply_programmed_names, async_refresh_panel_device
-from .repairs import async_check_model, async_report_lockout
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -134,14 +93,6 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigSubentry
 
     from . import JflConfigEntry
-
-
-_ALERT_NIBBLES: Final[dict[ZoneAlert, ZoneStatus]] = {
-    ZoneAlert.LOW_BATTERY: ZoneStatus.LOW_BATTERY,
-    ZoneAlert.SUPERVISION: ZoneStatus.NOT_COMMUNICATING,
-    ZoneAlert.TAMPER: ZoneStatus.TAMPER,
-}
-"""Which zone nibble reports the same condition each latched alert describes."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -170,18 +121,6 @@ class JflPanelState:
     last_event_code: str | None = None
     unknown_packets: int = 0
 
-    zone_alerts: Mapping[int, frozenset[ZoneAlert]] = field(default_factory=dict)
-    """Per-zone conditions latched from Contact ID events, keyed by zone number.
-
-    **This is state, not a stored event, and the distinction is the whole reason it is allowed
-    here.** The module docstring forbids keeping events in the snapshot because a snapshot is
-    replayed and an event would re-fire. "Zone 9's battery is low and has not been restored" does
-    not re-fire when it is replayed — it is a fact that stays true until `3384` arrives.
-
-    It exists because the zone nibble physically cannot hold it: one nibble, one value, so a
-    low-battery sensor reports `6` when closed and `7` when somebody walks past it. See `ZoneAlert`.
-    """
-
     @property
     def spec(self) -> ModelSpec:
         """The model's capability ceiling. Permissive, and never raises, for an unlisted byte.
@@ -204,48 +143,12 @@ class JflPanelState:
             return ()
         return self.status.partitions[: self.spec.partitions]
 
-    @property
-    def zones(self) -> tuple[ZoneState, ...]:
-        """Zone states, capped at what the model can have."""
-        if self.status is None:
-            return ()
-        return self.status.zones[: self.spec.zones]
-
-    @property
-    def fence(self) -> FenceState:
-        """The electric fence, from the status frame if there is one, else the connection frame."""
-        if self.status is not None:
-            return self.status.fence
-        if self.connection is not None:
-            return self.connection.fence
-        return FenceState(0x00)
-
     def partition(self, number: int) -> PartitionState | None:
         """Return partition *number* (1-based), or `None` if this panel has no such partition."""
         partitions = self.partitions
         if 1 <= number <= len(partitions):
             return partitions[number - 1]
         return None
-
-    def zone(self, number: int) -> ZoneState | None:
-        """Return zone *number* (1-based), or `None` if this panel has no such zone."""
-        for zone in self.zones:
-            if zone.number == number:
-                return zone
-        return None
-
-    def zone_alert(self, number: int, alert: ZoneAlert) -> bool:
-        """Whether zone *number* is currently in *alert*, from **either** source.
-
-        The nibble and the event latch are merged rather than one preferred over the other, because
-        each sees something the other cannot: the nibble is present-tense but holds only one value,
-        and the latch survives the nibble being overwritten but only exists if the panel reported
-        the event to us. Either saying yes is a yes.
-        """
-        if alert in self.zone_alerts.get(number, frozenset()):
-            return True
-        zone = self.zone(number)
-        return zone is not None and zone.status is _ALERT_NIBBLES[alert]
 
 
 @dataclass(frozen=True, slots=True)
@@ -256,8 +159,8 @@ class JflProgramming:
     this changes only when somebody reprograms the panel, and the panel tells us when that happened
     through `KP`. Keeping them apart means a full read is not thrown away by the next status frame.
 
-    ⚠️ **No user access codes are here, and none can be.** `UserRecord` carries `has_code` and the
-    parser never returns the code itself — see pyjfl's `protocol/programming.py`. AGENTS.md §4.
+    No user access codes are here, and none can be: `UserRecord` carries `has_code` and the parser
+    never returns the code itself.
     """
 
     checksum: bytes = b""
@@ -286,18 +189,6 @@ class JflProgramming:
     auto_arm_time: tuple[int, int] | None = None
     """The first auto-arm schedule's `(hour, minute)`, or `None` when it is not set."""
 
-    inventory: Mapping[int, WirelessDevice] = field(default_factory=dict)
-    """The `0x59` inventory, keyed by **zone**, holding each radio detector's live condition.
-
-    Separate from `wireless`, which is the enrolment *table* in the programming and says only that a
-    zone has a radio device on it. This is what the panel currently knows about that device: signal
-    quality, firmware, battery and when it last transmitted.
-
-    It has to be asked for separately — `0x59` is its own command, not part of a programming read —
-    and the panel's own UI leaves those columns blank until somebody presses *Atualizar*, which is
-    the same thing happening.
-    """
-
     incomplete: tuple[str, ...] = ()
     """Regions that did not come back. Named rather than counted, so "the zone names are missing"
     is answerable without re-reading anything."""
@@ -310,8 +201,8 @@ class JflProgramming:
     def zone_name(self, number: int) -> str:
         """Return a zone's programmed name, or an empty string if it has none or is unknown.
 
-        Empty rather than a placeholder: `docs/development/entity-map.md` settles that a zone with
-        no name reads as its bare number, and never as `Zone 3 (unnamed)`.
+        Empty rather than a placeholder: a zone with no name reads as its bare number, never as
+        `Zone 3 (unnamed)`.
         """
         record = self.zones.get(number)
         return record.name if record is not None else ""
@@ -321,66 +212,12 @@ class JflProgramming:
         record = self.partitions.get(number)
         return record.name if record is not None else ""
 
-    def user_name(self, number: int) -> str:
-        """Return a user's programmed name, or an empty string if unknown or unnamed.
-
-        This is what turns *"armed by 003"* in the logbook into *"armed by Bruno"*. The name is all
-        that is returned: `UserRecord` carries no access code, by construction — see `parse_users`.
-        """
-        record = self.users.get(number)
-        return record.name if record is not None else ""
-
-    def wireless_for_zone(self, number: int) -> WirelessRecord | None:
-        """Return the wireless device enrolled on zone *number*, if there is one.
-
-        A zone with no entry here is **hard-wired, or not enrolled** — the table only lists radio
-        devices, which is precisely what makes it the answer to "is this zone wireless?".
-        """
-        return next(
-            (
-                record
-                for record in self.wireless.values()
-                if record.present and record.zone == number
-            ),
-            None,
-        )
-
 
 @dataclass(slots=True)
 class _Discovery:
     """What the platforms have already created, so a re-run adds only what is new."""
 
     partitions: set[int] = field(default_factory=set)
-    zones: set[int] = field(default_factory=set)
-    timers: bool = False
-    """The panel's timer sensors, which exist only after a programming read."""
-
-    wireless_zones: set[int] = field(default_factory=set)
-    """Zones that already have their radio-detector entities. Kept apart from `zones` because these
-    appear only after a programming read, long after the zone itself."""
-
-    event_partitions: set[int] = field(default_factory=set)
-    """Kept apart from `partitions`: two platforms discover partitions, and sharing one set would
-    mean whichever ran first silently suppressed the other."""
-
-    fence: bool = False
-    """The fence switch, on the `switch` platform.
-
-    Four platforms create something for the fence, and each keeps its own flag for the same reason
-    the partitions do: one shared flag means whichever platform is set up first silently suppresses
-    the other three.
-    """
-
-    fence_alarm: bool = False
-    """The fence's `safety` binary sensor."""
-
-    fence_state: bool = False
-    """The fence's enumerated state sensor."""
-
-    fence_event: bool = False
-
-    pgms: set[int] = field(default_factory=set)
-    bypass: set[int] = field(default_factory=set)
 
 
 class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
@@ -435,18 +272,9 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         self._programming_unreadable = False
         """Set when the automatic read found a panel that will not answer `0x44`.
 
-        ADR-0010's requirement, and the reason the automatic read is safe to add at all: a panel
-        that does not implement the programming commands must be asked **once** and then left alone,
-        not hammered with thirty requests on every reconnection. The manual button and the service
-        still work — a person asking explicitly is not a loop."""
-
-        self.commands_enabled = True
-        """The master switch's position. Owned by the switch entity, which restores it on start.
-
-        `True` here is not a relaxation: `read_only` defaults to on, and **both** gates have to
-        open. Defaulting this one to off would mean a user who deliberately turned `read_only` off
-        still found nothing worked, with no clue why.
-        """
+        This is what makes the automatic read safe: a panel that does not implement the
+        programming commands is asked once and then left alone, rather than hammered with thirty
+        requests on every reconnection."""
 
         self.auth_blocked = False
         """Set by a `0xA1` or `0xAA` reply, and never cleared on its own. See `_handle_packet`."""
@@ -459,50 +287,6 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         self.async_set_updated_data(JflPanelState())
 
     # --- capabilities ---------------------------------------------------------------------------
-
-    @property
-    def capabilities(self) -> JflCapabilities:
-        """What this panel can do, merged from the model, the status frame and the programming.
-
-        The single place the three sources are combined — see pyjfl's `protocol/capabilities.py`.
-        It is rebuilt on demand rather than cached because two of its three inputs change: the
-        status frame arrives after the entities do, and the programming only after an explicit
-        read. The merge is cheap, and a stale capability is worse than recomputing one.
-        """
-        return JflCapabilities.detect(
-            self.data.spec,
-            self.data.status,
-            self.programming.pgms,
-            self.programming.zone_options,
-        )
-
-    @property
-    def pgm_functions_known(self) -> bool:
-        """Whether what each PGM output *does* has been settled, one way or the other.
-
-        `True` once a programming read has completed, and also once the panel has proved it will
-        not answer `0x44` at all — in which case the answer is "nothing is known, and nothing ever
-        will be", which is just as final and must not hold the entities back for ever.
-
-        **The switch platform waits for this before creating the PGM switches**, because a PGM's
-        function decides which device its switch belongs to, whether it is a control or a
-        configuration entity, and whether it is created enabled — and all three are registry
-        properties Home Assistant fixes when the entity is registered and never revisits. Creating
-        the switches on the first status frame, as Sprint 4 did, meant deciding all three before the
-        only source that can answer had spoken. See `switch._discover_pgms`.
-        """
-        return self.programming.read or self._programming_unreadable
-
-    @property
-    def configured_fence_pgm(self) -> int:
-        """The PGM the user named as the fence's power in the panel's settings, or `0` for none.
-
-        The override half of `JflCapabilities.effective_fence_pgm`: a value here wins over what a
-        programming read detects, because the user may know something the programming does not.
-        """
-        return int(
-            self.subentry.data.get(CONF_FENCE_PGM, DEFAULT_FENCE_PGM) or NO_FENCE_PGM
-        )
 
     # --- lifecycle ------------------------------------------------------------------------------
 
@@ -568,9 +352,8 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         including `0`. It is what makes a freshly added panel show *Zona 3 Cozinha* instead of
         *Zone 3* without anybody knowing there is a button.
 
-        **Once is also the probe.** If the first read comes back with nothing, the panel does not
-        answer `0x44` and is never asked again automatically — ADR-0010's condition for making the
-        read implicit.
+        Once is also the probe: if the first read comes back with nothing, the panel does not
+        answer `0x44` and is never asked again automatically.
 
         **A periodic read that changes nothing costs one comparison.** `KP` is in every status
         frame and changes only when the programming does, so the interval tick re-reads only when
@@ -620,7 +403,7 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         status = self.data.status
         if status is None or not self.programming.checksum:
             return True
-        return bool(status.programming_checksum != self.programming.checksum)
+        return status.programming_checksum != self.programming.checksum
 
     async def async_refresh_status(self) -> None:
         """Ask for a status frame now. Raises if the panel is not connected."""
@@ -632,8 +415,8 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
     async def async_read_programming(self) -> JflProgramming:
         """Read the panel's programming into a structured snapshot.
 
-        **A read, not a command**, so it runs in `read_only` mode and passes neither gate — the same
-        reasoning that keeps the status poll running. Sprint 6 implements no write path at all.
+        A read, not a command, so it runs in `read_only` mode — the same reasoning that keeps the
+        status poll running.
 
         Paced rather than fired at once: this is thirty-odd round trips on a link that is also
         carrying the status poll and, on a Bus panel, the keypad bus. A region that fails is named
@@ -658,9 +441,6 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
                 checksum = region_checksum or checksum
 
             programming = self._build_programming(blocks, checksum, tuple(missing))
-            programming = replace(
-                programming, inventory=await self._async_read_inventory()
-            )
             self.programming = programming
             LOGGER.debug(
                 "%s: programming read — %d zones, %d partitions, %d wireless devices%s",
@@ -675,76 +455,15 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
                 entry_id=self.config_entry.entry_id,
                 subentry_id=self.subentry.subentry_id,
                 serial=self.serial,
-                zones={
-                    number: record.name for number, record in programming.zones.items()
-                },
                 partitions={
                     number: record.name
                     for number, record in programming.partitions.items()
-                },
-                wireless={
-                    record.zone: record
-                    for record in programming.wireless.values()
-                    if record.present
                 },
             )
             # Entities read names from `self.programming`, which is not part of the snapshot, so
             # they have to be told to look again.
             self.async_update_listeners()
             return programming
-
-    async def async_read_events(
-        self, *, since: int = 0, limit: int = DEFAULT_EVENT_LIMIT
-    ) -> list[EventRecord]:
-        """Page through the panel's own event memory (`0x48`), forward from *since*.
-
-        **A read, like the programming read**, so it works in `read_only` mode and passes neither
-        command gate. It is the only place the panel's *history* lives: the status frame is the
-        present tense and the `0x24` stream is live-only.
-
-        ⚠️ **These records are never fired at the `event` entities, and that is deliberate.** An
-        `event` entity firing is a live occurrence: automations run, notifications go out, and a
-        replayed `1120` is a panic button pressing itself at three in the morning. The same
-        reasoning keeps events out of the coordinator snapshot — see the module docstring. What this
-        returns is *data*, for a service response, and nothing here writes an entity state.
-
-        **Paging is forward only, oldest first**, because that is what the panel offers: there is no
-        request for "the last twenty". So *limit* is a hard stop rather than a nicety — the author's
-        panel held 1073 records, which is 135 round trips on a link that is also carrying the status
-        poll. A caller wanting the tail keeps the highest `serial` it saw and passes it as *since*
-        next time.
-
-        Stops at the first page that returns nothing, that returns fewer than a full page, or that
-        does not advance the cursor — the last of which is the guard that matters, because a panel
-        answering with the same page forever would otherwise loop until *limit*.
-        """
-        collected: list[EventRecord] = []
-        cursor = max(0, since)
-        while len(collected) < limit:
-            try:
-                page = await self.link.async_read_events(cursor)
-            except (PanelNotConnectedError, OSError, TimeoutError) as err:
-                # The same treatment the wireless inventory gets: a panel that does not implement
-                # `0x48`, or that stops answering half way, returns what was read rather than
-                # raising. Partial history is worth having; a traceback in a service call is not.
-                LOGGER.debug(
-                    "%s: event buffer read stopped at %d: %s", self.serial, cursor, err
-                )
-                break
-            fresh = [record for record in page.records if record.serial > cursor]
-            if not fresh:
-                break
-            collected.extend(fresh)
-            cursor = max(record.serial for record in fresh)
-            if len(page.records) < EVENTS_PER_PAGE:
-                break
-        LOGGER.debug(
-            "%s: read %d buffered events, up to serial %d",
-            self.serial,
-            len(collected),
-            cursor,
-        )
-        return collected[:limit]
 
     async def _async_read_region(self, region: str) -> tuple[bytes | None, bytes]:
         """Read one named region, returning its bytes and the `KP` the panel reported with them."""
@@ -776,47 +495,6 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
                     err,
                 )
         return None
-
-    async def _async_read_inventory(self) -> dict[int, WirelessDevice]:
-        """Read the `0x59` wireless inventory, page by page, keyed by zone.
-
-        **Failure here is not failure of the programming read.** The inventory is extra information
-        about radio detectors; a panel with none, or one that does not implement `0x59` at all,
-        must still get its zone and partition names. So every error is swallowed to `debug` and the
-        result is simply empty.
-
-        Paging stops at the first page that returns nothing, rather than always asking for all four:
-        a panel with nine devices has one page of eight and one of one, and there is no reason to
-        ask about slots 17-32 that cannot exist.
-
-        ⚠️ **Pages are numbered from zero**, which is what ActiveNet does (`59 08 00`, then
-        `59 08 01`). Starting at one silently skips the first eight devices and returns only the
-        stragglers — it looked like a panel with one wireless sensor instead of nine.
-        """
-        devices: dict[int, WirelessDevice] = {}
-        for page in range(MAX_WIRELESS // WIRELESS_PER_PAGE):
-            try:
-                inventory = await self.link.async_read_wireless(page)
-            except (PanelNotConnectedError, OSError, TimeoutError) as err:
-                LOGGER.debug(
-                    "%s: wireless inventory page %d failed: %s", self.serial, page, err
-                )
-                break
-            present = [
-                device
-                for device in inventory.devices
-                if device.serial not in (0, 0xFFFFFFFF)
-            ]
-            if not present:
-                break
-            for device in present:
-                devices[device.zone] = device
-            await asyncio.sleep(PROGRAMMING_READ_GAP)
-        if devices:
-            LOGGER.debug(
-                "%s: wireless inventory — %d devices", self.serial, len(devices)
-            )
-        return devices
 
     @callback
     def _build_programming(
@@ -866,7 +544,7 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
     # --- outgoing commands ----------------------------------------------------------------------
 
     async def async_arm(self, partition: int, mode: ArmMode) -> None:
-        """Arm *partition* (1-based) in *mode*. Source: `docs/protocol/commands.md`.
+        """Arm *partition* (1-based) in *mode*.
 
         The three modes are three different commands, not three names for one — see `ArmMode`. The
         permission bit checked is the one for the mode actually being used, so a panel with no STAY
@@ -893,100 +571,6 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         )
         LOGGER.debug("%s: disarming partition %d", self.serial, partition)
         await self._async_command(lambda seq: build_disarm(seq, partition))
-
-    async def async_fence(self, *, arm: bool) -> None:
-        """Arm or disarm the electric fence — the project's primary goal.
-
-        Path A, the unauthenticated one, and **only** path A. The 2026-08-08 capture proved it works
-        on the real panel (`7B 06 1A 4E 63 4A` armed it, `7B 06 22 4F 63 73` disarmed it), and it
-        carries no password and therefore no lockout risk at all. The authenticated `0x37` fallback
-        the sprint plan allowed for is deliberately not wired up: it would need a panel user code,
-        and five wrong ones block remote operation until someone walks to the keypad. AGENTS.md §6.
-        """
-        permissions = self._fence_permissions()
-        self._require_permission(
-            permissions.may_arm if arm else permissions.may_disarm,
-            "300 TECLA3/TECLA4, and 'Opera eletrificador' at 301-398",
-        )
-        LOGGER.debug(
-            "%s: %s the electric fence", self.serial, "arming" if arm else "disarming"
-        )
-        await self._async_command(build_fence_arm if arm else build_fence_disarm)
-
-    async def async_pgm(self, number: int, *, on: bool) -> None:
-        """Switch PGM *number* (1-based) on or off. Source: `docs/protocol/pgm-and-bypass.md`.
-
-        ⚠️ The caller is responsible for not handing this the PGM that drives the electric fence.
-        The guard lives in the switch platform, where the panel's configured `fence_pgm` is known;
-        the coordinator deliberately does not second-guess a deliberate call.
-        """
-        self._require_pgm_permission(number)
-        LOGGER.debug(
-            "%s: switching PGM %d %s", self.serial, number, "on" if on else "off"
-        )
-        builder = build_pgm_on if on else build_pgm_off
-        await self._async_command(lambda seq: builder(seq, number))
-
-    async def async_bypass(self, zone: int, *, bypassed: bool) -> None:
-        """Bypass or un-bypass one *zone*, leaving every other zone's bypass exactly as it is.
-
-        **`0x52` replaces the whole bitmap**, so this is a read-modify-write — and what it reads is
-        the panel's own current answer (`bypassed_zones`, from the zone nibbles in the last status
-        frame), never a set this integration remembered. A remembered set would silently un-bypass
-        a zone somebody inhibited at the keypad.
-        """
-        status = self.data.status
-        if status is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="no_status_yet",
-                translation_placeholders={"serial": self.serial},
-            )
-        zone_state = self.data.zone(zone)
-        if zone_state is not None and not zone_state.may_bypass:
-            # `P-INIB` says the panel will not inhibit this zone. Unlike the arm permissions this is
-            # a programming choice rather than a state, but it is checked the same way and at the
-            # same moment, so the message can name the address.
-            self._require_permission(False, "the zone's 'permite inibir' attribute")
-
-        wanted = set(status.bypassed_zones)
-        wanted.add(zone) if bypassed else wanted.discard(zone)
-        LOGGER.debug(
-            "%s: %s zone %d; bypass set becomes %s",
-            self.serial,
-            "bypassing" if bypassed else "un-bypassing",
-            zone,
-            sorted(wanted),
-        )
-        await self.async_set_bypass_mask(frozenset(wanted))
-
-    async def async_set_bypass_mask(self, zones: frozenset[int]) -> None:
-        """Replace the whole manual-bypass bitmap with exactly *zones*.
-
-        The advanced form, and the shape the command really has. `async_bypass` is what an entity
-        should call; this is for the service, and for clearing everything with an empty set.
-        """
-        LOGGER.debug("%s: setting the bypass bitmap to %s", self.serial, sorted(zones))
-        await self._async_command(lambda seq: build_bypass_bitmap(seq, zones))
-
-    async def async_sync_time(self, now: datetime) -> None:
-        """Set the panel clock from *now*, which the caller has already made local.
-
-        Worth doing because the panel timestamps every event it reports from its own clock: a panel
-        that has drifted files today's alarm under yesterday afternoon.
-        """
-        LOGGER.debug("%s: setting the panel clock to %s", self.serial, now.isoformat())
-        await self._async_command(
-            lambda seq: build_set_datetime(
-                seq,
-                hour=now.hour,
-                minute=now.minute,
-                second=now.second,
-                day=now.day,
-                month=now.month,
-                year=now.year,
-            )
-        )
 
     async def _async_command(self, builder: Callable[[int], bytes]) -> None:
         """Send one command, if both gates allow it, and verify it afterwards.
@@ -1032,17 +616,11 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
     # --- guards ---------------------------------------------------------------------------------
 
     def _require_writable(self) -> None:
-        """Refuse to send anything unless both gates are open, and say which one is shut."""
+        """Refuse to send anything while the panel is in read-only mode."""
         if self.read_only:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="read_only",
-                translation_placeholders={"serial": self.serial},
-            )
-        if not self.commands_enabled:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="commands_disabled",
                 translation_placeholders={"serial": self.serial},
             )
 
@@ -1059,21 +637,6 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
                 translation_placeholders={"serial": self.serial, "address": address},
             )
 
-    def _require_pgm_permission(self, number: int) -> None:
-        """Refuse a PGM the panel will not operate, naming the address that decides it.
-
-        `P-PGM` is clear both for a PGM that is not programmed and for one whose function is not
-        user-operable — only functions **12** (with retention) and **13** (without) are — and the
-        panel answers either with `0xA9` on the authenticated path and with silence on this one. The
-        address to look at is the same in both cases.
-        """
-        status = self.data.status
-        if status is None:
-            return
-        self._require_permission(
-            status.pgm_permitted(number), "821-824 (the PGM's function)"
-        )
-
     def _partition_permissions(self, partition: int) -> PartitionPermissions:
         """`P-PART[i]` for *partition*, read at the moment of the call.
 
@@ -1086,13 +649,6 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         if status is None or not 1 <= partition <= len(status.partition_permissions):
             return PartitionPermissions(0xFF)
         return status.partition_permissions[partition - 1]
-
-    def _fence_permissions(self) -> FencePermissions:
-        """`P-ELET`, read at the moment of the call. Permissive before the first status frame."""
-        status = self.data.status
-        if status is None:
-            return FencePermissions(0xFF)
-        return status.fence_permissions
 
     # --- incoming -------------------------------------------------------------------------------
 
@@ -1108,7 +664,6 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         state = replace(self.data, last_seen_at=now, available=True)
 
         if isinstance(packet, ConnectionInfo):
-            async_check_model(self.hass, packet)
             # The device registry has to be told explicitly. Home Assistant reads an entity's
             # `device_info` once, when the entity is added — and every entity here was added before
             # this frame arrived, back when the model was still the "unknown" fallback.
@@ -1148,9 +703,8 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
 
         Nothing this integration sends carries a password — the whole command set runs on path A,
         which has none — so in normal operation this never fires. It exists because the cost of
-        being wrong about that is high and asymmetric: **five** wrong passwords block remote
-        operation at the panel until somebody walks to the keypad, and the flag has to be set on the
-        **first**. AGENTS.md §6.
+        being wrong about that is high and asymmetric: five wrong passwords block remote operation
+        at the panel until somebody walks to the keypad, so the flag is set on the first.
 
         The flag is never cleared automatically. Clearing it means the user has understood what
         happened, which is what the repair issue asks them to do.
@@ -1165,7 +719,6 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
             self.serial,
             response.ack.name,
         )
-        async_report_lockout(self.hass, self.serial)
 
     @callback
     def _handle_event(
@@ -1188,7 +741,6 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
                 state,
                 last_event_at=now,
                 last_event_code=event.code,
-                zone_alerts=self._apply_zone_alert(event, state.zone_alerts),
             )
         )
         async_dispatcher_send(
@@ -1198,58 +750,11 @@ class JflPanelCoordinator(DataUpdateCoordinator[JflPanelState]):
         )
 
     @callback
-    def _apply_zone_alert(
-        self, event: PanelEvent, current: Mapping[int, frozenset[ZoneAlert]]
-    ) -> Mapping[int, frozenset[ZoneAlert]]:
-        """Fold a low-battery, supervision or tamper event into the per-zone latches.
-
-        Returns *current* unchanged for every other code, which is almost all of them — and
-        returning the same object matters: the coordinator is `always_update=False`, so an identical
-        snapshot spares every entity a state write.
-        """
-        alert = zone_alert(event.code)
-        if alert is None or event.is_fence:
-            return current
-        try:
-            zone = int(event.subject)
-        except ValueError:
-            # These six codes all carry a zone number, so a non-numeric subject means a frame we
-            # decoded wrongly rather than a condition. Dropping it beats latching it on zone 0.
-            LOGGER.debug(
-                "%s: event %s has a non-numeric zone %r",
-                self.serial,
-                event.code,
-                event.subject,
-            )
-            return current
-
-        condition, setting = alert
-        held = current.get(zone, frozenset())
-        updated = held | {condition} if setting else held - {condition}
-        if updated == held:
-            return current
-
-        LOGGER.debug(
-            "%s: zone %d %s %s (event %s)",
-            self.serial,
-            zone,
-            "reports" if setting else "clears",
-            condition,
-            event.code,
-        )
-        alerts = dict(current)
-        if updated:
-            alerts[zone] = updated
-        else:
-            alerts.pop(zone, None)
-        return alerts
-
-    @callback
     def _handle_available(self, available: bool) -> None:
         """React to the connection watchdog.
 
-        Logged **once** per transition, never per retry: a panel that redials every ninety seconds
-        would otherwise fill the log with a pair of lines a minute. AGENTS.md §4.
+        Logged once per transition, never per retry: a panel that redials every ninety seconds
+        would otherwise fill the log with a pair of lines a minute.
 
         Both directions are `info`, matching the quality-scale `log-when-unavailable` rule exactly:
         it asks for `info` on both the disappearance and the return, on the grounds that this is

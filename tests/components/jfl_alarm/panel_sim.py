@@ -1,9 +1,5 @@
 """A fake panel that speaks the real protocol, for tests that need one to dial in.
 
-Author: Jonis Maurin Ceará <jmceara AT gmail.com>
-Based on the code developed by Carlos Jose Fernandes,
-available at https://github.com/fernac03/JFL_ACTIVE
-
 Every frame here is assembled with the project's own `build_frame`, so the checksums are real and
 the listener has to parse them exactly as it parses a live panel's. That matters for the sprint's
 acceptance criterion about three panels of different models on one port: a simulator that produced
@@ -21,7 +17,7 @@ import hashlib
 from pyjfl import EVENTS_PER_PAGE, Cmd, build_frame
 
 EVENT_RECORD_SIZE = 14
-"""Bytes per `0x48` record. See `docs/protocol/event-buffer.md`."""
+"""Bytes per `0x48` record."""
 
 CONNECTION_LENGTH = 102
 STATUS_LENGTH = 127
@@ -266,7 +262,7 @@ class FakePanel:
             )
             payload += bytes(stamp)
         # The real panel ends a download with terminator records rather than a short frame —
-        # `docs/protocol/event-buffer.md`. Padding matters: a reply carrying no records at all is
+        # Padding matters: a reply carrying no records at all is
         # below the length the decoder treats as a reply, so an empty buffer would look like
         # silence rather than like an answer.
         payload += b"\xff" * (EVENT_RECORD_SIZE * (EVENTS_PER_PAGE - len(page)))

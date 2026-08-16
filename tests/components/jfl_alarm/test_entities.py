@@ -1,9 +1,5 @@
 """The entities a panel produces once it dials in.
 
-Author: Jonis Maurin Ceará <jmceara AT gmail.com>
-Based on the code developed by Carlos Jose Fernandes,
-available at https://github.com/fernac03/JFL_ACTIVE
-
 The theme running through these tests is that **nothing exists until the panel says it does**. A
 partition that is not programmed produces no entity, and one programmed later still appears without
 a reload.
@@ -83,7 +79,7 @@ async def test_identity_is_on_the_device_and_not_in_entities(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """AGENTS.md §5: model, firmware, serial and MAC belong to the device registry."""
+    """Model, firmware, serial and MAC belong to the device registry, not to entity attributes."""
     await _bring_up(hass, setup_entry, connect_panel, panel)
 
     device = device_registry.async_get_device_by_identifier(

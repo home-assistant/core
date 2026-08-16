@@ -1,9 +1,5 @@
 """Fixtures for the tests that need a running Home Assistant.
 
-Author: Jonis Maurin Ceará <jmceara AT gmail.com>
-Based on the code developed by Carlos Jose Fernandes,
-available at https://github.com/fernac03/JFL_ACTIVE
-
 These tests drive the integration over a **real TCP socket** rather than a mocked one. The sprint's
 acceptance criteria are about socket behaviour — a reconnect mid-session, a malformed frame, three
 panels on one port, the port actually being freed on unload — and a mocked socket cannot fail any of
@@ -127,19 +123,11 @@ def announce_programming(
 ) -> None:
     """Tell *coordinator* its programming has been read, without driving thirty round trips.
 
-    **The PGM switches wait for the panel's functions** — `pgm_functions_known`, ADR-0017 — because
-    a function decides which device the switch belongs to, whether it is a control and whether it is
-    created enabled. A test that is about the *command* a PGM switch sends still has to get past
-    that gate, and a real read is the wrong way to do it here: `serve_programming` consumes the same
-    socket the test then reads its command frames from.
+    A real read is the wrong way to do this in a test about what the panel is sent afterwards:
+    `serve_programming` consumes the same socket the test then reads its command frames from.
 
     *pgms* maps PGM number to function byte. A number left out has no record at all, which is what
-    a panel whose PGM region did not come back looks like, and which produces an ordinary switch.
-
-    `tests/integration/test_capability_detection.py` (this repository's own tree; the `core` publish
-    target renames it to `tests/components/jfl_alarm/test_capability_detection.py`) covers the real
-    path — a read served over the socket, placing the fence's output on the fence device — so
-    nothing here is the only cover for it.
+    a panel whose PGM region did not come back looks like.
     """
     coordinator.programming = replace(
         coordinator.programming,
