@@ -10,7 +10,6 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_before": make_entity_datetime_condition(
         {
             DOMAIN: DomainSpec(),
-            "input_datetime": DomainSpec(),
             "sensor": DomainSpec(device_class="timestamp"),
         },
         primary_entities_only=False,

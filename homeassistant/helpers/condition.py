@@ -1217,20 +1217,7 @@ class EntityDatetimeConditionBase(EntityConditionBase):
         )
 
     def _get_datetime_from_state(self, state_obj: State) -> datetime | None:
-        domain = split_entity_id(state_obj.entity_id)[0]
-        if domain in {"datetime", "sensor"}:
-            try:
-                return datetime.fromisoformat(state_obj.state)
-            except TypeError, ValueError:
-                return None
-
-        timestamp = state_obj.attributes.get("timestamp")
-        if timestamp is not None:
-            try:
-                return datetime.fromtimestamp(timestamp, tz=dt_util.UTC)
-            except TypeError, ValueError:
-                return None
-        return None
+        return dt_util.parse_datetime(state_obj.state)
 
     @override
     def is_valid_state(self, entity_state: State) -> bool:

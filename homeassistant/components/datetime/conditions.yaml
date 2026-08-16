@@ -2,7 +2,6 @@ is_before:
   target:
     entity: &entity_filters
       - domain: datetime
-      - domain: input_datetime
       - domain: sensor
         device_class: timestamp
   fields:
