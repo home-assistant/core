@@ -512,6 +512,26 @@ async def test_join_players_foreign_entity(
     mock_api_object.change_output.assert_not_called()
 
 
+async def test_join_players_stale_output(
+    hass: HomeAssistant,
+    mock_api_object: Mock,
+    get_request_return_values: dict[str, Any],
+) -> None:
+    """Test joining a zone whose output disappeared from the server raises."""
+    get_request_return_values["outputs"] = SAMPLE_OUTPUTS_UNSELECTED[:2]
+    updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
+    await updater_update(["outputs"])
+    await hass.async_block_till_done()
+    with pytest.raises(ServiceValidationError, match="no longer exists"):
+        await _service_call(
+            hass,
+            TEST_MASTER_ENTITY_NAME,
+            SERVICE_JOIN,
+            {ATTR_GROUP_MEMBERS: [TEST_ZONE_ENTITY_NAMES[2]]},
+        )
+    mock_api_object.change_output.assert_not_called()
+
+
 async def test_unjoin_players(hass: HomeAssistant, mock_api_object: Mock) -> None:
     """Test unjoining disables all outputs."""
     await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_UNJOIN)

@@ -465,6 +465,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` (outputs) to the current playback."""
         entity_registry = er.async_get(self.hass)
+        known_output_ids = {output["id"] for output in self._outputs}
         output_ids: list[str] = []
         for entity_id in group_members:
             if entity_id == self.entity_id:
@@ -485,7 +486,15 @@ class ForkedDaapdMaster(MediaPlayerEntity):
                     translation_placeholders={"entity_id": entity_id},
                 )
             # Zone unique ids are f"{config_entry.entry_id}-{output_id}"
-            output_ids.append(entity_entry.unique_id.split("-", 1)[1])
+            output_id = entity_entry.unique_id.split("-", 1)[1]
+            # Registry entries persist after an output disappears from the server
+            if output_id not in known_output_ids:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="output_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            output_ids.append(output_id)
 
         await asyncio.gather(
             *(

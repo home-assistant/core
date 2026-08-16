@@ -31,6 +31,9 @@
     },
     "not_forked_daapd_output": {
       "message": "Entity {entity_id} is not an output of this OwnTone server."
+    },
+    "output_not_found": {
+      "message": "The output for entity {entity_id} no longer exists on the OwnTone server."
     }
   },
   "options": {
