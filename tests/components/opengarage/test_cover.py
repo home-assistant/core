@@ -80,10 +80,7 @@ async def test_cover_position_during_transition(
 
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == CoverState.OPENING
-    assert (
-        ATTR_CURRENT_POSITION not in state.attributes
-        or state.attributes[ATTR_CURRENT_POSITION] is None
-    )
+    assert ATTR_CURRENT_POSITION not in state.attributes
 
 
 @pytest.mark.parametrize(
