@@ -28,10 +28,15 @@ async def test_setup_and_unload_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_entry_unrecognized_inverter_raises_not_ready(
+async def test_setup_entry_unrecognized_inverter_raises_setup_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup retries when the inverter cannot be identified at all."""
+    """Test setup fails permanently (no retry) when the serial isn't recognized.
+
+    Not expected via the real config flow (it already validated the serial
+    before creating the entry) — this covers the defensive check for e.g. an
+    existing entry outliving a sofar-modbus library downgrade.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id="UNRECOGNIZED_SERIAL_XYZ", data=MOCK_USER_INPUT
     )
@@ -47,7 +52,7 @@ async def test_setup_entry_unrecognized_inverter_raises_not_ready(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_switch_platform_is_forwarded(

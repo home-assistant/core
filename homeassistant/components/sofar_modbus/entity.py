@@ -1,6 +1,6 @@
 """Shared entity base — device_info and the coordinator plumbing."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -9,32 +9,11 @@ from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import SofarDataUpdateCoordinator
 
 
-def build_device_info(coordinator: SofarDataUpdateCoordinator) -> DeviceInfo:
-    """The one physical inverter every entity on this config entry belongs to."""
-    device = coordinator.device
-    serial = device.serial_number
-    assert (
-        serial is not None
-    )  # set by async_setup(), which the coordinator's first refresh requires
-    assert (
-        coordinator.config_entry is not None
-    )  # always constructed with one; see coordinator.py
-    return DeviceInfo(
-        identifiers={(DOMAIN, serial)},
-        name=coordinator.config_entry.title,
-        manufacturer=ATTR_MANUFACTURER,
-        model=device.model or None,
-        serial_number=serial,
-    )
-
-
 class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
     """Base for every Sofar entity — one physical inverter per config entry.
 
-    ``component`` is the attribute name on ``coordinator.device`` this entity
-    reads or writes (e.g. ``'grid'``, ``'feed_in'``) — used by ``available``
-    below so only the entities on a component that actually failed this poll
-    go unavailable, not all of them.
+    ``component`` is the ``coordinator.device`` attribute this entity reads
+    or writes, used by ``available`` to scope per-component poll failures.
     """
 
     _attr_has_entity_name = True
@@ -47,13 +26,20 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        serial = coordinator.device.serial_number
-        assert (
-            serial is not None
-        )  # set by async_setup(), which the coordinator's first refresh requires
+        device = coordinator.device
+        serial = device.serial_number
+        if TYPE_CHECKING:
+            assert serial is not None
+            assert coordinator.config_entry is not None
         self._component = component
         self._attr_unique_id = f"{serial}_{unique_id_suffix}"
-        self._attr_device_info = build_device_info(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial)},
+            name=coordinator.config_entry.title,
+            manufacturer=ATTR_MANUFACTURER,
+            model=device.model or None,
+            serial_number=serial,
+        )
 
     @property
     def _link_available(self) -> bool:
@@ -70,6 +56,6 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
     def available(self) -> bool:
         """Whether this entity's component answered the most recent poll."""
         if not self._link_available:
-            return False  # the link is down; nothing refreshed at all
+            return False
         report = self.coordinator.data
         return report is None or self._component not in report.failed

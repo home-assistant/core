@@ -1,32 +1,4 @@
-"""DataUpdateCoordinator wrapping SofarInverter.async_update().
-
-sofar_modbus reads each polled component independently and contains a failed
-one in its returned UpdateReport rather than failing the whole poll — only a
-dead link (ModbusConnectionError) still raises. This coordinator builds on
-that in two ways:
-
-- A component that fails gets one retry before it's accepted as failed —
-  modbus_connection deliberately disables backend retries so a failure
-  surfaces on the first attempt and the wrapper alone decides what happens
-  next; this coordinator is that wrapper.
-- After the first refresh (which still polls everything, the way
-  SofarInverter.async_update() does it, to learn what this inverter
-  serves), later polls split components into a fast tier (read every
-  cycle) and a slow tier — settings, energy counters, identity, listed
-  in _VOLATILE_COMPONENTS below — read only every
-  _SLOW_TIER_EVERY_N_CYCLES-th cycle, cutting total registers read per poll.
-
-Also disconnect()s after repeated timed-out polls to recover a link
-that's up but unresponsive (a wedged serial-to-network bridge), and stores
-the report as coordinator.data so entities can tell which of them, if any,
-went stale.
-
-``pending`` backs the number/select/switch write entities whose registers the
-device only accepts as one combined block (FeedIn limitation, active power
-control): those entities stage a value here instead of writing it, and a
-paired button entity performs the actual write and clears the keys it just
-committed. See pending_or_live().
-"""
+"""DataUpdateCoordinator wrapping SofarInverter.async_update(), with retry-before-fail and tiered fast/slow polling."""
 
 from collections import deque
 from datetime import datetime, timedelta
@@ -57,15 +29,9 @@ type SofarConfigEntry = ConfigEntry[SofarDataUpdateCoordinator]
 
 _T = TypeVar("_T")
 
-# Components with at least one sensor row whose state_class is MEASUREMENT
-# — these get every-cycle polling; everything else (settings, energy counters,
-# identity, and write-only components like feed_in, active_power_control,
-# passive, charger, remote) lands in the slow tier. Hand-maintained rather
-# than derived from the sensor platform so the coordinator has no dependency
+# Components polled every cycle (vs. the slow tier). Hand-maintained instead
+# of derived from the sensor platform so the coordinator has no dependency
 # on any platform module.
-# TOTAL/TOTAL_INCREASING counters (energy, battery_energy) are deliberately
-# excluded: the recorder buckets long-term statistics at 5 minutes regardless,
-# so polling those faster wouldn't sharpen their stats.
 _VOLATILE_COMPONENTS: frozenset[str] = frozenset(
     {
         "battery_1_2",
