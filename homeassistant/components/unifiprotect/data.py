@@ -72,6 +72,9 @@ def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
 class ProtectData:
     """Coordinate updates."""
 
+    # Resolved once in _async_setup_entry, before any entity is created.
+    nvr_device_id: str
+
     def __init__(
         self,
         hass: HomeAssistant,

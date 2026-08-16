@@ -1,5 +1,6 @@
 """The tests for the Template fan platform."""
 
+from itertools import chain
 from typing import Any
 
 import pytest
@@ -14,9 +15,12 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
+    FanEntityCapabilityAttribute,
     FanEntityFeature,
+    FanEntityStateAttribute,
     NotValidPresetModeError,
 )
+from homeassistant.components.template.fan import DEFAULT_NAME
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
@@ -26,6 +30,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_extra_template_attributes,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -1611,3 +1616,45 @@ async def test_restore_state(
     assert state.attributes["preset_mode"] == "low"
     assert state.attributes["oscillating"] is True
     assert state.attributes["direction"] == DIRECTION_REVERSE
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_FAN, style, {"state": "{{ 'on' }}", **OPTIMISTIC_ON_OFF_ACTIONS}
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(FanEntityCapabilityAttribute, FanEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_FAN,
+        style,
+        0,
+        {
+            "state": "{{ 'on' }}",
+            **OPTIMISTIC_ON_OFF_ACTIONS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )

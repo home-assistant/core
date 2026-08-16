@@ -1011,6 +1011,11 @@ ZEROCONF = {
             "domain": "systemnexa2",
         },
     ],
+    "_tbk_vmc._tcp.local.": [
+        {
+            "domain": "flow_it",
+        },
+    ],
     "_technove-stations._tcp.local.": [
         {
             "domain": "technove",

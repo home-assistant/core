@@ -123,6 +123,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.data["zone"] = zones
             self.data["weather"] = home["weather"]
             self.data["geofence"] = home["geofence"]
+            self.data["rate_limit"] = self.get_rate_limit()
         finally:
             # Tado rotates the refresh token every time the (10-minute-lived)
             # access token is refreshed, which PyTado does lazily on the
