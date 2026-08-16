@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import logging
 from random import uniform
-from time import time
+from time import time as time_now
 from typing import Any
 
 from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, RETRY_ATTEMPTS
@@ -295,7 +295,7 @@ async def register_callbacks(
             """Request update when a battery camera wakes up."""
             if (
                 not host.api.sleeping(channel)
-                and time() - host.last_wake[channel]
+                and time_now() - host.last_wake[channel]
                 > BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
             ):
                 hass.loop.create_task(device_coordinator.async_request_refresh())
