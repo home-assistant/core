@@ -50,6 +50,29 @@
         "name": "Live view SD"
       }
     },
+    "select": {
+      "device_volume": {
+        "name": "Volume",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "mute": "Mute"
+        }
+      },
+      "night_vision_mode": {
+        "name": "Night vision mode",
+        "state": {
+          "custom": "Custom mode",
+          "fullcolor": "Bright color night vision",
+          "infrared": "Infrared night vision",
+          "intelligent": "Smart night vision",
+          "lowlight": "Low light night vision",
+          "off": "[%key:common::state::off%]",
+          "smartlowlight": "Smart low light night vision"
+        }
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
@@ -98,6 +121,23 @@
       "white_light": {
         "name": "White light"
       }
+    }
+  },
+  "exceptions": {
+    "get_image_failed": {
+      "message": "Could not get a snapshot from Imou: {error}"
+    },
+    "get_stream_failed": {
+      "message": "Could not get the live stream URL from Imou: {error}"
+    },
+    "press_button_failed": {
+      "message": "Imou rejected the button press: {error}"
+    },
+    "select_option_failed": {
+      "message": "Imou rejected the new option: {error}"
+    },
+    "switch_operation_failed": {
+      "message": "Imou rejected the switch change: {error}"
     }
   },
   "selector": {

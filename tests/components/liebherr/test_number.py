@@ -26,8 +26,9 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import MOCK_DEVICE
 
@@ -43,6 +44,18 @@ def platforms() -> list[Platform]:
 @pytest.fixture(autouse=True)
 def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_temperature_step(hass: HomeAssistant) -> None:
+    """Test the entities expose their supported temperature steps."""
+    top_zone = hass.states.get("number.test_fridge_top_zone_setpoint")
+    bottom_zone = hass.states.get("number.test_fridge_bottom_zone_setpoint")
+
+    assert top_zone is not None
+    assert bottom_zone is not None
+    assert top_zone.attributes["step"] == 2
+    assert bottom_zone.attributes["step"] == 1
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -126,6 +139,57 @@ async def test_set_temperature(
 
     # Verify coordinator refresh was triggered
     assert mock_liebherr_client.get_device_state.call_count > initial_call_count
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_after_unit_conversion(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+) -> None:
+    """Test setting a temperature converted from the configured unit."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+            ATTR_VALUE: 39,
+        },
+        blocking=True,
+    )
+
+    mock_liebherr_client.set_temperature.assert_called_once_with(
+        device_id="test_device_id",
+        zone_id=1,
+        target=4,
+        unit=TemperatureUnit.CELSIUS,
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("value", [4.1, 5])
+async def test_set_temperature_not_in_allowed_steps(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    value: float,
+) -> None:
+    """Test setting a temperature outside the allowed steps."""
+    with pytest.raises(
+        ServiceValidationError,
+        match=rf"Temperature {float(value)} is not supported. Allowed values: 2, 4, 6, 8",
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                ATTR_VALUE: value,
+            },
+            blocking=True,
+        )
+
+    mock_liebherr_client.set_temperature.assert_not_called()
 
 
 @pytest.mark.usefixtures("init_integration")

@@ -83,6 +83,11 @@
         }
       }
     },
+    "select": {
+      "schedule": {
+        "name": "Schedule"
+      }
+    },
     "sensor": {
       "gust_angle": {
         "name": "Gust angle"
