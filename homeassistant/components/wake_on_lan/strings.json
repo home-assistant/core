@@ -20,6 +20,23 @@
       }
     }
   },
+  "issues": {
+    "migrate_to_template": {
+      "fix_flow": {
+        "abort": {
+          "could_not_import": "Failed to import the config entry for the Group helper\n**Error:** {error}\n\nPlease manually remove the Min/Max helper and create your new Group helper.",
+          "entity_not_found": "Entity could not be found as it has been removed, aborting the repair."
+        },
+        "step": {
+          "migrate": {
+            "description": "Bla bla bla.",
+            "title": "[%key:component::wake_on_lan::issues::migrate_to_template::title%]"
+          }
+        }
+      },
+      "title": "WOL switch has been deprecated"
+    }
+  },
   "options": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"

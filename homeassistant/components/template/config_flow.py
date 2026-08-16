@@ -660,6 +660,10 @@ CONFIG_FLOW = {
         validate_user_input=validate_user_input(Platform.WEATHER),
         description_placeholders=_get_forecast_description_place_holders,
     ),
+    "import": SchemaFlowFormStep(
+        config_schema(Platform.SWITCH),
+        validate_user_input=validate_user_input(Platform.SWITCH),
+    ),
 }
 
 

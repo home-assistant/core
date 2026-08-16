@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -47,6 +48,18 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a wake on lan switch."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "migrate_to_template",
+        breaks_in_ha_version="2026.12.0",
+        is_fixable=True,
+        is_persistent=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="migrate_to_template",
+        data=config,
+    )
+
     broadcast_address: str | None = config.get(CONF_BROADCAST_ADDRESS)
     broadcast_port: int | None = config.get(CONF_BROADCAST_PORT)
     host: str | None = config.get(CONF_HOST)

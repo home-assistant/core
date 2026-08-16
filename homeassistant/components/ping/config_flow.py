@@ -37,6 +37,12 @@ class PingConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    async def async_step_import(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the import step."""
+        return await self.async_step_user(user_input)
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
