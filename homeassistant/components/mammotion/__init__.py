@@ -102,11 +102,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
     async def shutdown_mammotion(_: Event | None = None) -> None:
         await mammotion.stop()
 
+    def schedule_shutdown_mammotion() -> None:
+        hass.async_create_task(shutdown_mammotion())
+
+    def schedule_flush_mower_data() -> None:
+        hass.async_create_task(store.async_flush_mower_data())
+
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_mammotion)
     )
-    entry.async_on_unload(shutdown_mammotion)
-    entry.async_on_unload(store.async_flush_mower_data)
+    entry.async_on_unload(schedule_shutdown_mammotion)
+    entry.async_on_unload(schedule_flush_mower_data)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
