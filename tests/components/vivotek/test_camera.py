@@ -58,6 +58,30 @@ async def test_camera_device_info(
     assert device.sw_version == "1.2.3"
 
 
+async def test_camera_device_info_with_metadata_errors(
+    hass: HomeAssistant,
+    mock_vivotek_camera: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test metadata fields are omitted when camera metadata calls fail."""
+    mock_vivotek_camera.get_serial.side_effect = VivotekCameraError
+    mock_vivotek_camera.get_param.side_effect = VivotekCameraError
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_entry = entity_registry.async_get("camera.vivotek_camera")
+    assert entity_entry is not None
+    assert entity_entry.device_id is not None
+
+    device = device_registry.async_get(entity_entry.device_id)
+    assert device is not None
+    assert device.model is None
+    assert device.serial_number is None
+    assert device.sw_version is None
+
+
 def test_camera_available_when_update_succeeds(
     mock_vivotek_camera: AsyncMock,
 ) -> None:
@@ -97,3 +121,67 @@ def test_camera_unavailable_when_update_fails(
     camera.update()
 
     assert not camera.available
+
+
+async def test_camera_stream_source(
+    mock_vivotek_camera: AsyncMock,
+) -> None:
+    """Test stream source is returned from camera entity."""
+    camera = VivotekCam(
+        mock_vivotek_camera,
+        "rtsp://example/live.sdp",
+        "11:22:33:44:55:66",
+        None,
+        None,
+        None,
+        2,
+        "Vivotek Camera",
+    )
+
+    stream_source = await camera.stream_source()
+
+    assert stream_source == "rtsp://example/live.sdp"
+
+
+def test_camera_motion_detection_methods(
+    mock_vivotek_camera: AsyncMock,
+) -> None:
+    """Test motion detection commands update entity state."""
+    camera = VivotekCam(
+        mock_vivotek_camera,
+        "rtsp://example/live.sdp",
+        "11:22:33:44:55:66",
+        None,
+        None,
+        None,
+        2,
+        "Vivotek Camera",
+    )
+    mock_vivotek_camera.set_param.side_effect = ["1", "0"]
+
+    camera.enable_motion_detection()
+    assert camera.motion_detection_enabled
+
+    camera.disable_motion_detection()
+    assert not camera.motion_detection_enabled
+
+
+def test_camera_image_returns_snapshot(
+    mock_vivotek_camera: AsyncMock,
+) -> None:
+    """Test camera image comes directly from camera snapshot call."""
+    camera = VivotekCam(
+        mock_vivotek_camera,
+        "rtsp://example/live.sdp",
+        "11:22:33:44:55:66",
+        None,
+        None,
+        None,
+        2,
+        "Vivotek Camera",
+    )
+    mock_vivotek_camera.snapshot.return_value = b"snapshot-bytes"
+
+    image = camera.camera_image()
+
+    assert image == b"snapshot-bytes"
