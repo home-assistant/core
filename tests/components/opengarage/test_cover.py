@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
+    DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_TOGGLE,
@@ -63,7 +64,7 @@ async def test_cover_position_during_transition(
 
     # Open the cover - will be in OPENING state before update
     await hass.services.async_call(
-        "cover",
+        COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {ATTR_ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
@@ -96,7 +97,7 @@ async def test_toggle_from_closed_to_open(
 
     # Toggle should call open
     await hass.services.async_call(
-        "cover",
+        COVER_DOMAIN,
         SERVICE_TOGGLE,
         {ATTR_ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
@@ -131,7 +132,7 @@ async def test_toggle_from_open_to_closed(
 
     # Toggle should call close
     await hass.services.async_call(
-        "cover",
+        COVER_DOMAIN,
         SERVICE_TOGGLE,
         {ATTR_ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
@@ -170,7 +171,7 @@ async def test_toggle_already_closed_does_not_close_again(
 
     # First toggle opens
     await hass.services.async_call(
-        "cover",
+        COVER_DOMAIN,
         SERVICE_TOGGLE,
         {ATTR_ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
@@ -195,7 +196,7 @@ async def test_toggle_already_closed_does_not_close_again(
     # After idle time (simulating the time-dependent bug), toggle again
     # With current_cover_position available, this should reliably open
     await hass.services.async_call(
-        "cover",
+        COVER_DOMAIN,
         SERVICE_TOGGLE,
         {ATTR_ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
@@ -225,7 +226,7 @@ async def test_open_cover_command(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "cover",
+        COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {ATTR_ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
@@ -255,7 +256,7 @@ async def test_close_cover_command(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "cover",
+        COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
         {ATTR_ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
