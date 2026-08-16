@@ -90,6 +90,12 @@
     }
   },
   "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with TechnoVE API."
+    },
+    "invalid_response": {
+      "message": "Invalid response from TechnoVE API."
+    },
     "max_current_in_sharing_mode": {
       "message": "Cannot set the max current when power sharing mode is enabled."
     },
