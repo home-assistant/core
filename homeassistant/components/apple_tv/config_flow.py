@@ -28,6 +28,7 @@ from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
@@ -41,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_INPUT = "device_input"
 
-INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=None): int})
+INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=None): cv.string})
 
 DEFAULT_START_OFF = False
 

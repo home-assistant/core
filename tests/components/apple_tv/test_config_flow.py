@@ -155,6 +155,44 @@ async def test_user_adds_full_device(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("full_device", "pairing")
+async def test_user_adds_device_with_leading_zero_pin(hass: HomeAssistant) -> None:
+    """Test pairing a device with a PIN that starts with a leading zero."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"device_input": "MRP Device"},
+    )
+    assert result2["type"] is FlowResultType.FORM
+
+    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "pair_with_pin"
+    assert result3["description_placeholders"] == {"protocol": "MRP"}
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "0123"}
+    )
+    assert result4["type"] is FlowResultType.FORM
+    assert result4["step_id"] == "pair_no_pin"
+    assert result4["description_placeholders"] == {"protocol": "DMAP", "pin": "1111"}
+
+    result5 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result5["type"] is FlowResultType.FORM
+    assert result5["step_id"] == "pair_with_pin"
+    assert result5["description_placeholders"] == {"protocol": "AirPlay"}
+
+    result6 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "0456"}
+    )
+    assert result6["type"] is FlowResultType.CREATE_ENTRY
+    assert result6["data"]["name"] == "MRP Device"
+
+
 @pytest.mark.usefixtures("dmap_device", "dmap_pin", "pairing")
 async def test_user_adds_dmap_device(hass: HomeAssistant) -> None:
     """Test adding device with only DMAP service."""
