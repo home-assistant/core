@@ -7,11 +7,12 @@ from unittest.mock import MagicMock, Mock
 from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 from pymammotion.data.model.device import MowingDevice
+from pymammotion.transport.base import AuthError, LoginFailedError
 from Tea.exceptions import UnretryableException
 
 from homeassistant.components.mammotion.const import DOMAIN
 from homeassistant.components.mammotion.coordinator import DEFAULT_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import HomeAssistant
 
@@ -223,3 +224,41 @@ async def test_reload_does_not_overlap_clients(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert call_order == ["stop", "login"]
+
+
+async def test_login_failure_starts_reauth(
+    hass: HomeAssistant,
+    mock_mower_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stored credentials that no longer work prompt for reauth."""
+    mock_mower_api.mammotion.login_and_initiate_cloud.side_effect = LoginFailedError(
+        "user123", "bad password"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_auth_error_while_polling_starts_reauth(
+    hass: HomeAssistant,
+    mock_mower_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an auth failure during a poll prompts for reauth."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mower_api.update.side_effect = AuthError("user123", "token rejected")
+
+    freezer.tick(DEFAULT_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH

@@ -9,9 +9,11 @@ from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.data.model.device import MowingDevice
 from pymammotion.homeassistant import HomeAssistantMowerApi
 from pymammotion.transport import NoTransportAvailableError
+from pymammotion.transport.base import AuthError
 
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config import MammotionConfigStore
@@ -118,6 +120,8 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
             data = await self.api.update(self.device_name)
         except DeviceOfflineException, NoTransportAvailableError:
             return self.data
+        except AuthError as err:
+            raise ConfigEntryAuthFailed(err) from err
 
         if data is None:
             raise UpdateFailed(f"No data returned for {self.device_name}")
