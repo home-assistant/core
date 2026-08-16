@@ -16,6 +16,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, format_mac
 
 from .const import (
@@ -190,7 +191,9 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> tuple[dict[str, str], str | None]:
         """Validate the credentials and return errors and the account ID."""
         errors: dict[str, str] = {}
-        mammotion_http = MammotionHTTP(account, password)
+        mammotion_http = MammotionHTTP(
+            account, password, session=async_get_clientsession(self.hass)
+        )
 
         try:
             await mammotion_http.login_v2(account, password)

@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .config import MammotionConfigStore
 from .const import CONF_ACCOUNTNAME, DOMAIN, LOGGER
+from .exceptions import CommandFailedError
 
 if TYPE_CHECKING:
     from . import MammotionConfigEntry
@@ -67,9 +68,10 @@ class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
         """Check if device is online."""
         return self.api.is_online(self.device_name)
 
-    async def async_send_command(self, command: str, **kwargs: Any) -> bool | None:
+    async def async_send_command(self, command: str, **kwargs: Any) -> None:
         """Send command via api."""
-        return await self.api.async_send_command(self.device_name, command, **kwargs)
+        if not await self.api.async_send_command(self.device_name, command, **kwargs):
+            raise CommandFailedError(f"Command {command} failed for {self.device_name}")
 
 
 class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):

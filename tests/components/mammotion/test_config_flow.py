@@ -21,7 +21,6 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import MockConfigEntry
 
 
-# Helpers
 def _get_mock_device(name="Luba-ABC123", address="AA:BB:CC:DD:EE:FF"):
     device = MagicMock(spec=BLEDevice)
     device.name = name

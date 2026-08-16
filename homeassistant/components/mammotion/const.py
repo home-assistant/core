@@ -12,6 +12,8 @@ from pymammotion.aliyun.exceptions import (
 )
 from pymammotion.transport.base import NoTransportAvailableError
 
+from .exceptions import CommandFailedError
+
 DOMAIN: Final = "mammotion"
 
 DEVICE_SUPPORT = ("Luba", "Yuka")
@@ -24,6 +26,7 @@ COMMAND_EXCEPTIONS = (
     NoTransportAvailableError,
     TimeoutError,
     DeviceOfflineException,
+    CommandFailedError,
 )
 
 EXPIRED_CREDENTIAL_EXCEPTIONS = (CheckSessionException, CloudSetupError)

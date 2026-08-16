@@ -16,7 +16,7 @@ from homeassistant.components.lawn_mower import (
     SERVICE_START_MOWING,
     LawnMowerActivity,
 )
-from homeassistant.components.mammotion.const import COMMAND_EXCEPTIONS, DOMAIN
+from homeassistant.components.mammotion.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -171,7 +171,7 @@ async def test_services_command_failure(
     """Test the lawn mower services raise on command failures."""
     mock_mowing_device.report_data.dev.sys_status = sys_status
     mock_mowing_device.report_data.dev.charge_state = 0
-    mock_mower_api.async_send_command.side_effect = COMMAND_EXCEPTIONS[0]("boom")
+    mock_mower_api.async_send_command.return_value = False
 
     await setup_integration(hass, mock_config_entry)
 
