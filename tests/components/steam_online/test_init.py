@@ -40,6 +40,48 @@ async def test_setup(
     assert not hass.data.get(DOMAIN)
 
 
+async def test_setup_incomplete_profile(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    steam_api: MagicMock,
+) -> None:
+    """Test setup when a tracked player has an unconfigured profile without profilestate."""
+    steam_api.return_value.GetPlayerSummaries.return_value = {
+        "response": {
+            "players": {
+                "player": [
+                    {
+                        "steamid": ACCOUNT_1,
+                        "communityvisibilitystate": 1,
+                        "personaname": ACCOUNT_NAME_1,
+                        "profileurl": "https://steamcommunity.com/profiles/123456789/",
+                        "avatar": "https://avatars.steamstatic.com/avatar.jpg",
+                        "avatarmedium": "https://avatars.steamstatic.com/avatar_medium.jpg",
+                        "avatarfull": "https://avatars.steamstatic.com/avatar_full.jpg",
+                        "personastate": 1,
+                    },
+                    {
+                        "steamid": ACCOUNT_2,
+                        "communityvisibilitystate": 1,
+                        "personaname": ACCOUNT_NAME_2,
+                        "profileurl": "https://steamcommunity.com/profiles/987654321/",
+                        "avatar": "https://avatars.steamstatic.com/avatar.jpg",
+                        "avatarmedium": "https://avatars.steamstatic.com/avatar_medium.jpg",
+                        "avatarfull": "https://avatars.steamstatic.com/avatar_full.jpg",
+                        "personastate": 0,
+                    },
+                ]
+            }
+        }
+    }
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(
     "side_effect",
     [
