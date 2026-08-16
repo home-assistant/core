@@ -1,5 +1,6 @@
 """Tests for the TechnoVE config flow."""
 
+from dataclasses import replace
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
@@ -317,7 +318,7 @@ async def test_full_reconfigure_flow_unique_id_mismatch(
 
     # Change mac address to simulate a different device
     device = mock_technove.update.return_value
-    device.info.mac_address = "AA:AA:AA:AA:AA:CC"
+    device.info = replace(device.info, mac_address="AA:AA:AA:AA:AA:CC")
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 

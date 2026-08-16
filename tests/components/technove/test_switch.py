@@ -1,5 +1,6 @@
 """Tests for the TechnoVE switch platform."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock
 
 import pytest
@@ -184,7 +185,7 @@ async def test_disable_charging_auto_charge(
 
     # Enable auto-charge mode
     device = mock_technove.update.return_value
-    device.info.auto_charge = True
+    device.info = replace(device.info, auto_charge=True)
 
     with pytest.raises(
         ServiceValidationError,

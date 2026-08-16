@@ -1,5 +1,6 @@
 """Tests for the TechnoVE number platform."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock
 
 import pytest
@@ -111,7 +112,7 @@ async def test_set_max_current_sharing_mode(
 
     # Enable power sharing mode
     device = mock_technove.update.return_value
-    device.info.in_sharing_mode = True
+    device.info = replace(device.info, in_sharing_mode=True)
 
     with pytest.raises(
         ServiceValidationError,
