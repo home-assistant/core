@@ -6,10 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.tis_control import async_setup_entry, async_unload_entry
 from homeassistant.components.tis_control.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry, async_capture_events
 
@@ -18,10 +17,11 @@ async def test_async_setup_entry_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
     """Test successful setup of entry."""
+    mock_config_entry.add_to_hass(hass)
     with patch.object(
         hass.config_entries, "async_forward_entry_setups"
     ) as mock_forward:
-        result = await async_setup_entry(hass, mock_config_entry)
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
         assert result is True
         mock_tis_api.connect.assert_awaited_once()
@@ -36,14 +36,13 @@ async def test_async_setup_entry_connect_failure(
     """Test unsuccessful setup due to connection failure."""
     mock_tis_api.connect.side_effect = ConnectionError("Test error")
 
-    with (
-        patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
-        pytest.raises(
-            ConfigEntryNotReady,
-            match="Unable to connect to TIS Control on port 6000: Test error",
-        ),
-    ):
-        await async_setup_entry(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as mock_forward:
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert result is False
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     mock_tis_api.scan_devices.assert_not_called()
     mock_forward.assert_not_called()
@@ -55,10 +54,11 @@ async def test_async_setup_entry_scan_failure(
     """Test setup proceeds even if scan_devices fails."""
     mock_tis_api.scan_devices.side_effect = ConnectionError("Scan failed")
 
+    mock_config_entry.add_to_hass(hass)
     with patch.object(
         hass.config_entries, "async_forward_entry_setups"
     ) as mock_forward:
-        result = await async_setup_entry(hass, mock_config_entry)
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
         assert result is True
         mock_tis_api.scan_devices.assert_awaited_once()
@@ -69,15 +69,14 @@ async def test_async_setup_entry_forward_failure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
     """Test setup exception during forward setups."""
-    with (
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            side_effect=Exception("Forward failed"),
-        ),
-        pytest.raises(Exception, match="Forward failed"),
+    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=Exception("Forward failed"),
     ):
-        await async_setup_entry(hass, mock_config_entry)
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert result is False
 
     mock_tis_api.disconnect.assert_called_once()
     assert mock_config_entry.runtime_data.listener_task is None
@@ -99,7 +98,8 @@ async def test_async_setup_entry_event_listener(
     captured_events = async_capture_events(hass, event_type)
 
     with patch.object(hass.config_entries, "async_forward_entry_setups"):
-        await async_setup_entry(hass, mock_config_entry)
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert len(captured_events) == 1
@@ -107,7 +107,7 @@ async def test_async_setup_entry_event_listener(
 
     # Cleanup: unload the entry to stop the background task
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
-        await async_unload_entry(hass, mock_config_entry)
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
 
@@ -117,11 +117,14 @@ async def test_async_unload_entry_success(
     """Test successful unload of entry."""
     mock_config_entry.runtime_data = MagicMock()
     mock_config_entry.runtime_data.listener_task = None
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    tis_api_mock = mock_config_entry.runtime_data.tis_api
 
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
-        result = await async_unload_entry(hass, mock_config_entry)
+        result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
         assert result is True
-        mock_config_entry.runtime_data.tis_api.disconnect.assert_called_once()
+        tis_api_mock.disconnect.assert_called_once()
 
 
 async def test_async_unload_entry_failure(
@@ -130,11 +133,13 @@ async def test_async_unload_entry_failure(
     """Test unsuccessful unload of entry."""
     mock_config_entry.runtime_data = MagicMock()
     mock_config_entry.runtime_data.listener_task = None
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
 
     with patch.object(
         hass.config_entries, "async_unload_platforms", return_value=False
     ) as mock_unload_platforms:
-        result = await async_unload_entry(hass, mock_config_entry)
+        result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
         assert result is False
         mock_unload_platforms.assert_called_once()
@@ -163,7 +168,8 @@ async def test_async_setup_entry_event_listener_exception(
             side_effect=Exception("Simulated bus error"),
         ),
     ):
-        await async_setup_entry(hass, mock_config_entry)
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     # Verify that the exception was caught and logged.
@@ -171,7 +177,7 @@ async def test_async_setup_entry_event_listener_exception(
 
     # Cleanup: unload the entry to stop the background task
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
-        await async_unload_entry(hass, mock_config_entry)
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
 
@@ -195,7 +201,8 @@ async def test_async_setup_entry_event_listener_cancelled(
         patch.object(hass.config_entries, "async_forward_entry_setups"),
         caplog.at_level(logging.DEBUG),
     ):
-        await async_setup_entry(hass, mock_config_entry)
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
         # The task is stored in runtime_data
         task = mock_config_entry.runtime_data.listener_task
@@ -206,7 +213,7 @@ async def test_async_setup_entry_event_listener_cancelled(
         with patch.object(
             hass.config_entries, "async_unload_platforms", return_value=True
         ):
-            await async_unload_entry(hass, mock_config_entry)
+            await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -249,7 +256,8 @@ async def test_async_setup_entry_event_listener_generator_failure(
             side_effect=mock_sleep,
         ),
     ):
-        await async_setup_entry(hass, mock_config_entry)
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
         # Give the loop a chance to run and restart
         await asyncio.sleep(0)
@@ -261,5 +269,5 @@ async def test_async_setup_entry_event_listener_generator_failure(
 
     # Cleanup: unload the entry to stop the background task
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
-        await async_unload_entry(hass, mock_config_entry)
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
         await hass.async_block_till_done()

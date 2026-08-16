@@ -74,7 +74,11 @@ async def tis_switch(
 
 
 async def test_setup_and_properties(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tis_switch: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tis_switch: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test switch setup, initial state, and properties."""
     state = hass.states.get(ENTITY_ID)
@@ -85,22 +89,25 @@ async def test_setup_and_properties(
     tis_switch.request_update.assert_awaited_once()
 
     # Verify device-registry scoping
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_mock_gateway_1_2_3")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_mock_gateway_1_2_3"),
+        mock_config_entry.entry_id,
     )
     assert device is not None
     assert device.name == "TIS Device 1_2_3"
 
     # Verify entity-registry scoping
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(ENTITY_ID)
+    entity_entry = entity_registry.async_get(ENTITY_ID)
     assert entity_entry is not None
     assert entity_entry.unique_id == f"{mock_config_entry.entry_id}_tis_1_2_3_ch1"
 
 
 async def test_setup_empty_gateway(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tis_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test switch setup and device registry identifier when gateway is missing or empty."""
     mock_tis_api.get_entities.return_value = [
@@ -142,16 +149,14 @@ async def test_setup_empty_gateway(
         )
 
     # Verify device-registry scoping
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_2_3")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_2_3"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.name == "TIS Device 1_2_3"
 
     # Verify entity-registry scoping
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(
+    entity_entry = entity_registry.async_get(
         f"{SWITCH_DOMAIN}.tis_device_1_2_3_test_switch_no_gateway"
     )
     assert entity_entry is not None
