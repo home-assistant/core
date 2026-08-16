@@ -55,8 +55,10 @@
           "maintaining": "Maintaining",
           "no_state": "No state",
           "preheating": "Preheating",
+          "ready_to_cook": "Ready to cook",
           "set_timer": "Set timer",
-          "timer_expired": "Timer expired"
+          "timer_expired": "Timer expired",
+          "unknown": "Unknown"
         }
       },
       "target_temperature": {
