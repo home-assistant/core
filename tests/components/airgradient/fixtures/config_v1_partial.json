@@ -1,6 +1,0 @@
-{
-  "configurationControl": "local",
-  "postDataToCloud": false,
-  "ledMode": "pm",
-  "co2AbcDays": 8
-}

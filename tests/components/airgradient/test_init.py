@@ -120,10 +120,7 @@ async def test_v1_config_refresh_skips_pending_writes(
     await second_write_started.wait()
     config_calls = mock_v1_airgradient_client.get_config.call_count
 
-    refresh = hass.async_create_task(coordinator.async_refresh())
-    await asyncio.sleep(0)
-
-    await refresh
+    await coordinator.async_refresh()
 
     assert mock_v1_airgradient_client.get_config.call_count == config_calls
 
@@ -134,49 +131,36 @@ async def test_v1_config_refresh_skips_pending_writes(
     assert mock_v1_airgradient_client.get_config.call_count == config_calls + 1
 
 
+@pytest.mark.usefixtures("mock_config_apply_delay")
 async def test_v1_successful_write_refreshes_when_concurrent_write_fails(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
-    mock_config_apply_delay: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test an accepted V1 write refreshes after another write fails."""
     await setup_integration(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
-    first_write_delayed = asyncio.Event()
-    release_first_write = asyncio.Event()
-    second_write_started = asyncio.Event()
-    release_second_write = asyncio.Event()
-
-    async def delay_config_apply(_delay: float) -> None:
-        first_write_delayed.set()
-        await release_first_write.wait()
+    failed_write_started = asyncio.Event()
+    release_failed_write = asyncio.Event()
 
     async def fail_config_write() -> None:
-        second_write_started.set()
-        await release_second_write.wait()
+        failed_write_started.set()
+        await release_failed_write.wait()
         raise AirGradientError
 
-    mock_config_apply_delay.side_effect = delay_config_apply
     config_calls = mock_v1_airgradient_client.get_config.call_count
-
-    first_write = hass.async_create_task(
-        coordinator.async_execute_config_write(asyncio.sleep(0))
-    )
-    await first_write_delayed.wait()
-    second_write = hass.async_create_task(
+    failed_write = hass.async_create_task(
         coordinator.async_execute_config_write(fail_config_write())
     )
-    await second_write_started.wait()
+    await failed_write_started.wait()
 
-    release_first_write.set()
-    await first_write
+    await coordinator.async_execute_config_write(asyncio.sleep(0))
 
     assert mock_v1_airgradient_client.get_config.call_count == config_calls
 
-    release_second_write.set()
+    release_failed_write.set()
     with pytest.raises(AirGradientError):
-        await second_write
+        await failed_write
 
     assert mock_v1_airgradient_client.get_config.call_count == config_calls + 1
 

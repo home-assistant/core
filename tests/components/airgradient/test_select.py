@@ -128,33 +128,6 @@ async def test_v1_config_omission_removes_entity(
     assert hass.states.get("select.airgradient_co2_automatic_baseline_duration") is None
 
 
-async def test_v1_measurement_interval_select(
-    hass: HomeAssistant,
-    mock_v1_airgradient_client: AsyncMock,
-    mock_config_apply_delay: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test V1 measurement interval is selected from approved values."""
-    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
-        "config_v1_local.json", ApiVersion.V1
-    )
-    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SELECT]):
-        await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.airgradient_measurement_interval",
-            ATTR_OPTION: "300",
-        },
-        blocking=True,
-    )
-
-    mock_v1_airgradient_client.set_measurement_interval.assert_awaited_once_with(300)
-    mock_config_apply_delay.assert_awaited_once_with(V1_CONFIG_APPLY_DELAY)
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_v1_entities(
     hass: HomeAssistant,
@@ -204,12 +177,18 @@ async def test_v1_entities(
             "set_co2_automatic_baseline_calibration",
             0,
         ),
+        (
+            "select.airgradient_measurement_interval",
+            "300",
+            "set_measurement_interval",
+            300,
+        ),
     ],
 )
-@pytest.mark.usefixtures("mock_config_apply_delay")
 async def test_v1_select_writes(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
+    mock_config_apply_delay: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_id: str,
     option: str,
@@ -231,6 +210,7 @@ async def test_v1_select_writes(
     )
 
     getattr(mock_v1_airgradient_client, method).assert_awaited_once_with(expected)
+    mock_config_apply_delay.assert_awaited_once_with(V1_CONFIG_APPLY_DELAY)
 
 
 @pytest.mark.parametrize(
