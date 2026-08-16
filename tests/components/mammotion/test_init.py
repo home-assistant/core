@@ -1,6 +1,5 @@
 """Tests for the Mammotion integration setup."""
 
-from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
@@ -9,9 +8,10 @@ from freezegun.api import FrozenDateTimeFactory
 from pymammotion.data.model.device import MowingDevice
 from Tea.exceptions import UnretryableException
 
-from homeassistant.components.mammotion.config import SAVE_DELAY
 from homeassistant.components.mammotion.const import DOMAIN
+from homeassistant.components.mammotion.coordinator import DEFAULT_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -87,21 +87,26 @@ async def test_state_restored_from_store(
     handle.restore_device.assert_called_once()
 
 
-async def test_state_persisted_after_delay(
+async def test_state_persisted_on_final_write(
     hass: HomeAssistant,
     mock_mower_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test mower state is not written on every poll but after the save delay."""
+    """Test mower state is not written on every poll but on Home Assistant stop."""
     await setup_integration(hass, mock_config_entry)
     storage_key = f"{DOMAIN}.{mock_config_entry.entry_id}"
 
     assert storage_key not in hass_storage
 
-    freezer.tick(timedelta(seconds=SAVE_DELAY + 1))
+    freezer.tick(DEFAULT_INTERVAL)
     async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert storage_key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
     await hass.async_block_till_done()
 
     assert DEFAULT_NAME in hass_storage[storage_key]["data"]

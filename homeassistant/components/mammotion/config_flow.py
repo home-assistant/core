@@ -184,6 +184,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_ADDRESS): vol.In(self._discovered_devices),
                 },
             ),
+            step_id="user",
         )
 
     async def _async_validate_login(

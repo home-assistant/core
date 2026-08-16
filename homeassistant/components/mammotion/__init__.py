@@ -11,7 +11,12 @@ from pymammotion.transport.base import LoginFailedError
 from Tea.exceptions import UnretryableException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -111,6 +116,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_mammotion)
     )
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, flush_mower_data)
+    )
+
     entry.async_on_unload(schedule_shutdown_mammotion)
     entry.async_on_unload(schedule_flush_mower_data)
 
