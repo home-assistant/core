@@ -1676,6 +1676,11 @@ def test_select_selector_schema_error(schema) -> None:
             ("cat", 0, None, ["temperature"]),
         ),
         (
+            None,
+            ("battery", "humidity", "temperature"),
+            ("dog", 0, None, ["humidity"]),
+        ),
+        (
             {"options": ["temperature", "humidity"]},
             ("temperature", "humidity"),
             ("battery", "beer", 0, None, ["temperature"]),

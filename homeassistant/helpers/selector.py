@@ -1901,9 +1901,11 @@ class SensorDeviceClassSelector(SelectSelector):
         }
     )
 
-    def __init__(self, config: SensorDeviceClassSelectorConfig) -> None:
+    def __init__(self, config: SensorDeviceClassSelectorConfig | None = None) -> None:
         """Instantiate a sensor device class selector."""
         from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
+
+        config = self.CONFIG_SCHEMA(config)
 
         if config.get("options") is None:
             config["options"] = [
