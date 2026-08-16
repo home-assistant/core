@@ -7,6 +7,7 @@ from aiohttp import ClientConnectorError
 from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.client import MammotionClient
 from pymammotion.homeassistant import HomeAssistantMowerApi
+from pymammotion.transport.base import LoginFailedError
 from Tea.exceptions import UnretryableException
 
 from homeassistant.config_entries import ConfigEntry
@@ -64,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                 await mammotion.login_and_initiate_cloud(account, password, session)
         except ClientConnectorError as err:
             raise ConfigEntryNotReady(err) from err
-        except UnretryableException as err:
+        except (UnretryableException, LoginFailedError) as err:
             raise ConfigEntryError(err) from err
 
         store_cloud_credentials(hass, entry, mammotion)

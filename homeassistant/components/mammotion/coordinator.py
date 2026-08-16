@@ -4,9 +4,11 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any, override
 
 from mashumaro.exceptions import InvalidFieldValue
+from pymammotion.aliyun.exceptions import DeviceOfflineException
 from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.data.model.device import MowingDevice
 from pymammotion.homeassistant import HomeAssistantMowerApi
+from pymammotion.transport import NoTransportAvailableError
 
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
@@ -112,7 +114,11 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
     @override
     async def _async_update_data(self) -> MowingDevice:
         """Get data from the device."""
-        data = await self.api.update(self.device_name)
+        try:
+            data = await self.api.update(self.device_name)
+        except DeviceOfflineException, NoTransportAvailableError:
+            return self.data
+
         if data is None:
             raise UpdateFailed(f"No data returned for {self.device_name}")
         self.store.async_update_mower_data(self.device_name, data.to_dict())
