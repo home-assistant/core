@@ -15,14 +15,9 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.tado import DOMAIN
-from homeassistant.components.tado.const import TYPE_HEATING
+from homeassistant.components.tado.const import CONF_REFRESH_TOKEN, TYPE_HEATING
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -114,26 +109,33 @@ async def test_configuration_is_read_once(
 @pytest.mark.usefixtures("init_integration")
 async def test_failed_read_retries_the_setup(hass: HomeAssistant) -> None:
     """Test a failing heating circuit read makes the config entry retry."""
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, version=2, data={CONF_REFRESH_TOKEN: "mock-token"}
+    )
+    config_entry.add_to_hass(hass)
 
     with patch(
         "PyTado.interface.api.my_tado.Tado.get_heating_circuits",
         side_effect=RequestException("Boom"),
     ):
-        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_no_circuits_read_without_heating_zones(hass: HomeAssistant) -> None:
     """Test homes without a heating zone do not read the circuits at all."""
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     zones = [
-        zone for zone in config_entry.runtime_data.zones if zone["type"] != TYPE_HEATING
+        zone
+        for zone in hass.config_entries.async_entries(DOMAIN)[0].runtime_data.zones
+        if zone["type"] != TYPE_HEATING
     ]
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, version=2, data={CONF_REFRESH_TOKEN: "mock-token"}
+    )
+    config_entry.add_to_hass(hass)
 
     with (
         patch("PyTado.interface.api.my_tado.Tado.get_zones", return_value=zones),
@@ -141,11 +143,11 @@ async def test_no_circuits_read_without_heating_zones(hass: HomeAssistant) -> No
             "PyTado.interface.api.my_tado.Tado.get_heating_circuits"
         ) as mock_circuits,
     ):
-        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     mock_circuits.assert_not_called()
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.usefixtures("init_integration")

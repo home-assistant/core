@@ -495,7 +495,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             circuits, controls = await self.hass.async_add_executor_job(_load)
         except RequestException as err:
-            _LOGGER.error("Error updating Tado heating circuits: %s", err)
             raise UpdateFailed(f"Error updating Tado heating circuits: {err}") from err
 
         self.heating_circuits = {
