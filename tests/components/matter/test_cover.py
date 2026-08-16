@@ -762,3 +762,37 @@ async def test_closure_cover_venetian_blinds(
     assert state
     assert state.attributes["current_position"] == 30
     assert state.attributes["current_tilt_position"] == 80
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_roof_window"])
+async def test_closure_cover_rotate_panel(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A Rotate panel (e.g. a roof window) drives position, same as a Lift panel.
+
+    Rotate is a continuous 0-100% opening amount just like Lift, only
+    achieved by a different physical motion (ClosureWindow.Roof here).
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    # WINDOW because of the "Closure.Window" tag on the parent endpoint
+    assert state.attributes["device_class"] == CoverDeviceClass.WINDOW
+    assert state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.ClosureDimension.Commands.SetTarget(
+            position=7000, latch=False
+        ),
+        timed_request_timeout_ms=1000,
+    )

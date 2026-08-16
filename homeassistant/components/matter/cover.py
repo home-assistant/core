@@ -54,12 +54,17 @@ TYPE_MAP = {
 }
 
 # Semantic tag namespace IDs (Matter 1.5 data model) used to disambiguate
-# Closure devices. Namespace-Closure-Covering.xml (id 0x46) describes what
-# kind of covering a Closure is; Namespace-ClosurePanel.xml (id 0x45)
-# describes which axis a ClosurePanel child endpoint controls.
-NAMESPACE_CLOSURE_COVERING = 70
+# Closure devices. Namespace-Closure.xml (id 0x44) is the generic closure
+# kind (window, gate, door, garage door, ...); Namespace-Closure-Covering.xml
+# (id 0x46) narrows down what kind of covering it is when it's one;
+# Namespace-ClosurePanel.xml (id 0x45) describes which axis a ClosurePanel
+# child endpoint controls.
+NAMESPACE_CLOSURE = 68
 NAMESPACE_CLOSURE_PANEL = 69
+NAMESPACE_CLOSURE_COVERING = 70
 
+# Checked first: Closure.Covering + a more specific Covering.* tag always
+# wins over the generic Closure.* tag below (e.g. Covering.Venetian).
 CLOSURE_COVERING_TAG_TO_DEVICE_CLASS = {
     0: CoverDeviceClass.BLIND,  # Blind
     1: CoverDeviceClass.AWNING,  # Awning
@@ -67,17 +72,26 @@ CLOSURE_COVERING_TAG_TO_DEVICE_CLASS = {
     3: CoverDeviceClass.BLIND,  # Venetian
     4: CoverDeviceClass.CURTAIN,  # Curtain
 }
+CLOSURE_TAG_TO_DEVICE_CLASS = {
+    1: CoverDeviceClass.WINDOW,  # Window (e.g. a rotating roof window)
+    4: CoverDeviceClass.GATE,  # Gate
+    5: CoverDeviceClass.GARAGE,  # GarageDoor
+    6: CoverDeviceClass.DOOR,  # Door
+}
 
 
 class ClosurePanelRole(IntEnum):
-    """Role of a ClosurePanel child endpoint.
+    """Functional role of a ClosurePanel child endpoint.
 
-    Values match the tag IDs of the ClosurePanel semantic tag namespace.
-    Sliding (2) and Rotate (3) closures don't map to a lift/tilt cover
-    position and are intentionally left unhandled.
+    Lift, Sliding and Rotate are all a panel's primary, continuous
+    opening amount - a roof window rotating open (ClosureWindow.Roof)
+    is exactly as much a 0-100% position as a blind's Lift, just
+    achieved by a different physical motion - so they all drive
+    current_cover_position. Tilt is the only secondary axis, paired
+    with a primary one on venetian-blind-style panels.
     """
 
-    LIFT = 0
+    POSITION = 0
     TILT = 1
 
 
@@ -109,26 +123,36 @@ def _extract_struct_field(value: Any, index: int, attr_name: str) -> Any:
 
 def _get_closure_device_class(tag_list: Any) -> CoverDeviceClass:
     """Return the HA device class for a Closure endpoint from its TagList."""
+    fallback_device_class: CoverDeviceClass | None = None
     for tag in tag_list or ():
-        if _extract_struct_field(tag, 1, "namespaceID") != NAMESPACE_CLOSURE_COVERING:
-            continue
-        device_class = CLOSURE_COVERING_TAG_TO_DEVICE_CLASS.get(
-            _extract_struct_field(tag, 2, "tag")
-        )
-        if device_class is not None:
-            return device_class
-    return CoverDeviceClass.GARAGE
+        namespace_id = _extract_struct_field(tag, 1, "namespaceID")
+        tag_id = _extract_struct_field(tag, 2, "tag")
+        if namespace_id == NAMESPACE_CLOSURE_COVERING:
+            if (
+                device_class := CLOSURE_COVERING_TAG_TO_DEVICE_CLASS.get(tag_id)
+            ) is not None:
+                return device_class
+        elif namespace_id == NAMESPACE_CLOSURE and fallback_device_class is None:
+            fallback_device_class = CLOSURE_TAG_TO_DEVICE_CLASS.get(tag_id)
+    return fallback_device_class or CoverDeviceClass.GARAGE
+
+
+CLOSURE_PANEL_TAG_TO_ROLE = {
+    0: ClosurePanelRole.POSITION,  # Lift
+    1: ClosurePanelRole.TILT,  # Tilt
+    2: ClosurePanelRole.POSITION,  # Sliding
+    3: ClosurePanelRole.POSITION,  # Rotate
+}
 
 
 def _get_closure_panel_role(tag_list: Any) -> ClosurePanelRole | None:
-    """Return the Lift/Tilt role of a ClosurePanel endpoint from its TagList."""
+    """Return the functional role of a ClosurePanel endpoint from its TagList."""
     for tag in tag_list or ():
         if _extract_struct_field(tag, 1, "namespaceID") != NAMESPACE_CLOSURE_PANEL:
             continue
-        try:
-            return ClosurePanelRole(_extract_struct_field(tag, 2, "tag"))
-        except ValueError:
-            continue
+        role = CLOSURE_PANEL_TAG_TO_ROLE.get(_extract_struct_field(tag, 2, "tag"))
+        if role is not None:
+            return role
     return None
 
 
@@ -312,22 +336,23 @@ class MatterCover(MatterEntity, CoverEntity):
 
 
 class MatterClosure(MatterEntity, CoverEntity):
-    """Representation of a Matter Closure (garage door, blind, shutter, etc.) cover.
+    """Representation of a Matter Closure (garage door, blind, roof window, etc.) cover.
 
     The ClosureControl cluster on this entity's own endpoint provides coarse
-    Open/Close/Stop (no arbitrary position). Devices with distinct Lift
-    and/or Tilt behaviour (e.g. venetian blinds) additionally expose one or
-    more child ClosurePanel endpoints, listed in this endpoint's Descriptor
-    PartsList and each carrying its own ClosureDimension cluster for fine
-    positioning. Those children are resolved lazily via `_closure_panels`
-    and drive `current_cover_position`/`current_cover_tilt_position`.
+    Open/Close/Stop (no arbitrary position). Devices with a continuous
+    opening amount and/or a distinct Tilt axis (e.g. venetian blinds, roof
+    windows) additionally expose one or more child ClosurePanel endpoints,
+    listed in this endpoint's Descriptor PartsList and each carrying its own
+    ClosureDimension cluster for fine positioning. Those children are
+    resolved lazily via `_closure_panels` and drive
+    `current_cover_position`/`current_cover_tilt_position`.
     """
 
     _write_state_debounce_cooldown = STATE_WRITE_DEBOUNCE_COOLDOWN
 
     @cached_property
     def _closure_panels(self) -> dict[ClosurePanelRole, MatterEndpoint]:
-        """Return the Lift/Tilt ClosurePanel child endpoints, if any."""
+        """Return the ClosurePanel child endpoints, if any, by functional role."""
         node = self._endpoint.node
         panels: dict[ClosurePanelRole, MatterEndpoint] = {}
         for child_id in node.get_compose_child_ids(self._endpoint.endpoint_id) or ():
@@ -345,7 +370,7 @@ class MatterClosure(MatterEntity, CoverEntity):
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
-        # Subscribe to the Lift/Tilt ClosurePanel child endpoints' state:
+        # Subscribe to the ClosurePanel child endpoints' state:
         # these live on a different endpoint than the ones already
         # subscribed to by the base class for `self._endpoint`.
         for panel in self._closure_panels.values():
@@ -398,8 +423,8 @@ class MatterClosure(MatterEntity, CoverEntity):
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Set the cover's Lift position, via its ClosurePanel child endpoint."""
-        panel = self._closure_panels[ClosurePanelRole.LIFT]
+        """Set the cover's position, via its primary ClosurePanel child endpoint."""
+        panel = self._closure_panels[ClosurePanelRole.POSITION]
         await self._set_panel_target(panel, kwargs[ATTR_POSITION])
 
     @override
@@ -485,12 +510,12 @@ class MatterClosure(MatterEntity, CoverEntity):
         supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
-        if lift := self._closure_panels.get(ClosurePanelRole.LIFT):
-            lift_state = lift.get_attribute_value(
+        if position_panel := self._closure_panels.get(ClosurePanelRole.POSITION):
+            position_state = position_panel.get_attribute_value(
                 None, clusters.ClosureDimension.Attributes.CurrentState
             )
             self._attr_current_cover_position = _percent100ths_to_ha_position(
-                _extract_struct_field(lift_state, 0, "position")
+                _extract_struct_field(position_state, 0, "position")
             )
             supported_features |= CoverEntityFeature.SET_POSITION
         if tilt := self._closure_panels.get(ClosurePanelRole.TILT):

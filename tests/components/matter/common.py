@@ -55,6 +55,7 @@ FIXTURES = [
     "mock_battery_storage",
     "mock_chime",
     "mock_closure_garage_door",
+    "mock_closure_roof_window",
     "mock_closure_venetian_blinds",
     "mock_cooktop",
     "mock_dimmable_light",
