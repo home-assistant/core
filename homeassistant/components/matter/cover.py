@@ -121,8 +121,13 @@ def _extract_struct_field(value: Any, index: int, attr_name: str) -> Any:
     return getattr(value, attr_name, None)
 
 
-def _get_closure_device_class(tag_list: Any) -> CoverDeviceClass:
-    """Return the HA device class for a Closure endpoint from its TagList."""
+def _get_closure_device_class(tag_list: Any) -> CoverDeviceClass | None:
+    """Return the HA device class for a Closure endpoint from its TagList.
+
+    None (no device class) when the TagList is empty/absent or its tags
+    (e.g. Barrier, Cabinet) have no matching HA device class, rather than
+    guessing - a generic cover icon is more honest than a wrong one.
+    """
     fallback_device_class: CoverDeviceClass | None = None
     for tag in tag_list or ():
         namespace_id = _extract_struct_field(tag, 1, "namespaceID")
@@ -134,7 +139,7 @@ def _get_closure_device_class(tag_list: Any) -> CoverDeviceClass:
                 return device_class
         elif namespace_id == NAMESPACE_CLOSURE and fallback_device_class is None:
             fallback_device_class = CLOSURE_TAG_TO_DEVICE_CLASS.get(tag_id)
-    return fallback_device_class or CoverDeviceClass.GARAGE
+    return fallback_device_class
 
 
 CLOSURE_PANEL_TAG_TO_ROLE = {
@@ -181,6 +186,31 @@ def _feature_supported(
     if not isinstance(feature_map, int):
         return False
     return bool(feature_map & feature)
+
+
+def _remote_unlatch_supported(
+    endpoint: MatterEndpoint,
+    feature_map_attribute: type[clusters.ClusterAttributeDescriptor],
+    latch_control_modes_attribute: type[clusters.ClusterAttributeDescriptor],
+    motion_latching_feature: int,
+    remote_unlatching_bit: int,
+) -> bool:
+    """Return True if `endpoint` can be remotely unlatched.
+
+    The MotionLatching feature alone isn't enough: LatchControlModes
+    (mandatory whenever MotionLatching is supported) further indicates
+    whether RemoteUnlatching is actually permitted - a device may only
+    support physical/manual unlatching, in which case sending `latch=False`
+    is rejected with InvalidInState.
+    """
+    if not _feature_supported(endpoint, feature_map_attribute, motion_latching_feature):
+        return False
+    latch_control_modes = endpoint.get_attribute_value(
+        None, latch_control_modes_attribute
+    )
+    return isinstance(latch_control_modes, int) and bool(
+        latch_control_modes & remote_unlatching_bit
+    )
 
 
 async def async_setup_entry(
@@ -359,6 +389,15 @@ class MatterClosure(MatterEntity, CoverEntity):
             child = node.endpoints[child_id]
             if not child.has_cluster(clusters.ClosureDimension):
                 continue
+            # ClosureDimension permits MotionLatching without Positioning
+            # (a latch-only panel): nothing to drive current_cover_position/
+            # current_cover_tilt_position from in that case.
+            if not _feature_supported(
+                child,
+                clusters.ClosureDimension.Attributes.FeatureMap,
+                clusters.ClosureDimension.Bitmaps.Feature.kPositioning,
+            ):
+                continue
             tag_list = child.get_attribute_value(
                 None, clusters.Descriptor.Attributes.TagList
             )
@@ -443,10 +482,12 @@ class MatterClosure(MatterEntity, CoverEntity):
         command_kwargs: dict[str, Any] = {
             "position": _ha_position_to_percent100ths(position)
         }
-        if _feature_supported(
+        if _remote_unlatch_supported(
             panel,
             clusters.ClosureDimension.Attributes.FeatureMap,
+            clusters.ClosureDimension.Attributes.LatchControlModes,
             clusters.ClosureDimension.Bitmaps.Feature.kMotionLatching,
+            clusters.ClosureDimension.Bitmaps.LatchControlModesBitmap.kRemoteUnlatching,
         ):
             command_kwargs["latch"] = False
         await self.send_device_command(
@@ -507,9 +548,15 @@ class MatterClosure(MatterEntity, CoverEntity):
             ):
                 self._attr_is_closing = True
 
-        supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
+        supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        # Stop is non-conformant (and rejected) on Instantaneous closures:
+        # there's no in-progress motion for it to interrupt.
+        if not _feature_supported(
+            self._endpoint,
+            clusters.ClosureControl.Attributes.FeatureMap,
+            clusters.ClosureControl.Bitmaps.Feature.kInstantaneous,
+        ):
+            supported_features |= CoverEntityFeature.STOP
         if position_panel := self._closure_panels.get(ClosurePanelRole.POSITION):
             position_state = position_panel.get_attribute_value(
                 None, clusters.ClosureDimension.Attributes.CurrentState
@@ -529,11 +576,13 @@ class MatterClosure(MatterEntity, CoverEntity):
         self._attr_supported_features = supported_features
 
     def _motion_latching_supported(self) -> bool:
-        """Return True if the parent's MotionLatching feature is supported."""
-        return _feature_supported(
+        """Return True if the parent can be remotely unlatched."""
+        return _remote_unlatch_supported(
             self._endpoint,
             clusters.ClosureControl.Attributes.FeatureMap,
+            clusters.ClosureControl.Attributes.LatchControlModes,
             clusters.ClosureControl.Bitmaps.Feature.kMotionLatching,
+            clusters.ClosureControl.Bitmaps.LatchControlModesBitmap.kRemoteUnlatching,
         )
 
 

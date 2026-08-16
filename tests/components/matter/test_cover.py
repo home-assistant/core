@@ -32,9 +32,14 @@ async def trigger_subscription_callback_debounced(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     client: MagicMock,
+    *,
+    node_id: int | None = None,
+    attribute_path: str | None = None,
 ) -> None:
     """Trigger subscription callbacks and wait for the debounced state write."""
-    await trigger_subscription_callback(hass, client)
+    await trigger_subscription_callback(
+        hass, client, node_id=node_id, attribute_path=attribute_path
+    )
     freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -744,7 +749,17 @@ async def test_closure_cover_venetian_blinds(
         clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
         {0: 7000, 1: True, 2: 0},
     )
-    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    # target the endpoint 2 subscription specifically: a broadcast (no
+    # filter) would still pass even if async_added_to_hass never
+    # subscribed to this child endpoint at all.
+    await trigger_subscription_callback_debounced(
+        hass,
+        freezer,
+        matter_client,
+        node_id=matter_node.node_id,
+        attribute_path=f"2/{clusters.ClosureDimension.id}/"
+        f"{clusters.ClosureDimension.Attributes.CurrentState.attribute_id}",
+    )
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["current_position"] == 30
@@ -757,7 +772,14 @@ async def test_closure_cover_venetian_blinds(
         clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
         {0: 2000, 1: True, 2: 0},
     )
-    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    await trigger_subscription_callback_debounced(
+        hass,
+        freezer,
+        matter_client,
+        node_id=matter_node.node_id,
+        attribute_path=f"3/{clusters.ClosureDimension.id}/"
+        f"{clusters.ClosureDimension.Attributes.CurrentState.attribute_id}",
+    )
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["current_position"] == 30
