@@ -6,14 +6,14 @@ Probes the device to get its serial number for the unique_id.
 import logging
 from typing import Any, override
 
-from modbus_connection import ModbusError
+from modbus_connection import ModbusError, ModbusTcpParams
+from modbus_connection.tmodbus import ModbusConnection
 from sofar_modbus.modern.device import SofarInverter
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .connection import build_connection, unit_id
 from .const import (
     CONF_MODBUS_ADDR,
     CONF_READ_EPS,
@@ -46,11 +46,15 @@ class SofarUnrecognizedError(Exception):
 
 async def _async_probe(data: dict[str, Any]) -> tuple[str, str | None]:
     """Return (serial, model), or raise ModbusError / SofarUnrecognizedError."""
-    connection = build_connection(data)
-    try:
-        device = SofarInverter(
-            connection.for_unit(unit_id(data)), read_eps=data.get(CONF_READ_EPS, False)
+    connection = ModbusConnection(
+        ModbusTcpParams(
+            host=data[CONF_HOST],
+            port=data.get(CONF_PORT, DEFAULT_PORT),
         )
+    )
+    try:
+        unit = connection.for_unit(int(data.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR)))
+        device = SofarInverter(unit, read_eps=data.get(CONF_READ_EPS, False))
         await device.async_setup()
         if not device.inverter_type:
             raise SofarUnrecognizedError(device.serial_number or "")

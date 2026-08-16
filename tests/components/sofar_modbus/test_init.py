@@ -41,7 +41,7 @@ async def test_setup_entry_unrecognized_inverter_raises_not_ready(
     unseeded_connection.for_unit(1)  # zeroed registers -> no recognizable serial
 
     with patch(
-        "homeassistant.components.sofar_modbus.build_connection",
+        "homeassistant.components.sofar_modbus.ModbusConnection",
         return_value=unseeded_connection,
     ):
         await hass.config_entries.async_setup(entry.entry_id)

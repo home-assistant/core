@@ -10,14 +10,20 @@ as each subsequent platform lands.
 
 import logging
 
+from modbus_connection import ModbusTcpParams
+from modbus_connection.tmodbus import ModbusConnection
 from sofar_modbus.modern.device import SofarInverter, identify
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .connection import build_connection, unit_id
-from .const import CONF_READ_EPS, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_MODBUS_ADDR,
+    CONF_READ_EPS,
+    DEFAULT_MODBUS_ADDR,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+)
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,52 +33,42 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
     """Set up Sofar Inverter Modbus from a config entry."""
-    connection = build_connection(entry.data)
+    connection = ModbusConnection(
+        ModbusTcpParams(
+            host=entry.data[CONF_HOST],
+            port=entry.data.get(CONF_PORT, DEFAULT_PORT),
+        )
+    )
     entry.async_on_unload(connection.close)
 
-    unit = connection.for_unit(unit_id(entry.data))
+    # The config flow only ever creates an entry after successfully probing
+    # and identifying the inverter, so its serial (and thus its type) is
+    # always known here — identify() is a pure lookup, not I/O.
     serial = entry.unique_id
-    inverter_type, model = identify(serial) if serial else (None, None)
+    assert serial is not None
+    inverter_type, model = identify(serial)
+
+    unit = connection.for_unit(
+        int(entry.data.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR))
+    )
     device = SofarInverter(
         unit, inverter_type=inverter_type, read_eps=entry.data.get(CONF_READ_EPS, False)
     )
-    if serial and inverter_type and device.inverter_type is not None:
-        device.prime(serial, model)
+    device.prime(serial, model)
 
     coordinator = SofarDataUpdateCoordinator(
         hass, entry, connection, device, DEFAULT_SCAN_INTERVAL
     )
 
-    if not device.inverter_type:
-        # Fallback for entries where inverter type could not be determined in-memory:
-        # poll the device to discover its identity block.
-        await coordinator.async_config_entry_first_refresh()
-        if not device.inverter_type:
-            raise ConfigEntryNotReady(
-                f"Unrecognized Sofar inverter model for {entry.title}"
-            )
+    # Full refresh (fast + slow tier) before entities exist, so they start
+    # with real state instead of "unknown"; also confirms the connection
+    # actually works, raising ConfigEntryNotReady otherwise.
+    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh_slow_tier()
 
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    if serial and inverter_type:
-
-        async def _async_startup_refresh() -> None:
-            await coordinator.async_refresh()
-            await coordinator.async_refresh_slow_tier()
-
-        entry.async_create_background_task(
-            hass,
-            _async_startup_refresh(),
-            name=f"{DOMAIN}_{entry.unique_id}_startup_refresh",
-        )
-    else:
-        entry.async_create_background_task(
-            hass,
-            coordinator.async_refresh_slow_tier(),
-            name=f"{DOMAIN}_{entry.unique_id}_initial_slow_refresh",
-        )
     return True
 
 

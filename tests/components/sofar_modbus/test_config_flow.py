@@ -148,7 +148,7 @@ async def test_async_probe_real_mock_connection() -> None:
     seed_pv_inverter(unit)
 
     with patch(
-        "homeassistant.components.sofar_modbus.config_flow.build_connection",
+        "homeassistant.components.sofar_modbus.config_flow.ModbusConnection",
         return_value=mock_conn,
     ):
         serial, model = await _async_probe(MOCK_USER_INPUT)
@@ -164,7 +164,7 @@ async def test_async_probe_unrecognized_serial() -> None:
 
     with (
         patch(
-            "homeassistant.components.sofar_modbus.config_flow.build_connection",
+            "homeassistant.components.sofar_modbus.config_flow.ModbusConnection",
             return_value=mock_conn,
         ),
         pytest.raises(SofarUnrecognizedError),

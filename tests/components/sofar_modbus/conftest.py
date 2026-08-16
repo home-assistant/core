@@ -51,7 +51,7 @@ async def init_integration(
     """Set up the Sofar Inverter Modbus integration for testing."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.sofar_modbus.build_connection",
+        "homeassistant.components.sofar_modbus.ModbusConnection",
         return_value=mock_connection,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
