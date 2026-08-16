@@ -20,7 +20,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .common import airplay_service, create_conf, mrp_service, raop_service
+from .common import (
+    MockPairingHandler,
+    airplay_service,
+    create_conf,
+    mrp_service,
+    raop_service,
+)
 
 from tests.common import MockConfigEntry
 
@@ -155,8 +161,10 @@ async def test_user_adds_full_device(hass: HomeAssistant) -> None:
     }
 
 
-@pytest.mark.usefixtures("full_device", "pairing")
-async def test_user_adds_device_with_leading_zero_pin(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("full_device")
+async def test_user_adds_device_with_leading_zero_pin(
+    hass: HomeAssistant, pairing: MockPairingHandler
+) -> None:
     """Test pairing a device with a PIN that starts with a leading zero."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -177,6 +185,7 @@ async def test_user_adds_device_with_leading_zero_pin(hass: HomeAssistant) -> No
     result4 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": "0123"}
     )
+    assert pairing.pin_code == "0123"
     assert result4["type"] is FlowResultType.FORM
     assert result4["step_id"] == "pair_no_pin"
     assert result4["description_placeholders"] == {"protocol": "DMAP", "pin": "1111"}
@@ -189,6 +198,7 @@ async def test_user_adds_device_with_leading_zero_pin(hass: HomeAssistant) -> No
     result6 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": "0456"}
     )
+    assert pairing.pin_code == "0456"
     assert result6["type"] is FlowResultType.CREATE_ENTRY
     assert result6["data"]["name"] == "MRP Device"
 
