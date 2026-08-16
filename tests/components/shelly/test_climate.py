@@ -736,6 +736,41 @@ async def test_rpc_climate_hvac_mode_cool(
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
 
 
+@pytest.mark.parametrize(
+    ("thermostat_type", "invert_output", "output", "expected_action"),
+    [
+        ("heating", False, True, HVACAction.HEATING),
+        ("heating", False, False, HVACAction.IDLE),
+        ("heating", True, True, HVACAction.IDLE),
+        ("heating", True, False, HVACAction.HEATING),
+        ("cooling", True, True, HVACAction.IDLE),
+        ("cooling", True, False, HVACAction.COOLING),
+    ],
+)
+async def test_rpc_climate_hvac_action_inverted_output(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    thermostat_type: str,
+    invert_output: bool,
+    output: bool,
+    expected_action: HVACAction,
+) -> None:
+    """Test climate hvac action with inverted output."""
+    entity_id = "climate.test_name"
+
+    new_config = deepcopy(mock_rpc_device.config)
+    new_config["thermostat:0"]["type"] = thermostat_type
+    new_config["thermostat:0"]["invert_output"] = invert_output
+    monkeypatch.setattr(mock_rpc_device, "config", new_config)
+    monkeypatch.setitem(mock_rpc_device.status["thermostat:0"], "output", output)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_HVAC_ACTION] == expected_action
+
+
 async def test_wall_display_thermostat_mode(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
