@@ -727,6 +727,9 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         self._thermostat_type = coordinator.device.config[self.key].get(
             "type", "heating"
         )
+        self._invert_output = coordinator.device.config[self.key].get(
+            "invert_output", False
+        )
         if self._thermostat_type == "cooling":
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
         else:
@@ -770,7 +773,8 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     @override
     def hvac_action(self) -> HVACAction:
         """HVAC current action."""
-        if not self.status["output"]:
+        # When inverted, relay on means idle; otherwise relay on means active.
+        if self.status["output"] == self._invert_output:
             return HVACAction.IDLE
 
         return (
@@ -815,7 +819,12 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         self._attr_unique_id = f"{ble_addr}-{self.key}"
         fw_ver = coordinator.device.status[self.key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            self._config, ble_addr, self.coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            self._config,
+            ble_addr,
+            self.coordinator.mac,
+            fw_ver,
         )
 
     @property

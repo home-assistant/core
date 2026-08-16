@@ -26,7 +26,7 @@ def async_entity_id_to_device_id(
 def async_entity_id_to_device(
     hass: HomeAssistant,
     entity_id_or_uuid: str,
-) -> dr.DeviceEntry | None:
+) -> dr.AnyDeviceEntry | None:
     """Resolve the device entry for the entity id or entity uuid."""
 
     if (device_id := async_entity_id_to_device_id(hass, entity_id_or_uuid)) is None:
@@ -87,7 +87,7 @@ def async_remove_stale_devices_links_keep_entity_device(
     Deprecated, does nothing: a device belongs to a single config entry, so a helper no
     longer adds its config entry to the source device and there is no stale config entry
     link to remove. Call helper_integration.async_remove_helper_devices with
-    sweep_helper_devices=True to remove devices a helper created for previously selected
+    remove_all_devices=True to remove devices a helper created for previously selected
     source devices.
     """
     report_usage(
@@ -95,7 +95,7 @@ def async_remove_stale_devices_links_keep_entity_device(
         "and does nothing: a device belongs to a single config entry, so a helper no "
         "longer adds its config entry to the source device. Call "
         "homeassistant.helpers.helper_integration.async_remove_helper_devices with "
-        "sweep_helper_devices=True instead",
+        "remove_all_devices=True instead",
         core_behavior=ReportBehavior.LOG,
         breaks_in_ha_version="2027.8.0",
     )
@@ -112,7 +112,7 @@ def async_remove_stale_devices_links_keep_current_device(
     Deprecated, does nothing: a device belongs to a single config entry, so a helper no
     longer adds its config entry to another device and there is no stale config entry link
     to remove. Call helper_integration.async_remove_helper_devices with
-    sweep_helper_devices=True to remove devices a helper created for previously selected
+    remove_all_devices=True to remove devices a helper created for previously selected
     source devices.
     """
     report_usage(
@@ -120,7 +120,7 @@ def async_remove_stale_devices_links_keep_current_device(
         "and does nothing: a device belongs to a single config entry, so a helper no "
         "longer adds its config entry to another device. Call "
         "homeassistant.helpers.helper_integration.async_remove_helper_devices with "
-        "sweep_helper_devices=True instead",
+        "remove_all_devices=True instead",
         core_behavior=ReportBehavior.LOG,
         breaks_in_ha_version="2027.8.0",
     )

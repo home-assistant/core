@@ -494,6 +494,9 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
         for device_id in referenced.referenced_devices:
             if not (dev_reg_ent := dev_reg.async_get(device_id)):
                 raise HomeAssistantError(f"No device found for device id: {device_id}")
+            if isinstance(dev_reg_ent, dr.ChildDeviceEntry):
+                # A child device carries no HomeKit pairing; only its parent can.
+                continue
             macs = [
                 cval
                 for ctype, cval in dev_reg_ent.connections
@@ -1068,7 +1071,18 @@ class HomeKit:
         dev_reg = dr.async_get(self.hass)
         valid_device_ids = []
         for device_id in self._devices:
-            if not dev_reg.async_get(device_id):
+            if dev_reg.async_get(device_id, include_child_devices=False):
+                valid_device_ids.append(device_id)
+            elif dev_reg.async_get(device_id, include_main_devices=False):
+                _LOGGER.warning(
+                    (
+                        "HomeKit %s cannot add device %s because a child device cannot"
+                        " be a HomeKit accessory"
+                    ),
+                    self._name,
+                    device_id,
+                )
+            else:
                 _LOGGER.warning(
                     (
                         "HomeKit %s cannot add device %s because it is missing from the"
@@ -1077,8 +1091,6 @@ class HomeKit:
                     self._name,
                     device_id,
                 )
-            else:
-                valid_device_ids.append(device_id)
         for device_id, device_triggers in (
             await device_automation.async_get_device_automations(
                 self.hass,
@@ -1086,7 +1098,7 @@ class HomeKit:
                 valid_device_ids,
             )
         ).items():
-            device = dev_reg.async_get(device_id)
+            device = dev_reg.async_get(device_id, include_child_devices=False)
             assert device is not None
             valid_device_triggers: list[dict[str, Any]] = []
             for trigger in device_triggers:
@@ -1216,7 +1228,11 @@ class HomeKit:
         """Set attributes that will be used for homekit device info."""
         ent_cfg = self._config[entity_id]
         if ent_reg_ent.device_id:
-            if dev_reg_ent := dev_reg.async_get(ent_reg_ent.device_id):
+            dev_reg_ent = dev_reg.async_get(ent_reg_ent.device_id)
+            if isinstance(dev_reg_ent, dr.ChildDeviceEntry):
+                # A child device has no hardware info of its own; use the parent's
+                dev_reg_ent = dev_reg.devices.get(dev_reg_ent.parent_device_id)
+            if dev_reg_ent is not None:
                 self._fill_config_from_device_registry_entry(dev_reg_ent, ent_cfg)
         if ATTR_MANUFACTURER not in ent_cfg:
             try:

@@ -3,7 +3,12 @@
 from dataclasses import dataclass
 from typing import override
 
-from pyimouapi.const import PARAM_STATE_VARIANT, STATE_VARIANT_NUMERIC
+from pyimouapi.const import (
+    PARAM_STATE,
+    PARAM_STATE_VARIANT,
+    PARAM_STATUS,
+    STATE_VARIANT_NUMERIC,
+)
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.sensor import (
@@ -22,11 +27,11 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import PARAM_STATE, PARAM_STATUS, imou_device_identifier
+from .const import imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
@@ -146,14 +151,7 @@ async def async_setup_entry(
             if imou_device_identifier(device) in device_keys
         )
 
-    coordinator.new_device_callbacks.append(_add_sensors)
-
-    @callback
-    def _remove_new_device_callback() -> None:
-        if _add_sensors in coordinator.new_device_callbacks:
-            coordinator.new_device_callbacks.remove(_add_sensors)
-
-    entry.async_on_unload(_remove_new_device_callback)
+    entry.async_on_unload(coordinator.register_new_device_callback(_add_sensors))
     _add_sensors(coordinator.devices)
 
 
