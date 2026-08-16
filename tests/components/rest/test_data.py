@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -609,18 +609,44 @@ async def test_rest_data_backstop_timeout_prevents_permanent_hang(
 async def test_rest_data_backstop_disabled_when_timeout_disabled(
     hass: HomeAssistant,
 ) -> None:
-    """Test that timeout=0 (aiohttp timeout disabled) also disables the backstop."""
-    rest = RestData(
-        hass,
-        "GET",
-        "http://example.com/api",
-        "utf-8",
-        None,
-        None,
-        None,
-        None,
-        True,
-        DEFAULT_SSL_CIPHER_LIST,
-        timeout=0,
-    )
-    assert rest._backstop_timeout is None
+    """Test that timeout=0 (aiohttp timeout disabled) also disables the backstop.
+
+    asyncio.timeout(None) applies no time limit, so updates still work.
+    """
+    response = MagicMock()
+    response.charset = None
+    response.text = AsyncMock(return_value='{"status": "ok"}')
+    response.headers = {}
+    response.status = 200
+
+    class WorkingRequest:
+        async def __aenter__(self):
+            return response
+
+        async def __aexit__(self, *exc_info):
+            return False
+
+    session = MagicMock()
+    session.request = MagicMock(return_value=WorkingRequest())
+
+    with patch.object(
+        rest_data_module, "async_get_clientsession", return_value=session
+    ):
+        rest = RestData(
+            hass,
+            "GET",
+            "http://example.com/api",
+            "utf-8",
+            None,
+            None,
+            None,
+            None,
+            True,
+            DEFAULT_SSL_CIPHER_LIST,
+            timeout=0,
+        )
+        assert rest._backstop_timeout is None
+        await rest.async_update()
+
+    assert rest.data == '{"status": "ok"}'
+    assert rest.last_exception is None
