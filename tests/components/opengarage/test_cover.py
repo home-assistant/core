@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -16,38 +18,32 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_cover_position_closed(
+@pytest.mark.parametrize(
+    ("door_state", "expected_state", "expected_position"),
+    [
+        (0, STATE_CLOSED, 0),
+        (1, STATE_OPEN, 100),
+    ],
+    ids=["closed", "open"],
+)
+async def test_cover_position(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
     init_integration: MockConfigEntry,
+    door_state: int,
+    expected_state: str,
+    expected_position: int,
 ) -> None:
-    """Test that current_cover_position is 0 when closed."""
+    """Test that current_cover_position reflects the door state."""
     mock_opengarage.push_button.return_value = 1
     coordinator = init_integration.runtime_data
-    coordinator.async_set_updated_data({"door": 0, "name": "abcdef"})
+    coordinator.async_set_updated_data({"door": door_state, "name": "abcdef"})
 
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
-
-
-async def test_cover_position_open(
-    hass: HomeAssistant,
-    mock_opengarage: MagicMock,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test that current_cover_position is 100 when open."""
-    mock_opengarage.push_button.return_value = 1
-    coordinator = init_integration.runtime_data
-    coordinator.async_set_updated_data({"door": 1, "name": "abcdef"})
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+    assert state.state == expected_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == expected_position
 
 
 async def test_cover_position_during_transition(
@@ -79,23 +75,43 @@ async def test_cover_position_during_transition(
     )
 
 
-async def test_toggle_from_closed_to_open(
+@pytest.mark.parametrize(
+    (
+        "initial_door_state",
+        "initial_state",
+        "initial_position",
+        "final_door_state",
+        "final_state",
+        "final_position",
+    ),
+    [
+        (0, STATE_CLOSED, 0, 1, STATE_OPEN, 100),
+        (1, STATE_OPEN, 100, 0, STATE_CLOSED, 0),
+    ],
+    ids=["closed_to_open", "open_to_closed"],
+)
+async def test_toggle_cover(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
     init_integration: MockConfigEntry,
+    initial_door_state: int,
+    initial_state: str,
+    initial_position: int,
+    final_door_state: int,
+    final_state: str,
+    final_position: int,
 ) -> None:
-    """Test toggling cover from closed opens it."""
+    """Test toggling the cover switches it to the opposite state."""
     mock_opengarage.push_button.return_value = 1
     coordinator = init_integration.runtime_data
-    coordinator.async_set_updated_data({"door": 0, "name": "abcdef"})
+    coordinator.async_set_updated_data({"door": initial_door_state, "name": "abcdef"})
 
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.state == initial_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == initial_position
 
-    # Toggle should call open
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_TOGGLE,
@@ -105,48 +121,12 @@ async def test_toggle_from_closed_to_open(
 
     assert mock_opengarage.push_button.call_count == 1
 
-    # Simulate door opening
-    coordinator.async_set_updated_data({"door": 1, "name": "abcdef"})
+    coordinator.async_set_updated_data({"door": final_door_state, "name": "abcdef"})
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 100
-
-
-async def test_toggle_from_open_to_closed(
-    hass: HomeAssistant,
-    mock_opengarage: MagicMock,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test toggling cover from open closes it."""
-    mock_opengarage.push_button.return_value = 1
-    coordinator = init_integration.runtime_data
-    coordinator.async_set_updated_data({"door": 1, "name": "abcdef"})
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 100
-
-    # Toggle should call close
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
-        blocking=True,
-    )
-
-    assert mock_opengarage.push_button.call_count == 1
-
-    # Simulate door closing
-    coordinator.async_set_updated_data({"door": 0, "name": "abcdef"})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.state == final_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == final_position
 
 
 async def test_toggle_already_closed_does_not_close_again(
@@ -213,61 +193,49 @@ async def test_toggle_already_closed_does_not_close_again(
     assert state.state == STATE_OPEN
 
 
-async def test_open_cover_command(
+@pytest.mark.parametrize(
+    (
+        "initial_door_state",
+        "service",
+        "final_door_state",
+        "final_state",
+        "final_position",
+    ),
+    [
+        (0, SERVICE_OPEN_COVER, 1, STATE_OPEN, 100),
+        (1, SERVICE_CLOSE_COVER, 0, STATE_CLOSED, 0),
+    ],
+    ids=["open", "close"],
+)
+async def test_cover_command(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
     init_integration: MockConfigEntry,
+    initial_door_state: int,
+    service: str,
+    final_door_state: int,
+    final_state: str,
+    final_position: int,
 ) -> None:
-    """Test explicit open command."""
+    """Test explicit open/close commands."""
     mock_opengarage.push_button.return_value = 1
     coordinator = init_integration.runtime_data
-    coordinator.async_set_updated_data({"door": 0, "name": "abcdef"})
+    coordinator.async_set_updated_data({"door": initial_door_state, "name": "abcdef"})
 
     await hass.async_block_till_done()
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
+        service,
         {ATTR_ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
 
     assert mock_opengarage.push_button.call_count == 1
 
-    # Simulate door opening
-    coordinator.async_set_updated_data({"door": 1, "name": "abcdef"})
+    coordinator.async_set_updated_data({"door": final_door_state, "name": "abcdef"})
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 100
-
-
-async def test_close_cover_command(
-    hass: HomeAssistant,
-    mock_opengarage: MagicMock,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test explicit close command."""
-    mock_opengarage.push_button.return_value = 1
-    coordinator = init_integration.runtime_data
-    coordinator.async_set_updated_data({"door": 1, "name": "abcdef"})
-
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
-        blocking=True,
-    )
-
-    assert mock_opengarage.push_button.call_count == 1
-
-    # Simulate door closing
-    coordinator.async_set_updated_data({"door": 0, "name": "abcdef"})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.state == final_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == final_position
