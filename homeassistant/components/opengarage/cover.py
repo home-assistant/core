@@ -109,8 +109,6 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
     @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover (0=closed, 100=open)."""
-        if self._state is None:
-            return None
         if self._state == CoverState.CLOSED:
             return 0
         if self._state == CoverState.OPEN:
