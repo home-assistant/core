@@ -623,6 +623,15 @@
       "dust_collection": {
         "name": "Dust collection"
       },
+      "dust_emptying": {
+        "name": "Dust emptying"
+      },
+      "mop_drying": {
+        "name": "Mop drying"
+      },
+      "mop_washing": {
+        "name": "Mop washing"
+      },
       "off_peak_switch": {
         "name": "Off-peak charging"
       },
