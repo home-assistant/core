@@ -37,6 +37,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "device_pairing_enabled": {
+        "name": "Device pairing enabled"
+      }
+    },
     "select": {
       "room_priority": {
         "name": "Room priority",
