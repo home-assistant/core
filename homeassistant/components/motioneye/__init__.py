@@ -394,7 +394,9 @@ async def handle_webhook(
     device_registry = dr.async_get(hass)
     device_id = data[ATTR_DEVICE_ID]
 
-    if not (device := device_registry.async_get(device_id)):
+    if not (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ):
         return Response(
             text=f"Device not found: {device_id}",
             status=HTTPStatus.BAD_REQUEST,
