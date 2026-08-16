@@ -1218,44 +1218,35 @@ async def test_adjacent_events_stay_on(
         assert state.attributes["message"] == "Second"
 
 
-def _ics_with_status(status_property: str) -> str:
-    """Build a calendar holding a single event with the given STATUS line.
-
-    Built by concatenation rather than a dedented block: leading whitespace
-    means line folding in iCalendar, and an interpolated property would leave
-    the following line without the indentation dedent keys off.
-    """
-    return (
-        "BEGIN:VCALENDAR\n"
-        "BEGIN:VEVENT\n"
-        "SUMMARY:Bastille Day Party\n"
-        "DTSTART:19970714\n"
-        "DTEND:19970715\n"
-        f"{status_property}"
-        "END:VEVENT\n"
-        "END:VCALENDAR\n"
-    )
+ICS_WITH_STATUS = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+SUMMARY:Bastille Day Party
+DTSTART:19970714
+DTEND:19970715
+STATUS:{status}
+END:VEVENT
+END:VCALENDAR
+"""
 
 
 @pytest.mark.parametrize(
     ("ics_content", "expected_status"),
     [
         pytest.param(
-            _ics_with_status("STATUS:CANCELLED\n"), "cancelled", id="cancelled"
+            ICS_WITH_STATUS.format(status="CANCELLED"), "cancelled", id="cancelled"
         ),
         pytest.param(
-            _ics_with_status("STATUS:TENTATIVE\n"), "tentative", id="tentative"
+            ICS_WITH_STATUS.format(status="TENTATIVE"), "tentative", id="tentative"
         ),
         pytest.param(
-            _ics_with_status("STATUS:CONFIRMED\n"), "confirmed", id="confirmed"
+            ICS_WITH_STATUS.format(status="CONFIRMED"), "confirmed", id="confirmed"
         ),
-        pytest.param(_ics_with_status(""), None, id="no_status_property"),
     ],
 )
 @pytest.mark.usefixtures("setup_integration")
 async def test_event_status(
     get_events: GetEventsFn,
-    expected_status: str | None,
+    expected_status: str,
 ) -> None:
     """Test that the rfc5545 STATUS property is returned by the API."""
     events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")

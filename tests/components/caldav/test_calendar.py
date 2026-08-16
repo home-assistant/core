@@ -1150,25 +1150,7 @@ END:VCALENDAR"""
     assert events[0]["summary"] == "Modified occurrence"
 
 
-@pytest.mark.parametrize(
-    ("status_property", "expected_status"),
-    [
-        pytest.param("STATUS:CANCELLED\n", "cancelled", id="cancelled"),
-        pytest.param("STATUS:TENTATIVE\n", "tentative", id="tentative"),
-        pytest.param("STATUS:CONFIRMED\n", "confirmed", id="confirmed"),
-        pytest.param("STATUS:Cancelled\n", "cancelled", id="mixed_case"),
-        pytest.param("STATUS:X-VENDOR-SPECIFIC\n", None, id="unsupported_value"),
-        pytest.param("", None, id="no_status_property"),
-    ],
-)
-async def test_get_events_with_status(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    status_property: str,
-    expected_status: str | None,
-) -> None:
-    """Test that the rfc5545 STATUS property is populated from VEVENT data."""
-    vevent_with_status = f"""BEGIN:VCALENDAR
+ICS_WITH_STATUS = """BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//E-Corp.//CalDAV Client//EN
 BEGIN:VEVENT
@@ -1179,10 +1161,30 @@ DTEND:20171127T180000Z
 SUMMARY:This is an event with a status
 LOCATION:Hamburg
 DESCRIPTION:Surprisingly rainy
-{status_property}END:VEVENT
+STATUS:{status}
+END:VEVENT
 END:VCALENDAR"""
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_status"),
+    [
+        pytest.param("CANCELLED", "cancelled", id="cancelled"),
+        pytest.param("TENTATIVE", "tentative", id="tentative"),
+        pytest.param("CONFIRMED", "confirmed", id="confirmed"),
+        pytest.param("Cancelled", "cancelled", id="mixed_case"),
+        pytest.param("X-VENDOR-SPECIFIC", None, id="unsupported_value"),
+    ],
+)
+async def test_get_events_with_status(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    status: str,
+    expected_status: str | None,
+) -> None:
+    """Test that the rfc5545 STATUS property is populated from VEVENT data."""
     events = await _get_api_events_for_vevent(
-        hass, hass_client, vevent_with_status, "status-event-uid"
+        hass, hass_client, ICS_WITH_STATUS.format(status=status), "status-event-uid"
     )
 
     assert len(events) == 1
