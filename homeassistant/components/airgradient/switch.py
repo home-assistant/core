@@ -69,17 +69,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up AirGradient switch entities based on a config entry."""
     coordinator = entry.runtime_data
-
+    descriptions = (POST_DATA_TO_AIRGRADIENT, BUZZER_ENABLED, CLOUD_CONNECTION)
+    descriptions_by_key = {description.key: description for description in descriptions}
     added_entities: set[str] = set()
 
     @callback
     def _async_check_entities() -> None:
         nonlocal added_entities
         config = coordinator.data.config
-        descriptions = (POST_DATA_TO_AIRGRADIENT, BUZZER_ENABLED, CLOUD_CONNECTION)
-        descriptions_by_key = {
-            description.key: description for description in descriptions
-        }
         desired_entities = {
             description.key
             for description in descriptions

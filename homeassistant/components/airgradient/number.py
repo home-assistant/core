@@ -74,20 +74,14 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
     model = coordinator.data.measures.model
-
+    descriptions = (DISPLAY_BRIGHTNESS, LED_BAR_BRIGHTNESS)
+    descriptions_by_key = {description.key: description for description in descriptions}
     added_entities: set[str] = set()
 
     @callback
     def _async_check_entities() -> None:
         nonlocal added_entities
         config = coordinator.data.config
-        descriptions = (
-            DISPLAY_BRIGHTNESS,
-            LED_BAR_BRIGHTNESS,
-        )
-        descriptions_by_key = {
-            description.key: description for description in descriptions
-        }
         desired_entities = {
             description.key
             for description in descriptions

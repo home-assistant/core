@@ -53,19 +53,16 @@ async def async_setup_entry(
     """Set up AirGradient button entities based on a config entry."""
     coordinator = entry.runtime_data
     model = coordinator.data.measures.model
-
+    descriptions = (CO2_CALIBRATION, LED_BAR_TEST)
+    descriptions_by_key = {description.key: description for description in descriptions}
     added_entities: set[str] = set()
 
     @callback
     def _check_entities() -> None:
         nonlocal added_entities
-        descriptions = (CO2_CALIBRATION, LED_BAR_TEST)
-        descriptions_by_key = {
-            description.key: description for description in descriptions
-        }
         desired_entities = {
             description.key
-            for description in (CO2_CALIBRATION, LED_BAR_TEST)
+            for description in descriptions
             if coordinator.data.config.configuration_control
             is ConfigurationControl.LOCAL
             and supports_action(model, description.key)
