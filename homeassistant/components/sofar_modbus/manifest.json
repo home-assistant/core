@@ -1,0 +1,11 @@
+{
+  "domain": "sofar_modbus",
+  "name": "Sofar Inverter Modbus",
+  "codeowners": ["@darkrain-nl"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sofar_modbus",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["modbus-connection[tmodbus]==4.8.0", "sofar-modbus==0.1.8"]
+}

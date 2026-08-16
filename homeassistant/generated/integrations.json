@@ -6717,6 +6717,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "sofar_modbus": {
+      "name": "Sofar Inverter Modbus",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "solaredge": {
       "name": "SolarEdge",
       "integrations": {

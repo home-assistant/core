@@ -1609,6 +1609,9 @@ mitsubishi-comfort==0.5.2
 # homeassistant.components.moat
 moat-ble==0.1.1
 
+# homeassistant.components.sofar_modbus
+modbus-connection[tmodbus]==4.8.0
+
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
 
@@ -3072,6 +3075,9 @@ snapcast==2.3.8
 
 # homeassistant.components.sonos
 soco==0.31.2
+
+# homeassistant.components.sofar_modbus
+sofar-modbus==0.1.8
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
