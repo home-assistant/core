@@ -537,8 +537,9 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         description=event.description,
         location=event.location,
         # The Google API defaults an omitted status to confirmed, and gcal_sync
-        # applies that default, so this is never None. Its values already match
-        # the rfc5545 ones in lower case.
+        # applies that default, so this is never None. It drops cancelled
+        # events when building the timeline, so only the statuses a calendar
+        # entity reports reach here, already in lower case.
         status=CalendarEventStatus(event.status.value),
     )
 

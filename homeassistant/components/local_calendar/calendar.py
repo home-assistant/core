@@ -229,6 +229,23 @@ def _parse_event(event: dict[str, Any]) -> Event:
         raise vol.Invalid("Error parsing event input fields") from err
 
 
+def _get_status(event: Event) -> CalendarEventStatus | None:
+    """Return the status of an event, if a calendar entity reports that status.
+
+    ical models the full rfc5545 set, which includes cancelled, and an imported
+    calendar can contain such an event. A calendar entity does not report a
+    cancelled status, so anything outside the supported set maps to no status.
+    ical's enum is a plain (str, Enum) rather than a StrEnum, so its value has
+    to be read explicitly.
+    """
+    if event.status is None:
+        return None
+    try:
+        return CalendarEventStatus(event.status.value.lower())
+    except ValueError:
+        return None
+
+
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
     start: datetime | date
@@ -253,11 +270,5 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,
         location=event.location,
-        # ical validates STATUS against the same rfc5545 set, so the mapping is
-        # total and needs no fallback. Its values are upper case, and its enum
-        # is a plain (str, Enum) rather than a StrEnum, so str() would yield
-        # "EventStatus.CONFIRMED" instead of the value.
-        status=(
-            CalendarEventStatus(event.status.value.lower()) if event.status else None
-        ),
+        status=_get_status(event),
     )

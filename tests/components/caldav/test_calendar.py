@@ -1169,10 +1169,10 @@ END:VCALENDAR"""
 @pytest.mark.parametrize(
     ("status", "expected_status"),
     [
-        pytest.param("CANCELLED", "cancelled", id="cancelled"),
         pytest.param("TENTATIVE", "tentative", id="tentative"),
         pytest.param("CONFIRMED", "confirmed", id="confirmed"),
-        pytest.param("Cancelled", "cancelled", id="mixed_case"),
+        pytest.param("Tentative", "tentative", id="mixed_case"),
+        pytest.param("CANCELLED", None, id="cancelled_is_not_reported"),
         pytest.param("X-VENDOR-SPECIFIC", None, id="unsupported_value"),
     ],
 )

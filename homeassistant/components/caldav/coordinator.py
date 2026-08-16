@@ -28,11 +28,13 @@ OFFSET = "!!"
 
 
 def _get_status(vevent: caldav.CalendarObjectResource) -> CalendarEventStatus | None:
-    """Return the rfc5545 STATUS of a VEVENT, if it is one we know.
+    """Return the rfc5545 STATUS of a VEVENT, if a calendar entity reports it.
 
-    rfc5545 also permits iana-tokens and x-names here, so an unrecognized
-    value is dropped rather than passed on: reporting no status at all is
-    closer to the truth than reporting one the consumer cannot interpret.
+    Anything outside the supported set is dropped rather than passed on, which
+    covers both the cancelled status a calendar entity does not report and the
+    iana-tokens and x-names that rfc5545 also permits here: reporting no status
+    at all is closer to the truth than reporting one the consumer cannot
+    interpret.
     """
     if (value := get_attr_value(vevent, "status")) is None:
         return None

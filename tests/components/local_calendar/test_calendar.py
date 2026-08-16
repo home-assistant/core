@@ -1233,20 +1233,22 @@ END:VCALENDAR
     ("ics_content", "expected_status"),
     [
         pytest.param(
-            ICS_WITH_STATUS.format(status="CANCELLED"), "cancelled", id="cancelled"
-        ),
-        pytest.param(
             ICS_WITH_STATUS.format(status="TENTATIVE"), "tentative", id="tentative"
         ),
         pytest.param(
             ICS_WITH_STATUS.format(status="CONFIRMED"), "confirmed", id="confirmed"
+        ),
+        pytest.param(
+            ICS_WITH_STATUS.format(status="CANCELLED"),
+            None,
+            id="cancelled_is_not_reported",
         ),
     ],
 )
 @pytest.mark.usefixtures("setup_integration")
 async def test_event_status(
     get_events: GetEventsFn,
-    expected_status: str,
+    expected_status: str | None,
 ) -> None:
     """Test that the rfc5545 STATUS property is returned by the API."""
     events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")

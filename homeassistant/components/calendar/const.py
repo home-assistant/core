@@ -34,7 +34,11 @@ class CalendarEntityFeature(IntFlag):
 
 
 class CalendarEventStatus(StrEnum):
-    """Status of a calendar event, as defined by the rfc5545 STATUS property.
+    """Status of a calendar event.
+
+    A subset of the statuses defined by the rfc5545 STATUS property: a calendar
+    entity does not return cancelled events, so that value is not represented
+    here.
 
     An event without a status is not the same as a confirmed event: it means
     the calendar did not report one, either because the source does not
@@ -43,7 +47,6 @@ class CalendarEventStatus(StrEnum):
 
     CONFIRMED = "confirmed"
     TENTATIVE = "tentative"
-    CANCELLED = "cancelled"
 
 
 # rfc5545 fields
