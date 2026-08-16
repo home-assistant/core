@@ -542,3 +542,138 @@ async def test_bluetooth_discovery_skip_no_account_id(hass: HomeAssistant) -> No
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
+
+
+@pytest.mark.parametrize(
+    ("stored_connections", "stored_ble_devices", "expect_reload"),
+    [
+        pytest.param(set(), {}, True, id="new_ble_address_reloads_once"),
+        pytest.param(
+            {(dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff")},
+            {},
+            False,
+            id="known_address_missing_from_entry_data",
+        ),
+        pytest.param(
+            {(dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff")},
+            {"Luba-ABC123": "aa:bb:cc:dd:ee:ff"},
+            False,
+            id="known_address_already_in_entry_data",
+        ),
+    ],
+)
+async def test_bluetooth_discovery_only_reloads_for_new_address(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    stored_connections: set[tuple[str, str]],
+    stored_ble_devices: dict[str, str],
+    expect_reload: bool,
+) -> None:
+    """Test an advertisement for a known address does not reload a loaded entry.
+
+    A reload stands up a second client alongside the running one, and the two
+    MQTT sessions share a client_id, so the broker rejects both.  Writing
+    CONF_BLE_DEVICES must therefore not trigger a reload of its own — the
+    device-registry merge above already schedules the single one a genuinely
+    new address needs.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_ACCOUNT_ID: "user123", CONF_BLE_DEVICES: stored_ble_devices},
+        unique_id="user123",
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "Luba-ABC123")},
+        connections=stored_connections,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.bluetooth.async_ble_device_from_address",
+            return_value=_get_mock_device(),
+        ),
+        patch.object(
+            hass.config_entries, "async_schedule_reload"
+        ) as mock_schedule_reload,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=_get_discovery_info(),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert (mock_schedule_reload.call_count > 0) is expect_reload
+
+
+async def test_user_step_does_not_reload_loaded_entry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test listing candidates never reloads an entry that already owns a mower."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_ACCOUNT_ID: "user123"},
+        unique_id="user123",
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "Luba-ABC123")},
+        connections=set(),
+    )
+
+    with (
+        patch(
+            "homeassistant.components.mammotion.config_flow.async_discovered_service_info",
+            return_value=[_get_discovery_info()],
+        ),
+        patch(
+            "homeassistant.components.bluetooth.async_ble_device_from_address",
+            return_value=_get_mock_device(),
+        ),
+        patch.object(
+            hass.config_entries, "async_schedule_reload"
+        ) as mock_schedule_reload,
+    ):
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    mock_schedule_reload.assert_not_called()
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauth updates the password and reloads the entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch(
+            "homeassistant.components.mammotion.config_flow.MammotionHTTP"
+        ) as mock_http,
+        patch(
+            "homeassistant.components.mammotion.async_setup_entry", return_value=True
+        ),
+    ):
+        mock_http.return_value.login_v2 = AsyncMock()
+        mock_http.return_value.login_info.userInformation.userAccount = "user123"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"

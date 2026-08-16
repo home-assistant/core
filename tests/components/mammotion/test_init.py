@@ -1,5 +1,6 @@
 """Tests for the Mammotion integration setup."""
 
+import asyncio
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
@@ -166,3 +167,59 @@ async def test_setup_error_on_unretryable_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_client_stopped_before_unload_returns(
+    hass: HomeAssistant,
+    mock_mower_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the client is torn down before unload completes.
+
+    A reload sets the entry up again as soon as unload returns.  If the old
+    client is still holding its MQTT session, both sessions connect with the
+    same client_id and the broker rejects them.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    stopped = False
+
+    async def _stop() -> None:
+        # Suspend, as disconnecting a real MQTT transport does.
+        await asyncio.sleep(0)
+        nonlocal stopped
+        stopped = True
+
+    mock_mower_api.mammotion.stop.side_effect = _stop
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert stopped, "unload returned while the client still held its connection"
+
+
+async def test_reload_does_not_overlap_clients(
+    hass: HomeAssistant,
+    mock_mower_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a reload stops the old client before the new one logs in."""
+    await setup_integration(hass, mock_config_entry)
+
+    call_order: list[str] = []
+
+    async def _stop() -> None:
+        await asyncio.sleep(0)
+        call_order.append("stop")
+
+    async def _login(*args: Any, **kwargs: Any) -> None:
+        call_order.append("login")
+
+    mock_mower_api.mammotion.stop.side_effect = _stop
+    mock_mower_api.mammotion.restore_credentials.side_effect = _login
+    mock_mower_api.mammotion.login_and_initiate_cloud.side_effect = _login
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert call_order == ["stop", "login"]

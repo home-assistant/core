@@ -7,7 +7,7 @@ from aiohttp import ClientConnectorError
 from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.client import MammotionClient
 from pymammotion.homeassistant import HomeAssistantMowerApi
-from pymammotion.transport.base import LoginFailedError
+from pymammotion.transport.base import LoginFailedError, TransportType
 from Tea.exceptions import UnretryableException
 
 from homeassistant.config_entries import ConfigEntry
@@ -31,6 +31,7 @@ from .const import (
     DEVICE_SUPPORT,
     DOMAIN,
     EXPIRED_CREDENTIAL_EXCEPTIONS,
+    LOGGER,
 )
 from .coordinator import MammotionMowerUpdateCoordinator
 from .models import MammotionDevices, MammotionMowerData
@@ -58,6 +59,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
     if account and password:
         session = async_get_clientsession(hass)
         cached = _load_cached_credentials(entry)
+
+        async def credentials_updated() -> None:
+            """Persist credentials the library rotated behind our back."""
+            store_cloud_credentials(hass, entry, mammotion)
+
+        async def unrecoverable_auth_error(
+            account_id: str, transport_type: TransportType, err: Exception
+        ) -> None:
+            """Surface a dead cloud session as a single reauth prompt."""
+            LOGGER.error(
+                "Mammotion cloud authentication failed for %s on %s: %s",
+                account_id,
+                transport_type.value,
+                err,
+            )
+            entry.async_start_reauth(hass)
+
+        # Wired before login so a rotation during it is not lost.
+        mammotion.on_credentials_updated = credentials_updated
+        mammotion.on_unrecoverable_auth_error = unrecoverable_auth_error
+
         try:
             if cached:
                 try:
@@ -107,24 +129,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
     async def shutdown_mammotion(_: Event | None = None) -> None:
         await mammotion.stop()
 
-    def schedule_shutdown_mammotion() -> None:
-        hass.async_create_task(shutdown_mammotion())
-
-    def schedule_flush_mower_data(_: Event | None = None) -> None:
-        hass.async_create_task(store.async_flush_mower_data())
-
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_mammotion)
     )
 
     entry.async_on_unload(
         hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_FINAL_WRITE, schedule_flush_mower_data
+            EVENT_HOMEASSISTANT_FINAL_WRITE, store.async_flush_mower_data
         )
     )
 
-    entry.async_on_unload(schedule_shutdown_mammotion)
-    entry.async_on_unload(schedule_flush_mower_data)
+    entry.async_on_unload(shutdown_mammotion)
+    entry.async_on_unload(store.async_flush_mower_data)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

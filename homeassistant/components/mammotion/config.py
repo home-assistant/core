@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
@@ -22,7 +22,6 @@ class MammotionConfigStore(Store[dict[str, Any]]):
             minor_version=STORAGE_MINOR_VERSION,
             key=f"{DOMAIN}.{entry_id}",
         )
-        # In-memory state of the entry's mowers, keyed by device name
         self.mower_data: dict[str, Any] = {}
         self._dirty = False
 
@@ -38,7 +37,7 @@ class MammotionConfigStore(Store[dict[str, Any]]):
         self.mower_data[device_name] = data
         self._dirty = True
 
-    async def async_flush_mower_data(self) -> None:
+    async def async_flush_mower_data(self, _event: Event | None = None) -> None:
         """Write the in-memory mower data to disk if it changed."""
         if not self._dirty:
             return
