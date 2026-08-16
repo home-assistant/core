@@ -83,5 +83,42 @@ async def test_refresh_token_is_persisted_on_success(hass: HomeAssistant) -> Non
     assert entry.data[CONF_REFRESH_TOKEN] == "new-token"
 
 
+async def test_empty_refresh_token_does_not_clear_stored_token(
+    hass: HomeAssistant,
+) -> None:
+    """A falsy refresh token from PyTado must not overwrite the stored one.
+
+    ``get_refresh_token`` can return ``None`` (or an empty string) when
+    PyTado has not rotated the token this cycle. The persist check must
+    require the new value to be truthy *and* different, otherwise a falsy
+    result would compare unequal to the stored token and clear it.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_REFRESH_TOKEN: "old-token"},
+        unique_id="1",
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    tado = MagicMock()
+    tado.get_me.return_value = {"homes": [{"id": 1, "name": "Home"}]}
+    tado.get_zones.return_value = []
+    tado.get_devices.return_value = []
+    tado.get_zone_states.return_value = {"zoneStates": {}}
+    tado.get_weather.return_value = {}
+    tado.get_home_state.return_value = {}
+    tado.get_refresh_token.return_value = None
+    tado.rate_limit_info.return_value = {"remaining": "999"}
+
+    coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
+
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr(coordinator, "_async_update_devices", _return_empty_dict)
+        await coordinator._async_update_data()
+
+    assert entry.data[CONF_REFRESH_TOKEN] == "old-token"
+
+
 async def _return_empty_dict(*_args, **_kwargs) -> dict:
     return {}
