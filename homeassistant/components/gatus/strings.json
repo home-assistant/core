@@ -34,6 +34,9 @@
       "domain_expiration": {
         "name": "Domain expiration"
       },
+      "last_event": {
+        "name": "Last event"
+      },
       "response_time": {
         "name": "Response time"
       },
