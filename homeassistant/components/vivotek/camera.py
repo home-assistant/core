@@ -1,8 +1,10 @@
 """Support for Vivotek IP Cameras."""
 
+import asyncio
+from collections.abc import Callable
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Final, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 from libpyvivotek.vivotek import VivotekCamera, VivotekCameraError
 
@@ -28,6 +30,21 @@ DEFAULT_STREAM_SOURCE = "live.sdp"
 PLATFORM_SCHEMA: Final = cv.removed(DOMAIN, raise_if_present=False)
 
 
+async def _async_fetch_str_metadata(
+    hass: HomeAssistant,
+    fetcher: Callable[[], Any],
+    log_message: str,
+) -> str | None:
+    """Fetch optional string metadata from the camera."""
+    try:
+        value: Any = await hass.async_add_executor_job(fetcher)
+    except VivotekCameraError:
+        _LOGGER.debug(log_message)
+        return None
+
+    return value if isinstance(value, str) else None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: VivotekConfigEntry,
@@ -40,33 +57,23 @@ async def async_setup_entry(
         f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}"
     )
     cam_client = entry.runtime_data
-    serial_number: str | None = None
-    sw_version: str | None = None
-    model: str | None = None
-    try:
-        serial_number = await hass.async_add_executor_job(cam_client.get_serial)
-    except VivotekCameraError:
-        _LOGGER.debug("Failed to fetch serial number for %s", entry.title)
-    if not isinstance(serial_number, str):
-        serial_number = None
-
-    try:
-        sw_version = await hass.async_add_executor_job(
-            partial(cam_client.get_param, "system_info_firmwareversion")
-        )
-    except VivotekCameraError:
-        _LOGGER.debug("Failed to fetch firmware version for %s", entry.title)
-    if not isinstance(sw_version, str):
-        sw_version = None
-
-    try:
-        model = await hass.async_add_executor_job(
-            partial(cam_client.get_param, "system_info_modelname")
-        )
-    except VivotekCameraError:
-        _LOGGER.debug("Failed to fetch model for %s", entry.title)
-    if not isinstance(model, str):
-        model = None
+    serial_number, sw_version, model = await asyncio.gather(
+        _async_fetch_str_metadata(
+            hass,
+            cam_client.get_serial,
+            f"Failed to fetch serial number for {entry.title}",
+        ),
+        _async_fetch_str_metadata(
+            hass,
+            partial(cam_client.get_param, "system_info_firmwareversion"),
+            f"Failed to fetch firmware version for {entry.title}",
+        ),
+        _async_fetch_str_metadata(
+            hass,
+            partial(cam_client.get_param, "system_info_modelname"),
+            f"Failed to fetch model for {entry.title}",
+        ),
+    )
 
     if TYPE_CHECKING:
         assert entry.unique_id is not None
