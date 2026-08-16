@@ -1,6 +1,6 @@
 """Switch platform for TIS Control."""
 
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 from TISApi.api import TISApi
 from TISApi.components.switch.base_switch import TISAPISwitch
@@ -97,7 +97,7 @@ async def async_get_switches(tis_api: TISApi) -> list[SwitchDescription]:
                 switch_name=appliance.get("name"),
                 channel_number=channel_number,
                 device_id=device_id,
-                is_protected=appliance.get("is_protected", False),
+                is_protected=bool(appliance.get("is_protected", False)),
                 gateway=appliance.get("gateway") or "",
             )
         )
@@ -165,6 +165,7 @@ class TISSwitch(SwitchEntity):
         self._attr_available = self.device_api.available
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to Home Assistant."""
         # Register the HASS update method as the callback and store the unsubscribe hook.
@@ -177,6 +178,7 @@ class TISSwitch(SwitchEntity):
         self._attr_is_on = self.device_api.is_on
         self._attr_available = self.device_api.available
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         # Attempt to turn the switch on and wait for the result.
@@ -191,6 +193,7 @@ class TISSwitch(SwitchEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         # Send the 'off' packet and wait for an acknowledgement.
