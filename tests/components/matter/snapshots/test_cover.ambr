@@ -160,7 +160,7 @@
     'state': 'open',
   })
 # ---
-# name: test_covers[mock_closure_roof_window][cover.mock_roof_window-entry]
+# name: test_covers[mock_closure_gate][cover.sliding_gate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -174,7 +174,60 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.mock_roof_window',
+    'entity_id': 'cover.sliding_gate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000043-MatterNodeDevice-1-MatterClosure-260-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[mock_closure_gate][cover.sliding_gate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sliding Gate',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.sliding_gate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_covers[mock_closure_roof_window][cover.roof_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.roof_window',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -193,25 +246,133 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000079-MatterNodeDevice-1-MatterClosure-260-3',
+    'unique_id': '00000000000004D2-0000000000000044-MatterNodeDevice-1-MatterClosure-260-3',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[mock_closure_roof_window][cover.mock_roof_window-state]
+# name: test_covers[mock_closure_roof_window][cover.roof_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 51,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock roof window',
-      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roof Window',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.mock_roof_window',
+    'entity_id': 'cover.roof_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closed',
+    'state': 'open',
+  })
+# ---
+# name: test_covers[mock_closure_shutter][cover.mock_closure_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.mock_closure_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-MatterClosure-260-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[mock_closure_shutter][cover.mock_closure_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock closure shutter',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.mock_closure_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_covers[mock_closure_tilt_only][cover.mock_closure_tilt_only-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.mock_closure_tilt_only',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 139>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-MatterClosure-260-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[mock_closure_tilt_only][cover.mock_closure_tilt_only-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock closure tilt only',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 139>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.mock_closure_tilt_only',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
   })
 # ---
 # name: test_covers[mock_closure_venetian_blinds][cover.mock_venetian_blinds-entry]

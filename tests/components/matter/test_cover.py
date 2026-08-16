@@ -796,3 +796,123 @@ async def test_closure_cover_rotate_panel(
         ),
         timed_request_timeout_ms=1000,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_shutter"])
+async def test_closure_cover_shutter(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A single Lift-only panel (roller shutter) exposes position, not tilt."""
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == CoverDeviceClass.SHUTTER
+    assert state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
+    assert not (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.ClosureDimension.Commands.SetTarget(
+            position=7000, latch=False
+        ),
+        timed_request_timeout_ms=1000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_tilt_only"])
+async def test_closure_cover_tilt_only(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A single Tilt-only panel (no Lift/Sliding/Rotate) exposes tilt, not position."""
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == CoverDeviceClass.WINDOW
+    assert "current_position" not in state.attributes
+    assert not (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
+    )
+    assert state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_tilt_position",
+        {"entity_id": entity_id, "tilt_position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.ClosureDimension.Commands.SetTarget(
+            position=7000, latch=False
+        ),
+        timed_request_timeout_ms=1000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_gate"])
+async def test_closure_cover_gate(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A single-endpoint Closure with no ClosurePanel children (a sliding gate)."""
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == CoverDeviceClass.GATE
+    assert (
+        state.attributes["supported_features"]
+        & (CoverEntityFeature.SET_POSITION | CoverEntityFeature.SET_TILT_POSITION)
+        == 0
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        # this fixture supports MotionLatching (FeatureMap includes it)
+        command=clusters.ClosureControl.Commands.MoveTo(
+            position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed,
+            latch=False,
+        ),
+        timed_request_timeout_ms=1000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_roof_window"])
+@pytest.mark.usefixtures("matter_node")
+async def test_closure_cover_roof_window_real_device(
+    hass: HomeAssistant,
+) -> None:
+    """A real Matterbridge roof window capture: OpenedForVentilation, not Fully*.
+
+    OverallCurrentState can be an intermediate position (here
+    OpenedForVentilation) rather than strictly FullyOpen/FullyClosed;
+    is_closed should just fall through to False, not raise.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == CoverDeviceClass.WINDOW
+    assert state.state == CoverState.OPEN
+    # raw percent100ths 4999 -> HA position (100 - floor(4999/100))
+    assert state.attributes["current_position"] == 51
