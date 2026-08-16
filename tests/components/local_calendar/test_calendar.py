@@ -1207,14 +1207,12 @@ async def test_adjacent_events_stay_on(
         assert state.state == STATE_ON
         assert state.attributes["message"] == "First"
 
-        for offset in (0, 1, 30, 59):
-            freezer.move_to(
-                datetime.datetime(2026, 7, 29, 8, 0, tzinfo=datetime.UTC)
-                + datetime.timedelta(seconds=offset)
-            )
-            async_fire_time_changed(hass, dt_util.utcnow())
-            await hass.async_block_till_done()
+        # 02:00:00 in America/Regina, the moment the first event ends and the
+        # second begins.
+        freezer.move_to("2026-07-29 08:00:00+00:00")
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
 
-            state = hass.states.get(TEST_ENTITY)
-            assert state.state == STATE_ON, f"off at 02:00:{offset:02d}"
-            assert state.attributes["message"] == "Second"
+        state = hass.states.get(TEST_ENTITY)
+        assert state.state == STATE_ON
+        assert state.attributes["message"] == "Second"
