@@ -61,7 +61,10 @@ class RestData:
         self._params = params
         self._request_data = data
         self._timeout = aiohttp.ClientTimeout(total=timeout)
-        self._backstop_timeout = timeout + BACKSTOP_TIMEOUT_MARGIN
+        # timeout <= 0 disables aiohttp's timeout, so disable the backstop too
+        self._backstop_timeout: float | None = (
+            timeout + BACKSTOP_TIMEOUT_MARGIN if timeout > 0 else None
+        )
         self._verify_ssl = verify_ssl
         self._ssl_cipher_list = SSLCipherList(ssl_cipher_list)
         self._session: aiohttp.ClientSession | None = None

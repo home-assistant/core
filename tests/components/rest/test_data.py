@@ -567,11 +567,13 @@ async def test_rest_data_backstop_timeout_prevents_permanent_hang(
     silently stops the polling loop because the coordinator only schedules the
     next refresh after the current one completes.
     """
+    caplog.set_level(logging.ERROR, logger=rest_data_module.__name__)
     hang = asyncio.Event()
 
     class HangingRequest:
         async def __aenter__(self):
             await hang.wait()
+            return MagicMock()
 
         async def __aexit__(self, *exc_info):
             return False
@@ -579,9 +581,8 @@ async def test_rest_data_backstop_timeout_prevents_permanent_hang(
     session = MagicMock()
     session.request = MagicMock(return_value=HangingRequest())
 
-    with (
-        patch.object(rest_data_module, "BACKSTOP_TIMEOUT_MARGIN", 0),
-        patch.object(rest_data_module, "async_get_clientsession", return_value=session),
+    with patch.object(
+        rest_data_module, "async_get_clientsession", return_value=session
     ):
         rest = RestData(
             hass,
@@ -594,11 +595,32 @@ async def test_rest_data_backstop_timeout_prevents_permanent_hang(
             None,
             True,
             DEFAULT_SSL_CIPHER_LIST,
-            timeout=0,
+            timeout=1,
         )
+        rest._backstop_timeout = 0
         await rest.async_update()
 
     assert rest.data is None
     assert rest.headers is None
     assert isinstance(rest.last_exception, TimeoutError)
     assert "Timeout while fetching data: http://example.com/api" in caplog.text
+
+
+async def test_rest_data_backstop_disabled_when_timeout_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test that timeout=0 (aiohttp timeout disabled) also disables the backstop."""
+    rest = RestData(
+        hass,
+        "GET",
+        "http://example.com/api",
+        "utf-8",
+        None,
+        None,
+        None,
+        None,
+        True,
+        DEFAULT_SSL_CIPHER_LIST,
+        timeout=0,
+    )
+    assert rest._backstop_timeout is None
