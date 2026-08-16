@@ -3,6 +3,8 @@
 import logging
 from typing import Any, cast, override
 
+import aiohttp
+
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
@@ -117,7 +119,14 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
 
     async def _push_button(self):
         """Send commands to API."""
-        result = await self.coordinator.open_garage_connection.push_button()
+        try:
+            result = await self.coordinator.open_garage_connection.push_button()
+        except aiohttp.ClientError, TimeoutError:
+            self._state = self._state_before_move
+            self._state_before_move = None
+            self.async_write_ha_state()
+            raise
+
         if result == 1:
             return
 
