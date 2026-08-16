@@ -40,9 +40,6 @@ async def test_device_tracker(
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    freezer.tick(SHORT_UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id) == snapshot
 
     # Emulate state change
