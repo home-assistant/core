@@ -3,9 +3,12 @@
 from dataclasses import dataclass
 from enum import IntEnum
 from math import floor
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from chip.clusters import Objects as clusters
+from matter_server.common.helpers.util import create_attribute_path
+from matter_server.common.models import EventType
+from propcache.api import cached_property
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -23,6 +26,9 @@ from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
+
+if TYPE_CHECKING:
+    from matter_server.client.models.node import MatterEndpoint
 
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11
@@ -47,6 +53,33 @@ TYPE_MAP = {
     clusters.WindowCovering.Enums.Type.kTiltBlindLiftAndTilt: CoverDeviceClass.BLIND,
 }
 
+# Semantic tag namespace IDs (Matter 1.5 data model) used to disambiguate
+# Closure devices. Namespace-Closure-Covering.xml (id 0x46) describes what
+# kind of covering a Closure is; Namespace-ClosurePanel.xml (id 0x45)
+# describes which axis a ClosurePanel child endpoint controls.
+NAMESPACE_CLOSURE_COVERING = 70
+NAMESPACE_CLOSURE_PANEL = 69
+
+CLOSURE_COVERING_TAG_TO_DEVICE_CLASS = {
+    0: CoverDeviceClass.BLIND,  # Blind
+    1: CoverDeviceClass.AWNING,  # Awning
+    2: CoverDeviceClass.SHUTTER,  # Shutter
+    3: CoverDeviceClass.BLIND,  # Venetian
+    4: CoverDeviceClass.CURTAIN,  # Curtain
+}
+
+
+class ClosurePanelRole(IntEnum):
+    """Role of a ClosurePanel child endpoint.
+
+    Values match the tag IDs of the ClosurePanel semantic tag namespace.
+    Sliding (2) and Rotate (3) closures don't map to a lift/tilt cover
+    position and are intentionally left unhandled.
+    """
+
+    LIFT = 0
+    TILT = 1
+
 
 class OperationalStatus(IntEnum):
     """Ongoing operations enumeration for coverings per Matter spec."""
@@ -55,6 +88,75 @@ class OperationalStatus(IntEnum):
     COVERING_IS_CURRENTLY_OPENING = 0b01
     COVERING_IS_CURRENTLY_CLOSING = 0b10
     RESERVED = 0b11
+
+
+def _extract_struct_field(value: Any, index: int, attr_name: str) -> Any:
+    """Extract a field from a Matter struct value.
+
+    Matter server can expose cluster struct attributes either as objects or
+    simple dictionaries keyed by the TLV field index. We normalize access by
+    first checking dict keys and falling back to attribute lookup.
+    """
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        if index in value:
+            return value[index]
+        if (index_str := str(index)) in value:
+            return value[index_str]
+    return getattr(value, attr_name, None)
+
+
+def _get_closure_device_class(tag_list: Any) -> CoverDeviceClass:
+    """Return the HA device class for a Closure endpoint from its TagList."""
+    for tag in tag_list or ():
+        if _extract_struct_field(tag, 1, "namespaceID") != NAMESPACE_CLOSURE_COVERING:
+            continue
+        device_class = CLOSURE_COVERING_TAG_TO_DEVICE_CLASS.get(
+            _extract_struct_field(tag, 2, "tag")
+        )
+        if device_class is not None:
+            return device_class
+    return CoverDeviceClass.GARAGE
+
+
+def _get_closure_panel_role(tag_list: Any) -> ClosurePanelRole | None:
+    """Return the Lift/Tilt role of a ClosurePanel endpoint from its TagList."""
+    for tag in tag_list or ():
+        if _extract_struct_field(tag, 1, "namespaceID") != NAMESPACE_CLOSURE_PANEL:
+            continue
+        try:
+            return ClosurePanelRole(_extract_struct_field(tag, 2, "tag"))
+        except ValueError:
+            continue
+    return None
+
+
+def _percent100ths_to_ha_position(value: int | None) -> int | None:
+    """Convert a Matter percent100ths value to a HA 0-100 cover position.
+
+    Matter position is inverted compared to HA (100% is closed, 0% is open).
+    """
+    if value is None:
+        return None
+    return 100 - floor(value / 100)
+
+
+def _ha_position_to_percent100ths(position: int) -> int:
+    """Convert a HA 0-100 cover position to a Matter percent100ths value."""
+    return (100 - position) * 100
+
+
+def _feature_supported(
+    endpoint: MatterEndpoint,
+    feature_map_attribute: type[clusters.ClusterAttributeDescriptor],
+    feature: int,
+) -> bool:
+    """Return True if the given endpoint's FeatureMap contains `feature`."""
+    feature_map = endpoint.get_attribute_value(None, feature_map_attribute)
+    if not isinstance(feature_map, int):
+        return False
+    return bool(feature_map & feature)
 
 
 async def async_setup_entry(
@@ -113,8 +215,9 @@ class MatterCover(MatterEntity, CoverEntity):
         """Set the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         await self.send_device_command(
-            # value needs to be inverted and is sent in 100ths
-            clusters.WindowCovering.Commands.GoToLiftPercentage((100 - position) * 100)
+            clusters.WindowCovering.Commands.GoToLiftPercentage(
+                _ha_position_to_percent100ths(position)
+            )
         )
 
     @override
@@ -122,8 +225,9 @@ class MatterCover(MatterEntity, CoverEntity):
         """Set the cover tilt to a specific position."""
         position = kwargs[ATTR_TILT_POSITION]
         await self.send_device_command(
-            # value needs to be inverted and is sent in 100ths
-            clusters.WindowCovering.Commands.GoToTiltPercentage((100 - position) * 100)
+            clusters.WindowCovering.Commands.GoToTiltPercentage(
+                _ha_position_to_percent100ths(position)
+            )
         )
 
     @callback
@@ -157,14 +261,11 @@ class MatterCover(MatterEntity, CoverEntity):
         if self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
         ):
-            # current position is inverted in matter (100 is closed, 0 is open)
             current_cover_position = self.get_matter_attribute_value(
                 clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
             )
-            self._attr_current_cover_position = (
-                100 - floor(current_cover_position / 100)
-                if current_cover_position is not None
-                else None
+            self._attr_current_cover_position = _percent100ths_to_ha_position(
+                current_cover_position
             )
 
             LOGGER.debug(
@@ -177,14 +278,11 @@ class MatterCover(MatterEntity, CoverEntity):
         if self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
         ):
-            # current tilt position is inverted in matter (100 is closed, 0 is open)
             current_cover_tilt_position = self.get_matter_attribute_value(
                 clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
             )
-            self._attr_current_cover_tilt_position = (
-                100 - floor(current_cover_tilt_position / 100)
-                if current_cover_tilt_position is not None
-                else None
+            self._attr_current_cover_tilt_position = _percent100ths_to_ha_position(
+                current_cover_tilt_position
             )
 
             LOGGER.debug(
@@ -211,6 +309,207 @@ class MatterCover(MatterEntity, CoverEntity):
         if clusters.WindowCovering.Commands.GoToTiltPercentage.command_id in commands:
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
         self._attr_supported_features = supported_features
+
+
+class MatterClosure(MatterEntity, CoverEntity):
+    """Representation of a Matter Closure (garage door, blind, shutter, etc.) cover.
+
+    The ClosureControl cluster on this entity's own endpoint provides coarse
+    Open/Close/Stop (no arbitrary position). Devices with distinct Lift
+    and/or Tilt behaviour (e.g. venetian blinds) additionally expose one or
+    more child ClosurePanel endpoints, listed in this endpoint's Descriptor
+    PartsList and each carrying its own ClosureDimension cluster for fine
+    positioning. Those children are resolved lazily via `_closure_panels`
+    and drive `current_cover_position`/`current_cover_tilt_position`.
+    """
+
+    _write_state_debounce_cooldown = STATE_WRITE_DEBOUNCE_COOLDOWN
+
+    @cached_property
+    def _closure_panels(self) -> dict[ClosurePanelRole, MatterEndpoint]:
+        """Return the Lift/Tilt ClosurePanel child endpoints, if any."""
+        node = self._endpoint.node
+        panels: dict[ClosurePanelRole, MatterEndpoint] = {}
+        for child_id in node.get_compose_child_ids(self._endpoint.endpoint_id) or ():
+            child = node.endpoints[child_id]
+            if not child.has_cluster(clusters.ClosureDimension):
+                continue
+            tag_list = child.get_attribute_value(
+                None, clusters.Descriptor.Attributes.TagList
+            )
+            if (role := _get_closure_panel_role(tag_list)) is not None:
+                panels[role] = child
+        return panels
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to Home Assistant."""
+        await super().async_added_to_hass()
+        # Subscribe to the Lift/Tilt ClosurePanel child endpoints' state:
+        # these live on a different endpoint than the ones already
+        # subscribed to by the base class for `self._endpoint`.
+        for panel in self._closure_panels.values():
+            self._unsubscribes.append(
+                self.matter_client.subscribe_events(
+                    callback=self._on_matter_event,
+                    event_filter=EventType.ATTRIBUTE_UPDATED,
+                    node_filter=self._endpoint.node.node_id,
+                    attr_path_filter=create_attribute_path(
+                        panel.endpoint_id,
+                        clusters.ClosureDimension.Attributes.CurrentState.cluster_id,
+                        clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
+                    ),
+                )
+            )
+
+    @override
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the closure."""
+        command_kwargs: dict[str, Any] = {
+            "position": clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen
+        }
+        if self._motion_latching_supported():
+            command_kwargs["latch"] = False
+        await self.send_device_command(
+            clusters.ClosureControl.Commands.MoveTo(**command_kwargs),
+            timed_request_timeout_ms=1000,
+        )
+
+    @override
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the closure."""
+        command_kwargs: dict[str, Any] = {
+            "position": clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed
+        }
+        if self._motion_latching_supported():
+            command_kwargs["latch"] = False
+        await self.send_device_command(
+            clusters.ClosureControl.Commands.MoveTo(**command_kwargs),
+            timed_request_timeout_ms=1000,
+        )
+
+    @override
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop movement."""
+        await self.send_device_command(
+            clusters.ClosureControl.Commands.Stop(),
+            timed_request_timeout_ms=1000,
+        )
+
+    @override
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Set the cover's Lift position, via its ClosurePanel child endpoint."""
+        panel = self._closure_panels[ClosurePanelRole.LIFT]
+        await self._set_panel_target(panel, kwargs[ATTR_POSITION])
+
+    @override
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Set the cover's Tilt position, via its ClosurePanel child endpoint."""
+        panel = self._closure_panels[ClosurePanelRole.TILT]
+        await self._set_panel_target(panel, kwargs[ATTR_TILT_POSITION])
+
+    async def _set_panel_target(self, panel: MatterEndpoint, position: int) -> None:
+        """Send SetTarget to a ClosurePanel child endpoint.
+
+        A latched panel rejects SetTarget with InvalidInState until it's
+        explicitly unlatched, so unlatch as part of the move when the panel
+        supports it (mirrors the parent's MoveTo `latch=False` above).
+        """
+        command_kwargs: dict[str, Any] = {
+            "position": _ha_position_to_percent100ths(position)
+        }
+        if _feature_supported(
+            panel,
+            clusters.ClosureDimension.Attributes.FeatureMap,
+            clusters.ClosureDimension.Bitmaps.Feature.kMotionLatching,
+        ):
+            command_kwargs["latch"] = False
+        await self.send_device_command(
+            clusters.ClosureDimension.Commands.SetTarget(**command_kwargs),
+            endpoint=panel,
+            timed_request_timeout_ms=1000,
+        )
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update the entity from ClosureControl and ClosureDimension attributes."""
+        self._attr_device_class = _get_closure_device_class(
+            self.get_matter_attribute_value(clusters.Descriptor.Attributes.TagList)
+        )
+
+        overall_current_state = self.get_matter_attribute_value(
+            clusters.ClosureControl.Attributes.OverallCurrentState
+        )
+        main_state = self.get_matter_attribute_value(
+            clusters.ClosureControl.Attributes.MainState
+        )
+        overall_target_state = self.get_matter_attribute_value(
+            clusters.ClosureControl.Attributes.OverallTargetState
+        )
+
+        position = _extract_struct_field(overall_current_state, 0, "position")
+        target_position = _extract_struct_field(overall_target_state, 0, "position")
+
+        if isinstance(position, int):
+            position = clusters.ClosureControl.Enums.CurrentPositionEnum(position)
+        if isinstance(target_position, int):
+            target_position = clusters.ClosureControl.Enums.TargetPositionEnum(
+                target_position
+            )
+        if isinstance(main_state, int):
+            main_state = clusters.ClosureControl.Enums.MainStateEnum(main_state)
+
+        if position is None:
+            self._attr_is_closed = None
+        else:
+            self._attr_is_closed = (
+                position
+                == clusters.ClosureControl.Enums.CurrentPositionEnum.kFullyClosed
+            )
+
+        self._attr_is_opening = False
+        self._attr_is_closing = False
+        if main_state == clusters.ClosureControl.Enums.MainStateEnum.kMoving:
+            if (
+                target_position
+                == clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen
+            ):
+                self._attr_is_opening = True
+            elif (
+                target_position
+                == clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed
+            ):
+                self._attr_is_closing = True
+
+        supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
+        if lift := self._closure_panels.get(ClosurePanelRole.LIFT):
+            lift_state = lift.get_attribute_value(
+                None, clusters.ClosureDimension.Attributes.CurrentState
+            )
+            self._attr_current_cover_position = _percent100ths_to_ha_position(
+                _extract_struct_field(lift_state, 0, "position")
+            )
+            supported_features |= CoverEntityFeature.SET_POSITION
+        if tilt := self._closure_panels.get(ClosurePanelRole.TILT):
+            tilt_state = tilt.get_attribute_value(
+                None, clusters.ClosureDimension.Attributes.CurrentState
+            )
+            self._attr_current_cover_tilt_position = _percent100ths_to_ha_position(
+                _extract_struct_field(tilt_state, 0, "position")
+            )
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
+        self._attr_supported_features = supported_features
+
+    def _motion_latching_supported(self) -> bool:
+        """Return True if the parent's MotionLatching feature is supported."""
+        return _feature_supported(
+            self._endpoint,
+            clusters.ClosureControl.Attributes.FeatureMap,
+            clusters.ClosureControl.Bitmaps.Feature.kMotionLatching,
+        )
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -273,5 +572,34 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
             clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.COVER,
+        entity_description=MatterCoverEntityDescription(
+            key="MatterClosure",
+            name=None,
+        ),
+        entity_class=MatterClosure,
+        required_attributes=(clusters.ClosureControl.Attributes.OverallCurrentState,),
+        optional_attributes=(
+            clusters.ClosureControl.Attributes.MainState,
+            clusters.ClosureControl.Attributes.OverallTargetState,
+        ),
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.COVER,
+        entity_description=MatterCoverEntityDescription(
+            key="MatterClosureMotionLatching",
+            name=None,
+        ),
+        entity_class=MatterClosure,
+        required_attributes=(clusters.ClosureControl.Attributes.OverallCurrentState,),
+        optional_attributes=(
+            clusters.ClosureControl.Attributes.MainState,
+            clusters.ClosureControl.Attributes.OverallTargetState,
+        ),
+        allow_none_value=True,
+        featuremap_contains=clusters.ClosureControl.Bitmaps.Feature.kMotionLatching,
     ),
 ]
