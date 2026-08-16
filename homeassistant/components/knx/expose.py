@@ -26,7 +26,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
-    CoreState,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -211,7 +210,7 @@ class KnxExposeEntity:
         for option, xknx_expose in self._exposures:
             state_value = self._get_expose_value(state, option)
             try:
-                xknx_expose.sensor_value.value = state_value
+                xknx_expose.initialize_value(state_value)
             except ConversionError:
                 _LOGGER.exception(
                     "Error setting value %s for expose sensor %s",
@@ -286,18 +285,23 @@ class KnxExposeEntity:
         """Handle entity change for all options."""
         new_state = event.data["new_state"]
 
-        if event.data["old_state"] is None and self.hass.state in (
-            CoreState.not_running,
-            CoreState.starting,
-        ):
-            self._set_expose_state(new_state)
-            return
-
         async with TaskGroup() as tg:
             for option, xknx_expose in self._exposures:
                 expose_value = self._get_expose_value(new_state, option)
                 if expose_value is None:
                     continue
+
+                if xknx_expose.sensor_value.value is None:
+                    try:
+                        xknx_expose.initialize_value(expose_value)
+                    except ConversionError:
+                        _LOGGER.exception(
+                            "Error setting value %s for expose sensor %s",
+                            expose_value,
+                            xknx_expose.name,
+                        )
+                    continue
+
                 tg.create_task(self._async_set_knx_value(xknx_expose, expose_value))
 
     async def _async_set_knx_value(
