@@ -80,12 +80,12 @@ MAX_TEMP = 32
 MIN_TEMP_RANGE = 1.66667
 # Avoid Google's aggressive API rate limits when making incremental adjustments.
 TEMPERATURE_DEBOUNCE_SECONDS = 10
-TEMPERATURE_CONFIRMATION_TIMEOUT_SECONDS = 30
+TEMPERATURE_PENDING_TIMEOUT_SECONDS = 10
 
 
 @dataclass
 class _PendingTemperature:
-    """A temperature command pending delivery or confirmation."""
+    """A temperature command pending delivery or expiration."""
 
     kwargs: dict[str, Any]
     hvac_mode: HVACMode
@@ -148,7 +148,7 @@ class ThermostatEntity(ClimateEntity):
         """Run when entity is added to register update signal handler."""
         self._attr_supported_features = self._get_supported_features()
         self.async_on_remove(
-            self._device.add_update_listener(self._handle_device_update)
+            self._device.add_update_listener(self.async_write_ha_state)
         )
         self.async_on_remove(lambda: setattr(self, "_pending_temperature", None))
 
@@ -365,43 +365,6 @@ class ThermostatEntity(ClimateEntity):
             self.hass, TEMPERATURE_DEBOUNCE_SECONDS, async_send_temperature
         )
 
-    @callback
-    def _handle_device_update(self) -> None:
-        """Reconcile optimistic temperature state with a device update."""
-        if (
-            (pending := self._pending_temperature)
-            and pending.sent
-            and (
-                self.hvac_mode != pending.hvac_mode
-                or self._temperature_matches_device(pending)
-            )
-        ):
-            self._pending_temperature = None
-        self.async_write_ha_state()
-
-    def _temperature_matches_device(self, expected: _PendingTemperature) -> bool:
-        """Return whether the device traits confirm a temperature command."""
-        trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
-        temperatures: tuple[tuple[float | None, float], ...]
-        if ATTR_TARGET_TEMP_LOW in expected.kwargs:
-            temperatures = (
-                (trait.heat_celsius, expected.kwargs[ATTR_TARGET_TEMP_LOW]),
-                (trait.cool_celsius, expected.kwargs[ATTR_TARGET_TEMP_HIGH]),
-            )
-        elif expected.hvac_mode in (HVACMode.HEAT, HVACMode.COOL):
-            actual = (
-                trait.heat_celsius
-                if expected.hvac_mode == HVACMode.HEAT
-                else trait.cool_celsius
-            )
-            temperatures = ((actual, expected.kwargs[ATTR_TEMPERATURE]),)
-        else:
-            return False
-        return all(
-            actual is not None and abs(actual - target) < 0.01
-            for actual, target in temperatures
-        )
-
     async def _async_send_pending_temperature(
         self, expected: _PendingTemperature
     ) -> None:
@@ -439,15 +402,15 @@ class ThermostatEntity(ClimateEntity):
                 if succeeded:
 
                     @callback
-                    def clear_unconfirmed_temperature(_now: datetime) -> None:
+                    def clear_pending_temperature(_now: datetime) -> None:
                         if self._pending_temperature is expected:
                             self._pending_temperature = None
                             self.async_write_ha_state()
 
                     async_call_later(
                         self.hass,
-                        TEMPERATURE_CONFIRMATION_TIMEOUT_SECONDS,
-                        clear_unconfirmed_temperature,
+                        TEMPERATURE_PENDING_TIMEOUT_SECONDS,
+                        clear_pending_temperature,
                     )
                 else:
                     self._pending_temperature = None

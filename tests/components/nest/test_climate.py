@@ -789,12 +789,12 @@ async def test_thermostat_temperature_changes_use_trailing_debounce(
     assert thermostat.attributes[ATTR_TEMPERATURE] == 22.0
 
 
-async def test_unconfirmed_temperature_times_out(
+async def test_sent_temperature_times_out(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
 ) -> None:
-    """Test optimistic temperature expires without a matching device update."""
+    """Test optimistic temperature expires after a sent command."""
     create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
@@ -819,7 +819,7 @@ async def test_unconfirmed_temperature_times_out(
     async_fire_time_changed(
         hass,
         dt_util.utcnow()
-        + timedelta(seconds=nest_climate.TEMPERATURE_CONFIRMATION_TIMEOUT_SECONDS),
+        + timedelta(seconds=nest_climate.TEMPERATURE_PENDING_TIMEOUT_SECONDS),
     )
     await hass.async_block_till_done()
 
@@ -828,13 +828,13 @@ async def test_unconfirmed_temperature_times_out(
     assert thermostat.attributes[ATTR_TEMPERATURE] == 19.0
 
 
-async def test_unconfirmed_temperature_clears_on_mode_update(
+async def test_sent_temperature_persists_until_timeout_after_mode_update(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
     create_event: CreateEvent,
 ) -> None:
-    """Test a confirmed mode change clears an obsolete optimistic temperature."""
+    """Test optimistic temperature persists after updates until its timeout."""
     create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
@@ -869,6 +869,17 @@ async def test_unconfirmed_temperature_clears_on_mode_update(
             },
         }
     )
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 20.0
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow()
+        + timedelta(seconds=nest_climate.TEMPERATURE_PENDING_TIMEOUT_SECONDS),
+    )
+    await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
