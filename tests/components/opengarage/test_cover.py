@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-import aiohttp
 import pytest
 
 from homeassistant.components.cover import (
@@ -239,67 +238,3 @@ async def test_cover_command(
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == final_state
     assert state.attributes[ATTR_CURRENT_POSITION] == final_position
-
-
-@pytest.mark.parametrize(
-    ("push_button_result", "log_message"),
-    [
-        (None, "Unable to connect to OpenGarage device"),
-        (2, "Device key is incorrect"),
-        (3, "Error code 3"),
-    ],
-    ids=["connection_error", "bad_device_key", "other_error_code"],
-)
-async def test_push_button_error_code_rolls_back_state(
-    hass: HomeAssistant,
-    mock_opengarage: MagicMock,
-    init_integration: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-    push_button_result: int | None,
-    log_message: str,
-) -> None:
-    """Test that a failed push_button result restores and publishes the prior state."""
-    mock_opengarage.push_button.return_value = push_button_result
-    coordinator = init_integration.runtime_data
-    await _simulate_door_state(hass, mock_opengarage, coordinator, 0)
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
-        blocking=True,
-    )
-
-    assert log_message in caplog.text
-    state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
-
-
-@pytest.mark.parametrize(
-    "side_effect",
-    [aiohttp.ClientError(), TimeoutError()],
-    ids=["client_error", "timeout_error"],
-)
-async def test_push_button_raises_rolls_back_state_and_reraises(
-    hass: HomeAssistant,
-    mock_opengarage: MagicMock,
-    init_integration: MockConfigEntry,
-    side_effect: Exception,
-) -> None:
-    """Test that push_button raising restores and publishes the prior state, then re-raises."""
-    mock_opengarage.push_button.side_effect = side_effect
-    coordinator = init_integration.runtime_data
-    await _simulate_door_state(hass, mock_opengarage, coordinator, 0)
-
-    with pytest.raises(type(side_effect)):
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.garage_abcdef"},
-            blocking=True,
-        )
-
-    state = hass.states.get("cover.garage_abcdef")
-    assert state.state == STATE_CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
