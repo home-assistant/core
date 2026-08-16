@@ -1,13 +1,19 @@
 """Tests for the Spotify initialization."""
 
+import http
 from unittest.mock import MagicMock, patch
 
+from aiohttp import RequestInfo
 import pytest
 from spotifyaio import SpotifyConnectionError, SpotifyForbiddenError
 
 from homeassistant.components.spotify.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -32,6 +38,48 @@ async def test_setup(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize(
+    ("exc", "expected_state"),
+    [
+        (
+            OAuth2TokenRequestReauthError(
+                request_info=RequestInfo("", "POST", {}, ""),
+                status=http.HTTPStatus.BAD_REQUEST,
+                domain=DOMAIN,
+            ),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            OAuth2TokenRequestError(
+                request_info=RequestInfo("", "POST", {}, ""),
+                status=http.HTTPStatus.INTERNAL_SERVER_ERROR,
+                domain=DOMAIN,
+            ),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
+    ids=["reauth", "server_error"],
+)
+async def test_setup_token_refresh_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    exc: OAuth2TokenRequestError,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test a failing token refresh only asks for reauth when it is unrecoverable."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=exc,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is expected_state
 
 
 @pytest.mark.usefixtures("setup_credentials")
