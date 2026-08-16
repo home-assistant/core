@@ -84,6 +84,12 @@ def test_resolve_app_network_data_networks_not_list_returns_none() -> None:
     assert _resolve_app_network_data("plex::eth0", app_stats) is None
 
 
+def test_resolve_app_network_data_base_entry_not_dict_returns_none() -> None:
+    """A non-dict base entry resolves to None instead of raising AttributeError."""
+    app_stats = {"plex": "not-a-dict"}
+    assert _resolve_app_network_data("plex::eth0", app_stats) is None
+
+
 def test_resolve_app_network_data_no_matching_interface_returns_none() -> None:
     """No matching interface_name in the networks list resolves to None."""
     app_stats = {"plex": {"networks": [{"interface_name": "eth1"}]}}

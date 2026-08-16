@@ -55,9 +55,16 @@ async def async_setup_entry(
     def _discover_app_stats_sensors(
         updated_coordinator: TrueNASCoordinator | None = None,
     ) -> None:
-        _discover_app_stats(
-            platform, updated_coordinator or coordinator, _async_add_entities
-        )
+        # SIGNAL_UPDATE_SENSORS is a global dispatcher signal that __init__ always
+        # fires with the *same* coordinator instance object (one per config entry),
+        # so the identity check below is safe. With more than one TrueNAS config
+        # entry every platform receives every entry's refresh, so ignore refreshes
+        # from other entries — otherwise this platform would build the *other*
+        # instance's entities and try to add them here, causing "Platform truenas
+        # does not generate unique IDs … already exists" spam (#33).
+        if updated_coordinator is not None and updated_coordinator is not coordinator:
+            return
+        _discover_app_stats(platform, coordinator, _async_add_entities)
 
     _discover_app_stats_sensors()
     config_entry.async_on_unload(
@@ -96,6 +103,8 @@ def _discover_app_stats(
         ``app_name::interface_name`` so apps sharing an NIC name remain unique
     """
     app_stats_data = coord.data.get("app_stats", {})
+    if not isinstance(app_stats_data, dict):
+        app_stats_data = {}
     app_stats_entities: list[TrueNASAppStatsSensor] = []
 
     loaded = {
@@ -201,8 +210,10 @@ def _resolve_app_network_data(
     base_uid, interface_name = _parse_app_network_uid(uid)
     if base_uid is None or interface_name is None:
         return None
-    main_data = app_stats.get(base_uid, {})
-    if not main_data or not isinstance(main_data.get("networks"), list):
+    main_data = app_stats.get(base_uid)
+    if not isinstance(main_data, dict) or not isinstance(
+        main_data.get("networks"), list
+    ):
         return None
     return next(
         (
