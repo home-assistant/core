@@ -32,6 +32,7 @@ from homeassistant.components.calendar import (
     CalendarEntityDescription,
     CalendarEntityFeature,
     CalendarEvent,
+    CalendarEventStatus,
     extract_offset,
     is_offset_reached,
 )
@@ -535,6 +536,10 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         end=event.end.value,
         description=event.description,
         location=event.location,
+        # The Google API defaults an omitted status to confirmed, and gcal_sync
+        # applies that default, so this is never None. Its values already match
+        # the rfc5545 ones in lower case.
+        status=CalendarEventStatus(event.status.value),
     )
 
 

@@ -21,6 +21,7 @@ from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEntityFeature,
     CalendarEvent,
+    CalendarEventStatus,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -252,4 +253,11 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,
         location=event.location,
+        # ical validates STATUS against the same rfc5545 set, so the mapping is
+        # total and needs no fallback. Its values are upper case, and its enum
+        # is a plain (str, Enum) rather than a StrEnum, so str() would yield
+        # "EventStatus.CONFIRMED" instead of the value.
+        status=(
+            CalendarEventStatus(event.status.value.lower()) if event.status else None
+        ),
     )

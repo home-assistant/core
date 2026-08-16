@@ -1216,3 +1216,48 @@ async def test_adjacent_events_stay_on(
         state = hass.states.get(TEST_ENTITY)
         assert state.state == STATE_ON
         assert state.attributes["message"] == "Second"
+
+
+def _ics_with_status(status_property: str) -> str:
+    """Build a calendar holding a single event with the given STATUS line.
+
+    Built by concatenation rather than a dedented block: leading whitespace
+    means line folding in iCalendar, and an interpolated property would leave
+    the following line without the indentation dedent keys off.
+    """
+    return (
+        "BEGIN:VCALENDAR\n"
+        "BEGIN:VEVENT\n"
+        "SUMMARY:Bastille Day Party\n"
+        "DTSTART:19970714\n"
+        "DTEND:19970715\n"
+        f"{status_property}"
+        "END:VEVENT\n"
+        "END:VCALENDAR\n"
+    )
+
+
+@pytest.mark.parametrize(
+    ("ics_content", "expected_status"),
+    [
+        pytest.param(
+            _ics_with_status("STATUS:CANCELLED\n"), "cancelled", id="cancelled"
+        ),
+        pytest.param(
+            _ics_with_status("STATUS:TENTATIVE\n"), "tentative", id="tentative"
+        ),
+        pytest.param(
+            _ics_with_status("STATUS:CONFIRMED\n"), "confirmed", id="confirmed"
+        ),
+        pytest.param(_ics_with_status(""), None, id="no_status_property"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_event_status(
+    get_events: GetEventsFn,
+    expected_status: str | None,
+) -> None:
+    """Test that the rfc5545 STATUS property is returned by the API."""
+    events = await get_events("1997-07-13T00:00:00", "1997-07-16T00:00:00")
+    assert len(events) == 1
+    assert events[0]["status"] == expected_status
