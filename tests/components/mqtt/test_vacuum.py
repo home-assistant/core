@@ -355,7 +355,7 @@ async def test_clean_segments_initial_setup_without_repair_issue(
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
         & vacuum.VacuumEntityFeature.CLEAN_AREA
     )
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 0
 
 
@@ -405,7 +405,7 @@ async def test_clean_segments_command(
         & vacuum.VacuumEntityFeature.CLEAN_AREA
     )
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     # We do not expect a repair flow as the segments did not change
     assert len(issue_registry.issues) == 0
 
@@ -705,8 +705,7 @@ async def test_status(
             (
                 {
                     mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
-                        mqttvacuum.DEFAULT_SERVICES
-                        | vacuum.VacuumEntityFeature.BATTERY,
+                        mqttvacuum.DEFAULT_SERVICES,
                         SERVICE_TO_STRING,
                     )
                 },

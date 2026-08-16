@@ -179,23 +179,23 @@ async def test_remove_config_entry_device(
     ws_client = await hass_ws_client(hass)
 
     # Try to remove an active client from UI: allowed
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"]), config_entry.entry_id
     )
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"]
-    assert not device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+    assert not device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"]), config_entry.entry_id
     )
 
     # Try to remove an active device from UI: not allowed
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"])}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"]), config_entry.entry_id
     )
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
     assert not response["success"]
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"])}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"]), config_entry.entry_id
     )
 
     # Remove a client from Unifi API
@@ -203,11 +203,11 @@ async def test_remove_config_entry_device(
     await hass.async_block_till_done()
 
     # Try to remove an inactive client from UI: allowed
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"])}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"]), config_entry.entry_id
     )
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"]
-    assert not device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"])}
+    assert not device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"]), config_entry.entry_id
     )

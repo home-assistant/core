@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
@@ -10,19 +11,18 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DOMAIN,
     PARAM_AB_ALARM_SOUND,
     PARAM_AUDIO_ENCODE_CONTROL,
     PARAM_CLOSE_CAMERA,
     PARAM_HEADER_DETECT,
     PARAM_LIGHT,
-    PARAM_MOTION_DETECT,
     PARAM_PLUG_SWITCH,
-    PARAM_STATE,
     PARAM_WHITE_LIGHT,
     imou_device_identifier,
 )
@@ -97,14 +97,7 @@ async def async_setup_entry(
             if imou_device_identifier(device) in device_keys
         )
 
-    coordinator.new_device_callbacks.append(_add_switches)
-
-    @callback
-    def _remove_new_device_callback() -> None:
-        if _add_switches in coordinator.new_device_callbacks:
-            coordinator.new_device_callbacks.remove(_add_switches)
-
-    entry.async_on_unload(_remove_new_device_callback)
+    entry.async_on_unload(coordinator.register_new_device_callback(_add_switches))
     _add_switches(coordinator.devices)
 
 
@@ -138,5 +131,9 @@ class ImouSwitch(ImouEntity, SwitchEntity):
                 enable,
             )
         except ImouException as e:
-            raise HomeAssistantError(str(e)) from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_operation_failed",
+                translation_placeholders={"error": e.message},
+            ) from e
         await self.coordinator.async_request_refresh()
