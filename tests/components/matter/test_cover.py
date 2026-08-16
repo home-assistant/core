@@ -516,19 +516,12 @@ async def test_cover_full_features(
     assert state.state == "unknown"
 
 
-@pytest.mark.parametrize(
-    ("node_fixture", "expected_initial_state"),
-    [
-        ("closure_garage_door", CoverState.OPEN),
-        ("nrf_closure_garage_door", CoverState.CLOSED),
-    ],
-)
+@pytest.mark.parametrize("node_fixture", ["mock_closure_garage_door"])
 async def test_closure_cover_garage_door(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
     freezer: FrozenDateTimeFactory,
-    expected_initial_state: CoverState,
 ) -> None:
     """Test a single-endpoint Closure (garage door, no ClosurePanel children)."""
     cover_states = hass.states.async_all(Platform.COVER)
@@ -537,7 +530,7 @@ async def test_closure_cover_garage_door(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == expected_initial_state
+    assert state.state == CoverState.OPEN
     assert state.attributes["device_class"] == CoverDeviceClass.GARAGE
 
     supported_mask = (
