@@ -118,14 +118,14 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
     async def _push_button(self):
         """Send commands to API."""
         result = await self.coordinator.open_garage_connection.push_button()
-        if result is None:
-            _LOGGER.error("Unable to connect to OpenGarage device")
         if result == 1:
             return
 
-        if result == 2:
+        if result is None:
+            _LOGGER.error("Unable to connect to OpenGarage device")
+        elif result == 2:
             _LOGGER.error("Unable to control %s: Device key is incorrect", self.name)
-        elif result > 2:
+        else:
             _LOGGER.error("Unable to control %s: Error code %s", self.name, result)
 
         self._state = self._state_before_move
