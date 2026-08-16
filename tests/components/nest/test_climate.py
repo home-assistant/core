@@ -6,7 +6,7 @@ pubsub subscriber.
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timedelta
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, Mock
@@ -789,53 +789,6 @@ async def test_thermostat_temperature_changes_use_trailing_debounce(
     assert thermostat.attributes[ATTR_TEMPERATURE] == 22.0
 
 
-async def test_stale_temperature_callback_preserves_new_timer(
-    hass: HomeAssistant,
-    setup_platform: PlatformSetup,
-    create_device: CreateDevice,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test a stale callback does not clear a newer timer's cancel handle."""
-    create_device.create(
-        {
-            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
-            "sdm.devices.traits.ThermostatMode": {
-                "availableModes": ["HEAT", "OFF"],
-                "mode": "HEAT",
-            },
-            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
-                "heatCelsius": 19.0,
-            },
-        }
-    )
-    await setup_platform()
-
-    callbacks: list[Callable[[datetime], Awaitable[None]]] = []
-    cancel_timers: list[Mock] = []
-
-    def async_call_later(
-        _hass: HomeAssistant,
-        delay: float,
-        action: Callable[[datetime], Awaitable[None]],
-    ) -> Mock:
-        assert delay == nest_climate.TEMPERATURE_DEBOUNCE_SECONDS
-        callbacks.append(action)
-        cancel_timer = Mock()
-        cancel_timers.append(cancel_timer)
-        return cancel_timer
-
-    monkeypatch.setattr(nest_climate, "async_call_later", async_call_later)
-
-    await common.async_set_temperature(hass, temperature=20.0)
-    await common.async_set_temperature(hass, temperature=21.0)
-    cancel_timers[0].assert_called_once_with()
-
-    await callbacks[0](dt_util.utcnow())
-    await common.async_set_temperature(hass, temperature=22.0)
-
-    cancel_timers[1].assert_called_once_with()
-
-
 async def test_unconfirmed_temperature_times_out(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
@@ -873,63 +826,6 @@ async def test_unconfirmed_temperature_times_out(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.attributes[ATTR_TEMPERATURE] == 19.0
-
-
-async def test_stale_confirmation_callback_preserves_new_timer(
-    hass: HomeAssistant,
-    setup_platform: PlatformSetup,
-    create_device: CreateDevice,
-    create_event: CreateEvent,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test a stale confirmation callback does not orphan a newer timer."""
-    create_device.create(
-        {
-            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
-            "sdm.devices.traits.ThermostatMode": {
-                "availableModes": ["HEAT", "OFF"],
-                "mode": "HEAT",
-            },
-            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
-                "heatCelsius": 19.0,
-            },
-        }
-    )
-    await setup_platform()
-
-    confirmation_callbacks: list[Callable[[datetime], None]] = []
-    confirmation_cancel_timers: list[Mock] = []
-    real_async_call_later = nest_climate.async_call_later
-
-    def async_call_later(
-        timer_hass: HomeAssistant,
-        delay: float,
-        action: Callable[[datetime], None],
-    ) -> Mock:
-        if delay != nest_climate.TEMPERATURE_CONFIRMATION_TIMEOUT_SECONDS:
-            return real_async_call_later(timer_hass, delay, action)
-        confirmation_callbacks.append(action)
-        cancel_timer = Mock()
-        confirmation_cancel_timers.append(cancel_timer)
-        return cancel_timer
-
-    monkeypatch.setattr(nest_climate, "async_call_later", async_call_later)
-
-    await common.async_set_temperature(hass, temperature=20.0)
-    await async_fire_temperature_debounce(hass)
-    await common.async_set_temperature(hass, temperature=21.0)
-    await async_fire_temperature_debounce(hass)
-
-    confirmation_callbacks[0](dt_util.utcnow())
-    await create_event(
-        {
-            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
-                "heatCelsius": 21.0,
-            }
-        }
-    )
-
-    confirmation_cancel_timers[1].assert_called_once_with()
 
 
 async def test_unconfirmed_temperature_clears_on_mode_update(
@@ -2147,10 +2043,7 @@ async def test_thermostat_hvac_mode_failure(
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
     await common.async_set_temperature(hass, temperature=25.0)
     await async_fire_temperature_debounce(hass)
-    assert (
-        "Error sending debounced temperature command for climate.my_thermostat"
-        in caplog.text
-    )
+    assert "Error setting climate.my_thermostat temperature" in caplog.text
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
     with pytest.raises(HomeAssistantError) as e_info:
