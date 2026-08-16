@@ -2,6 +2,7 @@
 
 import contextlib
 import logging
+from typing import override
 
 from TISApi.api import TISApi
 import voluptuous as vol
@@ -19,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 class TISConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TIS Control."""
 
+    @override
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
