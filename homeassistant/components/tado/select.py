@@ -78,9 +78,11 @@ class TadoHeatingCircuitSelectEntity(TadoZoneEntity, SelectEntity):
     @callback
     def _async_update_callback(self) -> None:
         """Resolve the circuit number currently assigned to this zone."""
-        zone_control = self.coordinator.data["zone_control"].get(self.zone_id, {})
-
-        circuit_number = zone_control.get("heatingCircuit")
+        circuit_number = (
+            self.coordinator.data["zone_control"]
+            .get(self.zone_id, {})
+            .get("heatingCircuit")
+        )
         if circuit_number is None:
             self._attr_current_option = NO_HEATING_CIRCUIT_OPTION
             return
