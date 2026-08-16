@@ -70,9 +70,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.zones: list[dict[Any, Any]] = []
         self.devices: list[dict[Any, Any]] = []
         self.heating_circuits: dict[str, dict[str, Any]] = {}
-        # Tracks that the one-time fetch was attempted, not that it produced
-        # anything: a home without circuits, or a failed optional request, must
-        # not make us retry on every refresh.
         self._heating_circuits_loaded = False
         self.data: dict[str, Any] = {
             "device": {},
@@ -121,9 +118,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
 
-        # Heating circuits and their per-zone assignment are configuration, not
-        # state: they only change when the user rewires the home or changes the
-        # assignment. Fetching them once keeps the recurring call count at zero.
+        # Heating circuits are configuration, so fetching them once is enough.
         if not self._heating_circuits_loaded:
             self._heating_circuits_loaded = True
             await self._async_update_heating_circuits()
@@ -486,23 +481,14 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
 
     async def _async_update_heating_circuits(self) -> None:
-        """Fetch the heating circuits and their current per-zone assignment.
-
-        Only called once per config entry setup. A failure is not fatal: the
-        select entities are simply not created, every other platform is
-        unaffected. It is not retried either, so that a home without circuits
-        or a failing optional request cannot turn into a recurring call on
-        every refresh; reload the entry to try again.
-        """
+        """Fetch the heating circuits and their current per-zone assignment."""
 
         def _load() -> tuple[list[dict[str, Any]], dict[int, dict[str, Any]]]:
-            circuits = self._tado.get_heating_circuits()
-            controls = {
+            return self._tado.get_heating_circuits(), {
                 zone["id"]: self._tado.get_zone_control(zone["id"])
                 for zone in self.zones
                 if zone["type"] == TYPE_HEATING
             }
-            return circuits, controls
 
         try:
             circuits, controls = await self.hass.async_add_executor_job(_load)
@@ -528,8 +514,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 f"Error setting Tado heating circuit for zone {zone_id}: {err}"
             ) from err
 
-        # Track it locally instead of re-reading it: the write already tells us
-        # the new value, and a read back would cost another API call.
         self.data["zone_control"].setdefault(zone_id, {})["heatingCircuit"] = (
             circuit_number
         )

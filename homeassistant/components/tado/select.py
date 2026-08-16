@@ -26,7 +26,6 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     if not coordinator.heating_circuits:
-        # Home has no heating circuits, or they could not be read.
         return
 
     async_add_entities(
@@ -79,10 +78,7 @@ class TadoHeatingCircuitSelectEntity(TadoZoneEntity, SelectEntity):
     @callback
     def _async_update_callback(self) -> None:
         """Resolve the circuit number currently assigned to this zone."""
-        zone_control = self.coordinator.data["zone_control"].get(self.zone_id)
-        if zone_control is None:
-            self._attr_current_option = None
-            return
+        zone_control = self.coordinator.data["zone_control"].get(self.zone_id, {})
 
         circuit_number = zone_control.get("heatingCircuit")
         if circuit_number is None:
