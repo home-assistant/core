@@ -125,6 +125,8 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    SensorDeviceClassSelector,
+    SensorDeviceClassSelectorConfig,
     TemplateSelector,
     TemplateSelectorConfig,
     TextSelector,
@@ -774,13 +776,16 @@ SCALE_SELECTOR = NumberSelector(
         step=1,
     )
 )
-SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in SensorDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_sensor",
-        sort=True,
-    )
+# SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
+#    SelectSelectorConfig(
+#        options=[device_class.value for device_class in SensorDeviceClass],
+#        mode=SelectSelectorMode.DROPDOWN,
+#        translation_key="device_class_sensor",
+#        sort=True,
+#    )
+# )
+SENSOR_DEVICE_CLASS_SELECTOR = SensorDeviceClassSelector(
+    SensorDeviceClassSelectorConfig()
 )
 SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
     SelectSelectorConfig(

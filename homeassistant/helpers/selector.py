@@ -5,7 +5,7 @@ from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
-from typing import Any, Literal, Required, TypedDict, cast, override
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast, override
 from uuid import UUID
 
 import voluptuous as vol
@@ -17,6 +17,10 @@ from homeassistant.util import decorator
 from homeassistant.util.yaml import dumper
 
 from . import config_validation as cv
+
+if TYPE_CHECKING:
+    from homeassistant.components.sensor import SensorDeviceClass
+
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 
@@ -1867,6 +1871,45 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
         return [parent_schema(vol.Schema(str)(val)) for val in data]
+
+
+class SensorDeviceClassSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a sensor device class selector config."""
+
+    options: list[SensorDeviceClass | str]
+    multiple: bool
+    custom_value: bool
+    mode: SelectSelectorMode
+    sort: bool
+
+
+@SELECTORS.register("sensor_device_class")
+class SensorDeviceClassSelector(SelectSelector):
+    """Selector for sensor device class."""
+
+    selector_type = "sensor_device_class"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Optional("options"): list[str],
+            vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("custom_value", default=False): cv.boolean,
+            vol.Optional("mode"): vol.All(
+                vol.Coerce(SelectSelectorMode), lambda val: val.value
+            ),
+            vol.Optional("sort", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: SensorDeviceClassSelectorConfig) -> None:
+        """Instantiate a sensor device class selector."""
+        from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
+
+        if config.get("options") is None:
+            config["options"] = [
+                device_class.value for device_class in SensorDeviceClass
+            ]
+        super().__init__(cast(SelectSelectorConfig, config))
 
 
 class SerialPortSelectorConfig(BaseSelectorConfig, total=False):
