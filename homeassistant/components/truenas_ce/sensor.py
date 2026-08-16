@@ -1,17 +1,16 @@
 """TrueNAS sensor platform."""
 
-import asyncio
 from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from logging import getLogger
 import re
-from typing import Any, NoReturn, cast, override
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform as ep
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
@@ -19,19 +18,9 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.dt import naive_now, utc_from_timestamp
+from homeassistant.util.dt import utc_from_timestamp
 
-from .const import (
-    API_CLOUDSYNC_SYNC,
-    API_REPLICATION_RUN,
-    API_RSYNCTASK_RUN,
-    API_SNAPSHOTTASK_RUN,
-    CONF_DATA_UNIT,
-    CONF_DATASET_PASSPHRASES,
-    DEFAULT_DATA_UNIT,
-    DOMAIN,
-    SIGNAL_UPDATE_SENSORS,
-)
+from .const import CONF_DATA_UNIT, DEFAULT_DATA_UNIT, DOMAIN, SIGNAL_UPDATE_SENSORS
 from .coordinator import TrueNASConfigEntry, TrueNASCoordinator, get_truenas_coordinator
 from .entity import TrueNASEntity, async_add_entities, format_unique_id
 from .helper import alert_action, scaled_data_unit
@@ -42,18 +31,9 @@ from .sensor_types import (  # noqa: F401
 )
 
 _LOGGER = getLogger(__name__)
-_UNKNOWN_DATASET = "<unknown>"
 
 # Updates are centralized in the coordinator; entity actions may run unlimited.
 PARALLEL_UPDATES = 0
-
-# Middleware job polling for dataset lock/unlock operations.
-JOB_POLL_INTERVAL = 1
-JOB_WAIT_TIMEOUT = 30
-JOB_STATES_FAILED = ("FAILED", "ABORTED")
-# Tolerate a few empty lookups (the job may not be queryable immediately after
-# start) before treating a persistently missing job as a failure.
-JOB_MAX_MISSING_POLLS = 5
 
 
 # ---------------------------
@@ -426,31 +406,6 @@ class TrueNASUptimeSensor(TrueNASSensor):
             return utc_from_timestamp(val)
         return None
 
-    @override
-    async def restart(self) -> None:
-        """Restart TrueNAS system."""
-        await self.coordinator.api.query(
-            "system.reboot", ["Home Assistant Integration"]
-        )
-        self._raise_if_api_error("restart")
-
-    @override
-    async def stop(self) -> None:
-        """Shutdown TrueNAS system."""
-        await self.coordinator.api.query(
-            "system.shutdown", ["Home Assistant Integration"]
-        )
-        self._raise_if_api_error("stop")
-
-    @override
-    async def refresh(self) -> None:
-        """Force an immediate coordinator re-poll of TrueNAS.
-
-        Triggers the same update cycle that otherwise runs on the poll interval,
-        so automations can act on current data without waiting for the next poll.
-        """
-        await self.coordinator.async_refresh()
-
 
 # ---------------------------
 #   TrueNASAlertSensor
@@ -483,238 +438,6 @@ class TrueNASAlertSensor(TrueNASSensor):
 class TrueNASDatasetSensor(TrueNASSensor):
     """Define an TrueNAS Dataset sensor."""
 
-    def _raise_dataset_action_failed(
-        self, action: str, reason: str, *, cause: BaseException | None = None
-    ) -> NoReturn:
-        """Raise a uniform, translated error for a failed dataset action."""
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="dataset_action_failed",
-            translation_placeholders={
-                "action": action,
-                "dataset": self._data.get("name", _UNKNOWN_DATASET),
-                "host": self.coordinator.host,
-                "reason": str(reason),
-            },
-        ) from cause
-
-    async def _poll_job(self, job_id: int) -> dict[str, Any] | None:
-        """Fetch a single middleware job by id."""
-        jobs = await self.coordinator.api.query(
-            "core.get_jobs", [[["id", "=", job_id]]]
-        )
-        if isinstance(jobs, list):
-            jobs = jobs[0] if jobs else None
-        return jobs if isinstance(jobs, dict) else None
-
-    def _job_finished(self, job: dict[str, Any], action: str) -> bool:
-        """Return True if the job succeeded, raise on failure, False if running."""
-        state = job.get("state")
-        if state == "SUCCESS":
-            return True
-        if state in JOB_STATES_FAILED:
-            reason = job.get("error") or job.get("exception") or "unknown error"
-            self._raise_dataset_action_failed(action, reason)
-        return False
-
-    async def _wait_for_job(self, job_id: int, action: str) -> dict[str, Any]:
-        """Poll a middleware job until it succeeds, fails or times out."""
-        missing = 0
-        try:
-            # asyncio.timeout() raises TimeoutError (the builtin is asyncio's
-            # TimeoutError on py3.11+; the alias is avoided per ruff UP041).
-            async with asyncio.timeout(JOB_WAIT_TIMEOUT):
-                while True:
-                    job = await self._poll_job(job_id)
-                    if job is None:
-                        missing += 1
-                        if missing >= JOB_MAX_MISSING_POLLS:
-                            self._raise_dataset_action_failed(
-                                action, f"job {job_id} not found"
-                            )
-                    elif self._job_finished(job, action):
-                        return job
-                    else:
-                        missing = 0
-                    await asyncio.sleep(JOB_POLL_INTERVAL)
-        except TimeoutError as err:
-            self._raise_dataset_action_failed(
-                action, "timed out waiting for completion", cause=err
-            )
-
-    async def _run_dataset_job(
-        self, method: str, payload: list[Any], action: str
-    ) -> Any:
-        """Start a dataset middleware job, wait for it, and return its result."""
-        job_id = await self.coordinator.api.query(method, payload)
-        if not isinstance(job_id, int):
-            self._raise_dataset_action_failed(action, "invalid job id")
-        job = await self._wait_for_job(job_id, action)
-        return job.get("result")
-
-    def _raise_on_unlock_failure(self, result: Any, action: str) -> None:
-        """Raise if pool.dataset.unlock reported per-dataset failures.
-
-        A wrong passphrase makes the job *succeed* (state SUCCESS) but lists the
-        dataset under ``failed`` with an error, so the job state alone is not
-        enough to tell the user it actually worked.
-        """
-        if not isinstance(result, dict):
-            return
-        failed = result.get("failed")
-        if not isinstance(failed, dict) or not failed:
-            return
-        reasons = "; ".join(
-            f"{name}: {info.get('error', 'unknown error')}"
-            if isinstance(info, dict)
-            else str(name)
-            for name, info in failed.items()
-        )
-        self._raise_dataset_action_failed(action, reasons)
-
-    @override
-    async def snapshot(self) -> None:
-        """Create dataset snapshot."""
-        ts = naive_now().isoformat(sep="_", timespec="microseconds")
-        payload = {"dataset": f"{self._data['name']}", "name": f"custom-{ts}"}
-        result = await self.coordinator.api.query("pool.snapshot.create", payload)
-        if result is None:
-            result = await self.coordinator.api.query("zfs.snapshot.create", payload)
-        if result is None and self.coordinator.api.error:
-            self._raise_dataset_action_failed(
-                "snapshot", str(self.coordinator.api.error)
-            )
-
-    def _raise_if_not_encrypted(self, action: str) -> None:
-        """Reject lock/unlock on a dataset that is not encrypted.
-
-        Short-circuits before any middleware call: only encrypted datasets can
-        be locked/unlocked, so a non-encrypted target is a user error.
-        """
-        if not self._data.get("encrypted"):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="dataset_not_encrypted",
-                translation_placeholders={
-                    "dataset": self._data.get("name", _UNKNOWN_DATASET),
-                    "action": action,
-                },
-            )
-
-    def _log_already(self, state: str) -> None:
-        """Log that a dataset is already in the requested lock state."""
-        _LOGGER.debug(
-            "Dataset id=%s Name=%s Locked=%s Encrypted=%s is already %s",
-            self._data.get("id"),
-            self._data.get("name"),
-            self._data.get("locked"),
-            self._data.get("encrypted"),
-            state,
-        )
-
-    @override
-    async def lock(self, force_umount: bool = False) -> None:
-        """Lock a dataset.
-
-        Args:
-            force_umount: Force umount dataset mountpoints before locking.
-        """
-        self._raise_if_not_encrypted("lock")
-        # async_refresh (not async_request_refresh) so the locked state is read
-        # fresh here: request_refresh is debounced and may still return stale data
-        # when automations toggle datasets in quick succession.
-        await self.coordinator.async_refresh()
-        if self._data.get("locked", True):
-            self._log_already("locked")
-            return
-
-        payload = [self._data.get("id"), {"force_umount": force_umount}]
-        await self._run_dataset_job("pool.dataset.lock", payload, "lock")
-        await self.coordinator.async_refresh()
-
-    def _stored_passphrase(self) -> str | None:
-        """Return the stored passphrase for this dataset, or None."""
-        dataset_name = self._data.get("name")
-        if not dataset_name:
-            return None
-        stored = self.coordinator.config_entry.data.get(CONF_DATASET_PASSPHRASES, {})
-        return stored.get(dataset_name) if isinstance(stored, dict) else None
-
-    @override
-    async def unlock(
-        self,
-        passphrase: str | None = None,
-        recursive: bool = False,
-        force: bool = False,
-    ) -> None:
-        """Unlock a dataset.
-
-        Uses ``passphrase`` if supplied, otherwise falls back to the passphrase
-        stored in the config entry via ``passphrase_set``.
-        """
-        self._raise_if_not_encrypted("unlock")
-
-        effective_passphrase = (
-            passphrase if passphrase is not None else self._stored_passphrase()
-        )
-        if not effective_passphrase:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="missing_passphrase",
-                translation_placeholders={
-                    "dataset": self._data.get("name", _UNKNOWN_DATASET),
-                },
-            )
-
-        # See lock(): async_refresh forces fresh data before the idempotency check.
-        await self.coordinator.async_refresh()
-        if not self._data.get("locked", True):
-            self._log_already("unlocked")
-            return
-
-        payload = [
-            self._data.get("id"),
-            {
-                # Top-level "recursive" is what actually unlocks the child tree
-                # (the per-dataset flag alone does not), verified against 25.04.
-                "recursive": recursive,
-                "datasets": [
-                    {
-                        "name": self._data.get("name"),
-                        "passphrase": effective_passphrase,
-                        "recursive": recursive,
-                        "force": force,
-                    }
-                ],
-            },
-        ]
-        result = await self._run_dataset_job("pool.dataset.unlock", payload, "unlock")
-        self._raise_on_unlock_failure(result, "unlock")
-        await self.coordinator.async_refresh()
-
-    @override
-    async def passphrase_set(self, passphrase: str) -> None:
-        """Store a passphrase for this dataset in the config entry."""
-        dataset_name = self._data.get("name")
-        if not dataset_name:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="unknown_dataset_name"
-            )
-        existing = self.coordinator.config_entry.data.get(CONF_DATASET_PASSPHRASES, {})
-        updated = (
-            {**existing, dataset_name: passphrase}
-            if isinstance(existing, dict)
-            else {dataset_name: passphrase}
-        )
-        self.hass.config_entries.async_update_entry(
-            self.coordinator.config_entry,
-            data={
-                **self.coordinator.config_entry.data,
-                CONF_DATASET_PASSPHRASES: updated,
-            },
-        )
-        _LOGGER.debug("Stored passphrase for dataset %s", dataset_name)
-
 
 # ---------------------------
 #   TrueNASRsyncSensor
@@ -722,42 +445,12 @@ class TrueNASDatasetSensor(TrueNASSensor):
 class TrueNASRsyncSensor(TrueNASSensor):
     """Define a TrueNAS Rsync task sensor."""
 
-    @override
-    async def start(self) -> None:
-        """Run an rsync task."""
-        if self._data.get("state") in ("RUNNING", "WAITING"):
-            _LOGGER.warning(
-                "Rsync task %s (%s) is already running",
-                self._data.get("desc"),
-                self._data.get("id"),
-            )
-            return
-
-        await self.coordinator.async_run_task(
-            API_RSYNCTASK_RUN, self._data["id"], "rsynctask"
-        )
-
 
 # ---------------------------
 #   TrueNASReplicationSensor
 # ---------------------------
 class TrueNASReplicationSensor(TrueNASSensor):
     """Define a TrueNAS Replication task sensor."""
-
-    @override
-    async def start(self) -> None:
-        """Run a replication task."""
-        if self._data.get("state") in ("RUNNING", "WAITING"):
-            _LOGGER.warning(
-                "Replication %s (%s) is already running",
-                self._data.get("name"),
-                self._data.get("id"),
-            )
-            return
-
-        await self.coordinator.async_run_task(
-            API_REPLICATION_RUN, self._data["id"], "replication"
-        )
 
 
 # ---------------------------
@@ -892,86 +585,12 @@ class TrueNASSnapshotTaskSensor(TrueNASSensor):
             return _SCHEDULE_LABEL_HOURLY
         return None
 
-    @override
-    async def start(self) -> None:
-        """Run a periodic snapshot task on demand."""
-        if self._data.get("state") == "RUNNING":
-            _LOGGER.warning(
-                "Snapshot task %s (%s) is already running",
-                self._data.get("dataset"),
-                self._data.get("id"),
-            )
-            return
-
-        await self.coordinator.async_run_task(
-            API_SNAPSHOTTASK_RUN, self._data["id"], "snapshottask"
-        )
-
 
 # ---------------------------
 #   TrueNASCloudsyncSensor
 # ---------------------------
 class TrueNASCloudsyncSensor(TrueNASSensor):
     """Define an TrueNAS Cloudsync sensor."""
-
-    @override
-    async def start(self) -> None:
-        """Run cloudsync job."""
-        jobs = await self.coordinator.api.query(
-            "cloudsync.query", [[["id", "=", self._data["id"]]]]
-        )
-        self._raise_if_api_error("start")
-        tmp_job = jobs[0] if isinstance(jobs, list) and jobs else None
-
-        if not isinstance(tmp_job, dict) or "job" not in tmp_job:
-            _LOGGER.error(
-                "Cloudsync job %s (%s) invalid",
-                self._data["description"],
-                self._data["id"],
-            )
-            return
-        job_state = tmp_job.get("job")
-        state = job_state.get("state") if isinstance(job_state, dict) else None
-        if state in ["WAITING", "RUNNING"]:
-            _LOGGER.warning(
-                "Cloudsync job %s (%s) is already running",
-                self._data["description"],
-                self._data["id"],
-            )
-            return
-
-        await self.coordinator.async_run_task(
-            API_CLOUDSYNC_SYNC, self._data["id"], "cloudsync"
-        )
-
-    @override
-    async def stop(self) -> None:
-        """Abort cloudsync job."""
-        jobs = await self.coordinator.api.query(
-            "cloudsync.query", [[["id", "=", self._data["id"]]]]
-        )
-        self._raise_if_api_error("stop")
-        tmp_job = jobs[0] if isinstance(jobs, list) and jobs else None
-
-        if not isinstance(tmp_job, dict) or "job" not in tmp_job:
-            _LOGGER.error(
-                "Cloudsync job %s (%s) invalid",
-                self._data["description"],
-                self._data["id"],
-            )
-            return
-        job_state = tmp_job.get("job")
-        state = job_state.get("state") if isinstance(job_state, dict) else None
-        if state not in ["WAITING", "RUNNING"]:
-            _LOGGER.warning(
-                "Cloudsync job %s (%s) is not running",
-                self._data["description"],
-                self._data["id"],
-            )
-            return
-
-        await self.coordinator.api.query("cloudsync.abort", [self._data["id"]])
-        self._raise_if_api_error("stop")
 
 
 # ---------------------------

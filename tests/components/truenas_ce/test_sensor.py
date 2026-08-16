@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -14,11 +14,7 @@ from homeassistant.components.truenas_ce.sensor import (
     TrueNASAlertSensor,
     TrueNASAppStatsSensor,
     TrueNASCertExpirySensor,
-    TrueNASCloudsyncSensor,
-    TrueNASDatasetSensor,
     TrueNASDiskSensor,
-    TrueNASReplicationSensor,
-    TrueNASRsyncSensor,
     TrueNASSensor,
     TrueNASSnapshotTaskSensor,
     TrueNASUptimeSensor,
@@ -34,7 +30,7 @@ from homeassistant.components.truenas_ce.sensor_types import (
     TrueNASSensorEntityDescription,
 )
 from homeassistant.const import UnitOfInformation
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 
 from ._fakes import make_config_entry, make_coordinator
 
@@ -390,31 +386,6 @@ def test_uptime_native_value_zero_is_none() -> None:
     assert sensor.native_value is None
 
 
-async def test_uptime_restart_calls_reboot() -> None:
-    """restart() calls system.reboot with the integration's reason string."""
-    sensor = _make_sensor(TrueNASUptimeSensor, {})
-    await sensor.restart()
-    sensor.coordinator.api.query.assert_awaited_once_with(
-        "system.reboot", ["Home Assistant Integration"]
-    )
-
-
-async def test_uptime_stop_calls_shutdown() -> None:
-    """stop() calls system.shutdown with the integration's reason string."""
-    sensor = _make_sensor(TrueNASUptimeSensor, {})
-    await sensor.stop()
-    sensor.coordinator.api.query.assert_awaited_once_with(
-        "system.shutdown", ["Home Assistant Integration"]
-    )
-
-
-async def test_uptime_refresh_calls_coordinator_refresh() -> None:
-    """refresh() triggers a coordinator refresh."""
-    sensor = _make_sensor(TrueNASUptimeSensor, {})
-    await sensor.refresh()
-    sensor.coordinator.async_refresh.assert_awaited_once()
-
-
 # ---------------------------
 #   TrueNASAlertSensor
 # ---------------------------
@@ -451,56 +422,8 @@ async def test_alert_restore_with_uuid_calls_query_and_refreshes() -> None:
 
 
 # ---------------------------
-#   TrueNASRsyncSensor / TrueNASReplicationSensor / TrueNASSnapshotTaskSensor
+#   TrueNASSnapshotTaskSensor
 # ---------------------------
-async def test_rsync_start_skips_when_running() -> None:
-    """start() does not run a new task when the rsync task is already running."""
-    sensor = _make_sensor(TrueNASRsyncSensor, {"state": "RUNNING", "id": 1})
-    await sensor.start()
-    sensor.coordinator.async_run_task.assert_not_awaited()
-
-
-async def test_rsync_start_runs_task() -> None:
-    """start() runs rsynctask.run when the rsync task is not already running."""
-    sensor = _make_sensor(TrueNASRsyncSensor, {"state": "FINISHED", "id": 1})
-    await sensor.start()
-    sensor.coordinator.async_run_task.assert_awaited_once_with(
-        "rsynctask.run", 1, "rsynctask"
-    )
-
-
-async def test_replication_start_skips_when_waiting() -> None:
-    """start() does not run a new task when the replication task is waiting."""
-    sensor = _make_sensor(TrueNASReplicationSensor, {"state": "WAITING", "id": 2})
-    await sensor.start()
-    sensor.coordinator.async_run_task.assert_not_awaited()
-
-
-async def test_replication_start_runs_task() -> None:
-    """start() runs replication.run when the replication task is not waiting."""
-    sensor = _make_sensor(TrueNASReplicationSensor, {"state": "FINISHED", "id": 2})
-    await sensor.start()
-    sensor.coordinator.async_run_task.assert_awaited_once_with(
-        "replication.run", 2, "replication"
-    )
-
-
-async def test_snapshottask_start_skips_when_running() -> None:
-    """start() does not run a new task when the snapshot task is already running."""
-    sensor = _make_sensor(TrueNASSnapshotTaskSensor, {"state": "RUNNING", "id": 3})
-    await sensor.start()
-    sensor.coordinator.async_run_task.assert_not_awaited()
-
-
-async def test_snapshottask_start_runs_task() -> None:
-    """start() runs pool.snapshottask.run when the snapshot task is not running."""
-    sensor = _make_sensor(TrueNASSnapshotTaskSensor, {"state": "FINISHED", "id": 3})
-    await sensor.start()
-    sensor.coordinator.async_run_task.assert_awaited_once_with(
-        "pool.snapshottask.run", 3, "snapshottask"
-    )
-
-
 _SNAPSHOTTASK_DESC = TrueNASSensorEntityDescription(
     key="snapshottask",
     name="",
@@ -648,298 +571,6 @@ def test_snapshottask_name_naming_schema_suffix_wins_over_schedule() -> None:
         desc=_SNAPSHOTTASK_DESC,
     )
     assert sensor.name == "tank/data daily"
-
-
-# ---------------------------
-#   TrueNASCloudsyncSensor
-# ---------------------------
-def _make_cloudsync(data: dict | None = None) -> TrueNASCloudsyncSensor:
-    return _make_sensor(
-        TrueNASCloudsyncSensor,
-        {"id": 9, "description": "backup", **(data or {})},
-        path="cloudsync",
-    )
-
-
-async def test_cloudsync_start_invalid_job_logs_and_returns() -> None:
-    """start() does not run a task when the job status query returns no jobs."""
-    sensor = _make_cloudsync()
-    sensor.coordinator.api.query.return_value = []
-    await sensor.start()
-    sensor.coordinator.async_run_task.assert_not_awaited()
-
-
-async def test_cloudsync_start_already_running_skips() -> None:
-    """start() does not run a task when the latest job is already RUNNING."""
-    sensor = _make_cloudsync()
-    sensor.coordinator.api.query.return_value = [{"job": {"state": "RUNNING"}}]
-    await sensor.start()
-    sensor.coordinator.async_run_task.assert_not_awaited()
-
-
-async def test_cloudsync_start_success() -> None:
-    """start() runs cloudsync.sync when the latest job is not running."""
-    sensor = _make_cloudsync()
-    sensor.coordinator.api.query.return_value = [{"job": {"state": "FINISHED"}}]
-    await sensor.start()
-    sensor.coordinator.async_run_task.assert_awaited_once_with(
-        "cloudsync.sync", 9, "cloudsync"
-    )
-
-
-async def test_cloudsync_stop_invalid_job_returns() -> None:
-    """stop() only issues the job-status query when there is no job to abort."""
-    sensor = _make_cloudsync()
-    sensor.coordinator.api.query.return_value = []
-    await sensor.stop()
-    sensor.coordinator.api.query.assert_awaited_once()
-
-
-async def test_cloudsync_stop_not_running_returns() -> None:
-    """stop() does not call cloudsync.abort when the job is not RUNNING."""
-    sensor = _make_cloudsync()
-    sensor.coordinator.api.query.return_value = [{"job": {"state": "FINISHED"}}]
-    await sensor.stop()
-    sensor.coordinator.api.query.assert_awaited_once()
-
-
-async def test_cloudsync_stop_success() -> None:
-    """stop() calls cloudsync.abort with the job id when the job is RUNNING."""
-    sensor = _make_cloudsync()
-    sensor.coordinator.api.query.side_effect = [[{"job": {"state": "RUNNING"}}], None]
-    await sensor.stop()
-    sensor.coordinator.api.query.assert_awaited_with("cloudsync.abort", [9])
-
-
-# ---------------------------
-#   TrueNASDatasetSensor
-# ---------------------------
-def _make_dataset(data: dict | None = None) -> TrueNASDatasetSensor:
-    return _make_sensor(
-        TrueNASDatasetSensor,
-        {"id": "tank/data", "name": "tank/data", **(data or {})},
-        path="dataset",
-    )
-
-
-async def test_dataset_snapshot_success_uses_pool_snapshot() -> None:
-    """snapshot() calls pool.snapshot.create and succeeds when it returns an id."""
-    sensor = _make_dataset()
-    sensor.coordinator.api.query.return_value = {"id": 1}
-    await sensor.snapshot()
-    sensor.coordinator.api.query.assert_awaited_once()
-    assert sensor.coordinator.api.query.call_args.args[0] == "pool.snapshot.create"
-
-
-async def test_dataset_snapshot_falls_back_to_zfs_snapshot() -> None:
-    """snapshot() retries via zfs.snapshot.create when pool.snapshot.create fails."""
-    sensor = _make_dataset()
-    sensor.coordinator.api.query.side_effect = [None, {"id": 1}]
-    await sensor.snapshot()
-    assert sensor.coordinator.api.query.await_count == 2
-    assert sensor.coordinator.api.query.call_args.args[0] == "zfs.snapshot.create"
-
-
-async def test_dataset_snapshot_both_fail_raises() -> None:
-    """snapshot() raises HomeAssistantError with the API error when both calls fail."""
-    sensor = _make_dataset()
-    sensor.coordinator.api.query.side_effect = [None, None]
-    sensor.coordinator.api.error = "no permission"
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await sensor.snapshot()
-    assert exc_info.value.translation_key == "dataset_action_failed"
-    assert exc_info.value.translation_placeholders == {
-        "action": "snapshot",
-        "dataset": "tank/data",
-        "host": sensor.coordinator.host,
-        "reason": "no permission",
-    }
-
-
-async def test_dataset_lock_rejects_unencrypted() -> None:
-    """lock() on an unencrypted dataset raises ServiceValidationError."""
-    sensor = _make_dataset({"encrypted": False})
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await sensor.lock()
-    assert exc_info.value.translation_key == "dataset_not_encrypted"
-    assert exc_info.value.translation_placeholders == {
-        "dataset": "tank/data",
-        "action": "lock",
-    }
-
-
-async def test_dataset_lock_already_locked_returns_early() -> None:
-    """lock() on an already-locked dataset just refreshes without querying the API."""
-    sensor = _make_dataset({"encrypted": True, "locked": True})
-    await sensor.lock()
-    sensor.coordinator.async_refresh.assert_awaited_once()
-    sensor.coordinator.api.query.assert_not_awaited()
-
-
-async def test_dataset_lock_runs_job_to_success() -> None:
-    """lock() runs the lock job to completion and refreshes twice on success."""
-    sensor = _make_dataset({"encrypted": True, "locked": False})
-    sensor.coordinator.api.query.side_effect = [
-        42,
-        {"state": "SUCCESS", "result": None},
-    ]
-    await sensor.lock(force_umount=True)
-    assert sensor.coordinator.async_refresh.await_count == 2
-
-
-async def test_dataset_unlock_rejects_unencrypted() -> None:
-    """unlock() on an unencrypted dataset raises ServiceValidationError."""
-    sensor = _make_dataset({"encrypted": False})
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await sensor.unlock(passphrase="secret")
-    assert exc_info.value.translation_key == "dataset_not_encrypted"
-    assert exc_info.value.translation_placeholders == {
-        "dataset": "tank/data",
-        "action": "unlock",
-    }
-
-
-async def test_dataset_unlock_no_passphrase_raises() -> None:
-    """unlock() without a passed-in or stored passphrase raises missing_passphrase."""
-    sensor = _make_dataset({"encrypted": True})
-    sensor.coordinator.config_entry.data.pop("dataset_passphrases", None)
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await sensor.unlock()
-    assert exc_info.value.translation_key == "missing_passphrase"
-    assert exc_info.value.translation_placeholders == {"dataset": "tank/data"}
-
-
-async def test_dataset_unlock_already_unlocked_returns_early() -> None:
-    """unlock() on an already-unlocked dataset just refreshes without querying."""
-    sensor = _make_dataset({"encrypted": True, "locked": False})
-    await sensor.unlock(passphrase="secret")
-    sensor.coordinator.async_refresh.assert_awaited_once()
-    sensor.coordinator.api.query.assert_not_awaited()
-
-
-async def test_dataset_unlock_uses_stored_passphrase() -> None:
-    """unlock() without an explicit passphrase falls back to the stored one."""
-    sensor = _make_dataset({"encrypted": True, "locked": True})
-    sensor.coordinator.config_entry.data["dataset_passphrases"] = {
-        "tank/data": "stored-secret"
-    }
-    sensor.coordinator.api.query.side_effect = [42, {"state": "SUCCESS", "result": {}}]
-    await sensor.unlock()
-    job_call = sensor.coordinator.api.query.call_args_list[0]
-    assert job_call.args[1][1]["datasets"][0]["passphrase"] == "stored-secret"
-
-
-async def test_dataset_unlock_job_success_with_failed_entries_raises() -> None:
-    """A SUCCESS job result with a failed dataset entry still raises with its error."""
-    sensor = _make_dataset({"encrypted": True, "locked": True})
-    sensor.coordinator.api.query.side_effect = [
-        42,
-        {
-            "state": "SUCCESS",
-            "result": {"failed": {"tank/data": {"error": "bad passphrase"}}},
-        },
-    ]
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await sensor.unlock(passphrase="wrong")
-    assert exc_info.value.translation_key == "dataset_action_failed"
-    assert exc_info.value.translation_placeholders == {
-        "action": "unlock",
-        "dataset": "tank/data",
-        "host": sensor.coordinator.host,
-        "reason": "tank/data: bad passphrase",
-    }
-
-
-async def test_dataset_unlock_job_failed_state_raises() -> None:
-    """A FAILED job state raises HomeAssistantError with the job's error message."""
-    sensor = _make_dataset({"encrypted": True, "locked": True})
-    sensor.coordinator.api.query.side_effect = [
-        42,
-        {"state": "FAILED", "error": "disk error"},
-    ]
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await sensor.unlock(passphrase="secret")
-    assert exc_info.value.translation_key == "dataset_action_failed"
-    assert exc_info.value.translation_placeholders == {
-        "action": "unlock",
-        "dataset": "tank/data",
-        "host": sensor.coordinator.host,
-        "reason": "disk error",
-    }
-
-
-async def test_dataset_run_job_invalid_job_id_raises() -> None:
-    """A non-integer job id from the API raises HomeAssistantError."""
-    sensor = _make_dataset({"encrypted": True, "locked": True})
-    sensor.coordinator.api.query.return_value = None
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await sensor.unlock(passphrase="secret")
-    assert exc_info.value.translation_key == "dataset_action_failed"
-    assert exc_info.value.translation_placeholders == {
-        "action": "unlock",
-        "dataset": "tank/data",
-        "host": sensor.coordinator.host,
-        "reason": "invalid job id",
-    }
-
-
-async def test_dataset_wait_for_job_missing_job_exhausts_retries() -> None:
-    """Repeatedly missing job status exhausts retries and raises job-not-found."""
-    sensor = _make_dataset({"encrypted": True, "locked": True})
-    sensor.coordinator.api.query.side_effect = [42, None, None, None, None, None]
-    with (
-        patch(
-            "homeassistant.components.truenas_ce.sensor.asyncio.sleep", new=AsyncMock()
-        ),
-        pytest.raises(HomeAssistantError) as exc_info,
-    ):
-        await sensor.unlock(passphrase="secret")
-    assert exc_info.value.translation_key == "dataset_action_failed"
-    assert exc_info.value.translation_placeholders == {
-        "action": "unlock",
-        "dataset": "tank/data",
-        "host": sensor.coordinator.host,
-        "reason": "job 42 not found",
-    }
-
-
-async def test_dataset_wait_for_job_timeout_raises() -> None:
-    """A TimeoutError while polling raises HomeAssistantError with it as the cause."""
-    sensor = _make_dataset({"encrypted": True, "locked": True})
-    sensor.coordinator.api.query.side_effect = [42, {"state": "RUNNING"}]
-    with (
-        patch(
-            "homeassistant.components.truenas_ce.sensor.asyncio.sleep",
-            new=AsyncMock(side_effect=TimeoutError),
-        ),
-        pytest.raises(HomeAssistantError) as exc_info,
-    ):
-        await sensor.unlock(passphrase="secret")
-    assert exc_info.value.translation_key == "dataset_action_failed"
-    assert exc_info.value.translation_placeholders == {
-        "action": "unlock",
-        "dataset": "tank/data",
-        "host": sensor.coordinator.host,
-        "reason": "timed out waiting for completion",
-    }
-    assert isinstance(exc_info.value.__cause__, TimeoutError)
-
-
-async def test_dataset_passphrase_set_stores_in_config_entry() -> None:
-    """passphrase_set() persists the passphrase via the config entry update API."""
-    sensor = _make_dataset()
-    sensor.hass = sensor.coordinator.hass
-    await sensor.passphrase_set("new-secret")
-    sensor.coordinator.hass.config_entries.async_update_entry.assert_called_once()
-
-
-async def test_dataset_passphrase_set_no_name_raises() -> None:
-    """passphrase_set() without a known dataset name raises unknown_dataset_name."""
-    sensor = _make_dataset({"name": None})
-    sensor._data["name"] = None
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await sensor.passphrase_set("secret")
-    assert exc_info.value.translation_key == "unknown_dataset_name"
 
 
 # ---------------------------

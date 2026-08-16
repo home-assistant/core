@@ -1,8 +1,7 @@
-"""Full config-flow / options-flow coverage via a real HomeAssistant instance.
+"""Full config-flow coverage via a real HomeAssistant instance.
 
-Drives ``TrueNASConfigFlow``/``TrueNASOptionsFlow`` through
-``hass.config_entries.flow``/``hass.config_entries.options`` to cover the
-user/migrate/reauth/reconfigure/options steps end to end.
+Drives ``TrueNASConfigFlow`` through ``hass.config_entries.flow`` to cover the
+user/migrate/zeroconf steps end to end.
 """
 
 from __future__ import annotations
@@ -10,7 +9,6 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 import ipaddress
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -18,11 +16,8 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.truenas_ce import config_flow
 from homeassistant.components.truenas_ce.const import (
-    CONF_BEHAVIORS,
     CONF_CRONJOB_SKIP_DISABLED,
     CONF_DATA_UNIT,
-    CONF_DATASET_PASSPHRASES,
-    CONF_MONITORED_GROUPS,
     CONF_POLL_INTERVAL,
     CONF_SYSTEM_ID,
     DEFAULT_CRONJOB_SKIP_DISABLED,
@@ -522,186 +517,3 @@ async def test_migrate_manual_skips_takeover(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-
-
-# ---------------------------
-#   reauth step
-# ---------------------------
-@pytest.mark.usefixtures("_mock_connection_ok")
-async def test_reauth_flow_updates_api_key(hass: HomeAssistant) -> None:
-    """Reauth with a valid new API key updates the entry and aborts as successful."""
-    entry = MockConfigEntry(domain=DOMAIN, data=_user_input())
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "new-key"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_API_KEY] == "new-key"
-
-
-async def test_reauth_flow_stores_system_id_on_success(hass: HomeAssistant) -> None:
-    """A successful reauth also picks up system.global.id, if resolvable."""
-    entry = MockConfigEntry(domain=DOMAIN, data=_user_input())
-    entry.add_to_hass(hass)
-
-    with (
-        patch(f"{_API_PATH}.connection_test", AsyncMock(return_value=(True, None))),
-        patch(f"{_API_PATH}.query", AsyncMock(return_value="box-guid-123")),
-        patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-            data=entry.data,
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_API_KEY: "new-key"}
-        )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_API_KEY] == "new-key"
-    assert entry.data[CONF_SYSTEM_ID] == "box-guid-123"
-
-
-@pytest.mark.usefixtures("_mock_connection_ok")
-async def test_reauth_flow_succeeds_without_system_id_when_lookup_fails(
-    hass: HomeAssistant,
-) -> None:
-    """A failed system.global.id lookup must not block reauthentication."""
-    entry = MockConfigEntry(domain=DOMAIN, data=_user_input())
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "new-key"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_API_KEY] == "new-key"
-    assert CONF_SYSTEM_ID not in entry.data
-
-
-async def test_reauth_flow_shows_error_on_failed_connection(
-    hass: HomeAssistant,
-) -> None:
-    """A failed reauth connection shows the mapped error on the host field."""
-    entry = MockConfigEntry(domain=DOMAIN, data=_user_input())
-    entry.add_to_hass(hass)
-
-    with _mock_connection_failure(ERR_INVALID_KEY):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-            data=entry.data,
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_API_KEY: "bad-key"}
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: ERR_INVALID_KEY}
-
-
-# ---------------------------
-#   reconfigure step
-# ---------------------------
-@pytest.mark.usefixtures("_mock_connection_ok")
-async def test_reconfigure_flow_updates_host(hass: HomeAssistant) -> None:
-    """Reconfigure updates the entry's host and SSL setting and aborts as successful."""
-    entry = MockConfigEntry(domain=DOMAIN, data=_user_input())
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "new-host.example.com", CONF_VERIFY_SSL: False},
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert entry.data[CONF_HOST] == "new-host.example.com"
-
-
-async def test_reconfigure_flow_rejects_unknown_dataset_passphrase(
-    hass: HomeAssistant,
-) -> None:
-    """A passphrase entry for an unknown dataset is rejected with its name listed."""
-    entry = MockConfigEntry(domain=DOMAIN, data=_user_input())
-    entry.runtime_data = SimpleNamespace(ds={"dataset": {"1": {"name": "tank/data"}}})
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: entry.data[CONF_HOST],
-            CONF_VERIFY_SSL: entry.data[CONF_VERIFY_SSL],
-            CONF_DATASET_PASSPHRASES: "tank/unknown#secret",
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_DATASET_PASSPHRASES: "unknown_dataset"}
-    assert result["description_placeholders"] == {"datasets": "tank/unknown"}
-
-
-# ---------------------------
-#   options flow
-# ---------------------------
-async def test_options_flow_updates_entry(hass: HomeAssistant) -> None:
-    """The options flow persists the submitted options onto the config entry."""
-    entry = MockConfigEntry(domain=DOMAIN, data=_user_input(), options={})
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    new_options = {
-        CONF_DATA_UNIT: "GB",
-        CONF_BEHAVIORS: [],
-        CONF_MONITORED_GROUPS: [],
-    }
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], new_options
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == new_options

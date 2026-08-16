@@ -20,33 +20,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 
-from .const import (
-    LINK_STATE_DOWN,
-    SCHEMA_SERVICE_CLOUDSYNC_ABORT,
-    SCHEMA_SERVICE_CLOUDSYNC_RUN,
-    SCHEMA_SERVICE_DATASET_LOCK,
-    SCHEMA_SERVICE_DATASET_SNAPSHOT,
-    SCHEMA_SERVICE_DATASET_UNLOCK,
-    SCHEMA_SERVICE_PASSPHRASE_SET,
-    SCHEMA_SERVICE_REPLICATION_RUN,
-    SCHEMA_SERVICE_RSYNC_RUN,
-    SCHEMA_SERVICE_SNAPSHOTTASK_RUN,
-    SCHEMA_SERVICE_SYSTEM_REBOOT,
-    SCHEMA_SERVICE_SYSTEM_REFRESH,
-    SCHEMA_SERVICE_SYSTEM_SHUTDOWN,
-    SERVICE_CLOUDSYNC_ABORT,
-    SERVICE_CLOUDSYNC_RUN,
-    SERVICE_DATASET_LOCK,
-    SERVICE_DATASET_SNAPSHOT,
-    SERVICE_DATASET_UNLOCK,
-    SERVICE_PASSPHRASE_SET,
-    SERVICE_REPLICATION_RUN,
-    SERVICE_RSYNC_RUN,
-    SERVICE_SNAPSHOTTASK_RUN,
-    SERVICE_SYSTEM_REBOOT,
-    SERVICE_SYSTEM_REFRESH,
-    SERVICE_SYSTEM_SHUTDOWN,
-)
+from .const import LINK_STATE_DOWN
 from .entity import TrueNASEntityDescription
 
 DEVICE_ATTRIBUTES_NETWORK = (
@@ -823,41 +797,6 @@ class SensorService(NamedTuple):
     admin_only: bool = False
 
 
-SENSOR_SERVICES: tuple[SensorService, ...] = (
-    SensorService(SERVICE_CLOUDSYNC_RUN, SCHEMA_SERVICE_CLOUDSYNC_RUN, "start"),
-    SensorService(SERVICE_CLOUDSYNC_ABORT, SCHEMA_SERVICE_CLOUDSYNC_ABORT, "stop"),
-    SensorService(SERVICE_RSYNC_RUN, SCHEMA_SERVICE_RSYNC_RUN, "start"),
-    SensorService(SERVICE_REPLICATION_RUN, SCHEMA_SERVICE_REPLICATION_RUN, "start"),
-    SensorService(SERVICE_SNAPSHOTTASK_RUN, SCHEMA_SERVICE_SNAPSHOTTASK_RUN, "start"),
-    SensorService(
-        SERVICE_DATASET_SNAPSHOT, SCHEMA_SERVICE_DATASET_SNAPSHOT, "snapshot"
-    ),
-    SensorService(
-        SERVICE_DATASET_LOCK, SCHEMA_SERVICE_DATASET_LOCK, "lock", admin_only=True
-    ),
-    SensorService(
-        SERVICE_DATASET_UNLOCK,
-        SCHEMA_SERVICE_DATASET_UNLOCK,
-        "unlock",
-        admin_only=True,
-    ),
-    SensorService(
-        SERVICE_PASSPHRASE_SET,
-        SCHEMA_SERVICE_PASSPHRASE_SET,
-        "passphrase_set",
-        admin_only=True,
-    ),
-    SensorService(
-        SERVICE_SYSTEM_REBOOT,
-        SCHEMA_SERVICE_SYSTEM_REBOOT,
-        "restart",
-        admin_only=True,
-    ),
-    SensorService(
-        SERVICE_SYSTEM_SHUTDOWN,
-        SCHEMA_SERVICE_SYSTEM_SHUTDOWN,
-        "stop",
-        admin_only=True,
-    ),
-    SensorService(SERVICE_SYSTEM_REFRESH, SCHEMA_SERVICE_SYSTEM_REFRESH, "refresh"),
-)
+# No custom entity services in bronze scope; reintroduced in a follow-up PR
+# (see quality_scale.yaml's action-setup rule).
+SENSOR_SERVICES: tuple[SensorService, ...] = ()

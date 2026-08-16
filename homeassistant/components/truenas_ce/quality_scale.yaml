@@ -1,11 +1,11 @@
 rules:
   # Bronze
   action-setup:
-    status: done
+    status: exempt
     comment: |
-      Domain-level alert/passphrase services are registered in async_setup;
-      the handlers resolve the target config entry at call time and reject
-      missing/unloaded entries with ServiceValidationError.
+      No custom actions/services in bronze scope (see the PR review guide's
+      guidance on minimal initial submissions). Will return to done once
+      domain/entity services are reintroduced in a follow-up PR.
   appropriate-polling: done
   brands:
     status: done
@@ -19,12 +19,8 @@ rules:
   config-flow-test-coverage:
     status: done
     comment: |
-      tests/test_config_flow.py covers the pure helpers and validation logic;
-      tests/test_config_flow_flows.py drives the user/migrate/reauth/
-      reconfigure/options steps end to end via pytest-homeassistant-custom-
-      component, installed CI-only (Linux) since it cannot run on the Windows
-      dev machine (its plugin imports fcntl) -- conftest.py skips collecting
-      that module locally when the package is absent.
+      tests/test_config_flow.py covers the pure helpers/validation logic and
+      the user/migrate/zeroconf flow steps end to end.
   dependency-transparency: done
   docs-actions: done
   docs-conditions:
@@ -56,15 +52,8 @@ rules:
 
   # Silver
   action-exceptions:
-    status: done
-    comment: |
-      Unsupported entity actions raise ServiceValidationError
-      (_raise_unsupported). Every entity action that calls
-      coordinator.api.query() now also raises HomeAssistantError when that
-      call actually failed, via the shared TrueNASEntity._raise_if_api_error
-      helper (and coordinator.async_run_task for the shared run-task path) --
-      checking api.error rather than a None return value, since many
-      middleware endpoints legitimately return null on success too.
+    status: exempt
+    comment: No custom actions/services in bronze scope; see action-setup.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -74,22 +63,25 @@ rules:
     status: done
     comment: Handled by DataUpdateCoordinator (logs once on failure/recovery).
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow:
+    status: todo
+    comment: |
+      Planned as a follow-up PR after the initial bronze PR merges. An
+      invalid API key currently degrades to UpdateFailed/entity-unavailable
+      instead of a reauth prompt, since there is no reauth flow to hand off
+      to in bronze scope (see coordinator._async_ensure_connected).
   test-coverage:
     status: done
     comment: |
       CI (pytest --cov, which includes the hass-fixture-based flow/service
-      tests skipped on this repo's Windows dev machine) reports 99 % overall
-      coverage, well above the Silver requirement. The remaining handful of
-      lines are a couple of unreachable defensive branches in coordinator.py
-      (parse_api/​_unwrap_app_stats_message already guarantee the shapes they
-      guard against) and two multi-config-entry edge branches in
-      entity.async_add_entities, none of which are reachable from pure unit
-      tests without a running Home Assistant core.
+      tests skipped on this repo's Windows dev machine) reports high overall
+      coverage, well above the Silver requirement.
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics:
+    status: todo
+    comment: Planned as a follow-up PR after the initial bronze PR merges.
   discovery:
     status: done
     comment: |
@@ -127,14 +119,16 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: done
+  dynamic-devices:
+    status: todo
+    comment: Planned as a follow-up PR after the initial bronze PR merges.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations:
     status: done
     comment: |
-      Every entity description that carries static suffix text now sets
+      Every entity description that carries static suffix text sets
       translation_key (matching its key) instead of a literal name, with the
       English text moved to strings.json's entity.<platform>.<key>.name (and
       mirrored in translations/*.json). Dynamic/multi-object entities (pool,
@@ -150,19 +144,11 @@ rules:
     status: done
     comment: |
       Every ServiceValidationError/HomeAssistantError raised for a user-facing
-      action failure now sets translation_domain=DOMAIN and a translation_key
-      instead of a literal message, with translation_placeholders carrying the
-      dynamic parts (action, dataset, host, error, ...). The English message
-      templates live in strings.json's exceptions.<key>.message (mirrored in
-      translations/en.json). Dataset actions share a single
-      TrueNASDatasetSensor._raise_dataset_action_failed helper (translation_key
-      dataset_action_failed) since job-failed/not-found/timeout/invalid-job-id/
-      unlock-failure/snapshot-failure all report the same shape. The domain
-      service handlers' shared _resolve_config_entry now returns a
-      translation_key/translation_placeholders pair alongside its existing
-      plain-text "error" (still used, unchanged, by the list-type service
-      responses), so _require_config_entry can raise a translated exception
-      without touching those non-exception response paths.
+      failure sets translation_domain=DOMAIN and a translation_key instead of
+      a literal message, with translation_placeholders carrying the dynamic
+      parts (action, host, error, ...). The English message templates live in
+      strings.json's exceptions.<key>.message (mirrored in
+      translations/en.json).
   icon-translations:
     status: done
     comment: |
@@ -178,13 +164,22 @@ rules:
       device data, not entity state, so it cannot be expressed as a static
       or state-keyed icons.json entry) -- its unused static icon= literal in
       the entity description was dead code and is removed.
-  reconfiguration-flow: done
-  repair-issues: done
-  stale-devices:
+  reconfiguration-flow:
+    status: todo
+    comment: Planned as a follow-up PR after the initial bronze PR merges.
+  repair-issues:
     status: done
     comment: |
-      Orphaned entities and empty devices are removed on every setup
-      (_cleanup_orphaned_entities); recorder statistics get a repair issue.
+      MigrationRollbackRepairFlow (repairs.py) offers a confirm-gated rollback
+      of the Community-Edition legacy-domain migration. The orphaned-
+      statistics cleanup repair is planned as a follow-up PR alongside
+      stale-devices, once dynamic/stale-device handling returns.
+  stale-devices:
+    status: todo
+    comment: |
+      Planned as a follow-up PR after the initial bronze PR merges, alongside
+      dynamic-devices and the orphaned-statistics cleanup repair (all three
+      shared one removal/reintroduction unit of work).
 
   # Platinum
   async-dependency: done

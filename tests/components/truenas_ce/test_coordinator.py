@@ -24,8 +24,6 @@ from homeassistant.components.truenas_ce.const import (
     CONF_BEHAVIORS,
     CONF_MONITORED_GROUPS,
     CONF_POLL_INTERVAL,
-    CONF_STATISTICS_CLEANUP_IGNORED,
-    DEFAULT_DEVICE_NAME,
     DEFAULT_POLL_INTERVAL,
     DOMAIN,
     LEGACY_DOMAIN,
@@ -48,9 +46,7 @@ from homeassistant.components.truenas_ce.coordinator import (
     _aggregate_topology_errors,
     _arc_value,
     _as_int,
-    _count_statistics_with_data,
     _first_ipv4,
-    _is_truenas_sensor_id,
     _median,
     _netdata_mean_value,
     _stat_name_similar,
@@ -58,7 +54,7 @@ from homeassistant.components.truenas_ce.coordinator import (
     _unwrap_app_stats_message,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
 
 
 def _bare_coordinator() -> TrueNASCoordinator:
@@ -66,7 +62,6 @@ def _bare_coordinator() -> TrueNASCoordinator:
     coord = TrueNASCoordinator.__new__(TrueNASCoordinator)
     coord._app_stats_event_name = None
     coord._app_stats_sub_id = None
-    coord.orphaned_statistics = []
     coord.last_updatecheck_update = datetime(1970, 1, 1, tzinfo=UTC)
     return coord
 
@@ -243,66 +238,6 @@ def test_first_ipv4_returns_unknown_when_no_inet() -> None:
     assert _first_ipv4([{"type": "INET6", "address": "2001:db8::1"}]) == "unknown"
     assert _first_ipv4(None) == "unknown"
     assert _first_ipv4([]) == "unknown"
-
-
-# ---------------------------
-#   _is_truenas_sensor_id
-# ---------------------------
-def test_is_truenas_sensor_id_matches_device_slug_token() -> None:
-    """A sensor entity id containing the device slug anywhere is matched."""
-    slug = slugify(DEFAULT_DEVICE_NAME)
-    assert _is_truenas_sensor_id(f"sensor.{slug}_cpu_usage", slug) is True
-    assert _is_truenas_sensor_id(f"sensor.system_{slug}_uptime", slug) is True
-    assert _is_truenas_sensor_id(f"sensor.{slug}viacfnoauth_cpu", slug) is True
-
-
-def test_is_truenas_sensor_id_rejects_other_domains() -> None:
-    """A sensor id whose text does not contain the device slug is rejected."""
-    slug = slugify(DEFAULT_DEVICE_NAME)
-    assert _is_truenas_sensor_id("sensor.unrelated_integration_temp", slug) is False
-
-
-def test_is_truenas_sensor_id_rejects_non_sensor_entities() -> None:
-    """Entities outside the sensor domain (e.g. binary_sensor) are rejected."""
-    slug = slugify(DEFAULT_DEVICE_NAME)
-    assert _is_truenas_sensor_id(f"binary_sensor.{slug}_online", slug) is False
-
-
-def test_is_truenas_sensor_id_unaffected_by_domain_changes(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Regression: matching used to depend on DOMAIN/LEGACY_DOMAIN.
-
-    That broke since the 2.0.0 CE rename because DOMAIN ("truenas_ce") contains an
-    underscore and can never appear whole inside an underscore-split token.
-    The fix matches the device-name slug instead -- the same string real
-    entity ids are slugged from -- so behavior no longer depends on
-    DOMAIN/LEGACY_DOMAIN at all, even if both constants are ever renamed or
-    removed (e.g. a future HA Core submission dropping the "_ce" suffix).
-    """
-    monkeypatch.setattr(coordinator_module, "DOMAIN", "something_else_entirely")
-    monkeypatch.setattr(coordinator_module, "LEGACY_DOMAIN", "unrelated")
-    assert _is_truenas_sensor_id("sensor.truenas_cpu_usage", "truenas") is True
-
-
-def test_is_truenas_sensor_id_scoped_to_this_entrys_device_slug() -> None:
-    """Regression (#61): a global slug match flagged every entry's orphans.
-
-    That happened on multi-entry installs. Each entry must only match its
-    own device slug.
-    """
-    assert (
-        _is_truenas_sensor_id("sensor.truenas_nuc13_cpu_usage", "truenas_nuc13") is True
-    )
-    assert (
-        _is_truenas_sensor_id("sensor.truenas_x11dpu_cpu_usage", "truenas_nuc13")
-        is False
-    )
-
-
-def test_is_truenas_sensor_id_rejects_empty_device_slug() -> None:
-    """An empty slug (e.g. a blank device name) must never match every id."""
-    assert _is_truenas_sensor_id("sensor.truenas_nuc13_cpu_usage", "") is False
 
 
 # ---------------------------
@@ -664,14 +599,6 @@ def test_rollback_possible_false_when_no_legacy_id_recorded() -> None:
     coord.config_entry.data = {}
     coord.hass = MagicMock()
     assert coord._rollback_possible() is False
-
-
-def test_statistics_issue_id_includes_entry_id() -> None:
-    """The orphaned-statistics issue id is scoped by config entry id."""
-    coord = _bare_coordinator()
-    coord.config_entry = MagicMock()
-    coord.config_entry.entry_id = "entry123"
-    assert coord._statistics_issue_id() == "statistics_orphaned_entry123"
 
 
 def test_migration_rollback_issue_id_includes_entry_id() -> None:
@@ -1603,8 +1530,13 @@ async def test_async_ensure_connected_raises_update_failed_on_exception() -> Non
         await coord._async_ensure_connected()
 
 
-async def test_async_ensure_connected_raises_auth_failed_on_invalid_key() -> None:
-    """An ERR_INVALID_KEY connect failure is translated into ConfigEntryAuthFailed."""
+async def test_async_ensure_connected_raises_update_failed_on_invalid_key() -> None:
+    """An ERR_INVALID_KEY connect failure is translated into UpdateFailed.
+
+    Bronze scope has no reauth flow to hand off to, so this degrades to the
+    same UpdateFailed/entity-unavailable path as any other connection failure
+    instead of ConfigEntryAuthFailed (see coordinator._async_ensure_connected).
+    """
     coord = _bare_coordinator()
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
@@ -1613,7 +1545,7 @@ async def test_async_ensure_connected_raises_auth_failed_on_invalid_key() -> Non
     coord.host = "truenas.local"
     with (
         patch.object(coordinator_module, "ERR_INVALID_KEY", "ERR_INVALID_KEY"),
-        pytest.raises(coordinator_module.ConfigEntryAuthFailed),
+        pytest.raises(coordinator_module.UpdateFailed),
     ):
         await coord._async_ensure_connected()
 
@@ -1678,7 +1610,6 @@ async def test_async_update_data_runs_jobs_when_connected() -> None:
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord._async_ensure_connected = AsyncMock()
-    coord.async_detect_orphaned_statistics = AsyncMock()
     coord._clear_stale_migration_rollback_issue = MagicMock()
     coord.last_updatecheck_update = datetime(1970, 1, 1, tzinfo=UTC)
     _stub_all_jobs(coord)
@@ -1699,7 +1630,6 @@ async def test_async_update_data_skips_jobs_when_disconnected() -> None:
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
     coord._async_ensure_connected = AsyncMock()
-    coord.async_detect_orphaned_statistics = AsyncMock()
     coord._clear_stale_migration_rollback_issue = MagicMock()
     _stub_all_jobs(coord)
 
@@ -1715,7 +1645,6 @@ async def test_async_update_data_swallows_job_exceptions() -> None:
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord._async_ensure_connected = AsyncMock()
-    coord.async_detect_orphaned_statistics = AsyncMock()
     coord._clear_stale_migration_rollback_issue = MagicMock()
     coord.last_updatecheck_update = dt_util.utcnow()
     _stub_all_jobs(coord)
@@ -1728,245 +1657,8 @@ async def test_async_update_data_swallows_job_exceptions() -> None:
 
 
 # ---------------------------
-#   Orphaned statistics / migration rollback lifecycle
+#   Community-Edition migration rollback lifecycle
 # ---------------------------
-async def test_async_detect_orphaned_statistics_skips_without_recorder() -> None:
-    """Without the recorder component loaded, no orphan detection is attempted."""
-    coord = _bare_coordinator()
-    coord.hass = MagicMock()
-    coord.hass.config.components = set()
-    await coord.async_detect_orphaned_statistics()
-    assert coord.orphaned_statistics == []
-
-
-async def test_async_detect_orphaned_statistics_handles_listing_exception() -> None:
-    """An exception while listing statistics is swallowed, leaving no orphans."""
-    coord = _bare_coordinator()
-    coord.hass = MagicMock()
-    coord.hass.config.components = {"recorder"}
-    with patch.object(
-        coordinator_module,
-        "get_instance",
-        return_value=MagicMock(
-            async_add_executor_job=AsyncMock(side_effect=Exception("boom"))
-        ),
-    ):
-        await coord.async_detect_orphaned_statistics()
-    assert coord.orphaned_statistics == []
-
-
-async def test_async_detect_orphaned_statistics_filters_matching_ids() -> None:
-    """Matching ids are kept, everything else dropped — and the result is sorted."""
-    coord = _bare_coordinator()
-    coord.hass = MagicMock()
-    coord.hass.config.components = {"recorder"}
-    coord.config_entry = MagicMock()
-    coord.config_entry.entry_id = "entry1"
-    coord.config_entry.options = {}
-    slug = slugify(DEFAULT_DEVICE_NAME)
-    coord._device_slug = slug
-    stat_ids = [
-        {"statistic_id": f"sensor.{slug}_cpu_usage", "source": "recorder"},
-        {"statistic_id": f"sensor.{slug}_arc_size", "source": "recorder"},
-        {"statistic_id": "sensor.unrelated_thing", "source": "recorder"},
-        "not-a-dict",
-    ]
-    ent_reg = MagicMock()
-    ent_reg.async_get.return_value = None
-    with (
-        patch.object(
-            coordinator_module,
-            "get_instance",
-            return_value=MagicMock(
-                async_add_executor_job=AsyncMock(return_value=stat_ids)
-            ),
-        ),
-        patch.object(coordinator_module.er, "async_get", return_value=ent_reg),
-        patch.object(coordinator_module.ir, "async_create_issue") as create_mock,
-    ):
-        await coord.async_detect_orphaned_statistics()
-
-    assert coord.orphaned_statistics == [
-        f"sensor.{slug}_arc_size",
-        f"sensor.{slug}_cpu_usage",
-    ]
-    create_mock.assert_called_once()
-
-
-async def test_async_detect_orphaned_statistics_ignores_other_entrys_device() -> None:
-    """Regression (#61): with two TrueNAS config entries, detection used to match a fixed global slug.
-
-    So each entry's coordinator flagged the *other* entry's orphaned
-    statistics too and both raised their own duplicate Repairs issue for the
-    same global list. Each entry must only see statistics whose id matches
-    its own device-name slug.
-    """
-    coord = _bare_coordinator()
-    coord.hass = MagicMock()
-    coord.hass.config.components = {"recorder"}
-    coord.config_entry = MagicMock()
-    coord.config_entry.entry_id = "entry1"
-    coord.config_entry.options = {}
-    coord._device_slug = slugify("TrueNAS nuc13")
-    stat_ids = [
-        {
-            "statistic_id": "sensor.truenas_nuc13_certificates_cert_time_until_expiry",
-            "source": "recorder",
-        },
-        {
-            "statistic_id": "sensor.truenas_x11dpu_certificates_cert_time_until_expiry",
-            "source": "recorder",
-        },
-    ]
-    ent_reg = MagicMock()
-    ent_reg.async_get.return_value = None
-    with (
-        patch.object(
-            coordinator_module,
-            "get_instance",
-            return_value=MagicMock(
-                async_add_executor_job=AsyncMock(return_value=stat_ids)
-            ),
-        ),
-        patch.object(coordinator_module.er, "async_get", return_value=ent_reg),
-        patch.object(coordinator_module.ir, "async_create_issue"),
-    ):
-        await coord.async_detect_orphaned_statistics()
-
-    assert coord.orphaned_statistics == [
-        "sensor.truenas_nuc13_certificates_cert_time_until_expiry"
-    ]
-
-
-async def test_async_detect_orphaned_statistics_logs_ids_on_change(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """The full id list is logged once per change, not on every poll."""
-    coord = _bare_coordinator()
-    coord.hass = MagicMock()
-    coord.hass.config.components = {"recorder"}
-    coord.config_entry = MagicMock()
-    coord.config_entry.entry_id = "entry1"
-    coord.config_entry.options = {}
-    slug = slugify(DEFAULT_DEVICE_NAME)
-    coord._device_slug = slug
-    stat_ids = [{"statistic_id": f"sensor.{slug}_cpu_usage", "source": "recorder"}]
-    ent_reg = MagicMock()
-    ent_reg.async_get.return_value = None
-    with (
-        patch.object(
-            coordinator_module,
-            "get_instance",
-            return_value=MagicMock(
-                async_add_executor_job=AsyncMock(return_value=stat_ids)
-            ),
-        ),
-        patch.object(coordinator_module.er, "async_get", return_value=ent_reg),
-        patch.object(coordinator_module.ir, "async_create_issue"),
-        caplog.at_level("DEBUG", logger=coordinator_module.__name__),
-    ):
-        await coord.async_detect_orphaned_statistics()
-        assert f"sensor.{slug}_cpu_usage" in caplog.text
-
-        caplog.clear()
-        await coord.async_detect_orphaned_statistics()
-
-    assert "Orphaned TrueNAS statistics" not in caplog.text
-
-
-def test_count_statistics_with_data_counts_only_ids_with_rows() -> None:
-    """Only statistic ids whose lookup returns rows are counted."""
-    hass = MagicMock()
-    with patch.object(
-        coordinator_module,
-        "get_last_statistics",
-        side_effect=[{"sensor.a": [{"state": 1}]}, {}],
-    ) as stats_mock:
-        assert _count_statistics_with_data(hass, ["sensor.a", "sensor.b"]) == 1
-
-    # Pinned on purpose: ``get_last_statistics`` takes a single id as a bare
-    # ``str`` and builds ``{statistic_id}`` from it internally. Wrapping it in a
-    # list would raise "unhashable type: 'list'", so this asserts the id is
-    # never "helpfully" turned into a sequence.
-    assert [call.args[2] for call in stats_mock.call_args_list] == [
-        "sensor.a",
-        "sensor.b",
-    ]
-
-
-async def test_async_count_orphans_with_data_returns_zero_without_orphans() -> None:
-    """With no orphaned statistics recorded, the count is zero without probing."""
-    coord = _bare_coordinator()
-    coord.hass = MagicMock()
-    coord.orphaned_statistics = []
-    assert await coord.async_count_orphans_with_data() == 0
-
-
-async def test_async_count_orphans_with_data_probes_recorder() -> None:
-    """With the recorder loaded, the count comes from probing actual statistics."""
-    coord = _bare_coordinator()
-    coord.hass = MagicMock()
-    coord.hass.config.components = {"recorder"}
-    coord.orphaned_statistics = ["sensor.truenas_a", "sensor.truenas_b"]
-    with patch.object(
-        coordinator_module,
-        "get_instance",
-        return_value=MagicMock(async_add_executor_job=AsyncMock(return_value=1)),
-    ):
-        assert await coord.async_count_orphans_with_data() == 1
-
-
-async def test_async_count_orphans_with_data_assumes_all_without_recorder() -> None:
-    """Without the recorder loaded the probe cannot run: assume the worst case."""
-    coord = _bare_coordinator()
-    coord.hass = MagicMock()
-    coord.hass.config.components = set()
-    coord.orphaned_statistics = ["sensor.truenas_a"]
-    assert await coord.async_count_orphans_with_data() == 1
-
-
-async def test_async_count_orphans_with_data_falls_back_on_error() -> None:
-    """A probing error assumes every recorded orphan still has data."""
-    coord = _bare_coordinator()
-    coord.hass = MagicMock()
-    coord.hass.config.components = {"recorder"}
-    coord.orphaned_statistics = ["sensor.truenas_a", "sensor.truenas_b"]
-    with patch.object(
-        coordinator_module,
-        "get_instance",
-        return_value=MagicMock(
-            async_add_executor_job=AsyncMock(side_effect=Exception("boom"))
-        ),
-    ):
-        assert await coord.async_count_orphans_with_data() == 2
-
-
-def test_update_statistics_issue_deletes_when_no_orphans() -> None:
-    """No orphaned statistics deletes any existing Repairs issue."""
-    coord = _bare_coordinator()
-    coord.hass = MagicMock()
-    coord.config_entry = MagicMock()
-    coord.config_entry.entry_id = "entry1"
-    coord.config_entry.options = {}
-    coord.orphaned_statistics = []
-    with patch.object(coordinator_module.ir, "async_delete_issue") as delete_mock:
-        coord._update_statistics_issue()
-    delete_mock.assert_called_once()
-
-
-def test_update_statistics_issue_skips_creation_when_ignored() -> None:
-    """An ignored statistics-cleanup option skips (re-)creating the issue."""
-    coord = _bare_coordinator()
-    coord.hass = MagicMock()
-    coord.config_entry = MagicMock()
-    coord.config_entry.entry_id = "entry1"
-    coord.config_entry.options = {CONF_STATISTICS_CLEANUP_IGNORED: True}
-    coord.orphaned_statistics = ["sensor.truenas_x"]
-    with patch.object(coordinator_module.ir, "async_delete_issue") as delete_mock:
-        coord._update_statistics_issue()
-    delete_mock.assert_called_once()
-
-
 def test_raise_migration_rollback_issue_noop_when_not_possible() -> None:
     """No rollback-eligible legacy entry means no issue is created."""
     coord = _bare_coordinator()
@@ -2017,38 +1709,6 @@ def test_clear_stale_migration_rollback_issue_deletes_when_rollback_impossible()
     with patch.object(coordinator_module.ir, "async_delete_issue") as delete_mock:
         coord._clear_stale_migration_rollback_issue()
     delete_mock.assert_called_once()
-
-
-async def test_async_clear_orphaned_statistics_noop_when_empty() -> None:
-    """No orphaned statistics means the clear routine does nothing."""
-    coord = _bare_coordinator()
-    coord.orphaned_statistics = []
-    coord.hass = MagicMock()
-    await coord.async_clear_orphaned_statistics()
-    coord.hass.assert_not_called() if callable(coord.hass) else None
-
-
-async def test_async_clear_orphaned_statistics_clears_and_refreshes() -> None:
-    """Orphaned statistics are cleared, the issue deleted, and listeners refreshed."""
-    coord = _bare_coordinator()
-    coord.orphaned_statistics = ["sensor.truenas_x"]
-    coord.hass = MagicMock()
-    coord.config_entry = MagicMock()
-    coord.config_entry.entry_id = "entry1"
-    coord.ds = {"foo": "bar"}
-    coord.async_set_updated_data = MagicMock()
-    instance_mock = MagicMock()
-    instance_mock.async_clear_statistics = MagicMock()
-    with (
-        patch.object(coordinator_module, "get_instance", return_value=instance_mock),
-        patch.object(coordinator_module.ir, "async_delete_issue") as delete_mock,
-    ):
-        await coord.async_clear_orphaned_statistics()
-
-    instance_mock.async_clear_statistics.assert_called_once_with(["sensor.truenas_x"])
-    assert coord.orphaned_statistics == []
-    delete_mock.assert_called_once()
-    coord.async_set_updated_data.assert_called_once_with(coord.ds)
 
 
 # ---------------------------

@@ -6,93 +6,8 @@ from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
-from .const import (
-    CONF_STATISTICS_CLEANUP_IGNORED,
-    DOMAIN,
-    ISSUE_MIGRATION_ROLLBACK,
-    ISSUE_STATISTICS_ORPHANED,
-    MIGRATION_RECORDS,
-)
-from .coordinator import get_truenas_coordinator
+from .const import DOMAIN, ISSUE_MIGRATION_ROLLBACK, MIGRATION_RECORDS
 from .migration import async_rollback_to_legacy
-
-# Upper bound on ids rendered into the repair dialog. A chain of renames can
-# leave dozens behind; the remainder is summarised so the dialog stays readable
-# (the full list goes to the debug log during detection).
-MAX_LISTED_ORPHANS = 20
-
-
-def _format_statistic_ids(statistic_ids: list[str]) -> str:
-    """Render statistic ids as a Markdown list for the repair dialog."""
-    shown = statistic_ids[:MAX_LISTED_ORPHANS]
-    lines = [f"- `{statistic_id}`" for statistic_id in shown]
-    if remaining := len(statistic_ids) - len(shown):
-        # Language-neutral on purpose: placeholder content is not translated.
-        lines.append(f"- … (+{remaining})")
-    return "\n".join(lines)
-
-
-class StatisticsCleanupRepairFlow(RepairsFlow):
-    """Repair flow for orphaned statistics: delete them or ignore the issue."""
-
-    def __init__(self, entry_id: str) -> None:
-        """Remember which config entry this issue belongs to."""
-        self._entry_id = entry_id
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> RepairsFlowResult:
-        """Show the fix/ignore menu listing the affected statistic ids.
-
-        Metadata-only orphans (no data points left) get their own wording: they
-        cannot be found in Developer Tools → Statistics, so pointing the user
-        there would send them looking for something that isn't displayed.
-        """
-        entry = self.hass.config_entries.async_get_entry(self._entry_id)
-        coordinator = get_truenas_coordinator(entry)
-        if coordinator is None:
-            orphans: list[str] = []
-            with_data = 0
-        else:
-            # Already sorted by the coordinator; copied so the dialog keeps the
-            # snapshot it renders even if the next poll rebuilds the list.
-            orphans = list(coordinator.orphaned_statistics)
-            with_data = await coordinator.async_count_orphans_with_data()
-
-        return self.async_show_menu(
-            step_id="init" if with_data else "init_metadata_only",
-            menu_options=["fix", "ignore"],
-            description_placeholders={
-                "count": str(len(orphans)),
-                "with_data": str(with_data),
-                "entities": _format_statistic_ids(orphans),
-            },
-        )
-
-    async def async_step_fix(
-        self, user_input: dict[str, Any] | None = None
-    ) -> RepairsFlowResult:
-        """Delete the orphaned statistics."""
-        entry = self.hass.config_entries.async_get_entry(self._entry_id)
-        coordinator = get_truenas_coordinator(entry)
-        if coordinator is not None:
-            await coordinator.async_clear_orphaned_statistics()
-        return self.async_create_entry(title="", data={})
-
-    async def async_step_ignore(
-        self, user_input: dict[str, Any] | None = None
-    ) -> RepairsFlowResult:
-        """Suppress the issue for this config entry."""
-        entry = self.hass.config_entries.async_get_entry(self._entry_id)
-        if entry is not None:
-            self.hass.config_entries.async_update_entry(
-                entry,
-                options={**entry.options, CONF_STATISTICS_CLEANUP_IGNORED: True},
-            )
-        ir.async_delete_issue(
-            self.hass, DOMAIN, f"{ISSUE_STATISTICS_ORPHANED}_{self._entry_id}"
-        )
-        return self.async_create_entry(title="", data={})
 
 
 class MigrationRollbackRepairFlow(RepairsFlow):
@@ -160,7 +75,4 @@ async def async_create_fix_flow(
     if issue_id.startswith(f"{ISSUE_MIGRATION_ROLLBACK}_"):
         entry_id = issue_id.removeprefix(f"{ISSUE_MIGRATION_ROLLBACK}_")
         return MigrationRollbackRepairFlow(entry_id)
-    if issue_id.startswith(f"{ISSUE_STATISTICS_ORPHANED}_"):
-        entry_id = issue_id.removeprefix(f"{ISSUE_STATISTICS_ORPHANED}_")
-        return StatisticsCleanupRepairFlow(entry_id)
     raise ValueError(f"Unknown TrueNAS repair issue id: {issue_id}")

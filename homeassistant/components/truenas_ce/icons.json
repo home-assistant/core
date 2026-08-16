@@ -140,58 +140,5 @@
         "default": "mdi:sine-wave"
       }
     }
-  },
-  "services": {
-    "alert_dismiss": {
-      "service": "mdi:alert-remove"
-    },
-    "alert_list": {
-      "service": "mdi:format-list-bulleted"
-    },
-    "alert_restore": {
-      "service": "mdi:alert-plus"
-    },
-    "cloudsync_abort": {
-      "service": "mdi:stop-circle-outline"
-    },
-    "cloudsync_run": {
-      "service": "mdi:play-circle-outline"
-    },
-    "dataset_lock": {
-      "service": "mdi:lock"
-    },
-    "dataset_snapshot": {
-      "service": "mdi:camera-outline"
-    },
-    "dataset_unlock": {
-      "service": "mdi:lock-open-variant"
-    },
-    "passphrase_list": {
-      "service": "mdi:key-outline"
-    },
-    "passphrase_remove": {
-      "service": "mdi:key-remove"
-    },
-    "passphrase_set": {
-      "service": "mdi:key-plus"
-    },
-    "replication_run": {
-      "service": "mdi:play-circle-outline"
-    },
-    "rsync_run": {
-      "service": "mdi:play-circle-outline"
-    },
-    "snapshottask_run": {
-      "service": "mdi:play-circle-outline"
-    },
-    "system_reboot": {
-      "service": "mdi:restart"
-    },
-    "system_refresh": {
-      "service": "mdi:refresh"
-    },
-    "system_shutdown": {
-      "service": "mdi:power"
-    }
   }
 }

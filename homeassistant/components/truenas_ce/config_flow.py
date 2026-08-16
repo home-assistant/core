@@ -14,7 +14,6 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
@@ -24,20 +23,13 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .api import TrueNASAPI
 from .const import (
     ALLOWED_DATA_UNITS,
-    BEHAVIOR_REMOVE_INACTIVE_NIC,
-    BEHAVIOR_SKIP_DISABLED_CRONJOBS,
-    CONF_BEHAVIORS,
     CONF_CRONJOB_SKIP_DISABLED,
     CONF_DATA_UNIT,
-    CONF_DATASET_PASSPHRASES,
-    CONF_MONITORED_GROUPS,
     CONF_SYSTEM_ID,
-    DEFAULT_BEHAVIORS,
     DEFAULT_CRONJOB_SKIP_DISABLED,
     DEFAULT_DATA_UNIT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
-    DEFAULT_MONITORED_GROUPS,
     DEFAULT_SSL_VERIFY,
     DOMAIN,
     ERR_API_NOT_FOUND,
@@ -54,23 +46,12 @@ from .const import (
     ERR_WS_NOT_SUPPORTED,
     KNOWN_DOMAINS,
     LEGACY_DOMAIN,
-    MONITOR_GROUP_CLOUDSYNC,
-    MONITOR_GROUP_CONTAINERS,
-    MONITOR_GROUP_CRONJOBS,
-    MONITOR_GROUP_DATASETS,
-    MONITOR_GROUP_DIRECTORY_SERVICES,
-    MONITOR_GROUP_REPLICATION,
-    MONITOR_GROUP_RSYNC,
-    MONITOR_GROUP_SNAPSHOTS,
-    MONITOR_GROUP_UPS,
-    MONITOR_GROUP_VMS,
 )
-from .coordinator import TrueNASConfigEntry, get_truenas_coordinator
 
 _LOGGER = getLogger(__name__)
 
 # Shared selector for the API key field, reused by every schema (initial setup,
-# reconfigure, reauth) so all three stay visually/behaviorally in sync.
+# reauth) so both stay visually/behaviorally in sync.
 _API_KEY_SELECTOR = selector.TextSelector(
     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
 )
@@ -102,112 +83,6 @@ def _base_schema(truenas_config: Mapping[str, Any]) -> vol.Schema:
     }
 
     return vol.Schema(base_schema)
-
-
-def _text_to_passphrases(text: str) -> dict[str, str]:
-    """Parse a multi-line textarea string back into the passphrases dict.
-
-    Each non-empty line must be of the form ``<dataset_name>#<passphrase>``
-    where both parts are non-empty.  The first ``#`` is the separator;
-    additional ``#`` characters in the passphrase are preserved.  Dataset
-    names must not contain ``#``.
-    Raises ``ValueError((error_key, line))`` on the first invalid line.
-    """
-    result: dict[str, str] = {}
-    for line in text.strip().splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        if "#" not in line:
-            raise ValueError(("passphrase_malformed_line", line))
-        name, _, pp = line.partition("#")
-        name = name.strip()
-        if not name:
-            raise ValueError(("passphrase_empty_name", line))
-        if not pp:
-            raise ValueError(("passphrase_empty_value", line))
-        result[name] = pp
-    return result
-
-
-def _reconfigure_schema(truenas_config: Mapping[str, Any]) -> vol.Schema:
-    """Generate reconfigure schema (connection parameters + stored passphrases)."""
-    return vol.Schema(
-        {
-            vol.Required(
-                CONF_HOST, default=truenas_config.get(CONF_HOST, DEFAULT_HOST)
-            ): str,
-            vol.Optional(CONF_API_KEY): _API_KEY_SELECTOR,
-            vol.Required(
-                CONF_VERIFY_SSL,
-                default=truenas_config.get(CONF_VERIFY_SSL, DEFAULT_SSL_VERIFY),
-            ): bool,
-            vol.Optional(CONF_DATASET_PASSPHRASES): selector.TextSelector(
-                selector.TextSelectorConfig(multiline=True)
-            ),
-        }
-    )
-
-
-def _options_schema(options: Mapping[str, Any]) -> vol.Schema:
-    """Generate the options-flow schema."""
-    behaviors = options.get(CONF_BEHAVIORS, DEFAULT_BEHAVIORS)
-    monitored = options.get(CONF_MONITORED_GROUPS, DEFAULT_MONITORED_GROUPS)
-    data_unit = options.get(CONF_DATA_UNIT, DEFAULT_DATA_UNIT)
-
-    behavior_options = [
-        selector.SelectOptionDict(
-            value=BEHAVIOR_SKIP_DISABLED_CRONJOBS,
-            label="Skip disabled cronjobs",
-        ),
-        selector.SelectOptionDict(
-            value=BEHAVIOR_REMOVE_INACTIVE_NIC,
-            label="Hide RX/TX sensors for disconnected NICs",
-        ),
-    ]
-    group_options = [
-        selector.SelectOptionDict(value=MONITOR_GROUP_UPS, label="UPS"),
-        selector.SelectOptionDict(value=MONITOR_GROUP_VMS, label="Virtual Machines"),
-        selector.SelectOptionDict(value=MONITOR_GROUP_CONTAINERS, label="Containers"),
-        selector.SelectOptionDict(value=MONITOR_GROUP_CLOUDSYNC, label="Cloudsync"),
-        selector.SelectOptionDict(value=MONITOR_GROUP_REPLICATION, label="Replication"),
-        selector.SelectOptionDict(value=MONITOR_GROUP_RSYNC, label="Rsync Tasks"),
-        selector.SelectOptionDict(
-            value=MONITOR_GROUP_SNAPSHOTS, label="Snapshot Tasks"
-        ),
-        selector.SelectOptionDict(value=MONITOR_GROUP_CRONJOBS, label="Cron Jobs"),
-        selector.SelectOptionDict(value=MONITOR_GROUP_DATASETS, label="Datasets"),
-        selector.SelectOptionDict(
-            value=MONITOR_GROUP_DIRECTORY_SERVICES, label="Directory Services"
-        ),
-    ]
-
-    return vol.Schema(
-        {
-            vol.Required(CONF_DATA_UNIT, default=data_unit): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        selector.SelectOptionDict(value="GB", label="GB (base 1000)"),
-                        selector.SelectOptionDict(value="GiB", label="GiB (base 1024)"),
-                    ]
-                )
-            ),
-            vol.Required(CONF_BEHAVIORS, default=behaviors): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=behavior_options,
-                    multiple=True,
-                )
-            ),
-            vol.Required(
-                CONF_MONITORED_GROUPS, default=monitored
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=group_options,
-                    multiple=True,
-                )
-            ),
-        }
-    )
 
 
 # ---------------------------
@@ -434,15 +309,6 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         # Guard so the legacy-takeover offer is made at most once per flow.
         self._migration_checked = False
 
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        config_entry: TrueNASConfigEntry,
-    ) -> OptionsFlowWithReload:
-        """Return the options flow handler."""
-        return TrueNASOptionsFlow()
-
     async def _validate_connection(
         self, config: dict[str, Any], errors: dict[str, str]
     ) -> None:
@@ -471,10 +337,10 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
             if system_id:
                 config[CONF_SYSTEM_ID] = system_id
             # Only auto-derive the name on a genuinely new entry. A legacy
-            # migration or an existing entry (reauth/reconfigure) pre-seeds
-            # this from data the user never re-enters, and legacy migration
-            # in particular requires keeping the exact original value so
-            # unique_ids still match (see async_step_migrate_import).
+            # migration or an existing entry (reauth) pre-seeds this from data
+            # the user never re-enters, and legacy migration in particular
+            # requires keeping the exact original value so unique_ids still
+            # match (see async_step_migrate_import).
             if not config.get(CONF_NAME):
                 config[CONF_NAME] = await _async_get_hostname(
                     api, config.get(CONF_HOST, "")
@@ -751,168 +617,3 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Skip the takeover and configure TrueNAS CE from scratch."""
         return await self.async_step_user()
-
-    def _validate_passphrase_names(
-        self,
-        new_passphrases: dict[str, str],
-        entry_id: str,
-        errors: dict[str, str],
-        description_placeholders: dict[str, str],
-    ) -> None:
-        """Set errors if any passphrase key is not a known dataset name."""
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        coordinator = get_truenas_coordinator(entry)
-        if coordinator is None:
-            return
-        known = {
-            v.get("name")
-            for v in coordinator.ds.get("dataset", {}).values()
-            if isinstance(v, dict) and v.get("name")
-        }
-        if not known:
-            return
-        if unknown := [k for k in new_passphrases if k not in known]:
-            description_placeholders["datasets"] = ", ".join(sorted(unknown))
-            errors[CONF_DATASET_PASSPHRASES] = "unknown_dataset"
-
-    def _apply_passphrase_input(
-        self,
-        user_input: dict[str, Any],
-        truenas_config: dict[str, Any],
-        entry_id: str,
-        errors: dict[str, str],
-        description_placeholders: dict[str, str],
-    ) -> None:
-        """Parse/validate the passphrase textarea; mutate user_input in place."""
-        new_text = user_input.get(CONF_DATASET_PASSPHRASES, "")
-        if not isinstance(new_text, str) or not new_text.strip():
-            user_input.pop(CONF_DATASET_PASSPHRASES, None)
-            return
-        try:
-            new_passphrases = _text_to_passphrases(new_text)
-        except ValueError as exc:
-            error_key, bad_line = exc.args[0]
-            errors[CONF_DATASET_PASSPHRASES] = error_key
-            description_placeholders["line"] = bad_line
-            return
-        if new_passphrases:
-            self._validate_passphrase_names(
-                new_passphrases, entry_id, errors, description_placeholders
-            )
-        if not errors:
-            existing = dict(truenas_config.get(CONF_DATASET_PASSPHRASES) or {})
-            existing |= new_passphrases
-            user_input[CONF_DATASET_PASSPHRASES] = existing
-
-    async def _check_connection_if_changed(
-        self,
-        truenas_config: dict[str, Any],
-        entry_data: Mapping[str, Any],
-        errors: dict[str, str],
-    ) -> None:
-        """Run connection test only when transport-relevant settings changed."""
-        connection_keys = (CONF_HOST, CONF_API_KEY, CONF_VERIFY_SSL)
-        if any(truenas_config.get(k) != entry_data.get(k) for k in connection_keys):
-            await self._validate_connection(truenas_config, errors)
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthentication triggered by an invalid API key."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask for a new API key and validate it before updating the entry."""
-        reauth_entry = self._get_reauth_entry()
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            config = dict(reauth_entry.data)
-            config[CONF_API_KEY] = user_input[CONF_API_KEY]
-            await self._validate_connection(config, errors)
-            if not errors:
-                data_updates = {CONF_API_KEY: user_input[CONF_API_KEY]}
-                if CONF_SYSTEM_ID in config:
-                    data_updates[CONF_SYSTEM_ID] = config[CONF_SYSTEM_ID]
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates=data_updates,
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): _API_KEY_SELECTOR}),
-            errors=errors,
-            description_placeholders={
-                CONF_NAME: reauth_entry.data.get(CONF_NAME, DEFAULT_DEVICE_NAME)
-            },
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of an existing entry."""
-        reconfigure_entry = self._get_reconfigure_entry()
-        if not self.truenas_config:
-            self.truenas_config.update(reconfigure_entry.data)
-
-        truenas_config = self.truenas_config
-        reconfigure_entry = self._get_reconfigure_entry()
-        errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
-
-        if user_input is not None:
-            if CONF_HOST in user_input:
-                user_input[CONF_HOST] = _sanitize_host(user_input[CONF_HOST])
-            if not user_input.get(CONF_API_KEY):
-                user_input.pop(CONF_API_KEY, None)
-            if CONF_DATASET_PASSPHRASES in user_input:
-                self._apply_passphrase_input(
-                    user_input,
-                    truenas_config,
-                    reconfigure_entry.entry_id,
-                    errors,
-                    description_placeholders,
-                )
-
-            truenas_config.update(user_input)
-
-            if not errors:
-                await self._check_connection_if_changed(
-                    truenas_config, reconfigure_entry.data, errors
-                )
-
-            if not errors:
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    title=reconfigure_entry.data.get(CONF_NAME, DEFAULT_DEVICE_NAME),
-                    data_updates=truenas_config,
-                )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=_reconfigure_schema(truenas_config),
-            errors=errors,
-            description_placeholders=description_placeholders or None,
-        )
-
-
-# ---------------------------
-#   TrueNASOptionsFlow
-# ---------------------------
-class TrueNASOptionsFlow(OptionsFlowWithReload):
-    """Handle TrueNAS integration options."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Show and process the options form."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=_options_schema(self.config_entry.options),
-        )

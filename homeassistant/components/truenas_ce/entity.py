@@ -12,11 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_platform as ep,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_platform as ep
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -188,7 +184,7 @@ def _composite_references(
     network sensors where the interface name lives inside a list of dicts.
 
     When ``honor_exclude`` is True, items matching ``description.data_exclude``
-    are skipped, mirroring ``_referenced_unique_ids`` behavior.
+    are skipped.
     """
     ids: set[str] = set()
     container_key, leaf_key = description.data_composite_references
@@ -317,62 +313,6 @@ def _append_if_new(
         new_entities.append(obj)
 
 
-def _cleanup_orphaned_entities(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    coordinator: TrueNASCoordinator,
-) -> None:
-    """Remove registry entities the integration would no longer create.
-
-    An entity is deleted when it is not in the active set yet belongs to a data
-    domain that currently holds data. This covers both true orphans (the object
-    is gone) and entities filtered out by ``data_exclude`` (e.g. traffic sensors
-    of a down interface). A transient empty fetch of a whole domain never wipes
-    the corresponding group, and cleanup is skipped unless the last update
-    succeeded.
-    """
-    # Deferred to avoid a circular import: __init__.py imports from entity.py
-    # at module level, so importing back from it here must happen lazily.
-    from . import _collect_active_unique_ids  # noqa: PLC0415
-
-    if not coordinator.last_update_success:
-        return
-
-    inst = config_entry.data[CONF_NAME]
-    active, live_bases = _collect_active_unique_ids(inst, coordinator)
-
-    ent_reg = er.async_get(hass)
-    for entity_entry in er.async_entries_for_config_entry(
-        ent_reg, config_entry.entry_id
-    ):
-        unique_id = entity_entry.unique_id
-        if unique_id in active:
-            continue
-        if any(
-            unique_id == base or unique_id.startswith(f"{base}-") for base in live_bases
-        ):
-            _LOGGER.info(
-                "Removing orphaned TrueNAS entity %s (unique_id=%s)",
-                entity_entry.entity_id,
-                unique_id,
-            )
-            ent_reg.async_remove(entity_entry.entity_id)
-
-    # Remove devices that are now empty (all their entities were cleaned up above).
-    dev_reg = dr.async_get(hass)
-    for device_entry in dr.async_entries_for_config_entry(
-        dev_reg, config_entry.entry_id
-    ):
-        if not er.async_entries_for_device(
-            ent_reg, device_entry.id, include_disabled_entities=True
-        ):
-            _LOGGER.info(
-                "Removing empty TrueNAS device %s",
-                device_entry.name_by_user or device_entry.name,
-            )
-            dev_reg.async_remove_device(device_entry.id)
-
-
 async def async_add_entities(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -453,11 +393,6 @@ async def async_add_entities(
             if new_entities:
                 _LOGGER.debug("Adding %d new TrueNAS entities", len(new_entities))
                 await platform.async_add_entities(new_entities)
-
-        # Runs after entities are (re)added so a device that only just gained
-        # its first entity this pass (e.g. the System device on initial setup)
-        # is never misread as empty and deleted out from under them.
-        _cleanup_orphaned_entities(hass, config_entry, coordinator)
 
     await async_update_controller(this_coordinator)
 

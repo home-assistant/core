@@ -7,18 +7,13 @@ import logging
 import re
 from typing import Any, TypeGuard, override
 
-from homeassistant.components.recorder.statistics import (
-    get_last_statistics,
-    list_statistic_ids,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.recorder import get_instance
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
 
 from .api import TrueNASAPI, _summarize_payload
 from .apiparser import ApiValueSpec, parse_api
@@ -27,13 +22,11 @@ from .const import (
     CONF_BEHAVIORS,
     CONF_MONITORED_GROUPS,
     CONF_POLL_INTERVAL,
-    CONF_STATISTICS_CLEANUP_IGNORED,
     DEFAULT_MONITORED_GROUPS,
     DEFAULT_POLL_INTERVAL,
     DOMAIN,
     ERR_INVALID_KEY,
     ISSUE_MIGRATION_ROLLBACK,
-    ISSUE_STATISTICS_ORPHANED,
     KILOBITS_TO_KIBIBYTES_FACTOR,
     LEGACY_DOMAIN,
     LINK_STATE_UP,
@@ -310,49 +303,6 @@ def _first_ipv4(aliases: Any) -> str:
     return "unknown"
 
 
-def _is_truenas_sensor_id(statistic_id: str, device_slug: str) -> bool:
-    """Return True if a recorder statistic_id looks like *this entry's* sensor.
-
-    Entity ids vary across versions and instance names (``sensor.truenas_...``,
-    ``sensor.system_truenas_...`` and custom names whose slug merges the domain
-    into a longer token, e.g. ``sensor.truenasviacfnoauth_...``). Match the
-    per-entry device-name slug as a substring of the id's remainder after
-    ``sensor.`` rather than as an exact token or fixed prefix, so every
-    orphaned variant is caught.
-
-    ``device_slug`` must be ``slugify(config_entry.data[CONF_NAME])`` for the
-    entry doing the detection, not a fixed constant: entity ids are slugged
-    from the *device* name, which is user-chosen per entry (e.g. "TrueNAS
-    nuc13" vs "TrueNAS x11dpu" to tell multiple instances apart). Matching a
-    single global slug instead used to make every entry's coordinator flag
-    every *other* entry's orphaned statistics too, since all of them contain
-    the same "truenas" substring -- producing one duplicate Repairs issue per
-    config entry for the same global orphan list on multi-entry installs
-    (#61). An empty ``device_slug`` (e.g. a blank device name) is rejected
-    outright, since an empty string would otherwise match every id.
-    """
-    if not device_slug or not statistic_id.startswith("sensor."):
-        return False
-    return device_slug in statistic_id[len("sensor.") :]
-
-
-def _count_statistics_with_data(hass: HomeAssistant, statistic_ids: list[str]) -> int:
-    """Return how many of the given statistic_ids still hold data points.
-
-    Runs inside the recorder executor: one indexed ``LIMIT 1`` lookup per id, so
-    the cost stays flat even for a large orphan backlog. The requested column
-    types are irrelevant for the mere existence check, and the set literal must
-    stay inside the loop rather than becoming a shared constant: every
-    ``get_last_statistics`` call discards impossible columns from the set it is
-    handed, *in place*, so a reused set would erode with each id.
-    """
-    return sum(
-        1
-        for statistic_id in statistic_ids
-        if get_last_statistics(hass, 1, statistic_id, False, {"mean", "state", "sum"})
-    )
-
-
 # Typed alias: a TrueNAS config entry carries its coordinator as runtime_data.
 type TrueNASConfigEntry = ConfigEntry[TrueNASCoordinator]
 
@@ -405,9 +355,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.name = config_entry.data[CONF_NAME]
         self.host = config_entry.data[CONF_HOST]
-        # Computed once: a config-entry rename goes through a full entry
-        # reload (new coordinator instance), so this never goes stale.
-        self._device_slug = slugify(self.name)
         # Set by entity.register_system_device() in async_setup_entry, after the
         # first refresh and before platforms create entities.
         self.system_device_id: str | None = None
@@ -458,9 +405,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._version_major: int = 0
         self._version_minor: int = 0
         self._unknown_system_stat_names: set[str] = set()
-
-        # Orphaned recorder statistic_ids (no live entity) detected each poll.
-        self.orphaned_statistics: list[str] = []
 
         self._app_stats_event_name: str | None = None
         self._app_stats_sub_id: str | None = None
@@ -556,7 +500,11 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if not connected:
             if self.api.error == ERR_INVALID_KEY:
-                raise ConfigEntryAuthFailed(
+                # Bronze scope has no reauth flow to hand off to (see the
+                # reauthentication-flow rule in quality_scale.yaml), so this
+                # degrades to the same UpdateFailed/entity-unavailable path as
+                # any other connection failure instead of ConfigEntryAuthFailed.
+                raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="invalid_api_key",
                     translation_placeholders={"host": self.host},
@@ -639,118 +587,11 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"host": self.host},
             )
 
-        # Re-check orphaned recorder statistics each poll so the diagnostic
-        # button and Repairs issue track the current state automatically.
-        await self.async_detect_orphaned_statistics()
-
         # Withdraw a lingering rollback issue once the old integration is gone.
         # (The issue is only ever raised on demand by the diagnostic button.)
         self._clear_stale_migration_rollback_issue()
 
         return self.ds
-
-    # ---------------------------
-    #   Orphaned statistics cleanup
-    # ---------------------------
-    def _statistics_issue_id(self) -> str:
-        """Return the per-entry Repairs issue id for orphaned statistics."""
-        return f"{ISSUE_STATISTICS_ORPHANED}_{self.config_entry.entry_id}"
-
-    async def async_detect_orphaned_statistics(self) -> None:
-        """Find recorder statistic_ids of this config entry with no live entity.
-
-        After an entity-id rename the recorder can leave the old long-term
-        statistics behind when the target name already exists. We list the
-        recorder-sourced statistics matching this entry's device-name slug and
-        keep those whose entity is no longer in the registry. Scoping by this
-        entry's own slug (not a fixed integration-wide one) matters on
-        multi-entry installs: without it, every entry's coordinator would flag
-        every other entry's orphans too, each raising its own duplicate
-        Repairs issue for the same statistics (#61).
-
-        Older leftovers are often *metadata-only* (their data points were purged
-        long ago), which is why they can be reported here without being visible
-        in Developer Tools → Statistics — see ``async_count_orphans_with_data``.
-        """
-        if "recorder" not in self.hass.config.components:
-            return
-
-        try:
-            stat_ids = await get_instance(self.hass).async_add_executor_job(
-                list_statistic_ids, self.hass
-            )
-        except Exception:
-            _LOGGER.debug(
-                "Could not list statistic ids for orphan detection", exc_info=True
-            )
-            return
-
-        ent_reg = er.async_get(self.hass)
-        previous = self.orphaned_statistics
-        # Sorted once here so log output, the repair dialog and the change check
-        # below all share one order: ``list_statistic_ids`` makes no ordering
-        # promise, so an unsorted list could "change" without any orphan doing so.
-        self.orphaned_statistics = sorted(
-            meta["statistic_id"]
-            for meta in stat_ids
-            if isinstance(meta, dict)
-            and meta.get("source") == "recorder"
-            and isinstance(meta.get("statistic_id"), str)
-            and _is_truenas_sensor_id(meta["statistic_id"], self._device_slug)
-            and ent_reg.async_get(meta["statistic_id"]) is None
-        )
-        # Logged only on change: detection runs every poll, and the full id list
-        # is what a user needs for a bug report before deleting anything.
-        if self.orphaned_statistics != previous:
-            _LOGGER.debug(
-                "Orphaned TrueNAS statistics (%d): %s",
-                len(self.orphaned_statistics),
-                ", ".join(self.orphaned_statistics) or "none",
-            )
-        self._update_statistics_issue()
-
-    async def async_count_orphans_with_data(self) -> int:
-        """Return how many orphaned statistics still hold recorded data points.
-
-        Long-standing orphans are frequently metadata-only: the recorder purged
-        their data points long ago and only the (invisible) metadata row keeps
-        them listed, so they cannot be found in Developer Tools → Statistics.
-        The Repairs dialog probes this on demand to word its explanation
-        correctly — never per poll, since it queries the database.
-
-        Falls back to "all of them" when the probe fails, which is the
-        conservative assumption the dialog made unconditionally before.
-        """
-        if not self.orphaned_statistics:
-            return 0
-        if "recorder" not in self.hass.config.components:
-            return len(self.orphaned_statistics)
-
-        try:
-            return await get_instance(self.hass).async_add_executor_job(
-                _count_statistics_with_data, self.hass, list(self.orphaned_statistics)
-            )
-        except Exception:
-            _LOGGER.debug(
-                "Could not probe orphaned statistics for data points", exc_info=True
-            )
-            return len(self.orphaned_statistics)
-
-    def _update_statistics_issue(self) -> None:
-        """Create or clear the Repairs issue based on the current orphan state."""
-        ignored = self.config_entry.options.get(CONF_STATISTICS_CLEANUP_IGNORED, False)
-        if self.orphaned_statistics and not ignored:
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                self._statistics_issue_id(),
-                is_fixable=True,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=ISSUE_STATISTICS_ORPHANED,
-                translation_placeholders={"count": str(len(self.orphaned_statistics))},
-            )
-        else:
-            ir.async_delete_issue(self.hass, DOMAIN, self._statistics_issue_id())
 
     # ---------------------------
     #   Community-Edition migration rollback
@@ -800,20 +641,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ir.async_delete_issue(
                 self.hass, DOMAIN, self._migration_rollback_issue_id()
             )
-
-    async def async_clear_orphaned_statistics(self) -> None:
-        """Delete the detected orphaned statistics and refresh entities/issue."""
-        if not self.orphaned_statistics:
-            return
-
-        get_instance(self.hass).async_clear_statistics(list(self.orphaned_statistics))
-        _LOGGER.info(
-            "Cleared %d orphaned TrueNAS statistic(s)", len(self.orphaned_statistics)
-        )
-        self.orphaned_statistics = []
-        ir.async_delete_issue(self.hass, DOMAIN, self._statistics_issue_id())
-        # Push the empty state so the diagnostic button updates immediately.
-        self.async_set_updated_data(self.ds)
 
     # ---------------------------
     #   get_systeminfo

@@ -73,14 +73,11 @@ def make_coordinator(
             )
         ),
         last_update_success=True,
-        orphaned_statistics=[],
         system_device_id="test-system-device-id",
         async_refresh=AsyncMock(),
         async_request_refresh=AsyncMock(),
         async_run_task=AsyncMock(),
         set_optimistic_running=MagicMock(),
-        async_clear_orphaned_statistics=AsyncMock(),
-        async_count_orphans_with_data=AsyncMock(return_value=0),
         raise_migration_rollback_issue=MagicMock(),
         supports_update_run=MagicMock(return_value=True),
     )
