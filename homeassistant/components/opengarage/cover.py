@@ -122,9 +122,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         try:
             result = await self.coordinator.open_garage_connection.push_button()
         except aiohttp.ClientError, TimeoutError:
-            self._state = self._state_before_move
-            self._state_before_move = None
-            self.async_write_ha_state()
+            self._restore_state_before_move()
             raise
 
         if result == 1:
@@ -137,6 +135,12 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         else:
             _LOGGER.error("Unable to control %s: Error code %s", self.name, result)
 
+        self._restore_state_before_move()
+
+    def _restore_state_before_move(self) -> None:
+        """Restore the state prior to this command, unless the coordinator already confirmed it."""
+        if self._state_before_move is None:
+            return
         self._state = self._state_before_move
         self._state_before_move = None
         self.async_write_ha_state()
