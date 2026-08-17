@@ -1,5 +1,7 @@
 """Support for wake on lan."""
 
+import hashlib
+import json
 import logging
 import subprocess as sp
 from typing import Any, override
@@ -48,10 +50,15 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a wake on lan switch."""
+
+    def make_hash(config: dict[str, Any]) -> str:
+        d = hashlib.sha1(json.dumps(config, sort_keys=True).encode())
+        return d.hexdigest()
+
     async_create_issue(
         hass,
         DOMAIN,
-        "migrate_to_template",
+        f"migrate_to_template-{make_hash(config)}",
         breaks_in_ha_version="2026.12.0",
         is_fixable=True,
         is_persistent=False,

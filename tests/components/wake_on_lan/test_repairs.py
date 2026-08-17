@@ -56,11 +56,11 @@ async def test_full_config(
     assert len(msg["result"]["issues"]) > 0
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "migrate_to_template":
+        if i["issue_id"].startswith("migrate_to_template"):
             issue = i
     assert issue is not None
 
-    data = await start_repair_fix_flow(client, DOMAIN, "migrate_to_template")
+    data = await start_repair_fix_flow(client, DOMAIN, issue["issue_id"])
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {"mac": "00-01-02-03-04-05"}
@@ -75,6 +75,7 @@ async def test_full_config(
     assert data["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
+    # Repair does not remove the WOL switch
     state = hass.states.get("switch.test")
     assert state
 
@@ -84,6 +85,6 @@ async def test_full_config(
     assert msg["success"]
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "migrate_to_template":
+        if i["issue_id"].startswith("migrate_to_template"):
             issue = i
     assert not issue
