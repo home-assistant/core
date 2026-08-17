@@ -70,7 +70,7 @@ STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
         device_class=SensorDeviceClass.ENUM,
         options=list(MODES.values()),
         value_fn=lambda data: (
-            MODES[data.mode.id] if data and data.mode and data.mode.id else None
+            MODES.get(data.mode.id) if data and data.mode and data.mode.id else None
         ),
     ),
     WatercrystSensorEntityDescription[StateResponse](
@@ -107,7 +107,7 @@ STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
         options=list(ML_STATES.values()),
         available_fn=lambda data: data.has_leakage_protection_system,
         value_fn=lambda data: (
-            ML_STATES[data.ml_state] if data and data.ml_state else None
+            ML_STATES.get(data.ml_state) if data and data.ml_state else None
         ),
     ),
 ]
