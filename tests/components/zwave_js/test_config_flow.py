@@ -1573,6 +1573,10 @@ async def test_esphome_discovery_migration(
     await hass.async_block_till_done()
 
     assert restart_addon.call_args == call("core_zwave_js")
+    # The add-on start has finished and the next configure call below
+    # runs the finish step, which routes to the migration finish.
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert flow["step_id"] == "finish_addon_setup"
 
     _set_home_id(get_server_version, 3245146787)
 
