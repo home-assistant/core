@@ -653,8 +653,6 @@ async def websocket_network_neighbors(
     rf_restored = False
     async with entry.runtime_data.network_neighbors_lock:
         try:
-            # Don't read the routing table with the radio still on,
-            # that is what wedges older controllers
             rf_disabled = await controller.async_toggle_rf(False)
             if rf_disabled:
                 # Snapshot the nodes, inclusion/exclusion can mutate the
@@ -673,19 +671,20 @@ async def websocket_network_neighbors(
             # Shielded so the radio comes back on even when the connection is
             # closed while the routing table is being read. The lock is held
             # until it has, so a queued refresh can't race the restore.
-            restore = asyncio.ensure_future(controller.async_toggle_rf(True))
+            restore = hass.async_create_task(controller.async_toggle_rf(True))
             try:
                 rf_restored = await asyncio.shield(restore)
             except asyncio.CancelledError:
                 with suppress(FailedCommand):
                     rf_restored = await asyncio.shield(restore)
                 raise
-            if not rf_restored:
-                _LOGGER.error(
-                    "Failed to re-enable RF after reading the neighbors of the"
-                    " nodes of config entry %s",
-                    entry.entry_id,
-                )
+            finally:
+                if not rf_restored:
+                    _LOGGER.error(
+                        "Failed to re-enable RF after reading the neighbors of"
+                        " the nodes of config entry %s",
+                        entry.entry_id,
+                    )
     if not rf_disabled:
         connection.send_error(msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to disable RF")
         return
