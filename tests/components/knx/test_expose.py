@@ -79,7 +79,7 @@ async def test_binary_expose_does_not_send_initial_state(
     await knx.receive_read("1/1/8")
     await knx.assert_response("1/1/8", True)
 
-    # A subsequent state change is exposed even while HA is still starting.
+    # A subsequent state change is exposed normally.
     hass.states.async_set(entity_id, "off", {})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", False)
