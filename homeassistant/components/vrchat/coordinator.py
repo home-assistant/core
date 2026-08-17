@@ -266,7 +266,11 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
         self.ws = await self.api.ws_connect()
         self.ws.on_error(self._ws_error_handler)
         self.available = True
-        self.ws_handler_task = asyncio.create_task(self.ws_handler())
+        self.ws_handler_task = self.config_entry.async_create_background_task(
+            self.hass,
+            self.ws_handler(),
+            "vrchat websocket handler",
+        )
         self.ws_handler_task.add_done_callback(self.ws_handler_done(self.ws))
         self.add_to_cleanups(self.ws.close)
         self.add_to_cleanups(self.ws_handler_task.cancel)
