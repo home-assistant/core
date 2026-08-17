@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -150,6 +151,26 @@ async def test_no_switch_for_non_ventilation_device(
     )
 
     assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
+
+
+async def test_turn_on_error_is_raised(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a failed activation is not swallowed."""
+    mock_vicare = MockPyViCare(VENTILATION_FIXTURES)
+    await setup_switch_platform(hass, mock_config_entry, mock_vicare)
+    mock_vicare.devices[
+        2
+    ].service.setProperty.side_effect = PyViCareNotSupportedFeatureError("comfort")
+
+    with pytest.raises(PyViCareNotSupportedFeatureError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.model2_comfort"},
+            blocking=True,
+        )
 
 
 def activate_quickmode(mock_vicare: MockPyViCare, device: int, quickmode: str) -> None:

@@ -101,11 +101,9 @@ class ViCareQuickmodeSwitch(ViCareEntity, SwitchEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Activate the quickmode."""
-        with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
-            self._api.activateVentilationQuickmode(self._quickmode)
+        self._api.activateVentilationQuickmode(self._quickmode)
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Deactivate the quickmode."""
-        with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
-            self._api.deactivateVentilationQuickmode(self._quickmode)
+        self._api.deactivateVentilationQuickmode(self._quickmode)
