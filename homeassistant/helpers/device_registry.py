@@ -2191,7 +2191,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if disabled_by is DeviceEntryDisabler.DEVICE:
             raise HomeAssistantError(
                 "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child "
-                "device; use async_update_child_device"
+                "device"
             )
 
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
@@ -3597,7 +3597,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if disabled_by is DeviceEntryDisabler.DEVICE:
             raise HomeAssistantError(
                 "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child "
-                "device; use async_update_child_device"
+                "device"
             )
         if (
             underlying_ids := self._async_device_ids_for_composite_device_id(device_id)
