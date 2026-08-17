@@ -16,7 +16,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
 
 from .conftest import HOST, FakeGateway
 
@@ -178,7 +177,6 @@ async def test_import_flow_with_a_gateway_that_does_not_answer(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
     mock_setup_entry: AsyncMock,
-    issue_registry: ir.IssueRegistry,
     attribute: str,
     value: Any,
     reason: str,
@@ -186,7 +184,9 @@ async def test_import_flow_with_a_gateway_that_does_not_answer(
     """Test YAML that no longer describes a working gateway is not imported.
 
     The configuration can have gone stale since it was written, and a
-    configuration entry that never works is worse than being told why.
+    configuration entry that never works is worse than being told why. Which
+    of the two failed is reported back to the platform that started the
+    import, so that it can say so.
     """
     setattr(mock_gateway, attribute, value)
 
@@ -198,9 +198,6 @@ async def test_import_flow_with_a_gateway_that_does_not_answer(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
     assert not hass.config_entries.async_entries(DOMAIN)
-    assert issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_yaml_import_issue_{reason}"
-    )
 
 
 async def test_import_flow_already_configured(

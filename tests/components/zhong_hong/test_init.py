@@ -105,7 +105,11 @@ async def test_yaml_import_already_configured(
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test an already imported YAML configuration still asks to be removed."""
+    """Test an already imported YAML configuration still asks to be removed.
+
+    The import aborts here as well, but on an entry that already holds this
+    configuration, so the YAML has served its purpose and can go.
+    """
     mock_config_entry.add_to_hass(hass)
 
     assert await async_setup_component(hass, CLIMATE_DOMAIN, YAML_CONFIG)
@@ -115,27 +119,48 @@ async def test_yaml_import_already_configured(
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_already_configured"
+    )
 
 
+@pytest.mark.parametrize(
+    ("attribute", "value", "reason"),
+    [
+        ("discovery_error", OSError, "cannot_connect"),
+        ("discovery_result", [], "no_devices_found"),
+    ],
+    ids=["cannot_connect", "no_devices_found"],
+)
 async def test_yaml_import_with_an_unreachable_gateway(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
     issue_registry: ir.IssueRegistry,
+    attribute: str,
+    value: Any,
+    reason: str,
 ) -> None:
     """Test a gateway that does not answer is reported instead of imported.
 
     The YAML can describe a gateway that has since been replaced or taken
     away, and a configuration entry that never works tells the user less than
     being shown which part of it no longer holds.
+
+    Only the failure is reported. The notice that the YAML has been imported
+    asks for it to be removed, which for a configuration that never made it
+    into an entry would leave the integration with nothing at all.
     """
-    mock_gateway.discovery_error = OSError
+    setattr(mock_gateway, attribute, value)
 
     assert await async_setup_component(hass, CLIMATE_DOMAIN, YAML_CONFIG)
     await hass.async_block_till_done()
 
     assert not hass.config_entries.async_entries(DOMAIN)
     assert issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        DOMAIN, f"deprecated_yaml_import_issue_{reason}"
+    )
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
 
 

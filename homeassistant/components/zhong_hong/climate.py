@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
@@ -104,6 +105,25 @@ def _create_deprecated_yaml_issue(hass: HomeAssistant) -> None:
     )
 
 
+def _create_import_failed_issue(hass: HomeAssistant, reason: str, host: str) -> None:
+    """Tell the user which part of their YAML the gateway did not answer."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_yaml_import_issue_{reason}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=f"deprecated_yaml_import_issue_{reason}",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+            "host": host,
+        },
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -111,7 +131,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the YAML configuration of the ZhongHong HVAC platform."""
-    await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
@@ -120,6 +140,16 @@ async def async_setup_platform(
             CONF_GATEWAY_ADDRESS: config[CONF_GATEWAY_ADDRESS],
         },
     )
+
+    # Only a configuration that made it into an entry may be asked to be
+    # removed. Telling the user to delete YAML that was never imported would
+    # leave the integration with nothing at all.
+    if (
+        result["type"] is FlowResultType.ABORT
+        and (reason := result["reason"]) != "already_configured"
+    ):
+        _create_import_failed_issue(hass, reason, config[CONF_HOST])
+        return
 
     _create_deprecated_yaml_issue(hass)
 

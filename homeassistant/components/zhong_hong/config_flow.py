@@ -10,15 +10,12 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
-    BREAKS_IN_HA_VERSION,
     CONF_GATEWAY_ADDRESS,
     DEFAULT_GATEWAY_ADDRESS,
     DEFAULT_PORT,
     DOMAIN,
-    INTEGRATION_TITLE,
     LOGGER,
 )
 
@@ -104,7 +101,13 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle an import from configuration.yaml."""
+        """Handle an import from configuration.yaml.
+
+        The YAML can have gone stale: the gateway may have been replaced or
+        removed since it was written. Aborting with which part failed leaves
+        the platform that started the import able to say so, rather than a
+        configuration entry behind that never works.
+        """
         self._async_abort_entries_match(
             {
                 CONF_HOST: import_data[CONF_HOST],
@@ -114,24 +117,6 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if error := await _async_validate_gateway(self.hass, import_data):
-            # The YAML can have gone stale: the gateway may have been replaced
-            # or removed since it was written. Say which one failed, rather
-            # than leaving a configuration entry behind that never works.
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"deprecated_yaml_import_issue_{error}",
-                breaks_in_ha_version=BREAKS_IN_HA_VERSION,
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key=f"deprecated_yaml_import_issue_{error}",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": INTEGRATION_TITLE,
-                    "host": import_data[CONF_HOST],
-                },
-            )
             return self.async_abort(reason=error)
 
         return self.async_create_entry(title=import_data[CONF_HOST], data=import_data)
