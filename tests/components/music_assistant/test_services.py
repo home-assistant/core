@@ -28,13 +28,13 @@ from homeassistant.components.music_assistant.services import (
     SERVICE_SHOW_DASHBOARD,
 )
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import entity_registry as er
 
 from .common import create_library_albums_from_fixture, setup_integration_from_fixtures
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
 
 
 async def test_search_action(
@@ -382,6 +382,29 @@ async def test_show_dashboard_action(
     )
 
 
+async def test_show_dashboard_action_requires_admin(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test show_dashboard requires administrator access."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    setup_dashboards(music_assistant_client)
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SHOW_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "chromecast_kitchen",
+                ATTR_DASHBOARD: "party",
+            },
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+
 async def test_show_dashboard_action_with_player(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
@@ -413,6 +436,7 @@ async def test_show_dashboard_action_with_player(
 async def test_show_dashboard_action_invalid_input(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test show_dashboard input validation errors."""
     entry = await setup_integration_from_fixtures(hass, music_assistant_client)
@@ -461,7 +485,6 @@ async def test_show_dashboard_action_invalid_input(
     # player entity belongs to a different config entry
     other_entry = MockConfigEntry(domain=DOMAIN, unique_id="other_server")
     other_entry.add_to_hass(hass)
-    entity_registry = er.async_get(hass)
     other_entry_player = entity_registry.async_get_or_create(
         "media_player", DOMAIN, "other-player-id", config_entry=other_entry
     )
@@ -500,7 +523,28 @@ async def test_show_dashboard_action_invalid_dashboard_type(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test show_dashboard rejects an unknown dashboard type at the schema level."""
+    """Test show_dashboard rejects an unknown dashboard type with a readable error."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    setup_dashboards(music_assistant_client)
+
+    with pytest.raises(ServiceValidationError, match="Unsupported dashboard"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SHOW_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "chromecast_kitchen",
+                ATTR_DASHBOARD: "definitely_not_a_dashboard",
+            },
+            blocking=True,
+        )
+
+
+async def test_show_dashboard_action_invalid_player_domain(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test show_dashboard rejects a non-media_player entity at the schema level."""
     entry = await setup_integration_from_fixtures(hass, music_assistant_client)
     setup_dashboards(music_assistant_client)
 
@@ -511,7 +555,29 @@ async def test_show_dashboard_action_invalid_dashboard_type(
             {
                 ATTR_CONFIG_ENTRY_ID: entry.entry_id,
                 ATTR_DASHBOARD_ID: "chromecast_kitchen",
-                ATTR_DASHBOARD: "definitely_not_a_dashboard",
+                ATTR_DASHBOARD: "now_playing",
+                ATTR_PLAYER: "switch.test_player_1",
+            },
+            blocking=True,
+        )
+
+
+async def test_show_dashboard_action_unsupported_dashboard(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test show_dashboard rejects a dashboard the endpoint does not support."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    setup_dashboards(music_assistant_client)
+
+    with pytest.raises(ServiceValidationError, match="does not support"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SHOW_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "chromecast_kitchen",
+                ATTR_DASHBOARD: "music_quiz",
             },
             blocking=True,
         )

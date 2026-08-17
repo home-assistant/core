@@ -154,7 +154,8 @@ def register_actions(hass: HomeAssistant) -> None:
         schema=vol.Schema({vol.Required(ATTR_CONFIG_ENTRY_ID): str}),
         supports_response=SupportsResponse.ONLY,
     )
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SHOW_DASHBOARD,
         handle_show_dashboard,
@@ -162,15 +163,13 @@ def register_actions(hass: HomeAssistant) -> None:
             {
                 vol.Required(ATTR_CONFIG_ENTRY_ID): str,
                 vol.Required(ATTR_DASHBOARD_ID): cv.string,
-                vol.Required(ATTR_DASHBOARD): vol.All(
-                    vol.Coerce(DashboardType),
-                    vol.NotIn([DashboardType.UNKNOWN]),
-                ),
-                vol.Optional(ATTR_PLAYER): cv.entity_id,
+                vol.Required(ATTR_DASHBOARD): vol.Coerce(DashboardType),
+                vol.Optional(ATTR_PLAYER): cv.entity_domain(MEDIA_PLAYER_DOMAIN),
             }
         ),
     )
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_HIDE_DASHBOARD,
         handle_hide_dashboard,
@@ -373,8 +372,10 @@ async def handle_get_dashboards(call: ServiceCall) -> ServiceResponse:
         active_session: dict[str, Any] | None = None
         if session := mass.dashboard.get_session(dashboard_device.dashboard_id):
             player_entity_id = (
-                entity_registry.async_get_entity_id(
-                    MEDIA_PLAYER_DOMAIN, DOMAIN, session.player_id
+                _resolve_scoped_player_entity_id(
+                    entity_registry,
+                    call.data[ATTR_CONFIG_ENTRY_ID],
+                    session.player_id,
                 )
                 if session.player_id
                 else None
@@ -402,12 +403,25 @@ async def handle_get_dashboards(call: ServiceCall) -> ServiceResponse:
 @catch_musicassistant_error
 async def handle_show_dashboard(call: ServiceCall) -> None:
     """Handle show_dashboard action."""
+    dashboard: DashboardType = call.data[ATTR_DASHBOARD]
+    if dashboard is DashboardType.UNKNOWN:
+        valid = ", ".join(
+            x.value for x in DashboardType if x is not DashboardType.UNKNOWN
+        )
+        raise ServiceValidationError(
+            f"Unsupported dashboard, valid options are: {valid}"
+        )
     mass = get_music_assistant_client(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
     _verify_dashboard_support(mass)
     dashboard_id: str = call.data[ATTR_DASHBOARD_ID]
-    dashboard: DashboardType = call.data[ATTR_DASHBOARD]
-    if mass.dashboard.get(dashboard_id) is None:
+    dashboard_device = mass.dashboard.get(dashboard_id)
+    if dashboard_device is None:
         raise ServiceValidationError(f"Dashboard endpoint {dashboard_id} not found")
+    if dashboard not in dashboard_device.supported_types:
+        raise ServiceValidationError(
+            f"Dashboard endpoint {dashboard_id} does not support the "
+            f"{dashboard.value} dashboard"
+        )
     player_id: str | None = None
     if player_entity_id := call.data.get(ATTR_PLAYER):
         entity_registry = er.async_get(call.hass)
@@ -449,3 +463,18 @@ def _verify_dashboard_support(mass: MusicAssistantClient) -> None:
         raise ServiceValidationError(
             "The connected Music Assistant server does not support dashboards"
         )
+
+
+def _resolve_scoped_player_entity_id(
+    entity_registry: er.EntityRegistry, config_entry_id: str, player_id: str
+) -> str | None:
+    """Resolve a MA player_id to its entity id, scoped to the config entry."""
+    entity_id = entity_registry.async_get_entity_id(
+        MEDIA_PLAYER_DOMAIN, DOMAIN, player_id
+    )
+    if entity_id is None:
+        return None
+    entity_reg_entry = entity_registry.async_get(entity_id)
+    if entity_reg_entry is None or entity_reg_entry.config_entry_id != config_entry_id:
+        return None
+    return entity_id
