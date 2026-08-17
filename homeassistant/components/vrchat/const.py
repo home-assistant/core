@@ -3,6 +3,8 @@
 from enum import StrEnum
 from typing import Final
 
+from homeassistant.const import __version__
+
 from .utils import VRChatSpecialLocationString, svg_file_uri
 
 DOMAIN = "vrchat"
@@ -15,7 +17,9 @@ CONF_EMAIL_2FA_CODE: Final = "email_2fa_code"
 CONF_COOKIE_AUTH: Final = "auth"
 CONF_COOKIE_2FA: Final = "twoFactorAuth"
 
-USER_AGENT: Final = "HomeAssistant/0.0.1 hi94740@qq.com"
+USER_AGENT: Final = (
+    f"HomeAssistant/{__version__} https://github.com/home-assistant/core"
+)
 
 VRCHAT_API_HOST: Final = "api.vrchat.cloud"
 VRCHAT_USER_PAGE_BASE_URL: Final = "https://vrchat.com/home/user/"
