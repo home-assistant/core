@@ -290,3 +290,16 @@ show_dashboard:
         entity:
           domain: media_player
           integration: music_assistant
+
+hide_dashboard:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: music_assistant
+    dashboard_id:
+      required: true
+      example: "chromecast_a1b2c3"
+      selector:
+        text:

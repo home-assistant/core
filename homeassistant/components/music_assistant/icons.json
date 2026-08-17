@@ -10,6 +10,7 @@
     "get_dashboards": { "service": "mdi:monitor-multiple" },
     "get_library": { "service": "mdi:music-box-multiple" },
     "get_queue": { "service": "mdi:playlist-music" },
+    "hide_dashboard": { "service": "mdi:cast-off" },
     "play_announcement": { "service": "mdi:bullhorn" },
     "play_media": { "service": "mdi:play" },
     "search": { "service": "mdi:magnify" },

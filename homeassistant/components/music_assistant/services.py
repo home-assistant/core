@@ -93,6 +93,7 @@ SERVICE_SEARCH = "search"
 SERVICE_GET_LIBRARY = "get_library"
 SERVICE_GET_DASHBOARDS = "get_dashboards"
 SERVICE_SHOW_DASHBOARD = "show_dashboard"
+SERVICE_HIDE_DASHBOARD = "hide_dashboard"
 SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
 SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
 SERVICE_TRANSFER_QUEUE = "transfer_queue"
@@ -166,6 +167,17 @@ def register_actions(hass: HomeAssistant) -> None:
                     vol.NotIn([DashboardType.UNKNOWN]),
                 ),
                 vol.Optional(ATTR_PLAYER): cv.entity_id,
+            }
+        ),
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_HIDE_DASHBOARD,
+        handle_hide_dashboard,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+                vol.Required(ATTR_DASHBOARD_ID): cv.string,
             }
         ),
     )
@@ -420,3 +432,14 @@ async def handle_show_dashboard(call: ServiceCall) -> None:
             "A player is required for the now playing dashboard"
         )
     await mass.dashboard.show(dashboard_id, dashboard, player_id)
+
+
+@catch_musicassistant_error
+async def handle_hide_dashboard(call: ServiceCall) -> None:
+    """Handle hide_dashboard action."""
+    mass = get_music_assistant_client(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    verify_dashboard_support(mass)
+    dashboard_id: str = call.data[ATTR_DASHBOARD_ID]
+    if mass.dashboard.get(dashboard_id) is None:
+        raise ServiceValidationError(f"Dashboard endpoint {dashboard_id} not found")
+    await mass.dashboard.hide(dashboard_id)

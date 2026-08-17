@@ -22,6 +22,7 @@ from homeassistant.components.music_assistant.const import (
 from homeassistant.components.music_assistant.services import (
     SERVICE_GET_DASHBOARDS,
     SERVICE_GET_LIBRARY,
+    SERVICE_HIDE_DASHBOARD,
     SERVICE_SEARCH,
     SERVICE_SHOW_DASHBOARD,
 )
@@ -405,6 +406,41 @@ async def test_show_dashboard_action_invalid_input(
                 ATTR_DASHBOARD_ID: "chromecast_kitchen",
                 ATTR_DASHBOARD: "now_playing",
                 ATTR_PLAYER: "media_player.some_other_player",
+            },
+            blocking=True,
+        )
+
+
+async def test_hide_dashboard_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test music assistant hide_dashboard action."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    setup_dashboards(music_assistant_client)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_HIDE_DASHBOARD,
+        {
+            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+            ATTR_DASHBOARD_ID: "chromecast_kitchen",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "dashboard/hide",
+        dashboard_id="chromecast_kitchen",
+        require_schema=39,
+    )
+
+    with pytest.raises(ServiceValidationError, match="not found"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_HIDE_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "does_not_exist",
             },
             blocking=True,
         )

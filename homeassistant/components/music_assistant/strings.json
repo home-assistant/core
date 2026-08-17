@@ -397,6 +397,20 @@
       "description": "Retrieves the details of the currently active queue of a Music Assistant player.",
       "name": "Get playerQueue details"
     },
+    "hide_dashboard": {
+      "description": "Hides the active Music Assistant dashboard on a display device.",
+      "fields": {
+        "config_entry_id": {
+          "description": "Select the Music Assistant instance the display device belongs to.",
+          "name": "Music Assistant instance"
+        },
+        "dashboard_id": {
+          "description": "ID of the display device to hide the dashboard on. Use the 'Get dashboards' action to list the available display devices and their IDs.",
+          "name": "Display device"
+        }
+      },
+      "name": "Hide dashboard"
+    },
     "play_announcement": {
       "description": "Plays an announcement on a Music Assistant player with more fine-grained control options.",
       "fields": {
