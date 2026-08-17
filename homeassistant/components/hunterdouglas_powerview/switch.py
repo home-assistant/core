@@ -1,4 +1,4 @@
-"""Buttons for Hunter Douglas Powerview advanced features."""
+"""Switches for Hunter Douglas Powerview advanced features."""
 
 import logging
 from typing import Any, override
