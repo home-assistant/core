@@ -37,27 +37,57 @@ def mock_hunterdouglas_hub(
     with (
         patch(
             "homeassistant.components.hunterdouglas_powerview.cover.BaseShade.refresh",
+            new_callable=AsyncMock,
         ),
         patch(
             "homeassistant.components.hunterdouglas_powerview.cover.BaseShade.current_position",
             new_callable=PropertyMock,
             return_value=ShadePosition(primary=0, secondary=0, tilt=0, velocity=0),
         ),
-        patch("aiopvapi.hub.Hub.request_raw_data", return_value=device_json),
-        patch("aiopvapi.hub.Hub.request_home_data", return_value=home_json),
-        patch("aiopvapi.hub.Hub.request_raw_firmware", return_value=firmware_json),
-        patch("aiopvapi.shades.Shades.get_resources", return_value=shade_json),
-        patch("aiopvapi.rooms.Rooms.get_resources", return_value=room_json),
-        patch("aiopvapi.scenes.Scenes.get_resources", return_value=scene_json),
+        patch(
+            "aiopvapi.hub.Hub.request_raw_data",
+            new_callable=AsyncMock,
+            return_value=device_json,
+        ),
+        patch(
+            "aiopvapi.hub.Hub.request_home_data",
+            new_callable=AsyncMock,
+            return_value=home_json,
+        ),
+        patch(
+            "aiopvapi.hub.Hub.request_raw_firmware",
+            new_callable=AsyncMock,
+            return_value=firmware_json,
+        ),
+        patch(
+            "aiopvapi.shades.Shades.get_resources",
+            new_callable=AsyncMock,
+            return_value=shade_json,
+        ),
+        patch(
+            "aiopvapi.rooms.Rooms.get_resources",
+            new_callable=AsyncMock,
+            return_value=room_json,
+        ),
+        patch(
+            "aiopvapi.scenes.Scenes.get_resources",
+            new_callable=AsyncMock,
+            return_value=scene_json,
+        ),
         patch(
             "aiopvapi.scene_members.SceneMembers.get_resources",
+            new_callable=AsyncMock,
             return_value=scenemember_json,
         ),
         patch(
             "aiopvapi.automations.Automations.get_resources",
+            new_callable=AsyncMock,
             return_value=automation_json,
         ),
-        patch("aiopvapi.resources.automation.Automation.fetch_associated_scene_data"),
+        patch(
+            "aiopvapi.resources.automation.Automation.fetch_associated_scene_data",
+            new_callable=AsyncMock,
+        ),
     ):
         yield
 
