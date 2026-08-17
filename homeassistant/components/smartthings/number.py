@@ -294,11 +294,13 @@ class SmartThingsFanSpeedCountNumberEntity(RestoreNumber):
         """Restore the last configured value, or default to 3."""
         await super().async_added_to_hass()
         restored = await self.async_get_last_number_data()
-        value = (
-            int(restored.native_value)
-            if restored is not None and restored.native_value is not None
-            else 3
-        )
+        value = 3
+        if restored is not None and restored.native_value is not None:
+            value = int(restored.native_value)
+            value = max(
+                int(self._attr_native_min_value),
+                min(int(self._attr_native_max_value), value),
+            )
         self._entry_data.fan_speed_counts[self._device_id] = value
         async_dispatcher_send(self.hass, fan_speed_count_signal(self._device_id))
 
