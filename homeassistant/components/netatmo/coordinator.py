@@ -1,10 +1,10 @@
 """The Netatmo data handler."""
 
-import logging
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import islice
+import logging
 from time import time
 from typing import Any
 
@@ -12,8 +12,6 @@ import aiohttp
 import pyatmo
 from pyatmo.modules.device_types import (
     DeviceCategory as NetatmoDeviceCategory,
-)
-from pyatmo.modules.device_types import (
     DeviceType as NetatmoDeviceType,
 )
 from pyatmo.schedule import Schedule

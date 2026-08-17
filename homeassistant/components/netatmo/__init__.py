@@ -168,7 +168,7 @@ async def async_remove_config_entry_device(
         ):
             return False
         device = (
-            device_registry.async_get(device.via_device_id)
+            device_registry.async_get(device.via_device_id, include_child_devices=False)
             if device.via_device_id
             else None
         )
