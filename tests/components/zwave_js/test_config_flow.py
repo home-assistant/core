@@ -2059,6 +2059,7 @@ async def test_not_addon(hass: HomeAssistant) -> None:
 async def test_addon_already_configured(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
 ) -> None:
     """Test flow aborts when another entry already uses the add-on."""
     addon_options["device"] = "/test"
@@ -2096,6 +2097,9 @@ async def test_addon_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_already_configured"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    # The flow must not have touched the add-on config of the existing entry.
+    set_addon_options.assert_not_called()
+    assert addon_options["device"] == "/test"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")

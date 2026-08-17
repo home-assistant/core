@@ -734,6 +734,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.use_addon = True
 
+        if any(
+            entry.data.get(CONF_USE_ADDON) and entry.unique_id != self.unique_id
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            # The add-on can only connect to a single adapter, so abort before
+            # the flow changes the add-on config of the existing entry.
+            return self.async_abort(reason="addon_already_configured")
+
         addon_info = await self._async_get_addon_info()
 
         if addon_info.state is AddonState.RUNNING:
