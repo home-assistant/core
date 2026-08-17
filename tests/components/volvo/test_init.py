@@ -63,13 +63,7 @@ async def test_token_refresh_success(
     )
 
 
-@pytest.mark.parametrize(
-    ("token_response"),
-    [
-        (HTTPStatus.INTERNAL_SERVER_ERROR),
-        (HTTPStatus.NOT_FOUND),
-    ],
-)
+@pytest.mark.parametrize("token_response", [HTTPStatus.INTERNAL_SERVER_ERROR])
 async def test_token_refresh_fail(
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -85,10 +79,11 @@ async def test_token_refresh_fail(
 
 
 @pytest.mark.parametrize(
-    ("token_response"),
+    "token_response",
     [
-        (HTTPStatus.BAD_REQUEST),
-        (HTTPStatus.FORBIDDEN),
+        HTTPStatus.BAD_REQUEST,
+        HTTPStatus.FORBIDDEN,
+        HTTPStatus.NOT_FOUND,
     ],
 )
 async def test_token_refresh_reauth(

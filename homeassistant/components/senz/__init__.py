@@ -44,6 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool
 
     try:
         account = await senz_api.get_account()
+    except ConfigEntryAuthFailed, ConfigEntryNotReady:
+        raise
     except HTTPStatusError as err:
         if err.response.status_code == HTTPStatus.UNAUTHORIZED:
             raise ConfigEntryAuthFailed(
