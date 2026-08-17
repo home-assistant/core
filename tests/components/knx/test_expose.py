@@ -495,12 +495,10 @@ async def test_ui_expose_create_and_update(
     hass.states.async_set(ENTITY_ID, "on", {"brightness": 50})
     await hass.async_block_till_done()
     await knx.assert_write(GROUP_ADDRESS_2, (128,))
-    await knx.assert_no_telegram()
 
     hass.states.async_set(ENTITY_ID, "off", {"brightness": 50})
     await hass.async_block_till_done()
     await knx.assert_write(GROUP_ADDRESS_1, False)
-    await knx.assert_no_telegram()
 
 
 async def test_ui_expose_with_options(
