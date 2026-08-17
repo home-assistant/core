@@ -209,17 +209,19 @@ class DemoCover(CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position: int = kwargs[ATTR_POSITION]
-        self._set_position = round(position / 5) * 5
-        if self._position == position:
+        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT").upper()]
+        step = self._current_speed.value
+        target_position = min(100, max(0, round(position / step) * step))
+        self._set_position = target_position
+        if self._position == target_position:
             return
 
-        self._is_closing = position < (self._position or 0)
+        self._is_closing = target_position < (self._position or 0)
         self._is_opening = not self._is_closing
 
-        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT").upper()]
         self._listen_cover()
         self._requested_closing = (
-            self._position is not None and position < self._position
+            self._position is not None and target_position < self._position
         )
         self.async_write_ha_state()
 
