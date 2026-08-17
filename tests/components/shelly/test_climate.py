@@ -1103,13 +1103,12 @@ async def test_rpc_linkedgo_st802_thermostat_floor_heating(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test LINKEDGO ST802 thermostat climate in floor heating mode (h02=3)."""
+    """Test LINKEDGO ST802 thermostat in floor heating mode."""
     entity_id = "climate.test_name"
 
     device_fixture = await async_load_json_object_fixture(
         hass, "st802_gen3.json", DOMAIN
     )
-    # Floor heating + cooling valve mode reports "floor_heating" instead of "heat"
     device_fixture["config"]["enum:201"]["options"] = [
         "cool",
         "dry",
@@ -1133,7 +1132,6 @@ async def test_rpc_linkedgo_st802_thermostat_floor_heating(
         HVACMode.HEAT,
     ]
 
-    # Selecting HEAT must send "floor_heating" back to the device
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
