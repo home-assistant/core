@@ -28,6 +28,13 @@ ENTITY_ID = "vacuum.test_roomba"
         ("stop", "clean", VacuumActivity.PAUSED),
         ("stop", "none", VacuumActivity.IDLE),
         ("stuck", "clean", VacuumActivity.ERROR),
+        # Dock maintenance: the robot is stationary on the dock throughout.
+        ("evac", "evac", VacuumActivity.DOCKED),
+        ("evac", "clean", VacuumActivity.DOCKED),
+        ("padWash", "none", VacuumActivity.DOCKED),
+        ("refill", "none", VacuumActivity.DOCKED),
+        # Dock servicing reports `run` with no mission cycle.
+        ("run", "none", VacuumActivity.DOCKED),
     ],
 )
 async def test_vacuum_activity(
