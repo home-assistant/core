@@ -143,6 +143,7 @@ class MissingAddressRepairFlow(RepairsFlow):
                 by_mac = {
                     dr.format_mac(cred["mac"]): (serial, cred)
                     for serial, cred in credentials.items()
+                    if has_full_credentials(cred)
                 }
                 session = async_get_clientsession(self.hass)
                 reachable = await asyncio.gather(
