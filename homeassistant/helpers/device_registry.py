@@ -4445,12 +4445,13 @@ def async_get_device_and_config_entry_for_domain(
 ) -> tuple[DeviceEntry | None, ConfigEntry | None]:
     """Get the device and the config entry of the domain owning it.
 
-    Returns (None, None) for an unknown device id, and (device, None) when no
-    config entry of the domain owns the device. A returned pair is consistent:
-    for a pre-migration composite device id, the device is the domain's split
-    device, not the composite; if several splits belong to config entries of
-    the domain, which pair is returned is undefined. When no split matches the
-    domain, the restored composite is returned as the device.
+    Returns (None, None) for an unknown device id or if the device is a child
+    device, and (device, None) when no config entry of the domain owns the
+    device. A returned pair is consistent: for a pre-migration composite
+    device id, the device is the domain's split device, not the composite; if
+    several splits belong to config entries of the domain, which pair is
+    returned is undefined. When no split matches the domain, the restored
+    composite is returned as the device.
     """
     registry = async_get(hass)
     if (device := registry.devices.get(device_id)) is not None:
