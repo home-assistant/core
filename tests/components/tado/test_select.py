@@ -22,6 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "select.baseboard_heater_baseboard_heater_heating_circuit"
@@ -111,14 +113,11 @@ async def test_failed_read_retries_the_setup(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test a failing heating circuit read makes the config entry retry."""
-    mock_config_entry.add_to_hass(hass)
-
     with patch(
         "PyTado.interface.api.my_tado.Tado.get_heating_circuits",
         side_effect=RequestException("Boom"),
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -133,16 +132,13 @@ async def test_no_circuits_read_without_heating_zones(
         for zone in hass.config_entries.async_entries(DOMAIN)[0].runtime_data.zones
         if zone["type"] != TYPE_HEATING
     ]
-    mock_config_entry.add_to_hass(hass)
-
     with (
         patch("PyTado.interface.api.my_tado.Tado.get_zones", return_value=zones),
         patch(
             "PyTado.interface.api.my_tado.Tado.get_heating_circuits"
         ) as mock_circuits,
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await setup_integration(hass, mock_config_entry)
 
     mock_circuits.assert_not_called()
     assert mock_config_entry.state is ConfigEntryState.LOADED
