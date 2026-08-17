@@ -1,5 +1,6 @@
 """Websocket API for Z-Wave JS."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import dataclasses
@@ -645,8 +646,8 @@ async def websocket_network_neighbors(
     controller = driver.controller
     neighbors: dict[int, list[int]] = {}
     async with entry.runtime_data.network_neighbors_lock:
-        await controller.async_toggle_rf(False)
         try:
+            await controller.async_toggle_rf(False)
             for node in controller.nodes.values():
                 # Long range nodes are not part of the mesh
                 if node.protocol is Protocols.ZWAVE_LONG_RANGE:
@@ -658,7 +659,9 @@ async def websocket_network_neighbors(
                 except FailedCommand:
                     continue
         finally:
-            await controller.async_toggle_rf(True)
+            # Shielded so the radio comes back on even when the connection
+            # is closed while the routing table is being read
+            await asyncio.shield(controller.async_toggle_rf(True))
     connection.send_result(msg[ID], neighbors)
 
 

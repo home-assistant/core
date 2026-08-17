@@ -508,10 +508,46 @@ async def test_network_neighbors(
     assert not msg["success"]
     assert msg["error"]["code"] == "zwave_error"
     assert msg["error"]["message"] == "zwave_error: Z-Wave error 1 - error message"
-    # The radio was never turned off, so it should not be turned back on
-    assert commands == [{"command": "controller.toggle_rf", "enable": False}]
+    # Turning the radio back on is attempted even if disabling it failed,
+    # since the disable command may have been effective before it errored
+    assert commands == [
+        {"command": "controller.toggle_rf", "enable": False},
+        {"command": "controller.toggle_rf", "enable": True},
+    ]
+
+    # Test the radio is turned back on when the command is cancelled while
+    # the radio is being turned off, e.g. because the connection closed
+    commands.clear()
+
+    async def mock_send_command_cancelled(
+        message: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
+        commands.append(message)
+        if message["command"] == "controller.toggle_rf" and not message["enable"]:
+            raise asyncio.CancelledError
+        return {"success": True}
+
+    client.async_send_command.side_effect = mock_send_command_cancelled
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    # A cancelled command sends no response, so sync on a ping instead
+    await ws_client.send_json_auto_id({TYPE: "ping"})
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "pong"
+    await hass.async_block_till_done()
+
+    assert commands == [
+        {"command": "controller.toggle_rf", "enable": False},
+        {"command": "controller.toggle_rf", "enable": True},
+    ]
 
     client.async_send_command.side_effect = original_side_effect
+    ws_client = await hass_ws_client(hass)
 
     # Test sending command with improper entry ID fails
     await ws_client.send_json_auto_id(
