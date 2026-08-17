@@ -179,9 +179,6 @@ async def test_expose_attribute_with_default(
     # Change state to "on"; no attribute -> default
     hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
-    # Change state to "on"; no attribute -> default
-    hass.states.async_set(entity_id, "on", {})
-    await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
     # Change attribute; keep state
