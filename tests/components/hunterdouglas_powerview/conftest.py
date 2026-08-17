@@ -7,6 +7,7 @@ from aiopvapi.resources.shade import ShadePosition
 import pytest
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
+from homeassistant.util.json import JsonObjectType
 
 from tests.common import load_json_value_fixture
 
@@ -23,14 +24,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_hunterdouglas_hub(
-    device_json: str,
-    home_json: str,
-    firmware_json: str,
-    room_json: str,
-    scene_json: str,
-    scenemember_json: str,
-    shade_json: str,
-    automation_json: str,
+    device_json: JsonObjectType,
+    home_json: JsonObjectType,
+    firmware_json: JsonObjectType,
+    room_json: JsonObjectType,
+    scene_json: JsonObjectType,
+    scenemember_json: JsonObjectType,
+    shade_json: JsonObjectType,
+    automation_json: JsonObjectType,
 ) -> Generator[None]:
     """Return a mocked Powerview Hub with all data populated."""
     with (
@@ -62,7 +63,7 @@ def mock_hunterdouglas_hub(
 
 
 @pytest.fixture
-def device_json(api_version: int) -> str:
+def device_json(api_version: int) -> JsonObjectType:
     """Return the request_raw_data fixture for a specific device."""
     if api_version == 1:
         return load_json_value_fixture("gen1/userdata.json", DOMAIN)
@@ -74,7 +75,7 @@ def device_json(api_version: int) -> str:
 
 
 @pytest.fixture
-def home_json(api_version: int) -> str:
+def home_json(api_version: int) -> JsonObjectType:
     """Return the request_home_data fixture for a specific device."""
     if api_version == 1:
         return load_json_value_fixture("gen1/userdata.json", DOMAIN)
@@ -86,7 +87,7 @@ def home_json(api_version: int) -> str:
 
 
 @pytest.fixture
-def firmware_json(api_version: int) -> str:
+def firmware_json(api_version: int) -> JsonObjectType:
     """Return the request_raw_firmware fixture for a specific device."""
     if api_version == 1:
         return load_json_value_fixture("gen1/fwversion.json", DOMAIN)
@@ -98,7 +99,7 @@ def firmware_json(api_version: int) -> str:
 
 
 @pytest.fixture
-def room_json(api_version: int) -> str:
+def room_json(api_version: int) -> JsonObjectType:
     """Return the get_resources fixture for a specific device."""
     if api_version == 1:
         return load_json_value_fixture("gen1/rooms.json", DOMAIN)
@@ -110,7 +111,7 @@ def room_json(api_version: int) -> str:
 
 
 @pytest.fixture
-def scene_json(api_version: int) -> str:
+def scene_json(api_version: int) -> JsonObjectType:
     """Return the get_resources fixture for a specific device."""
     if api_version == 1:
         return load_json_value_fixture("gen1/scenes.json", DOMAIN)
@@ -122,19 +123,19 @@ def scene_json(api_version: int) -> str:
 
 
 @pytest.fixture
-def scenemember_json(api_version: int) -> str:
+def scenemember_json(api_version: int) -> JsonObjectType:
     """Return the get_resources fixture for a specific device."""
     if api_version == 1:
         return load_json_value_fixture("gen1/scenemembers.json", DOMAIN)
     if api_version == 2:
         return load_json_value_fixture("gen2/scenemembers.json", DOMAIN)
     if api_version == 3:
-        return "{}"  # gen3 does not have (or need) a scenemembers endpoint
+        return {}  # Gen 3 does not use the scene members endpoint
     raise ValueError(f"Unsupported api_version: {api_version}")
 
 
 @pytest.fixture
-def shade_json(api_version: int) -> str:
+def shade_json(api_version: int) -> JsonObjectType:
     """Return the get_resources fixture for a specific device."""
     if api_version == 1:
         return load_json_value_fixture("gen1/shades.json", DOMAIN)
@@ -146,7 +147,7 @@ def shade_json(api_version: int) -> str:
 
 
 @pytest.fixture
-def automation_json(api_version: int) -> str:
+def automation_json(api_version: int) -> JsonObjectType:
     """Return the automation resources fixture for a specific device."""
     if api_version == 1:
         return load_json_value_fixture("gen1/scheduledevents.json", DOMAIN)
