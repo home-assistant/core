@@ -129,7 +129,7 @@ def scenemember_json(api_version: int) -> str:
     if api_version == 2:
         return load_json_value_fixture("gen2/scenemembers.json", DOMAIN)
     if api_version == 3:
-        return None  # gen3 does not have (or need) a scenemembers endpoint
+        return "{}"  # gen3 does not have (or need) a scenemembers endpoint
     raise ValueError(f"Unsupported api_version: {api_version}")
 
 
