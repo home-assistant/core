@@ -1,14 +1,32 @@
 """Denon HEOS Media Player."""
 
 import asyncio
-import dataclasses
-import logging
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from contextlib import suppress
+import dataclasses
 from datetime import datetime
 from functools import reduce, wraps
+import logging
 from operator import ior
 from typing import Any, Final, override
+
+from pyheos import (
+    AddCriteriaType,
+    ControlType,
+    HeosError,
+    HeosPlayer,
+    MediaItem,
+    MediaMusicSource,
+    PlayState,
+    RepeatType,
+)
+from pyheos import (
+    MediaType as HeosMediaType,
+)
+from pyheos import (
+    const as heos_const,
+)
+from pyheos.util import mediauri as heos_source
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -33,23 +51,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
-from pyheos import (
-    AddCriteriaType,
-    ControlType,
-    HeosError,
-    HeosPlayer,
-    MediaItem,
-    MediaMusicSource,
-    PlayState,
-    RepeatType,
-)
-from pyheos import (
-    MediaType as HeosMediaType,
-)
-from pyheos import (
-    const as heos_const,
-)
-from pyheos.util import mediauri as heos_source
 
 from . import services
 from .const import DOMAIN
