@@ -23,10 +23,10 @@ class PowerviewEntryData:
     """Define class for main domain information."""
 
     api: AioRequest
-    room_data: dict[str, Room]
-    scene_data: dict[str, Scene]
-    shade_data: dict[str, BaseShade]
-    automation_data: dict[str, Automation]
+    room_data: dict[int, Room]
+    scene_data: dict[int, Scene]
+    shade_data: dict[int, BaseShade]
+    automation_data: dict[int, Automation]
     coordinator: PowerviewShadeUpdateCoordinator
     device_info: PowerviewDeviceInfo
 
