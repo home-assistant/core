@@ -24,7 +24,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import DOMAIN
+from .const import CONF_GITHUB_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -36,6 +36,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(),
+        vol.Optional(CONF_GITHUB_TOKEN): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
     }
 )
 
@@ -155,6 +158,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_URL: reconf_entry.data[CONF_URL],
             CONF_API_TOKEN: reconf_entry.data[CONF_API_TOKEN],
             CONF_VERIFY_SSL: reconf_entry.data[CONF_VERIFY_SSL],
+            CONF_GITHUB_TOKEN: reconf_entry.data.get(CONF_GITHUB_TOKEN),
         }
 
         if user_input:
@@ -184,6 +188,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_URL: user_input[CONF_URL],
                         CONF_API_TOKEN: user_input[CONF_API_TOKEN],
                         CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                        CONF_GITHUB_TOKEN: user_input.get(CONF_GITHUB_TOKEN),
                     },
                 )
 
