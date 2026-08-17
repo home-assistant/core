@@ -968,7 +968,7 @@ class EntityPlatform:
                                 raise dr.DeviceInfoError(  # noqa: TRY301
                                     self.config_entry.domain,
                                     cast("dr.DeviceInfo", device_info),
-                                    f"unexpected key(s) {', '.join(sorted(extra_keys))} "
+                                    f"unexpected key(s) {', '.join(sorted(map(str, extra_keys)))} "
                                     "for a child device",
                                 )
                             # identifiers is a required ChildDeviceInfo key; a missing

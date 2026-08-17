@@ -3065,12 +3065,7 @@ async def test_device_info_child_device_with_main_only_key(
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a child device info mixing in a main-only key is not added.
-
-    A device info carrying parent_device_id must only contain ChildDeviceInfo keys;
-    a main-only key such as manufacturer is rejected via the curated DeviceInfoError
-    path so the entity is aborted while platform setup still completes.
-    """
+    """Test that child device info containing a main-only key is rejected."""
     config_entry = MockConfigEntry(entry_id="super-mock-id")
     config_entry.add_to_hass(hass)
     parent = device_registry.async_get_or_create(
