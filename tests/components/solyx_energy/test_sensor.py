@@ -16,8 +16,8 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     ("key", "expected"),
     [
-        ("boilerPower", ("1234.0", "W", "power")),
-        ("gridPower", ("-100.0", "W", "power")),
+        ("boiler_power", ("1234.0", "W", "power")),
+        ("grid_power", ("-100.0", "W", "power")),
     ],
 )
 async def test_sensor_states(

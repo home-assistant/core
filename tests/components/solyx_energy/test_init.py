@@ -7,11 +7,7 @@ with the API client mocked at the class level, so no network calls are made.
 from typing import TYPE_CHECKING
 
 import pytest
-from solyx_energy_api.exceptions import (
-    SolyxEnergyAuthError,
-    SolyxEnergyDataError,
-    SolyxEnergyTokenError,
-)
+from solyx_energy_api.exceptions import SolyxEnergyDataError, SolyxEnergyTokenError
 
 from homeassistant.components.solyx_energy.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -32,27 +28,6 @@ async def test_load_unload_config_entry(hass: HomeAssistant, init_integration) -
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
     assert init_integration.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_config_entry_auth_failure(
-    hass: HomeAssistant, mock_config_entry, mock_api_client_class
-) -> None:
-    """An auth error on the first refresh fails setup and starts a reauth flow."""
-    mock_api_client_class.async_get_asset_data.side_effect = SolyxEnergyAuthError(
-        "bad creds"
-    )
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    # A reauth flow should have been spawned and be waiting on the confirm step.
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
-    assert flows[0]["handler"] == DOMAIN
 
 
 @pytest.mark.parametrize("api_error", [SolyxEnergyTokenError, SolyxEnergyDataError])

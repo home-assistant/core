@@ -1,7 +1,7 @@
 """Coordinator file that handles data updates for Solyx Energy device entities."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
@@ -33,28 +33,28 @@ if TYPE_CHECKING:
     from solyx_energy_api.client import SolyxEnergyApiClient
 
     from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
 class SolyxEnergyData:
-    """Hold a snapshot of all Solyx Energy integration values, using the internal Solyx platform name."""
+    """Hold a snapshot of all Solyx Energy integration values exposed to Home Assistant."""
 
-    boilerCurrent: float | None  # noqa: N815
-    boilerPower: float | None  # noqa: N815
-    boilerVoltage: float | None  # noqa: N815
-    daysSinceMaximumTemperature: float | None  # noqa: N815
-    gridPower: float | None  # noqa: N815
-    legionellaDays: float | None  # noqa: N815
-    savedThisMonth: float | None  # noqa: N815
-    savedThisWeek: float | None  # noqa: N815
-    savedToday: float | None  # noqa: N815
+    boiler_current: float | None
+    boiler_power: float | None
+    boiler_voltage: float | None
+    days_since_maximum_temperature: float | None
+    grid_power: float | None
+    legionella_days: float | None
+    saved_this_month: float | None
+    saved_this_week: float | None
+    saved_today: float | None
 
 
 class SolyxEnergyCoordinator(DataUpdateCoordinator[SolyxEnergyData]):
-    """Coordinator that fetches and sends data over HTTPS using the SolyxEnergyApiClient class."""
+    """Coordinator that fetches data over HTTPS using the SolyxEnergyApiClient class."""
 
     def __init__(
         self,
@@ -73,9 +73,6 @@ class SolyxEnergyCoordinator(DataUpdateCoordinator[SolyxEnergyData]):
         )
         self.api_client = api_client
         self.device_id = device_id
-        self._settle_unsub: CALLBACK_TYPE | None = None
-        if self.config_entry is not None:
-            self.config_entry.async_on_unload(self._async_cancel_settle_timer)
 
     @override
     async def _async_update_data(self) -> SolyxEnergyData:
@@ -89,26 +86,15 @@ class SolyxEnergyCoordinator(DataUpdateCoordinator[SolyxEnergyData]):
             raise UpdateFailed(f"API error: {err}") from err
 
         return SolyxEnergyData(
-            boilerCurrent=parse_float(nymo_data, ATTRIBUTE_BOILER_CURRENT),
-            boilerPower=parse_float(nymo_data, ATTRIBUTE_BOILER_POWER),
-            boilerVoltage=parse_float(nymo_data, ATTRIBUTE_BOILER_VOLTAGE),
-            daysSinceMaximumTemperature=parse_float(
+            boiler_current=parse_float(nymo_data, ATTRIBUTE_BOILER_CURRENT),
+            boiler_power=parse_float(nymo_data, ATTRIBUTE_BOILER_POWER),
+            boiler_voltage=parse_float(nymo_data, ATTRIBUTE_BOILER_VOLTAGE),
+            days_since_maximum_temperature=parse_float(
                 nymo_data, ATTRIBUTE_DAYS_SINCE_MAX_TEMPERATURE
             ),
-            gridPower=parse_float(nymo_data, ATTRIBUTE_GRID_POWER),
-            legionellaDays=parse_float(nymo_data, ATTRIBUTE_LEGIONELLA_DAYS),
-            savedThisMonth=parse_float(nymo_data, ATTRIBUTE_SAVED_THIS_MONTH),
-            savedThisWeek=parse_float(nymo_data, ATTRIBUTE_SAVED_THIS_WEEK),
-            savedToday=parse_float(nymo_data, ATTRIBUTE_SAVED_TODAY),
+            grid_power=parse_float(nymo_data, ATTRIBUTE_GRID_POWER),
+            legionella_days=parse_float(nymo_data, ATTRIBUTE_LEGIONELLA_DAYS),
+            saved_this_month=parse_float(nymo_data, ATTRIBUTE_SAVED_THIS_MONTH),
+            saved_this_week=parse_float(nymo_data, ATTRIBUTE_SAVED_THIS_WEEK),
+            saved_today=parse_float(nymo_data, ATTRIBUTE_SAVED_TODAY),
         )
-
-    async def _async_settle_refresh(self, _now: datetime) -> None:
-        """Refresh data after a write has settled on the Solyx cloud platform."""
-        self._settle_unsub = None
-        await self.async_request_refresh()
-
-    def _async_cancel_settle_timer(self) -> None:
-        """Cancel any pending settle timer when the config entry is unloaded."""
-        if self._settle_unsub is not None:
-            self._settle_unsub()
-            self._settle_unsub = None

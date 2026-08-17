@@ -41,8 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolyxEnergyConfigEntry) 
         device_id=entry.data[CONF_NYMO_DEVICE_ID],
         config_entry=entry,
     )
-    entry.runtime_data = coordinator
     await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
