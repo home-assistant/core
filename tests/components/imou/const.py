@@ -17,6 +17,7 @@ from pyimouapi.const import (
 )
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
+from homeassistant.components.imou.binary_sensor import PARAM_DOOR_CONTACT_STATUS
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import (
     CONF_API_URL,
@@ -48,8 +49,6 @@ UNKNOWN_SWITCH_KEY = "legacy_unknown_switch"
 UNKNOWN_SENSOR_KEY = "legacy_unknown_sensor"
 UNKNOWN_SELECT_KEY = "legacy_unknown_select"
 UNKNOWN_BINARY_SENSOR_KEY = "legacy_unknown_binary_sensor"
-
-PARAM_DOOR_CONTACT_STATUS = "door_contact_status"
 
 DEFAULT_BINARY_SENSORS = {
     PARAM_DOOR_CONTACT_STATUS: {PARAM_STATE: True},
