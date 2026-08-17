@@ -4,12 +4,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.daikin.const import (
-    ATTR_EN_DEMAND,
-    ATTR_MAX_POW,
-    DOMAIN,
-    KEY_MAC,
-)
+from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
+from homeassistant.components.daikin.services import ATTR_EN_DEMAND, ATTR_MAX_POW
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_MODE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
