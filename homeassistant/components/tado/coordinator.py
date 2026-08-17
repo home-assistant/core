@@ -486,14 +486,14 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not heating_zones:
             return
 
-        def _load() -> tuple[list[dict[str, Any]], dict[int, dict[str, Any]]]:
+        def _load_circuits() -> tuple[list[dict[str, Any]], dict[int, dict[str, Any]]]:
             return self._tado.get_heating_circuits(), {
                 zone["id"]: self._tado.get_zone_control(zone["id"])
                 for zone in heating_zones
             }
 
         try:
-            circuits, controls = await self.hass.async_add_executor_job(_load)
+            circuits, controls = await self.hass.async_add_executor_job(_load_circuits)
         except RequestException as err:
             raise UpdateFailed(f"Error updating Tado heating circuits: {err}") from err
 
