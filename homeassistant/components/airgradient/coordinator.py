@@ -97,10 +97,10 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
             await self.async_request_refresh()
             return
 
-        self._config_write_generation += 1
         self._pending_config_writes += 1
         try:
             await write
+            self._config_write_generation += 1
             self._config_refresh_pending = True
             await sleep(V1_CONFIG_APPLY_DELAY)
         finally:

@@ -128,6 +128,23 @@ async def test_v1_config_omission_removes_entity(
     assert hass.states.get("select.airgradient_co2_automatic_baseline_duration") is None
 
 
+async def test_known_v1_model_uses_model_capabilities(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test known V1 models only expose declared configuration capabilities."""
+    mock_v1_airgradient_client.get_current_measures.return_value.model = "I-9PSL"
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("select.airgradient_display_temperature_unit")
+    assert hass.states.get("select.airgradient_gps_mode") is None
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_v1_entities(
     hass: HomeAssistant,

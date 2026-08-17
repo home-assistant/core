@@ -131,12 +131,9 @@ def supports_config(
     """Return whether a device supports a configuration capability."""
     capabilities = get_model_capabilities(model)
     if api_version is ApiVersion.V1:
-        if capabilities is not None and model.startswith("P-1PSG"):
-            return (
-                capability in capabilities.config
-                and getattr(config, capability) is not None
-            )
-        return getattr(config, capability) is not None
+        return getattr(config, capability) is not None and (
+            capabilities is None or capability in capabilities.config
+        )
     return capabilities is not None and capability in capabilities.config
 
 

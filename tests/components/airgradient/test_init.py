@@ -204,6 +204,48 @@ async def test_v1_config_refresh_discards_in_flight_read(
     mock_config_apply_delay.assert_awaited_once_with(V1_CONFIG_APPLY_DELAY)
 
 
+async def test_v1_failed_write_keeps_in_flight_read(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed V1 config write does not discard an in-flight config read."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    cached_config = coordinator.data.config
+    updated_config = replace(cached_config, temperature_unit=None)
+    config_read_started = asyncio.Event()
+    release_config_read = asyncio.Event()
+    write_started = asyncio.Event()
+    release_write = asyncio.Event()
+
+    async def get_config() -> object:
+        config_read_started.set()
+        await release_config_read.wait()
+        return updated_config
+
+    async def fail_config_write() -> None:
+        write_started.set()
+        await release_write.wait()
+        raise AirGradientError
+
+    mock_v1_airgradient_client.get_config.side_effect = get_config
+    refresh = hass.async_create_task(coordinator.async_refresh())
+    await config_read_started.wait()
+    write = hass.async_create_task(
+        coordinator.async_execute_config_write(fail_config_write())
+    )
+    await write_started.wait()
+
+    release_config_read.set()
+    await refresh
+    release_write.set()
+    with pytest.raises(AirGradientError):
+        await write
+
+    assert coordinator.data.config == updated_config
+
+
 async def test_new_firmware_version(
     hass: HomeAssistant,
     mock_airgradient_client: AsyncMock,
