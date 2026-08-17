@@ -1,10 +1,12 @@
 """Demo platform for the cover component."""
 
 from datetime import datetime
+from enum import Enum
 from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
@@ -19,6 +21,13 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from . import DOMAIN
 
 
+class Speed(Enum):
+    """Supported speeds for the demo cover."""
+
+    SLOW = 5
+    DEFAULT = 10
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -29,7 +38,14 @@ async def async_setup_entry(
         [
             DemoCover(hass, "cover_1", "Kitchen Window"),
             DemoCover(hass, "cover_2", "Hall Window", 10),
-            DemoCover(hass, "cover_3", "Living Room Window", 70, 50),
+            DemoCover(
+                hass,
+                "cover_3",
+                "Living Room Window",
+                70,
+                50,
+                supported_speeds=[s.name for s in Speed],
+            ),
             DemoCover(
                 hass,
                 "cover_4",
@@ -69,6 +85,7 @@ class DemoCover(CoverEntity):
         tilt_position: int | None = None,
         device_class: CoverDeviceClass | None = None,
         supported_features: CoverEntityFeature | None = None,
+        supported_speeds: list[str] | None = None,
     ) -> None:
         """Initialize the cover."""
         self.hass = hass
@@ -76,6 +93,7 @@ class DemoCover(CoverEntity):
         self._position = position
         self._attr_device_class = device_class
         self._attr_supported_features = supported_features
+        self._attr_supported_speeds = supported_speeds
         self._set_position: int | None = None
         self._set_tilt_position: int | None = None
         self._tilt_position = tilt_position
@@ -89,6 +107,7 @@ class DemoCover(CoverEntity):
             self._closed = True
         else:
             self._closed = position <= 0
+        self._current_speed = Speed.DEFAULT
 
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -144,6 +163,7 @@ class DemoCover(CoverEntity):
             self.async_write_ha_state()
             return
 
+        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT")]
         self._is_opening = False
         self._is_closing = True
         self._listen_cover()
@@ -169,6 +189,7 @@ class DemoCover(CoverEntity):
             self.async_write_ha_state()
             return
 
+        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT")]
         self._is_opening = True
         self._is_closing = False
         self._listen_cover()
@@ -195,6 +216,7 @@ class DemoCover(CoverEntity):
         self._is_closing = position < (self._position or 0)
         self._is_opening = not self._is_closing
 
+        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT")]
         self._listen_cover()
         self._requested_closing = (
             self._position is not None and position < self._position
@@ -251,9 +273,9 @@ class DemoCover(CoverEntity):
         if self._position is None:
             return
         if self._requested_closing:
-            self._position -= 10
+            self._position -= self._current_speed.value
         else:
-            self._position += 10
+            self._position += self._current_speed.value
 
         if self._position in (100, 0, self._set_position):
             await self.async_stop_cover()

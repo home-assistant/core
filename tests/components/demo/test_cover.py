@@ -10,6 +10,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverState,
@@ -76,7 +77,10 @@ async def test_close_cover(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_CURRENT_POSITION] == 70
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: ENTITY_COVER},
+        blocking=True,
     )
     state = hass.states.get(ENTITY_COVER)
     assert state.state == CoverState.CLOSING
@@ -90,17 +94,44 @@ async def test_close_cover(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
 
+async def test_close_cover_slow(hass: HomeAssistant) -> None:
+    """Test closing the cover."""
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 70
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_SPEED: "SLOW"},
+        blocking=True,
+    )
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.CLOSING
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.CLOSING
+    assert state.attributes[ATTR_CURRENT_POSITION] == 35
+
+
 async def test_open_cover(hass: HomeAssistant) -> None:
     """Test opening the cover."""
     state = hass.states.get(ENTITY_COVER)
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 70
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: ENTITY_COVER},
+        blocking=True,
     )
     state = hass.states.get(ENTITY_COVER)
     assert state.state == CoverState.OPENING
-    for _ in range(7):
+    for _ in range(4):
         future = dt_util.utcnow() + timedelta(seconds=1)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -108,6 +139,29 @@ async def test_open_cover(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_COVER)
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
+
+
+async def test_open_cover_slow(hass: HomeAssistant) -> None:
+    """Test opening the cover."""
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 70
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_SPEED: "SLOW"},
+        blocking=True,
+    )
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPENING
+    for _ in range(4):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPENING
+    assert state.attributes[ATTR_CURRENT_POSITION] == 90
 
 
 async def test_toggle_cover(hass: HomeAssistant) -> None:
@@ -182,6 +236,68 @@ async def test_set_cover_position(hass: HomeAssistant) -> None:
         blocking=True,
     )
     state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPENING
+
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert state.attributes[ATTR_CURRENT_POSITION] == 80
+    assert state.state == CoverState.OPEN
+
+
+async def test_set_cover_position_slow(hass: HomeAssistant) -> None:
+    """Test moving the cover to a specific position."""
+    state = hass.states.get(ENTITY_COVER)
+    assert state.attributes[ATTR_CURRENT_POSITION] == 70
+
+    # close to 10%
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 10, ATTR_SPEED: "SLOW"},
+        blocking=True,
+    )
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.CLOSING
+
+    for _ in range(6):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert state.attributes[ATTR_CURRENT_POSITION] == 40
+    assert state.state == CoverState.CLOSING
+
+    for _ in range(6):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert state.attributes[ATTR_CURRENT_POSITION] == 10
+    assert state.state == CoverState.OPEN
+
+    # open to 80%
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 80, ATTR_SPEED: "SLOW"},
+        blocking=True,
+    )
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPENING
+
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert state.attributes[ATTR_CURRENT_POSITION] == 45
     assert state.state == CoverState.OPENING
 
     for _ in range(7):
