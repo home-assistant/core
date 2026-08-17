@@ -1,10 +1,10 @@
 """Sensor entities for the Solyx Energy Nymo integration."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from homeassistant.components.sensor import (
-    Callable,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
