@@ -262,7 +262,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             # Capture the announcement media signature after a brief delay
             # This allows HEOS to start playing and report the media info
             self.hass.async_create_task(self._capture_announcement_signature())
-        except Exception as err:
+        except (HeosError, ValueError, TypeError) as err:
             # If announcement fails, attempt to restore pre-announcement state
             _LOGGER.error("Failed to play announcement: %s", err)
 
@@ -282,7 +282,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                         await self._player.play()
 
                     _LOGGER.debug("Restored state after announcement failure")
-                except Exception as restore_err:
+                except HeosError as restore_err:
                     _LOGGER.warning(
                         "Could not restore state after announcement failure: %s",
                         restore_err,
