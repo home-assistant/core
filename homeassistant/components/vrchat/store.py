@@ -26,12 +26,12 @@ class VRChatAuthCookie(TypedDict, total=False):
 VRChatAuthCookieStore: dict[str, Store[VRChatAuthCookie]] = {}
 
 
-def get_vrchat_auth_cookie_store(hass: HomeAssistant, id: str):
+def get_vrchat_auth_cookie_store(hass: HomeAssistant, user_id: str):
     """Get an auth cookie store for given user id."""
-    store = VRChatAuthCookieStore.get(id)
+    store = VRChatAuthCookieStore.get(user_id)
     if store is None:
-        store = Store[VRChatAuthCookie](hass, 1, f"{DOMAIN}.{id}")
-        VRChatAuthCookieStore[id] = store
+        store = Store[VRChatAuthCookie](hass, 1, f"{DOMAIN}.{user_id}")
+        VRChatAuthCookieStore[user_id] = store
     return store
 
 

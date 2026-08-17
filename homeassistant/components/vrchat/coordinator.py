@@ -346,7 +346,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
                         _LOGGER.exception(EXCEPTION_MESSAGE_VRCHAT_WEBSOCKET_EVENT)
             else:
                 data["type"] = "error" if "err" in data else "unknown"
-                _LOGGER.error(data)
+                _LOGGER.error("%s", data)
         finally:
             pass
 
