@@ -202,7 +202,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
         async with asyncio.TaskGroup() as tg:
             online_friends_task = tg.create_task(self._get_friends(False))
             offline_friends_task = tg.create_task(self._get_friends(True))
-            for i in self.users:
+            for i in list(self.users):
                 if not (i == self.current_user_data["id"] or i in friend_ids):
                     tg.create_task(self.users[i].close())
         self.set_user(self.current_user_data)

@@ -257,6 +257,10 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
         assert NEW_FRIEND_USER_ID not in coordinator.users
         assert device_registry.async_get(new_friend_device.id) is None
 
+        coordinator.current_user_data["friends"] = []
+        await coordinator.fetch_users()
+        assert FRIEND_USER_ID not in coordinator.users
+
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
