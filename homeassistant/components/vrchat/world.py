@@ -78,31 +78,35 @@ class VRChatWorldData:
         if self.data is None:
             await asyncio.sleep(1)
         if self.data is None or self.should_invalidate:
-            if self.task is None:
+            if self.task is None or self.task.done():
                 self.task = asyncio.create_task(self._get_data())
             await self.task
         return self.data
 
     async def _get_data(self):
         try:
-            async with VRChatAPI() as api:
-                data = await asyncio.wait_for(
-                    api.get_world(self.id), RETRY_DELAY_SECOND
-                )
-                self.data = data
-                self.task = None
-                return data
-        except TimeoutError:
-            _LOGGER.exception("Fetch world data timed out. Retrying. ID: %s", self.id)
-            return await self._get_data()
-        except Exception:
-            _LOGGER.exception(
-                "Fetch world data failed. Retrying in %s seconds. ID: %s",
-                RETRY_DELAY_SECOND,
-                self.id,
-            )
-            await asyncio.sleep(RETRY_DELAY_SECOND)
-            return await self._get_data()
+            while True:
+                try:
+                    async with VRChatAPI() as api:
+                        data = await asyncio.wait_for(
+                            api.get_world(self.id), RETRY_DELAY_SECOND
+                        )
+                except TimeoutError:
+                    _LOGGER.exception(
+                        "Fetch world data timed out. Retrying. ID: %s", self.id
+                    )
+                except Exception:
+                    _LOGGER.exception(
+                        "Fetch world data failed. Retrying in %s seconds. ID: %s",
+                        RETRY_DELAY_SECOND,
+                        self.id,
+                    )
+                    await asyncio.sleep(RETRY_DELAY_SECOND)
+                else:
+                    self.data = data
+                    return data
+        finally:
+            self.task = None
 
     def subscribe(self, callback: Callable[[World | None], None]) -> Callable[[], None]:
         """Subscribe to data update."""
