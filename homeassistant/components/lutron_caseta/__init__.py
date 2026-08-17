@@ -522,7 +522,7 @@ def _id_to_identifier(lutron_id: str) -> tuple[str, str]:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: LutronCasetaConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: LutronCasetaConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove lutron_caseta config entry from a device."""
     data = entry.runtime_data

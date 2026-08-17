@@ -237,9 +237,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: UFPConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: UFPConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove ufp config entry from a device."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     unifi_macs = {
         _async_unifi_mac_from_hass(connection[1])
         for connection in device_entry.connections

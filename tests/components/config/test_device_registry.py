@@ -435,7 +435,7 @@ async def test_remove_device(
     can_remove = False
 
     async def async_remove_config_entry_device(
-        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
     ) -> bool:
         return can_remove
 
@@ -521,7 +521,7 @@ async def test_remove_device_fails(
     ws_client = await hass_ws_client(hass)
 
     async def async_remove_config_entry_device(
-        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
     ) -> bool:
         return True
 
@@ -626,7 +626,7 @@ async def test_remove_device_if_integration_removes(
     can_remove = False
 
     async def async_remove_config_entry_device(
-        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
     ) -> bool:
         if can_remove:
             device_registry.async_remove_device(device_entry.id)
@@ -759,7 +759,7 @@ async def test_remove_config_entry_from_device_deprecated_config_entry_mismatch(
     ws_client = await hass_ws_client(hass)
 
     async def async_remove_config_entry_device(
-        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
     ) -> bool:
         return True
 
@@ -1070,7 +1070,7 @@ async def test_remove_config_entry_from_child_device(
     async def async_remove_config_entry_device(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        device_entry: dr.DeviceEntry | dr.ChildDeviceEntry,
+        device_entry: dr.AnyDeviceEntry,
     ) -> bool:
         removed_devices.append(device_entry.id)
         return can_remove
@@ -1117,7 +1117,7 @@ async def test_remove_config_entry_from_parent_with_children(
     async def async_remove_config_entry_device(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        device_entry: dr.DeviceEntry | dr.ChildDeviceEntry,
+        device_entry: dr.AnyDeviceEntry,
     ) -> bool:
         consulted_devices.append(device_entry.id)
         return True

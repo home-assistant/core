@@ -21,7 +21,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -229,7 +229,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     entry: PortainerConfigEntry,
-    device: DeviceEntry,
+    device: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     coordinator = entry.runtime_data

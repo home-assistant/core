@@ -236,3 +236,17 @@ async def test_remove_device_allowed_stale_player(
     )
     result = await async_remove_config_entry_device(hass, entry, device)
     assert result is True
+
+
+async def test_remove_device_rejects_child_device(
+    hass: HomeAssistant,
+    setup_squeezebox: MockConfigEntry,
+) -> None:
+    """Test that removal is rejected for an unexpected child device."""
+    entry = setup_squeezebox
+    child_device = dr.ChildDeviceEntry(
+        config_entry_id=entry.entry_id,
+        parent_device_id="mock-parent-device",
+    )
+    result = await async_remove_config_entry_device(hass, entry, child_device)
+    assert result is False
