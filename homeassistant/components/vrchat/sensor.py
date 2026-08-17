@@ -84,6 +84,7 @@ class VRChatUserStatusSensor(VRChatUserDataSensorEntity):
         status = self.native_value
         if status is None:
             return None
+        # VRChat renders offline and in-game states with the same solid-circle indicator.
         if status == VRChatUserState.OFFLINE or is_user_in_game(self.user.data):
             return VRCHAT_USER_STATUS_INDICATOR_MAP_IN_GAME.get(status)
         return VRCHAT_USER_STATUS_INDICATOR_MAP_NOT_IN_GAME.get(status)
@@ -194,6 +195,7 @@ class VRChatUserLocationSensor(
             name = self.vrchat_user_world_data_get("name")
             if name is None:
                 name = self.get_state_from_user_data(self.user.data, "worldId")
+            # Preserve the last resolved name while metadata retries to avoid showing a world ID.
             if name is not None and not name.startswith(VRCHAT_WORLD_ID_PREFIX):
                 self._attr_native_value = name
         return self._attr_native_value
