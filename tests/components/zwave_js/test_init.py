@@ -1516,7 +1516,9 @@ async def test_keep_old_devices_flag(
     )
     assert len(device_entries) == 2
     assert (
-        device_registry.async_get_device(identifiers={get_device_id(driver, old_node)})
+        device_registry.async_get_device_by_identifier(
+            get_device_id(driver, old_node), integration.entry_id
+        )
         is None
     )
 
