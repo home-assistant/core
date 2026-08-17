@@ -99,6 +99,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds this fan supports.
 
