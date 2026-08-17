@@ -1671,32 +1671,31 @@ def test_select_selector_schema_error(schema) -> None:
     ("schema", "valid_selections", "invalid_selections"),
     [
         (
-            {},
+            {"domain": "sensor"},
             ("battery", "humidity", "temperature"),
             ("cat", 0, None, ["temperature"]),
         ),
         (
-            None,
-            ("battery", "humidity", "temperature"),
-            ("dog", 0, None, ["humidity"]),
-        ),
-        (
-            {"options": ["temperature", "humidity"]},
+            {"domain": "sensor", "options": ["temperature", "humidity"]},
             ("temperature", "humidity"),
             ("battery", "beer", 0, None, ["temperature"]),
         ),
         (
-            {"options": ["temperature", "humidity"], "multiple": True},
+            {
+                "domain": "sensor",
+                "options": ["temperature", "humidity"],
+                "multiple": True,
+            },
             (["temperature"], ["temperature", "humidity"], []),
             ("battery", "beer", 0, None, "temperature"),
         ),
     ],
 )
-def test_sensor_device_class_selector_schema(
+def test_device_class_selector_schema(
     schema, valid_selections, invalid_selections
 ) -> None:
-    """Test sensor device class selector."""
-    _test_selector("sensor_device_class", schema, valid_selections, invalid_selections)
+    """Test device class selector."""
+    _test_selector("device_class", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(

@@ -5,22 +5,19 @@ from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
-from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast, override
+from typing import Any, Literal, Required, TypedDict, cast, override
 from uuid import UUID
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT, Platform
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.generated.countries import COUNTRIES
+from homeassistant.generated.entity_platforms import EntityPlatforms
 from homeassistant.util import decorator
 from homeassistant.util.yaml import dumper
 
 from . import config_validation as cv
-
-if TYPE_CHECKING:
-    from homeassistant.components.sensor import SensorDeviceClass
-
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 
@@ -1873,24 +1870,41 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
-class SensorDeviceClassSelectorConfig(BaseSelectorConfig, total=False):
+class DeviceClassSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a sensor device class selector config."""
 
-    options: list[SensorDeviceClass | str]
+    domain: Platform
+    options: list[str | StrEnum]
     multiple: bool
     custom_value: bool
     mode: SelectSelectorMode
     sort: bool
 
 
-@SELECTORS.register("sensor_device_class")
-class SensorDeviceClassSelector(SelectSelector):
-    """Selector for sensor device class."""
+@SELECTORS.register("device_class")
+class DeviceClassSelector(SelectSelector):
+    """Selector for device class."""
 
-    selector_type = "sensor_device_class"
+    selector_type = "device_class"
+
+    SUPPORTED_PLATFORMS = (
+        Platform.BUTTON,
+        Platform.BINARY_SENSOR,
+        Platform.COVER,
+        Platform.EVENT,
+        Platform.HUMIDIFIER,
+        Platform.INFRARED,
+        Platform.MEDIA_PLAYER,
+        Platform.NUMBER,
+        Platform.SENSOR,
+        Platform.SWITCH,
+        Platform.UPDATE,
+        Platform.VALVE,
+    )
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
+            vol.Required("domain"): vol.In(SUPPORTED_PLATFORMS),
             vol.Optional("options"): list[str],
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("custom_value", default=False): cv.boolean,
@@ -1901,16 +1915,61 @@ class SensorDeviceClassSelector(SelectSelector):
         }
     )
 
-    def __init__(self, config: SensorDeviceClassSelectorConfig | None = None) -> None:
-        """Instantiate a sensor device class selector."""
+    def _device_class_options(self, domain: EntityPlatforms) -> list[str]:
+        # Do late imports to prevent circular imports
+        from homeassistant.components.binary_sensor import (  # noqa: PLC0415
+            BinarySensorDeviceClass,
+        )
+        from homeassistant.components.button import ButtonDeviceClass  # noqa: PLC0415
+        from homeassistant.components.cover import CoverDeviceClass  # noqa: PLC0415
+        from homeassistant.components.event import EventDeviceClass  # noqa: PLC0415
+        from homeassistant.components.humidifier import (  # noqa: PLC0415
+            HumidifierDeviceClass,
+        )
+        from homeassistant.components.infrared import (  # noqa: PLC0415
+            InfraredDeviceClass,
+        )
+        from homeassistant.components.media_player import (  # noqa: PLC0415
+            MediaPlayerDeviceClass,
+        )
+        from homeassistant.components.number import NumberDeviceClass  # noqa: PLC0415
         from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
+        from homeassistant.components.switch import SwitchDeviceClass  # noqa: PLC0415
+        from homeassistant.components.update import UpdateDeviceClass  # noqa: PLC0415
+        from homeassistant.components.valve import ValveDeviceClass  # noqa: PLC0415
+
+        return [
+            device_class.value
+            for device_class in {
+                Platform.BUTTON: ButtonDeviceClass,
+                Platform.COVER: CoverDeviceClass,
+                Platform.BINARY_SENSOR: BinarySensorDeviceClass,
+                Platform.EVENT: EventDeviceClass,
+                Platform.HUMIDIFIER: HumidifierDeviceClass,
+                Platform.INFRARED: InfraredDeviceClass,
+                Platform.MEDIA_PLAYER: MediaPlayerDeviceClass,
+                Platform.NUMBER: NumberDeviceClass,
+                Platform.SENSOR: SensorDeviceClass,
+                Platform.SWITCH: SwitchDeviceClass,
+                Platform.UPDATE: UpdateDeviceClass,
+                Platform.VALVE: ValveDeviceClass,
+            }[domain]
+        ]
+
+    def __init__(self, config: DeviceClassSelectorConfig) -> None:
+        """Instantiate a sensor device class selector."""
 
         config = self.CONFIG_SCHEMA(config)
+        domain = config["domain"]
+        device_classes = self._device_class_options(domain)
 
-        if config.get("options") is None:
-            config["options"] = [
-                device_class.value for device_class in SensorDeviceClass
-            ]
+        if (options := config.get("options")) is None:
+            config["options"] = device_classes
+        elif any(option not in device_classes for option in options):
+            raise vol.Invalid(
+                f"Invalid devices classes configured for {domain}"
+                f"device class selector. Got {options}"
+            )
         super().__init__(cast(SelectSelectorConfig, config))
 
 
