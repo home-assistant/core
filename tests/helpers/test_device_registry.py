@@ -48,9 +48,10 @@ def _downgrade_device_registry_deprecation_reports(
 ) -> Generator[None]:
     """Keep the deprecated device registry APIs from raising in tests.
 
-    async_get_device, the config entry parameters of async_update_device, and via_device
-    on async_get_or_create are deprecated and raise for core and core integration
-    callers, disable them here so we can run tests without triggering deprecation errors.
+    async_get_device, the config entry parameters and merge_connections/merge_identifiers
+    parameters of async_update_device, and via_device on async_get_or_create are
+    deprecated and raise for core and core integration callers, disable them here so we
+    can run tests without triggering deprecation errors.
 
     Tests which use `mock_integration_frame` will not be affected by this fixture, so
     they can test the deprecation.
@@ -4365,6 +4366,66 @@ async def test_async_update_device_config_entry_params_deprecated(
         device_registry.async_update_device(
             device.id, remove_config_entry_id=config_entry.entry_id
         )
+
+    assert caplog.text.count(what) == expected_log
+
+
+@pytest.mark.parametrize(
+    "update_kwargs",
+    [
+        pytest.param(
+            {"merge_connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")}},
+            id="merge_connections",
+        ),
+        pytest.param(
+            {"merge_identifiers": {("some_domain", "extra")}}, id="merge_identifiers"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(RuntimeError),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_update_device_merge_params_deprecated(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    update_kwargs: dict[str, set[tuple[str, str]]],
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test merge_connections/merge_identifiers of async_update_device are deprecated.
+
+    Passing either logs for custom integrations, and raises for core and core
+    integrations. The parameters stay available on the protected _async_update_device
+    for internal use by the registry.
+    """
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("some_domain", "some_id")}
+    )
+
+    what = "calls `device_registry.async_update_device` with `merge_connections`"
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        device_registry.async_update_device(device.id, **update_kwargs)
 
     assert caplog.text.count(what) == expected_log
 
@@ -10078,6 +10139,42 @@ async def test_child_device_update(
             "changes": {"area_id": "garden"},
         },
     ]
+
+
+@pytest.mark.usefixtures("hass")
+async def test_update_main_device_rejects_disabled_by_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test disabled_by=DEVICE is rejected on a main device, on create and update.
+
+    DeviceEntryDisabler.DEVICE means "disabled because the parent is disabled" and is
+    only valid for a child device. The rejection runs before any registry mutation, so
+    a rejected create leaves no phantom device behind and a rejected update leaves the
+    device unchanged.
+    """
+    match = "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child device"
+
+    # The create path rejects it, before a (phantom) device is created
+    with pytest.raises(HomeAssistantError, match=match):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("test", "main")},
+            disabled_by=dr.DeviceEntryDisabler.DEVICE,
+        )
+    assert len(device_registry.devices) == 0
+
+    # The update path rejects it, leaving the device unchanged
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "main")},
+    )
+    assert device.disabled_by is None
+    with pytest.raises(HomeAssistantError, match=match):
+        device_registry.async_update_device(
+            device.id, disabled_by=dr.DeviceEntryDisabler.DEVICE
+        )
+    assert device_registry.async_get(device.id).disabled_by is None
 
 
 @pytest.mark.usefixtures("hass")
