@@ -215,9 +215,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         # This ensures we can properly track and clean up announcement state
         self._announce_restore_state = self._snapshot_state()
         self._announce_restore_state["tts_url"] = media_id
-        _LOGGER.debug(
-            "Saving state for announcement: %s", self._announce_restore_state
-        )
+        _LOGGER.debug("Saving state for announcement: %s", self._announce_restore_state)
 
         # Pause current playback if playing
         if self._player.state == PlayState.PLAY:
@@ -344,9 +342,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
             # Remove TTS items from queue
             if tts_queue_ids:
-                _LOGGER.debug(
-                    "Removing TTS items from queue: %s", tts_queue_ids
-                )
+                _LOGGER.debug("Removing TTS items from queue: %s", tts_queue_ids)
                 await self._player.remove_from_queue(tts_queue_ids)
             else:
                 _LOGGER.debug("No TTS items found to remove")
@@ -386,7 +382,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         elif self._player.state in (PlayState.STOP, PlayState.PAUSE):
             if hasattr(current_media, "song") and current_media.song != "Url Stream":
                 is_completed = True
-                _LOGGER.debug("TTS completion detected: state=%s, not URL stream", self._player.state)
+                _LOGGER.debug(
+                    "TTS completion detected: state=%s, not URL stream",
+                    self._player.state,
+                )
         
         if is_completed:
             # Give it a moment to ensure this is a permanent state change
