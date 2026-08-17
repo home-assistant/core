@@ -5,11 +5,13 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.ping import DOMAIN as PING_DOMAIN
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
     RepairsFlowResult,
 )
+from homeassistant.components.template import DOMAIN as TEMPLATE_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
@@ -68,7 +70,7 @@ class MigrateSwitchFlow(RepairsFlow):
                         CONF_HOST: ping_host,
                     }
                     import_result = await self.hass.config_entries.flow.async_init(
-                        "ping",
+                        PING_DOMAIN,
                         context={"source": SOURCE_IMPORT},
                         data=ping_config,
                     )
@@ -160,7 +162,7 @@ class MigrateSwitchFlow(RepairsFlow):
                 template_config[CONF_OFF_ACTION] = turn_off_action
 
             import_result = await self.hass.config_entries.flow.async_init(
-                "template",
+                TEMPLATE_DOMAIN,
                 context={"source": SOURCE_IMPORT},
                 data=template_config,
             )
