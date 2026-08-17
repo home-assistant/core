@@ -515,6 +515,9 @@ async def test_ui_expose_with_options(
     await knx.setup_integration()
     ws_client = await hass_ws_client(hass)
 
+    hass.states.async_set(ENTITY_ID, "on", {"brightness": 100})
+    await hass.async_block_till_done()    
+
     await ws_client.send_json_auto_id(
         {
             "type": "knx/update_expose",
