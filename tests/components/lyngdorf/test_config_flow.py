@@ -368,3 +368,86 @@ async def test_ssdp_discovery_connectivity_check_aborts(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_reason
+
+
+@pytest.mark.usefixtures("mock_find_receiver_model", "mock_get_device_serial")
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring an entry updates the host."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.50"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.50"
+
+
+@pytest.mark.usefixtures("mock_find_receiver_model")
+async def test_reconfigure_different_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_device_serial: AsyncMock,
+) -> None:
+    """Test an entry cannot be pointed at a different device."""
+    mock_config_entry.add_to_hass(hass)
+    mock_get_device_serial.return_value = "aabbccddeeff"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.50"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (TimeoutError, "timeout_connect"),
+        (OSError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_device_serial")
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_find_receiver_model: AsyncMock,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test reconfigure surfaces connection errors and recovers."""
+    mock_config_entry.add_to_hass(hass)
+    mock_find_receiver_model.side_effect = side_effect
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.50"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_find_receiver_model.side_effect = None
+    mock_find_receiver_model.return_value = LyngdorfModel.MP_60
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.50"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

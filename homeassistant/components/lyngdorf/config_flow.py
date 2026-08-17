@@ -4,6 +4,7 @@ import logging
 from typing import Any, override
 from urllib.parse import urlparse
 
+from lyngdorf.const import LyngdorfModel
 from lyngdorf.device import (
     async_find_receiver_model,
     async_get_device_serial,
@@ -54,31 +55,17 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
+            model, serial, errors = await self._async_probe(self._host)
 
-            try:
-                model = await async_find_receiver_model(self._host)
-            except TimeoutError:
-                errors["base"] = "timeout_connect"
-            except OSError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                errors["base"] = "unknown"
-
-            if not errors and not model:
-                errors["base"] = "unsupported_model"
-
-            if not errors and model:
+            if not errors:
+                assert model is not None
+                assert serial is not None
                 self._device_model = model.model_name
                 self._name = model.model_name
-
-                serial = await async_get_device_serial(self._host)
-                if not serial:
-                    errors["base"] = "cannot_determine_id"
-                else:
-                    self._device_serial_number = serial.lower()
-                    await self.async_set_unique_id(self._device_serial_number)
-                    self._abort_if_unique_id_configured()
-                    return await self._create_entry()
+                self._device_serial_number = serial
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_configured()
+                return await self._create_entry()
 
         return self.async_show_form(
             step_id="user",
@@ -86,6 +73,68 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST): cv.string,
                 }
+            ),
+            errors=errors,
+        )
+
+    async def _async_probe(
+        self, host: str
+    ) -> tuple[LyngdorfModel | None, str | None, dict[str, str]]:
+        """Probe a host, returning its model, serial and any errors."""
+        try:
+            model = await async_find_receiver_model(host)
+        except TimeoutError:
+            return None, None, {"base": "timeout_connect"}
+        except OSError:
+            return None, None, {"base": "cannot_connect"}
+        except Exception:  # noqa: BLE001
+            return None, None, {"base": "unknown"}
+
+        if not model:
+            return None, None, {"base": "unsupported_model"}
+
+        if not (serial := await async_get_device_serial(host)):
+            return None, None, {"base": "cannot_determine_id"}
+
+        return model, serial.lower(), {}
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry.
+
+        SSDP rediscovery only recovers a changed address while the device is
+        still announcing somewhere Home Assistant can hear it, which a move to
+        a static address or another subnet can end.
+        """
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            model, serial, errors = await self._async_probe(host)
+
+            if not errors:
+                assert model is not None
+                assert serial is not None
+                await self.async_set_unique_id(serial)
+                # Refuse to point an existing entry at a different device,
+                # which would inherit the first one's entities.
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_HOST: host,
+                        CONF_MODEL: model.model_name,
+                        CONF_SERIAL_NUMBER: serial,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required(CONF_HOST): cv.string}),
+                reconfigure_entry.data,
             ),
             errors=errors,
         )
