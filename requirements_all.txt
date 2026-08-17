@@ -1146,7 +1146,7 @@ google-cloud-texttospeech==2.25.1
 google-genai==2.16.0
 
 # homeassistant.components.google_health
-google-health-api==0.8.0
+google-health-api==0.9.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
@@ -1332,7 +1332,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==14.1.0
+ical==14.1.1
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1592,7 +1592,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==8.0.1
+midea-local==9.0.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -2626,7 +2626,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.14.0
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.6.3
+pystiebeleltron==0.7.0
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.7
@@ -3415,7 +3415,7 @@ wyoming==1.10.0
 xiaomi-ble==1.11.0
 
 # homeassistant.components.knx
-xknx==3.19.0
+xknx==3.20.0
 
 # homeassistant.components.knx
 xknxproject==3.10.0
