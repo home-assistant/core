@@ -588,12 +588,9 @@ class VRChatUserDataCoordinator(AsyncCleanups):
     def device_entry(self):
         """Device entry that represents this user."""
         identifier = next(iter(self.device_info["identifiers"]))
-        device_registry = self.account.device_registry
-        if hasattr(device_registry, "async_get_device_by_identifier"):
-            return device_registry.async_get_device_by_identifier(
-                identifier, self.account.config_entry.entry_id
-            )
-        return device_registry.async_get_device({identifier})
+        return self.account.device_registry.async_get_device_by_identifier(
+            identifier, self.account.config_entry.entry_id
+        )
 
     @cached_property
     def is_current_user(self):
