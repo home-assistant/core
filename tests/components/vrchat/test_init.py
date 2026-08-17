@@ -12,6 +12,7 @@ from homeassistant.components.vrchat import async_remove_entry
 from homeassistant.components.vrchat.const import DOMAIN
 from homeassistant.components.vrchat.coordinator import (
     VRChatAccountAuthFailed,
+    VRChatAccountDataCoordinator,
     VRChatAccountSetupFailed,
 )
 from homeassistant.components.vrchat.store import (
@@ -118,6 +119,32 @@ async def test_async_cleanups_uses_callback_snapshot() -> None:
     await cleanups.close()
 
     second_cleanup.assert_called_once()
+
+
+async def test_restart_closes_replacement_api() -> None:
+    """Test restarting closes both the old and replacement API clients."""
+    old_api = Mock()
+    old_api.close = AsyncMock()
+    replacement_api = Mock()
+    replacement_api.close = AsyncMock()
+    old_api.copy.return_value = replacement_api
+
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.api = old_api
+    coordinator.auto_restart = False
+    coordinator.authenticate = AsyncMock()
+    coordinator.ws_connect = AsyncMock()
+    coordinator.fetch_users = AsyncMock()
+    coordinator.add_to_cleanups(old_api.close)
+
+    await coordinator._restart(0)
+
+    old_api.close.assert_awaited_once()
+    assert replacement_api.close in coordinator._cleanups
+
+    await AsyncCleanups.close(coordinator)
+
+    replacement_api.close.assert_awaited_once()
 
 
 @pytest.mark.parametrize(

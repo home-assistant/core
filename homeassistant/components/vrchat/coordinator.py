@@ -397,6 +397,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
     async def _restart(self, delay):
         old_api = self.api
         self.api = old_api.copy()
+        self.add_to_cleanups(self.api.close)
         if delay > 0:
             await asyncio.sleep(delay)
         try:
