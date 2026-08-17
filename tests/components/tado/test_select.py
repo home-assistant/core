@@ -144,16 +144,17 @@ async def test_no_circuits_read_without_heating_zones(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_unknown_when_circuit_is_not_listed(hass: HomeAssistant) -> None:
-    """Test the state is unknown when the assigned circuit is not in the list."""
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-
+@pytest.fixture
+def unlisted_circuit() -> Generator[None]:
+    """Assign a zone a heating circuit that is not in the circuit list."""
     with patch(
         "PyTado.interface.api.my_tado.Tado.get_zone_control",
         return_value={"type": "HEATING", "heatingCircuit": 99},
     ):
-        await hass.config_entries.async_reload(config_entry.entry_id)
-        await hass.async_block_till_done()
+        yield
 
+
+@pytest.mark.usefixtures("unlisted_circuit", "init_integration")
+async def test_unknown_when_circuit_is_not_listed(hass: HomeAssistant) -> None:
+    """Test the state is unknown when the assigned circuit is not in the list."""
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
