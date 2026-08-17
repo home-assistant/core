@@ -17,13 +17,9 @@ from pyheos import (
     HeosPlayer,
     MediaItem,
     MediaMusicSource,
+    MediaType as HeosMediaType,
     PlayState,
     RepeatType,
-)
-from pyheos import (
-    MediaType as HeosMediaType,
-)
-from pyheos import (
     const as heos_const,
 )
 from pyheos.util import mediauri as heos_source
