@@ -190,6 +190,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._announce_in_progress: bool = False
         self._announce_completed: bool = False
         self._announce_media_signature: dict[str, Any] | None = None
+        self._announce_started: bool = False
         super().__init__(coordinator, context=player.player_id)
 
     async def _player_update(self, event: str) -> None:
@@ -225,14 +226,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 # Give the pause command time to take effect
                 await asyncio.sleep(0.5)
 
-            # Mark announcement as in progress (only after state is captured)
-            self._announce_in_progress = True
-
-            # Capture the announcement media signature after a brief delay
-            # This allows HEOS to start playing and report the media info
-            self.hass.async_create_task(self._capture_announcement_signature())
-
-            # Set volume if specified in extra
+            # Set volume if specified in extra (before marking as in progress)
             extra = kwargs.get("extra", {})
             if "volume" in extra:
                 try:
@@ -258,11 +252,20 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
             # Play the announcement
             await self._player.play_url(media_id)
+
+            # Mark announcement as in progress AFTER play_url to avoid race with pause event
+            self._announce_in_progress = True
+            self._announce_started = False  # Will be set when media signature captured
+
+            # Capture the announcement media signature after a brief delay
+            # This allows HEOS to start playing and report the media info
+            self.hass.async_create_task(self._capture_announcement_signature())
         except Exception as err:
             # If announcement fails, clean up state to prevent getting stuck
             _LOGGER.error("Failed to play announcement: %s", err)
             self._announce_in_progress = False
             self._announce_completed = False
+            self._announce_started = False
             self._announce_media_signature = None
             self._announce_restore_state = None
             raise
@@ -283,6 +286,8 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             "album": getattr(current_media, "album", None),
             "artist": getattr(current_media, "artist", None),
         }
+        # Mark announcement as actually started
+        self._announce_started = True
         _LOGGER.debug(
             "Captured announcement media signature: %s",
             self._announce_media_signature,
@@ -350,6 +355,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             self._announce_restore_state = None
             self._announce_in_progress = False
             self._announce_completed = False
+            self._announce_started = False
             self._announce_media_signature = None
 
     async def _remove_tts_from_queue(self, tts_url: str) -> None:
@@ -408,6 +414,11 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             return
 
         if not self._announce_in_progress or not self._announce_restore_state:
+            return
+
+        # Don't check completion until announcement has actually started
+        # This prevents race with pause event triggering premature completion
+        if not self._announce_started:
             return
 
         # Capture state locally to avoid race conditions with concurrent calls
