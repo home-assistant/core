@@ -67,7 +67,9 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
     _attr_name = None
 
-    def __init__(self, client: SmartThings, device: FullDevice, entry_data: SmartThingsData) -> None:
+    def __init__(
+        self, client: SmartThings, device: FullDevice, entry_data: SmartThingsData
+    ) -> None:
         """Init the class."""
         super().__init__(
             client,

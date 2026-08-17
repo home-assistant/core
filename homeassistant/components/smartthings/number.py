@@ -4,7 +4,12 @@ from typing import override
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
-from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode, RestoreNumber
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberMode,
+    RestoreNumber,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo

@@ -240,6 +240,9 @@
       "cooler_temperature": {
         "name": "Fridge temperature"
       },
+      "fan_speed_count": {
+        "name": "Number of speeds"
+      },
       "freezer_temperature": {
         "name": "Freezer temperature"
       },
@@ -252,9 +255,6 @@
       "washer_rinse_cycles": {
         "name": "Rinse cycles",
         "unit_of_measurement": "cycles"
-      },
-      "fan_speed_count": {
-        "name": "Number of speeds"
       }
     },
     "select": {
