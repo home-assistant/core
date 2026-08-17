@@ -43,6 +43,15 @@ class HeatingCircuit(TypedDict):
     driverShortSerialNo: str
 
 
+class ZoneControl(TypedDict, total=False):
+    """The control settings of a zone as returned by Tado."""
+
+    type: str
+    heatingCircuit: int | None
+    earlyStartEnabled: bool
+    duties: dict[str, Any]
+
+
 class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage API calls from and to Tado via PyTado."""
 
@@ -494,7 +503,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not heating_zones:
             return
 
-        def _load() -> tuple[list[HeatingCircuit], dict[int, dict[str, Any]]]:
+        def _load() -> tuple[list[HeatingCircuit], dict[int, ZoneControl]]:
             return self._tado.get_heating_circuits(), {
                 zone["id"]: self._tado.get_zone_control(zone["id"])
                 for zone in heating_zones
