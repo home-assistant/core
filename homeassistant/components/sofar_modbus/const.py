@@ -1,9 +1,4 @@
-"""Constants for the Sofar Inverter Modbus integration.
-
-Integration-level config keys and defaults only. Distinct from sofar_modbus's
-own const module (the PyPI library), which holds the device library's
-bitmasks and register-map tables.
-"""
+"""Constants for the Sofar Inverter Modbus integration — distinct from sofar_modbus's own const module (the PyPI library's bitmasks/register tables)."""
 
 DOMAIN = "sofar_modbus"
 ATTR_MANUFACTURER = "Sofar Solar"

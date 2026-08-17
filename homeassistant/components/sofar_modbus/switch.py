@@ -1,10 +1,6 @@
 """Switch platform: whether the active power control limit is armed.
 
-Register 1105's Bit0 has to go out together with the limit percentage in
-1106 (see sofar_modbus.modern.ActivePowerControl), so this stages a plain
-bool in coordinator.pending instead of writing on toggle — the paired
-"Active Power Control: Update" button commits both together (added in a
-follow-up PR alongside the button platform).
+Register 1105's Bit0 must go out with 1106's limit percentage, so this stages a bool in coordinator.pending instead of writing on toggle — a paired button (follow-up PR) commits both together.
 """
 
 from typing import Any, override
@@ -24,12 +20,7 @@ _KEY = "active_power_control_enabled"
 def resolve_active_power_control_enabled(
     coordinator: SofarDataUpdateCoordinator,
 ) -> bool | None:
-    """The enabled state this switch is currently showing — pending or live.
-
-    Shared with the button platform (added in a follow-up PR) so "Active
-    Power Control: Update" commits exactly what the switch displays, not a
-    separately re-derived value.
-    """
+    """The enabled state this switch is currently showing — pending or live. Shared with the button platform (follow-up PR) so its commit uses this exact value."""
     flags = coordinator.device.active_power_control.power_control
     live = None if flags is None else PowerControlFlags.ACTIVE_POWER in flags
     return coordinator.pending_or_live(_KEY, live)
