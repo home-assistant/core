@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components import infrared
 from homeassistant.components.infrared import DOMAIN as INFRARED_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_TEMPERATURE_UNIT, UnitOfTemperature
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     EntitySelector,
@@ -26,6 +27,7 @@ from .const import (
     DEFAULT_COMMAND_STEP_DELAY,
     DOMAIN,
     DysonDeviceType,
+    DysonTemperatureUnit,
 )
 
 DEVICE_TYPE_NAMES: dict[DysonDeviceType, str] = {
@@ -66,6 +68,12 @@ class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=title, data=user_input)
 
+        default_temperature_unit = (
+            DysonTemperatureUnit.FAHRENHEIT
+            if self.hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT
+            else DysonTemperatureUnit.CELSIUS
+        ).value
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -83,6 +91,15 @@ class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=emitter_entity_ids,
+                        )
+                    ),
+                    vol.Required(
+                        CONF_TEMPERATURE_UNIT, default=default_temperature_unit
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[unit.value for unit in DysonTemperatureUnit],
+                            translation_key=CONF_TEMPERATURE_UNIT,
+                            mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
                     vol.Optional(

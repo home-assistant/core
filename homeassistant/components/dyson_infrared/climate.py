@@ -14,7 +14,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_TEMPERATURE_UNIT,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -24,12 +28,22 @@ from .const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
     DEFAULT_COMMAND_STEP_DELAY,
     DOMAIN,
+    DysonTemperatureUnit,
 )
 
 PARALLEL_UPDATES = 0
 
-_MIN_TEMP = 1
-_MAX_TEMP = 37
+# HEAT_UP/HEAT_DOWN step by one degree in whatever unit the device itself is
+# set to display, so the entity works natively in that unit rather than
+# converting; the AM09 covers the same range either way.
+_UNITS: dict[DysonTemperatureUnit, UnitOfTemperature] = {
+    DysonTemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
+    DysonTemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+}
+_TEMP_RANGES: dict[DysonTemperatureUnit, tuple[int, int]] = {
+    DysonTemperatureUnit.CELSIUS: (1, 37),
+    DysonTemperatureUnit.FAHRENHEIT: (34, 99),
+}
 
 _SPEED_COUNT = 10
 _FAN_MODES = [str(speed) for speed in range(1, _SPEED_COUNT + 1)]
@@ -46,10 +60,24 @@ async def async_setup_entry(
     """Set up the Dyson infrared heater/cooler platform from a config entry."""
     infrared_emitter_entity_id = entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
     step_delay = entry.data.get(CONF_COMMAND_STEP_DELAY, DEFAULT_COMMAND_STEP_DELAY)
+    # Entries created before the unit was configurable fall back to the unit
+    # the user's system is set to, which is what the device most likely shows.
+    temperature_unit = DysonTemperatureUnit(
+        entry.data.get(CONF_TEMPERATURE_UNIT)
+        or (
+            DysonTemperatureUnit.FAHRENHEIT
+            if hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT
+            else DysonTemperatureUnit.CELSIUS
+        )
+    )
     async_add_entities(
         [
             DysonInfraredHeaterCooler(
-                infrared_emitter_entity_id, entry.entry_id, entry.title, step_delay
+                infrared_emitter_entity_id,
+                entry.entry_id,
+                entry.title,
+                step_delay,
+                temperature_unit,
             )
         ]
     )
@@ -61,20 +89,11 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
     _attr_translation_key = "heater_cooler"
     _attr_has_entity_name = True
     _attr_assumed_state = True
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = _MIN_TEMP
-    _attr_max_temp = _MAX_TEMP
     _attr_target_temperature_step = 1.0
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT]
     _attr_fan_modes = _FAN_MODES
     _attr_preset_modes = [PRESET_FOCUSED, PRESET_DIFFUSED]
     _attr_swing_modes = [SWING_OFF, SWING_ON]
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.SWING_MODE
-    )
 
     def __init__(
         self,
@@ -82,14 +101,18 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
         unique_id: str,
         name: str,
         step_delay: float = DEFAULT_COMMAND_STEP_DELAY,
+        temperature_unit: DysonTemperatureUnit = DysonTemperatureUnit.CELSIUS,
     ) -> None:
         """Initialize the Dyson infrared heater/cooler entity."""
         self._infrared_emitter_entity_id = infrared_emitter_entity_id
         self._step_delay = step_delay
 
+        self._attr_temperature_unit = _UNITS[temperature_unit]
+        self._attr_min_temp, self._attr_max_temp = _TEMP_RANGES[temperature_unit]
+
         self._attr_unique_id = unique_id
         self._attr_hvac_mode = HVACMode.OFF
-        self._attr_target_temperature = float(_MIN_TEMP)
+        self._attr_target_temperature = float(self._attr_min_temp)
         self._attr_fan_mode = _FAN_MODES[_SPEED_COUNT // 2 - 1]
         self._attr_preset_mode = PRESET_DIFFUSED
         self._attr_swing_mode = SWING_OFF
@@ -98,6 +121,23 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
             identifiers={(DOMAIN, unique_id)},
             name=name,
         )
+
+    @property
+    @override
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features.
+
+        The AM09 has no IR codes for a cooling target temperature, so
+        TARGET_TEMPERATURE is only advertised while heating.
+        """
+        features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.SWING_MODE
+        )
+        if self._attr_hvac_mode is HVACMode.HEAT:
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        return features
 
     async def _async_send_am09_action(self, code: DysonAm09Code) -> None:
         await self._send_command(code.to_command())
@@ -115,14 +155,21 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
         if hvac_mode is HVACMode.OFF:
             await self._async_send_am09_action(DysonAm09Code.ON)
         else:
-            if self._attr_hvac_mode is HVACMode.OFF:
+            came_from_off = self._attr_hvac_mode is HVACMode.OFF
+            if came_from_off:
                 await self._async_send_am09_action(DysonAm09Code.ON)
                 await asyncio.sleep(self._step_delay)
             if hvac_mode is HVACMode.COOL:
                 await self._async_send_am09_action(DysonAm09Code.COOL_ON)
             elif hvac_mode is HVACMode.HEAT:
                 await self._async_send_am09_action(DysonAm09Code.HEAT_UP)
-                self._attr_target_temperature = float(_MIN_TEMP)
+                if came_from_off:
+                    # Powering on from OFF makes the HEAT_UP mode-select
+                    # press also bump the device's remembered target by one
+                    # degree. Cancel that out with HEAT_DOWN. Switching
+                    # directly from COOL doesn't have this side effect.
+                    await asyncio.sleep(self._step_delay)
+                    await self._async_send_am09_action(DysonAm09Code.HEAT_DOWN)
 
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
@@ -133,8 +180,13 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
         if self._attr_hvac_mode is not HVACMode.HEAT:
             return
 
-        target = max(_MIN_TEMP, min(_MAX_TEMP, int(kwargs[ATTR_TEMPERATURE])))
-        current = int(self._attr_target_temperature or _MIN_TEMP)
+        # round(), not int(), since a system unit differing from the device's
+        # unit means this may arrive as a converted, non-integer value.
+        target = max(
+            self._attr_min_temp,
+            min(self._attr_max_temp, round(kwargs[ATTR_TEMPERATURE])),
+        )
+        current = round(self._attr_target_temperature or self._attr_min_temp)
         if target == current:
             return
 
@@ -164,7 +216,14 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
 
     @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
-        """Toggle oscillation."""
+        """Toggle oscillation.
+
+        SWING has no dedicated on/off code, only a toggle, so resending it
+        when already at the requested mode would flip it the wrong way.
+        """
+        if swing_mode == self._attr_swing_mode:
+            return
+
         await self._async_send_am09_action(DysonAm09Code.SWING)
         self._attr_swing_mode = swing_mode
         self.async_write_ha_state()
@@ -172,6 +231,9 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the airflow diffusion preset."""
+        if preset_mode == self._attr_preset_mode:
+            return
+
         code = (
             DysonAm09Code.VENT_THIN
             if preset_mode == PRESET_FOCUSED

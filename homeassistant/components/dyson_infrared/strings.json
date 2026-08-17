@@ -9,12 +9,14 @@
         "data": {
           "command_step_delay": "Delay between repeated commands",
           "device_type": "Device type",
-          "infrared_emitter_entity_id": "Infrared transmitter"
+          "infrared_emitter_entity_id": "Infrared transmitter",
+          "temperature_unit": "Temperature unit"
         },
         "data_description": {
           "command_step_delay": "How long to wait between commands when stepping fan speed or temperature by more than one level at a time.",
           "device_type": "The type of device to control.",
-          "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands."
+          "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands.",
+          "temperature_unit": "The unit the heater/cooler itself is set to display, since each command steps the target temperature by one degree in that unit."
         },
         "description": "Select the device type and the infrared transmitter entity to use for controlling your device.",
         "title": "Set up Infrared Remote"
@@ -46,6 +48,12 @@
       "options": {
         "fan": "Fan",
         "heater_cooler": "Heater/Cooler"
+      }
+    },
+    "temperature_unit": {
+      "options": {
+        "celsius": "Celsius",
+        "fahrenheit": "Fahrenheit"
       }
     }
   }

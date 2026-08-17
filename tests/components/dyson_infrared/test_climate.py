@@ -7,6 +7,8 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -27,10 +29,13 @@ from homeassistant.components.dyson_infrared.const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
     DOMAIN,
     DysonDeviceType,
+    DysonTemperatureUnit,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_TEMPERATURE_UNIT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.infrared import EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID
@@ -129,12 +134,12 @@ async def test_set_hvac_mode_off_sends_toggle_command(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_set_hvac_mode_heat_sends_heat_up_and_resets_temperature(
+async def test_set_hvac_mode_heat_leaves_temperature_unchanged(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     climate_entity_id: str,
 ) -> None:
-    """Test switching to heat mode from off powers on, sends HEAT_UP, and resets the assumed target temperature."""
+    """Test switching to heat mode powers on and cancels out the HEAT_UP mode-select bump."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
@@ -145,6 +150,7 @@ async def test_set_hvac_mode_heat_sends_heat_up_and_resets_temperature(
     assert mock_infrared_emitter_entity.send_command_calls == [
         DysonAm09Code.ON,
         DysonAm09Code.HEAT_UP,
+        DysonAm09Code.HEAT_DOWN,
     ]
 
     state = hass.states.get(climate_entity_id)
@@ -159,7 +165,7 @@ async def test_set_hvac_mode_between_cool_and_heat_does_not_repower(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     climate_entity_id: str,
 ) -> None:
-    """Test switching directly between COOL and HEAT does not resend the ON toggle."""
+    """Test switching directly between COOL and HEAT does not resend the ON toggle or compensate the target temperature."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
@@ -214,20 +220,178 @@ async def test_set_temperature_steps_heat_up(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_set_temperature_ignored_outside_heat_mode(
+async def test_set_temperature_rounds_fractional_value(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     climate_entity_id: str,
 ) -> None:
-    """Test setting a temperature while not in heat mode sends no command."""
+    """Test a fractional target (e.g. from a Fahrenheit-converted request) rounds to the nearest degree instead of truncating down."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: climate_entity_id, ATTR_TEMPERATURE: 10},
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_TEMPERATURE: 3.6},
         blocking=True,
     )
 
+    assert mock_infrared_emitter_entity.send_command_calls == (
+        [DysonAm09Code.HEAT_UP] * 3
+    )
+
+    state = hass.states.get(climate_entity_id)
+    assert state
+    assert state.attributes[ATTR_TEMPERATURE] == 4
+
+
+@pytest.mark.usefixtures("mock_make_dyson_am09_command")
+async def test_fahrenheit_device_uses_fahrenheit_range_and_single_steps(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a Fahrenheit device exposes the Fahrenheit range and sends one command per degree."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="01JTEST0000000000000000003",
+        title="Dyson Heater/Cooler via Test IR emitter",
+        data={
+            CONF_DEVICE_TYPE: DysonDeviceType.HEATER_COOLER,
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_COMMAND_STEP_DELAY: 0,
+            CONF_TEMPERATURE_UNIT: DysonTemperatureUnit.FAHRENHEIT,
+        },
+        unique_id=f"heater_cooler_fahrenheit_{MOCK_INFRARED_ENTITY_ID}",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = er.async_entries_for_config_entry(entity_registry, entry.entry_id)[
+        0
+    ].entity_id
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_MIN_TEMP] == 34
+    assert state.attributes[ATTR_MAX_TEMP] == 99
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 35},
+        blocking=True,
+    )
+
+    assert mock_infrared_emitter_entity.send_command_calls == [DysonAm09Code.HEAT_UP]
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_TEMPERATURE] == 35
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_raises_outside_heat_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    climate_entity_id: str,
+) -> None:
+    """Test setting a temperature while off is rejected since it isn't supported."""
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: climate_entity_id, ATTR_TEMPERATURE: 10},
+            blocking=True,
+        )
+
     assert mock_infrared_emitter_entity.send_command_calls == []
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_raises_in_cool_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    climate_entity_id: str,
+) -> None:
+    """Test setting a temperature while cooling is rejected since the AM09 has no cool setpoint."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: climate_entity_id, ATTR_TEMPERATURE: 10},
+            blocking=True,
+        )
+
+    assert mock_infrared_emitter_entity.send_command_calls == []
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_hvac_mode_heat_retains_temperature_across_power_cycle(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    climate_entity_id: str,
+) -> None:
+    """Test turning heat off and back on keeps the previous target temperature."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_TEMPERATURE: 5},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        DysonAm09Code.ON,
+        DysonAm09Code.HEAT_UP,
+        DysonAm09Code.HEAT_DOWN,
+    ]
+
+    state = hass.states.get(climate_entity_id)
+    assert state
+    assert state.attributes[ATTR_TEMPERATURE] == 5
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -298,6 +462,23 @@ async def test_set_swing_mode_sends_swing_command(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_set_swing_mode_unchanged_sends_no_command(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    climate_entity_id: str,
+) -> None:
+    """Test setting swing mode to its current value sends no command, since SWING is a toggle."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_SWING_MODE,
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_SWING_MODE: "off"},
+        blocking=True,
+    )
+
+    assert mock_infrared_emitter_entity.send_command_calls == []
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_set_preset_mode_focused_sends_vent_thin_command(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -328,6 +509,14 @@ async def test_set_preset_mode_diffused_sends_vent_wide_command(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_PRESET_MODE: PRESET_FOCUSED},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: climate_entity_id, ATTR_PRESET_MODE: PRESET_DIFFUSED},
         blocking=True,
     )
@@ -337,3 +526,20 @@ async def test_set_preset_mode_diffused_sends_vent_wide_command(
     state = hass.states.get(climate_entity_id)
     assert state
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_DIFFUSED
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_preset_mode_unchanged_sends_no_command(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    climate_entity_id: str,
+) -> None:
+    """Test setting the preset to its current value sends no command."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: climate_entity_id, ATTR_PRESET_MODE: PRESET_DIFFUSED},
+        blocking=True,
+    )
+
+    assert mock_infrared_emitter_entity.send_command_calls == []
