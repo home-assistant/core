@@ -53,6 +53,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_DEVICE_TYPE: DysonDeviceType.HEATER_COOLER,
             CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
             CONF_COMMAND_STEP_DELAY: 0,
+            CONF_TEMPERATURE_UNIT: DysonTemperatureUnit.CELSIUS,
         },
         unique_id=f"heater_cooler_{MOCK_INFRARED_ENTITY_ID}",
     )

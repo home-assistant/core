@@ -138,9 +138,10 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
                 if target_speed > current_speed
                 else DysonCoolCode.SPEED_DOWN
             )
-            for _ in range(abs(target_speed - current_speed)):
+            for step in range(abs(target_speed - current_speed)):
+                if step:
+                    await asyncio.sleep(self._step_delay)
                 await self._async_send_dyson_action(code)
-                await asyncio.sleep(self._step_delay)
 
         self._attr_percentage = normalized_percentage
         self._attr_is_on = True

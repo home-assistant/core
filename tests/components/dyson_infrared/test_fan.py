@@ -1,6 +1,6 @@
 """Tests for the Dyson Infrared fan platform."""
 
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from infrared_protocols.codes.dyson.cool import DysonCoolCode
 import pytest
@@ -289,8 +289,9 @@ async def test_custom_command_step_delay_is_used_when_stepping(
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 60},
+            {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 80},
             blocking=True,
         )
 
-    mock_sleep.assert_called_with(1.5)
+    # Stepping speed 5 to 8 sends three commands, delayed only between them.
+    assert mock_sleep.call_args_list == [call(1.5), call(1.5)]

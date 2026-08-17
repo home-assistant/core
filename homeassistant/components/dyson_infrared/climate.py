@@ -60,16 +60,7 @@ async def async_setup_entry(
     """Set up the Dyson infrared heater/cooler platform from a config entry."""
     infrared_emitter_entity_id = entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
     step_delay = entry.data.get(CONF_COMMAND_STEP_DELAY, DEFAULT_COMMAND_STEP_DELAY)
-    # Entries created before the unit was configurable fall back to the unit
-    # the user's system is set to, which is what the device most likely shows.
-    temperature_unit = DysonTemperatureUnit(
-        entry.data.get(CONF_TEMPERATURE_UNIT)
-        or (
-            DysonTemperatureUnit.FAHRENHEIT
-            if hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT
-            else DysonTemperatureUnit.CELSIUS
-        )
-    )
+    temperature_unit = DysonTemperatureUnit(entry.data[CONF_TEMPERATURE_UNIT])
     async_add_entities(
         [
             DysonInfraredHeaterCooler(
@@ -176,10 +167,11 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set the target temperature by stepping HEAT_UP/HEAT_DOWN."""
-        if self._attr_hvac_mode is not HVACMode.HEAT:
-            return
+        """Set the target temperature by stepping HEAT_UP/HEAT_DOWN.
 
+        Only reachable in heat mode, since TARGET_TEMPERATURE is not advertised
+        otherwise and the service call is rejected before it gets here.
+        """
         # round(), not int(), since a system unit differing from the device's
         # unit means this may arrive as a converted, non-integer value.
         target = max(
@@ -191,9 +183,10 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
             return
 
         code = DysonAm09Code.HEAT_UP if target > current else DysonAm09Code.HEAT_DOWN
-        for _ in range(abs(target - current)):
+        for step in range(abs(target - current)):
+            if step:
+                await asyncio.sleep(self._step_delay)
             await self._async_send_am09_action(code)
-            await asyncio.sleep(self._step_delay)
 
         self._attr_target_temperature = float(target)
         self.async_write_ha_state()
@@ -207,9 +200,10 @@ class DysonInfraredHeaterCooler(InfraredEmitterConsumerEntity, ClimateEntity):
             return
 
         code = DysonAm09Code.SPEED_UP if target > current else DysonAm09Code.SPEED_DOWN
-        for _ in range(abs(target - current)):
+        for step in range(abs(target - current)):
+            if step:
+                await asyncio.sleep(self._step_delay)
             await self._async_send_am09_action(code)
-            await asyncio.sleep(self._step_delay)
 
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
