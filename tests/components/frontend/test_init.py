@@ -1011,6 +1011,20 @@ async def test_manifest_json(hass: HomeAssistant, mock_http_client: TestClient) 
     assert json["theme_color"] != DEFAULT_THEME_COLOR
 
 
+async def test_manifest_json_cors(mock_http_client: TestClient) -> None:
+    """Test manifest.json is readable cross-origin.
+
+    The landing page detects Core availability by reading manifest.json
+    cross-origin when its request is redirected from the legacy HTTP port
+    to the default port.
+    """
+    resp = await mock_http_client.get(
+        "/manifest.json", headers={"Origin": "http://example.local:8123"}
+    )
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Access-Control-Allow-Origin"] == "http://example.local:8123"
+
+
 async def test_static_path_cache(mock_http_client: TestClient) -> None:
     """Test static paths cache."""
     resp = await mock_http_client.get("/lovelace/default_view", allow_redirects=False)

@@ -77,8 +77,8 @@ async def test_remove_config_entry_device(
     assert await async_setup_component(hass, "config", {})
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{config_entry.entry_id}-{node_id}")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}-{node_id}"), config_entry.entry_id
     )
     state = hass.states.get(entity_id)
 
@@ -88,14 +88,14 @@ async def test_remove_config_entry_device(
     assert state
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
     await hass.async_block_till_done()
 
     assert node_id not in gateway.sensors
     assert gateway.tasks.persistence.need_save is True
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{config_entry.entry_id}-1")}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}-1"), config_entry.entry_id
     )
     assert not entity_registry.async_get(entity_id)
     assert not hass.states.get(entity_id)

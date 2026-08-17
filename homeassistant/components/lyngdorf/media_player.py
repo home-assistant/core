@@ -51,16 +51,19 @@ async def async_setup_entry(
     """Set up the receiver from a config entry."""
     runtime_data = config_entry.runtime_data
 
-    async_add_entities(
-        [
-            LyngdorfMainDevice(
-                runtime_data.receiver, config_entry, runtime_data.device_info
-            ),
+    entities: list[LyngdorfDevice] = [
+        LyngdorfMainDevice(
+            runtime_data.receiver, config_entry, runtime_data.device_info
+        )
+    ]
+    if runtime_data.zone_b_device_info is not None:
+        entities.append(
             LyngdorfZoneBDevice(
                 runtime_data.receiver, config_entry, runtime_data.zone_b_device_info
-            ),
-        ]
-    )
+            )
+        )
+
+    async_add_entities(entities)
 
 
 def _to_ha_volume(volume_db: float) -> float:

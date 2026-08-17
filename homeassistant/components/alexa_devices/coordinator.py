@@ -240,10 +240,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 (DOMAIN, serial_num), self.config_entry.entry_id
             )
             if device:
-                device_registry.async_update_device(
-                    device_id=device.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                device_registry.async_remove_device(device.id)
 
     async def _async_remove_routine_stale(
         self,
@@ -302,7 +299,9 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     async def todo_event_handler(self, list_event: AmazonListEvent) -> None:
         """Handle changes on To-Do lists."""
         if list_event.type == AmazonListEventType.DELETED:
-            self._todo_list_items[list_event.list_id].pop(list_event.item_id, None)
+            self._todo_list_items.get(list_event.list_id, {}).pop(
+                list_event.item_id, None
+            )
         elif (
             list_event.type
             in (AmazonListEventType.UPDATED, AmazonListEventType.CREATED)

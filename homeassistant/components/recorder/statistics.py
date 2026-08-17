@@ -979,8 +979,8 @@ def async_update_statistics_metadata(
     statistic_id: str,
     *,
     new_statistic_id: str | UndefinedType = UNDEFINED,
-    new_unit_class: str | None | UndefinedType = UNDEFINED,
-    new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+    new_unit_class: str | UndefinedType | None = UNDEFINED,
+    new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
     on_done: Callable[[], None] | None = None,
     _called_from_ws_api: bool = False,
 ) -> None:
@@ -1028,9 +1028,9 @@ def async_update_statistics_metadata(
 def update_statistics_metadata(
     instance: Recorder,
     statistic_id: str,
-    new_statistic_id: str | None | UndefinedType,
-    new_unit_class: str | None | UndefinedType,
-    new_unit_of_measurement: str | None | UndefinedType,
+    new_statistic_id: str | UndefinedType | None,
+    new_unit_class: str | UndefinedType | None,
+    new_unit_of_measurement: str | UndefinedType | None,
 ) -> None:
     """Update statistics metadata for a statistic_id."""
     statistics_meta_manager = instance.statistics_meta_manager

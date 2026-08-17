@@ -12,6 +12,8 @@ import pytest
 
 from homeassistant.components.hassio.const import DATA_HASSIO_SUPERVISOR_USER
 from homeassistant.components.hassio.handler import HassIO
+from homeassistant.components.http.config import _DEFAULT_CONFIG as HTTP_DEFAULT_CONFIG
+from homeassistant.components.http.const import CONF_SERVER_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -26,6 +28,24 @@ def disable_security_filter() -> Generator[None]:
     with patch(
         "homeassistant.components.http.security_filter.FILTERS",
         re.compile("not-matching-anything"),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def http_supervisor_default_port() -> Generator[None]:
+    """Reflect the port-80 HTTP default that Core sees under Supervisor.
+
+    _DEFAULT_CONFIG is frozen at import (port 8123, since SUPERVISOR is not set
+    then in the test process). Under MOCK_ENVIRON the runtime default is 80, so
+    the store would treat the default as a pending change and schedule an
+    auto-revert restart - a state that cannot occur in a real Supervisor
+    process. Patch the default to port 80 to reproduce production.
+    """
+    default_80 = {**HTTP_DEFAULT_CONFIG, CONF_SERVER_PORT: 80}
+    with (
+        patch("homeassistant.components.http.config._DEFAULT_CONFIG", default_80),
+        patch("homeassistant.components.http.server._DEFAULT_CONFIG", default_80),
     ):
         yield
 

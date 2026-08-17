@@ -187,11 +187,20 @@ def async_remove_helper_devices(
         return
 
     # source_device_id is either the pre-migration composite id (source_device is then the
-    # synthesized composite) or a concrete device. Its splits, if any, share this id as
-    # their composite_device_id.
-    source_is_concrete = source_device_id in device_registry.devices
+    # synthesized composite) or a concrete device - a main device or a child device. A main
+    # device's splits, if any, share this id as their composite_device_id.
+    source_is_concrete = (
+        source_device_id in device_registry.devices
+        or source_device_id in device_registry.child_devices
+    )
     composite_device_id = (
-        source_device.composite_device_id if source_is_concrete else source_device_id
+        (
+            source_device.composite_device_id
+            if isinstance(source_device, dr.DeviceEntry)
+            else None
+        )
+        if source_is_concrete
+        else source_device_id
     )
     target_device_id = source_device_id if source_is_concrete else None
 
@@ -218,7 +227,7 @@ def _remove_duplicate_helper_device(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     helper_config_entry_id: str,
-    source_device: dr.DeviceEntry,
+    source_device: dr.AnyDeviceEntry,
     composite_device_id: str | None,
     target_device_id: str | None,
 ) -> None:
@@ -240,7 +249,11 @@ def _remove_duplicate_helper_device(
                 and device.composite_device_id == composite_device_id
             )
             or device.identifiers & source_device.identifiers
-            or device.connections & source_device.connections
+            # A child source device has no connections to match on.
+            or (
+                isinstance(source_device, dr.DeviceEntry)
+                and device.connections & source_device.connections
+            )
         ),
         None,
     )

@@ -579,8 +579,8 @@ class SonosDiscoveryManager:
     def is_device_disabled(self, uid: str) -> bool:
         """Check if the Sonos device is disabled in the device registry."""
         if not (
-            device := dr.async_get(self.hass).async_get_device(
-                identifiers={(DOMAIN, uid)}
+            device := dr.async_get(self.hass).async_get_device_by_identifier(
+                (DOMAIN, uid), self.entry.entry_id
             )
         ):
             return False
