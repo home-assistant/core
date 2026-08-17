@@ -16,6 +16,7 @@ def fan_speed_count_signal(device_id: str) -> str:
     """
     return f"{DOMAIN}_fan_speed_count_{device_id}"
 
+
 SCOPES = [
     "r:devices:*",
     "w:devices:*",
