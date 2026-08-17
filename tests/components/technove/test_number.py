@@ -65,6 +65,7 @@ async def test_number_expected_value(
 
     assert method_mock.call_count == 1
     method_mock.assert_called_with(**called_with_value)
+    assert mock_technove.update.call_count == 2
 
 
 @pytest.mark.parametrize(
