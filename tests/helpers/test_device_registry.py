@@ -10142,6 +10142,42 @@ async def test_child_device_update(
 
 
 @pytest.mark.usefixtures("hass")
+async def test_update_main_device_rejects_disabled_by_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test disabled_by=DEVICE is rejected on a main device, on create and update.
+
+    DeviceEntryDisabler.DEVICE means "disabled because the parent is disabled" and is
+    only valid for a child device. The rejection runs before any registry mutation, so
+    a rejected create leaves no phantom device behind and a rejected update leaves the
+    device unchanged.
+    """
+    match = "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child device"
+
+    # The create path rejects it, before a (phantom) device is created
+    with pytest.raises(HomeAssistantError, match=match):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("test", "main")},
+            disabled_by=dr.DeviceEntryDisabler.DEVICE,
+        )
+    assert len(device_registry.devices) == 0
+
+    # The update path rejects it, leaving the device unchanged
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "main")},
+    )
+    assert device.disabled_by is None
+    with pytest.raises(HomeAssistantError, match=match):
+        device_registry.async_update_device(
+            device.id, disabled_by=dr.DeviceEntryDisabler.DEVICE
+        )
+    assert device_registry.async_get(device.id).disabled_by is None
+
+
+@pytest.mark.usefixtures("hass")
 async def test_child_device_update_identifiers(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
