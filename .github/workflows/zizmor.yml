@@ -7,6 +7,8 @@ name: Zizmor GitHub Actions security analysis
   push:
     branches:
       - dev
+      - rc
+      - master
     paths:
       - .github/actions/**
       - .github/dependabot.yaml
@@ -14,9 +16,7 @@ name: Zizmor GitHub Actions security analysis
       - .github/workflows/**
       - .github/zizmor.yml
       - .pre-commit-config.yaml
-  pull_request:
-    branches:
-      - dev
+  pull_request: ~
   schedule:
     # Weekly re-scan (Mondays 05:30 UTC) so the code scanning results stay fresh.
     - cron: "30 5 * * 1"
