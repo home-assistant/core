@@ -31,12 +31,11 @@ concurrency:
 jobs:
   zizmor:
     name: Check GitHub Actions workflows (code scanning)
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read # To check out the repository
-      security-events: write # To upload the SARIF results to code scanning
-      actions: read # To read workflow metadata
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -47,12 +46,8 @@ jobs:
       - name: Check for relevant changes
         id: changes
         shell: bash
-        env:
-          EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [[ "$EVENT_NAME" != "pull_request" ]]; then
-            echo "relevant=true" >> "$GITHUB_OUTPUT"
-          elif git diff --quiet HEAD^1 HEAD -- \
+          if git diff --quiet HEAD^1 HEAD -- \
             .github/actions \
             .github/dependabot.yaml \
             .github/dependabot.yml \
@@ -64,18 +59,8 @@ jobs:
             echo "relevant=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish accepted-code findings
-        if: steps.changes.outputs.relevant == 'true' && github.event_name != 'pull_request'
-        uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
-        with:
-          collect: all
-          persona: pedantic
-          advanced-security: true
-          config: .github/zizmor.yml
-          version: 1.29.0
-
       - name: Block medium and high pull request findings
-        if: steps.changes.outputs.relevant == 'true' && github.event_name == 'pull_request'
+        if: steps.changes.outputs.relevant == 'true'
         uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
         with:
           collect: all
@@ -89,3 +74,28 @@ jobs:
       - name: Skip scan for unrelated pull request
         if: steps.changes.outputs.relevant == 'false'
         run: echo "No GitHub Actions security-related files changed."
+
+  report:
+    name: Publish GitHub Actions findings (code scanning)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read # To check out the repository
+      security-events: write # To upload the SARIF results to code scanning
+      actions: read # To read workflow metadata
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Publish accepted-code findings
+        uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
+        with:
+          collect: all
+          persona: pedantic
+          advanced-security: true
+          config: .github/zizmor.yml
+          version: 1.29.0
