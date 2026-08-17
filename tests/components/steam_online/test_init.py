@@ -12,7 +12,7 @@ from homeassistant.components.steam_online.const import (
     SUBENTRY_TYPE_FRIEND,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -80,6 +80,10 @@ async def test_setup_incomplete_profile(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.testaccount1") is not None
+    last_online = hass.states.get("sensor.testaccount1_last_online")
+    assert last_online is not None
+    assert last_online.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
