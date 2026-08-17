@@ -3,7 +3,7 @@
 from copy import copy
 from html import escape
 from json import dumps
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from onedrive_personal_sdk.const import DriveState
 from onedrive_personal_sdk.exceptions import (
@@ -20,8 +20,13 @@ from homeassistant.components.onedrive.const import (
     CONF_FOLDER_NAME,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -56,6 +61,110 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_oauth_token_request_reauth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_approot: AppRoot,
+    mock_onedrive_client: MagicMock,
+    mock_onedrive_client_init: MagicMock,
+) -> None:
+    """Test a token refresh reauth error starts a reauth flow."""
+
+    async def get_approot() -> AppRoot:
+        token_callback = mock_onedrive_client_init.call_args[0][0]
+        await token_callback()
+        return mock_approot
+
+    mock_onedrive_client.get_approot.side_effect = get_approot
+
+    with patch(
+        "homeassistant.components.onedrive.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestReauthError(
+            request_info=Mock(),
+            domain=DOMAIN,
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["handler"] == DOMAIN
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("context", {}).get("source") == SOURCE_REAUTH
+
+
+async def test_oauth_token_request_reauth_error_during_update_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client_init: MagicMock,
+) -> None:
+    """Test a token refresh reauth error during an update starts reauth."""
+    await setup_integration(hass, mock_config_entry)
+    token_callback = mock_onedrive_client_init.call_args[0][0]
+
+    with (
+        patch(
+            "homeassistant.components.onedrive.OAuth2Session.async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestReauthError(
+                request_info=Mock(),
+                domain=DOMAIN,
+            ),
+        ),
+        pytest.raises(OAuth2TokenRequestReauthError),
+    ):
+        await token_callback()
+
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["handler"] == DOMAIN
+    assert flows[0].get("step_id") == "reauth_confirm"
+    assert flows[0].get("context", {}).get("source") == SOURCE_REAUTH
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            OAuth2TokenRequestError(request_info=Mock(), domain=DOMAIN),
+            id="generic",
+        ),
+        pytest.param(
+            OAuth2TokenRequestTransientError(request_info=Mock(), domain=DOMAIN),
+            id="transient",
+        ),
+    ],
+)
+async def test_oauth_token_request_error_retries_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_approot: AppRoot,
+    mock_onedrive_client: MagicMock,
+    mock_onedrive_client_init: MagicMock,
+    error: OAuth2TokenRequestError,
+) -> None:
+    """Test a token refresh error retries setup."""
+
+    async def get_approot() -> AppRoot:
+        token_callback = mock_onedrive_client_init.call_args[0][0]
+        await token_callback()
+        return mock_approot
+
+    mock_onedrive_client.get_approot.side_effect = get_approot
+
+    with patch(
+        "homeassistant.components.onedrive.OAuth2Session.async_ensure_token_valid",
+        side_effect=error,
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
 
 
 @pytest.mark.parametrize(
