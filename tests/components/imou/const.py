@@ -47,6 +47,13 @@ UNKNOWN_BUTTON_KEY = "legacy_unknown_button"
 UNKNOWN_SWITCH_KEY = "legacy_unknown_switch"
 UNKNOWN_SENSOR_KEY = "legacy_unknown_sensor"
 UNKNOWN_SELECT_KEY = "legacy_unknown_select"
+UNKNOWN_BINARY_SENSOR_KEY = "legacy_unknown_binary_sensor"
+
+PARAM_DOOR_CONTACT_STATUS = "door_contact_status"
+
+DEFAULT_BINARY_SENSORS = {
+    PARAM_DOOR_CONTACT_STATUS: {PARAM_STATE: True},
+}
 
 DEFAULT_SELECTS = {
     PARAM_NIGHT_VISION_MODE: {
@@ -93,6 +100,7 @@ def create_online_device(
     switches: dict[str, dict] | None = None,
     sensors: dict[str, dict] | None = None,
     selects: dict[str, dict] | None = None,
+    binary_sensors: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an online ImouHaDevice for tests."""
     return create_device(
@@ -104,6 +112,7 @@ def create_online_device(
         switches=switches,
         sensors=sensors,
         selects=selects,
+        binary_sensors=binary_sensors,
     )
 
 
@@ -136,6 +145,7 @@ def create_device(
     switches: dict[str, dict] | None = None,
     sensors: dict[str, dict] | None = None,
     selects: dict[str, dict] | None = None,
+    binary_sensors: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an ImouHaDevice for tests."""
     device = ImouHaDevice(device_id, name, "Imou", "m1", "1.0")
@@ -153,6 +163,10 @@ def create_device(
         device._sensors.update({key: dict(value) for key, value in sensors.items()})
     if selects:
         device._selects.update({key: dict(value) for key, value in selects.items()})
+    if binary_sensors:
+        device._binary_sensors.update(
+            {key: dict(value) for key, value in binary_sensors.items()}
+        )
     return device
 
 
@@ -187,5 +201,17 @@ def select_mock_devices() -> list[ImouHaDevice]:
             "Device 1",
             button_keys=(),
             selects=DEFAULT_SELECTS,
+        ),
+    ]
+
+
+def binary_sensor_mock_devices() -> list[ImouHaDevice]:
+    """Return a fresh binary-sensor-focused device list for tests."""
+    return [
+        create_online_device(
+            "d1",
+            "Device 1",
+            button_keys=(),
+            binary_sensors=DEFAULT_BINARY_SENSORS,
         ),
     ]
