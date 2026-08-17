@@ -49,6 +49,7 @@ type TraccarServerCoordinatorData = dict[int, TraccarServerCoordinatorDataDevice
 
 
 _SUBSCRIPTION_FAILURE_LOG_EVERY_N_ATTEMPTS = 30
+_SUBSCRIPTION_RECONNECT_DELAY = 10
 
 
 class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorData]):
@@ -265,7 +266,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 self._consecutive_subscription_failures = 0
                 self._should_log_subscription_error = True
 
-            await asyncio.sleep(10)
+            await asyncio.sleep(_SUBSCRIPTION_RECONNECT_DELAY)
 
     def _log_subscription_failure(
         self, prefix: str, ex: Exception, *, log_traceback: bool
