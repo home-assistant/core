@@ -44,6 +44,7 @@ async def _set_max_current(
             translation_domain=DOMAIN, translation_key="max_current_in_sharing_mode"
         )
     await coordinator.technove.set_max_current(int(value))
+    await coordinator.async_request_refresh()
 
 
 NUMBERS = [

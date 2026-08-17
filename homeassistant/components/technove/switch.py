@@ -44,6 +44,7 @@ async def _set_auto_charge(
     coordinator: TechnoVEDataUpdateCoordinator, enabled: bool
 ) -> None:
     await coordinator.technove.set_auto_charge(enabled=enabled)
+    await coordinator.async_request_refresh()
 
 
 @dataclass(frozen=True, kw_only=True)
