@@ -191,6 +191,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._announce_completed: bool = False
         self._announce_media_signature: dict[str, Any] | None = None
         self._announce_started: bool = False
+        self._announce_start_time: datetime | None = None
         super().__init__(coordinator, context=player.player_id)
 
     async def _player_update(self, event: str) -> None:
@@ -256,6 +257,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             # Mark announcement as in progress AFTER play_url to avoid race with pause event
             self._announce_in_progress = True
             self._announce_started = False  # Will be set when media signature captured
+            self._announce_start_time = utcnow()  # Track when announcement started
 
             # Capture the announcement media signature after a brief delay
             # This allows HEOS to start playing and report the media info
@@ -266,6 +268,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             self._announce_in_progress = False
             self._announce_completed = False
             self._announce_started = False
+            self._announce_start_time = None
             self._announce_media_signature = None
             self._announce_restore_state = None
             raise
@@ -356,6 +359,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             self._announce_in_progress = False
             self._announce_completed = False
             self._announce_started = False
+            self._announce_start_time = None
             self._announce_media_signature = None
 
     async def _remove_tts_from_queue(self, tts_url: str) -> None:
@@ -416,14 +420,18 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         if not self._announce_in_progress or not self._announce_restore_state:
             return
 
-        # Don't check completion until announcement has actually started
-        # This prevents race with pause event triggering premature completion
-        if not self._announce_started:
-            return
-
         # Capture state locally to avoid race conditions with concurrent calls
         restore_state = self._announce_restore_state
         tts_url = restore_state.get("tts_url")
+
+        # Grace period: don't check completion for first 2 seconds after start
+        # This prevents race with pause event triggering premature completion
+        # After grace period, allow fallback detection even without signature
+        if self._announce_start_time:
+            time_since_start = (utcnow() - self._announce_start_time).total_seconds()
+            if time_since_start < 2.0 and not self._announce_started:
+                # Still in grace period and announcement hasn't started yet
+                return
 
         # Wait a moment to ensure the state change is processed
         await asyncio.sleep(0.5)
