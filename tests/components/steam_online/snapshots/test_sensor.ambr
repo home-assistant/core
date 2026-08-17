@@ -470,7 +470,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.unconfigured-entry]
+# name: test_sensors[sensor.unconfigured_account-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -494,7 +494,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.unconfigured',
+    'entity_id': 'sensor.unconfigured_account',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -517,13 +517,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.unconfigured-state]
+# name: test_sensors[sensor.unconfigured_account-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'created': datetime.datetime(2026, 8, 17, 12, 8, 31, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'unconfigured',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'unconfigured_account',
       'game': None,
       'game_icon': None,
       'game_id': None,
@@ -543,14 +543,14 @@
       'real_name': None,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.unconfigured',
+    'entity_id': 'sensor.unconfigured_account',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'offline',
   })
 # ---
-# name: test_sensors[sensor.unconfigured_last_online-entry]
+# name: test_sensors[sensor.unconfigured_account_last_online-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -564,7 +564,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.unconfigured_last_online',
+    'entity_id': 'sensor.unconfigured_account_last_online',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -587,21 +587,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.unconfigured_last_online-state]
+# name: test_sensors[sensor.unconfigured_account_last_online-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'unconfigured Last online',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'unconfigured_account Last online',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.unconfigured_last_online',
+    'entity_id': 'sensor.unconfigured_account_last_online',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.unconfigured_level-entry]
+# name: test_sensors[sensor.unconfigured_account_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -617,7 +617,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.unconfigured_level',
+    'entity_id': 'sensor.unconfigured_account_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -640,21 +640,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.unconfigured_level-state]
+# name: test_sensors[sensor.unconfigured_account_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'unconfigured Level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'unconfigured_account Level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.unconfigured_level',
+    'entity_id': 'sensor.unconfigured_account_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_sensors[sensor.unconfigured_now_playing-entry]
+# name: test_sensors[sensor.unconfigured_account_now_playing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -668,7 +668,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.unconfigured_now_playing',
+    'entity_id': 'sensor.unconfigured_account_now_playing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -691,14 +691,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.unconfigured_now_playing-state]
+# name: test_sensors[sensor.unconfigured_account_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'app_id': None,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'unconfigured Now playing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'unconfigured_account Now playing',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.unconfigured_now_playing',
+    'entity_id': 'sensor.unconfigured_account_now_playing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
