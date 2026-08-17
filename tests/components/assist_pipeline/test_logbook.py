@@ -1,5 +1,7 @@
 """The tests for assist_pipeline logbook."""
 
+import pytest
+
 from homeassistant.components import assist_pipeline, logbook
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
@@ -44,8 +46,9 @@ async def test_recording_event(
     )
 
 
+@pytest.mark.usefixtures("init_components")
 async def test_recording_event_child_device(
-    hass: HomeAssistant, init_components, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test recording event fired for a child device."""
     hass.config.components.add("recorder")
@@ -83,9 +86,8 @@ async def test_recording_event_child_device(
     )
 
 
-async def test_recording_event_unknown_device(
-    hass: HomeAssistant, init_components
-) -> None:
+@pytest.mark.usefixtures("init_components")
+async def test_recording_event_unknown_device(hass: HomeAssistant) -> None:
     """Test recording event for an unknown device does not raise."""
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
