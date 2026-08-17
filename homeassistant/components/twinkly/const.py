@@ -17,3 +17,7 @@ DEV_PROFILE_RGBW = "RGBW"
 
 # Minimum version required to support effects
 MIN_EFFECT_VERSION = "2.7.1"
+
+# Kept short on purpose: a stalled request is retried rather than waited out,
+# and the tail of a stall is long enough that no timeout would cover it.
+DEVICE_TIMEOUT = 3
