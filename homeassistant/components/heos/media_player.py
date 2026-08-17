@@ -1,8 +1,6 @@
 """Denon HEOS Media Player."""
 
 import asyncio
-
-
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from contextlib import suppress
 import dataclasses
@@ -22,7 +20,7 @@ from pyheos import (
     MediaType as HeosMediaType,
     PlayState,
     RepeatType,
-    const as heos_const
+    const as heos_const,
 )
 from pyheos.util import mediauri as heos_source
 
@@ -49,6 +47,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
+
 from . import services
 from .const import DOMAIN
 from .coordinator import HeosConfigEntry, HeosCoordinator
@@ -190,6 +189,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._announce_restore_state: dict[str, Any] | None = None
         self._announce_in_progress: bool = False
         self._announce_completed: bool = False
+        self._announce_media_signature: dict[str, Any] | None = None
         super().__init__(coordinator, context=player.player_id)
 
     async def _player_update(self, event: str) -> None:
@@ -226,6 +226,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
         # Mark announcement as in progress (only after state is captured)
         self._announce_in_progress = True
+        
+        # Capture the announcement media signature after a brief delay
+        # This allows HEOS to start playing and report the media info
+        self.hass.async_create_task(self._capture_announcement_signature())
 
         # Set volume if specified in extra
         extra = kwargs.get("extra", {})
@@ -253,6 +257,27 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
         # Play the announcement
         await self._player.play_url(media_id)
+
+    async def _capture_announcement_signature(self) -> None:
+        """Capture the media signature of the playing announcement."""
+        # Wait for HEOS to start playing and report media info
+        await asyncio.sleep(1.0)
+        
+        if not self._announce_in_progress:
+            return
+            
+        # Capture the current media signature
+        current_media = self._player.now_playing_media
+        self._announce_media_signature = {
+            "media_id": current_media.media_id,
+            "song": getattr(current_media, "song", None),
+            "album": getattr(current_media, "album", None),
+            "artist": getattr(current_media, "artist", None),
+        }
+        _LOGGER.debug(
+            "Captured announcement media signature: %s",
+            self._announce_media_signature,
+        )
 
     def _snapshot_state(self) -> dict[str, Any]:
         """Snapshot the current player state for restoration after announcement."""
@@ -316,6 +341,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             self._announce_restore_state = None
             self._announce_in_progress = False
             self._announce_completed = False
+            self._announce_media_signature = None
 
     async def _remove_tts_from_queue(self, tts_url: str) -> None:
         """Remove TTS URL from the queue if it was added."""
@@ -387,31 +413,46 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             return
 
         # Check multiple indicators for announcement completion
-        current_media_id = self._player.now_playing_media.media_id
         current_media = self._player.now_playing_media
         current_state = self._player.state
 
         # Completion detection using multiple signals:
-        # 1. Media ID changed from TTS URL (if HEOS reports it)
+        # 1. Media signature changed from captured announcement signature
         # 2. State changed to STOP (announcement finished)
-        # 3. State is PAUSE and media is no longer the URL stream pattern
+        # 3. State is PAUSE and media signature changed
         is_completed = False
 
-        # Check if media_id changed (most reliable if available)
-        if current_media_id and current_media_id != tts_url:
-            is_completed = True
-            _LOGGER.debug("TTS completion detected: media_id changed")
-        # Check if stopped (announcement likely finished)
-        elif current_state == PlayState.STOP:
-            is_completed = True
-            _LOGGER.debug("TTS completion detected: player stopped")
-        # Check if paused and media is no longer the URL stream pattern
-        elif current_state == PlayState.PAUSE:
-            if hasattr(current_media, "song") and current_media.song != "Url Stream":
+        # If we captured the announcement signature, use it for reliable detection
+        if self._announce_media_signature:
+            signature = self._announce_media_signature
+            # Check if any part of the media signature changed
+            media_changed = (
+                current_media.media_id != signature["media_id"]
+                or getattr(current_media, "song", None) != signature["song"]
+                or getattr(current_media, "album", None) != signature["album"]
+                or getattr(current_media, "artist", None) != signature["artist"]
+            )
+            
+            if media_changed:
                 is_completed = True
-                _LOGGER.debug(
-                    "TTS completion detected: paused, not URL stream",
-                )
+                _LOGGER.debug("TTS completion detected: media signature changed")
+            elif current_state == PlayState.STOP:
+                # Stopped while still showing announcement media
+                is_completed = True
+                _LOGGER.debug("TTS completion detected: player stopped")
+        else:
+            # Fallback if signature wasn't captured yet
+            # Check if stopped (announcement likely finished)
+            if current_state == PlayState.STOP:
+                is_completed = True
+                _LOGGER.debug("TTS completion detected: player stopped (no signature)")
+            # Check if paused and media is no longer the URL stream pattern
+            elif current_state == PlayState.PAUSE:
+                if hasattr(current_media, "song") and current_media.song != "Url Stream":
+                    is_completed = True
+                    _LOGGER.debug(
+                        "TTS completion detected: paused, not URL stream",
+                    )
 
         if is_completed:
             # Give it a moment to ensure this is a permanent state change
