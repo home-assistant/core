@@ -262,3 +262,31 @@ get_dashboards:
       selector:
         config_entry:
           integration: music_assistant
+
+show_dashboard:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: music_assistant
+    dashboard_id:
+      required: true
+      example: "chromecast_a1b2c3"
+      selector:
+        text:
+    dashboard:
+      required: true
+      example: "party"
+      selector:
+        select:
+          translation_key: dashboard
+          options:
+            - party
+            - now_playing
+            - music_quiz
+    player:
+      selector:
+        entity:
+          domain: media_player
+          integration: music_assistant

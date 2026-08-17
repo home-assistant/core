@@ -280,6 +280,13 @@
         "unknown": "Unknown"
       }
     },
+    "dashboard": {
+      "options": {
+        "music_quiz": "Music quiz",
+        "now_playing": "Now playing",
+        "party": "Party"
+      }
+    },
     "enqueue": {
       "options": {
         "add": "Add to queue",
@@ -488,6 +495,28 @@
           "name": "Search options"
         }
       }
+    },
+    "show_dashboard": {
+      "description": "Shows a Music Assistant dashboard on a display device.",
+      "fields": {
+        "config_entry_id": {
+          "description": "Select the Music Assistant instance the display device belongs to.",
+          "name": "Music Assistant instance"
+        },
+        "dashboard": {
+          "description": "The dashboard to show.",
+          "name": "Dashboard"
+        },
+        "dashboard_id": {
+          "description": "ID of the display device to show the dashboard on. Use the 'Get dashboards' action to list the available display devices and their IDs.",
+          "name": "Display device"
+        },
+        "player": {
+          "description": "The Music Assistant player to show. Required for the now playing dashboard.",
+          "name": "Player"
+        }
+      },
+      "name": "Show dashboard"
     },
     "transfer_queue": {
       "description": "Transfers a player's queue to another player.",

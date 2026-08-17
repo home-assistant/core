@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Any
 
 from music_assistant_client.dashboard import DASHBOARD_SCHEMA_VERSION
-from music_assistant_models.enums import MediaType, QueueOption
+from music_assistant_models.enums import DashboardType, MediaType, QueueOption
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -65,7 +65,11 @@ from .const import (
     ATTR_USERNAME,
     DOMAIN,
 )
-from .helpers import catch_user_not_found, get_music_assistant_client
+from .helpers import (
+    catch_musicassistant_error,
+    catch_user_not_found,
+    get_music_assistant_client,
+)
 from .schemas import (
     DASHBOARDS_RESULT_SCHEMA,
     LIBRARY_RESULTS_SCHEMA,
@@ -88,6 +92,7 @@ if TYPE_CHECKING:
 SERVICE_SEARCH = "search"
 SERVICE_GET_LIBRARY = "get_library"
 SERVICE_GET_DASHBOARDS = "get_dashboards"
+SERVICE_SHOW_DASHBOARD = "show_dashboard"
 SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
 SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
 SERVICE_TRANSFER_QUEUE = "transfer_queue"
@@ -147,6 +152,22 @@ def register_actions(hass: HomeAssistant) -> None:
         handle_get_dashboards,
         schema=vol.Schema({vol.Required(ATTR_CONFIG_ENTRY_ID): str}),
         supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SHOW_DASHBOARD,
+        handle_show_dashboard,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+                vol.Required(ATTR_DASHBOARD_ID): cv.string,
+                vol.Required(ATTR_DASHBOARD): vol.All(
+                    vol.Coerce(DashboardType),
+                    vol.NotIn([DashboardType.UNKNOWN]),
+                ),
+                vol.Optional(ATTR_PLAYER): cv.entity_id,
+            }
+        ),
     )
 
     # Platform entity services
@@ -373,3 +394,29 @@ async def handle_get_dashboards(call: ServiceCall) -> ServiceResponse:
         )
     response: ServiceResponse = DASHBOARDS_RESULT_SCHEMA({ATTR_DASHBOARDS: dashboards})
     return response
+
+
+@catch_musicassistant_error
+async def handle_show_dashboard(call: ServiceCall) -> None:
+    """Handle show_dashboard action."""
+    mass = get_music_assistant_client(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    verify_dashboard_support(mass)
+    dashboard_id: str = call.data[ATTR_DASHBOARD_ID]
+    dashboard: DashboardType = call.data[ATTR_DASHBOARD]
+    if mass.dashboard.get(dashboard_id) is None:
+        raise ServiceValidationError(f"Dashboard endpoint {dashboard_id} not found")
+    player_id: str | None = None
+    if player_entity_id := call.data.get(ATTR_PLAYER):
+        entity_registry = er.async_get(call.hass)
+        entity_reg_entry = entity_registry.async_get(player_entity_id)
+        if entity_reg_entry is None or entity_reg_entry.platform != DOMAIN:
+            raise ServiceValidationError(
+                f"Entity {player_entity_id} is not a Music Assistant player"
+            )
+        # unique id is the MA player_id
+        player_id = entity_reg_entry.unique_id
+    if dashboard == DashboardType.NOW_PLAYING and player_id is None:
+        raise ServiceValidationError(
+            "A player is required for the now playing dashboard"
+        )
+    await mass.dashboard.show(dashboard_id, dashboard, player_id)

@@ -10,8 +10,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.const import (
+    ATTR_DASHBOARD,
+    ATTR_DASHBOARD_ID,
     ATTR_FAVORITE,
     ATTR_MEDIA_TYPE,
+    ATTR_PLAYER,
     ATTR_SEARCH_NAME,
     ATTR_USERNAME,
     DOMAIN,
@@ -20,6 +23,7 @@ from homeassistant.components.music_assistant.services import (
     SERVICE_GET_DASHBOARDS,
     SERVICE_GET_LIBRARY,
     SERVICE_SEARCH,
+    SERVICE_SHOW_DASHBOARD,
 )
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
@@ -299,4 +303,108 @@ async def test_get_dashboards_requires_supported_server(
             {ATTR_CONFIG_ENTRY_ID: entry.entry_id},
             blocking=True,
             return_response=True,
+        )
+
+
+async def test_show_dashboard_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test music assistant show_dashboard action."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    setup_dashboards(music_assistant_client)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SHOW_DASHBOARD,
+        {
+            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+            ATTR_DASHBOARD_ID: "chromecast_kitchen",
+            ATTR_DASHBOARD: "party",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "dashboard/show",
+        dashboard_id="chromecast_kitchen",
+        dashboard=DashboardType.PARTY,
+        player_id=None,
+        require_schema=39,
+    )
+
+
+async def test_show_dashboard_action_with_player(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test show_dashboard resolves the player entity to a MA player id."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    setup_dashboards(music_assistant_client)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SHOW_DASHBOARD,
+        {
+            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+            ATTR_DASHBOARD_ID: "web_client_1",
+            ATTR_DASHBOARD: "now_playing",
+            ATTR_PLAYER: "media_player.test_player_1",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "dashboard/show",
+        dashboard_id="web_client_1",
+        dashboard=DashboardType.NOW_PLAYING,
+        player_id="00:00:00:00:00:01",
+        require_schema=39,
+    )
+
+
+async def test_show_dashboard_action_invalid_input(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test show_dashboard input validation errors."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    setup_dashboards(music_assistant_client)
+
+    # unknown dashboard endpoint
+    with pytest.raises(ServiceValidationError, match="not found"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SHOW_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "does_not_exist",
+                ATTR_DASHBOARD: "party",
+            },
+            blocking=True,
+        )
+
+    # now_playing requires a player
+    with pytest.raises(ServiceValidationError, match="player is required"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SHOW_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "chromecast_kitchen",
+                ATTR_DASHBOARD: "now_playing",
+            },
+            blocking=True,
+        )
+
+    # player entity must be a Music Assistant player
+    with pytest.raises(ServiceValidationError, match="not a Music Assistant player"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SHOW_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "chromecast_kitchen",
+                ATTR_DASHBOARD: "now_playing",
+                ATTR_PLAYER: "media_player.some_other_player",
+            },
+            blocking=True,
         )
