@@ -401,6 +401,7 @@ async def test_reconfigure_different_device(
     """Test an entry cannot be pointed at a different device."""
     mock_config_entry.add_to_hass(hass)
     mock_get_device_serial.return_value = "aabbccddeeff"
+    original_host = mock_config_entry.data[CONF_HOST]
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
@@ -410,7 +411,7 @@ async def test_reconfigure_different_device(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
-    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert mock_config_entry.data[CONF_HOST] == original_host
 
 
 @pytest.mark.parametrize(

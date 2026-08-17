@@ -28,6 +28,15 @@ from .const import CONF_SERIAL_NUMBER, DEFAULT_DEVICE_NAME, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+class _ProbeError(Exception):
+    """Raised when a host could not be identified as a supported device."""
+
+    def __init__(self, error: str) -> None:
+        """Store the error key to show on the form."""
+        super().__init__(error)
+        self.error = error
+
+
 class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Lyngdorf config flow."""
 
@@ -55,11 +64,11 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
-            model, serial, errors = await self._async_probe(self._host)
-
-            if not errors:
-                assert model is not None
-                assert serial is not None
+            try:
+                model, serial = await self._async_probe(self._host)
+            except _ProbeError as err:
+                errors["base"] = err.error
+            else:
                 self._device_model = model.model_name
                 self._name = model.model_name
                 self._device_serial_number = serial
@@ -77,26 +86,24 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_probe(
-        self, host: str
-    ) -> tuple[LyngdorfModel | None, str | None, dict[str, str]]:
-        """Probe a host, returning its model, serial and any errors."""
+    async def _async_probe(self, host: str) -> tuple[LyngdorfModel, str]:
+        """Return the model and serial of the device at a host."""
         try:
             model = await async_find_receiver_model(host)
+            serial = await async_get_device_serial(host) if model else None
         except TimeoutError:
-            return None, None, {"base": "timeout_connect"}
+            raise _ProbeError("timeout_connect") from None
         except OSError:
-            return None, None, {"base": "cannot_connect"}
+            raise _ProbeError("cannot_connect") from None
         except Exception:  # noqa: BLE001
-            return None, None, {"base": "unknown"}
+            raise _ProbeError("unknown") from None
 
         if not model:
-            return None, None, {"base": "unsupported_model"}
+            raise _ProbeError("unsupported_model")
+        if not serial:
+            raise _ProbeError("cannot_determine_id")
 
-        if not (serial := await async_get_device_serial(host)):
-            return None, None, {"base": "cannot_determine_id"}
-
-        return model, serial.lower(), {}
+        return model, serial.lower()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -112,14 +119,12 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
-            model, serial, errors = await self._async_probe(host)
-
-            if not errors:
-                assert model is not None
-                assert serial is not None
+            try:
+                model, serial = await self._async_probe(host)
+            except _ProbeError as err:
+                errors["base"] = err.error
+            else:
                 await self.async_set_unique_id(serial)
-                # Refuse to point an existing entry at a different device,
-                # which would inherit the first one's entities.
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
