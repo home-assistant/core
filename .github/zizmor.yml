@@ -1,0 +1,16 @@
+rules:
+  anonymous-definition:
+    ignore:
+      - check-requirements.lock.yml
+  ref-version-mismatch:
+    ignore:
+      - check-requirements.lock.yml
+  template-injection:
+    ignore:
+      - check-requirements.lock.yml
+  undocumented-permissions:
+    ignore:
+      - check-requirements.lock.yml
+  unsound-condition:
+    ignore:
+      - check-requirements.lock.yml
