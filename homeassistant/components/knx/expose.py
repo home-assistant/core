@@ -202,11 +202,7 @@ class KnxExposeEntity:
     @callback
     def _init_expose_state(self) -> None:
         """Initialize state of all exposures from the current HA state."""
-        self._set_expose_state(self.hass.states.get(self.entity_id))
-
-    @callback
-    def _set_expose_state(self, state: State | None) -> None:
-        """Set the local state of all exposures without sending to KNX."""
+        state = self.hass.states.get(self.entity_id)
         for option, xknx_expose in self._exposures:
             state_value = self._get_expose_value(state, option)
             if state_value is None:
