@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: This integration does not register any service actions.
   appropriate-polling: done
-  brands:
-    status: todo
-    comment: Submitted as home-assistant/brands#10981, awaiting merge.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -17,15 +15,9 @@ rules:
   docs-conditions:
     status: exempt
     comment: This integration does not provide any conditions.
-  docs-high-level-description:
-    status: todo
-    comment: Submitted as home-assistant/home-assistant.io#47445, awaiting merge.
-  docs-installation-instructions:
-    status: todo
-    comment: Submitted as home-assistant/home-assistant.io#47445, awaiting merge.
-  docs-removal-instructions:
-    status: todo
-    comment: Submitted as home-assistant/home-assistant.io#47445, awaiting merge.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   docs-triggers:
     status: exempt
     comment: This integration does not provide any triggers.

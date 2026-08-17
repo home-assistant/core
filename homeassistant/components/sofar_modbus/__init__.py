@@ -64,7 +64,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         hass, entry, connection, device, DEFAULT_SCAN_INTERVAL
     )
 
-    # Ensures entities start with real data instead of "unknown".
     await coordinator.async_config_entry_first_refresh()
     await coordinator.async_refresh_slow_tier()
 
