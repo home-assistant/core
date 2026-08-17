@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_hotspring")
@@ -134,6 +134,11 @@ async def test_full_reconfigure_flow_success(
 
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"] is not None
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_HOST)
+        == "192.168.1.100"
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.200"}
@@ -181,6 +186,11 @@ async def test_full_reconfigure_flow_connection_error_and_success(
 
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"] is not None
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_HOST)
+        == "192.168.1.100"
+    )
 
     mock_hotspring.update.side_effect = HotSpringConnectionError
     result = await hass.config_entries.flow.async_configure(
@@ -190,6 +200,11 @@ async def test_full_reconfigure_flow_connection_error_and_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+    assert result["data_schema"] is not None
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_HOST)
+        == "192.168.1.200"
+    )
 
     mock_hotspring.update.side_effect = None
     result = await hass.config_entries.flow.async_configure(

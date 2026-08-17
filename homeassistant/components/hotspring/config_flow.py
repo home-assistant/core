@@ -1,7 +1,7 @@
 """Config flow for Hot Spring."""
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from hotspring import HotSpring, HotSpringConnectionError, HotSpringError, Spa
 import voluptuous as vol
@@ -53,18 +53,9 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(spa.info.mac_address)
                 if self.source == SOURCE_RECONFIGURE:
-                    entry = self._get_reconfigure_entry()
-                    if TYPE_CHECKING:
-                        assert entry.unique_id is not None
-                    self._abort_if_unique_id_mismatch(
-                        reason="unique_id_mismatch",
-                        description_placeholders={
-                            "expected_mac": entry.unique_id.upper(),
-                            "actual_mac": spa.info.mac_address.upper(),
-                        },
-                    )
+                    self._abort_if_unique_id_mismatch()
                     return self.async_update_reload_and_abort(
-                        entry,
+                        self._get_reconfigure_entry(),
                         data_updates={CONF_HOST: user_input[CONF_HOST]},
                     )
                 self._abort_if_unique_id_configured(
