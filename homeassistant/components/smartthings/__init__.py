@@ -560,7 +560,7 @@ def create_devices(
         # fall back to the device's driver-assigned name for the model,
         # since SmartThings doesn't expose a separate model field for either.
         if device.device.type is DeviceType.ZWAVE:
-            kwargs.setdefault(ATTR_MANUFACTURER, "ZWave")
+            kwargs.setdefault(ATTR_MANUFACTURER, "Z-Wave")
             kwargs.setdefault(ATTR_MODEL, device.device.name)
         elif device.device.type is DeviceType.ZIGBEE:
             kwargs.setdefault(
