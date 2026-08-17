@@ -54,11 +54,11 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_write("1/1/8", False)
 
 
-async def test_binary_expose_does_not_send_initial_state_during_startup(
+async def test_binary_expose_does_not_send_initial_state(
     hass: HomeAssistant,
     knx: KNXTestKit,
 ) -> None:
-    """Test only the initial state during startup is not exposed to KNX."""
+    """Test only the initial state is not exposed to KNX."""
     entity_id = "binary_sensor.fake"
     await knx.setup_integration(
         {
@@ -340,7 +340,7 @@ async def test_expose_value_template(
 
     hass.states.async_set(entity_id, "off", {attribute: 255})
     await hass.async_block_till_done()
-    
+
     await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: [
@@ -496,7 +496,7 @@ async def test_ui_expose_create_and_update(
     await hass.async_block_till_done()
     await knx.assert_write(GROUP_ADDRESS_2, (128,))
     await knx.assert_no_telegram()
-    
+
     hass.states.async_set(ENTITY_ID, "off", {"brightness": 50})
     await hass.async_block_till_done()
     await knx.assert_write(GROUP_ADDRESS_1, False)
