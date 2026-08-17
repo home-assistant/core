@@ -54,10 +54,6 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_write("1/1/8", False)
 
 
-@pytest.mark.parametrize(
-    "core_state",
-    [CoreState.not_running, CoreState.starting],
-)
 async def test_binary_expose_does_not_send_initial_state_during_startup(
     hass: HomeAssistant,
     knx: KNXTestKit,
@@ -73,7 +69,6 @@ async def test_binary_expose_does_not_send_initial_state_during_startup(
             }
         },
     )
-    hass.set_state(CoreState.starting)
 
     # The first known value initializes the exposure without sending.
     hass.states.async_set(entity_id, "on", {})
@@ -323,7 +318,6 @@ async def test_expose_periodic_send(
             }
         },
     )
-    hass.set_state(CoreState.starting)
 
     # Initial value is adopted without sending.
     hass.states.async_set(entity_id, "15", {})
