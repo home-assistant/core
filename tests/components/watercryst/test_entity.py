@@ -1,32 +1,27 @@
 """Tests for WATERCryst entities."""
 
-from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.watercryst.entity import WatercrystEntity
-from homeassistant.helpers.device_registry import DeviceInfo
+
+from tests.common import MockConfigEntry
 
 
-def test_entity_initialization() -> None:
+def test_entity_initialization(config_entry: MockConfigEntry) -> None:
     """Test shared WATERCryst entity attributes."""
-    device_info = DeviceInfo(identifiers={("watercryst", "1234567890")})
-    client = MagicMock()
-    runtime_data = SimpleNamespace(
-        biocat_serial_number="1234567890",
-        device_info=device_info,
-        client=client,
-    )
-    config_entry = MagicMock()
-    config_entry.runtime_data = runtime_data
+    coordinator = MagicMock()
     description = SensorEntityDescription(key="pressure")
 
-    entity = WatercrystEntity(config_entry, description)
+    entity = WatercrystEntity(
+        config_entry=config_entry,
+        coordinator=coordinator,
+        entity_description=description,
+    )
 
-    assert entity.device_info is device_info
-    assert entity.unique_id == "1234567890_pressure"
+    assert entity.unique_id == "2026123456789123_pressure"
     assert entity.entity_description is description
-    assert entity.runtime_data is runtime_data
-    assert entity._client is client
+    assert entity.runtime_data is config_entry.runtime_data
+    assert entity.device_info is config_entry.runtime_data.device_info
     assert entity.should_poll is False
     assert entity.has_entity_name is True

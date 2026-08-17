@@ -1,42 +1,29 @@
 """Tests for WATERCryst update coordinators."""
 
 from asyncio import CancelledError
-from datetime import timedelta
-from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from pyocat import WTCApiDisabledError
+from pyocat import WTCApiDisabledError, WTCApiTemporaryError, WTCApiUnauthorizedError
 import pytest
 
 from homeassistant.components.watercryst.coordinator import (
-    MeasurementsUpdateCoordinator,
-    StateUpdateCoordinator,
+    WatercrystMeasurementsUpdateCoordinator,
+    WatercrystStateUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from .conftest import (
+    DEFAULT_MEASUREMENT_RESPONSE,
+    DEFAULT_STATE_RESPONSE,
+    OFFLINE_STATE_RESPONSE,
+    http_status_error,
+    request_error,
+)
 
-async def test_measurements_update_success(hass: HomeAssistant) -> None:
-    """Test a successful measurements update."""
-    measurements = object()
-    client = MagicMock()
-    client.get_measurements = AsyncMock(return_value=measurements)
-
-    state = MagicMock(spec=StateUpdateCoordinator)
-    state.data = SimpleNamespace(online=True)
-
-    coordinator = MeasurementsUpdateCoordinator(
-        hass=hass,
-        entry=MagicMock(),
-        client=client,
-        state=state,
-    )
-
-    await coordinator.async_refresh()
-
-    assert coordinator.last_update_success
-    assert coordinator.data is measurements
-    client.get_measurements.assert_awaited_once_with()
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -45,99 +32,133 @@ async def test_measurements_update_success(hass: HomeAssistant) -> None:
 )
 async def test_state_update_success(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
     language: str,
     expected_locale: str,
 ) -> None:
-    """Test state updates use supported locales and fall back to English."""
+    """Test successful state update."""
     hass.config.language = language
-    state = object()
-    client = MagicMock()
-    client.get_state = AsyncMock(return_value=state)
 
-    coordinator = StateUpdateCoordinator(
+    coordinator = WatercrystStateUpdateCoordinator(
         hass=hass,
-        entry=MagicMock(),
-        client=client,
+        config_entry=config_entry,
+        client=mock_api_client,
     )
 
-    assert coordinator.name == "State update coordinator"
-    assert coordinator.update_interval == timedelta(seconds=30)
-    assert await coordinator._async_update_data() is state
-    client.get_state.assert_awaited_once_with(locale=expected_locale)
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success
+    assert coordinator.data is DEFAULT_STATE_RESPONSE
+    mock_api_client.get_state.assert_awaited_once_with(locale=expected_locale)
+
+
+async def test_measurements_update_success(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """Test successful measurements update."""
+    state = MagicMock(spec=WatercrystStateUpdateCoordinator)
+    state.data = DEFAULT_STATE_RESPONSE
+
+    coordinator = WatercrystMeasurementsUpdateCoordinator(
+        hass=hass, config_entry=config_entry, client=mock_api_client, state=state
+    )
+
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success
+    assert coordinator.data is DEFAULT_MEASUREMENT_RESPONSE
+    mock_api_client.get_measurements.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
-    ("coordinator_class", "client_method", "message"),
+    "response",
+    [None, OFFLINE_STATE_RESPONSE],
+)
+async def test_measurements_update_failed_device_offline(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+    response: Any,
+) -> None:
+    """Test failed measurements update because the device is offline."""
+    state = MagicMock(spec=WatercrystStateUpdateCoordinator)
+    state.data = response
+
+    coordinator = WatercrystMeasurementsUpdateCoordinator(
+        hass=hass, config_entry=config_entry, client=mock_api_client, state=state
+    )
+
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success
+    assert coordinator.data is None
+    mock_api_client.get_measurements.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "exception",
     [
-        (
-            MeasurementsUpdateCoordinator,
-            "get_measurements",
-            "Failed to update measurements",
-        ),
-        (StateUpdateCoordinator, "get_state", "Failed to update state"),
+        WTCApiDisabledError(),
+        WTCApiTemporaryError(),
+        request_error(),
+        http_status_error(503),
     ],
 )
-async def test_update_error(
+async def test_update_failed(
     hass: HomeAssistant,
-    coordinator_class: type[MeasurementsUpdateCoordinator | StateUpdateCoordinator],
-    client_method: str,
-    message: str,
+    config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+    exception: Exception,
 ) -> None:
-    """Test coordinator exceptions become update failures."""
-    error = WTCApiDisabledError()
-    client = MagicMock()
-    state = MagicMock(spec=StateUpdateCoordinator)
-    state.data = SimpleNamespace(online=True)
-    setattr(client, client_method, AsyncMock(side_effect=error))
-    if coordinator_class is MeasurementsUpdateCoordinator:
-        coordinator = coordinator_class(
-            hass=hass,
-            entry=MagicMock(),
-            client=client,
-            state=state,
-        )
-    else:
-        coordinator = coordinator_class(
-            hass=hass,
-            entry=MagicMock(),
-            client=client,
-        )
-    with pytest.raises(UpdateFailed, match=message) as exc_info:
+    """Test failed state update because of an exception."""
+    mock_api_client.get_state.side_effect = exception
+
+    coordinator = WatercrystStateUpdateCoordinator(
+        hass=hass,
+        config_entry=config_entry,
+        client=mock_api_client,
+    )
+
+    with pytest.raises(UpdateFailed, match="Failed to update state"):
         await coordinator._async_update_data()
 
-    assert exc_info.value.__cause__ is error
 
-
-@pytest.mark.parametrize(
-    ("coordinator_class", "client_method"),
-    [
-        (MeasurementsUpdateCoordinator, "get_measurements"),
-        (StateUpdateCoordinator, "get_state"),
-    ],
-)
-async def test_update_cancelled(
+async def test_update_failed_unauthorized(
     hass: HomeAssistant,
-    coordinator_class: type[MeasurementsUpdateCoordinator | StateUpdateCoordinator],
-    client_method: str,
+    config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
 ) -> None:
-    """Test task cancellation is propagated unchanged."""
-    client = MagicMock()
+    """Test failed state update because of a missing authorization."""
+    mock_api_client.get_state.side_effect = WTCApiUnauthorizedError()
 
-    state = MagicMock(spec=StateUpdateCoordinator)
-    state.data = SimpleNamespace(online=True)
-    setattr(client, client_method, AsyncMock(side_effect=CancelledError))
-    if coordinator_class is MeasurementsUpdateCoordinator:
-        coordinator = coordinator_class(
-            hass=hass,
-            entry=MagicMock(),
-            client=client,
-            state=state,
-        )
-    else:
-        coordinator = coordinator_class(
-            hass=hass,
-            entry=MagicMock(),
-            client=client,
-        )
+    coordinator = WatercrystStateUpdateCoordinator(
+        hass=hass,
+        config_entry=config_entry,
+        client=mock_api_client,
+    )
+
+    with pytest.raises(
+        ConfigEntryAuthFailed, match="Failed to update state, unauthorized"
+    ):
+        await coordinator._async_update_data()
+
+
+async def test_update_failed_cancelled(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """Test failed state update because it was cancelled."""
+    mock_api_client.get_state.side_effect = CancelledError()
+
+    coordinator = WatercrystStateUpdateCoordinator(
+        hass=hass,
+        config_entry=config_entry,
+        client=mock_api_client,
+    )
+
     with pytest.raises(CancelledError):
         await coordinator._async_update_data()

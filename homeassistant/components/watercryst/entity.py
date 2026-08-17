@@ -24,7 +24,6 @@ class WatercrystEntity[CoordinatorT: WatercrystDataUpdateCoordinator[Any]](
         entity_description: EntityDescription,
     ) -> None:
         """Initialize a WatercrystEntity instance."""
-        Entity.__init__(self)
         CoordinatorEntity.__init__(self, coordinator)
 
         data = config_entry.runtime_data
@@ -34,5 +33,3 @@ class WatercrystEntity[CoordinatorT: WatercrystDataUpdateCoordinator[Any]](
 
         self.entity_description = entity_description
         self.runtime_data = data
-
-        self._client = config_entry.runtime_data.client

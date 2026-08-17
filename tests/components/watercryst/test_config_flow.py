@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-from httpx import HTTPStatusError, Request, RequestError, Response
 from pyocat import WTCApiDisabledError, WTCApiTemporaryError, WTCApiUnauthorizedError
 import pytest
 
@@ -11,6 +10,8 @@ from homeassistant.components.watercryst.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .conftest import http_status_error, request_error
 
 from tests.common import MockConfigEntry
 
@@ -70,31 +71,14 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-def _http_status_error(status_code: int) -> HTTPStatusError:
-    """Create an HTTP status error."""
-    request = Request("GET", "https://example.com/v1/device")
-    response = Response(status_code, request=request)
-    return HTTPStatusError(
-        "Unexpected HTTP status",
-        request=request,
-        response=response,
-    )
-
-
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
         (WTCApiUnauthorizedError(), "invalid_auth"),
         (WTCApiDisabledError(), "api_disabled"),
         (WTCApiTemporaryError(), "cannot_connect"),
-        (_http_status_error(404), "cannot_connect"),
-        (
-            RequestError(
-                message="",
-                request=Request("GET", "https://example.com/v1/device"),
-            ),
-            "cannot_connect",
-        ),
+        (http_status_error(404), "cannot_connect"),
+        (request_error(), "cannot_connect"),
         (Exception(), "unknown"),
     ],
 )

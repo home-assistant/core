@@ -208,6 +208,8 @@ async def async_setup_entry(
     )
 
 
+# NOTE: The coordinator is supposed to be WatercrystDataUpdateCoordinator[DataT]
+#       but mypy reports an error that DataT is undefined.
 class WatercrystSensor[DataT, CoordinatorT: WatercrystDataUpdateCoordinator[Any]](
     SensorEntity, WatercrystEntity[CoordinatorT]
 ):
