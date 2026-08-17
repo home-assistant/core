@@ -5119,6 +5119,7 @@ async def test_subscribe_controller_statistics(
 
 async def test_subscribe_node_statistics(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     multisensor_6,
     wallmote_central_scene,
     zen_31,
@@ -5233,6 +5234,56 @@ async def test_subscribe_node_statistics(
             ],
         },
     }
+
+    # Fire statistics updated with a route that references a node
+    # that has been removed from the network
+    event = Event(
+        "statistics updated",
+        {
+            "source": "node",
+            "event": "statistics updated",
+            "nodeId": multisensor_6.node_id,
+            "statistics": {
+                "commandsTX": 1,
+                "commandsRX": 2,
+                "commandsDroppedTX": 3,
+                "commandsDroppedRX": 4,
+                "timeoutResponse": 5,
+                "lwr": {
+                    "protocolDataRate": 1,
+                    "rssi": 1,
+                    "repeaters": [999],
+                    "repeaterRSSI": [1],
+                },
+                "nlwr": {
+                    "protocolDataRate": 2,
+                    "rssi": 2,
+                    "repeaters": [wallmote_central_scene.node_id],
+                    "repeaterRSSI": [2],
+                },
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+    msg = await ws_client.receive_json()
+    assert msg["event"]["lwr"] is None
+    assert msg["event"]["nlwr"] == {
+        "protocol_data_rate": 2,
+        "rssi": 2,
+        "repeaters": [wallmote_central_scene_device.id],
+        "repeater_rssi": [2],
+        "route_failed_between": None,
+    }
+
+    # Fire statistics updated with a route that references a node
+    # whose device has been removed from the registry
+    device_registry.async_remove_device(wallmote_central_scene_device.id)
+    await hass.async_block_till_done()
+    client.driver.controller.receive_event(event)
+    msg = await ws_client.receive_json()
+    assert msg["event"]["lwr"] is None
+    assert msg["event"]["nlwr"] is None
+    assert msg["event"]["commands_tx"] == 1
 
     # Test sending command with improper entry ID fails
     await ws_client.send_json(
