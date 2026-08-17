@@ -154,9 +154,12 @@ class VizioDevice(VizioEntity, MediaPlayerEntity):
 
         # Audio settings
         if data.audio_settings:
-            self._attr_volume_level = (
-                float(data.audio_settings[VIZIO_VOLUME].value) / self._max_volume
-            )
+            if VIZIO_VOLUME in data.audio_settings:
+                self._attr_volume_level = (
+                    float(data.audio_settings[VIZIO_VOLUME].value) / self._max_volume
+                )
+            else:
+                self._attr_volume_level = None
             if VIZIO_MUTE in data.audio_settings:
                 self._attr_is_volume_muted = (
                     str(data.audio_settings[VIZIO_MUTE].value).lower() == VIZIO_MUTE_ON
