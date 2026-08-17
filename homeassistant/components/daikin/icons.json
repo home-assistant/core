@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "demand_control": {
+        "default": "mdi:meter-electric-outline"
+      }
+    },
     "sensor": {
       "compressor_frequency": {
         "default": "mdi:fan"
