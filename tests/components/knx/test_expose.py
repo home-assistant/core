@@ -264,6 +264,7 @@ async def test_expose_cooldown(
     entity_id = "fake.entity"
 
     hass.states.async_set(entity_id, "0", {})
+    await hass.async_block_till_done()
 
     await knx.setup_integration(
         {
@@ -338,7 +339,8 @@ async def test_expose_value_template(
     percent_address = "2/2/2"
 
     hass.states.async_set(entity_id, "off", {attribute: 255})
-
+    await hass.async_block_till_done()
+    
     await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: [
@@ -442,6 +444,7 @@ async def test_ui_expose_create_and_update(
     ws_client = await hass_ws_client(hass)
 
     hass.states.async_set(ENTITY_ID, "off", {"brightness": 30})
+    await hass.async_block_till_done()
 
     await ws_client.send_json_auto_id(
         {
@@ -492,6 +495,12 @@ async def test_ui_expose_create_and_update(
     hass.states.async_set(ENTITY_ID, "on", {"brightness": 50})
     await hass.async_block_till_done()
     await knx.assert_write(GROUP_ADDRESS_2, (128,))
+    await knx.assert_no_telegram()
+    
+    hass.states.async_set(ENTITY_ID, "off", {"brightness": 50})
+    await hass.async_block_till_done()
+    await knx.assert_write(GROUP_ADDRESS_1, False)
+    await knx.assert_no_telegram()
 
 
 async def test_ui_expose_with_options(
