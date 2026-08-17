@@ -28,6 +28,8 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
     HomeAssistantError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
@@ -761,7 +763,21 @@ class OAuth2Session:
             if self.valid_token:
                 return
 
-            new_token = await self.implementation.async_refresh_token(self.token)
+            setup_in_progress = (
+                self.config_entry.state
+                is config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+            )
+            try:
+                new_token = await self.implementation.async_refresh_token(self.token)
+            except OAuth2TokenRequestReauthError as err:
+                if setup_in_progress:
+                    raise ConfigEntryAuthFailed from err
+                self.config_entry.async_start_reauth_if_available(self.hass)
+                raise
+            except OAuth2TokenRequestError as err:
+                if setup_in_progress:
+                    raise ConfigEntryNotReady from err
+                raise
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data={**self.config_entry.data, "token": new_token}
