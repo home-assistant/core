@@ -344,6 +344,14 @@ class BraavaJet(IRobotVacuum):
             for spray in BRAAVA_SPRAY_AMOUNT
         ]
 
+        # Mopping behavior is derived from `rankOverlap`. Combo models report a
+        # mop pad but not `rankOverlap`, so the behavior half of the fan speed
+        # can never be resolved and the entity would report a value outside its
+        # own fan speed list. Only offer the feature where it can be produced.
+        if self.vacuum_state.get("rankOverlap") is None:
+            self._attr_supported_features &= ~VacuumEntityFeature.FAN_SPEED
+            self._attr_fan_speed_list = []
+
     @property
     @override
     def fan_speed(self) -> str:
