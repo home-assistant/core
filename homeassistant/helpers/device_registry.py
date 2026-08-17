@@ -4462,7 +4462,7 @@ def async_get_device_and_config_entry_for_domain(
         config_entry = hass.config_entries.async_get_entry(split.config_entry_id)
         if config_entry is not None and config_entry.domain == domain:
             return split, config_entry
-    return registry.async_get(device_id), None
+    return registry.async_get(device_id, include_child_devices=False), None
 
 
 def async_setup(hass: HomeAssistant) -> None:
