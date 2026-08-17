@@ -20,7 +20,6 @@ async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
     """Test that errors are shown when duplicates are added."""
     hass.config.latitude = -41.2
     hass.config.longitude = 174.7
-    conf = {CONF_RADIUS: 25}
 
     config_entry.add_to_hass(hass)
 
@@ -30,7 +29,7 @@ async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
     )
     assert result["type"] is FlowResultType.FORM
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], conf)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["errors"] == {"base": "already_configured"}
 
 
