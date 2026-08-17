@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -100,6 +100,13 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
         suitable_fn=lambda device: (
             device.changeable_values and device.changeable_values.next_period_time
         ),
+    ),
+    LyricSensorEntityDescription(
+        key="schedule_status",
+        translation_key="schedule_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.schedule_status,
+        suitable_fn=lambda device: device.schedule_status,
     ),
     LyricSensorEntityDescription(
         key="setpoint_status",

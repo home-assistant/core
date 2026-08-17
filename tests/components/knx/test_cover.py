@@ -10,6 +10,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
+from homeassistant.components.knx.const import CONF_SYNC_STATE
 from homeassistant.components.knx.schema import CoverSchema
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
@@ -30,6 +31,7 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 CoverSchema.CONF_MOVE_SHORT_ADDRESS: "1/0/1",
                 CoverSchema.CONF_POSITION_STATE_ADDRESS: "1/0/2",
                 CoverSchema.CONF_POSITION_ADDRESS: "1/0/3",
+                CONF_SYNC_STATE: "init",
             }
         }
     )
