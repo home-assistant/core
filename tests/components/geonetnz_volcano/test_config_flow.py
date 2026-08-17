@@ -28,8 +28,10 @@ async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "already_configured"}
 
 
