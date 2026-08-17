@@ -204,15 +204,15 @@ class KnxExposeEntity:
         """Initialize state of all exposures from the current HA state."""
         state = self.hass.states.get(self.entity_id)
         for option, xknx_expose in self._exposures:
-            state_value = self._get_expose_value(state, option)
-            if state_value is None:
+            expose_value = self._get_expose_value(state, option)
+            if expose_value is None:
                 continue
             try:
-                xknx_expose.initialize_value(state_value)
+                xknx_expose.initialize_value(expose_value)
             except ConversionError:
                 _LOGGER.exception(
                     "Error setting value %s for expose sensor %s",
-                    state_value,
+                    expose_value,
                     xknx_expose.name,
                 )
 
