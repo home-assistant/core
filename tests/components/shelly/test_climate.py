@@ -1109,16 +1109,20 @@ async def test_rpc_linkedgo_st802_thermostat_floor_heating(
     device_fixture = await async_load_json_object_fixture(
         hass, "st802_gen3.json", DOMAIN
     )
-    device_fixture["config"]["enum:201"]["options"] = [
+    device_info = device_fixture["shelly"]
+    config = device_fixture["config"]
+    status = device_fixture["status"]
+
+    config["enum:201"]["options"] = [
         "cool",
         "dry",
         "ventilation",
         "floor_heating",
     ]
-    device_fixture["status"]["enum:201"]["value"] = "floor_heating"
-    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
-    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
-    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+    status["enum:201"]["value"] = "floor_heating"
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_info)
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    monkeypatch.setattr(mock_rpc_device, "config", config)
 
     await init_integration(hass, 3, model=MODEL_LINKEDGO_ST802_THERMOSTAT)
 
