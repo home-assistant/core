@@ -1603,7 +1603,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="already_configured")
 
                 # Only update config automatically if using socket
-                if existing_entry.data.get(CONF_SOCKET_PATH):
+                if existing_socket_path := existing_entry.data.get(CONF_SOCKET_PATH):
+                    if existing_socket_path == discovery_info.socket_path:
+                        # Config entry already has correct config
+                        return self.async_abort(reason="already_configured")
                     manager = get_addon_manager(self.hass)
                     await self._async_set_addon_config(
                         {CONF_ADDON_SOCKET: discovery_info.socket_path}
