@@ -3,7 +3,7 @@
 from collections import deque
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar, cast, override
+from typing import TYPE_CHECKING, Any, TypeVar, cast, override
 
 from modbus_connection import (
     ModbusConnection,
@@ -12,12 +12,20 @@ from modbus_connection import (
     ModbusTimeoutError,
 )
 from sofar_modbus.model import SofarComponentBase, UpdateReport
-from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus.modern.device import SofarInverter, identify
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+
+from .const import (
+    CONF_MODBUS_ADDR,
+    CONF_READ_EPS,
+    DEFAULT_MODBUS_ADDR,
+    DEFAULT_SCAN_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,8 +68,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         hass: HomeAssistant,
         entry: SofarConfigEntry,
         connection: ModbusConnection,
-        device: SofarInverter,
-        scan_interval: int,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -69,30 +75,52 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             _LOGGER,
             config_entry=entry,
             name=entry.title,
-            update_interval=timedelta(seconds=scan_interval),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self.config_entry: SofarConfigEntry = entry
         self.connection = connection
-        self.device = device
+        self.device: SofarInverter
         self._consecutive_timeouts = 0
         self._consecutive_failures: dict[str, int] = {}
         self._poll_outcomes: deque[bool] = deque(maxlen=_HEALTH_WINDOW)
         self.last_error: str | None = None
         self.last_error_time: datetime | None = None
         self._cycle = 0
+        self._fast: dict[str, SofarComponentBase] = {}
+        self._slow: dict[str, SofarComponentBase] = {}
+        self._force_slow_tier = True
+        self.pending: dict[str, Any] = {}
+
+    @override
+    async def _async_setup(self) -> None:
+        """Set up the coordinator before the first refresh."""
+        serial = self.config_entry.unique_id
+        if TYPE_CHECKING:
+            assert serial is not None
+        inverter_type, model = identify(serial)
+        if not inverter_type:
+            raise ConfigEntryError(
+                f"Unrecognized Sofar inverter model for {self.config_entry.title}"
+            )
+        self.device = SofarInverter(
+            self.connection.for_unit(
+                int(self.config_entry.data.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR))
+            ),
+            inverter_type=inverter_type,
+            read_eps=self.config_entry.data.get(CONF_READ_EPS, False),
+        )
+        self.device.prime(serial, model)
         polled = self.device.polled_components or ()
-        self._fast: dict[str, SofarComponentBase] = {
+        self._fast = {
             name: getattr(self.device, name)
             for name in polled
             if name in _VOLATILE_COMPONENTS
         }
-        self._slow: dict[str, SofarComponentBase] = {
+        self._slow = {
             name: getattr(self.device, name)
             for name in polled
             if name not in _VOLATILE_COMPONENTS
         }
-        self._force_slow_tier = True
-        self.pending: dict[str, Any] = {}
 
     @property
     def success_rate(self) -> float | None:

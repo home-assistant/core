@@ -9,23 +9,14 @@ as each subsequent platform lands.
 """
 
 import logging
-from typing import TYPE_CHECKING
 
 from modbus_connection import ModbusTcpParams
 from modbus_connection.tmodbus import ModbusConnection
-from sofar_modbus.modern.device import SofarInverter, identify
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 
-from .const import (
-    CONF_MODBUS_ADDR,
-    CONF_READ_EPS,
-    DEFAULT_MODBUS_ADDR,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-)
+from .const import DEFAULT_PORT
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,24 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     )
     entry.async_on_unload(connection.close)
 
-    serial = entry.unique_id
-    if TYPE_CHECKING:
-        assert serial is not None
-
-    inverter_type, model = identify(serial)
-    if not inverter_type:
-        raise ConfigEntryError(f"Unrecognized Sofar inverter model for {entry.title}")
-
-    device = SofarInverter(
-        connection.for_unit(int(entry.data.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR))),
-        inverter_type=inverter_type,
-        read_eps=entry.data.get(CONF_READ_EPS, False),
-    )
-    device.prime(serial, model)
-
-    coordinator = SofarDataUpdateCoordinator(
-        hass, entry, connection, device, DEFAULT_SCAN_INTERVAL
-    )
+    coordinator = SofarDataUpdateCoordinator(hass, entry, connection)
 
     await coordinator.async_config_entry_first_refresh()
 
