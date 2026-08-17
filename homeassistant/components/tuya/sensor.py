@@ -14,16 +14,19 @@ from tuya_device_handlers.device_wrapper.common import (
 from tuya_device_handlers.device_wrapper.sensor import (
     DeltaIntegerWrapper,
     ElectricityApparentPowerHexStringWrapper,
+    ElectricityApparentPowerJsonWrapper,
     ElectricityApparentPowerRawWrapper,
     ElectricityCurrentHexStringWrapper,
     ElectricityCurrentJsonWrapper,
     ElectricityCurrentRawWrapper,
     ElectricityPowerFactorHexStringWrapper,
+    ElectricityPowerFactorJsonWrapper,
     ElectricityPowerFactorRawWrapper,
     ElectricityPowerHexStringWrapper,
     ElectricityPowerJsonWrapper,
     ElectricityPowerRawWrapper,
     ElectricityReactivePowerHexStringWrapper,
+    ElectricityReactivePowerJsonWrapper,
     ElectricityReactivePowerRawWrapper,
     ElectricityVoltageHexStringWrapper,
     ElectricityVoltageJsonWrapper,
@@ -68,9 +71,18 @@ from .util import get_device_temp_unit_convert
 CURRENT_WRAPPER = (ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper)
 POWER_WRAPPER = (ElectricityPowerRawWrapper, ElectricityPowerJsonWrapper)
 VOLTAGE_WRAPPER = (ElectricityVoltageRawWrapper, ElectricityVoltageJsonWrapper)
-REACTIVE_POWER_WRAPPER = (ElectricityReactivePowerRawWrapper,)
-APPARENT_POWER_WRAPPER = (ElectricityApparentPowerRawWrapper,)
-POWER_FACTOR_WRAPPER = (ElectricityPowerFactorRawWrapper,)
+REACTIVE_POWER_WRAPPER = (
+    ElectricityReactivePowerRawWrapper,
+    ElectricityReactivePowerJsonWrapper,
+)
+APPARENT_POWER_WRAPPER = (
+    ElectricityApparentPowerRawWrapper,
+    ElectricityApparentPowerJsonWrapper,
+)
+POWER_FACTOR_WRAPPER = (
+    ElectricityPowerFactorRawWrapper,
+    ElectricityPowerFactorJsonWrapper,
+)
 CURRENT_HEX_WRAPPER = (ElectricityCurrentHexStringWrapper,)
 POWER_HEX_WRAPPER = (ElectricityPowerHexStringWrapper,)
 VOLTAGE_HEX_WRAPPER = (ElectricityVoltageHexStringWrapper,)
