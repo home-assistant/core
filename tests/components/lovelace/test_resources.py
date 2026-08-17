@@ -87,6 +87,10 @@ async def test_yaml_resources_missing_local_file_warning(
                     {"type": "module", "url": "https://example.com/local/remote.js"},
                     {"type": "module", "url": "//example.com/local/scheme.js"},
                     {"type": "module", "url": "/hacsfiles/plugin/plugin.js"},
+                    # normalizing this leaves www, so it is not a local file
+                    {"type": "module", "url": "/local/../configuration.yaml"},
+                    # any string is accepted as URL, this one cannot be parsed
+                    {"type": "module", "url": "//["},
                     # url is optional in the resource schema
                     {"type": "module"},
                 ],
@@ -100,6 +104,7 @@ async def test_yaml_resources_missing_local_file_warning(
     assert "remote.js" not in caplog.text
     assert "scheme.js" not in caplog.text
     assert "plugin.js" not in caplog.text
+    assert "configuration.yaml" not in caplog.text
 
 
 async def test_yaml_resources_without_local_files_never_warns(

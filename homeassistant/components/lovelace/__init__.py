@@ -4,6 +4,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 import logging
 import os
+import posixpath
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
@@ -355,12 +356,17 @@ async def _async_warn_missing_local_resources(
         url: str | None = resource.get(CONF_URL)
         if not url:
             continue
-        parts = urlsplit(url)
+        try:
+            parts = urlsplit(url)
+        except ValueError:
+            # Any string is accepted as URL, an unparsable one is not a local file
+            continue
         # Only URLs served from <config>/www can be checked, skip external URLs
         # and custom static paths such as /hacsfiles/
         if parts.scheme or parts.netloc:
             continue
-        path = unquote(parts.path)
+        # Normalize the way a browser would, so traversal cannot escape www
+        path = posixpath.normpath(unquote(parts.path))
         if not path.startswith("/local/"):
             continue
         candidates[url] = hass.config.path(
