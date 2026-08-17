@@ -168,42 +168,6 @@ class ChildDeviceInfo(TypedDict, total=False):
     translation_placeholders: Mapping[str, str] | None
 
 
-DEVICE_INFO_TYPES = {
-    # Device info is categorized by finding the first device info type which has all
-    # the keys of the device info. The link device info type must be kept first
-    # to make it preferred over primary.
-    "link": {
-        "connections",
-        "identifiers",
-    },
-    "primary": {
-        "configuration_url",
-        "connections",
-        "entry_type",
-        "hw_version",
-        "identifiers",
-        "manufacturer",
-        "model",
-        "model_id",
-        "name",
-        "serial_number",
-        "suggested_area",
-        "sw_version",
-        "via_device",
-        "via_device_id",
-    },
-    "secondary": {
-        "connections",
-        "default_manufacturer",
-        "default_model",
-        "default_name",
-        # Used by Fritz
-        "via_device",
-        "via_device_id",
-    },
-}
-
-
 class _EventDeviceRegistryUpdatedData_Create(TypedDict):
     """EventDeviceRegistryUpdated data for action type 'create'."""
 
@@ -281,40 +245,17 @@ class DeviceConnectionCollisionError(DeviceCollisionError):
         )
 
 
-def _determine_device_info_type(
+def _validate_device_info(
     config_entry: ConfigEntry,
     device_info: DeviceInfo,
-) -> str:
-    """Determine the type of a device info."""
-    keys = set(device_info)
-
-    # If no keys or not enough info to match up, abort
+) -> None:
+    """Validate that a device info has enough information to match up a device."""
     if not device_info.get("connections") and not device_info.get("identifiers"):
         raise DeviceInfoError(
             config_entry.domain,
             device_info,
             "device info must include at least one of identifiers or connections",
         )
-
-    device_info_type: str | None = None
-
-    # Find the first device info type which has all keys in the device info
-    for possible_type, allowed_keys in DEVICE_INFO_TYPES.items():
-        if keys <= allowed_keys:
-            device_info_type = possible_type
-            break
-
-    if device_info_type is None:
-        raise DeviceInfoError(
-            config_entry.domain,
-            device_info,
-            (
-                "device info needs to either describe a device, "
-                "link to existing device or provide extra information."
-            ),
-        )
-
-    return device_info_type
 
 
 class _ValidatedDeviceInfoFields(TypedDict):
@@ -2252,7 +2193,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if val is not UNDEFINED
         }
 
-        device_info_type = _determine_device_info_type(config_entry, device_info)
+        _validate_device_info(config_entry, device_info)
 
         if identifiers is None or identifiers is UNDEFINED:
             identifiers = set()
@@ -2372,7 +2313,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
             self.devices[device.id] = device
             # If creating a new device, default to the config entry name
-            if device_info_type == "primary" and (not name or name is UNDEFINED):
+            if not name or name is UNDEFINED:
                 name = config_entry.title
 
         elif (

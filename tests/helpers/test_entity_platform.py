@@ -2784,15 +2784,6 @@ async def test_device_name_defaulting_config_entry(
         ({}, 1),  # Empty device info does not prevent the entity from being created
         ({"name": "bla"}, 0),
         ({"default_name": "bla"}, 0),
-        # Match multiple types
-        (
-            {
-                "identifiers": {("hue", "1234")},
-                "name": "bla",
-                "default_name": "yo",
-            },
-            0,
-        ),
     ],
 )
 async def test_device_type_error_checking(

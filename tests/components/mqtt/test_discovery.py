@@ -1198,9 +1198,9 @@ async def test_discovery_component_availability_overridden(
         payload,
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.mqtt_beer")
     assert state is not None
-    assert state.name == "Beer"
+    assert state.name == "MQTT Beer"
     assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(
@@ -1209,7 +1209,7 @@ async def test_discovery_component_availability_overridden(
         "online",
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.mqtt_beer")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -1219,7 +1219,7 @@ async def test_discovery_component_availability_overridden(
         "online",
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.mqtt_beer")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -1229,7 +1229,7 @@ async def test_discovery_component_availability_overridden(
         "ON",
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.mqtt_beer")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -1741,7 +1741,7 @@ async def test_duplicate_removal(
                 '"name": "sensor2"'
                 "}",
             },
-            ["sensor.sensor1", "sensor.sensor2"],
+            ["sensor.mqtt_sensor1", "sensor.mqtt_sensor2"],
         ),
         (
             {
@@ -1760,7 +1760,7 @@ async def test_duplicate_removal(
                 '"unique_id": "unique2"'
                 "}}}"
             },
-            ["sensor.sensor1", "sensor.sensor2"],
+            ["sensor.mqtt_sensor1", "sensor.mqtt_sensor2"],
         ),
     ],
 )
@@ -1836,7 +1836,7 @@ async def test_cleanup_device_manual(
             '{ "device":{"identifiers":["0AFFD2"]},'
             '  "state_topic": "foobar/sensor",'
             '  "unique_id": "unique" }',
-            ["sensor.mqtt_sensor"],
+            ["sensor.mqtt_mqtt_sensor"],
         ),
         (
             "homeassistant/device/bla/config",
@@ -1853,7 +1853,7 @@ async def test_cleanup_device_manual(
             '  "state_topic": "foobar/sensor2",'
             '  "unique_id": "unique2"'
             "}}}",
-            ["sensor.sensor1", "sensor.sensor2"],
+            ["sensor.mqtt_sensor1", "sensor.mqtt_sensor2"],
         ),
     ],
 )
@@ -1877,7 +1877,7 @@ async def test_cleanup_device_mqtt(
         '  "unique_id": "unique_base" }'
     )
     base_discovery_topic = "homeassistant/sensor/bla_base/config"
-    base_entity_id = "sensor.sensor_base"
+    base_entity_id = "sensor.mqtt_sensor_base"
     async_fire_mqtt_message(hass, base_discovery_topic, data)
     await hass.async_block_till_done()
 
@@ -1965,7 +1965,7 @@ async def test_cleanup_device_mqtt_device_discovery(
         '  "unique_id": "unique2"'
         "}}}"
     )
-    entity_ids = ["sensor.sensor1", "sensor.sensor2"]
+    entity_ids = ["sensor.mqtt_sensor1", "sensor.mqtt_sensor2"]
     async_fire_mqtt_message(hass, discovery_topic, discovery_payload)
     await hass.async_block_till_done()
 
@@ -2116,10 +2116,10 @@ async def test_cleanup_device_multiple_config_entries(
         )
         is not None
     )
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.mqtt_mqtt_sensor")
     assert state is not None
 
     # Remove MQTT from the device
@@ -2135,12 +2135,12 @@ async def test_cleanup_device_multiple_config_entries(
         ("mac", "12:34:56:AB:CD:EF"), config_entry.entry_id
     )
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_mqtt_sensor")
     assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.mqtt_mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 
@@ -2241,10 +2241,10 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         )
         is not None
     )
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.mqtt_mqtt_sensor")
     assert state is not None
 
     # Send MQTT messages to remove
@@ -2260,12 +2260,12 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         ("mac", "12:34:56:AB:CD:EF"), config_entry.entry_id
     )
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_mqtt_sensor")
     assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.mqtt_sensor")
+    state = hass.states.get("sensor.mqtt_mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 
@@ -3194,7 +3194,7 @@ async def test_discovery_dispatcher_signal_type_messages(
             '  "state_topic": "foobar/sensor3",'
             '  "unique_id": "unique3"'
             "}}}",
-            ["sensor.sensor1", "sensor.sensor2", "sensor.sensor3"],
+            ["sensor.mqtt_sensor1", "sensor.mqtt_sensor2", "sensor.mqtt_sensor3"],
         ),
     ],
 )
@@ -3281,7 +3281,7 @@ async def test_discovery_with_late_via_device_discovery(
             hass.config_entries.async_entries("mqtt")[0].entry_id,
         )
         assert via_device_entry is not None
-        assert via_device_entry.name is None
+        assert via_device_entry.name == "MQTT"
 
     await hass.async_block_till_done()
 
@@ -3376,7 +3376,7 @@ async def test_discovery_with_late_via_device_update(
             hass.config_entries.async_entries("mqtt")[0].entry_id,
         )
         assert via_device_entry is not None
-        assert via_device_entry.name is None
+        assert via_device_entry.name == "MQTT"
 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
