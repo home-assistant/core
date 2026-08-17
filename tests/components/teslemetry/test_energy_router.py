@@ -202,26 +202,6 @@ async def test_energy_site_cloud_without_powerwall(hass: HomeAssistant) -> None:
     assert not isinstance(energysite.api, EnergySiteRouter)
 
 
-def _entry_with_unpaired_subentry() -> MockConfigEntry:
-    """Return a config entry whose energy site subentry exists but is unpaired."""
-    entry = mock_config_entry()
-    return MockConfigEntry(
-        domain=entry.domain,
-        version=entry.version,
-        minor_version=entry.minor_version,
-        unique_id=entry.unique_id,
-        data=dict(entry.data),
-        subentries_data=[
-            ConfigSubentryData(
-                subentry_type=SUBENTRY_TYPE_ENERGY_SITE,
-                unique_id=str(SITE_ID),
-                title="Energy Site",
-                data={CONF_SITE_ID: SITE_ID},
-            )
-        ],
-    )
-
-
 async def _start_add_flow_select_site(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> SubentryFlowResult:
@@ -452,12 +432,17 @@ async def test_add_flow_lists_only_not_added_sites(hass: HomeAssistant) -> None:
     assert set(schema[site_field].container) == {str(SITE_ID)}
 
 
-@pytest.mark.usefixtures("mock_rsa_key")
 async def test_add_flow_aborts_when_all_sites_added(hass: HomeAssistant) -> None:
-    """The add flow aborts when every battery site is already added."""
-    entry = _entry_with_unpaired_subentry()
+    """The add flow aborts when every battery site is already paired."""
+    entry = _entry_with_powerwall()
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
