@@ -51,38 +51,44 @@ class MigrateSwitchFlow(RepairsFlow):
         turn_off_action: list[dict[str, Any]] | None = self._data.get(CONF_OFF_ACTION)
         name: str = self._data[CONF_NAME]
 
-        if user_input is not None:
-            entity_reg = er.async_get(self.hass)
-            ping_entry_id: str | None = None
+        if user_input is None:
+            return self.async_show_form(
+                step_id="migrate",
+                data_schema=vol.Schema({}),
+                description_placeholders={"mac": mac},
+            )
 
-            if ping_host:
-                # If a hosts was provided, setup a Ping config entry
-                ping_entry_id = None
-                ping_entries = self.hass.config_entries.async_entries("ping")
-                for entry in ping_entries:
-                    if entry.options.get(CONF_HOST) == ping_host:
-                        ping_entry_id = entry.entry_id
-                        break
-                if not ping_entry_id:
-                    ping_config = {
-                        CONF_HOST: ping_host,
-                    }
-                    import_result = await self.hass.config_entries.flow.async_init(
-                        "ping",
-                        context={"source": SOURCE_IMPORT},
-                        data=ping_config,
+        entity_reg = er.async_get(self.hass)
+        ping_entry_id: str | None = None
+
+        ping_entity_id = None
+        if ping_host:
+            # If a hosts was provided, setup a Ping config entry
+            ping_entry_id = None
+            ping_entries = self.hass.config_entries.async_entries("ping")
+            for entry in ping_entries:
+                if entry.options.get(CONF_HOST) == ping_host:
+                    ping_entry_id = entry.entry_id
+                    break
+            if not ping_entry_id:
+                ping_config = {
+                    CONF_HOST: ping_host,
+                }
+                import_result = await self.hass.config_entries.flow.async_init(
+                    "ping",
+                    context={"source": SOURCE_IMPORT},
+                    data=ping_config,
+                )
+                if not (
+                    import_result["type"] is FlowResultType.CREATE_ENTRY
+                    or (
+                        import_result["type"] is FlowResultType.ABORT
+                        and import_result["reason"] == "already_configured"
                     )
-                    if not (
-                        import_result["type"] is FlowResultType.CREATE_ENTRY
-                        or (
-                            import_result["type"] is FlowResultType.ABORT
-                            and import_result["reason"] == "already_configured"
-                        )
-                    ):
-                        return self.async_abort(reason="could_not_import_host")
-                    ping_entry_id = import_result["result"].entry_id
+                ):
+                    return self.async_abort(reason="could_not_import_host")
+                ping_entry_id = import_result["result"].entry_id
 
-            ping_entity_id = None
             for _ in range(10):
                 # Wait for Ping binary sensor to be created
                 if ping_entry_id and (
@@ -100,70 +106,23 @@ class MigrateSwitchFlow(RepairsFlow):
             if not ping_entity_id:
                 return self.async_abort(reason="could_not_get_ping_entity")
 
-            # Import Wake on LAN config to get a config entry with a button entity
-            wol_entry_id = None
-            wol_entries = self.hass.config_entries.async_entries(DOMAIN)
-            for entry in wol_entries:
-                if entry.options.get(CONF_MAC) == dr.format_mac(mac):
-                    wol_entry_id = entry.entry_id
-                    break
-            if not wol_entry_id:
-                wol_config: dict[str, Any] = {CONF_MAC: mac}
-                if broadcast_address is not None:
-                    wol_config[CONF_BROADCAST_ADDRESS] = broadcast_address
-                if broadcast_port is not None:
-                    wol_config[CONF_BROADCAST_PORT] = broadcast_port
-                import_result = await self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data=wol_config,
-                )
-                if not (
-                    import_result["type"] is FlowResultType.CREATE_ENTRY
-                    or (
-                        import_result["type"] is FlowResultType.ABORT
-                        and import_result["reason"] == "already_configured"
-                    )
-                ):
-                    return self.async_abort(reason="could_not_import_wol")
-                wol_entry_id = import_result["result"].entry_id
-
-            wol_entity_id = None
-            for _ in range(10):
-                # Wait for WOL button to be created
-                if entities := er.async_entries_for_config_entry(
-                    entity_reg,
-                    wol_entry_id,
-                ):
-                    wol_entity_id = entities[0].entity_id
-                    break
-                await asyncio.sleep(1)
-            if not wol_entity_id:
-                return self.async_abort(reason="could_not_get_wol_entity")
-
-            # Create the Template switch based on the above entities created
-            template_config = {
-                CONF_NAME: name,
-                CONF_ON_ACTION: [
-                    {
-                        "action": "button.press",
-                        "target": {
-                            "entity_id": wol_entity_id,
-                        },
-                    }
-                ],
-            }
-            if ping_entity_id:
-                template_config[CONF_VALUE_TEMPLATE] = (
-                    "{{ is_state('" + ping_entity_id + "', 'on') }}"
-                )
-            if turn_off_action:
-                template_config[CONF_OFF_ACTION] = turn_off_action
-
+        # Import Wake on LAN config to get a config entry with a button entity
+        wol_entry_id = None
+        wol_entries = self.hass.config_entries.async_entries(DOMAIN)
+        for entry in wol_entries:
+            if entry.options.get(CONF_MAC) == dr.format_mac(mac):
+                wol_entry_id = entry.entry_id
+                break
+        if not wol_entry_id:
+            wol_config: dict[str, Any] = {CONF_MAC: mac}
+            if broadcast_address is not None:
+                wol_config[CONF_BROADCAST_ADDRESS] = broadcast_address
+            if broadcast_port is not None:
+                wol_config[CONF_BROADCAST_PORT] = broadcast_port
             import_result = await self.hass.config_entries.flow.async_init(
-                "template",
+                DOMAIN,
                 context={"source": SOURCE_IMPORT},
-                data=template_config,
+                data=wol_config,
             )
             if not (
                 import_result["type"] is FlowResultType.CREATE_ENTRY
@@ -172,18 +131,59 @@ class MigrateSwitchFlow(RepairsFlow):
                     and import_result["reason"] == "already_configured"
                 )
             ):
-                return self.async_abort(reason="could_not_import_template")
+                return self.async_abort(reason="could_not_import_wol")
+            wol_entry_id = import_result["result"].entry_id
 
-            return self.async_create_entry(
-                data={},
-                description="with_ping" if ping_host else "no_ping",
-                description_placeholders={"mac": mac, "host": ping_host or ""},
+        wol_entity_id = None
+        for _ in range(10):
+            # Wait for WOL button to be created
+            if entities := er.async_entries_for_config_entry(
+                entity_reg,
+                wol_entry_id,
+            ):
+                wol_entity_id = entities[0].entity_id
+                break
+            await asyncio.sleep(1)
+        if not wol_entity_id:
+            return self.async_abort(reason="could_not_get_wol_entity")
+
+        # Create the Template switch based on the above entities created
+        template_config = {
+            CONF_NAME: name,
+            CONF_ON_ACTION: [
+                {
+                    "action": "button.press",
+                    "target": {
+                        "entity_id": wol_entity_id,
+                    },
+                }
+            ],
+        }
+        if ping_entity_id:
+            template_config[CONF_VALUE_TEMPLATE] = (
+                "{{ is_state('" + ping_entity_id + "', 'on') }}"
             )
+        if turn_off_action:
+            template_config[CONF_OFF_ACTION] = turn_off_action
 
-        return self.async_show_form(
-            step_id="migrate",
-            data_schema=vol.Schema({}),
-            description_placeholders={"mac": mac},
+        import_result = await self.hass.config_entries.flow.async_init(
+            "template",
+            context={"source": SOURCE_IMPORT},
+            data=template_config,
+        )
+        if not (
+            import_result["type"] is FlowResultType.CREATE_ENTRY
+            or (
+                import_result["type"] is FlowResultType.ABORT
+                and import_result["reason"] == "already_configured"
+            )
+        ):
+            return self.async_abort(reason="could_not_import_template")
+
+        return self.async_create_entry(
+            data={},
+            description="with_ping" if ping_host else "no_ping",
+            description_placeholders={"mac": mac, "host": ping_host or ""},
         )
 
 
