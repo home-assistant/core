@@ -5,13 +5,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.ping import DOMAIN as PING_DOMAIN
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
     RepairsFlowResult,
 )
-from homeassistant.components.template import DOMAIN as TEMPLATE_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
@@ -57,8 +55,8 @@ class MigrateSwitchFlow(RepairsFlow):
             entity_reg = er.async_get(self.hass)
             ping_entry_id: str | None = None
 
-            # Setup ping sensor if host is provided
             if ping_host:
+                # If a hosts was provided, setup a Ping config entry
                 ping_entry_id = None
                 ping_entries = self.hass.config_entries.async_entries("ping")
                 for entry in ping_entries:
@@ -70,7 +68,7 @@ class MigrateSwitchFlow(RepairsFlow):
                         CONF_HOST: ping_host,
                     }
                     import_result = await self.hass.config_entries.flow.async_init(
-                        PING_DOMAIN,
+                        "ping",
                         context={"source": SOURCE_IMPORT},
                         data=ping_config,
                     )
@@ -86,7 +84,7 @@ class MigrateSwitchFlow(RepairsFlow):
 
             ping_entity_id = None
             for _ in range(10):
-                # Wait for ping config entry entity to be created
+                # Wait for Ping binary sensor to be created
                 if ping_entry_id and (
                     entities := er.async_entries_for_config_entry(
                         entity_reg,
@@ -132,7 +130,7 @@ class MigrateSwitchFlow(RepairsFlow):
 
             wol_entity_id = None
             for _ in range(10):
-                # Wait for wol config entry entity to be created
+                # Wait for WOL button to be created
                 if entities := er.async_entries_for_config_entry(
                     entity_reg,
                     wol_entry_id,
@@ -143,6 +141,7 @@ class MigrateSwitchFlow(RepairsFlow):
             if not wol_entity_id:
                 return self.async_abort(reason="could_not_get_wol_entity")
 
+            # Create the Template switch based on the above entities created
             template_config = {
                 CONF_NAME: name,
                 CONF_ON_ACTION: [
@@ -162,7 +161,7 @@ class MigrateSwitchFlow(RepairsFlow):
                 template_config[CONF_OFF_ACTION] = turn_off_action
 
             import_result = await self.hass.config_entries.flow.async_init(
-                TEMPLATE_DOMAIN,
+                "template",
                 context={"source": SOURCE_IMPORT},
                 data=template_config,
             )
