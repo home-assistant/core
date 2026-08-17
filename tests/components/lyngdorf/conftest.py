@@ -7,10 +7,15 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from lyngdorf.const import LyngdorfModel
 from lyngdorf.device import Receiver
+from lyngdorf.models.base import NumericRange
 import pytest
 
-from homeassistant.components.lyngdorf.const import CONF_SERIAL_NUMBER, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.components.lyngdorf.const import (
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
+    PLATFORMS,
+)
+from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -67,11 +72,36 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver.sound_mode = None
         receiver.available_sound_modes = []
 
+        receiver.audio_information = None
+        receiver.video_information = None
+        receiver.audio_input = None
+        receiver.video_input = None
+        receiver.streaming_source = None
+        receiver.available_audio_inputs = []
+        receiver.available_video_inputs = []
+        receiver.available_stream_types = []
+
+        receiver.room_perfect_position = None
+        receiver.available_room_perfect_positions = []
+        receiver.voicing = None
+        receiver.available_voicings = []
+
+        receiver.lipsync = None
+        receiver.lipsync_range = NumericRange(0, 500, 1)
+        for _trim in ("bass", "treble", "centre", "height", "lfe", "surround"):
+            setattr(receiver, f"trim_{_trim}", None)
+        receiver.trim_bass_range = NumericRange(-12.0, 12.0, 0.1)
+        receiver.trim_treble_range = NumericRange(-12.0, 12.0, 0.1)
+        for _trim in ("centre", "height", "lfe", "surround"):
+            setattr(receiver, f"trim_{_trim}_range", NumericRange(-10.0, 10.0, 0.1))
+
         receiver.zone_b_power_on = False
         receiver.zone_b_volume = -40.0
         receiver.zone_b_mute_enabled = False
         receiver.zone_b_source = None
         receiver.zone_b_available_sources = []
+        receiver.zone_b_audio_input = None
+        receiver.zone_b_streaming_source = None
 
         create_mock.return_value = receiver
         yield receiver
@@ -98,15 +128,25 @@ def mock_find_receiver_model() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms to load; override per module to isolate a single platform."""
+    return list(PLATFORMS)
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the Lyngdorf integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.lyngdorf.lookup_receiver_model") as lookup:
+    with (
+        patch("homeassistant.components.lyngdorf.lookup_receiver_model") as lookup,
+        patch("homeassistant.components.lyngdorf.PLATFORMS", platforms),
+    ):
         lookup.return_value = LyngdorfModel.MP_60
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
