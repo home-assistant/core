@@ -11,7 +11,7 @@ from airgradient import (
 from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture, load_fixture
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
@@ -33,4 +33,20 @@ def load_config_fixture(filename: str) -> Config:
     """Load and parse a legacy config fixture."""
     return parse_config_json(
         load_fixture(filename, DOMAIN), api_version=ApiVersion.LEGACY
+    )
+
+
+async def async_load_measures_fixture(hass: HomeAssistant, filename: str) -> Measures:
+    """Load and parse a legacy measures fixture asynchronously."""
+    return parse_measures_json(
+        await async_load_fixture(hass, filename, DOMAIN),
+        api_version=ApiVersion.LEGACY,
+    )
+
+
+async def async_load_config_fixture(hass: HomeAssistant, filename: str) -> Config:
+    """Load and parse a legacy config fixture asynchronously."""
+    return parse_config_json(
+        await async_load_fixture(hass, filename, DOMAIN),
+        api_version=ApiVersion.LEGACY,
     )

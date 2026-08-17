@@ -12,7 +12,7 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import load_measures_fixture, setup_integration
+from . import async_load_measures_fixture, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -39,15 +39,15 @@ async def test_create_entities(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test creating entities."""
-    mock_airgradient_client.get_current_measures.return_value = load_measures_fixture(
-        "measures_after_boot.json"
+    mock_airgradient_client.get_current_measures.return_value = (
+        await async_load_measures_fixture(hass, "measures_after_boot.json")
     )
     with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert len(hass.states.async_all()) == 0
-    mock_airgradient_client.get_current_measures.return_value = load_measures_fixture(
-        "current_measures_indoor.json"
+    mock_airgradient_client.get_current_measures.return_value = (
+        await async_load_measures_fixture(hass, "current_measures_indoor.json")
     )
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)

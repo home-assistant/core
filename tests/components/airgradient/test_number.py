@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import load_config_fixture, setup_integration
+from . import async_load_config_fixture, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -76,8 +76,8 @@ async def test_cloud_creates_no_number(
 
     assert len(hass.states.async_all()) == 0
 
-    mock_cloud_airgradient_client.get_config.return_value = load_config_fixture(
-        "get_config_local.json"
+    mock_cloud_airgradient_client.get_config.return_value = (
+        await async_load_config_fixture(hass, "get_config_local.json")
     )
 
     freezer.tick(timedelta(minutes=5))
@@ -86,8 +86,8 @@ async def test_cloud_creates_no_number(
 
     assert len(hass.states.async_all()) == 2
 
-    mock_cloud_airgradient_client.get_config.return_value = load_config_fixture(
-        "get_config_cloud.json"
+    mock_cloud_airgradient_client.get_config.return_value = (
+        await async_load_config_fixture(hass, "get_config_cloud.json")
     )
 
     freezer.tick(timedelta(minutes=5))
