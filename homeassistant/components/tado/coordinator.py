@@ -2,7 +2,7 @@
 
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any, TypedDict, override
+from typing import Any, override
 from zoneinfo import ZoneInfo
 
 from PyTado.interface import Tado
@@ -33,23 +33,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
 
 type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
-
-
-class HeatingCircuit(TypedDict):
-    """A heating circuit as returned by Tado."""
-
-    number: int
-    driverSerialNo: str
-    driverShortSerialNo: str
-
-
-class ZoneControl(TypedDict, total=False):
-    """The control settings of a zone as returned by Tado."""
-
-    type: str
-    heatingCircuit: int | None
-    earlyStartEnabled: bool
-    duties: dict[str, Any]
 
 
 class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -86,7 +69,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.home_name: str
         self.zones: list[dict[Any, Any]] = []
         self.devices: list[dict[Any, Any]] = []
-        self.heating_circuits: dict[str, HeatingCircuit] = {}
+        self.heating_circuits: dict[str, dict[str, Any]] = {}
         self._heating_circuits_loaded = False
         self.data: dict[str, Any] = {
             "device": {},
@@ -503,7 +486,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not heating_zones:
             return
 
-        def _load() -> tuple[list[HeatingCircuit], dict[int, ZoneControl]]:
+        def _load() -> tuple[list[dict[str, Any]], dict[int, dict[str, Any]]]:
             return self._tado.get_heating_circuits(), {
                 zone["id"]: self._tado.get_zone_control(zone["id"])
                 for zone in heating_zones
