@@ -6,7 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from google_health_api.const import HealthApiScope
-from google_health_api.model import ListPairedDevicesResult, _ListPairedDevicesModel
+from google_health_api.model import (
+    SLEEP,
+    ListPairedDevicesResult,
+    _ListPairedDevicesModel,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,7 +25,7 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from .conftest import paired_devices_fixture
+from .conftest import _list_fixture, paired_devices_fixture
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -93,6 +97,61 @@ async def test_sensor_empty_sleep(
 ) -> None:
     """Test sleep sensors when the sleep endpoint returns no data."""
     mock_google_health_client.sleep.list.return_value = MagicMock(data_points=[])
+
+    assert await integration_setup()
+
+    time_asleep_state = hass.states.get("sensor.google_health_time_asleep")
+    assert time_asleep_state is not None
+    assert time_asleep_state.state == "unknown"
+
+
+async def test_sensor_in_progress_sleep(
+    hass: HomeAssistant,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test sleep sensors return latest completed session when an active session is in progress."""
+    mock_google_health_client.sleep.list.return_value = _list_fixture(
+        "sleep_in_progress.json", SLEEP
+    )
+
+    assert await integration_setup()
+
+    time_asleep_state = hass.states.get("sensor.google_health_time_asleep")
+    assert time_asleep_state is not None
+    assert time_asleep_state.state == "420"
+
+    time_awake_state = hass.states.get("sensor.google_health_time_awake")
+    assert time_awake_state is not None
+    assert time_awake_state.state == "60"
+
+    time_in_bed_state = hass.states.get("sensor.google_health_time_in_bed")
+    assert time_in_bed_state is not None
+    assert time_in_bed_state.state == "480"
+
+    time_to_fall_asleep_state = hass.states.get(
+        "sensor.google_health_time_to_fall_asleep"
+    )
+    assert time_to_fall_asleep_state is not None
+    assert time_to_fall_asleep_state.state == "15"
+
+    time_after_wakeup_state = hass.states.get(
+        "sensor.google_health_time_after_waking_up"
+    )
+    assert time_after_wakeup_state is not None
+    assert time_after_wakeup_state.state == "10"
+
+
+async def test_sensor_only_in_progress_sleep(
+    hass: HomeAssistant,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test sleep sensors when only an in-progress session with no summary exists."""
+    full_fixture = _list_fixture("sleep_in_progress.json", SLEEP)
+    mock_google_health_client.sleep.list.return_value = MagicMock(
+        data_points=full_fixture.data_points[:1]
+    )
 
     assert await integration_setup()
 
