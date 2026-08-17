@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
 
