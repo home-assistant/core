@@ -659,6 +659,20 @@
         "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       }
     },
+    "switch": {
+      "quickmode_comfort": {
+        "name": "Comfort"
+      },
+      "quickmode_eco": {
+        "name": "Eco"
+      },
+      "quickmode_forced_level_four": {
+        "name": "Boost"
+      },
+      "quickmode_silent": {
+        "name": "Silent"
+      }
+    },
     "water_heater": {
       "domestic_hot_water": {
         "name": "Domestic hot water"
