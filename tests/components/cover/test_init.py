@@ -280,7 +280,7 @@ async def test_services_with_speed(
             SERVICE_SET_COVER_POSITION,
             {
                 ATTR_ENTITY_ID: speed_cover.entity_id,
-                "position": 50,
+                ATTR_POSITION: 50,
                 ATTR_SPEED: "invalid",
             },
             blocking=True,
