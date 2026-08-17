@@ -150,8 +150,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     # Total active power
     BitvisSensorEntityDescription(
         key="power_active_delivered_to_client",
-        translation_key="power_active",
-        translation_placeholders={"direction": "import"},
+        translation_key="power_active_import",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -164,8 +163,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="power_active_delivered_by_client",
-        translation_key="power_active",
-        translation_placeholders={"direction": "export"},
+        translation_key="power_active_export",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -179,8 +177,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     # Total reactive power
     BitvisSensorEntityDescription(
         key="power_reactive_delivered_to_client",
-        translation_key="power_reactive",
-        translation_placeholders={"direction": "import"},
+        translation_key="power_reactive_import",
         device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -193,8 +190,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="power_reactive_delivered_by_client",
-        translation_key="power_reactive",
-        translation_placeholders={"direction": "export"},
+        translation_key="power_reactive_export",
         device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -208,8 +204,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     # Per-phase active power (to client)
     BitvisSensorEntityDescription(
         key="power_active_l1_delivered_to_client",
-        translation_key="power_active_phase",
-        translation_placeholders={"direction": "import", "phase": "L1"},
+        translation_key="power_active_phase_import",
+        translation_placeholders={"phase": "L1"},
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -222,8 +218,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="power_active_l2_delivered_to_client",
-        translation_key="power_active_phase",
-        translation_placeholders={"direction": "import", "phase": "L2"},
+        translation_key="power_active_phase_import",
+        translation_placeholders={"phase": "L2"},
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -236,8 +232,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="power_active_l3_delivered_to_client",
-        translation_key="power_active_phase",
-        translation_placeholders={"direction": "import", "phase": "L3"},
+        translation_key="power_active_phase_import",
+        translation_placeholders={"phase": "L3"},
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -251,8 +247,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     # Per-phase active power (by client)
     BitvisSensorEntityDescription(
         key="power_active_l1_delivered_by_client",
-        translation_key="power_active_phase",
-        translation_placeholders={"direction": "export", "phase": "L1"},
+        translation_key="power_active_phase_export",
+        translation_placeholders={"phase": "L1"},
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -265,8 +261,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="power_active_l2_delivered_by_client",
-        translation_key="power_active_phase",
-        translation_placeholders={"direction": "export", "phase": "L2"},
+        translation_key="power_active_phase_import",
+        translation_placeholders={"phase": "L2"},
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -279,8 +275,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="power_active_l3_delivered_by_client",
-        translation_key="power_active_phase",
-        translation_placeholders={"direction": "export", "phase": "L3"},
+        translation_key="power_active_phase_export",
+        translation_placeholders={"phase": "L3"},
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -294,8 +290,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     # Per-phase reactive power (to client)
     BitvisSensorEntityDescription(
         key="power_reactive_l1_delivered_to_client",
-        translation_key="power_reactive_phase",
-        translation_placeholders={"direction": "import", "phase": "L1"},
+        translation_key="power_reactive_phase_import",
+        translation_placeholders={"phase": "L1"},
         device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -308,8 +304,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="power_reactive_l2_delivered_to_client",
-        translation_key="power_reactive_phase",
-        translation_placeholders={"direction": "import", "phase": "L2"},
+        translation_key="power_reactive_phase_import",
+        translation_placeholders={"phase": "L2"},
         device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -322,8 +318,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="power_reactive_l3_delivered_to_client",
-        translation_key="power_reactive_phase",
-        translation_placeholders={"direction": "import", "phase": "L3"},
+        translation_key="power_reactive_phase_import",
+        translation_placeholders={"phase": "L3"},
         device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -337,8 +333,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     # Per-phase reactive power (by client)
     BitvisSensorEntityDescription(
         key="power_reactive_l1_delivered_by_client",
-        translation_key="power_reactive_phase",
-        translation_placeholders={"direction": "export", "phase": "L1"},
+        translation_key="power_reactive_phase_export",
+        translation_placeholders={"phase": "L1"},
         device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -351,8 +347,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="power_reactive_l2_delivered_by_client",
-        translation_key="power_reactive_phase",
-        translation_placeholders={"direction": "export", "phase": "L2"},
+        translation_key="power_reactive_phase_export",
+        translation_placeholders={"phase": "L2"},
         device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -365,8 +361,8 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="power_reactive_l3_delivered_by_client",
-        translation_key="power_reactive_phase",
-        translation_placeholders={"direction": "export", "phase": "L3"},
+        translation_key="power_reactive_phase_export",
+        translation_placeholders={"phase": "L3"},
         device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -380,8 +376,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     # Energy - active
     BitvisSensorEntityDescription(
         key="energy_active_delivered_to_client",
-        translation_key="energy_active",
-        translation_placeholders={"direction": "import"},
+        translation_key="energy_active_import",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -394,8 +389,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="energy_active_delivered_by_client",
-        translation_key="energy_active",
-        translation_placeholders={"direction": "export"},
+        translation_key="energy_active_export",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -409,8 +403,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     # Energy - reactive
     BitvisSensorEntityDescription(
         key="energy_reactive_delivered_to_client",
-        translation_key="energy_reactive",
-        translation_placeholders={"direction": "import"},
+        translation_key="energy_reactive_import",
         device_class=SensorDeviceClass.REACTIVE_ENERGY,
         native_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -423,8 +416,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
     ),
     BitvisSensorEntityDescription(
         key="energy_reactive_delivered_by_client",
-        translation_key="energy_reactive",
-        translation_placeholders={"direction": "export"},
+        translation_key="energy_reactive_export",
         device_class=SensorDeviceClass.REACTIVE_ENERGY,
         native_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,

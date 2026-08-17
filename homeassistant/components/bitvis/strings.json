@@ -26,11 +26,17 @@
   },
   "entity": {
     "sensor": {
-      "energy_active": {
-        "name": "Active energy {direction}"
+      "energy_active_export": {
+        "name": "Active energy export"
       },
-      "energy_reactive": {
-        "name": "Reactive energy {direction}"
+      "energy_active_import": {
+        "name": "Active energy import"
+      },
+      "energy_reactive_export": {
+        "name": "Reactive energy export"
+      },
+      "energy_reactive_import": {
+        "name": "Reactive energy import"
       },
       "han_msg_buffer_overflow": {
         "name": "HAN buffer overflows"
@@ -44,17 +50,29 @@
       "phase_voltage": {
         "name": "Voltage {phase}"
       },
-      "power_active": {
-        "name": "Active power {direction}"
+      "power_active_export": {
+        "name": "Active power export"
       },
-      "power_active_phase": {
-        "name": "Active power {direction} {phase}"
+      "power_active_import": {
+        "name": "Active power import"
       },
-      "power_reactive": {
-        "name": "Reactive power {direction}"
+      "power_active_phase_export": {
+        "name": "Active power export {phase}"
       },
-      "power_reactive_phase": {
-        "name": "Reactive power {direction} {phase}"
+      "power_active_phase_import": {
+        "name": "Active power import {phase}"
+      },
+      "power_reactive_export": {
+        "name": "Reactive power export"
+      },
+      "power_reactive_import": {
+        "name": "Reactive power import"
+      },
+      "power_reactive_phase_export": {
+        "name": "Reactive power export {phase}"
+      },
+      "power_reactive_phase_import": {
+        "name": "Reactive power import {phase}"
       },
       "wifi_rssi": {
         "name": "Wi-Fi signal strength"
