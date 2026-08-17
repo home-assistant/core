@@ -98,7 +98,7 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             raise UpdateFailed from exception
         if self.supports_effects:
             try:
-                current_movie = await self.client.get_current_movie()
+                current_movie = await self._request(self.client.get_current_movie)
             except (TwinklyError, TimeoutError, ClientError) as exception:
                 _LOGGER.debug("Error fetching current movie: %s", exception)
         brightness = (
