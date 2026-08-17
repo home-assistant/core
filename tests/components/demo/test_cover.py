@@ -103,7 +103,7 @@ async def test_close_cover_slow(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_SPEED: "SLOW"},
+        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_SPEED: "slow"},
         blocking=True,
     )
     state = hass.states.get(ENTITY_COVER)
@@ -149,7 +149,7 @@ async def test_open_cover_slow(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_SPEED: "SLOW"},
+        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_SPEED: "slow"},
         blocking=True,
     )
     state = hass.states.get(ENTITY_COVER)
@@ -257,7 +257,7 @@ async def test_set_cover_position_slow(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 10, ATTR_SPEED: "SLOW"},
+        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 10, ATTR_SPEED: "slow"},
         blocking=True,
     )
     state = hass.states.get(ENTITY_COVER)
@@ -285,7 +285,7 @@ async def test_set_cover_position_slow(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 80, ATTR_SPEED: "SLOW"},
+        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 80, ATTR_SPEED: "slow"},
         blocking=True,
     )
     state = hass.states.get(ENTITY_COVER)

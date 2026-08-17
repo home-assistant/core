@@ -44,7 +44,7 @@ async def async_setup_entry(
                 "Living Room Window",
                 70,
                 50,
-                supported_speeds=[s.name for s in Speed],
+                supported_speeds=[s.name.lower() for s in Speed],
             ),
             DemoCover(
                 hass,
@@ -163,7 +163,7 @@ class DemoCover(CoverEntity):
             self.async_write_ha_state()
             return
 
-        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT")]
+        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT").upper()]
         self._is_opening = False
         self._is_closing = True
         self._listen_cover()
@@ -189,7 +189,7 @@ class DemoCover(CoverEntity):
             self.async_write_ha_state()
             return
 
-        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT")]
+        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT").upper()]
         self._is_opening = True
         self._is_closing = False
         self._listen_cover()
@@ -216,7 +216,7 @@ class DemoCover(CoverEntity):
         self._is_closing = position < (self._position or 0)
         self._is_opening = not self._is_closing
 
-        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT")]
+        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT").upper()]
         self._listen_cover()
         self._requested_closing = (
             self._position is not None and position < self._position
