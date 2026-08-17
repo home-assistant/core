@@ -35,7 +35,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.vrchat.async_setup_entry",
-            return_value=True,
+            new=AsyncMock(return_value=True),
         ),
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.close",
@@ -73,7 +73,7 @@ async def test_user_flow_duplicate_account(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.vrchat.async_setup_entry",
-            return_value=True,
+            new=AsyncMock(return_value=True),
         ),
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.close",
@@ -157,7 +157,7 @@ async def test_authenticator_two_factor_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.vrchat.async_setup_entry",
-            return_value=True,
+            new=AsyncMock(return_value=True),
         ),
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.close",
@@ -202,7 +202,7 @@ async def test_email_two_factor_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.vrchat.async_setup_entry",
-            return_value=True,
+            new=AsyncMock(return_value=True),
         ),
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.close",
