@@ -1,14 +1,30 @@
 """Denon HEOS Media Player."""
 
 import asyncio
-import dataclasses
-import logging
+
+
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from contextlib import suppress
+import dataclasses
 from datetime import datetime
 from functools import reduce, wraps
+import logging
 from operator import ior
 from typing import Any, Final, override
+
+from pyheos import (
+    AddCriteriaType,
+    ControlType,
+    HeosError,
+    HeosPlayer,
+    MediaItem,
+    MediaMusicSource,
+    MediaType as HeosMediaType,
+    PlayState,
+    RepeatType,
+    const as heos_const
+)
+from pyheos.util import mediauri as heos_source
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -33,24 +49,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
-from pyheos import (
-    AddCriteriaType,
-    ControlType,
-    HeosError,
-    HeosPlayer,
-    MediaItem,
-    MediaMusicSource,
-    PlayState,
-    RepeatType,
-)
-from pyheos import (
-    MediaType as HeosMediaType,
-)
-from pyheos import (
-    const as heos_const,
-)
-from pyheos.util import mediauri as heos_source
-
 from . import services
 from .const import DOMAIN
 from .coordinator import HeosConfigEntry, HeosCoordinator
@@ -233,8 +231,23 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         extra = kwargs.get("extra", {})
         if "volume" in extra:
             try:
-                volume_level = float(extra["volume"]) / 100
-                await self._player.set_volume(int(volume_level * 100))
+                volume_value = float(extra["volume"])
+                # Support both normalized (0.0-1.0) and percentage (0-100) formats
+                if 0.0 <= volume_value <= 1.0:
+                    # Normalized format (Home Assistant style)
+                    volume_percent = int(volume_value * 100)
+                elif 0 <= volume_value <= 100:
+                    # Percentage format
+                    volume_percent = int(volume_value)
+                else:
+                    # Out of range, clamp to valid range
+                    volume_percent = max(0, min(100, int(volume_value)))
+                    _LOGGER.warning(
+                        "Volume %s out of range, clamping to %s",
+                        volume_value,
+                        volume_percent,
+                    )
+                await self._player.set_volume(volume_percent)
             except (ValueError, TypeError) as err:
                 _LOGGER.warning("Invalid volume level for announcement: %s", err)
 
