@@ -1,28 +1,14 @@
 """Denon HEOS Media Player."""
 
 import asyncio
+import dataclasses
+import logging
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from contextlib import suppress
-import dataclasses
 from datetime import datetime
 from functools import reduce, wraps
-import logging
 from operator import ior
 from typing import Any, Final, override
-
-from pyheos import (
-    AddCriteriaType,
-    ControlType,
-    HeosError,
-    HeosPlayer,
-    MediaItem,
-    MediaMusicSource,
-    MediaType as HeosMediaType,
-    PlayState,
-    RepeatType,
-    const as heos_const,
-)
-from pyheos.util import mediauri as heos_source
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -47,6 +33,23 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
+from pyheos import (
+    AddCriteriaType,
+    ControlType,
+    HeosError,
+    HeosPlayer,
+    MediaItem,
+    MediaMusicSource,
+    PlayState,
+    RepeatType,
+)
+from pyheos import (
+    MediaType as HeosMediaType,
+)
+from pyheos import (
+    const as heos_const,
+)
+from pyheos.util import mediauri as heos_source
 
 from . import services
 from .const import DOMAIN
@@ -138,14 +141,14 @@ type _FuncType[**_P, _R] = Callable[_P, Awaitable[_R]]
 type _ReturnFuncType[**_P, _R] = Callable[_P, Coroutine[Any, Any, _R]]
 
 
-def catch_action_error[**_P, _R](
+def catch_action_error[**P, R](
     action: str,
-) -> Callable[[_FuncType[_P, _R]], _ReturnFuncType[_P, _R]]:
+) -> Callable[[_FuncType[P, R]], _ReturnFuncType[P, R]]:
     """Return decorator that catches errors and raises HomeAssistantError."""
 
-    def decorator(func: _FuncType[_P, _R]) -> _ReturnFuncType[_P, _R]:
+    def decorator(func: _FuncType[P, R]) -> _ReturnFuncType[P, R]:
         @wraps(func)
-        async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             try:
                 return await func(*args, **kwargs)
             except (HeosError, ValueError) as ex:
@@ -197,7 +200,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             self._media_position_updated_at = utcnow()
 
         # Check for announcement completion
-        if self._announce_in_progress and event == heos_const.EVENT_PLAYER_STATE_CHANGED:
+        if (
+            self._announce_in_progress
+            and event == heos_const.EVENT_PLAYER_STATE_CHANGED
+        ):
             await self._check_announcement_completion()
 
         self._handle_coordinator_update()
@@ -211,7 +217,9 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         if self._player.state == PlayState.PLAY:
             self._announce_restore_state = self._snapshot_state()
             self._announce_restore_state["tts_url"] = media_id
-            _LOGGER.debug("Saving state for announcement: %s", self._announce_restore_state)
+            _LOGGER.debug(
+                "Saving state for announcement: %s", self._announce_restore_state
+            )
 
             # Pause the current playback
             await self._player.pause()
@@ -282,11 +290,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                         _LOGGER.debug("Could not skip TTS track: %s", err)
                         # Fallback to just play
                         await self._player.play()
-                else:
-                    # Already moved to next track or different media, just ensure we're playing
-                    if self._player.state != PlayState.PLAY:
-                        _LOGGER.debug("Not on TTS track, ensuring playback continues")
-                        await self._player.play()
+                # Already moved to next track or different media, just ensure we're playing
+                elif self._player.state != PlayState.PLAY:
+                    _LOGGER.debug("Not on TTS track, ensuring playback continues")
+                    await self._player.play()
 
             _LOGGER.debug("State restoration completed")
         except HeosError as err:
@@ -308,18 +315,27 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             tts_queue_ids = []
             for item in queue_after:
                 # Check for the exact TTS characteristics from the logs
-                if (hasattr(item, 'song') and item.song == "Url Stream" and
-                    hasattr(item, 'album') and item.album == "Url Stream" and
-                    hasattr(item, 'artist') and item.artist == "Url Stream"):
+                if (
+                    hasattr(item, "song")
+                    and item.song == "Url Stream"
+                    and hasattr(item, "album")
+                    and item.album == "Url Stream"
+                    and hasattr(item, "artist")
+                    and item.artist == "Url Stream"
+                ):
                     tts_queue_ids.append(item.queue_id)
                     _LOGGER.debug(
                         "Found TTS Url Stream item: queue_id=%s, song=%s, media_id=%s",
-                        item.queue_id, item.song, getattr(item, 'media_id', 'N/A')
+                        item.queue_id,
+                        item.song,
+                        getattr(item, "media_id", "N/A"),
                     )
 
             # Remove TTS items from queue
             if tts_queue_ids:
-                _LOGGER.debug("Removing TTS Url Stream items from queue: %s", tts_queue_ids)
+                _LOGGER.debug(
+                    "Removing TTS Url Stream items from queue: %s", tts_queue_ids
+                )
                 await self._player.remove_from_queue(tts_queue_ids)
             else:
                 _LOGGER.debug("No TTS Url Stream items found to remove")
@@ -355,7 +371,8 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 self._announce_completed = True
                 _LOGGER.debug(
                     "Announcement completed - was playing TTS, now playing: %s, state: %s",
-                    current_media_id, self._player.state
+                    current_media_id,
+                    self._player.state,
                 )
                 await self._restore_state()
 
