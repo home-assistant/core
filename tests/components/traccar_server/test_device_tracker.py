@@ -1,6 +1,5 @@
 """Test the Traccar Server device tracker."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock
 
 from homeassistant.config_entries import ConfigEntryState
@@ -14,7 +13,7 @@ from tests.common import MockConfigEntry
 
 async def test_update_data_happy_path(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Devices, positions, and geofences merged by the coordinator reach the device tracker."""
@@ -34,7 +33,7 @@ async def test_update_data_happy_path(
 
 async def test_handle_subscription_data_updates_known_device(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """A subscription update for a known device updates its device tracker state."""
@@ -63,7 +62,7 @@ async def test_handle_subscription_data_updates_known_device(
 
 async def test_handle_subscription_data_ignores_unknown_device(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Subscription data for a device we haven't seen via polling is ignored."""
@@ -96,7 +95,7 @@ async def test_handle_subscription_data_ignores_unknown_device(
 
 async def test_handle_subscription_data_filters_low_accuracy_position(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """A position update that fails the accuracy filter is skipped."""

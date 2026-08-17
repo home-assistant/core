@@ -1,7 +1,7 @@
 """Test the Traccar Server integration setup and subscription lifecycle."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import sys
@@ -67,7 +67,7 @@ async def test_handle_subscription_data_logs_restored_after_failures(
     calls = 0
 
     async def _fail_three_times_then_succeed(
-        callback: Callable[[SubscriptionData], object],
+        callback: Callable[[SubscriptionData], Awaitable[None]],
     ) -> None:
         nonlocal calls
         calls += 1
