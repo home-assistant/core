@@ -1413,8 +1413,6 @@ async def test_esphome_discovery_intent_recommended(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
