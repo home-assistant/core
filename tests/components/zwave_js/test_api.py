@@ -403,9 +403,9 @@ async def test_node_status(
 
 async def test_node_neighbors(
     hass: HomeAssistant,
-    multisensor_6,
-    integration,
-    client,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+    client: MagicMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test the node_neighbors websocket command."""
