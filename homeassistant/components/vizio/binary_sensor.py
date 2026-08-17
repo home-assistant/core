@@ -1,16 +1,17 @@
-"""Sensor platform for Vizio SmartCast devices."""
+"""Binary sensor platform for Vizio SmartCast devices."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
+from vizaio import ChargingStatus
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,20 +24,24 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class VizioSensorEntityDescription(SensorEntityDescription):
-    """Describes a Vizio sensor entity."""
+class VizioBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Vizio binary sensor entity."""
 
-    value_fn: Callable[[VizioDeviceData], int | None]
+    value_fn: Callable[[VizioDeviceData], bool | None]
 
 
-SENSORS: tuple[VizioSensorEntityDescription, ...] = (
-    VizioSensorEntityDescription(
-        key="battery_level",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
+BINARY_SENSORS: tuple[VizioBinarySensorEntityDescription, ...] = (
+    VizioBinarySensorEntityDescription(
+        key="battery_charging",
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.battery_level,
+        # A fully charged battery is not drawing charge, so it reports off;
+        # the battery level sensor is what tells the user it is full.
+        value_fn=lambda data: (
+            data.charging_status is ChargingStatus.CHARGING
+            if data.charging_status is not None
+            else None
+        ),
     ),
 )
 
@@ -46,29 +51,30 @@ async def async_setup_entry(
     config_entry: VizioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Vizio sensor entities."""
+    """Set up Vizio binary sensor entities."""
     coordinator = config_entry.runtime_data.device_coordinator
     if not coordinator.device.profile.has_battery:
         return
 
     async_add_entities(
-        VizioSensor(config_entry, coordinator, description) for description in SENSORS
+        VizioBinarySensor(config_entry, coordinator, description)
+        for description in BINARY_SENSORS
     )
 
 
-class VizioSensor(CoordinatorEntity[VizioDeviceCoordinator], SensorEntity):
-    """Sensor entity for battery-powered Vizio SmartCast devices."""
+class VizioBinarySensor(CoordinatorEntity[VizioDeviceCoordinator], BinarySensorEntity):
+    """Binary sensor entity for battery-powered Vizio SmartCast devices."""
 
     _attr_has_entity_name = True
-    entity_description: VizioSensorEntityDescription
+    entity_description: VizioBinarySensorEntityDescription
 
     def __init__(
         self,
         config_entry: VizioConfigEntry,
         coordinator: VizioDeviceCoordinator,
-        description: VizioSensorEntityDescription,
+        description: VizioBinarySensorEntityDescription,
     ) -> None:
-        """Initialize the sensor entity."""
+        """Initialize the binary sensor entity."""
         super().__init__(coordinator)
         self.entity_description = description
         unique_id = config_entry.unique_id
@@ -80,6 +86,6 @@ class VizioSensor(CoordinatorEntity[VizioDeviceCoordinator], SensorEntity):
 
     @property
     @override
-    def native_value(self) -> int | None:
-        """Return the sensor value."""
+    def is_on(self) -> bool | None:
+        """Return whether the battery is charging."""
         return self.entity_description.value_fn(self.coordinator.data)

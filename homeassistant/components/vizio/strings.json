@@ -37,18 +37,6 @@
       }
     }
   },
-  "entity": {
-    "sensor": {
-      "charging_status": {
-        "name": "Charging status",
-        "state": {
-          "charging": "Charging",
-          "fully_charged": "Fully charged",
-          "not_charging": "Not charging"
-        }
-      }
-    }
-  },
   "exceptions": {
     "cannot_determine_port": {
       "message": "Could not determine the SmartCast API port for {host}. If the device is reachable, reconfigure it using host:port."

@@ -1,15 +1,4 @@
 {
-  "entity": {
-    "sensor": {
-      "charging_status": {
-        "default": "mdi:battery-charging",
-        "state": {
-          "fully_charged": "mdi:battery-check",
-          "not_charging": "mdi:battery-off-outline"
-        }
-      }
-    }
-  },
   "services": {
     "send_text": {
       "service": "mdi:keyboard"

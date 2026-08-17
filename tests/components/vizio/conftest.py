@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from vizaio import (
     AppConfig,
+    ChargingStatus,
     InputInfo,
     SettingInfo,
     SettingType,
@@ -92,6 +93,22 @@ def mock_crave_config_entry() -> MockConfigEntry:
         data=MOCK_CRAVE_CONFIG,
         unique_id=UNIQUE_ID,
     )
+
+
+@pytest.fixture(name="vizio_battery")
+def vizio_battery_fixture() -> Generator[None]:
+    """Mock battery state for a Crave device."""
+    with (
+        patch(
+            "homeassistant.components.vizio.Vizio.get_battery_level",
+            return_value=80,
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_charging_status",
+            return_value=ChargingStatus.CHARGING,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture(name="vizio_get_unique_id", autouse=True)
