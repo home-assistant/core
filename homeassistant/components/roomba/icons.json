@@ -1,8 +1,17 @@
 {
   "entity": {
     "binary_sensor": {
+      "bin_empty_allowed": {
+        "default": "mdi:delete-empty"
+      },
       "bin_full": {
         "default": "mdi:delete-variant"
+      },
+      "pad_dry_allowed": {
+        "default": "mdi:tumble-dryer"
+      },
+      "pad_wash_allowed": {
+        "default": "mdi:washing-machine"
       }
     },
     "sensor": {
@@ -15,6 +24,12 @@
       "canceled_missions": {
         "default": "mdi:counter"
       },
+      "detected_pad": {
+        "default": "mdi:rectangle-outline"
+      },
+      "dock_state": {
+        "default": "mdi:home-import-outline"
+      },
       "dock_tank_level": {
         "default": "mdi:water"
       },
@@ -23,6 +38,15 @@
       },
       "last_mission": {
         "default": "mdi:calendar-clock"
+      },
+      "mission_cycle": {
+        "default": "mdi:sync"
+      },
+      "mission_phase": {
+        "default": "mdi:state-machine"
+      },
+      "not_ready_code": {
+        "default": "mdi:alert-circle-outline"
       },
       "scrubs_count": {
         "default": "mdi:counter"

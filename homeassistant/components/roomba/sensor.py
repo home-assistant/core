@@ -36,6 +36,18 @@ DOCK_SENSORS: list[RoombaSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: self.dock_tank_level,
     ),
+    # The dock reports its activity as an undocumented numeric code. Observed
+    # on a Roomba Combo: 300 while the robot is away or the dock idle, 301 at
+    # rest on the dock, 302 and 303 during a bin evacuation, and 300/301
+    # alternating through a pad wash. The full mapping is not published, so the
+    # raw value is surfaced rather than a guessed enum that would be wrong for
+    # other models or firmware.
+    RoombaSensorEntityDescription(
+        key="dock_state",
+        translation_key="dock_state",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.vacuum_state.get("dock", {}).get("state"),
+    ),
 ]
 
 SENSORS: list[RoombaSensorEntityDescription] = [
@@ -135,6 +147,31 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: self.last_mission,
         entity_registry_enabled_default=False,
+    ),
+    RoombaSensorEntityDescription(
+        key="mission_phase",
+        translation_key="mission_phase",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.clean_mission_status.get("phase"),
+    ),
+    RoombaSensorEntityDescription(
+        key="mission_cycle",
+        translation_key="mission_cycle",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.clean_mission_status.get("cycle"),
+    ),
+    RoombaSensorEntityDescription(
+        key="not_ready_code",
+        translation_key="not_ready_code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.clean_mission_status.get("notReady"),
+        entity_registry_enabled_default=False,
+    ),
+    RoombaSensorEntityDescription(
+        key="detected_pad",
+        translation_key="detected_pad",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.vacuum_state.get("detectedPad"),
     ),
 ]
 

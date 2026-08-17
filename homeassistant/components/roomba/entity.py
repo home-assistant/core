@@ -1,6 +1,6 @@
 """Base class for iRobot devices."""
 
-from typing import override
+from typing import Any, override
 
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
@@ -55,6 +55,11 @@ class IRobotEntity(Entity):
     def unique_id(self):
         """Return the uniqueid of the vacuum cleaner."""
         return self.robot_unique_id
+
+    @property
+    def clean_mission_status(self) -> dict[str, Any]:
+        """Return the current clean mission status."""
+        return self.vacuum_state.get("cleanMissionStatus", {})
 
     @property
     def run_stats(self):

@@ -40,7 +40,10 @@ def mock_roomba() -> Generator[AsyncMock]:
                 "cap": {"pose": 1},
                 "cleanMissionStatus": {"cycle": "none", "phase": "charge"},
                 "pose": {"point": {"x": 1, "y": 2}, "theta": 90},
-                "dock": {"tankLvl": 99},
+                "dock": {"tankLvl": 99, "state": 301},
+                "evacAllowed": True,
+                "padWashAllowed": 1,
+                "padDryAllowed": 1,
                 "hwPartsRev": {
                     "navSerialNo": "12345",
                     "wlan0HwAddr": "AA:BB:CC:DD:EE:FF",
