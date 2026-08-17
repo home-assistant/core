@@ -11,6 +11,7 @@ from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -489,3 +490,269 @@ async def test_no_turn_off_config(
         ],
         "value_template": "{{ is_state('" + ping_entity + "', 'on') }}",
     }
+
+
+async def test_input_entities_already_exist(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test fixing when matching ping and WOL entity already exist.
+
+    Only the Template switch should be created.
+    """
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {SWITCH_DOMAIN: FULL_CONFIG},
+    )
+    await hass.async_block_till_done()
+
+    ping_entry = MockConfigEntry(
+        title="somehostname.local",
+        domain="ping",
+        data={},
+        options={
+            "host": "somehostname.local",
+            "count": 5,
+            "consider_home": 180,
+        },
+        minor_version=2,
+    )
+    ping_entry.add_to_hass(hass)
+    wol_entry = MockConfigEntry(
+        title="Wake on LAN 00:01:02:03:04:05",
+        domain="wake_on_lan",
+        data={},
+        options={
+            "mac": "00:01:02:03:04:05",
+            "broadcast_address": "255.255.255.255",
+            "broadcast_port": 1,
+        },
+    )
+    wol_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.ping.helpers.async_ping",
+        return_value=Host(address="10.10.10.10", packets_sent=10, rtts=[]),
+    ):
+        await hass.config_entries.async_setup(ping_entry.entry_id)
+    await hass.config_entries.async_setup(wol_entry.entry_id)
+    await hass.async_block_till_done(True)
+
+    states = hass.states.async_all()
+    # switch.test - WOL YAML switch
+    # binary_sensor.somehostname_local - Ping config entry
+    # zone.home
+    # button.wake_on_lan_00_01_02_03_04_05 - WOL config entry
+    assert len(states) == 4
+
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) > 0
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"].startswith("migrate_to_template"):
+            issue = i
+    assert issue is not None
+
+    data = await start_repair_fix_flow(client, DOMAIN, issue["issue_id"])
+
+    flow_id = data["flow_id"]
+    assert data["description_placeholders"] == {"mac": "00-01-02-03-04-05"}
+    assert data["step_id"] == "migrate"
+
+    data = await process_repair_fix_flow(client, flow_id, json={})
+
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    # Repair does not remove the WOL switch
+    state = hass.states.get("switch.test")
+    assert state
+
+    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"].startswith("migrate_to_template"):
+            issue = i
+    assert not issue
+
+    ping_config_entries = hass.config_entries.async_entries("ping")
+    assert ping_config_entries
+    ping_entities = entity_registry.entities.get_entries_for_config_entry_id(
+        ping_config_entries[0].entry_id
+    )
+    assert ping_entities
+
+    wol_config_entries = hass.config_entries.async_entries("wake_on_lan")
+    assert wol_config_entries
+    wol_entities = entity_registry.entities.get_entries_for_config_entry_id(
+        wol_config_entries[0].entry_id
+    )
+    assert wol_entities
+
+    template_config_entries = hass.config_entries.async_entries("template")
+    assert template_config_entries
+    template_entities = entity_registry.entities.get_entries_for_config_entry_id(
+        template_config_entries[0].entry_id
+    )
+    assert template_entities
+
+    states = hass.states.async_all()
+    # switch.test - WOL YAML switch
+    # binary_sensor.somehostname_local - Ping config entry
+    # zone.home
+    # button.wake_on_lan_00_01_02_03_04_05 - WOL config entry
+    # switch.test_2 - Template switch
+    assert len(states) == 5
+
+
+async def test_template_switch_already_exist(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test fixing when also template switch already exist."""
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {SWITCH_DOMAIN: FULL_CONFIG},
+    )
+    await hass.async_block_till_done()
+
+    ping_entry = MockConfigEntry(
+        title="somehostname.local",
+        domain="ping",
+        data={},
+        options={
+            "host": "somehostname.local",
+            "count": 5,
+            "consider_home": 180,
+        },
+        minor_version=2,
+    )
+    ping_entry.add_to_hass(hass)
+    wol_entry = MockConfigEntry(
+        title="Wake on LAN 00:01:02:03:04:05",
+        domain="wake_on_lan",
+        data={},
+        options={
+            "mac": "00:01:02:03:04:05",
+            "broadcast_address": "255.255.255.255",
+            "broadcast_port": 1,
+        },
+    )
+    wol_entry.add_to_hass(hass)
+    template_entry = MockConfigEntry(
+        title="Test",
+        domain="template",
+        data={},
+        options={
+            "template_type": "switch",
+            "name": "Test",
+            "turn_on": [
+                {
+                    "action": "button.press",
+                    "target": {"entity_id": "button.wake_on_lan_00_01_02_03_04_05"},
+                }
+            ],
+            "value_template": "{{ is_state('binary_sensor.somehostname_local', 'on') }}",
+        },
+    )
+    template_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.ping.helpers.async_ping",
+        return_value=Host(address="10.10.10.10", packets_sent=10, rtts=[]),
+    ):
+        await hass.config_entries.async_setup(ping_entry.entry_id)
+    await hass.config_entries.async_setup(wol_entry.entry_id)
+    await hass.config_entries.async_setup(template_entry.entry_id)
+    await hass.async_block_till_done(True)
+
+    states = hass.states.async_all()
+    # switch.test - WOL YAML switch
+    # binary_sensor.somehostname_local - Ping config entry
+    # zone.home
+    # button.wake_on_lan_00_01_02_03_04_05 - WOL config entry
+    # switch.test_2 - Template switch
+    assert len(states) == 5
+
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) > 0
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"].startswith("migrate_to_template"):
+            issue = i
+    assert issue is not None
+
+    data = await start_repair_fix_flow(client, DOMAIN, issue["issue_id"])
+
+    flow_id = data["flow_id"]
+    assert data["description_placeholders"] == {"mac": "00-01-02-03-04-05"}
+    assert data["step_id"] == "migrate"
+
+    data = await process_repair_fix_flow(client, flow_id, json={})
+
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    # Repair does not remove the WOL switch
+    state = hass.states.get("switch.test")
+    assert state
+
+    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"].startswith("migrate_to_template"):
+            issue = i
+    assert not issue
+
+    ping_config_entries = hass.config_entries.async_entries("ping")
+    assert ping_config_entries
+    ping_entities = entity_registry.entities.get_entries_for_config_entry_id(
+        ping_config_entries[0].entry_id
+    )
+    assert ping_entities
+
+    wol_config_entries = hass.config_entries.async_entries("wake_on_lan")
+    assert wol_config_entries
+    wol_entities = entity_registry.entities.get_entries_for_config_entry_id(
+        wol_config_entries[0].entry_id
+    )
+    assert wol_entities
+
+    template_config_entries = hass.config_entries.async_entries("template")
+    assert template_config_entries
+    template_entities = entity_registry.entities.get_entries_for_config_entry_id(
+        template_config_entries[0].entry_id
+    )
+    assert template_entities
+
+    states = hass.states.async_all()
+    # switch.test - WOL YAML switch
+    # binary_sensor.somehostname_local - Ping config entry
+    # zone.home
+    # button.wake_on_lan_00_01_02_03_04_05 - WOL config entry
+    # switch.test_2 - Template switch
+    assert len(states) == 5
