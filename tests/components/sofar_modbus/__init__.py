@@ -21,7 +21,7 @@ MOCK_USER_INPUT = {
 def seed_pv_inverter(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
     """Seed a MockModbusUnit with enough registers for a PV-only Sofar inverter.
 
-    Enough for identify()/async_setup() to resolve the inverter type and for
+    Enough for identify() to resolve the inverter type and for
     the active_power_control component (the only one this PR's switch
     platform reads) to report a coherent state.
     """

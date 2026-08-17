@@ -61,7 +61,7 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                     read_eps=user_input.get(CONF_READ_EPS, False),
                 )
-                await device.async_setup()
+                await device.async_update()
             except ModbusError:
                 errors["base"] = "cannot_connect"
             else:

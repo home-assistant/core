@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator wrapping SofarInverter.async_update(), with retry-before-fail and tiered fast/slow polling."""
+"""DataUpdateCoordinator wrapping SofarInverter's readings/settings polls, with retry-before-fail and tiered cadence."""
 
 from collections import deque
 from datetime import datetime, timedelta
@@ -11,7 +11,7 @@ from modbus_connection import (
     ModbusError,
     ModbusTimeoutError,
 )
-from sofar_modbus.model import SofarComponentBase, UpdateReport
+from sofar_modbus.model import UpdateReport
 from sofar_modbus.modern.device import SofarInverter, identify
 
 from homeassistant.config_entries import ConfigEntry
@@ -36,28 +36,6 @@ _HEALTH_WINDOW = 60  # ~5min at the 5s base scan interval
 type SofarConfigEntry = ConfigEntry[SofarDataUpdateCoordinator]
 
 _T = TypeVar("_T")
-
-# Components polled every cycle (vs. the slow tier). Hand-maintained instead
-# of derived from the sensor platform so the coordinator has no dependency
-# on any platform module.
-_VOLATILE_COMPONENTS: frozenset[str] = frozenset(
-    {
-        "battery_1_2",
-        "battery_3_8",
-        "battery_totals",
-        "grid",
-        "offgrid",
-        "offgrid_single_phase",
-        "offgrid_three_phase",
-        "pv_1_2",
-        "pv_3",
-        "pv_4",
-        "pv_5_6",
-        "pv_7_8",
-        "pv_9_10",
-        "state",
-    }
-)
 
 
 class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
@@ -86,8 +64,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self.last_error: str | None = None
         self.last_error_time: datetime | None = None
         self._cycle = 0
-        self._fast: dict[str, SofarComponentBase] = {}
-        self._slow: dict[str, SofarComponentBase] = {}
         self._force_slow_tier = True
         self.pending: dict[str, Any] = {}
 
@@ -106,30 +82,15 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             self.connection.for_unit(
                 int(self.config_entry.data.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR))
             ),
+            serial_number=serial,
+            model=model,
             inverter_type=inverter_type,
             read_eps=self.config_entry.data.get(CONF_READ_EPS, False),
         )
-        self.device.prime(serial, model)
-        polled = self.device.polled_components or ()
-        self._fast = {
-            name: getattr(self.device, name)
-            for name in polled
-            if name in _VOLATILE_COMPONENTS
-        }
-        self._slow = {
-            name: getattr(self.device, name)
-            for name in polled
-            if name not in _VOLATILE_COMPONENTS
-        }
 
     @property
     def success_rate(self) -> float | None:
-        """Percent of the last `_HEALTH_WINDOW` poll cycles with no failed component.
-
-        None until the first poll lands. Whole-device, not per-component: a
-        cycle only counts as a failure if a component's poll still shows up
-        in the returned report.failed after _retry_failed's one retry.
-        """
+        """Percent of the last _HEALTH_WINDOW cycles with no failed component. Whole-device, not per-component; None until the first poll lands."""
         if not self._poll_outcomes:
             return None
         return round(100 * sum(self._poll_outcomes) / len(self._poll_outcomes), 1)
@@ -142,22 +103,13 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @property
     def served_components(self) -> frozenset[str]:
-        """All component names served by this inverter type."""
-        if self.device.polled_components is not None:
-            return frozenset(self.device.polled_components)
+        """All component names served by this inverter type. Empty until the first refresh lands."""
         if self.data is not None:
             return frozenset(self.data.updated | set(self.data.failed))
         return frozenset()
 
     def pending_or_live(self, key: str, live_value: _T) -> _T:
-        """What a staged number/select/switch entity should show right now.
-
-        The value the user last set this session, if any and if it hasn't
-        been committed yet — otherwise whatever the last successful poll
-        read. In-memory only: these registers are volatile on the device
-        itself (no flash wear from writing them often), so there's nothing
-        to persist across a restart either.
-        """
+        """What a staged number/select/switch entity should show: the pending value if set this session, else the last live read. In-memory only — these registers are volatile on the device anyway, so there's nothing to persist."""
         return cast("_T", self.pending.get(key, live_value))
 
     @override
@@ -175,8 +127,17 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     @override
     async def _async_update_data(self) -> UpdateReport:
         try:
-            report = await self._poll(self._components_due())
+            report = await self.device.async_update_readings()
             self._cycle += 1
+            if self._force_slow_tier or (
+                self._cycle > 0 and self._cycle % _SLOW_TIER_EVERY_N_CYCLES == 0
+            ):
+                self._force_slow_tier = False
+                settings_report = await self.device.async_update_settings()
+                report = UpdateReport(
+                    report.updated | settings_report.updated,
+                    {**report.failed, **settings_report.failed},
+                )
             report = await self._retry_failed(report)
             if not report.updated:
                 errors = list(report.failed.values())
@@ -215,50 +176,21 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             )
             return report
 
-    def _components_due(self) -> dict[str, SofarComponentBase]:
-        components = dict(self._fast)
-        if self._force_slow_tier or (
-            self._cycle > 0 and self._cycle % _SLOW_TIER_EVERY_N_CYCLES == 0
-        ):
-            components.update(self._slow)
-            self._force_slow_tier = False
-        return components
-
-    async def _poll(
-        self,
-        components: dict[str, SofarComponentBase],
-        allow_fatal_timeout: bool = True,
-    ) -> UpdateReport:
-        """One attempt at each of ``components``, no retry."""
-        updated: set[str] = set()
-        failed: dict[str, ModbusError] = {}
-        for name, component in components.items():
-            try:
-                await component.async_update()
-            except ModbusConnectionError:
-                raise
-            except ModbusTimeoutError as err:
-                if allow_fatal_timeout and not updated and not failed:
-                    raise  # nothing answered at all: assume the rest time out too
-                failed[name] = err
-            except ModbusError as err:
-                failed[name] = err
-            else:
-                updated.add(name)
-        return UpdateReport(updated, failed)
-
     async def _retry_failed(self, report: UpdateReport) -> UpdateReport:
-        """Give every failed component one more try before accepting the failure.
-
-        Skipped when nothing answered on the first pass (e.g. an all-timeout
-        outage) to avoid doubling the timeout latency when the link is down.
-        """
+        """Give every failed component one more try; skipped entirely if nothing answered, to avoid doubling the timeout latency during an outage."""
         if report.failed and report.updated:
-            retry = await self._poll(
-                {name: getattr(self.device, name) for name in report.failed},
-                allow_fatal_timeout=False,
-            )
-            report = UpdateReport(report.updated | retry.updated, retry.failed)
+            updated: set[str] = set()
+            failed: dict[str, ModbusError] = {}
+            for name in report.failed:
+                try:
+                    await getattr(self.device, name).async_update()
+                except ModbusConnectionError:
+                    raise
+                except ModbusError as err:
+                    failed[name] = err
+                else:
+                    updated.add(name)
+            report = UpdateReport(report.updated | updated, failed)
 
         for name, cause in report.failed.items():
             prev = self._consecutive_failures.get(name, 0)
