@@ -39,7 +39,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: The integration does not have an options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -50,22 +50,26 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info:
+    status: exempt
+    comment: The integration does not have a discovery mechanism.
+  discovery:
+    status: exempt
+    comment: The integration does not have a discovery mechanism.
   docs-data-update: done
   docs-examples: todo
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices: todo
-  entity-category: todo
+  entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: todo
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
@@ -73,4 +77,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done
