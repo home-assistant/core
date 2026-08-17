@@ -28,7 +28,7 @@ from .entity import TechnoVEEntity
 
 PARALLEL_UPDATES = 0
 
-STATUS_TYPE = [s.value for s in Status if s != Status.UNKNOWN]
+STATUS_TYPE = [s.value for s in Status if s is not Status.UNKNOWN]
 
 
 @dataclass(frozen=True, kw_only=True)
