@@ -10,7 +10,7 @@ from airgradient import (
     ApiVersion,
     ConfigurationControl,
 )
-from awesomeversion import AwesomeVersion
+from awesomeversion import AwesomeVersion, AwesomeVersionException
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -46,10 +46,12 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
     def _has_supported_firmware(self, firmware_version: str) -> bool:
         """Return whether the detected device has supported firmware."""
         assert self.client
-        return (
-            self.client.api_version is not ApiVersion.LEGACY
-            or AwesomeVersion(firmware_version) >= MIN_VERSION
-        )
+        if self.client.api_version is not ApiVersion.LEGACY:
+            return True
+        try:
+            return AwesomeVersion(firmware_version) >= MIN_VERSION
+        except AwesomeVersionException:
+            return False
 
     @override
     async def async_step_zeroconf(

@@ -313,14 +313,30 @@ async def test_zeroconf_flow_config_source_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_zeroconf_flow_abort_old_firmware(
-    hass: HomeAssistant, mock_airgradient_client: AsyncMock
+@pytest.mark.parametrize(
+    "firmware_version",
+    [
+        pytest.param("3.0.8", id="old"),
+        pytest.param("invalid", id="invalid"),
+    ],
+)
+async def test_zeroconf_flow_abort_unsupported_firmware(
+    hass: HomeAssistant,
+    mock_airgradient_client: AsyncMock,
+    firmware_version: str,
 ) -> None:
-    """Test zeroconf flow aborts with old firmware."""
+    """Test zeroconf flow aborts with unsupported firmware."""
+    discovery_info = replace(
+        OLD_ZEROCONF_DISCOVERY,
+        properties={
+            **OLD_ZEROCONF_DISCOVERY.properties,
+            "fw_ver": firmware_version,
+        },
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=OLD_ZEROCONF_DISCOVERY,
+        data=discovery_info,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_version"
