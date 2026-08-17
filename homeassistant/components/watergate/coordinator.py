@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from watergate_local_api import WatergateApiException, WatergateLocalApiClient
 from watergate_local_api.models import (
@@ -65,8 +65,10 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
             auto_shut_off = await self.api.async_get_auto_shut_off()
         except WatergateApiException as exc:
             raise UpdateFailed(f"Sonic device is unavailable: {exc}") from exc
-        if auto_shut_off is None:
-            raise UpdateFailed("Sonic device did not report auto shut-off state")
+        if TYPE_CHECKING:
+            # Every supported Sonic firmware reports auto shut-off; the client
+            # raises rather than returning None when the read genuinely fails.
+            assert auto_shut_off is not None
         return WatergateAgregatedRequests(state, telemetry, networking, auto_shut_off)
 
     @override
