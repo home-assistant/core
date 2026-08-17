@@ -147,6 +147,20 @@ async def test_restart_closes_replacement_api() -> None:
     replacement_api.close.assert_awaited_once()
 
 
+async def test_get_friends_propagates_fetch_error() -> None:
+    """Test friend fetch errors propagate from the task group."""
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.current_user_data = {"onlineFriends": [FRIEND_USER_ID]}
+    coordinator.api = Mock()
+    coordinator.api.get_friends = AsyncMock(side_effect=RuntimeError("test error"))
+
+    with pytest.raises(ExceptionGroup) as exc_info:
+        await coordinator._get_friends(False)
+
+    assert isinstance(exc_info.value.exceptions[0], RuntimeError)
+    assert str(exc_info.value.exceptions[0]) == "test error"
+
+
 @pytest.mark.parametrize(
     ("user_data", "expected"),
     [

@@ -230,15 +230,17 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
             return []
         page_size = 100
         page_count = math.ceil(len(friend_ids) / page_size)
-        friends: list[User] = []
+        tasks: list[asyncio.Task[list[User]]] = []
         async with asyncio.TaskGroup() as tg:
-            for i in range(page_count):
+            tasks.extend(
                 tg.create_task(
                     self.api.get_friends(
                         offset=i * page_size, n=page_size, offline=offline
                     )
-                ).add_done_callback(lambda task: friends.extend(task.result()))
-        return friends
+                )
+                for i in range(page_count)
+            )
+        return [friend for task in tasks for friend in task.result()]
 
     def set_user(self, data: User, overwrite=True):
         """Set a user data dict to users dict."""
