@@ -601,8 +601,37 @@ async def test_network_neighbors(
         {"command": "controller.toggle_rf", "enable": True},
     ]
 
-    client.async_send_command.side_effect = original_side_effect
+    # Test a node joining the network mid-read doesn't abort the reads
+    commands.clear()
+
+    async def mock_send_command_mutating(
+        message: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
+        commands.append(message)
+        if message["command"] == "controller.get_node_neighbors":
+            client.driver.controller.nodes.setdefault(999, wallmote_central_scene)
+            return {"neighbors": []}
+        return {"success": True}
+
+    client.async_send_command.side_effect = mock_send_command_mutating
     ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "1": [],
+        str(multisensor_6.node_id): [],
+    }
+    assert commands[-1] == {"command": "controller.toggle_rf", "enable": True}
+
+    client.async_send_command.side_effect = original_side_effect
 
     # Test sending command with improper entry ID fails
     await ws_client.send_json_auto_id(

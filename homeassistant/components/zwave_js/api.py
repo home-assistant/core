@@ -659,7 +659,9 @@ async def websocket_network_neighbors(
                     msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to disable RF"
                 )
                 return
-            for node in controller.nodes.values():
+            # Snapshot the nodes, inclusion/exclusion can mutate the
+            # collection while it is being iterated
+            for node in list(controller.nodes.values()):
                 # Long range nodes are not part of the mesh
                 if node.protocol is Protocols.ZWAVE_LONG_RANGE:
                     continue
