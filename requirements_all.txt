@@ -3345,7 +3345,7 @@ volkszaehler==0.4.0
 volvocarsapi==0.4.3
 
 # homeassistant.components.vrchat
-vrchatapi-async==1.20.8
+vrchatapi-async==1.20.8.post1
 
 # homeassistant.components.verisure
 vsure==2.10.0
