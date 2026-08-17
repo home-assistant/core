@@ -343,12 +343,10 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
-        attrs: dict[str, list[str]] = {}
 
         if speeds := self.supported_speeds:
-            attrs[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] = speeds
-
-        return attrs or None
+            return {CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: speeds}
+        return None
 
     @final
     def _valid_speed_or_raise(self, speed: str, supported: list[str]) -> None:
