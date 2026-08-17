@@ -31,6 +31,7 @@ from homeassistant.components.zwave_js.const import (
     CONF_ADDON_S2_AUTHENTICATED_KEY,
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_ADDON_SOCKET,
+    CONF_KEEP_OLD_DEVICES,
     CONF_SOCKET_PATH,
     CONF_USB_PATH,
     DOMAIN,
@@ -1059,6 +1060,152 @@ async def test_usb_discovery_migration(
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
     assert "keep_old_devices" not in entry.data
+    assert entry.unique_id == "3245146787"
+
+
+@pytest.mark.usefixtures(
+    "supervisor",
+    "addon_running",
+    "climate_radio_thermostat_ct100_plus",
+    "lock_schlage_be469",
+)
+async def test_usb_discovery_migration_new_stick(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    restart_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    addon_options: dict[str, Any],
+    mock_usb_serial_by_id: MagicMock,
+    get_server_version: AsyncMock,
+) -> None:
+    """Test migration to a factory-new adapter keeps the old node devices.
+
+    The new adapter reports its own home id until the NVM restore has
+    completed, so the entry unique id matches the empty adapter during
+    the reload that reconnects the client after the add-on restart.
+    """
+    addon_options["device"] = "/dev/ttyUSB0"
+    entry = integration
+    assert entry.unique_id == "3245146787"
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "usb_path": "/dev/ttyUSB0",
+        },
+    )
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(device_entries) == 3
+    old_device_ids = {device.id for device in device_entries}
+
+    nodes_snapshot = dict(client.driver.controller.nodes)
+    own_node_id = client.driver.controller.own_node.node_id
+
+    async def mock_restart_addon(addon_slug: str) -> None:
+        # A factory-new adapter has its own home id and no nodes.
+        client.driver.controller.data["homeId"] = 1234
+        client.driver.controller.nodes.clear()
+        client.driver.controller.nodes[own_node_id] = nodes_snapshot[own_node_id]
+
+    restart_addon.side_effect = mock_restart_addon
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm backup progress", {"bytesRead": 100, "total": 200}
+        )
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
+        client.driver.controller.emit(
+            "nvm convert progress",
+            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
+        )
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm restore progress",
+            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
+        )
+        # The restore brings back the old network, on the controller and in
+        # what the server reports from now on.
+        client.driver.controller.data["homeId"] = 3245146787
+        client.driver.controller.nodes.update(nodes_snapshot)
+        _set_home_id(get_server_version, 3245146787)
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
+
+    registry_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_usb_migration"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+
+    # The server, connected to the new adapter, reports the adapter's
+    # factory home id before the restore.
+    _set_home_id(get_server_version, 1234)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "migration_successful"
+    await hass.async_block_till_done()
+
+    # The old network's devices may not be removed while the flow is
+    # connected to the still empty adapter. The transient device created
+    # for the empty adapter's own node is cleaned up instead.
+    assert not [
+        event
+        for event in registry_events
+        if event.data["action"] == "remove"
+        and event.data["device_id"] in old_device_ids
+    ]
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(device_entries) == 3
+    # The one-shot protection is fully consumed.
+    assert CONF_KEEP_OLD_DEVICES not in entry.data
     assert entry.unique_id == "3245146787"
 
 
