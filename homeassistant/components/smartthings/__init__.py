@@ -563,9 +563,7 @@ def create_devices(
             kwargs.setdefault(ATTR_MANUFACTURER, "Z-Wave")
             kwargs.setdefault(ATTR_MODEL, device.device.name)
         elif device.device.type is DeviceType.ZIGBEE:
-            kwargs.setdefault(
-                ATTR_MANUFACTURER, device.device.device_manufacturer_code
-            )
+            kwargs.setdefault(ATTR_MANUFACTURER, device.device.device_manufacturer_code)
             kwargs.setdefault(ATTR_MODEL, device.device.name)
         if (main_component := device.status.get(MAIN)) is not None:
             if (
