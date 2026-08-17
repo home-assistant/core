@@ -1,6 +1,5 @@
 """Switches for Hunter Douglas Powerview advanced features."""
 
-import logging
 from typing import Any, override
 
 from aiopvapi.helpers.constants import ATTR_NAME, FUNCTION_SCHEDULE
@@ -20,15 +19,13 @@ from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import HDEntity
 from .model import PowerviewConfigEntry, PowerviewDeviceInfo
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PowerviewConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the hunter douglas advanced feature buttons."""
+    """Set up the hunter douglas advanced feature switches."""
     pv_entry = entry.runtime_data
     entities: list[SwitchEntity] = []
     for automation in pv_entry.automation_data.values():
