@@ -1,7 +1,7 @@
 """Support for TechnoVE switches."""
 
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, override
 
 from technove import Station as TechnoVEStation
@@ -17,6 +17,8 @@ from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 from .helpers import technove_exception_handler
 
+PARALLEL_UPDATES = 1
+
 
 async def _set_charging_enabled(
     coordinator: TechnoVEDataUpdateCoordinator, enabled: bool
@@ -27,7 +29,7 @@ async def _set_charging_enabled(
             translation_key="set_charging_enabled_on_auto_charge",
         )
     await coordinator.technove.set_charging_enabled(enabled=enabled)
-    coordinator.data.info.is_session_active = enabled
+    coordinator.data.info = replace(coordinator.data.info, is_session_active=enabled)
     coordinator.async_set_updated_data(coordinator.data)
 
 

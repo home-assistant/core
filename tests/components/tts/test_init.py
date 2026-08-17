@@ -1,12 +1,13 @@
 """The tests for the TTS component."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import io
 from pathlib import Path
 import tempfile
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import wave
 
 from freezegun.api import FrozenDateTimeFactory
@@ -1854,6 +1855,79 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
             hass, "wav", bad_data_gen(), "mp3"
         ):
             pass
+
+
+async def _audio_data_gen() -> AsyncGenerator[bytes]:
+    """Yield test audio data."""
+    yield b"audio"
+
+
+@pytest.mark.parametrize(
+    ("from_extension", "audio_input", "expected_input"),
+    [
+        pytest.param(
+            "wav",
+            _audio_data_gen(),
+            ["-f", "wav", "-probesize", "32", "-i", "pipe:0"],
+            id="streaming_wav",
+        ),
+        pytest.param(
+            "wav",
+            Path("input.wav"),
+            ["-f", "wav", "-i", "input.wav"],
+            id="static_wav",
+        ),
+        pytest.param(
+            "mp3",
+            _audio_data_gen(),
+            ["-f", "mp3", "-i", "pipe:0"],
+            id="streaming_mp3",
+        ),
+    ],
+)
+async def test_async_convert_audio_probe_size(
+    hass: HomeAssistant,
+    from_extension: str,
+    audio_input: AsyncGenerator[bytes] | Path,
+    expected_input: list[str],
+) -> None:
+    """Test probe size is limited for streaming WAV conversion only."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    mock_process = MagicMock()
+    mock_process.stdin.drain = AsyncMock()
+    mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.wait = AsyncMock(return_value=0)
+
+    with patch(
+        "asyncio.create_subprocess_exec", return_value=mock_process
+    ) as mock_create_subprocess_exec:
+        async for _chunk in tts._async_convert_audio(
+            hass,
+            from_extension,
+            audio_input,
+            "flac",
+            to_sample_rate=48000,
+            to_sample_channels=1,
+            to_sample_bytes=2,
+        ):
+            pass
+
+    command = list(mock_create_subprocess_exec.call_args.args)
+    input_index = command.index("-i")
+    # FFmpeg input options are positional.
+    assert command[4 : input_index + 2] == expected_input
+    assert command[input_index + 2 :] == [
+        "-f",
+        "flac",
+        "-ar",
+        "48000",
+        "-ac",
+        "1",
+        "-sample_fmt",
+        "s16",
+        "pipe:1",
+    ]
 
 
 async def test_default_engine_prefer_entity(
