@@ -209,7 +209,7 @@ class DemoCover(CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position: int = kwargs[ATTR_POSITION]
-        self._set_position = round(position, -1)
+        self._set_position = round(position / 5) * 5
         if self._position == position:
             return
 
@@ -276,6 +276,7 @@ class DemoCover(CoverEntity):
             self._position -= self._current_speed.value
         else:
             self._position += self._current_speed.value
+        self._position = max(0, min(100, self._position))
 
         if self._position in (100, 0, self._set_position):
             await self.async_stop_cover()
