@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 import logging
-from threading import Timer
 
 from .api import VRChatAPI
 from .api_data_types import World
@@ -20,10 +19,24 @@ class VRChatWorldData:
     """VRChat world data."""
 
     registry: dict[str, VRChatWorldData] = {}
+    last_pruned = datetime.min.replace(tzinfo=UTC)
+
+    @classmethod
+    def _prune_unused_world_data(cls, now: datetime) -> None:
+        """Remove expired world data without subscribers."""
+        for world_id, world in list(cls.registry.items()):
+            if world.should_invalidate and not world.subscribers:
+                del cls.registry[world_id]
+        cls.last_pruned = now
 
     @classmethod
     def get(cls, world_id: str, data: World | None = None):
         """Get world data object. Update data if provided."""
+        now = datetime.now(UTC)
+        if now - cls.last_pruned >= timedelta(
+            seconds=VRCHAT_WORLD_DATA_OBJECT_PRUNE_INTERVAL_SECOND
+        ):
+            cls._prune_unused_world_data(now)
         registry = cls.registry
         world = registry.get(world_id)
         if world is None:
@@ -104,16 +117,3 @@ class VRChatWorldData:
         """Unsubscribe from data update."""
         if callback in self.subscribers:
             self.subscribers.remove(callback)
-
-
-def _prune_unused_world_data():
-    registry = VRChatWorldData.registry
-    for world_id, world in registry.items():
-        if world.should_invalidate and len(world.subscribers) <= 0:
-            del registry[world_id]
-    Timer(
-        VRCHAT_WORLD_DATA_OBJECT_PRUNE_INTERVAL_SECOND, _prune_unused_world_data
-    ).start()
-
-
-Timer(VRCHAT_WORLD_DATA_OBJECT_PRUNE_INTERVAL_SECOND, _prune_unused_world_data).start()
