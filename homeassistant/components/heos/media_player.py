@@ -263,8 +263,32 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             # This allows HEOS to start playing and report the media info
             self.hass.async_create_task(self._capture_announcement_signature())
         except Exception as err:
-            # If announcement fails, clean up state to prevent getting stuck
+            # If announcement fails, attempt to restore pre-announcement state
             _LOGGER.error("Failed to play announcement: %s", err)
+
+            # Best-effort restoration if we changed state before failure
+            if self._announce_restore_state:
+                try:
+                    state = self._announce_restore_state
+                    # Don't try to remove TTS from queue since announcement never started
+                    # Just restore volume, mute, and play state
+                    await self._player.set_volume(state["volume"])
+                    if state["is_muted"] != self._player.is_muted:
+                        await self._player.set_mute(state["is_muted"])
+                    await self._player.set_play_mode(state["repeat"], state["shuffle"])
+
+                    # Resume playback if it was playing before
+                    if state["was_playing"] and self._player.state != PlayState.PLAY:
+                        await self._player.play()
+
+                    _LOGGER.debug("Restored state after announcement failure")
+                except Exception as restore_err:
+                    _LOGGER.warning(
+                        "Could not restore state after announcement failure: %s",
+                        restore_err,
+                    )
+
+            # Clean up announcement state
             self._announce_in_progress = False
             self._announce_completed = False
             self._announce_started = False
