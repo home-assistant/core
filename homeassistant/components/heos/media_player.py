@@ -1,28 +1,14 @@
 """Denon HEOS Media Player."""
 
 import asyncio
+import dataclasses
+import logging
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from contextlib import suppress
-import dataclasses
 from datetime import datetime
 from functools import reduce, wraps
-import logging
 from operator import ior
 from typing import Any, Final, override
-
-from pyheos import (
-    AddCriteriaType,
-    ControlType,
-    HeosError,
-    HeosPlayer,
-    MediaItem,
-    MediaMusicSource,
-    MediaType as HeosMediaType,
-    PlayState,
-    RepeatType,
-    const as heos_const,
-)
-from pyheos.util import mediauri as heos_source
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -47,6 +33,23 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
+from pyheos import (
+    AddCriteriaType,
+    ControlType,
+    HeosError,
+    HeosPlayer,
+    MediaItem,
+    MediaMusicSource,
+    PlayState,
+    RepeatType,
+)
+from pyheos import (
+    MediaType as HeosMediaType,
+)
+from pyheos import (
+    const as heos_const,
+)
+from pyheos.util import mediauri as heos_source
 
 from . import services
 from .const import DOMAIN
@@ -359,37 +362,51 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         if not self._announce_in_progress or not self._announce_restore_state:
             return
 
+        # Capture state locally to avoid race conditions with concurrent calls
+        restore_state = self._announce_restore_state
+        tts_url = restore_state.get("tts_url")
+
         # Wait a moment to ensure the state change is processed
         await asyncio.sleep(0.5)
 
-        tts_url = self._announce_restore_state.get("tts_url")
-        
+        # Re-check that announcement is still in progress after sleep
+        if not self._announce_in_progress or not self._announce_restore_state:
+            return
+
         # Check multiple indicators for announcement completion
         current_media_id = self._player.now_playing_media.media_id
         current_media = self._player.now_playing_media
-        
+        current_state = self._player.state
+
         # Completion detection using multiple signals:
         # 1. Media ID changed from TTS URL (if HEOS reports it)
-        # 2. State changed to STOP/PAUSE after playing
-        # 3. Now playing media changed from "Url Stream" pattern
+        # 2. State changed to STOP (announcement finished)
+        # 3. State is PAUSE and media is no longer the URL stream pattern
         is_completed = False
-        
+
         # Check if media_id changed (most reliable if available)
         if current_media_id and current_media_id != tts_url:
             is_completed = True
             _LOGGER.debug("TTS completion detected: media_id changed")
-        # Check if stopped/paused and media is no longer the URL stream pattern
-        elif self._player.state in (PlayState.STOP, PlayState.PAUSE):
+        # Check if stopped (announcement likely finished)
+        elif current_state == PlayState.STOP:
+            is_completed = True
+            _LOGGER.debug("TTS completion detected: player stopped")
+        # Check if paused and media is no longer the URL stream pattern
+        elif current_state == PlayState.PAUSE:
             if hasattr(current_media, "song") and current_media.song != "Url Stream":
                 is_completed = True
                 _LOGGER.debug(
-                    "TTS completion detected: state=%s, not URL stream",
-                    self._player.state,
+                    "TTS completion detected: paused, not URL stream",
                 )
-        
+
         if is_completed:
             # Give it a moment to ensure this is a permanent state change
             await asyncio.sleep(0.3)
+
+            # Re-check one final time that we should still restore
+            if not self._announce_in_progress or not self._announce_restore_state:
+                return
 
             # Double-check the state is stable
             if (
