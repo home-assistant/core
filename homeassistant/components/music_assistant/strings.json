@@ -325,6 +325,16 @@
     }
   },
   "services": {
+    "get_dashboards": {
+      "description": "Returns all display devices that can show a Music Assistant dashboard, including their active session.",
+      "fields": {
+        "config_entry_id": {
+          "description": "Select the Music Assistant instance to get the dashboards from.",
+          "name": "Music Assistant instance"
+        }
+      },
+      "name": "Get dashboards"
+    },
     "get_library": {
       "description": "Retrieves items from a Music Assistant library.",
       "fields": {

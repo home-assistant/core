@@ -7,6 +7,7 @@
     }
   },
   "services": {
+    "get_dashboards": { "service": "mdi:monitor-multiple" },
     "get_library": { "service": "mdi:music-box-multiple" },
     "get_queue": { "service": "mdi:playlist-music" },
     "play_announcement": { "service": "mdi:bullhorn" },

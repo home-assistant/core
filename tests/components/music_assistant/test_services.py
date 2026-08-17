@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, call
 
-from music_assistant_models.enums import MediaType
+from music_assistant_models.dashboard import DashboardDevice, DashboardSession
+from music_assistant_models.enums import DashboardType, MediaType
 from music_assistant_models.errors import UserNotFoundError
 from music_assistant_models.media_items import SearchResults
 import pytest
@@ -16,6 +17,7 @@ from homeassistant.components.music_assistant.const import (
     DOMAIN,
 )
 from homeassistant.components.music_assistant.services import (
+    SERVICE_GET_DASHBOARDS,
     SERVICE_GET_LIBRARY,
     SERVICE_SEARCH,
 )
@@ -214,3 +216,87 @@ async def test_get_library_action_with_unknown_username(
         )
     assert err.value.translation_key == "invalid_username"
     assert err.value.translation_placeholders == {"username": "nobody"}
+
+
+def setup_dashboards(music_assistant_client: MagicMock) -> None:
+    """Seed the mocked client with dashboard endpoints and one active session."""
+    music_assistant_client.server_info.schema_version = 39
+    music_assistant_client.dashboard._dashboards = {
+        "chromecast_kitchen": DashboardDevice(
+            dashboard_id="chromecast_kitchen",
+            name="Kitchen Display",
+            supported_types={DashboardType.PARTY, DashboardType.NOW_PLAYING},
+            provider_domain_hint="chromecast",
+        ),
+        "web_client_1": DashboardDevice(
+            dashboard_id="web_client_1",
+            name="Web Client",
+            supported_types={
+                DashboardType.PARTY,
+                DashboardType.NOW_PLAYING,
+                DashboardType.MUSIC_QUIZ,
+            },
+        ),
+    }
+    music_assistant_client.dashboard._sessions = {
+        "chromecast_kitchen": DashboardSession(
+            dashboard_id="chromecast_kitchen",
+            name="Kitchen Display",
+            dashboard=DashboardType.NOW_PLAYING,
+            player_id="00:00:00:00:00:01",
+        ),
+    }
+
+
+async def test_get_dashboards_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test music assistant get_dashboards action."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    setup_dashboards(music_assistant_client)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_DASHBOARDS,
+        {ATTR_CONFIG_ENTRY_ID: entry.entry_id},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "dashboards": [
+            {
+                "dashboard_id": "chromecast_kitchen",
+                "name": "Kitchen Display",
+                "supported_dashboards": ["now_playing", "party"],
+                "active_session": {
+                    "dashboard": "now_playing",
+                    "player": "media_player.test_player_1",
+                },
+            },
+            {
+                "dashboard_id": "web_client_1",
+                "name": "Web Client",
+                "supported_dashboards": ["music_quiz", "now_playing", "party"],
+                "active_session": None,
+            },
+        ]
+    }
+
+
+async def test_get_dashboards_requires_supported_server(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test get_dashboards raises on a server without dashboard support."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    # the fixture server_info reports schema_version 1
+
+    with pytest.raises(ServiceValidationError, match="does not support dashboards"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_DASHBOARDS,
+            {ATTR_CONFIG_ENTRY_ID: entry.entry_id},
+            blocking=True,
+            return_response=True,
+        )

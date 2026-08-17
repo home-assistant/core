@@ -1,7 +1,8 @@
 """Custom actions (previously known as services) for the Music Assistant integration."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from music_assistant_client.dashboard import DASHBOARD_SCHEMA_VERSION
 from music_assistant_models.enums import MediaType, QueueOption
 import voluptuous as vol
 
@@ -9,7 +10,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
 )
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -18,9 +19,14 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    service,
+)
 
 from .const import (
+    ATTR_ACTIVE_SESSION,
     ATTR_ALBUM,
     ATTR_ALBUM_ARTISTS_ONLY,
     ATTR_ALBUM_TYPE,
@@ -30,6 +36,9 @@ from .const import (
     ATTR_ARTISTS,
     ATTR_AUDIOBOOKS,
     ATTR_AUTO_PLAY,
+    ATTR_DASHBOARD,
+    ATTR_DASHBOARD_ID,
+    ATTR_DASHBOARDS,
     ATTR_FAVORITE,
     ATTR_ITEMS,
     ATTR_LIBRARY_ONLY,
@@ -38,6 +47,7 @@ from .const import (
     ATTR_MEDIA_TYPE,
     ATTR_OFFSET,
     ATTR_ORDER_BY,
+    ATTR_PLAYER,
     ATTR_PLAYLISTS,
     ATTR_PODCASTS,
     ATTR_PRE_ANNOUNCE_URL,
@@ -48,6 +58,7 @@ from .const import (
     ATTR_SEARCH_ARTIST,
     ATTR_SEARCH_NAME,
     ATTR_SOURCE_PLAYER,
+    ATTR_SUPPORTED_DASHBOARDS,
     ATTR_TRACKS,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
@@ -56,12 +67,14 @@ from .const import (
 )
 from .helpers import catch_user_not_found, get_music_assistant_client
 from .schemas import (
+    DASHBOARDS_RESULT_SCHEMA,
     LIBRARY_RESULTS_SCHEMA,
     SEARCH_RESULT_SCHEMA,
     media_item_dict_from_mass_item,
 )
 
 if TYPE_CHECKING:
+    from music_assistant_client import MusicAssistantClient
     from music_assistant_models.media_items import (
         Album,
         Artist,
@@ -74,6 +87,7 @@ if TYPE_CHECKING:
 
 SERVICE_SEARCH = "search"
 SERVICE_GET_LIBRARY = "get_library"
+SERVICE_GET_DASHBOARDS = "get_dashboards"
 SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
 SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
 SERVICE_TRANSFER_QUEUE = "transfer_queue"
@@ -125,6 +139,13 @@ def register_actions(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_USERNAME): cv.string,
             }
         ),
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_DASHBOARDS,
+        handle_get_dashboards,
+        schema=vol.Schema({vol.Required(ATTR_CONFIG_ENTRY_ID): str}),
         supports_response=SupportsResponse.ONLY,
     )
 
@@ -306,4 +327,49 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
             ATTR_MEDIA_TYPE: media_type,
         }
     )
+    return response
+
+
+def verify_dashboard_support(mass: MusicAssistantClient) -> None:
+    """Raise if the connected server does not support the dashboard commands."""
+    if (
+        mass.server_info is None
+        or mass.server_info.schema_version < DASHBOARD_SCHEMA_VERSION
+    ):
+        raise ServiceValidationError(
+            "The connected Music Assistant server does not support dashboards"
+        )
+
+
+async def handle_get_dashboards(call: ServiceCall) -> ServiceResponse:
+    """Handle get_dashboards action."""
+    mass = get_music_assistant_client(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    verify_dashboard_support(mass)
+    entity_registry = er.async_get(call.hass)
+    dashboards: list[dict[str, Any]] = []
+    for dashboard_device in mass.dashboard.dashboards:
+        active_session: dict[str, Any] | None = None
+        if session := mass.dashboard.get_session(dashboard_device.dashboard_id):
+            player_entity_id = (
+                entity_registry.async_get_entity_id(
+                    MEDIA_PLAYER_DOMAIN, DOMAIN, session.player_id
+                )
+                if session.player_id
+                else None
+            )
+            active_session = {
+                ATTR_DASHBOARD: session.dashboard.value,
+                ATTR_PLAYER: player_entity_id,
+            }
+        dashboards.append(
+            {
+                ATTR_DASHBOARD_ID: dashboard_device.dashboard_id,
+                ATTR_NAME: dashboard_device.name,
+                ATTR_SUPPORTED_DASHBOARDS: sorted(
+                    x.value for x in dashboard_device.supported_types
+                ),
+                ATTR_ACTIVE_SESSION: active_session,
+            }
+        )
+    response: ServiceResponse = DASHBOARDS_RESULT_SCHEMA({ATTR_DASHBOARDS: dashboards})
     return response

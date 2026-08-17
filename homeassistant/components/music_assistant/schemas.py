@@ -11,6 +11,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_ACTIVE,
+    ATTR_ACTIVE_SESSION,
     ATTR_ALBUM,
     ATTR_ALBUMS,
     ATTR_ARTISTS,
@@ -20,6 +21,9 @@ from .const import (
     ATTR_CONTENT_TYPE,
     ATTR_CURRENT_INDEX,
     ATTR_CURRENT_ITEM,
+    ATTR_DASHBOARD,
+    ATTR_DASHBOARD_ID,
+    ATTR_DASHBOARDS,
     ATTR_DISCART_IMAGE,
     ATTR_DURATION,
     ATTR_ELAPSED_TIME,
@@ -35,6 +39,7 @@ from .const import (
     ATTR_NEXT_ITEM,
     ATTR_OFFSET,
     ATTR_ORDER_BY,
+    ATTR_PLAYER,
     ATTR_PLAYLISTS,
     ATTR_PODCASTS,
     ATTR_PROVIDER,
@@ -46,6 +51,7 @@ from .const import (
     ATTR_SHUFFLE_ENABLED,
     ATTR_STREAM_DETAILS,
     ATTR_STREAM_TITLE,
+    ATTR_SUPPORTED_DASHBOARDS,
     ATTR_TRACKS,
     ATTR_URI,
     ATTR_VERSION,
@@ -222,4 +228,24 @@ QUEUE_DETAILS_SCHEMA = vol.Schema(
         vol.Required(ATTR_CURRENT_ITEM): vol.Any(None, QUEUE_ITEM_SCHEMA),
         vol.Required(ATTR_NEXT_ITEM): vol.Any(None, QUEUE_ITEM_SCHEMA),
     }
+)
+
+DASHBOARD_SESSION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DASHBOARD): cv.string,
+        vol.Required(ATTR_PLAYER): vol.Any(None, cv.string),
+    }
+)
+
+DASHBOARD_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DASHBOARD_ID): cv.string,
+        vol.Required(ATTR_NAME): cv.string,
+        vol.Required(ATTR_SUPPORTED_DASHBOARDS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(ATTR_ACTIVE_SESSION): vol.Any(None, DASHBOARD_SESSION_SCHEMA),
+    }
+)
+
+DASHBOARDS_RESULT_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_DASHBOARDS): vol.All(cv.ensure_list, [DASHBOARD_SCHEMA])}
 )

@@ -254,3 +254,11 @@ get_library:
       example: "john"
       selector:
         text:
+
+get_dashboards:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: music_assistant
