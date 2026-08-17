@@ -6,6 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -24,10 +25,54 @@ async def async_setup_entry(
     roomba = domain_data.roomba
     blid = domain_data.blid
     entities: list[BinarySensorEntity] = [RoombaCharging(roomba, blid)]
-    status = roomba_reported_state(roomba).get("bin", {})
+    reported = roomba_reported_state(roomba)
+    status = reported.get("bin", {})
     if "full" in status:
         entities.append(RoombaBinStatus(roomba, blid))
+    entities.extend(
+        RoombaDockCapability(roomba, blid, api_key, translation_key)
+        for api_key, translation_key in (
+            ("evacAllowed", "bin_empty_allowed"),
+            ("padWashAllowed", "pad_wash_allowed"),
+            ("padDryAllowed", "pad_dry_allowed"),
+        )
+        if api_key in reported
+    )
     async_add_entities(entities)
+
+
+class RoombaDockCapability(IRobotEntity, BinarySensorEntity):
+    """Reports whether the dock currently permits an action."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, roomba, blid: str, api_key: str, translation_key: str) -> None:
+        """Initialize the capability binary sensor."""
+        super().__init__(roomba, blid)
+        self._api_key = api_key
+        self._attr_translation_key = translation_key
+
+    @property
+    @override
+    def unique_id(self) -> str:
+        """Return the ID of this sensor.
+
+        Keyed on the reported field rather than the translation key: the
+        translation key is presentation and can be reworded, which would
+        change the entity's identity.
+        """
+        return f"{self._api_key}_{self._blid}"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return whether the dock currently permits this action."""
+        return roomba_reported_state(self.vacuum).get(self._api_key) in (True, 1)
+
+    @override
+    def new_state_filter(self, new_state):
+        """Filter the new state."""
+        return self._api_key in new_state
 
 
 class RoombaBinStatus(IRobotEntity, BinarySensorEntity):

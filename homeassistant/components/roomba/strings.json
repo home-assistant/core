@@ -46,8 +46,17 @@
   },
   "entity": {
     "binary_sensor": {
+      "bin_empty_allowed": {
+        "name": "Bin empty allowed"
+      },
       "bin_full": {
         "name": "Bin full"
+      },
+      "pad_dry_allowed": {
+        "name": "Pad dry allowed"
+      },
+      "pad_wash_allowed": {
+        "name": "Pad wash allowed"
       }
     },
     "sensor": {
@@ -60,6 +69,12 @@
       "canceled_missions": {
         "name": "Canceled missions"
       },
+      "detected_pad": {
+        "name": "Detected pad"
+      },
+      "dock_state": {
+        "name": "Dock state"
+      },
       "dock_tank_level": {
         "name": "Dock tank level"
       },
@@ -68,6 +83,15 @@
       },
       "last_mission": {
         "name": "Last mission start time"
+      },
+      "mission_cycle": {
+        "name": "Mission cycle"
+      },
+      "mission_phase": {
+        "name": "Mission phase"
+      },
+      "not_ready_code": {
+        "name": "Not ready code"
       },
       "scrubs_count": {
         "name": "Scrubs"
