@@ -58,6 +58,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import get_scheduled_timer_handles
 
 from . import (
     FakeRemoteScanner,
@@ -3272,6 +3273,33 @@ async def test_default_address_config_entries_removed_linux(
     await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+
+
+@pytest.mark.usefixtures("one_adapter", "mock_bleak_scanner_start")
+async def test_unload_cancels_expire_devices_timer(hass: HomeAssistant) -> None:
+    """Test unloading an adapter cancels the scanner expire devices timer."""
+
+    def _expire_devices_timers() -> list[asyncio.TimerHandle]:
+        return [
+            handle
+            for handle in get_scheduled_timer_handles(hass.loop)
+            if not handle.cancelled()
+            and "_async_expire_devices_schedule_next" in repr(handle)
+        ]
+
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    # The timer must exist first, otherwise the assertion below is vacuous
+    assert _expire_devices_timers()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not _expire_devices_timers()
 
 
 @pytest.mark.usefixtures("one_adapter")
