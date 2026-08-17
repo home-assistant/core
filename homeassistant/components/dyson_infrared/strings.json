@@ -51,6 +51,11 @@
       }
     }
   },
+  "exceptions": {
+    "unknown_device_type": {
+      "message": "The configuration entry has an unsupported device type \"{device_type}\". Delete the entry and set it up again."
+    }
+  },
   "selector": {
     "device_type": {
       "options": {

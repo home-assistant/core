@@ -8,6 +8,7 @@ from homeassistant.components.dyson_infrared.const import (
     CONF_DEVICE_TYPE,
     DysonDeviceType,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -65,3 +66,23 @@ async def test_async_unload_entry(
 
         assert result is True
         mock_unload.assert_called_once_with(entry, [platform])
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param({}, id="missing"),
+        pytest.param({CONF_DEVICE_TYPE: "purifier"}, id="unrecognized"),
+    ],
+)
+async def test_async_setup_entry_unknown_device_type(
+    hass: HomeAssistant, data: dict[str, str]
+) -> None:
+    """Test an entry without a usable device type fails setup with a clear error."""
+    entry = MockConfigEntry(domain="dyson_infrared", data=data)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id) is False
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.error_reason_translation_key == "unknown_device_type"
