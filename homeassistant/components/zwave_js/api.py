@@ -411,6 +411,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_subscribe_node_status)
     websocket_api.async_register_command(hass, websocket_node_status)
+    websocket_api.async_register_command(hass, websocket_node_neighbors)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_node_alerts)
     websocket_api.async_register_command(hass, websocket_add_node)
@@ -615,6 +616,31 @@ async def websocket_node_status(
 ) -> None:
     """Get the status of a Z-Wave JS node."""
     connection.send_result(msg[ID], node_status(node))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/node_neighbors",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_node
+async def websocket_node_neighbors(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    node: Node,
+) -> None:
+    """Get the node IDs of the neighbors of a Z-Wave JS node."""
+    driver = node.client.driver
+    assert driver is not None  # The node comes from the driver instance.
+    controller = driver.controller
+
+    neighbors = await controller.async_get_node_neighbors(node)
+    connection.send_result(msg[ID], neighbors)
 
 
 @websocket_api.websocket_command(

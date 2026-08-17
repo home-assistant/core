@@ -401,6 +401,80 @@ async def test_node_status(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_node_neighbors(
+    hass: HomeAssistant,
+    multisensor_6,
+    integration,
+    client,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the node_neighbors websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+    device = get_device(hass, multisensor_6)
+
+    client.async_send_command.return_value = {"neighbors": [35, 32]}
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/node_neighbors",
+            DEVICE_ID: device.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == [35, 32]
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.get_node_neighbors",
+        "nodeId": multisensor_6.node_id,
+    }
+
+    # Test FailedZWaveCommand is caught
+    with patch(
+        f"{CONTROLLER_PATCH_PREFIX}.async_get_node_neighbors",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json_auto_id(
+            {
+                TYPE: "zwave_js/node_neighbors",
+                DEVICE_ID: device.id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "zwave_error: Z-Wave error 1 - error message"
+
+    # Test sending command with improper device ID fails
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/node_neighbors",
+            DEVICE_ID: "fake_device",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/node_neighbors",
+            DEVICE_ID: device.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
 async def test_node_metadata(
     hass: HomeAssistant,
     wallmote_central_scene,
