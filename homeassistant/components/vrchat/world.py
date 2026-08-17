@@ -76,6 +76,7 @@ class VRChatWorldData:
     async def get_data(self):
         """Get data. Fetch if not exist."""
         if self.data is None:
+            # Allow a matching WebSocket event to populate the shared cache first.
             await asyncio.sleep(1)
         if self.data is None or self.should_invalidate:
             if self.task is None or self.task.done():
