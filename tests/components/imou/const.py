@@ -17,12 +17,12 @@ from pyimouapi.const import (
 )
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
-from homeassistant.components.imou.binary_sensor import PARAM_DOOR_CONTACT_STATUS
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import (
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
+    PARAM_DOOR_CONTACT_STATUS,
     PARAM_HEADER_DETECT,
     PARAM_LIGHT,
     PARAM_PLUG_SWITCH,

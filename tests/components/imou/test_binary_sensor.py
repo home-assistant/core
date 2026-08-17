@@ -120,6 +120,37 @@ async def test_door_contact_state(
     "imou_mock_devices", [binary_sensor_mock_devices], indirect=True
 )
 @pytest.mark.usefixtures("init_integration")
+async def test_binary_sensor_added_for_device_discovered_after_setup(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """A device added to the account after setup gets its binary sensor entity."""
+    assert hass.states.get("binary_sensor.device_2_door") is None
+
+    mock_imou_ha_device_manager.async_get_devices.return_value = [
+        *binary_sensor_mock_devices(),
+        create_online_device(
+            "d2",
+            "Device 2",
+            button_keys=(),
+            binary_sensors={PARAM_DOOR_CONTACT_STATUS: {PARAM_STATE: False}},
+        ),
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.device_2_door")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR]], indirect=True)
+@pytest.mark.parametrize(
+    "imou_mock_devices", [binary_sensor_mock_devices], indirect=True
+)
+@pytest.mark.usefixtures("init_integration")
 async def test_binary_sensor_unavailable_when_device_offline(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

@@ -13,13 +13,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import imou_device_identifier
+from .const import PARAM_DOOR_CONTACT_STATUS, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
 PARALLEL_UPDATES = 0
-
-PARAM_DOOR_CONTACT_STATUS = "door_contact_status"
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
