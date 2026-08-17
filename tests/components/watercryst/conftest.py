@@ -166,9 +166,7 @@ def http_status_error(status_code: int) -> HTTPStatusError:
 
 def request_error() -> RequestError:
     """Create a request error."""
-    return (
-        RequestError(
-            message="",
-            request=Request("GET", "https://example.com/v1/state"),
-        ),
+    return RequestError(
+        message="",
+        request=Request("GET", "https://example.com/v1/state"),
     )
