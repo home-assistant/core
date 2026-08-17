@@ -378,7 +378,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             requests.exceptions.RequestException,
             urllib.error.URLError,
             UpdateFailed,
-            ConfigEntryNotReady,
         ) as err:
             self.last_exception = err
 
@@ -502,14 +501,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     err.retry_after,
                 )
 
-            if self.last_update_success:
-                if log_failures:
-                    self.logger.error("Error fetching %s data: %s", self.name, err)
-                    self.logger.debug("Full error:", exc_info=True)
-                self.last_update_success = False
-
-        except ConfigEntryNotReady as err:
-            self.last_exception = err
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
