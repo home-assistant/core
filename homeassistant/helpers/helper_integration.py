@@ -136,7 +136,7 @@ def async_remove_helper_devices(
     *,
     helper_config_entry_id: str,
     source_device_id: str | None,
-    sweep_helper_devices: bool = False,
+    remove_all_devices: bool = False,
     keep_device_ids: Collection[str] = (),
 ) -> None:
     """Migrate a helper which has tried to own a device instead of just linking to it.
@@ -154,7 +154,7 @@ def async_remove_helper_devices(
         device relinks the entities to it. A pre-migration composite id and None have no
         concrete device to hold the link, so the entities are detached; in targeted mode
         a composite or None source with no matching duplicate is a no-op.
-    :param sweep_helper_devices: By default only the helper's single duplicate of
+    :param remove_all_devices: By default only the helper's single duplicate of
         source_device_id (a split or fork) is removed. When True, every device the
         helper owns except source_device_id and keep_device_ids is removed instead -
         even when source_device_id no longer exists, in which case the helper's
@@ -162,7 +162,7 @@ def async_remove_helper_devices(
         created but never removed itself, such as a fork left behind for each
         previously selected source device.
     :param keep_device_ids: Devices the helper legitimately owns which must not be removed.
-        Only consulted when sweep_helper_devices is True.
+        Only consulted when remove_all_devices is True.
     """
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
@@ -173,10 +173,10 @@ def async_remove_helper_devices(
         else None
     )
     if source_device is None:
-        # No source device (gone, or none selected). In sweep mode the helper's devices are
-        # still removed, leaving its entities without a device; targeted mode has no duplicate
-        # to match.
-        if sweep_helper_devices:
+        # No source device (gone, or none selected). In remove-all mode the helper's devices
+        # are still removed, leaving its entities without a device; targeted mode has no
+        # duplicate to match.
+        if remove_all_devices:
             _sweep_helper_devices(
                 device_registry,
                 entity_registry,
@@ -187,15 +187,24 @@ def async_remove_helper_devices(
         return
 
     # source_device_id is either the pre-migration composite id (source_device is then the
-    # synthesized composite) or a concrete device. Its splits, if any, share this id as
-    # their composite_device_id.
-    source_is_concrete = source_device_id in device_registry.devices
+    # synthesized composite) or a concrete device - a main device or a child device. A main
+    # device's splits, if any, share this id as their composite_device_id.
+    source_is_concrete = (
+        source_device_id in device_registry.devices
+        or source_device_id in device_registry.child_devices
+    )
     composite_device_id = (
-        source_device.composite_device_id if source_is_concrete else source_device_id
+        (
+            source_device.composite_device_id
+            if isinstance(source_device, dr.DeviceEntry)
+            else None
+        )
+        if source_is_concrete
+        else source_device_id
     )
     target_device_id = source_device_id if source_is_concrete else None
 
-    if sweep_helper_devices:
+    if remove_all_devices:
         _sweep_helper_devices(
             device_registry,
             entity_registry,
@@ -218,7 +227,7 @@ def _remove_duplicate_helper_device(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     helper_config_entry_id: str,
-    source_device: dr.DeviceEntry,
+    source_device: dr.AnyDeviceEntry,
     composite_device_id: str | None,
     target_device_id: str | None,
 ) -> None:
@@ -240,7 +249,11 @@ def _remove_duplicate_helper_device(
                 and device.composite_device_id == composite_device_id
             )
             or device.identifiers & source_device.identifiers
-            or device.connections & source_device.connections
+            # A child source device has no connections to match on.
+            or (
+                isinstance(source_device, dr.DeviceEntry)
+                and device.connections & source_device.connections
+            )
         ),
         None,
     )

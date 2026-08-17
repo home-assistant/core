@@ -406,9 +406,13 @@ class ComponentProtocol(Protocol):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        device_entry: dr.DeviceEntry,
+        device_entry: dr.AnyDeviceEntry,
     ) -> bool:
-        """Remove a config entry device."""
+        """Remove a config entry device.
+
+        Only integrations that register child devices can receive a
+        ChildDeviceEntry. Removing a parent device also removes its child devices.
+        """
 
     async def async_reset_platform(
         self, hass: HomeAssistant, integration_name: str
@@ -1524,7 +1528,7 @@ async def _resolve_integrations_dependencies(
     integrations: Iterable[Integration],
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
     ignore_exceptions: bool,
 ) -> dict[str, set[str]]:
     """Resolve all dependencies for integrations.
@@ -1567,7 +1571,7 @@ async def _resolve_integration_dependencies(
     itg: Integration,
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
     ignore_exceptions: bool = False,
 ) -> set[str]:
     """Recursively resolve all dependencies.

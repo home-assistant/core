@@ -114,11 +114,14 @@ async def test_init_missing_uuid(
 async def test_device_registry(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
+    config_entry: MockConfigEntry,
     configured_player: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test squeezebox device registered in the device registry."""
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[0])})
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MAC[0]), config_entry.entry_id
+    )
     assert reg_device is not None
     assert reg_device == snapshot
 
@@ -137,7 +140,9 @@ async def test_device_registry_numeric_firmware(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[0])})
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MAC[0]), config_entry.entry_id
+    )
     assert reg_device is not None
     assert reg_device.hw_version == "137"
 
@@ -145,12 +150,17 @@ async def test_device_registry_numeric_firmware(
 async def test_device_registry_server_merged(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
+    config_entry: MockConfigEntry,
     configured_players: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test squeezebox device registered in the device registry."""
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[2])})
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MAC[2]), config_entry.entry_id
+    )
     assert reg_device is not None
+    # The player shares the server's device, so it must not be linked to itself.
+    assert reg_device.via_device_id is None
     assert reg_device == snapshot
 
 
@@ -182,7 +192,9 @@ async def test_remove_device_blocked(
     else:
         player_id = TEST_MAC[0]
         entry.runtime_data.player_coordinators[player_id].available = is_online
-        device = device_registry.async_get_device(identifiers={(DOMAIN, player_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, player_id), entry.entry_id
+        )
 
     assert device is not None
     with pytest.raises(HomeAssistantError, match=expected_error):
@@ -200,7 +212,9 @@ async def test_remove_device_allowed_offline_player(
     # Ensure the player coordinator exists and is marked offline/unavailable.
     coordinator = entry.runtime_data.player_coordinators[player_id]
     coordinator.available = False
-    device = device_registry.async_get_device(identifiers={(DOMAIN, player_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, player_id), entry.entry_id
+    )
     assert device is not None
     result = await async_remove_config_entry_device(hass, entry, device)
     assert result is True

@@ -1,6 +1,6 @@
 """Teslemetry Data Coordinator."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any, override
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
@@ -113,7 +113,6 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
     config_entry: TeslemetryConfigEntry
-    last_active: datetime
 
     def __init__(
         self,
@@ -135,7 +134,6 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.api = api
         self.data = flatten(product)
-        self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:

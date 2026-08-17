@@ -158,7 +158,7 @@ async def test_setup_and_stop_passive(
 
     assert init_kwargs == {
         "bluez": {
-            **scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
+            **scanner.PASSIVE_SCANNER_ARGS,
             "adapter": "hci0",
         },
         "scanning_mode": "passive",

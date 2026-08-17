@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER
+from .const import LOGGER
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 
 # Coordinator is used to centralize the data updates
@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guest WiFi QR code for device."""
-    _LOGGER.debug("Setting up Vodafone Station images")
+    LOGGER.debug("Setting up Vodafone Station images")
 
     coordinator = entry.runtime_data
 

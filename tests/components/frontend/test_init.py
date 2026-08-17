@@ -958,13 +958,24 @@ async def test_get_version(
     ("from_url", "to_url", "expected_status"),
     [
         ("/.well-known/change-password", "/profile", 302),
-        ("/developer-tools", "/config/developer-tools", 301),
-        ("/developer-tools/yaml", "/config/developer-tools/yaml", 301),
-        ("/developer-tools/state", "/config/developer-tools/state", 301),
-        ("/developer-tools/action", "/config/developer-tools/action", 301),
-        ("/developer-tools/template", "/config/developer-tools/template", 301),
-        ("/developer-tools/event", "/config/developer-tools/event", 301),
-        ("/developer-tools/debug", "/config/developer-tools/debug", 301),
+        ("/developer-tools", "/config/tools", 301),
+        ("/developer-tools/yaml", "/config/tools/yaml", 301),
+        ("/developer-tools/state", "/config/tools/state", 301),
+        ("/developer-tools/action", "/config/tools/action", 301),
+        ("/developer-tools/template", "/config/tools/template", 301),
+        ("/developer-tools/event", "/config/tools/event", 301),
+        ("/developer-tools/statistics", "/config/tools/statistics", 301),
+        ("/developer-tools/assist", "/config/tools/assist", 301),
+        ("/developer-tools/debug", "/config/tools/debug", 301),
+        ("/config/developer-tools", "/config/tools", 301),
+        ("/config/developer-tools/yaml", "/config/tools/yaml", 301),
+        ("/config/developer-tools/state", "/config/tools/state", 301),
+        ("/config/developer-tools/action", "/config/tools/action", 301),
+        ("/config/developer-tools/template", "/config/tools/template", 301),
+        ("/config/developer-tools/event", "/config/tools/event", 301),
+        ("/config/developer-tools/statistics", "/config/tools/statistics", 301),
+        ("/config/developer-tools/assist", "/config/tools/assist", 301),
+        ("/config/developer-tools/debug", "/config/tools/debug", 301),
         ("/shopping-list", "/todo", 301),
     ],
 )
@@ -998,6 +1009,20 @@ async def test_manifest_json(hass: HomeAssistant, mock_http_client: TestClient) 
 
     json = await resp.json()
     assert json["theme_color"] != DEFAULT_THEME_COLOR
+
+
+async def test_manifest_json_cors(mock_http_client: TestClient) -> None:
+    """Test manifest.json is readable cross-origin.
+
+    The landing page detects Core availability by reading manifest.json
+    cross-origin when its request is redirected from the legacy HTTP port
+    to the default port.
+    """
+    resp = await mock_http_client.get(
+        "/manifest.json", headers={"Origin": "http://example.local:8123"}
+    )
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Access-Control-Allow-Origin"] == "http://example.local:8123"
 
 
 async def test_static_path_cache(mock_http_client: TestClient) -> None:

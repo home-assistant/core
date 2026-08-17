@@ -1,12 +1,12 @@
 """Test the Harbor sensors."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -31,7 +31,8 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Harbor sensors report their values."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.harbor.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await emit_message(mock_mqtt_client, HEARTBEAT_TOPIC, HEARTBEAT_PAYLOAD)

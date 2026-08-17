@@ -486,8 +486,8 @@ async def test_configuration_url_default_port(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90")}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.configuration_url == "http://127.0.0.1"
@@ -515,8 +515,8 @@ async def test_configuration_url_non_default_port(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90")}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90"), config_entry.entry_id
     )
     assert device is not None
     assert device.configuration_url == "http://192.168.1.100:8080"

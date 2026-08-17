@@ -2,6 +2,7 @@
 
 from typing import override
 
+from pyimouapi.const import PARAM_RESTART_DEVICE
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
@@ -14,13 +15,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import PTZ_MOVE_DURATION_MS, imou_device_identifier
+from .const import DOMAIN, PTZ_MOVE_DURATION_MS, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
 PARALLEL_UPDATES = 1
-# Button types
-PARAM_RESTART_DEVICE = "restart_device"
+# Button types not yet exported by pyimouapi (keep module-local).
 PARAM_MUTE = "mute"
 PARAM_PTZ_UP = "ptz_up"
 PARAM_PTZ_DOWN = "ptz_down"
@@ -110,4 +110,8 @@ class ImouButton(ImouEntity, ButtonEntity):
                 duration,
             )
         except ImouException as e:
-            raise HomeAssistantError(str(e)) from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="press_button_failed",
+                translation_placeholders={"error": e.message},
+            ) from e

@@ -183,9 +183,7 @@ async def async_setup_entry(  # noqa: C901
         if hass_device := dev_reg.async_get_device_by_identifier(
             (DOMAIN, player_id), entry.entry_id
         ):
-            dev_reg.async_update_device(
-                hass_device.id, remove_config_entry_id=entry.entry_id
-            )
+            dev_reg.async_remove_device(hass_device.id)
 
     # register listener for new players
     def handle_player_added(event: MassEvent) -> None:

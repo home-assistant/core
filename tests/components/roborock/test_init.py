@@ -452,7 +452,7 @@ async def test_cloud_api_repair(
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 1
     # Check that both expected device names are present, regardless of order
     assert all(
@@ -495,7 +495,7 @@ async def test_cloud_api_repair_cleared_on_update(
     await hass.async_block_till_done()
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 1
 
     # Fake that the device is reachable locally again.
@@ -513,7 +513,7 @@ async def test_cloud_api_repair_cleared_on_update(
     await hass.async_block_till_done()
 
     # Verify that the repair issue is cleared
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 0
 
     # Fake the device is cloud only again. Refreshing the coordinator
@@ -529,7 +529,7 @@ async def test_cloud_api_repair_cleared_on_update(
     await hass.async_block_till_done()
 
     # Verify that the repair issue still does not exist
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 0
 
 
@@ -558,8 +558,8 @@ async def test_zeo_device_fails_setup(
 
     # The Zeo device should be in the registry and have entities
     # because entities are registered immediately without blocking on coordinator refresh.
-    zeo_device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, zeo_device.duid)}
+    zeo_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, zeo_device.duid), mock_roborock_entry.entry_id
     )
     assert zeo_device_entry is not None
     zeo_entities = er.async_entries_for_device(
@@ -618,8 +618,8 @@ async def test_dyad_device_fails_setup(
 
     # The Dyad device should be in the registry and have entities
     # because entities are registered immediately without blocking on coordinator refresh.
-    dyad_device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, dyad_device.duid)}
+    dyad_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dyad_device.duid), mock_roborock_entry.entry_id
     )
     assert dyad_device_entry is not None
     dyad_entities = er.async_entries_for_device(
@@ -680,8 +680,8 @@ async def test_disabled_device_no_coordinator(
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
 
     # The disabled device should still be registered in the device registry
-    disabled_device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, first_device.duid)}
+    disabled_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, first_device.duid), mock_roborock_entry.entry_id
     )
     assert disabled_device_entry is not None
     assert disabled_device_entry.disabled
@@ -769,8 +769,8 @@ async def test_all_devices_disabled(
 
     # All devices should still exist in the registry but be disabled
     for fake_device in fake_devices:
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, fake_device.duid)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, fake_device.duid), mock_roborock_entry.entry_id
         )
         assert device_entry is not None
         assert device_entry.disabled

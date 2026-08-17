@@ -122,6 +122,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data["zone"] = zones
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
+        self.data["rate_limit"] = self.get_rate_limit()
 
         refresh_token = await self.hass.async_add_executor_job(
             self._tado.get_refresh_token
@@ -448,7 +449,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def set_meter_reading(self, reading: int) -> dict[str, Any]:
         """Send meter reading to Tado."""
-        dt: str = datetime.now().strftime("%Y-%m-%d")  # pylint: disable=home-assistant-enforce-naive-now
+        dt: str = dt_util.now().strftime("%Y-%m-%d")
         if self._tado is None:
             raise HomeAssistantError("Tado client is not initialized")
 

@@ -61,6 +61,26 @@
     }
   },
   "issues": {
+    "issue_addon_app_port_conflict": {
+      "fix_flow": {
+        "abort": {
+          "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."
+        },
+        "step": {
+          "addon_execute_start": {
+            "description": "App {addon} has a port conflict on port {port}. The app cannot change this in settings. Please uninstall the app or stop and reconfigure the other service using port {port}. Once unblocked, select this option again to start the app."
+          },
+          "fix_menu": {
+            "description": "App {addon} has a port conflict on port {port}. You can clear the port configuration in the app settings to automatically resolve this and start the app, or you can manually unblock the port by stopping or reconfiguring the other service using it.",
+            "menu_options": {
+              "addon_clear_port_config": "Clear port configuration",
+              "addon_execute_start": "Start after manual unblock"
+            }
+          }
+        }
+      },
+      "title": "App port conflict"
+    },
     "issue_addon_boot_fail": {
       "fix_flow": {
         "abort": {
@@ -224,6 +244,10 @@
       "description": "System is currently unhealthy due to {reason}. For troubleshooting information, select Learn more.",
       "title": "Unhealthy system - {reason}"
     },
+    "unhealthy_data_filesystem_check_error": {
+      "description": "System is currently unhealthy because a filesystem integrity check failed on the data partition. This can be caused by unexpected power loss or failing storage and may affect configuration, apps, or backups. For troubleshooting information, select Learn more.",
+      "title": "Unhealthy system - Data partition filesystem check failed"
+    },
     "unhealthy_docker": {
       "description": "System is currently unhealthy because Docker is configured incorrectly. For troubleshooting information, select Learn more.",
       "title": "Unhealthy system - Docker misconfigured"
@@ -235,6 +259,10 @@
     "unhealthy_duplicate_os_installation": {
       "description": "System is currently unhealthy because it has detected multiple Home Assistant OS installations. For troubleshooting information, select Learn more.",
       "title": "Unhealthy system - Duplicate Home Assistant OS installation"
+    },
+    "unhealthy_os_filesystem_check_error": {
+      "description": "System is currently unhealthy because a filesystem integrity check failed on an operating system partition. This can be caused by unexpected power loss or failing storage. For troubleshooting information, select Learn more.",
+      "title": "Unhealthy system - OS partition filesystem check failed"
     },
     "unhealthy_oserror_bad_message": {
       "description": "System is currently unhealthy because the operating system has reported an OS error: Bad message. For troubleshooting information, select Learn more.",
