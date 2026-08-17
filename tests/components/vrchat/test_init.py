@@ -18,7 +18,7 @@ from homeassistant.components.vrchat.store import (
     InitialCurrentUserData,
     VRChatAuthCookieStore,
 )
-from homeassistant.components.vrchat.utils import is_user_in_game
+from homeassistant.components.vrchat.utils import AsyncCleanups, is_user_in_game
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -102,6 +102,22 @@ def _entity_id(entity_registry: er.EntityRegistry, unique_id: str) -> str:
     entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
     assert entity_id is not None
     return entity_id
+
+
+async def test_async_cleanups_uses_callback_snapshot() -> None:
+    """Test cleanup callbacks can unregister other callbacks."""
+    cleanups = AsyncCleanups()
+    second_cleanup = Mock()
+
+    def first_cleanup() -> None:
+        cleanups.remove_from_cleanups(second_cleanup)
+
+    cleanups.add_to_cleanups(second_cleanup)
+    cleanups.add_to_cleanups(first_cleanup)
+
+    await cleanups.close()
+
+    second_cleanup.assert_called_once()
 
 
 @pytest.mark.parametrize(

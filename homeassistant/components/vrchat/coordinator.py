@@ -421,11 +421,11 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
             await old_api.close()
 
     @override
-    def close(self):
+    async def close(self) -> None:
         """Close."""
         self.auto_restart = False
         self.starting_task.cancel()
-        return super().close()
+        await super().close()
 
 
 class VRChatAccountSetupFailed(ConfigEntryNotReady):
@@ -685,14 +685,14 @@ class VRChatUserDataCoordinator(AsyncCleanups):
         self.data = new_data
 
     @override
-    def close(self):
+    async def close(self) -> None:
         """Close."""
         account = self.account
         account.users.pop(self.data["id"], None)
         account.remove_from_cleanups(self.close)
         if (world := self.world) is not None:
             world.unsubscribe(self.async_schedule_update_ha_state_of_world_entities)
-        return super().close()
+        await super().close()
 
 
 class VRChatUserDataEntity(Entity):

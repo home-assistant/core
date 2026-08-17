@@ -115,7 +115,7 @@ class AsyncCleanups:
         self._closed = True
         try:
             async with asyncio.TaskGroup() as tg:
-                for c in self._cleanups:
+                for c in list(self._cleanups):
                     try:
                         res = c()
                     except Exception:
