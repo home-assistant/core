@@ -1,20 +1,22 @@
-"""Test the Traccar Server coordinator."""
+"""Test the Traccar Server integration setup and subscription lifecycle."""
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Generator
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 import sys
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytraccar import SubscriptionData, TraccarAuthenticationException, TraccarException
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.components.traccar_server.coordinator import (
+    _SUBSCRIPTION_RECONNECT_DELAY,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.util import dt as dt_util
 
 from .common import setup_integration
 
@@ -23,7 +25,7 @@ from tests.common import MockConfigEntry, async_capture_events, async_fire_time_
 
 async def test_update_data_auth_failure_triggers_reauth(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """An auth failure during update should fail setup and prompt reauth."""
@@ -42,7 +44,7 @@ async def test_update_data_auth_failure_triggers_reauth(
 
 async def test_update_data_traccar_exception_retries_setup(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """A non-auth error during update should leave setup pending retry."""
@@ -57,7 +59,7 @@ async def test_update_data_traccar_exception_retries_setup(
 
 async def test_handle_subscription_data_logs_restored_after_failures(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -65,7 +67,7 @@ async def test_handle_subscription_data_logs_restored_after_failures(
     calls = 0
 
     async def _fail_three_times_then_succeed(
-        callback: Callable[[SubscriptionData], Awaitable[None]],
+        callback: Callable[[SubscriptionData], object],
     ) -> None:
         nonlocal calls
         calls += 1
@@ -80,8 +82,8 @@ async def test_handle_subscription_data_logs_restored_after_failures(
 
     with (
         patch(
-            "homeassistant.components.traccar_server.coordinator.asyncio.sleep",
-            new=AsyncMock(),
+            "homeassistant.components.traccar_server.coordinator._SUBSCRIPTION_RECONNECT_DELAY",
+            0,
         ),
         caplog.at_level(logging.INFO, logger="homeassistant.components.traccar_server"),
     ):
@@ -97,15 +99,17 @@ async def test_handle_subscription_data_logs_restored_after_failures(
 
 async def test_import_events_fires_hass_events(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Events returned by the Traccar API are imported on schedule and fired on the HA bus."""
     events = async_capture_events(hass, "traccar_device_moving")
 
     await setup_integration(hass, mock_config_entry)
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -116,46 +120,39 @@ async def test_import_events_fires_hass_events(
 
 async def test_subscribe_raises_config_entry_auth_failed(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """An authentication failure must stop retrying, not loop forever."""
+    ready_to_raise = asyncio.Event()
+
+    async def _raise_auth_failure_when_ready(_callback: object) -> None:
+        await ready_to_raise.wait()
+        raise TraccarAuthenticationException("Unauthorized")
+
     mock_traccar_api_client.subscribe = AsyncMock(
-        side_effect=TraccarAuthenticationException("Unauthorized")
+        side_effect=_raise_auth_failure_when_ready
     )
 
-    background_tasks: list[asyncio.Task] = []
-    original_create_background_task = ConfigEntry.async_create_background_task
+    await setup_integration(hass, mock_config_entry)
 
-    def _capture_background_task(
-        self: ConfigEntry,
-        hass: HomeAssistant,
-        target: Coroutine[Any, Any, Any],
-        name: str,
-        eager_start: bool = True,
-    ) -> asyncio.Task:
-        task = original_create_background_task(self, hass, target, name, eager_start)
-        background_tasks.append(task)
-        return task
-
-    with patch.object(
-        ConfigEntry, "async_create_background_task", _capture_background_task
-    ):
-        await setup_integration(hass, mock_config_entry)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
+    # The background task the integration created is still pending here
+    # (it's blocked on ready_to_raise), so it's still tracked on the entry.
+    background_tasks = list(mock_config_entry._background_tasks)
     assert len(background_tasks) == 1
-    with pytest.raises(ConfigEntryAuthFailed):
-        background_tasks[0].result()
 
-    # A retryable failure would call subscribe() again after sleep(10);
-    # an auth failure must not retry at all.
+    ready_to_raise.set()
+    with pytest.raises(ConfigEntryAuthFailed):
+        await background_tasks[0]
+
+    # A retryable failure would call subscribe() again after the reconnect
+    # delay; an auth failure must not retry at all.
     assert mock_traccar_api_client.subscribe.call_count == 1
 
 
 async def test_subscribe_does_not_recurse_across_reconnects(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Subscribe retries must not grow the call stack."""
@@ -173,8 +170,8 @@ async def test_subscribe_does_not_recurse_across_reconnects(
     mock_traccar_api_client.subscribe = AsyncMock(side_effect=_flaky_subscribe)
 
     with patch(
-        "homeassistant.components.traccar_server.coordinator.asyncio.sleep",
-        new=AsyncMock(),
+        "homeassistant.components.traccar_server.coordinator._SUBSCRIPTION_RECONNECT_DELAY",
+        0,
     ):
         await setup_integration(hass, mock_config_entry)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -184,7 +181,7 @@ async def test_subscribe_does_not_recurse_across_reconnects(
 
 async def test_subscribe_does_not_busy_loop_on_clean_return(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """If client.subscribe() ever returns without raising, still throttle.
@@ -212,18 +209,20 @@ async def test_subscribe_does_not_busy_loop_on_clean_return(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert calls == 3
-    # Only calls 1 and 2 (the clean returns) reach the loop's sleep(10);
+    # Only calls 1 and 2 (the clean returns) reach the loop's delay;
     # call 3 raises CancelledError before that line, so exactly two real
     # reconnect delays are attributable to this code path.
-    ten_second_sleeps = [
-        call for call in mock_sleep.await_args_list if call.args == (10,)
+    reconnect_delay_sleeps = [
+        call
+        for call in mock_sleep.await_args_list
+        if call.args == (_SUBSCRIPTION_RECONNECT_DELAY,)
     ]
-    assert len(ten_second_sleeps) == 2
+    assert len(reconnect_delay_sleeps) == 2
 
 
 async def test_subscribe_retries_on_unexpected_exception(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """An exception that isn't a TraccarException must still be retried.
@@ -248,8 +247,8 @@ async def test_subscribe_retries_on_unexpected_exception(
     )
 
     with patch(
-        "homeassistant.components.traccar_server.coordinator.asyncio.sleep",
-        new=AsyncMock(),
+        "homeassistant.components.traccar_server.coordinator._SUBSCRIPTION_RECONNECT_DELAY",
+        0,
     ):
         await setup_integration(hass, mock_config_entry)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -259,7 +258,7 @@ async def test_subscribe_retries_on_unexpected_exception(
 
 async def test_subscribe_logs_error_once_then_periodic_reminder(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -278,8 +277,8 @@ async def test_subscribe_logs_error_once_then_periodic_reminder(
 
     with (
         patch(
-            "homeassistant.components.traccar_server.coordinator.asyncio.sleep",
-            new=AsyncMock(),
+            "homeassistant.components.traccar_server.coordinator._SUBSCRIPTION_RECONNECT_DELAY",
+            0,
         ),
         caplog.at_level(logging.INFO, logger="homeassistant.components.traccar_server"),
     ):
@@ -310,7 +309,7 @@ async def test_subscribe_logs_error_once_then_periodic_reminder(
 
 async def test_subscribe_clean_return_resets_error_logging(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock],
+    mock_traccar_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -339,8 +338,8 @@ async def test_subscribe_clean_return_resets_error_logging(
 
     with (
         patch(
-            "homeassistant.components.traccar_server.coordinator.asyncio.sleep",
-            new=AsyncMock(),
+            "homeassistant.components.traccar_server.coordinator._SUBSCRIPTION_RECONNECT_DELAY",
+            0,
         ),
         caplog.at_level(logging.INFO, logger="homeassistant.components.traccar_server"),
     ):
