@@ -551,8 +551,13 @@ def validate_user_input(
             _validate_state_class(user_input)
         if template_type == Platform.SWITCH:
             # Can be removed when Wake on LAN import is removed in 2027.2
+            match = {CONF_ON_ACTION: user_input.get(CONF_ON_ACTION)}
+            if turn_off := user_input.get(CONF_OFF_ACTION):
+                match[CONF_OFF_ACTION] = turn_off
+            if value_template := user_input.get(CONF_VALUE_TEMPLATE):
+                match[CONF_VALUE_TEMPLATE] = value_template
             handler.parent_handler._async_abort_entries_match(  # noqa: SLF001
-                {CONF_ON_ACTION: user_input.get(CONF_ON_ACTION)}
+                match
             )
         return {"template_type": template_type} | user_input
 

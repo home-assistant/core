@@ -668,6 +668,12 @@ async def test_template_switch_already_exist(
                     "target": {"entity_id": "button.wake_on_lan_00_01_02_03_04_05"},
                 }
             ],
+            "turn_off": [
+                {
+                    "action": "input_number.increment",
+                    "target": {"entity_id": ["input_number.number"]},
+                }
+            ],
             "value_template": "{{ is_state('binary_sensor.somehostname_local', 'on') }}",
         },
     )
