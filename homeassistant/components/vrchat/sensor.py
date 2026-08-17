@@ -152,6 +152,8 @@ class VRChatUserLocationSensor(
 ):
     """VRChat user location sensor entity."""
 
+    _attr_native_value = None
+
     entity_description = SensorEntityDescription(
         key="location", icon="mdi:map-marker", device_class=SensorDeviceClass.ENUM
     )
