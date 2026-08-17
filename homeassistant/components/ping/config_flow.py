@@ -41,6 +41,7 @@ class PingConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the import step."""
+        # Can be removed when Wake on LAN import is removed in 2027.2
         return await self.async_step_user(user_input)
 
     @override
