@@ -218,54 +218,63 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._announce_restore_state["tts_url"] = media_id
         _LOGGER.debug("Saving state for announcement: %s", self._announce_restore_state)
 
-        # Pause current playback if playing
-        if self._player.state == PlayState.PLAY:
-            await self._player.pause()
-            # Give the pause command time to take effect
-            await asyncio.sleep(0.5)
+        try:
+            # Pause current playback if playing
+            if self._player.state == PlayState.PLAY:
+                await self._player.pause()
+                # Give the pause command time to take effect
+                await asyncio.sleep(0.5)
 
-        # Mark announcement as in progress (only after state is captured)
-        self._announce_in_progress = True
-        
-        # Capture the announcement media signature after a brief delay
-        # This allows HEOS to start playing and report the media info
-        self.hass.async_create_task(self._capture_announcement_signature())
+            # Mark announcement as in progress (only after state is captured)
+            self._announce_in_progress = True
 
-        # Set volume if specified in extra
-        extra = kwargs.get("extra", {})
-        if "volume" in extra:
-            try:
-                volume_value = float(extra["volume"])
-                # Support both normalized (0.0-1.0) and percentage (0-100) formats
-                if 0.0 <= volume_value <= 1.0:
-                    # Normalized format (Home Assistant style)
-                    volume_percent = int(volume_value * 100)
-                elif 0 <= volume_value <= 100:
-                    # Percentage format
-                    volume_percent = int(volume_value)
-                else:
-                    # Out of range, clamp to valid range
-                    volume_percent = max(0, min(100, int(volume_value)))
-                    _LOGGER.warning(
-                        "Volume %s out of range, clamping to %s",
-                        volume_value,
-                        volume_percent,
-                    )
-                await self._player.set_volume(volume_percent)
-            except (ValueError, TypeError) as err:
-                _LOGGER.warning("Invalid volume level for announcement: %s", err)
+            # Capture the announcement media signature after a brief delay
+            # This allows HEOS to start playing and report the media info
+            self.hass.async_create_task(self._capture_announcement_signature())
 
-        # Play the announcement
-        await self._player.play_url(media_id)
+            # Set volume if specified in extra
+            extra = kwargs.get("extra", {})
+            if "volume" in extra:
+                try:
+                    volume_value = float(extra["volume"])
+                    # Support both normalized (0.0-1.0) and percentage (0-100) formats
+                    if 0.0 <= volume_value <= 1.0:
+                        # Normalized format (Home Assistant style)
+                        volume_percent = int(volume_value * 100)
+                    elif 0 <= volume_value <= 100:
+                        # Percentage format
+                        volume_percent = int(volume_value)
+                    else:
+                        # Out of range, clamp to valid range
+                        volume_percent = max(0, min(100, int(volume_value)))
+                        _LOGGER.warning(
+                            "Volume %s out of range, clamping to %s",
+                            volume_value,
+                            volume_percent,
+                        )
+                    await self._player.set_volume(volume_percent)
+                except (ValueError, TypeError) as err:
+                    _LOGGER.warning("Invalid volume level for announcement: %s", err)
+
+            # Play the announcement
+            await self._player.play_url(media_id)
+        except Exception as err:
+            # If announcement fails, clean up state to prevent getting stuck
+            _LOGGER.error("Failed to play announcement: %s", err)
+            self._announce_in_progress = False
+            self._announce_completed = False
+            self._announce_media_signature = None
+            self._announce_restore_state = None
+            raise
 
     async def _capture_announcement_signature(self) -> None:
         """Capture the media signature of the playing announcement."""
         # Wait for HEOS to start playing and report media info
         await asyncio.sleep(1.0)
-        
+
         if not self._announce_in_progress:
             return
-            
+
         # Capture the current media signature
         current_media = self._player.now_playing_media
         self._announce_media_signature = {
@@ -432,7 +441,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 or getattr(current_media, "album", None) != signature["album"]
                 or getattr(current_media, "artist", None) != signature["artist"]
             )
-            
+
             if media_changed:
                 is_completed = True
                 _LOGGER.debug("TTS completion detected: media signature changed")
@@ -440,19 +449,18 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 # Stopped while still showing announcement media
                 is_completed = True
                 _LOGGER.debug("TTS completion detected: player stopped")
-        else:
-            # Fallback if signature wasn't captured yet
-            # Check if stopped (announcement likely finished)
-            if current_state == PlayState.STOP:
+        # Fallback if signature wasn't captured yet
+        # Check if stopped (announcement likely finished)
+        elif current_state == PlayState.STOP:
+            is_completed = True
+            _LOGGER.debug("TTS completion detected: player stopped (no signature)")
+        # Check if paused and media is no longer the URL stream pattern
+        elif current_state == PlayState.PAUSE:
+            if hasattr(current_media, "song") and current_media.song != "Url Stream":
                 is_completed = True
-                _LOGGER.debug("TTS completion detected: player stopped (no signature)")
-            # Check if paused and media is no longer the URL stream pattern
-            elif current_state == PlayState.PAUSE:
-                if hasattr(current_media, "song") and current_media.song != "Url Stream":
-                    is_completed = True
-                    _LOGGER.debug(
-                        "TTS completion detected: paused, not URL stream",
-                    )
+                _LOGGER.debug(
+                    "TTS completion detected: paused, not URL stream",
+                )
 
         if is_completed:
             # Give it a moment to ensure this is a permanent state change
@@ -471,7 +479,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 self._announce_completed = True
                 _LOGGER.debug(
                     "Announcement completed - was playing TTS, now playing: %s, state: %s",
-                    current_media_id,
+                    self._player.now_playing_media.media_id,
                     self._player.state,
                 )
                 await self._restore_state()
