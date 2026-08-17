@@ -1097,6 +1097,23 @@ async def test_rpc_linkedgo_st802_thermostat(
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.4
 
+    # Test HVAC mode heat (not floor_heating)
+    mock_rpc_device.boolean_set.reset_mock()
+    mock_rpc_device.enum_set.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    monkeypatch.setitem(mock_rpc_device.status["enum:201"], "value", "heat")
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.boolean_set.assert_called_once_with(201, True)
+    mock_rpc_device.enum_set.assert_called_once_with(201, "heat")
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.HEAT
+
 
 async def test_rpc_linkedgo_st802_thermostat_floor_heating(
     hass: HomeAssistant,
