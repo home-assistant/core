@@ -7162,6 +7162,32 @@ async def test_get_or_create_sets_default_values(
     assert entry.manufacturer == "default manufacturer 1"
 
 
+@pytest.mark.parametrize(
+    ("field", "default_field"),
+    [
+        ("name", "default_name"),
+        ("manufacturer", "default_manufacturer"),
+        ("model", "default_model"),
+    ],
+)
+async def test_get_or_create_rejects_field_and_its_default(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    field: str,
+    default_field: str,
+) -> None:
+    """Test passing both an explicit field and its default_ counterpart is rejected."""
+    with pytest.raises(
+        dr.DeviceInfoError,
+        match=f"passing both `{field}` and `{default_field}` is not allowed",
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            **{field: "explicit value", default_field: "default value"},
+        )
+
+
 async def test_verify_suggested_area_does_not_overwrite_area_id(
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,

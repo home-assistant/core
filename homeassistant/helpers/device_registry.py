@@ -256,6 +256,13 @@ def _validate_device_info(
             device_info,
             "device info must include at least one of identifiers or connections",
         )
+    for field in ("manufacturer", "model", "name"):
+        if field in device_info and f"default_{field}" in device_info:
+            raise DeviceInfoError(
+                config_entry.domain,
+                device_info,
+                f"passing both `{field}` and `default_{field}` is not allowed",
+            )
 
 
 class _ValidatedDeviceInfoFields(TypedDict):
