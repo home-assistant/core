@@ -5,6 +5,8 @@ from unittest.mock import MagicMock
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
+from .conftest import notify_receiver_update
+
 from tests.common import MockConfigEntry
 
 
@@ -46,12 +48,7 @@ async def test_main_zone_sensor_values(
     mock_receiver.available_stream_types = ["AirPlay", "DLNA"]
 
     # Trigger callback to update states
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mock_lyngdorf_audio_information").state == "Stereo"
@@ -73,12 +70,7 @@ async def test_zone_b_sensor_values(
     mock_receiver.available_stream_types = ["AirPlay", "DLNA"]
 
     # Trigger callback to update states
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mock_lyngdorf_zone_b_audio_input").state == "aux"
@@ -95,7 +87,7 @@ async def test_sensor_none_values(
     """Test sensors show unknown when receiver values are None."""
     state = hass.states.get("sensor.mock_lyngdorf_audio_information")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_enum_sensor_ignores_unknown_device_value(
@@ -107,12 +99,7 @@ async def test_enum_sensor_ignores_unknown_device_value(
     mock_receiver.available_audio_inputs = ["optical"]
     mock_receiver.audio_input = "audio-37"
 
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mock_lyngdorf_audio_input").state == STATE_UNKNOWN

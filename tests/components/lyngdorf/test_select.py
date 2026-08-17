@@ -6,6 +6,8 @@ from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
+from .conftest import notify_receiver_update
+
 from tests.common import MockConfigEntry
 
 ROOM_PERFECT_ENTITY_ID = "select.mock_lyngdorf_roomperfect_position"
@@ -32,12 +34,7 @@ async def test_room_perfect_current_option(
     mock_receiver.room_perfect_position = "focus"
     mock_receiver.available_room_perfect_positions = ["focus", "global"]
 
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     state = hass.states.get(ROOM_PERFECT_ENTITY_ID)
@@ -54,12 +51,7 @@ async def test_room_perfect_select_option(
     mock_receiver.room_perfect_position = "focus"
     mock_receiver.available_room_perfect_positions = ["focus", "global"]
 
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -84,12 +76,7 @@ async def test_voicing_current_option(
     mock_receiver.voicing = "Neutral"
     mock_receiver.available_voicings = ["Neutral", "Music", "Movie"]
 
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     state = hass.states.get(VOICING_ENTITY_ID)
@@ -106,12 +93,7 @@ async def test_voicing_select_option(
     mock_receiver.voicing = "Neutral"
     mock_receiver.available_voicings = ["Neutral", "Music", "Movie"]
 
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     await hass.services.async_call(

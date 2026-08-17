@@ -127,6 +127,12 @@ def mock_find_receiver_model() -> Generator[AsyncMock]:
         yield find_mock
 
 
+def notify_receiver_update(receiver: MagicMock) -> None:
+    """Fire every notification callback the entities registered."""
+    for call in receiver.register_notification_callback.call_args_list:
+        call.args[0]()
+
+
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Platforms to load; override per module to isolate a single platform."""

@@ -1,12 +1,15 @@
 """Tests for the Lyngdorf number platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+from lyngdorf.const import LyngdorfModel
 import pytest
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+
+from .conftest import notify_receiver_update
 
 from tests.common import MockConfigEntry
 
@@ -53,12 +56,7 @@ async def test_number_values(
     mock_receiver.trim_lfe = 5.0
     mock_receiver.trim_surround = -1.0
 
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     assert hass.states.get(LIPSYNC_ENTITY_ID).state == "50.0"
@@ -78,12 +76,7 @@ async def test_set_lipsync(
     """Test setting the lipsync value."""
     mock_receiver.lipsync = 0
 
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -120,12 +113,7 @@ async def test_set_trim(
     """Test setting each trim value."""
     setattr(mock_receiver, attribute, 0.0)
 
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -149,8 +137,38 @@ async def test_number_none_values(
     """Test number entities show unknown when receiver values are None."""
     state = hass.states.get(LIPSYNC_ENTITY_ID)
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get(TRIM_BASS_ENTITY_ID)
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_receiver")
+async def test_entities_absent_for_controls_the_model_lacks(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no entity is created where the model has no such control.
+
+    Absence alone would also be produced by an entity that was created and
+    then failed, so this checks the setup stayed clean too.
+    """
+    mock_receiver.lipsync_range = None
+    mock_receiver.trim_surround_range = None
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.lyngdorf.lookup_receiver_model",
+        return_value=LyngdorfModel.MP_60,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(LIPSYNC_ENTITY_ID) is None
+    assert hass.states.get(TRIM_SURROUND_ENTITY_ID) is None
+    assert hass.states.get(TRIM_BASS_ENTITY_ID) is not None
+    assert "Error adding entity" not in caplog.text
+    assert "AssertionError" not in caplog.text
