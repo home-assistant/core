@@ -411,7 +411,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_subscribe_node_status)
     websocket_api.async_register_command(hass, websocket_node_status)
-    websocket_api.async_register_command(hass, websocket_node_neighbors)
+    websocket_api.async_register_command(hass, websocket_network_neighbors)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_node_alerts)
     websocket_api.async_register_command(hass, websocket_add_node)
@@ -621,25 +621,44 @@ async def websocket_node_status(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/node_neighbors",
-        vol.Required(DEVICE_ID): str,
+        vol.Required(TYPE): "zwave_js/network_neighbors",
+        vol.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
-@async_get_node
-async def websocket_node_neighbors(
+@async_get_entry
+async def websocket_network_neighbors(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    node: Node,
+    entry: ZwaveJSConfigEntry,
+    client: Client,
+    driver: Driver,
 ) -> None:
-    """Get the node IDs of the neighbors of a Z-Wave JS node."""
-    driver = node.client.driver
-    assert driver is not None  # The node comes from the driver instance.
-    controller = driver.controller
+    """Get the node IDs of the neighbors of all nodes in the network.
 
-    neighbors = await controller.async_get_node_neighbors(node)
+    Reading the routing table can wedge older controllers when the radio is
+    on or reads overlap, so refreshes are serialized and done with RF off:
+    https://zwave-js.github.io/zwave-js/#/api/controller?id=getnodeneighbors
+    """
+    controller = driver.controller
+    neighbors: dict[int, list[int]] = {}
+    async with entry.runtime_data.network_neighbors_lock:
+        await controller.async_toggle_rf(False)
+        try:
+            for node in controller.nodes.values():
+                # Long range nodes are not part of the mesh
+                if node.protocol is Protocols.ZWAVE_LONG_RANGE:
+                    continue
+                try:
+                    neighbors[node.node_id] = await controller.async_get_node_neighbors(
+                        node
+                    )
+                except FailedCommand:
+                    continue
+        finally:
+            await controller.async_toggle_rf(True)
     connection.send_result(msg[ID], neighbors)
 
 
