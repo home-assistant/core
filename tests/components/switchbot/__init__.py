@@ -1513,7 +1513,7 @@ KEYPAD_VISION_INFO = BluetoothServiceInfoBleak(
 
 KEYPAD_VISION_PRO_INFO = BluetoothServiceInfoBleak(
     name="Keypad Vision Pro",
-    manufacturer_data={2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\x00\x00\x00\x00\x00\x002"},
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\xc5\x00\x00\x00\x00\x002"},
     service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00`\x01\x11Q\x98"},
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     address="AA:BB:CC:DD:EE:FF",
@@ -1522,7 +1522,7 @@ KEYPAD_VISION_PRO_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(
         local_name="Keypad Vision Pro",
         manufacturer_data={
-            2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\x00\x00\x00\x00\x00\x002"
+            2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\xc5\x00\x00\x00\x00\x002"
         },
         service_data={
             "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00`\x01\x11Q\x98"
