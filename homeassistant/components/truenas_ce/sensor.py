@@ -195,10 +195,13 @@ def _parse_app_network_uid(uid: str) -> tuple[str | None, str | None]:
     return (base_uid, iface) if sep and base_uid and iface else (None, None)
 
 
-def _resolve_app_network_data(
-    uid: str, app_stats: dict[str, Any]
-) -> dict[str, Any] | None:
+def _resolve_app_network_data(uid: str, app_stats: Any) -> dict[str, Any] | None:
     """Resolve a composite app-network UID to its merged sensor data.
+
+    ``app_stats`` is typed ``Any`` rather than ``dict[str, Any]``: callers
+    pass it straight from ``coordinator.data.get("app_stats", {})``, which
+    can be a malformed non-dict payload on a broken API response, so this
+    function must runtime-check it rather than trust the static type.
 
     Uses ``_APP_STATS_NETWORK_UID_SEPARATOR`` to split the UID, then looks up
     the base app in ``app_stats`` and merges the matching network interface
@@ -209,6 +212,8 @@ def _resolve_app_network_data(
     """
     base_uid, interface_name = _parse_app_network_uid(uid)
     if base_uid is None or interface_name is None:
+        return None
+    if not isinstance(app_stats, dict):
         return None
     main_data = app_stats.get(base_uid)
     if not isinstance(main_data, dict) or not isinstance(

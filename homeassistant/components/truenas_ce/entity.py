@@ -95,7 +95,6 @@ def register_system_device(
     http_scheme = "https" if coordinator.api.scheme == "wss" else "http"
     device = dr.async_get(hass).async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(DOMAIN, identifier)},
         identifiers={(DOMAIN, identifier)},
         name=inst,
         model=f"{system_info['system_product']}",

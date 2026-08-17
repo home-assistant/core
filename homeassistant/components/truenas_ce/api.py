@@ -8,7 +8,6 @@ from logging import DEBUG, ERROR, Filter, LogRecord, getLogger
 from typing import Any, override
 
 from aiotruenas import TrueNASClient
-from aiotruenas.client import _SubscriptionTerminator
 from aiotruenas.exceptions import (
     TrueNASAuthenticationError,
     TrueNASCallError,
@@ -203,9 +202,11 @@ class TrueNASAPI:
         ----------
         host:
             Bare TrueNAS hostname or IP address without scheme or path
-            (for example, ``"truenas.local"`` or ``"192.168.1.10"``).
-            Values containing a URL scheme (``"://"``) or path (``"/"``)
-            are rejected to prevent malformed WebSocket URLs.
+            (for example, ``"truenas.local"`` or ``"192.168.1.10"``). This
+            class does not itself validate or strip a scheme/path -- callers
+            (``config_flow._sanitize_host``) are expected to normalize user
+            input before constructing this class, to avoid malformed
+            WebSocket URLs.
         api_key:
             API key used to authenticate with the TrueNAS API.
         verify_ssl:
@@ -360,11 +361,18 @@ class TrueNASAPI:
     # ---------------------------
     async def subscribe_events(
         self, event: str
-    ) -> (
-        tuple[str, asyncio.Queue[dict[str, Any] | _SubscriptionTerminator]]
-        | tuple[None, None]
-    ):
-        """Subscribe to an event and return (subscription_id, queue)."""
+    ) -> tuple[str, asyncio.Queue[Any]] | tuple[None, None]:
+        """Subscribe to an event and return (subscription_id, queue).
+
+        The queue yields either raw event payload dicts or aiotruenas's
+        internal subscription-terminator sentinel (an unstable, underscored
+        symbol we deliberately avoid importing); callers should just treat
+        any non-dict item as end-of-subscription. ``asyncio.Queue`` is
+        invariant, so the item type must stay structurally compatible with
+        aiotruenas's own (private) return type -- ``Any`` achieves that
+        without importing the private symbol; a plain ``object`` would not,
+        since it is a supertype rather than a structural match.
+        """
         if not self.connected() and not await self.connect():
             self._error = self._error or ERR_CONNECTION_REFUSED
             _LOGGER.warning(

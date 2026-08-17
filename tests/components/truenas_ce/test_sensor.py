@@ -78,6 +78,11 @@ def test_resolve_app_network_data_unknown_base_returns_none() -> None:
     assert _resolve_app_network_data("plex::eth0", {}) is None
 
 
+def test_resolve_app_network_data_non_dict_app_stats_returns_none() -> None:
+    """A malformed, non-dict app_stats payload resolves to None instead of raising."""
+    assert _resolve_app_network_data("plex::eth0", "not-a-dict") is None
+
+
 def test_resolve_app_network_data_networks_not_list_returns_none() -> None:
     """A non-list `networks` value resolves to None instead of raising."""
     app_stats = {"plex": {"networks": "not-a-list"}}
