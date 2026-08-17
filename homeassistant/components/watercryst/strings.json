@@ -23,7 +23,12 @@
   "entity": {
     "sensor": {
       "event_category": {
-        "name": "Event category"
+        "name": "Event category",
+        "state": {
+          "error": "Error",
+          "info": "Info",
+          "warning": "Warning"
+        }
       },
       "event_description": {
         "name": "Event description"
@@ -44,10 +49,33 @@
         "name": "Last water tap volume"
       },
       "ml_state": {
-        "name": "Microleakage measurement state"
+        "name": "Microleakage measurement state",
+        "state": {
+          "cancelled": "Microleakage test cancelled",
+          "failure_pressure_drop": "Pressure drop during measurement",
+          "failure_start_pressure": "Start pressure error",
+          "failure_unknown": "Unknown error",
+          "failure_water_tap": "Water draw-off during measurement",
+          "idle": "Microleakage test idle",
+          "leakage": "Microleakage detected during the test",
+          "running": "Microleakage test running",
+          "success": "Microleakage test completed successfully"
+        }
       },
       "mode_id": {
-        "name": "Device mode"
+        "name": "Device mode",
+        "state": {
+          "error_mode": "Error",
+          "fail_safe": "Fail-safe",
+          "leakage_protection": "Leakage protection",
+          "manual_control": "Manual control",
+          "rinse": "Rinsing",
+          "self_test": "Restart",
+          "thermal_disinfection": "Thermal disinfection",
+          "update": "Update",
+          "water_off": "Water supply locked",
+          "water_treatment": "Water treatment"
+        }
       },
       "pause_leakage_protection_until_utc": {
         "name": "Pause leakage protection until"
