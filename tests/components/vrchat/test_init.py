@@ -105,6 +105,10 @@ def _entity_id(entity_registry: er.EntityRegistry, unique_id: str) -> str:
     [
         pytest.param({}, None, id="missing_location"),
         pytest.param({"location": "offline"}, False, id="offline"),
+        pytest.param({"location": "offline:offline"}, False, id="offline_location"),
+        pytest.param(
+            {"location": "wrld_offline"}, True, id="world_id_contains_offline"
+        ),
         pytest.param({"location": "wrld_123"}, True, id="in_world"),
         pytest.param({"location": ""}, None, id="empty_location"),
         pytest.param(

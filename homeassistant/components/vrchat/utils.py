@@ -37,7 +37,10 @@ def is_user_in_game(user_data: dict[str, Any]) -> bool | None:
     )
     if location is None:
         return None
-    return VRChatSpecialLocationString.OFFLINE not in location
+    return location not in {
+        VRChatSpecialLocationString.OFFLINE,
+        f"{VRChatSpecialLocationString.OFFLINE}:{VRChatSpecialLocationString.OFFLINE}",
+    }
 
 
 class VRChatSpecialLocationString(StrEnum):
