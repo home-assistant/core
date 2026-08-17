@@ -363,21 +363,10 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
     return response
 
 
-def verify_dashboard_support(mass: MusicAssistantClient) -> None:
-    """Raise if the connected server does not support the dashboard commands."""
-    if (
-        mass.server_info is None
-        or mass.server_info.schema_version < DASHBOARD_SCHEMA_VERSION
-    ):
-        raise ServiceValidationError(
-            "The connected Music Assistant server does not support dashboards"
-        )
-
-
 async def handle_get_dashboards(call: ServiceCall) -> ServiceResponse:
     """Handle get_dashboards action."""
     mass = get_music_assistant_client(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
-    verify_dashboard_support(mass)
+    _verify_dashboard_support(mass)
     entity_registry = er.async_get(call.hass)
     dashboards: list[dict[str, Any]] = []
     for dashboard_device in mass.dashboard.dashboards:
@@ -399,7 +388,9 @@ async def handle_get_dashboards(call: ServiceCall) -> ServiceResponse:
                 ATTR_DASHBOARD_ID: dashboard_device.dashboard_id,
                 ATTR_NAME: dashboard_device.name,
                 ATTR_SUPPORTED_DASHBOARDS: sorted(
-                    x.value for x in dashboard_device.supported_types
+                    x.value
+                    for x in dashboard_device.supported_types
+                    if x is not DashboardType.UNKNOWN
                 ),
                 ATTR_ACTIVE_SESSION: active_session,
             }
@@ -412,7 +403,7 @@ async def handle_get_dashboards(call: ServiceCall) -> ServiceResponse:
 async def handle_show_dashboard(call: ServiceCall) -> None:
     """Handle show_dashboard action."""
     mass = get_music_assistant_client(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
-    verify_dashboard_support(mass)
+    _verify_dashboard_support(mass)
     dashboard_id: str = call.data[ATTR_DASHBOARD_ID]
     dashboard: DashboardType = call.data[ATTR_DASHBOARD]
     if mass.dashboard.get(dashboard_id) is None:
@@ -421,7 +412,11 @@ async def handle_show_dashboard(call: ServiceCall) -> None:
     if player_entity_id := call.data.get(ATTR_PLAYER):
         entity_registry = er.async_get(call.hass)
         entity_reg_entry = entity_registry.async_get(player_entity_id)
-        if entity_reg_entry is None or entity_reg_entry.platform != DOMAIN:
+        if (
+            entity_reg_entry is None
+            or entity_reg_entry.platform != DOMAIN
+            or entity_reg_entry.config_entry_id != call.data[ATTR_CONFIG_ENTRY_ID]
+        ):
             raise ServiceValidationError(
                 f"Entity {player_entity_id} is not a Music Assistant player"
             )
@@ -438,8 +433,19 @@ async def handle_show_dashboard(call: ServiceCall) -> None:
 async def handle_hide_dashboard(call: ServiceCall) -> None:
     """Handle hide_dashboard action."""
     mass = get_music_assistant_client(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
-    verify_dashboard_support(mass)
+    _verify_dashboard_support(mass)
     dashboard_id: str = call.data[ATTR_DASHBOARD_ID]
-    if mass.dashboard.get(dashboard_id) is None:
-        raise ServiceValidationError(f"Dashboard endpoint {dashboard_id} not found")
+    # unknown dashboard endpoints are server-side no-ops: they are
+    # connection-scoped and vanish when a display disconnects
     await mass.dashboard.hide(dashboard_id)
+
+
+def _verify_dashboard_support(mass: MusicAssistantClient) -> None:
+    """Raise if the connected server does not support the dashboard commands."""
+    if (
+        mass.server_info is None
+        or mass.server_info.schema_version < DASHBOARD_SCHEMA_VERSION
+    ):
+        raise ServiceValidationError(
+            "The connected Music Assistant server does not support dashboards"
+        )

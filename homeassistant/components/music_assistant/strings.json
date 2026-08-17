@@ -337,7 +337,7 @@
       "fields": {
         "config_entry_id": {
           "description": "Select the Music Assistant instance to get the dashboards from.",
-          "name": "Music Assistant instance"
+          "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]"
         }
       },
       "name": "Get dashboards"
@@ -401,12 +401,12 @@
       "description": "Hides the active Music Assistant dashboard on a display device.",
       "fields": {
         "config_entry_id": {
-          "description": "Select the Music Assistant instance the display device belongs to.",
-          "name": "Music Assistant instance"
+          "description": "[%key:component::music_assistant::services::show_dashboard::fields::config_entry_id::description%]",
+          "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]"
         },
         "dashboard_id": {
           "description": "ID of the display device to hide the dashboard on. Use the 'Get dashboards' action to list the available display devices and their IDs.",
-          "name": "Display device"
+          "name": "[%key:component::music_assistant::services::show_dashboard::fields::dashboard_id::name%]"
         }
       },
       "name": "Hide dashboard"
@@ -515,7 +515,7 @@
       "fields": {
         "config_entry_id": {
           "description": "Select the Music Assistant instance the display device belongs to.",
-          "name": "Music Assistant instance"
+          "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]"
         },
         "dashboard": {
           "description": "The dashboard to show.",

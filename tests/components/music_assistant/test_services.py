@@ -8,6 +8,7 @@ from music_assistant_models.errors import UserNotFoundError
 from music_assistant_models.media_items import SearchResults
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.music_assistant.const import (
     ATTR_DASHBOARD,
@@ -29,8 +30,11 @@ from homeassistant.components.music_assistant.services import (
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from .common import create_library_albums_from_fixture, setup_integration_from_fixtures
+
+from tests.common import MockConfigEntry
 
 
 async def test_search_action(
@@ -240,7 +244,13 @@ def setup_dashboards(music_assistant_client: MagicMock) -> None:
                 DashboardType.PARTY,
                 DashboardType.NOW_PLAYING,
                 DashboardType.MUSIC_QUIZ,
+                DashboardType.UNKNOWN,
             },
+        ),
+        "unmapped_player_display": DashboardDevice(
+            dashboard_id="unmapped_player_display",
+            name="Unmapped Player Display",
+            supported_types={DashboardType.NOW_PLAYING},
         ),
     }
     music_assistant_client.dashboard._sessions = {
@@ -249,6 +259,12 @@ def setup_dashboards(music_assistant_client: MagicMock) -> None:
             name="Kitchen Display",
             dashboard=DashboardType.NOW_PLAYING,
             player_id="00:00:00:00:00:01",
+        ),
+        "unmapped_player_display": DashboardSession(
+            dashboard_id="unmapped_player_display",
+            name="Unmapped Player Display",
+            dashboard=DashboardType.NOW_PLAYING,
+            player_id="not-exposed-player",
         ),
     }
 
@@ -285,15 +301,24 @@ async def test_get_dashboards_action(
                 "supported_dashboards": ["music_quiz", "now_playing", "party"],
                 "active_session": None,
             },
+            {
+                "dashboard_id": "unmapped_player_display",
+                "name": "Unmapped Player Display",
+                "supported_dashboards": ["now_playing"],
+                "active_session": {
+                    "dashboard": "now_playing",
+                    "player": None,
+                },
+            },
         ]
     }
 
 
-async def test_get_dashboards_requires_supported_server(
+async def test_dashboard_actions_require_supported_server(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test get_dashboards raises on a server without dashboard support."""
+    """Test all dashboard actions raise on a server without dashboard support."""
     entry = await setup_integration_from_fixtures(hass, music_assistant_client)
     # the fixture server_info reports schema_version 1
 
@@ -304,6 +329,29 @@ async def test_get_dashboards_requires_supported_server(
             {ATTR_CONFIG_ENTRY_ID: entry.entry_id},
             blocking=True,
             return_response=True,
+        )
+
+    with pytest.raises(ServiceValidationError, match="does not support dashboards"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SHOW_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "chromecast_kitchen",
+                ATTR_DASHBOARD: "party",
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError, match="does not support dashboards"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_HIDE_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "chromecast_kitchen",
+            },
+            blocking=True,
         )
 
 
@@ -410,6 +458,64 @@ async def test_show_dashboard_action_invalid_input(
             blocking=True,
         )
 
+    # player entity belongs to a different config entry
+    other_entry = MockConfigEntry(domain=DOMAIN, unique_id="other_server")
+    other_entry.add_to_hass(hass)
+    entity_registry = er.async_get(hass)
+    other_entry_player = entity_registry.async_get_or_create(
+        "media_player", DOMAIN, "other-player-id", config_entry=other_entry
+    )
+    with pytest.raises(ServiceValidationError, match="not a Music Assistant player"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SHOW_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "chromecast_kitchen",
+                ATTR_DASHBOARD: "now_playing",
+                ATTR_PLAYER: other_entry_player.entity_id,
+            },
+            blocking=True,
+        )
+
+    # player entity belongs to a different integration
+    demo_player = entity_registry.async_get_or_create(
+        "media_player", "demo", "demo-player-1"
+    )
+    with pytest.raises(ServiceValidationError, match="not a Music Assistant player"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SHOW_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "chromecast_kitchen",
+                ATTR_DASHBOARD: "now_playing",
+                ATTR_PLAYER: demo_player.entity_id,
+            },
+            blocking=True,
+        )
+
+
+async def test_show_dashboard_action_invalid_dashboard_type(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test show_dashboard rejects an unknown dashboard type at the schema level."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    setup_dashboards(music_assistant_client)
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SHOW_DASHBOARD,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_DASHBOARD_ID: "chromecast_kitchen",
+                ATTR_DASHBOARD: "definitely_not_a_dashboard",
+            },
+            blocking=True,
+        )
+
 
 async def test_hide_dashboard_action(
     hass: HomeAssistant,
@@ -434,13 +540,18 @@ async def test_hide_dashboard_action(
         require_schema=39,
     )
 
-    with pytest.raises(ServiceValidationError, match="not found"):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_HIDE_DASHBOARD,
-            {
-                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-                ATTR_DASHBOARD_ID: "does_not_exist",
-            },
-            blocking=True,
-        )
+    # hiding an unknown dashboard endpoint is a no-op forwarded to the server
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_HIDE_DASHBOARD,
+        {
+            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+            ATTR_DASHBOARD_ID: "does_not_exist",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "dashboard/hide",
+        dashboard_id="does_not_exist",
+        require_schema=39,
+    )
