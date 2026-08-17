@@ -217,6 +217,14 @@ def vizio_bypass_update_fixture() -> Generator[None]:
             return_value=None,
         ),
         patch(
+            "homeassistant.components.vizio.Vizio.get_volume",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.is_muted",
+            return_value=None,
+        ),
+        patch(
             "homeassistant.components.vizio.Vizio.get_current_input",
             return_value=None,
         ),
@@ -358,6 +366,14 @@ def vizio_update_fixture() -> Generator[None]:
                 type=SettingType.LIST,
                 options=tuple(EQ_LIST),
             ),
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_volume",
+            return_value=int(SOUNDBAR_PROFILE.max_volume / 2),
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.is_muted",
+            return_value=False,
         ),
         patch(
             "homeassistant.components.vizio.Vizio.get_current_input",
