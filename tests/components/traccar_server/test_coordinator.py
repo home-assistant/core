@@ -16,20 +16,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.util import dt as dt_util
 
+from . import get_subscription_callback
 from .common import setup_integration
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
-
-
-def _get_subscription_callback(
-    mock_traccar_api_client: AsyncMock,
-) -> Callable[[SubscriptionData], Awaitable[None]]:
-    """Return the callback our integration registered with client.subscribe().
-
-    Reading it off the mock's call args exercises the exact function
-    pytraccar would invoke, instead of calling a coordinator method by name.
-    """
-    return mock_traccar_api_client.subscribe.call_args.args[0]
 
 
 async def test_update_data_happy_path(
@@ -93,7 +83,7 @@ async def test_handle_subscription_data_updates_known_device(
 ) -> None:
     """A subscription update for a known device updates its device tracker state."""
     await setup_integration(hass, mock_config_entry)
-    subscription_callback = _get_subscription_callback(mock_traccar_api_client)
+    subscription_callback = get_subscription_callback(mock_traccar_api_client)
 
     updated_position = {
         "id": 0,
@@ -122,7 +112,7 @@ async def test_handle_subscription_data_ignores_unknown_device(
 ) -> None:
     """Subscription data for a device we haven't seen via polling is ignored."""
     await setup_integration(hass, mock_config_entry)
-    subscription_callback = _get_subscription_callback(mock_traccar_api_client)
+    subscription_callback = get_subscription_callback(mock_traccar_api_client)
 
     state_before = hass.states.get("device_tracker.x_wing")
 
@@ -155,7 +145,7 @@ async def test_handle_subscription_data_filters_low_accuracy_position(
 ) -> None:
     """A position update that fails the accuracy filter is skipped."""
     await setup_integration(hass, mock_config_entry)
-    subscription_callback = _get_subscription_callback(mock_traccar_api_client)
+    subscription_callback = get_subscription_callback(mock_traccar_api_client)
 
     original_latitude = hass.states.get("device_tracker.x_wing").attributes["latitude"]
 
