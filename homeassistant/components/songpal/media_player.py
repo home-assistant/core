@@ -161,6 +161,11 @@ class SongpalEntity(MediaPlayerEntity):
         """Activate websocket for listening if wanted."""
         _LOGGER.debug("Activating websocket connection")
 
+        # Narrowed once here rather than at each call site: the entity is only
+        # ever added from async_setup_entry, so the platform always has an entry.
+        entry = self.platform.config_entry
+        assert entry is not None
+
         async def _volume_changed(volume: VolumeChange):
             _LOGGER.debug("Volume changed: %s", volume)
             self._volume = volume.volume
@@ -218,7 +223,7 @@ class SongpalEntity(MediaPlayerEntity):
                     # back from a disconnected state.
                     await self.async_update_ha_state(force_refresh=True)
 
-            self.platform.config_entry.async_create_background_task(
+            entry.async_create_background_task(
                 self.hass,
                 self._dev.listen_notifications(),
                 "songpal-listen-notifications",
@@ -238,7 +243,7 @@ class SongpalEntity(MediaPlayerEntity):
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
-        self.platform.config_entry.async_create_background_task(
+        entry.async_create_background_task(
             self.hass, self._dev.listen_notifications(), "songpal-listen-notifications"
         )
 
