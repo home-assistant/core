@@ -252,6 +252,9 @@
       "washer_rinse_cycles": {
         "name": "Rinse cycles",
         "unit_of_measurement": "cycles"
+      },
+      "fan_speed_count": {
+        "name": "Number of speeds"
       }
     },
     "select": {

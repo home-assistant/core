@@ -6,6 +6,16 @@ from homeassistant.const import UnitOfTemperature
 
 DOMAIN = "smartthings"
 
+
+def fan_speed_count_signal(device_id: str) -> str:
+    """Return the dispatcher signal name for a device's fan speed count changing.
+
+    Fired by the "Fan speed count" number entity (number.py) whenever the
+    user changes it, so the corresponding fan entity (fan.py) can refresh
+    its state immediately without a full integration reload.
+    """
+    return f"{DOMAIN}_fan_speed_count_{device_id}"
+
 SCOPES = [
     "r:devices:*",
     "w:devices:*",
