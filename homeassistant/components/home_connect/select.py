@@ -73,24 +73,28 @@ AMBIENT_LIGHT_COLOR_TEMPERATURE_ENUM = {
     },
 }
 
-STATIC_PROGRAM_KEY_MAPPINGS = [
-    {
-        PROGRAMS_TRANSLATION_KEYS_MAP[translation_key]
-        for translation_key in static_mapping_key
-    }
-    for static_mapping_key in (
+STATIC_PROGRAM_KEY_MAPPINGS = {
+    translated_program_key: translated_static_mapping_group
+    for translated_static_mapping_group in (
         {
-            ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR,
-            ProgramKey.COOKING_OVEN_HEATING_MODE_3D_HOT_AIR,
-            ProgramKey.COOKING_OVEN_HEATING_MODE_2_D_HOT_AIR,
-        },
-        {
-            ProgramKey.LAUNDRY_CARE_WASHER_DRUM_CLEAN,
-            # ProgramKey.LAUNDRY_CARE_WASHER_DRUM_CLEAN_DRUM_CLEAN,
-            # ProgramKey.LAUNDRY_CARE_WASHER_DRUM_CLEAN_70_DRUM_CLEAN_70,
-        },
+            PROGRAMS_TRANSLATION_KEYS_MAP[program_key]
+            for program_key in static_mapping_group
+        }
+        for static_mapping_group in (
+            {
+                ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR,
+                ProgramKey.COOKING_OVEN_HEATING_MODE_3D_HOT_AIR,
+                ProgramKey.COOKING_OVEN_HEATING_MODE_2_D_HOT_AIR,
+            },
+            {
+                ProgramKey.LAUNDRY_CARE_WASHER_DRUM_CLEAN,
+                # ProgramKey.LAUNDRY_CARE_WASHER_DRUM_CLEAN_DRUM_CLEAN,
+                # ProgramKey.LAUNDRY_CARE_WASHER_DRUM_CLEAN_70_DRUM_CLEAN_70,
+            },
+        )
     )
-]
+    for translated_program_key in translated_static_mapping_group
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -474,26 +478,24 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
 
         if not hasattr(self, "_attr_options"):
             self.set_options()
+        # If the current option is not in the options, maybe it is
+        # a key that is in one of the static mapping groups.
         if (
             self._attr_current_option is not None
             and self._attr_current_option not in self._attr_options
+            and (
+                static_mapping_group := STATIC_PROGRAM_KEY_MAPPINGS.get(
+                    self._attr_current_option
+                )
+            )
         ):
-            # If the current option is not in the options, maybe it is
-            # a key that is in one of the static mapping groups.
-            for static_mapping_group in STATIC_PROGRAM_KEY_MAPPINGS:
-                if self._attr_current_option in static_mapping_group:
-                    # If the current option is in a static mapping group,
-                    # set the current option to the one that it is also
-                    # in the entity options.
-                    self._attr_current_option = next(
-                        (
-                            key
-                            for key in static_mapping_group
-                            if key in self._attr_options
-                        ),
-                        None,
-                    )
-                    break
+            # If the current option is in a static mapping group,
+            # set the current option to the one that it is also
+            # in the entity options.
+            self._attr_current_option = next(
+                (key for key in static_mapping_group if key in self._attr_options),
+                None,
+            )
 
     @override
     async def async_select_option(self, option: str) -> None:
