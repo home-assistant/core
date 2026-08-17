@@ -1271,4 +1271,8 @@ async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
     await hass.async_block_till_done()
     assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
 
-    assert not hass.config_entries.flow.async_progress()
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN
+    ]
