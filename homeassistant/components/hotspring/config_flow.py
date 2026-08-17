@@ -1,11 +1,16 @@
 """Config flow for Hot Spring."""
 
-from typing import override
+from collections.abc import Mapping
+from typing import Any, override
 
 from hotspring import HotSpring, HotSpringConnectionError, HotSpringError, Spa
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> Spa:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Spa:
     """Validate the user input allows us to connect."""
     api = HotSpring(data[CONF_HOST], session=async_get_clientsession(hass))
     spa = await api.update()
@@ -36,7 +41,7 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @override
     async def async_step_user(
-        self, user_input: dict[str, str] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
@@ -47,6 +52,12 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(spa.info.mac_address)
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data_updates={CONF_HOST: user_input[CONF_HOST]},
+                    )
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
                 )
@@ -57,8 +68,21 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        suggested_values: Mapping[str, Any] | None = user_input
+        if suggested_values is None and self.source == SOURCE_RECONFIGURE:
+            suggested_values = self._get_reconfigure_entry().data
+
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                suggested_values,
+            ),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Hot Spring spa."""
+        return await self.async_step_user(user_input)
