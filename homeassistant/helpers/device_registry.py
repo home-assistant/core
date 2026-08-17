@@ -2188,6 +2188,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             sw_version=sw_version,
         )
 
+        if disabled_by is DeviceEntryDisabler.DEVICE:
+            raise HomeAssistantError(
+                "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child "
+                "device; use async_update_child_device"
+            )
+
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if config_entry is None:
             raise HomeAssistantError(
@@ -3588,6 +3594,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             subentry of remove_config_entry_id. Use new_config_subentry_id to move, or
             async_remove_device to remove.
         """
+        if disabled_by is DeviceEntryDisabler.DEVICE:
+            raise HomeAssistantError(
+                "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child "
+                "device; use async_update_child_device"
+            )
         if (
             underlying_ids := self._async_device_ids_for_composite_device_id(device_id)
         ) is not None:
