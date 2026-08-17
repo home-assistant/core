@@ -75,8 +75,8 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # A gateway is identified by the endpoint it is reached on and the
-            # address it answers to, all three of which the coordinator needs
-            # to talk to it.
+            # address it answers to, all three of which are needed to talk
+            # to it.
             self._async_abort_entries_match(
                 {
                     CONF_HOST: user_input[CONF_HOST],

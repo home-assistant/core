@@ -1,27 +1,55 @@
 """The ZhongHong HVAC integration."""
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 
 from .const import CONF_GATEWAY_ADDRESS, DOMAIN
-from .coordinator import (
-    DeviceAddress,
-    ZhongHongConfigEntry,
-    ZhongHongCoordinator,
-    ZhongHongData,
-    device_unique_id,
-    legacy_device_unique_id,
-)
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
+
+type DeviceAddress = tuple[int, int]
+
+
+@dataclass
+class ZhongHongData:
+    """What a loaded config entry holds.
+
+    The air conditioners are found once, when the entry is set up: discovery
+    needs the listener thread stopped, so the gateway cannot be asked again
+    while the entry is running.
+    """
+
+    hub: ZhongHongGateway
+    devices: dict[DeviceAddress, ZhongHongHVAC]
+
+
+type ZhongHongConfigEntry = ConfigEntry[ZhongHongData]
+
+
+def device_unique_id(entry: ZhongHongConfigEntry, address: DeviceAddress) -> str:
+    """Return the unique ID of the air conditioner at an address."""
+    return f"{entry.entry_id}_{address[0]}_{address[1]}"
+
+
+def legacy_device_unique_id(address: DeviceAddress) -> str:
+    """Return the identifier the YAML platform gave the air conditioner.
+
+    It carried only the address on the bus, so two gateways with an air
+    conditioner at the same address, which `(1, 1)` commonly is, produced the
+    same one and the second entity was dropped. Entities are moved off it on
+    setup; it is still needed to find them.
+    """
+    return f"zhong_hong_hvac_{address[0]}_{address[1]}"
 
 
 @callback
@@ -65,8 +93,8 @@ def _connect(hub: ZhongHongGateway) -> dict[DeviceAddress, ZhongHongHVAC]:
     """Ask the gateway what is on its bus, then start listening to it.
 
     Discovery has to finish before the listener thread starts, because the two
-    read from the same socket. Both block, so this runs as one executor job
-    rather than hopping back to the event loop in between.
+    read from the same socket. All of it blocks, so it runs as one executor
+    job rather than hopping back to the event loop in between.
     """
     addresses = hub.discovery_ac()
     if not addresses:
@@ -77,6 +105,12 @@ def _connect(hub: ZhongHongGateway) -> dict[DeviceAddress, ZhongHongHVAC]:
     devices = {address: ZhongHongHVAC(hub, *address) for address in addresses}
 
     hub.start_listen()
+
+    # The gateway reports a unit only when it changes, so without asking once
+    # here the entities would have no state until someone touched a unit.
+    if not hub.query_all_status():
+        raise OSError(f"The gateway at {hub.ip_addr} did not answer the first query")
+
     return devices
 
 
@@ -121,10 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZhongHongConfigEntry) ->
 
     devices = await _async_connect(hass, hub)
 
-    coordinator = ZhongHongCoordinator(hass, entry, hub, devices)
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = ZhongHongData(hub, devices, coordinator)
+    entry.runtime_data = ZhongHongData(hub, devices)
     _async_migrate_unique_ids(hass, entry, devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

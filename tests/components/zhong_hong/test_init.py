@@ -12,7 +12,7 @@ from homeassistant.components.zhong_hong.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_OFF
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -63,10 +63,14 @@ async def test_setup_retries_without_devices(
     assert mock_gateway.start_listen_calls == 0
 
 
-async def test_setup_stops_listener_when_first_refresh_fails(
+async def test_setup_stops_listener_when_the_first_query_fails(
     hass: HomeAssistant, mock_gateway: FakeGateway, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test the listener is stopped when the entry fails after it was started."""
+    """Test the listener is stopped when the entry fails after it was started.
+
+    The gateway takes one connection at a time, so a socket left behind by a
+    failed setup is what the retry would then be refused by.
+    """
     mock_gateway.query_all_status_result = False
 
     await setup_integration(hass, mock_config_entry)
@@ -74,6 +78,20 @@ async def test_setup_stops_listener_when_first_refresh_fails(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert mock_gateway.start_listen_calls == 1
     assert mock_gateway.stop_listen_calls == 1
+
+
+async def test_setup_asks_for_the_state_of_every_device(
+    hass: HomeAssistant, mock_gateway: FakeGateway, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the entities have state without waiting for someone to touch a unit.
+
+    The gateway reports a unit when it changes and not before, so the first
+    state of each one has to be asked for.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_gateway.query_all_status_calls == 1
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
 async def test_yaml_import(

@@ -1,8 +1,5 @@
 """Test the zhong_hong climate platform."""
 
-from datetime import timedelta
-
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from zhong_hong_hvac.protocol import StatusFanMode, StatusOperation, StatusSwitch
 
@@ -12,9 +9,7 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODES,
     ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    FAN_HIGH,
     FAN_LOW,
-    FAN_MIDDLE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -27,7 +22,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     STATE_OFF,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -37,13 +31,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DEVICE_ADDRESS, ENTITY_ID, FakeGateway, build_status
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-# Spelled out instead of importing SCAN_INTERVAL and READBACK_DELAY, so that
-# changing either in the integration makes these tests fail instead of
-# following along.
-POLL_INTERVAL = timedelta(seconds=60)
-READBACK_DELAY = timedelta(seconds=3)
+from tests.common import MockConfigEntry
 
 
 async def test_entity_registration(
@@ -110,65 +98,6 @@ async def test_push_of_an_unknown_operation(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
-
-
-async def test_scheduled_poll_queries_the_gateway(
-    hass: HomeAssistant,
-    mock_gateway: FakeGateway,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the gateway is polled for the pushes that were missed."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_gateway.query_all_status_calls == 1
-
-    freezer.tick(POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    # The coordinator refreshes in a background task.
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert mock_gateway.query_all_status_calls == 2
-
-
-async def test_unavailable_when_the_gateway_connection_drops(
-    hass: HomeAssistant,
-    mock_gateway: FakeGateway,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a dropped gateway connection makes the entity unavailable."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
-
-    mock_gateway.connected = False
-    freezer.tick(POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    # The coordinator refreshes in a background task.
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-    # The gateway is not talked to while the connection is known to be down.
-    assert mock_gateway.query_all_status_calls == 1
-
-
-async def test_unavailable_when_the_gateway_stops_answering(
-    hass: HomeAssistant,
-    mock_gateway: FakeGateway,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a gateway that refuses the poll makes the entity unavailable."""
-    await setup_integration(hass, mock_config_entry)
-
-    mock_gateway.query_all_status_result = False
-    freezer.tick(POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    # The coordinator refreshes in a background task.
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_turn_on_success(
@@ -356,66 +285,3 @@ async def test_device_address_is_used_for_the_entity(
 
     assert hass.states.get(ENTITY_ID) is not None
     assert hass.states.get("climate.ac_1_2") is not None
-
-
-async def test_a_command_is_read_back(
-    hass: HomeAssistant,
-    mock_gateway: FakeGateway,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the gateway is re-read shortly after being commanded.
-
-    A unit reports the new state itself once it acts, so this only matters
-    for the reports that go missing: without it the entity would show the old
-    state until the next scheduled poll.
-    """
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_gateway.query_all_status_calls == 1
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_HIGH},
-        blocking=True,
-    )
-    # The command is sent from the executor, which hands the re-read back to
-    # the event loop to be scheduled there. Moving the clock on before that
-    # has happened would leave the timer set past the point being fired.
-    await hass.async_block_till_done()
-
-    assert mock_gateway.query_all_status_calls == 1
-
-    freezer.tick(READBACK_DELAY)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert mock_gateway.query_all_status_calls == 2
-
-
-async def test_commands_in_a_row_are_read_back_once(
-    hass: HomeAssistant,
-    mock_gateway: FakeGateway,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a burst of commands does not queue up a re-read for each one."""
-    await setup_integration(hass, mock_config_entry)
-
-    for fan_mode in (FAN_HIGH, FAN_LOW, FAN_MIDDLE):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: fan_mode},
-            blocking=True,
-        )
-    # See test_a_command_is_read_back: the re-read is scheduled on the event
-    # loop from the executor the commands are sent on.
-    await hass.async_block_till_done()
-
-    freezer.tick(READBACK_DELAY)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert mock_gateway.query_all_status_calls == 2
