@@ -153,6 +153,48 @@ def unload_entry_fixture() -> Generator[AsyncMock]:
         yield mock_unload_entry
 
 
+@pytest.fixture(name="backup_nvm")
+def backup_nvm_fixture(client: MagicMock) -> AsyncMock:
+    """Mock a successful NVM backup that emits progress."""
+
+    async def mock_backup_nvm_raw() -> bytes:
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm backup progress", {"bytesRead": 100, "total": 200}
+        )
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+    return client.driver.controller.async_backup_nvm_raw
+
+
+@pytest.fixture(name="restore_nvm")
+def restore_nvm_fixture(client: MagicMock) -> AsyncMock:
+    """Mock a successful NVM restore that emits progress and driver ready."""
+
+    async def mock_restore_nvm(
+        data: bytes, options: dict[str, bool] | None = None
+    ) -> None:
+        client.driver.controller.emit(
+            "nvm convert progress",
+            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
+        )
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm restore progress",
+            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
+        )
+        client.driver.controller.data["homeId"] = 3245146787
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
+    return client.driver.controller.async_restore_nvm
+
+
 @pytest.fixture(name="supervisor")
 def mock_supervisor_fixture() -> Generator[None]:
     """Mock Supervisor."""
@@ -916,7 +958,7 @@ async def test_usb_discovery_addon_not_running(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm", "restore_nvm")
 async def test_usb_discovery_migration(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
@@ -945,34 +987,6 @@ async def test_usb_discovery_migration(
         client.driver.controller.data["homeId"] = 1234
 
     restart_addon.side_effect = mock_restart_addon
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
-
-    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
-        client.driver.controller.emit(
-            "nvm convert progress",
-            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
-        )
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm restore progress",
-            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
-        )
-        client.driver.controller.data["homeId"] = 3245146787
-        client.driver.emit(
-            "driver ready", {"event": "driver ready", "source": "driver"}
-        )
-
-    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
     events = async_capture_events(
         hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
@@ -1062,7 +1076,7 @@ async def test_usb_discovery_migration(
     assert entry.unique_id == "3245146787"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
 async def test_usb_discovery_migration_restore_driver_ready_timeout(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
@@ -1090,17 +1104,6 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
         client.driver.controller.data["homeId"] = 1234
 
     restart_addon.side_effect = mock_restart_addon
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
 
     async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
         client.driver.controller.emit(
@@ -4303,6 +4306,7 @@ async def test_reconfigure_migrate_low_sdk_version(
         ),
     ],
 )
+@pytest.mark.usefixtures("backup_nvm", "restore_nvm")
 async def test_reconfigure_migrate_with_addon(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4369,34 +4373,6 @@ async def test_reconfigure_migrate_with_addon(
     device_registry.async_update_device(
         device.id, name_by_user="Custom Sensor Device Name"
     )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
-
-    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
-        client.driver.controller.emit(
-            "nvm convert progress",
-            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
-        )
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm restore progress",
-            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
-        )
-        client.driver.controller.data["homeId"] = 3245146787
-        client.driver.emit(
-            "driver ready", {"event": "driver ready", "source": "driver"}
-        )
-
-    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
     events = async_capture_events(
         hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
@@ -4514,7 +4490,7 @@ async def test_reconfigure_migrate_with_addon(
     assert client.driver.controller.home_id == 3245146787
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
 async def test_reconfigure_migrate_restore_driver_ready_timeout(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4540,17 +4516,6 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
         client.driver.controller.data["homeId"] = 1234
 
     restart_addon.side_effect = mock_restart_addon
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
 
     async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
         client.driver.controller.emit(
@@ -4680,6 +4645,7 @@ async def test_reconfigure_migrate_backup_failure(
     assert "keep_old_devices" not in entry.data
 
 
+@pytest.mark.usefixtures("backup_nvm")
 async def test_reconfigure_migrate_backup_file_failure(
     hass: HomeAssistant,
     integration: MockConfigEntry,
@@ -4689,14 +4655,6 @@ async def test_reconfigure_migrate_backup_file_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     result = await entry.start_reconfigure_flow(hass)
@@ -4722,7 +4680,7 @@ async def test_reconfigure_migrate_backup_file_failure(
     assert "keep_old_devices" not in entry.data
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
 async def test_reconfigure_migrate_start_addon_failure(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4735,14 +4693,6 @@ async def test_reconfigure_migrate_start_addon_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     result = await entry.start_reconfigure_flow(hass)
@@ -4796,7 +4746,7 @@ async def test_reconfigure_migrate_start_addon_failure(
     assert "keep_old_devices" not in entry.data
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon", "backup_nvm")
 async def test_reconfigure_migrate_restore_failure(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4807,14 +4757,6 @@ async def test_reconfigure_migrate_restore_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     client.driver.controller.async_restore_nvm = AsyncMock(
@@ -4924,6 +4866,7 @@ async def test_get_driver_failure_intent_migrate(
     assert "keep_old_devices" not in entry.data
 
 
+@pytest.mark.usefixtures("backup_nvm")
 async def test_choose_serial_port_usb_ports_failure(
     hass: HomeAssistant,
     integration: MockConfigEntry,
@@ -4933,14 +4876,6 @@ async def test_choose_serial_port_usb_ports_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     result = await entry.start_reconfigure_flow(hass)
@@ -5606,7 +5541,7 @@ async def test_addon_rf_region_new_network(
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm", "restore_nvm")
 async def test_addon_rf_region_migrate_network(
     hass: HomeAssistant,
     client: MagicMock,
@@ -5631,34 +5566,6 @@ async def test_addon_rf_region_migrate_network(
         },
     )
     addon_options["device"] = "/dev/ttyUSB0"
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
-
-    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
-        client.driver.controller.emit(
-            "nvm convert progress",
-            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
-        )
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm restore progress",
-            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
-        )
-        client.driver.controller.data["homeId"] = 3245146787
-        client.driver.emit(
-            "driver ready", {"event": "driver ready", "source": "driver"}
-        )
-
-    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
     events = async_capture_events(
         hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
