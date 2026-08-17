@@ -541,11 +541,11 @@ async def test_ui_expose_with_options(
     assert res["success"], res
     assert res["result"]["success"] is True, res["result"]
 
-    # Change attribute to None - 1 because of value template
+    # Change attribute to 1 - because of value template
     hass.states.async_set(ENTITY_ID, "on", {"brightness": 10})
     await hass.async_block_till_done()
     await knx.assert_write(GROUP_ADDRESS_1, (1,))
-    # Change attribute to 2 - skip because of cooldown
+    # Change attribute to 50 - skip because of cooldown
     hass.states.async_set(ENTITY_ID, "on", {"brightness": 100})
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
