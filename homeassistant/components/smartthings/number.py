@@ -300,6 +300,7 @@ class SmartThingsFanSpeedCountNumberEntity(RestoreNumber):
             else 3
         )
         self._entry_data.fan_speed_counts[self._device_id] = value
+        async_dispatcher_send(self.hass, fan_speed_count_signal(self._device_id))
 
     @property
     @override
