@@ -32,10 +32,12 @@ from homeassistant.components.switch import (
 )
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
+    CONF_DEVICE,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
     CONF_EVENT,
+    CONF_ID,
     CONF_MODE,
     CONF_NAME,
     CONF_PAYLOAD,
@@ -46,6 +48,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
+from homeassistant.util import slugify
 
 from .const import (
     CONF_CONTEXT_TIMEOUT,
@@ -60,6 +63,7 @@ from .const import (
     CONF_SYNC_STATE,
     CONF_VALUE,
     KNX_ADDRESS,
+    UI_DEVICE_ID_PREFIX,
     ClimateConf,
     ColorTempModes,
     CoverConf,
@@ -67,6 +71,7 @@ from .const import (
     FanZeroMode,
     NumberConf,
     SceneConf,
+    SelectConf,
 )
 from .dpt import get_supported_dpts
 from .validation import (
@@ -77,6 +82,7 @@ from .validation import (
     numeric_type_validator,
     sensor_type_validator,
     string_type_validator,
+    sync_state_no_false_validator,
     sync_state_validator,
     validate_number_attributes,
     validate_sensor_attributes,
@@ -135,8 +141,8 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     payloads_seen = set()
     payload_length = entity_config[CONF_PAYLOAD_LENGTH]
 
-    for opt in entity_config[SelectSchema.CONF_OPTIONS]:
-        option = opt[SelectSchema.CONF_OPTION]
+    for opt in entity_config[SelectConf.OPTIONS]:
+        option = opt[SelectConf.OPTION]
         payload = opt[CONF_PAYLOAD]
         if payload > (max_payload := _max_payload_value(payload_length)):
             raise vol.Invalid(
@@ -204,11 +210,34 @@ class KNXPlatformSchema(ABC):
         }
 
 
+def _device_id(value: str) -> str:
+    """Normalize a YAML device id.
+
+    A value matching the identifier of a device created in the UI (see
+    `UI_DEVICE_ID_PREFIX`) is passed through verbatim, so it keeps linking to
+    that device. Any other value is slugified so ids that only differ in
+    case or whitespace resolve to the same device instead of silently
+    creating a separate one.
+    """
+    value = value.strip()
+    if value.startswith(UI_DEVICE_ID_PREFIX):
+        return value
+    return slugify(value)
+
+
 def _entity_base_schema(platform: Platform) -> vol.Schema:
     """Return a base schema for KNX entities."""
     return vol.Schema(
         {
             vol.Optional(CONF_NAME, default=""): cv.string,
+            vol.Optional(CONF_DEVICE): vol.Schema(
+                {
+                    vol.Required(CONF_ID): vol.All(
+                        cv.string, _device_id, vol.Length(min=1)
+                    ),
+                    vol.Optional(CONF_NAME): cv.string,
+                }
+            ),
             vol.Optional(CONF_DEFAULT_ENTITY_ID): vol.All(
                 cv.entity_id, cv.entity_domain(platform)
             ),
@@ -421,6 +450,9 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_SWING_HORIZONTAL_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_SWING_HORIZONTAL_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_HUMIDITY_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
     )
@@ -461,6 +493,9 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CoverConf.INVERT_POSITION, default=False): cv.boolean,
                 vol.Optional(CoverConf.INVERT_ANGLE, default=False): cv.boolean,
                 vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         vol.Any(
@@ -703,6 +738,9 @@ class LightSchema(KNXPlatformSchema):
                 vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         vol.Any(
@@ -776,6 +814,9 @@ class NumberSchema(KNXPlatformSchema):
                 vol.Optional(NumberConf.STEP): cv.positive_float,
                 vol.Optional(CONF_DEVICE_CLASS): NUMBER_DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         _number_limit_sub_validator,
@@ -804,9 +845,6 @@ class SelectSchema(KNXPlatformSchema):
 
     PLATFORM = Platform.SELECT
 
-    CONF_OPTION = "option"
-    CONF_OPTIONS = "options"
-
     ENTITY_SCHEMA = vol.All(
         _entity_base_schema(PLATFORM).extend(
             {
@@ -815,9 +853,9 @@ class SelectSchema(KNXPlatformSchema):
                 vol.Required(CONF_PAYLOAD_LENGTH): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=14)
                 ),
-                vol.Required(CONF_OPTIONS): [
+                vol.Required(SelectConf.OPTIONS): [
                     {
-                        vol.Required(CONF_OPTION): vol.Coerce(str),
+                        vol.Required(SelectConf.OPTION): vol.Coerce(str),
                         vol.Required(CONF_PAYLOAD): cv.positive_int,
                     }
                 ],
@@ -869,6 +907,7 @@ class SwitchSchema(KNXPlatformSchema):
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_no_false_validator,
         }
     )
 
@@ -885,6 +924,7 @@ class TextSchema(KNXPlatformSchema):
             vol.Optional(CONF_MODE, default=TextMode.TEXT): vol.Coerce(TextMode),
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_no_false_validator,
         }
     )
 

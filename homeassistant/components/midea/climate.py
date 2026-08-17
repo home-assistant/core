@@ -1,13 +1,11 @@
 """Midea Climate entries."""
 
 from dataclasses import dataclass
-import logging
 from typing import Any, cast, override
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes, MideaACDevice
-from midealocal.devices.c3 import MideaC3Device
-from midealocal.devices.c3.const import DeviceAttributes as C3Attributes
+from midealocal.devices.c3 import DeviceAttributes as C3Attributes, MideaC3Device
 from midealocal.devices.cc import DeviceAttributes as CCAttributes, MideaCCDevice
 from midealocal.devices.cf import DeviceAttributes as CFAttributes, MideaCFDevice
 from midealocal.devices.fb import DeviceAttributes as FBAttributes, MideaFBDevice
@@ -46,8 +44,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, FanSpeed
 from .entity import MideaConfigEntry, MideaEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -168,15 +164,6 @@ class MideaClimate(MideaEntity, ClimateEntity):
     _attr_min_temp = TEMPERATURE_MIN
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _zone: int | None = None
-
-    def __init__(
-        self,
-        device: MideaClimateDevice,
-        description: MideaClimateEntityDescription,
-    ) -> None:
-        """Midea Climate entity init."""
-        super().__init__(device, description.key)
-        self.entity_description = description
 
     def _float_attribute(self, attr: str) -> float | None:
         """Return a device attribute as float, if convertible."""

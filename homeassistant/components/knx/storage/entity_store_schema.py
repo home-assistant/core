@@ -1,5 +1,6 @@
 """KNX entity store schema."""
 
+from collections.abc import Hashable
 from enum import StrEnum, unique
 
 import voluptuous as vol
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_MODE,
     CONF_NAME,
+    CONF_PAYLOAD,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
     Platform,
@@ -51,8 +53,9 @@ from ..const import (
     FanZeroMode,
     NumberConf,
     SceneConf,
+    SelectConf,
 )
-from ..dpt import get_supported_dpts
+from ..dpt import get_supported_dpts, raw_payload_length
 from ..validation import validate_number_attributes, validate_sensor_attributes
 from .const import (
     CONF_ALWAYS_CALLBACK,
@@ -64,23 +67,31 @@ from .const import (
     CONF_DPT,
     CONF_ENTITY,
     CONF_GA_ACTIVE,
+    CONF_GA_AIR_PRESSURE,
     CONF_GA_ANGLE,
     CONF_GA_BLUE_BRIGHTNESS,
     CONF_GA_BLUE_SWITCH,
     CONF_GA_BRIGHTNESS,
+    CONF_GA_BRIGHTNESS_EAST,
+    CONF_GA_BRIGHTNESS_NORTH,
+    CONF_GA_BRIGHTNESS_SOUTH,
+    CONF_GA_BRIGHTNESS_WEST,
     CONF_GA_COLOR,
     CONF_GA_COLOR_TEMP,
     CONF_GA_CONTROLLER_MODE,
     CONF_GA_CONTROLLER_STATUS,
     CONF_GA_DATE,
     CONF_GA_DATETIME,
+    CONF_GA_DAY_NIGHT,
     CONF_GA_FAN_SPEED,
     CONF_GA_FAN_SWING,
     CONF_GA_FAN_SWING_HORIZONTAL,
+    CONF_GA_FROST_ALARM,
     CONF_GA_GREEN_BRIGHTNESS,
     CONF_GA_GREEN_SWITCH,
     CONF_GA_HEAT_COOL,
     CONF_GA_HUE,
+    CONF_GA_HUMIDITY,
     CONF_GA_HUMIDITY_CURRENT,
     CONF_GA_ON_OFF,
     CONF_GA_OP_MODE_COMFORT,
@@ -91,6 +102,7 @@ from .const import (
     CONF_GA_OSCILLATION,
     CONF_GA_POSITION_SET,
     CONF_GA_POSITION_STATE,
+    CONF_GA_RAIN_ALARM,
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
@@ -102,6 +114,7 @@ from .const import (
     CONF_GA_STEP,
     CONF_GA_STOP,
     CONF_GA_SWITCH,
+    CONF_GA_TEMPERATURE,
     CONF_GA_TEMPERATURE_CURRENT,
     CONF_GA_TEMPERATURE_TARGET,
     CONF_GA_TEXT,
@@ -110,7 +123,11 @@ from .const import (
     CONF_GA_VALVE,
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
+    CONF_GA_WIND_ALARM,
+    CONF_GA_WIND_BEARING,
+    CONF_GA_WIND_SPEED,
     CONF_IGNORE_AUTO_MODE,
+    CONF_INVERT_DAY_NIGHT,
     CONF_SPEED,
     CONF_TARGET_TEMPERATURE,
 )
@@ -121,6 +138,7 @@ from .knx_selector import (
     GroupSelectOption,
     KnxPayloadSelector,
     KNXSectionFlat,
+    KnxSelectOptionsSelector,
     SyncStateSelector,
 )
 
@@ -572,6 +590,125 @@ SCENE_KNX_SCHEMA = vol.Schema(
     },
 )
 
+
+def _select_options_sub_validator(config: dict) -> dict:
+    """Validate select options against the configured DPT.
+
+    The `options_source` group selects one of two modes, distinguished by the
+    group address key:
+    - `ga_enum`: options are derived from a required enum DPT.
+    - `ga_custom`: options are configured manually, each as a typed value (needs
+      a DPT) or a raw payload. Payload ranges are validated per option by the
+      options selector.
+
+    All options are sent to the same group address, so they have to share a
+    single payload length - taken from the DPT if one is configured.
+    """
+    source = config[SelectConf.OPTIONS_SOURCE]
+    if SelectConf.GA_ENUM in source:
+        dpt = source[SelectConf.GA_ENUM].get(CONF_DPT)
+        if dpt is None or get_supported_dpts()[dpt]["dpt_class"] != "enum":
+            raise vol.Invalid(
+                "An enum data point type is required",
+                path=[SelectConf.OPTIONS_SOURCE, SelectConf.GA_ENUM],
+            )
+        return config
+
+    error_path: list[Hashable] = [SelectConf.OPTIONS_SOURCE, SelectConf.CUSTOM_OPTIONS]
+    options = source[SelectConf.CUSTOM_OPTIONS]
+    if not options:
+        raise vol.Invalid("At least one option is required", path=error_path)
+
+    dpt = source[SelectConf.GA_CUSTOM].get(CONF_DPT)
+    transcoder = DPTBase.parse_transcoder(dpt) if dpt is not None else None
+    payload_length = raw_payload_length(transcoder) if transcoder is not None else None
+
+    options_seen: set[str] = set()
+    payloads_seen: set[int] = set()
+    for option in options:
+        name = option[SelectConf.OPTION]
+        if name in options_seen:
+            raise vol.Invalid(f"Duplicate option not allowed: {name}", path=error_path)
+        options_seen.add(name)
+
+        if CONF_VALUE in option:
+            if transcoder is None:
+                raise vol.Invalid(
+                    f"A data point type is required for typed option '{name}'",
+                    path=error_path,
+                )
+            try:
+                payload = int.from_bytes(
+                    transcoder.validate_payload(transcoder.to_knx(option[CONF_VALUE])),
+                    byteorder="big",
+                )
+            except ConversionError as ex:
+                raise vol.Invalid(
+                    f"Value invalid for option '{name}' with DPT "
+                    f"{transcoder.dpt_number_str()}",
+                    path=error_path,
+                ) from ex
+        else:
+            option_length = option[CONF_PAYLOAD_LENGTH]
+            if payload_length is None:
+                payload_length = option_length
+            elif option_length != payload_length:
+                expected = (
+                    f"DPT {transcoder.dpt_number_str()}"
+                    if transcoder is not None
+                    else "the other options"
+                )
+                raise vol.Invalid(
+                    f"Payload length {option_length} of option '{name}' doesn't "
+                    f"match payload length {payload_length} of {expected}",
+                    path=error_path,
+                )
+            payload = int(option[CONF_PAYLOAD], 16)
+
+        if payload in payloads_seen:
+            raise vol.Invalid(
+                f"Duplicate payload not allowed for option '{name}'", path=error_path
+            )
+        payloads_seen.add(payload)
+    return config
+
+
+SELECT_KNX_SCHEMA = AllSerializeFirst(
+    vol.Schema(
+        {
+            vol.Required(SelectConf.OPTIONS_SOURCE): GroupSelect(
+                GroupSelectOption(
+                    translation_key="from_dpt",
+                    schema={
+                        vol.Required(SelectConf.GA_ENUM): GASelector(
+                            write_required=True, dpt=["enum"]
+                        ),
+                    },
+                ),
+                GroupSelectOption(
+                    translation_key="custom",
+                    schema={
+                        vol.Required(SelectConf.GA_CUSTOM): GASelector(
+                            write_required=True,
+                            dpt=["numeric", "enum", "complex", "string"],
+                            dpt_required=False,
+                        ),
+                        vol.Required(
+                            SelectConf.CUSTOM_OPTIONS
+                        ): KnxSelectOptionsSelector(ga_path=SelectConf.GA_CUSTOM),
+                    },
+                ),
+                collapsible=False,
+            ),
+            vol.Optional(
+                CONF_RESPOND_TO_READ, default=False
+            ): selector.BooleanSelector(),
+            vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        }
+    ),
+    _select_options_sub_validator,
+)
+
 SWITCH_KNX_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_GA_SWITCH): GASelector(write_required=True, valid_dpt="1"),
@@ -802,6 +939,41 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
     _sensor_attribute_sub_validator,
 )
 
+WEATHER_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_TEMPERATURE): GASelector(
+            write=False, state_required=True, valid_dpt="9.001"
+        ),
+        vol.Optional(CONF_GA_HUMIDITY): GASelector(write=False, valid_dpt="9.007"),
+        vol.Optional(CONF_GA_AIR_PRESSURE): GASelector(
+            write=False, valid_dpt=["9.006", "14.058"]
+        ),
+        vol.Optional(CONF_GA_WIND_SPEED): GASelector(write=False, valid_dpt="9.005"),
+        vol.Optional(CONF_GA_WIND_BEARING): GASelector(write=False, valid_dpt="5.003"),
+        "section_brightness": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_BRIGHTNESS_EAST): GASelector(
+            write=False, valid_dpt="9.004"
+        ),
+        vol.Optional(CONF_GA_BRIGHTNESS_SOUTH): GASelector(
+            write=False, valid_dpt="9.004"
+        ),
+        vol.Optional(CONF_GA_BRIGHTNESS_WEST): GASelector(
+            write=False, valid_dpt="9.004"
+        ),
+        vol.Optional(CONF_GA_BRIGHTNESS_NORTH): GASelector(
+            write=False, valid_dpt="9.004"
+        ),
+        "section_day_night": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_DAY_NIGHT): GASelector(write=False, valid_dpt="1.024"),
+        vol.Optional(CONF_INVERT_DAY_NIGHT, default=False): selector.BooleanSelector(),
+        "section_alarms": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_RAIN_ALARM): GASelector(write=False, valid_dpt="1"),
+        vol.Optional(CONF_GA_FROST_ALARM): GASelector(write=False, valid_dpt="1"),
+        vol.Optional(CONF_GA_WIND_ALARM): GASelector(write=False, valid_dpt="1"),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    }
+)
+
 KNX_SCHEMA_FOR_PLATFORM = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_KNX_SCHEMA,
     Platform.BUTTON: BUTTON_KNX_SCHEMA,
@@ -814,10 +986,12 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.NOTIFY: NOTIFY_KNX_SCHEMA,
     Platform.NUMBER: NUMBER_KNX_SCHEMA,
     Platform.SCENE: SCENE_KNX_SCHEMA,
+    Platform.SELECT: SELECT_KNX_SCHEMA,
     Platform.SENSOR: SENSOR_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,
     Platform.TEXT: TEXT_KNX_SCHEMA,
     Platform.TIME: TIME_KNX_SCHEMA,
+    Platform.WEATHER: WEATHER_KNX_SCHEMA,
 }
 
 ENTITY_STORE_DATA_SCHEMA: VolSchemaType = vol.All(

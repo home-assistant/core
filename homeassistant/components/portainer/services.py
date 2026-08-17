@@ -54,7 +54,7 @@ SERVICE_RECREATE_CONTAINER_SCHEMA = vol.Schema(
 def _async_get_device(call: ServiceCall, device_id: str) -> dr.DeviceEntry:
     """Get a device entry from a device ID."""
     device_reg = dr.async_get(call.hass)
-    if (device := device_reg.async_get(device_id)) is None:
+    if (device := device_reg.async_get(device_id, include_child_devices=False)) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_target",
@@ -196,7 +196,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_PRUNE_IMAGES_SCHEMA,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RECREATE_CONTAINER,
         recreate_container,

@@ -31,8 +31,9 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, airgradient_config_entry)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, airgradient_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, airgradient_config_entry.unique_id),
+        airgradient_config_entry.entry_id,
     )
     assert device_entry is not None
     assert device_entry == snapshot
@@ -50,9 +51,8 @@ async def test_go_device_info(
         "config_v1_local.json", ApiVersion.V1
     )
     await setup_integration(hass, mock_config_entry)
-
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot
@@ -213,8 +213,8 @@ async def test_new_firmware_version(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.sw_version == "3.1.1"
@@ -222,8 +222,8 @@ async def test_new_firmware_version(
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.sw_version == "3.1.2"

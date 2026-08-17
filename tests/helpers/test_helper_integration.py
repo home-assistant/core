@@ -670,6 +670,63 @@ async def test_async_remove_helper_devices_fork(
     )
 
 
+async def test_async_remove_helper_devices_fork_child_source(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A helper's fork of a child source device is relinked to the child.
+
+    A ChildDeviceEntry has no connections, so the connections match is skipped; the
+    identifier match still finds and removes the helper's fork of the child. A child is
+    a concrete device, so the fork's entity is relinked to the child, not detached.
+    """
+    source_config_entry = MockConfigEntry(domain=SOURCE_DOMAIN)
+    source_config_entry.add_to_hass(hass)
+    helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
+    helper_config_entry.add_to_hass(hass)
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={(SOURCE_DOMAIN, "parent")},
+    )
+    source_child = device_registry.async_get_or_create_child(
+        config_entry_id=source_config_entry.entry_id,
+        parent_device_id=parent_device.id,
+        identifiers={(SOURCE_DOMAIN, "child")},
+    )
+    assert isinstance(source_child, dr.ChildDeviceEntry)
+    # The helper forked the child by copying its identifiers into device_info
+    fork = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id,
+        identifiers={(SOURCE_DOMAIN, "child")},
+    )
+    assert fork.id != source_child.id
+    helper_entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        "1",
+        config_entry=helper_config_entry,
+        device_id=fork.id,
+    )
+
+    async_remove_helper_devices(
+        hass,
+        helper_config_entry_id=helper_config_entry.entry_id,
+        source_device_id=source_child.id,
+    )
+
+    # The fork is removed by identifier match, without crashing on the child's
+    # absent connections; the child source device itself is left untouched.
+    assert device_registry.async_get(fork.id) is None
+    assert device_registry.async_get(source_child.id) is not None
+    # A child is a concrete relink target, so the fork's entity is relinked to the child.
+    assert (
+        entity_registry.async_get(helper_entity_entry.entity_id).device_id
+        == source_child.id
+    )
+
+
 async def test_async_remove_helper_devices_sweep(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

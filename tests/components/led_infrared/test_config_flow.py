@@ -19,10 +19,24 @@ from tests.common import MockConfigEntry
 from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 
 
+@pytest.mark.parametrize(
+    ("device_type", "device_name"),
+    [
+        (LEDIrDeviceType.GENERIC_13_KEY, "13-key remote"),
+        (LEDIrDeviceType.GENERIC_24_KEY, "24-key remote"),
+        (LEDIrDeviceType.GENERIC_40_KEY, "40-key remote"),
+        (LEDIrDeviceType.GENERIC_44_KEY, "44-key remote"),
+    ],
+)
 @pytest.mark.usefixtures(
     "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
 )
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    device_type: LEDIrDeviceType,
+    device_name: str,
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -33,7 +47,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
+            CONF_DEVICE_TYPE: device_type,
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
             CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
         },
@@ -41,9 +55,9 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "LED light with 24-key remote via Test IR emitter"
+    assert result["title"] == f"LED light with {device_name} via Test IR emitter"
     assert result["data"] == {
-        CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
+        CONF_DEVICE_TYPE: device_type,
         CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
         CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
     }
