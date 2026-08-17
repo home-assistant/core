@@ -81,7 +81,7 @@ async def test_active_power_control_switch_unavailable_on_component_failure(
     unit = coordinator.connection.for_unit(1)
     unit.fail_read(0x1105, IllegalDataAddressError())
 
-    await coordinator.async_refresh_slow_tier()
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -89,7 +89,7 @@ async def test_active_power_control_switch_unavailable_on_component_failure(
     assert state.state == STATE_UNAVAILABLE
 
     unit.fail_read(0x1105, None)
-    await coordinator.async_refresh_slow_tier()
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

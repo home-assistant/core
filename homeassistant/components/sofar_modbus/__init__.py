@@ -65,7 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     )
 
     await coordinator.async_config_entry_first_refresh()
-    await coordinator.async_refresh_slow_tier()
 
     entry.runtime_data = coordinator
 

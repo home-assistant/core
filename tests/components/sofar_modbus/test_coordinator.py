@@ -7,9 +7,12 @@ from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusTimeoutError
 
 from homeassistant.components.sofar_modbus.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+ENTITY_ID = "switch.4_4_ktlx_g3_active_power_control"
 
 
 async def test_disconnects_after_repeated_timeouts(
@@ -29,7 +32,8 @@ async def test_disconnects_after_repeated_timeouts(
             freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
-            assert coordinator.last_update_success is False
+            assert (state := hass.states.get(ENTITY_ID))
+            assert state.state == STATE_UNAVAILABLE
 
         assert mock_disconnect.await_count == 1
 
@@ -51,14 +55,16 @@ async def test_consecutive_timeouts_resets_on_recovery(
             freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
-            assert coordinator.last_update_success is False
+            assert (state := hass.states.get(ENTITY_ID))
+            assert state.state == STATE_UNAVAILABLE
         assert mock_disconnect.await_count == 0
 
         unit.fail_requests(None)
         freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        assert coordinator.last_update_success is True
+        assert (state := hass.states.get(ENTITY_ID))
+        assert state.state == STATE_OFF
 
         # Two more timeouts alone shouldn't hit the threshold if the counter
         # actually reset on the successful poll above.
@@ -67,5 +73,6 @@ async def test_consecutive_timeouts_resets_on_recovery(
             freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
-            assert coordinator.last_update_success is False
+            assert (state := hass.states.get(ENTITY_ID))
+            assert state.state == STATE_UNAVAILABLE
         assert mock_disconnect.await_count == 0

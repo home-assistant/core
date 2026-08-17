@@ -86,10 +86,11 @@ def _seed_unrecognized(unit: MockModbusUnit) -> None:
 )
 async def test_user_step_errors(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     seed: Callable[[MockModbusUnit], None],
     expected_error: str,
 ) -> None:
-    """Test the user step reports the right error for each probe failure."""
+    """Test the user step reports the right error for each probe failure and recovers."""
     mock_conn = MockModbusConnection()
     seed(mock_conn.for_unit(1))
 
@@ -107,26 +108,6 @@ async def test_user_step_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
 
-
-async def test_user_step_cannot_connect_then_recovers(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test the user step can be resubmitted successfully after a connection failure."""
-    unreachable_conn = MockModbusConnection()
-    unreachable_conn.for_unit(1).fail_requests(ModbusTimeoutError("stuck"))
-
-    with patch(
-        "homeassistant.components.sofar_modbus.config_flow.ModbusConnection",
-        return_value=unreachable_conn,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
-        )
-
-    assert result["errors"] == {"base": "cannot_connect"}
-
     working_conn = MockModbusConnection()
     seed_pv_inverter(working_conn.for_unit(1))
 
@@ -134,11 +115,11 @@ async def test_user_step_cannot_connect_then_recovers(
         "homeassistant.components.sofar_modbus.config_flow.ModbusConnection",
         return_value=working_conn,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_USER_INPUT
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_step_already_configured(hass: HomeAssistant) -> None:

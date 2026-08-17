@@ -10,11 +10,7 @@ from .coordinator import SofarDataUpdateCoordinator
 
 
 class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
-    """Base for every Sofar entity — one physical inverter per config entry.
-
-    ``component`` is the ``coordinator.device`` attribute this entity reads
-    or writes, used by ``available`` to scope per-component poll failures.
-    """
+    """Base for every Sofar entity — one physical inverter per config entry."""
 
     _attr_has_entity_name = True
 

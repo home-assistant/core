@@ -92,7 +92,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                 for name in self.device.polled_components
                 if name not in _VOLATILE_COMPONENTS
             }
-        self._force_slow_tier = False
+        self._force_slow_tier = True
         self.pending: dict[str, Any] = {}
 
     @property
@@ -139,10 +139,11 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self._force_slow_tier = True
         await super().async_request_refresh()
 
-    async def async_refresh_slow_tier(self) -> None:
-        """Poll the slow tier (controls, settings, energy totals) in the background."""
+    @override
+    async def async_refresh(self) -> None:
+        """Refresh data immediately, polling the slow tier too regardless of cadence."""
         self._force_slow_tier = True
-        await self.async_refresh()
+        await super().async_refresh()
 
     @override
     async def _async_update_data(self) -> UpdateReport:
