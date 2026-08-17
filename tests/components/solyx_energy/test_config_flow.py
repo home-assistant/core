@@ -1,8 +1,7 @@
 """Tests for the Solyx Energy config flow.
 
-Covers the user setup flow (happy path, validation errors, duplicate device) and
-the reauthentication flow (happy path, validation errors). The API client is
-mocked at the class level, so no network calls are made.
+Covers the user setup flow (happy path, validation errors, duplicate device).
+The API client is mocked at the class level, so no network calls are made.
 """
 
 from typing import TYPE_CHECKING
@@ -61,9 +60,9 @@ async def test_user_flow(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("side_effect", "error_key"),
     [
-        (SolyxEnergyAuthError, "invalid_auth"),
-        (SolyxEnergyTokenError, "data_error"),
-        (SolyxEnergyDataError, "data_error"),
+        (SolyxEnergyAuthError(), "invalid_auth"),
+        (SolyxEnergyTokenError(), "data_error"),
+        (SolyxEnergyDataError(), "data_error"),
     ],
 )
 async def test_user_flow_errors(

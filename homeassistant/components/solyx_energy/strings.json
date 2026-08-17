@@ -30,7 +30,7 @@
         "name": "Boiler current"
       },
       "boiler_power": {
-        "name": "Power boiler"
+        "name": "Boiler power"
       },
       "boiler_voltage": {
         "name": "Boiler voltage"

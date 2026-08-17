@@ -21,6 +21,6 @@ def parse_float(raw: dict[str, Any], attr_name: str) -> float | None:
         return None
     try:
         return float(value)
-    except TypeError, ValueError:
+    except (TypeError, ValueError) as _err:
         _LOGGER.warning("Unable to parse float value %s", value)
         return None

@@ -30,7 +30,7 @@ async def test_load_unload_config_entry(hass: HomeAssistant, init_integration) -
     assert init_integration.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.parametrize("api_error", [SolyxEnergyTokenError, SolyxEnergyDataError])
+@pytest.mark.parametrize("api_error", [SolyxEnergyTokenError(), SolyxEnergyDataError()])
 async def test_config_entry_not_ready(
     hass: HomeAssistant, mock_config_entry, mock_api_client_class, api_error
 ) -> None:
