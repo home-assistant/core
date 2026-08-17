@@ -102,11 +102,8 @@ class MigrateUniqueIDFlow(RepairsFlow):
             if config_entry is not None:
                 # The user confirmed the new adapter, so clear the keep old
                 # devices flag to let the reload clean up stale devices.
-                data = {
-                    key: value
-                    for key, value in config_entry.data.items()
-                    if key != CONF_KEEP_OLD_DEVICES
-                }
+                data = dict(config_entry.data)
+                data.pop(CONF_KEEP_OLD_DEVICES, None)
                 self.hass.config_entries.async_update_entry(
                     config_entry,
                     data=data,

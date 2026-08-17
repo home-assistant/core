@@ -1707,11 +1707,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 # the unique id is updated here and hits the unknown adapter
                 # branch on setup, which sets the keep old devices flag again.
                 # Clear the flag so the reload below cleans up stale devices.
-                data = {
-                    key: value
-                    for key, value in config_entry.data.items()
-                    if key != CONF_KEEP_OLD_DEVICES
-                }
+                data = dict(config_entry.data)
+                data.pop(CONF_KEEP_OLD_DEVICES, None)
                 self.hass.config_entries.async_update_entry(
                     config_entry, data=data, unique_id=str(version_info.home_id)
                 )
