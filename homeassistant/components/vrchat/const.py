@@ -39,14 +39,14 @@ class VRChatWebsocketEventType(StrEnum):
 class VRChatUserState(StrEnum):
     """VRChat user state enum."""
 
-    JOIN_ME = "join me"
+    JOIN_ME = "join_me"
     ACTIVE = "active"
-    ASK_ME = "ask me"
+    ASK_ME = "ask_me"
     BUSY = "busy"
     OFFLINE = "offline"
     # ACTIVE_ON_WEB = "active on web"
     # ACTIVE_ON_MOBILE = "active on mobile"
-    ACTIVE_ON_WEB_OR_MOBILE = "active on web or mobile"
+    ACTIVE_ON_WEB_OR_MOBILE = "active_on_web_or_mobile"
 
 
 VRCHAT_USER_STATUS_ICON_MAP = {

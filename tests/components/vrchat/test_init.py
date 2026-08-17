@@ -175,6 +175,10 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
             f"vrchat.statusDescription.{CURRENT_USER_ID}:{FRIEND_USER_ID}",
         )
         assert (
+            entity_registry.async_get(status_description_entity_id).translation_key
+            == "status_description"
+        )
+        assert (
             hass.states.get(status_description_entity_id).state == "Friend description"
         )
         status_entity_id = _entity_id(
@@ -188,12 +192,12 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
             {
                 "type": "user-update",
                 "content": json.dumps(
-                    {"userId": FRIEND_USER_ID, "user": {"status": "busy"}}
+                    {"userId": FRIEND_USER_ID, "user": {"status": "ask me"}}
                 ),
             }
         )
         await hass.async_block_till_done()
-        assert hass.states.get(status_entity_id).state == "busy"
+        assert hass.states.get(status_entity_id).state == "ask_me"
 
         coordinator._handle_ws_message(
             {

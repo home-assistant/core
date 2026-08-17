@@ -6,6 +6,7 @@ from functools import cache, cached_property
 import json
 import logging
 import math
+import re
 from typing import Any, Final, cast, override
 
 import vrchatapi
@@ -760,7 +761,7 @@ class VRChatUserDataEntity(Entity):
     @override
     def translation_key(self):
         """Translation key."""
-        return self.entity_description.key
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", self.entity_description.key).lower()
 
     @property
     @override

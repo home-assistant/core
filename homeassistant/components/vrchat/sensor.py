@@ -31,6 +31,7 @@ from .utils import (
     VRCHAT_SPECIAL_LOCATION_STRINGS,
     VRCHAT_WORLD_ID_PREFIX,
     is_user_in_game,
+    normalize_vrchat_enum_value,
     process_vrchat_string,
 )
 from .world import VRChatWorldData
@@ -67,6 +68,14 @@ class VRChatUserStatusSensor(VRChatUserDataSensorEntity):
     )
 
     icon_map = VRCHAT_USER_STATUS_ICON_MAP
+
+    @classmethod
+    @override
+    def get_state_from_user_data(cls, user_data, key=None):
+        """Return a normalized VRChat user status."""
+        return normalize_vrchat_enum_value(
+            super().get_state_from_user_data(user_data, key)
+        )
 
     @property
     @override

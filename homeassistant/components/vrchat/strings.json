@@ -45,7 +45,7 @@
       "location": {
         "name": "Location",
         "state": {
-          "active on web or mobile": "📱 Web/Mobile",
+          "active_on_web_or_mobile": "📱 Web/Mobile",
           "offline": "Offline",
           "private": "Private",
           "traveling": "Traveling"
@@ -54,10 +54,10 @@
       "state": {
         "state": {
           "active": "🟢 Online",
-          "active on web or mobile": "📱 Web/Mobile",
-          "ask me": "🟠 Ask me",
+          "active_on_web_or_mobile": "📱 Web/Mobile",
+          "ask_me": "🟠 Ask me",
           "busy": "🔴 Busy",
-          "join me": "🔵 Join me",
+          "join_me": "🔵 Join me",
           "offline": "Offline"
         }
       },
@@ -65,13 +65,13 @@
         "name": "Status",
         "state": {
           "active": "🟢 Online",
-          "ask me": "🟠 Ask me",
+          "ask_me": "🟠 Ask me",
           "busy": "🔴 Busy",
-          "join me": "🔵 Join me",
+          "join_me": "🔵 Join me",
           "offline": "Offline"
         }
       },
-      "statusDescription": {
+      "status_description": {
         "name": "Status description"
       }
     }
