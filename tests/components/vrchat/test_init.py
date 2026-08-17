@@ -258,3 +258,23 @@ async def test_remove_entry_logs_out_and_removes_cookie_store(
     mock_logout.assert_awaited_once()
     cookie_store.async_remove.assert_awaited_once()
     assert CURRENT_USER_ID not in VRChatAuthCookieStore
+
+
+async def test_remove_entry_without_cookie_store(hass: HomeAssistant) -> None:
+    """Test removing an entry when its cookie store was already removed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "user@example.com", CONF_PASSWORD: "password"},
+        unique_id=CURRENT_USER_ID,
+    )
+
+    async def remove_cookie_store() -> None:
+        VRChatAuthCookieStore.pop(CURRENT_USER_ID)
+
+    with patch(
+        "homeassistant.components.vrchat.VRChatAPI.logout",
+        new=AsyncMock(side_effect=remove_cookie_store),
+    ):
+        await async_remove_entry(hass, entry)
+
+    assert CURRENT_USER_ID not in VRChatAuthCookieStore

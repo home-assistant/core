@@ -44,4 +44,5 @@ async def async_remove_entry(hass: HomeAssistant, entry: VRChatConfigEntry) -> N
                 await api.logout()
         except Exception:
             _LOGGER.exception("Error logging out of VRChat")
-    await VRChatAuthCookieStore.pop(unique_id).async_remove()
+    if removed_cookie_store := VRChatAuthCookieStore.pop(unique_id, None):
+        await removed_cookie_store.async_remove()
