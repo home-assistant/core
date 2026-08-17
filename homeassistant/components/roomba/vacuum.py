@@ -134,7 +134,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         except KeyError:
             return VacuumActivity.ERROR
         # Dock servicing reports `run` with no mission cycle.
-        if cycle == "none" and state is VacuumActivity.CLEANING:
+        if phase == "run" and cycle == "none":
             state = VacuumActivity.DOCKED
         # A robot stopped in the middle of a mission is paused, but one that is
         # docked to recharge mid-mission stays docked (the charging binary
