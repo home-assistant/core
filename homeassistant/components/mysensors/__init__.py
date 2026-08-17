@@ -9,7 +9,7 @@ from mysensors import BaseAsyncGateway
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import AnyDeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
 from .const import (
     ATTR_DEVICES,
@@ -71,6 +71,9 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a MySensors config entry from a device."""
+    if not isinstance(device_entry, DeviceEntry):
+        # This integration does not create child devices.
+        return False
     gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][
         config_entry.entry_id
     ]
