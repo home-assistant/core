@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant.components import cover
 from homeassistant.components.cover import ATTR_SPEED, CoverState
+from homeassistant.components.cover.const import ATTR_POSITION
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
