@@ -2,7 +2,7 @@
 
 import asyncio
 import base64
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from enum import StrEnum
 from functools import cached_property
 import inspect
@@ -77,6 +77,18 @@ def parse_vrchat_location_string(s: str | None = None):
 
 
 EXCEPTION_MESSAGE_ASYNC_CLEANUP: Final = "Error during async clean up."
+ASYNC_CLEANUP_TIMEOUT_SECOND: Final = 10
+
+
+async def _async_run_cleanup(awaitable: Awaitable[Any]) -> None:
+    """Run an async cleanup without blocking other cleanup callbacks."""
+    try:
+        async with asyncio.timeout(ASYNC_CLEANUP_TIMEOUT_SECOND):
+            await awaitable
+    except TimeoutError:
+        _LOGGER.warning("Timed out during async clean up.")
+    except Exception:
+        _LOGGER.exception(EXCEPTION_MESSAGE_ASYNC_CLEANUP)
 
 
 class AsyncCleanups:
@@ -123,7 +135,7 @@ class AsyncCleanups:
                         _LOGGER.exception(EXCEPTION_MESSAGE_ASYNC_CLEANUP)
 
                     if inspect.isawaitable(res):
-                        tg.create_task(asyncio.wait_for(asyncio.shield(res), None))
+                        tg.create_task(_async_run_cleanup(res))
         except Exception:
             _LOGGER.exception(EXCEPTION_MESSAGE_ASYNC_CLEANUP)
 

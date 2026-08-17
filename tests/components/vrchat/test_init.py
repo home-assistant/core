@@ -121,6 +121,26 @@ async def test_async_cleanups_uses_callback_snapshot() -> None:
     second_cleanup.assert_called_once()
 
 
+async def test_async_cleanups_timeout_does_not_stop_other_callbacks() -> None:
+    """Test a timed out cleanup does not stop other cleanup callbacks."""
+    cleanups = AsyncCleanups()
+    completed_cleanup = Mock()
+    cleanup_started = asyncio.Event()
+
+    async def stuck_cleanup() -> None:
+        cleanup_started.set()
+        await asyncio.Event().wait()
+
+    cleanups.add_to_cleanups(completed_cleanup)
+    cleanups.add_to_cleanups(stuck_cleanup)
+
+    with patch("homeassistant.components.vrchat.utils.ASYNC_CLEANUP_TIMEOUT_SECOND", 0):
+        await cleanups.close()
+
+    assert cleanup_started.is_set()
+    completed_cleanup.assert_called_once()
+
+
 async def test_restart_closes_replacement_api() -> None:
     """Test restarting closes both the old and replacement API clients."""
     old_api = Mock()
