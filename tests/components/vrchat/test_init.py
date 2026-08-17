@@ -10,6 +10,10 @@ import pytest
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.vrchat import async_remove_entry
 from homeassistant.components.vrchat.const import DOMAIN
+from homeassistant.components.vrchat.coordinator import (
+    VRChatAccountAuthFailed,
+    VRChatAccountSetupFailed,
+)
 from homeassistant.components.vrchat.store import (
     InitialCurrentUserData,
     VRChatAuthCookieStore,
@@ -123,6 +127,27 @@ def test_is_user_in_game_matches_original_binary_sensor(
 ) -> None:
     """Test that the shared presence logic matches the removed binary sensor."""
     assert is_user_in_game(user_data) is expected
+
+
+@pytest.mark.parametrize(
+    ("exception_class", "translation_key"),
+    [
+        pytest.param(VRChatAccountAuthFailed, "auth_failed", id="auth_failed"),
+        pytest.param(VRChatAccountSetupFailed, "setup_failed", id="setup_failed"),
+    ],
+)
+def test_account_exception_translations(
+    exception_class: type[VRChatAccountAuthFailed | VRChatAccountSetupFailed],
+    translation_key: str,
+) -> None:
+    """Test account exceptions use registered translation keys."""
+    entry = MockConfigEntry(domain=DOMAIN, title="current_user")
+
+    exception = exception_class(entry)
+
+    assert exception.translation_domain == DOMAIN
+    assert exception.translation_key == translation_key
+    assert exception.translation_placeholders == {"config_entry_title": "current_user"}
 
 
 async def test_setup_websocket_updates_dynamic_friends_and_unload(

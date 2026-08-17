@@ -75,5 +75,16 @@
         "name": "Status description"
       }
     }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed for VRChat account {config_entry_title}."
+    },
+    "setup_failed": {
+      "message": "Unable to set up VRChat account {config_entry_title}."
+    },
+    "unique_id_mismatch": {
+      "message": "The VRChat account ID does not match the configured account. Remove the integration and add the correct account again. Expected ID: {expected_id}; received ID: {got_id}."
+    }
   }
 }

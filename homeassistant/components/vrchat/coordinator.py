@@ -185,7 +185,6 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
             raise VRChatAccountSetupFailed(self.config_entry) from e
         if current_user_data["id"] != self.config_entry.unique_id:
             raise ConfigEntryError(
-                f"User ID does not match the ID of this config entry. Please reconfigure and make sure the account is correct or add a new entry instead.\nExpected ID: {self.config_entry.unique_id}\nGot ID: {current_user_data['id']}",
                 translation_domain=DOMAIN,
                 translation_key="unique_id_mismatch",
                 translation_placeholders={
