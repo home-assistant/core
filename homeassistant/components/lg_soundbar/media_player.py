@@ -17,6 +17,22 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 
+EQUIVALENT_FUNCTIONS = (
+    ("Optical/HDMI ARC", "E-ARC", "ARC", "LG Optical", "Optical", "Optical2"),
+    ("HDMI", "HDMI2", "HDMI3"),
+    ("USB", "USB2"),
+    ("Bluetooth", "Portable"),
+    ("Wi-Fi", "Chromecast", "Spotify"),
+)
+
+
+def _offered_equivalent(function: str, offered: list[int]) -> str | None:
+    """Return an offered function from the same group as the given one."""
+    group = next((names for names in EQUIVALENT_FUNCTIONS if function in names), ())
+    return next(
+        (name for name in group if temescal.functions.index(name) in offered), None
+    )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -240,7 +256,10 @@ class LGDevice(MediaPlayerEntity):
         """Return the current input source."""
         if self._function == -1 or self._function >= len(temescal.functions):
             return None
-        return temescal.functions[self._function]
+        function = temescal.functions[self._function]
+        if self._function in self._functions:
+            return function
+        return _offered_equivalent(function, self._functions) or function
 
     @property
     @override
