@@ -68,7 +68,6 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             MIN_EFFECT_VERSION
         )
 
-    @override
     async def _request[_T](self, request: Callable[[], Awaitable[_T]]) -> _T:
         """Make a request, retrying it once if it times out.
 
@@ -82,6 +81,7 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
         except TimeoutError:
             return await request()
 
+    @override
     async def _async_update_data(self) -> TwinklyData:
         """Fetch data from Twinkly."""
         movies: list[dict[str, Any]] = []
