@@ -47,8 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     if TYPE_CHECKING:
         assert serial is not None
 
-    # identify() is a pure lookup (no I/O); a mismatch here isn't transient,
-    # so ConfigEntryError rather than ConfigEntryNotReady.
     inverter_type, model = identify(serial)
     if not inverter_type:
         raise ConfigEntryError(f"Unrecognized Sofar inverter model for {entry.title}")

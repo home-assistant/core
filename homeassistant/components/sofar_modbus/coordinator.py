@@ -71,6 +71,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             name=entry.title,
             update_interval=timedelta(seconds=scan_interval),
         )
+        self.config_entry: SofarConfigEntry = entry
         self.connection = connection
         self.device = device
         self._consecutive_timeouts = 0
@@ -79,19 +80,17 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self.last_error: str | None = None
         self.last_error_time: datetime | None = None
         self._cycle = 0
-        self._fast: dict[str, SofarComponentBase] | None = None
-        self._slow: dict[str, SofarComponentBase] | None = None
-        if self.device.polled_components is not None:
-            self._fast = {
-                name: getattr(self.device, name)
-                for name in self.device.polled_components
-                if name in _VOLATILE_COMPONENTS
-            }
-            self._slow = {
-                name: getattr(self.device, name)
-                for name in self.device.polled_components
-                if name not in _VOLATILE_COMPONENTS
-            }
+        polled = self.device.polled_components or ()
+        self._fast: dict[str, SofarComponentBase] = {
+            name: getattr(self.device, name)
+            for name in polled
+            if name in _VOLATILE_COMPONENTS
+        }
+        self._slow: dict[str, SofarComponentBase] = {
+            name: getattr(self.device, name)
+            for name in polled
+            if name not in _VOLATILE_COMPONENTS
+        }
         self._force_slow_tier = True
         self.pending: dict[str, Any] = {}
 
@@ -148,10 +147,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     @override
     async def _async_update_data(self) -> UpdateReport:
         try:
-            if self._fast is None:
-                report = await self._async_first_poll()
-            else:
-                report = await self._poll(self._components_due())
+            report = await self._poll(self._components_due())
             self._cycle += 1
             report = await self._retry_failed(report)
             if not report.updated:
@@ -191,37 +187,11 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             )
             return report
 
-    async def _async_first_poll(self) -> UpdateReport:
-        """Settle the fast/slow tier split from the inverter's served components.
-
-        Also refreshes the fast tier on startup.
-        """
-        if self._fast is None:
-            if self.device.polled_components is None:
-                await self.device.async_setup()
-            if not self.device.inverter_type:
-                return UpdateReport(updated={"identity"}, failed={})
-            polled = self.device.polled_components or ()
-            self._fast = {
-                name: getattr(self.device, name)
-                for name in polled
-                if name in _VOLATILE_COMPONENTS
-            }
-            self._slow = {
-                name: getattr(self.device, name)
-                for name in polled
-                if name not in _VOLATILE_COMPONENTS
-            }
-        components_to_poll = self._fast or dict(self._slow or {})
-        return await self._poll(components_to_poll)
-
     def _components_due(self) -> dict[str, SofarComponentBase]:
-        assert self._fast is not None
         components = dict(self._fast)
         if self._force_slow_tier or (
             self._cycle > 0 and self._cycle % _SLOW_TIER_EVERY_N_CYCLES == 0
         ):
-            assert self._slow is not None
             components.update(self._slow)
             self._force_slow_tier = False
         return components
