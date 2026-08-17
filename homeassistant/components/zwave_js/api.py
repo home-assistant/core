@@ -670,9 +670,16 @@ async def websocket_network_neighbors(
                     except FailedCommand:
                         continue
         finally:
-            # Shielded so the radio comes back on even when the connection
-            # is closed while the routing table is being read
-            rf_restored = await asyncio.shield(controller.async_toggle_rf(True))
+            # Shielded so the radio comes back on even when the connection is
+            # closed while the routing table is being read. The lock is held
+            # until it has, so a queued refresh can't race the restore.
+            restore = asyncio.ensure_future(controller.async_toggle_rf(True))
+            try:
+                rf_restored = await asyncio.shield(restore)
+            except asyncio.CancelledError:
+                with suppress(FailedCommand):
+                    rf_restored = await asyncio.shield(restore)
+                raise
             if not rf_restored:
                 _LOGGER.error(
                     "Failed to re-enable RF after reading the neighbors of the"

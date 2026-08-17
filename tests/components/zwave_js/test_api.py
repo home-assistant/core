@@ -716,6 +716,57 @@ async def test_network_neighbors(
         {"command": "controller.toggle_rf", "enable": True},
     ]
 
+    # Test the lock is held until RF is restored, even when cancelled
+    commands.clear()
+    restore_started = asyncio.Event()
+    resume_restore = asyncio.Event()
+
+    handler_tasks: list[asyncio.Task[None]] = []
+
+    async def mock_send_command_blocking_restore(
+        message: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
+        commands.append(message)
+        if message["command"] == "controller.get_node_neighbors":
+            # the reads run in the handler task, the restore does not
+            handler_tasks.append(asyncio.current_task())
+            return {"neighbors": []}
+        if message["enable"]:
+            restore_started.set()
+            await resume_restore.wait()
+        return {"success": True}
+
+    client.async_send_command.side_effect = mock_send_command_blocking_restore
+    lock = entry.runtime_data.network_neighbors_lock
+    ws_client_3 = await hass_ws_client(hass)
+
+    await ws_client_3.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    await restore_started.wait()
+    assert lock.locked()
+
+    handler_tasks[0].cancel()
+    for _ in range(5):
+        await asyncio.sleep(0)
+    # The radio is still being turned back on, so the lock must not be free yet
+    assert lock.locked()
+
+    resume_restore.set()
+    for _ in range(10):
+        await asyncio.sleep(0)
+    await hass.async_block_till_done()
+    assert not lock.locked()
+    assert commands == [
+        {"command": "controller.toggle_rf", "enable": False},
+        {"command": "controller.get_node_neighbors", "nodeId": 1},
+        {"command": "controller.get_node_neighbors", "nodeId": multisensor_6.node_id},
+        {"command": "controller.toggle_rf", "enable": True},
+    ]
+
     client.async_send_command.side_effect = original_side_effect
 
     # Test sending command with improper entry ID fails
