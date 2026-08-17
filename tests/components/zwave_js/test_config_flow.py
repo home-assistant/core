@@ -160,7 +160,8 @@ def backup_nvm_fixture(client: MagicMock) -> AsyncMock:
     async def mock_backup_nvm_raw() -> bytes:
         await asyncio.sleep(0)
         client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
+            "nvm backup progress",
+            {"event": "nvm backup progress", "bytesRead": 100, "total": 200},
         )
         return b"test_nvm_data"
 
