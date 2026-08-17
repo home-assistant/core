@@ -408,6 +408,7 @@ async def test_network_neighbors(
     integration: MockConfigEntry,
     client: MagicMock,
     hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the network_neighbors websocket command."""
     entry = integration
@@ -454,6 +455,60 @@ async def test_network_neighbors(
         1,
         multisensor_6.node_id,
     ]
+
+    # Test failing to disable RF aborts before any nodes are read
+    commands.clear()
+
+    async def mock_send_command_disable_rejected(
+        message: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
+        commands.append(message)
+        if message["command"] == "controller.toggle_rf":
+            return {"success": message["enable"]}
+        return {"neighbors": []}
+
+    client.async_send_command.side_effect = mock_send_command_disable_rejected
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "rf_toggle_failed"
+    assert commands == [
+        {"command": "controller.toggle_rf", "enable": False},
+        {"command": "controller.toggle_rf", "enable": True},
+    ]
+
+    # Test failing to restore RF is logged and reported as an error
+    commands.clear()
+
+    async def mock_send_command_restore_rejected(
+        message: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
+        commands.append(message)
+        if message["command"] == "controller.toggle_rf":
+            return {"success": not message["enable"]}
+        return {"neighbors": []}
+
+    client.async_send_command.side_effect = mock_send_command_restore_rejected
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "rf_toggle_failed"
+    assert commands[-1] == {"command": "controller.toggle_rf", "enable": True}
+    assert "Failed to re-enable RF" in caplog.text
 
     # Test a node that fails to report neighbors is skipped and RF is restored
     commands.clear()

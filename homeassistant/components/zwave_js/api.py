@@ -5,6 +5,7 @@ from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import dataclasses
 from functools import partial, wraps
+import logging
 from typing import TYPE_CHECKING, Any, Concatenate, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
@@ -104,12 +105,15 @@ if TYPE_CHECKING:
     from .models import ZwaveJSConfigEntry
 
 
+_LOGGER = logging.getLogger(__name__)
+
 DATA_UNSUBSCRIBE = "unsubs"
 
 # general API constants
 ID = "id"
 ENTRY_ID = "entry_id"
 ERR_NOT_LOADED = "not_loaded"
+ERR_RF_TOGGLE_FAILED = "rf_toggle_failed"
 NODE_ID = "node_id"
 DEVICE_ID = "device_id"
 COMMAND_CLASS_ID = "command_class_id"
@@ -645,9 +649,16 @@ async def websocket_network_neighbors(
     """
     controller = driver.controller
     neighbors: dict[int, list[int]] = {}
+    rf_restored = False
     async with entry.runtime_data.network_neighbors_lock:
         try:
-            await controller.async_toggle_rf(False)
+            if not await controller.async_toggle_rf(False):
+                # Don't read the routing table with the radio still on,
+                # that is what wedges older controllers
+                connection.send_error(
+                    msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to disable RF"
+                )
+                return
             for node in controller.nodes.values():
                 # Long range nodes are not part of the mesh
                 if node.protocol is Protocols.ZWAVE_LONG_RANGE:
@@ -661,7 +672,16 @@ async def websocket_network_neighbors(
         finally:
             # Shielded so the radio comes back on even when the connection
             # is closed while the routing table is being read
-            await asyncio.shield(controller.async_toggle_rf(True))
+            rf_restored = await asyncio.shield(controller.async_toggle_rf(True))
+            if not rf_restored:
+                _LOGGER.error(
+                    "Failed to re-enable RF after reading the neighbors of the"
+                    " nodes of config entry %s",
+                    entry.entry_id,
+                )
+    if not rf_restored:
+        connection.send_error(msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to re-enable RF")
+        return
     connection.send_result(msg[ID], neighbors)
 
 
