@@ -438,9 +438,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         device_info = dr.DeviceInfo(
             connections=connections,
-            default_manufacturer=self._device.manufacturer,
-            default_model=self._device.model_name,
-            default_name=self._device.name,
+            manufacturer=self._device.manufacturer,
+            model=self._device.model_name,
+            name=self._device.name,
         )
         self._attr_device_info = device_info
 
