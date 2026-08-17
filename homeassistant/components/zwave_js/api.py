@@ -649,28 +649,26 @@ async def websocket_network_neighbors(
     """
     controller = driver.controller
     neighbors: dict[int, list[int]] = {}
+    rf_disabled = False
     rf_restored = False
     async with entry.runtime_data.network_neighbors_lock:
         try:
-            if not await controller.async_toggle_rf(False):
-                # Don't read the routing table with the radio still on,
-                # that is what wedges older controllers
-                connection.send_error(
-                    msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to disable RF"
-                )
-                return
-            # Snapshot the nodes, inclusion/exclusion can mutate the
-            # collection while it is being iterated
-            for node in list(controller.nodes.values()):
-                # Long range nodes are not part of the mesh
-                if node.protocol is Protocols.ZWAVE_LONG_RANGE:
-                    continue
-                try:
-                    neighbors[node.node_id] = await controller.async_get_node_neighbors(
-                        node
-                    )
-                except FailedCommand:
-                    continue
+            # Don't read the routing table with the radio still on,
+            # that is what wedges older controllers
+            rf_disabled = await controller.async_toggle_rf(False)
+            if rf_disabled:
+                # Snapshot the nodes, inclusion/exclusion can mutate the
+                # collection while it is being iterated
+                for node in list(controller.nodes.values()):
+                    # Long range nodes are not part of the mesh
+                    if node.protocol is Protocols.ZWAVE_LONG_RANGE:
+                        continue
+                    try:
+                        neighbors[
+                            node.node_id
+                        ] = await controller.async_get_node_neighbors(node)
+                    except FailedCommand:
+                        continue
         finally:
             # Shielded so the radio comes back on even when the connection
             # is closed while the routing table is being read
@@ -681,6 +679,9 @@ async def websocket_network_neighbors(
                     " nodes of config entry %s",
                     entry.entry_id,
                 )
+    if not rf_disabled:
+        connection.send_error(msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to disable RF")
+        return
     if not rf_restored:
         connection.send_error(msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to re-enable RF")
         return

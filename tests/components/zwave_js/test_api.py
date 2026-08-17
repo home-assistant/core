@@ -631,6 +631,91 @@ async def test_network_neighbors(
     }
     assert commands[-1] == {"command": "controller.toggle_rf", "enable": True}
 
+    # Test a failed restore after a rejected disable sends a single error
+    commands.clear()
+
+    async def mock_send_command_rejected_then_raising(
+        message: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
+        commands.append(message)
+        if message["enable"]:
+            raise FailedZWaveCommand("failed_command", 1, "error message")
+        return {"success": False}
+
+    client.async_send_command.side_effect = mock_send_command_rejected_then_raising
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "zwave_error"
+    # The next frame is the pong, proving no second response was sent
+    await ws_client.send_json_auto_id({TYPE: "ping"})
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "pong"
+
+    # Test concurrent requests are serialized behind the lock
+    commands.clear()
+    read_started = asyncio.Event()
+    resume_read = asyncio.Event()
+
+    async def mock_send_command_blocking(
+        message: dict[str, Any], **kwargs: Any
+    ) -> dict[str, Any]:
+        commands.append(message)
+        if message["command"] == "controller.get_node_neighbors":
+            read_started.set()
+            await resume_read.wait()
+            return {"neighbors": []}
+        return {"success": True}
+
+    client.async_send_command.side_effect = mock_send_command_blocking
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    await read_started.wait()
+
+    ws_client_2 = await hass_ws_client(hass)
+    await ws_client_2.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    await ws_client_2.send_json_auto_id({TYPE: "ping"})
+    msg = await ws_client_2.receive_json()
+    assert msg["type"] == "pong"
+    # The second request must not have touched the radio yet
+    assert commands == [
+        {"command": "controller.toggle_rf", "enable": False},
+        {"command": "controller.get_node_neighbors", "nodeId": 1},
+    ]
+
+    resume_read.set()
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    msg = await ws_client_2.receive_json()
+    assert msg["success"]
+    assert commands == [
+        {"command": "controller.toggle_rf", "enable": False},
+        {"command": "controller.get_node_neighbors", "nodeId": 1},
+        {"command": "controller.get_node_neighbors", "nodeId": multisensor_6.node_id},
+        {"command": "controller.toggle_rf", "enable": True},
+        {"command": "controller.toggle_rf", "enable": False},
+        {"command": "controller.get_node_neighbors", "nodeId": 1},
+        {"command": "controller.get_node_neighbors", "nodeId": multisensor_6.node_id},
+        {"command": "controller.toggle_rf", "enable": True},
+    ]
+
     client.async_send_command.side_effect = original_side_effect
 
     # Test sending command with improper entry ID fails
