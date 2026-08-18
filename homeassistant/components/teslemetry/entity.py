@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from typing import Any, override
 
-from tesla_fleet_api.const import Scope
+from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 
 from homeassistant.exceptions import ServiceValidationError
@@ -19,6 +19,7 @@ from .coordinator import (
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
+    endpoints_for_key,
 )
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
@@ -57,9 +58,10 @@ class TeslemetryPollingEntity(
         | TeslemetryEnergySiteLiveCoordinator
         | TeslemetryEnergySiteInfoCoordinator,
         key: str,
+        context: Any = None,
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, context)
         self.key = key
         self._attr_translation_key = self.key
         self._async_update_attrs()
@@ -112,6 +114,7 @@ class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
         self,
         data: TeslemetryVehicleData,
         key: str,
+        endpoints: frozenset[VehicleDataEndpoint] | None = None,
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
 
@@ -125,7 +128,9 @@ class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
             # so disable it by default
             self._attr_entity_registry_enabled_default = False
 
-        super().__init__(data.coordinator, key)
+        # The context tells the coordinator which vehicle_data groups to request,
+        # so disabling every entity that needs a group stops fetching it.
+        super().__init__(data.coordinator, key, endpoints or endpoints_for_key(key))
 
     @property
     @override

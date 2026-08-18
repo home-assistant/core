@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from . import TeslemetryConfigEntry
 
 from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER
-from .helpers import flatten
+from .helpers import async_update_device_sw_version, flatten
 
 RETRY_EXCEPTIONS = (
     InvalidResponse,
@@ -62,6 +62,31 @@ ENDPOINTS = [
     VehicleDataEndpoint.VEHICLE_STATE,
     VehicleDataEndpoint.VEHICLE_CONFIG,
 ]
+
+# Flattened vehicle_data keys carry their endpoint group as a prefix, so the
+# groups an entity needs can be derived from the field it reads. Location and
+# active-route values live under drive_state but are only returned by the
+# location endpoint, so they are matched before the general drive_state prefix.
+_VEHICLE_ENDPOINT_BY_PREFIX: tuple[tuple[str, VehicleDataEndpoint], ...] = (
+    ("drive_state_active_route", VehicleDataEndpoint.LOCATION_DATA),
+    ("charge_state", VehicleDataEndpoint.CHARGE_STATE),
+    ("climate_state", VehicleDataEndpoint.CLIMATE_STATE),
+    ("drive_state", VehicleDataEndpoint.DRIVE_STATE),
+    ("vehicle_state", VehicleDataEndpoint.VEHICLE_STATE),
+    ("vehicle_config", VehicleDataEndpoint.VEHICLE_CONFIG),
+)
+
+
+def endpoints_for_key(key: str) -> frozenset[VehicleDataEndpoint]:
+    """Return the vehicle_data endpoint groups a polling entity key depends on.
+
+    Composite entities whose key maps to no single group request every group so
+    their data is never starved when other entities are disabled.
+    """
+    for prefix, endpoint in _VEHICLE_ENDPOINT_BY_PREFIX:
+        if key.startswith(prefix):
+            return frozenset((endpoint,))
+    return frozenset(ENDPOINTS)
 
 
 class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -113,6 +138,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
     config_entry: TeslemetryConfigEntry
+    vin: str
 
     def __init__(
         self,
@@ -133,13 +159,25 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.update_interval = VEHICLE_INTERVAL
 
         self.api = api
+        self.vin = product["vin"]
         self.data = flatten(product)
+
+    def _requested_endpoints(self) -> list[VehicleDataEndpoint]:
+        """Return the endpoint groups the enabled entities need this cycle."""
+        requested: set[VehicleDataEndpoint] = set()
+        for context in self.async_contexts():
+            requested.update(context)
+        # Fall back to every group for the setup/reload first read, before any
+        # entity has registered its context.
+        return [ep for ep in ENDPOINTS if ep in requested] or ENDPOINTS
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
         try:
-            data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
+            data = (await self.api.vehicle_data(endpoints=self._requested_endpoints()))[
+                "response"
+            ]
         except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except InsufficientCredits as e:
@@ -162,7 +200,15 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"message": e.message},
             ) from e
 
-        return flatten(data)
+        data = flatten(data)
+        if version := data.get("vehicle_state_car_version"):
+            # Consume firmware opportunistically rather than through a listener
+            # that would keep this coordinator polling after every entity is
+            # disabled. Drop the build suffix (e.g. "2024.44.25 x" -> "2024.44.25").
+            async_update_device_sw_version(
+                self.hass, self.vin, self.config_entry.entry_id, version.split(" ")[0]
+            )
+        return data
 
 
 class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):

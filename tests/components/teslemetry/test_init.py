@@ -8,6 +8,7 @@ from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     Forbidden,
     InsufficientCredits,
@@ -48,7 +49,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -855,6 +856,58 @@ async def test_vehicle_polling_version_update(
     )
     assert device is not None
     assert device.sw_version == "2026.2.0"
+
+
+async def test_vehicle_polling_endpoints_follow_enabled_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test disabling an entity drops its endpoint group from the next poll."""
+    vin = "LRW3F7EK4NC700000"
+    charge_uid = f"{vin}-charge_state_battery_level"
+    climate_uid = f"{vin}-climate_state_inside_temp"
+
+    async def next_poll_endpoints() -> set[VehicleDataEndpoint]:
+        """Return the endpoints of the next scheduled coordinator poll.
+
+        The first tick flushes the debounced reload that disabling an entity
+        schedules, so the second tick captures a poll shaped by the surviving
+        entities' contexts.
+        """
+        for _ in range(2):
+            mock_vehicle_data.reset_mock()
+            freezer.tick(VEHICLE_INTERVAL)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+        return set(mock_vehicle_data.call_args.kwargs["endpoints"])
+
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    # Keep one sensor from two distinct endpoint groups and disable the rest, so
+    # the coordinator only needs those two groups.
+    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if entity.unique_id not in (charge_uid, climate_uid):
+            entity_registry.async_update_entity(
+                entity.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+
+    endpoints = await next_poll_endpoints()
+    assert VehicleDataEndpoint.CHARGE_STATE in endpoints
+    assert VehicleDataEndpoint.CLIMATE_STATE in endpoints
+
+    # Disabling the only charge_state entity drops that group, while the climate
+    # group is retained because an enabled sibling still needs it.
+    entity_registry.async_update_entity(
+        entity_registry.async_get_entity_id("sensor", DOMAIN, charge_uid),
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    endpoints = await next_poll_endpoints()
+    assert VehicleDataEndpoint.CHARGE_STATE not in endpoints
+    assert VehicleDataEndpoint.CLIMATE_STATE in endpoints
 
 
 async def test_energy_site_version_update(
