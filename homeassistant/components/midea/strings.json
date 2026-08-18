@@ -113,26 +113,8 @@
       "aux_heating": {
         "name": "Auxiliary heating"
       },
-      "dhw_power": {
-        "name": "DHW power"
-      },
       "disinfect": {
         "name": "Disinfect"
-      },
-      "dry": {
-        "name": "Dry"
-      },
-      "eco_mode": {
-        "name": "ECO mode"
-      },
-      "fast_dhw": {
-        "name": "Fast DHW"
-      },
-      "indirect_wind": {
-        "name": "Indirect wind"
-      },
-      "natural_wind": {
-        "name": "Natural wind"
       },
       "night_light": {
         "name": "Night light"
@@ -145,9 +127,6 @@
       },
       "screen_display": {
         "name": "Screen display"
-      },
-      "screen_display_alternate": {
-        "name": "Screen display alternate"
       },
       "self_clean": {
         "name": "Self clean"
