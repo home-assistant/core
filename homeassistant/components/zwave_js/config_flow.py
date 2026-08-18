@@ -973,6 +973,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 str(self.version_info.home_id), raise_on_progress=False
             )
 
+        if (
+            existing_entry := next(
+                (
+                    entry
+                    for entry in self._async_current_entries(include_ignore=False)
+                    if entry.unique_id == self.unique_id
+                ),
+                None,
+            )
+        ) and not existing_entry.data.get(CONF_USE_ADDON):
+            # The controller is already configured against another server,
+            # e.g. via zeroconf discovery, so don't rewrite that entry
+            # with add-on data.
+            return self.async_abort(reason="already_configured")
+
         # When we came from discovery, make sure we update the add-on
         if self._adapter_discovered and self.use_addon:
             await self._async_set_addon_config(
