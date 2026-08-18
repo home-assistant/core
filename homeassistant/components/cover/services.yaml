@@ -9,6 +9,9 @@ open_cover:
   fields:
     speed:
       example: "fast"
+      filter:
+        supported_features:
+          - cover.CoverEntityFeature.SPEED
       selector:
         state:
           attribute: speed
@@ -22,6 +25,9 @@ close_cover:
   fields:
     speed:
       example: "fast"
+      filter:
+        supported_features:
+          - cover.CoverEntityFeature.SPEED
       selector:
         state:
           attribute: speed
@@ -49,6 +55,9 @@ set_cover_position:
           max: 100
           unit_of_measurement: "%"
     speed:
+      filter:
+        supported_features:
+          - cover.CoverEntityFeature.SPEED
       example: "fast"
       selector:
         state:

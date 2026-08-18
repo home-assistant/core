@@ -41,6 +41,7 @@ class CoverEntityFeature(IntFlag):
     CLOSE_TILT = 32
     STOP_TILT = 64
     SET_TILT_POSITION = 128
+    SPEED = 256
 
 
 class CoverState(StrEnum):
