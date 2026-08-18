@@ -1676,18 +1676,9 @@ def test_select_selector_schema_error(schema) -> None:
             ("cat", 0, None, ["temperature"]),
         ),
         (
-            {"domain": "sensor", "options": ["temperature", "humidity"]},
-            ("temperature", "humidity"),
-            ("battery", "beer", 0, None, ["temperature"]),
-        ),
-        (
-            {
-                "domain": "sensor",
-                "options": ["temperature", "humidity"],
-                "multiple": True,
-            },
+            {"domain": "sensor", "multiple": True},
             (["temperature"], ["temperature", "humidity"], []),
-            ("battery", "beer", 0, None, "temperature"),
+            ("battery", "beer", 0, None, "temperature", ["dog"]),
         ),
     ],
 )

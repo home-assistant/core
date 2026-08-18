@@ -1871,18 +1871,14 @@ class SelectSelector(Selector[SelectSelectorConfig]):
 
 
 class DeviceClassSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent a sensor device class selector config."""
+    """Class to represent a device class selector config."""
 
     domain: Platform
-    options: list[str | StrEnum]
     multiple: bool
-    custom_value: bool
-    mode: SelectSelectorMode
-    sort: bool
 
 
 @SELECTORS.register("device_class")
-class DeviceClassSelector(SelectSelector):
+class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
     """Selector for device class."""
 
     selector_type = "device_class"
@@ -1905,13 +1901,7 @@ class DeviceClassSelector(SelectSelector):
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Required("domain"): vol.In(SUPPORTED_PLATFORMS),
-            vol.Optional("options"): list[str],
             vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("custom_value", default=False): cv.boolean,
-            vol.Optional("mode"): vol.All(
-                vol.Coerce(SelectSelectorMode), lambda val: val.value
-            ),
-            vol.Optional("sort", default=True): cv.boolean,
         }
     )
 
@@ -1960,17 +1950,18 @@ class DeviceClassSelector(SelectSelector):
         """Instantiate a sensor device class selector."""
 
         config = self.CONFIG_SCHEMA(config)
-        domain = config["domain"]
-        device_classes = self._device_class_options(domain)
-
-        if (options := config.get("options")) is None:
-            config["options"] = device_classes
-        elif any(option not in device_classes for option in options):
-            raise vol.Invalid(
-                f"Invalid devices classes configured for {domain}"
-                f"device class selector. Got {options}"
-            )
         super().__init__(cast(SelectSelectorConfig, config))
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        valid_options = self._device_class_options(self.config["domain"])
+        options_schema: vol.In | vol.Any = vol.In(valid_options)
+
+        if not self.config["multiple"]:
+            return options_schema(vol.Schema(str)(data))
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [options_schema(vol.Schema(str)(val)) for val in data]
 
 
 class SerialPortSelectorConfig(BaseSelectorConfig, total=False):

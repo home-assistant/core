@@ -628,12 +628,10 @@ ALARM_CONTROL_PANEL_CODE_MODE = SelectSelector(
     )
 )
 BINARY_SENSOR_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
-    DeviceClassSelectorConfig(
-        domain=Platform.BINARY_SENSOR, mode=SelectSelectorMode.DROPDOWN
-    )
+    DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR)
 )
 BUTTON_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
-    DeviceClassSelectorConfig(domain=Platform.BUTTON, mode=SelectSelectorMode.DROPDOWN)
+    DeviceClassSelectorConfig(domain=Platform.BUTTON)
 )
 CLIMATE_MODE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -643,7 +641,7 @@ CLIMATE_MODE_SELECTOR = SelectSelector(
     )
 )
 COVER_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
-    DeviceClassSelectorConfig(domain=Platform.COVER, mode=SelectSelectorMode.DROPDOWN)
+    DeviceClassSelectorConfig(domain=Platform.COVER)
 )
 FAN_SPEED_RANGE_MIN_SELECTOR = vol.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1)),
@@ -719,7 +717,7 @@ LIGHT_SCHEMA_SELECTOR = SelectSelector(
 )
 MIN_MAX_SELECTOR = NumberSelector(NumberSelectorConfig(step=1e-3))
 NUMBER_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
-    DeviceClassSelectorConfig(domain=Platform.NUMBER, mode=SelectSelectorMode.DROPDOWN)
+    DeviceClassSelectorConfig(domain=Platform.NUMBER)
 )
 NUMBER_MODE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -754,7 +752,7 @@ SCALE_SELECTOR = NumberSelector(
     )
 )
 SENSOR_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
-    DeviceClassSelectorConfig(domain=Platform.SENSOR, mode=SelectSelectorMode.DROPDOWN)
+    DeviceClassSelectorConfig(domain=Platform.SENSOR)
 )
 SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
     SelectSelectorConfig(
