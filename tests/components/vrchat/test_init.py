@@ -265,7 +265,7 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
 
         assert entry.state is ConfigEntryState.LOADED
         state_entity_id = _entity_id(
-            entity_registry, f"vrchat.state.{CURRENT_USER_ID}:{CURRENT_USER_ID}"
+            entity_registry, f"state.{CURRENT_USER_ID}:{CURRENT_USER_ID}"
         )
         assert hass.states.get(state_entity_id).state == "offline"
         assert (
@@ -273,12 +273,12 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
             == "https://example.com/current-icon.png"
         )
         current_user_status_entity_id = _entity_id(
-            entity_registry, f"vrchat.status.{CURRENT_USER_ID}:{CURRENT_USER_ID}"
+            entity_registry, f"status.{CURRENT_USER_ID}:{CURRENT_USER_ID}"
         )
         assert hass.states.get(current_user_status_entity_id).state == "offline"
         status_description_entity_id = _entity_id(
             entity_registry,
-            f"vrchat.statusDescription.{CURRENT_USER_ID}:{FRIEND_USER_ID}",
+            f"statusDescription.{CURRENT_USER_ID}:{FRIEND_USER_ID}",
         )
         assert (
             entity_registry.async_get(status_description_entity_id).translation_key
@@ -288,7 +288,7 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
             hass.states.get(status_description_entity_id).state == "Friend description"
         )
         status_entity_id = _entity_id(
-            entity_registry, f"vrchat.status.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
+            entity_registry, f"status.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
         )
         assert hass.states.get(status_entity_id).state == "active"
         assert "entity_picture" in hass.states.get(status_entity_id).attributes
@@ -316,7 +316,7 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
         await hass.async_block_till_done()
         new_friend_status_entity_id = _entity_id(
             entity_registry,
-            f"vrchat.status.{CURRENT_USER_ID}:{NEW_FRIEND_USER_ID}",
+            f"status.{CURRENT_USER_ID}:{NEW_FRIEND_USER_ID}",
         )
         assert hass.states.get(new_friend_status_entity_id).state == "busy"
         new_friend_device = device_registry.async_get_device_by_identifier(

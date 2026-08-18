@@ -23,11 +23,8 @@ from .const import (
     VRChatSpecialLocationString,
     VRChatUserState,
 )
-from .coordinator import (
-    VRChatConfigEntry,
-    VRChatUserDataEntity,
-    VRChatUserLocationEntityMixin,
-)
+from .coordinator import VRChatConfigEntry
+from .entity import VRChatUserDataEntity, VRChatUserLocationEntityMixin
 from .utils import (
     VRCHAT_SPECIAL_LOCATION_STRINGS,
     VRCHAT_WORLD_ID_PREFIX,

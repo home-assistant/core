@@ -6,7 +6,6 @@ from functools import lru_cache
 import json
 import logging
 import math
-import re
 from typing import Any, Final, cast, override
 
 from propcache.api import cached_property
@@ -23,7 +22,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .api import VRChatAPI
@@ -36,6 +34,7 @@ from .const import (
     VRChatUserState,
     VRChatWebsocketEventType,
 )
+from .entity import VRChatUserDataEntity, vrchat_user_data_entity_classes_map
 from .store import InitialCurrentUserData, get_vrchat_auth_cookie_store
 from .utils import (
     VRCHAT_SPECIAL_LOCATION_STRINGS,
@@ -704,155 +703,3 @@ class VRChatUserDataCoordinator(AsyncCleanups):
         if (world := self.world) is not None:
             world.unsubscribe(self.async_schedule_update_ha_state_of_world_entities)
         await super().close()
-
-
-class VRChatUserDataEntity(Entity):  # pylint: disable=home-assistant-enforce-class-module
-    """ABC for an entity that represents a VRChat user data point."""
-
-    _attr_should_poll = False
-    _attr_has_entity_name = True
-
-    icon_map: dict[Any, str] | None = None
-
-    should_add_for_current_user = True
-    should_add_for_non_current_user = True
-
-    subscribe_to_world_update = False
-
-    VRCHAT_ENTITY_PLATFORM: str | None = None
-
-    @override
-    def __init_subclass__(cls, platform: str | None = None, **kwargs):
-        """Register subclass."""
-        if platform is not None:
-            cls.VRCHAT_ENTITY_PLATFORM = platform
-        elif (platform := cls.VRCHAT_ENTITY_PLATFORM) is not None:
-            cls._register_vrchat_user_data_entity_subclass(platform)
-        return super().__init_subclass__(**kwargs)
-
-    def __init__(self, user: VRChatUserDataCoordinator) -> None:
-        """Initialization."""
-        self.user = user
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to updates after the entity has joined Home Assistant."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.user.async_add_entity_update_listener(self._async_handle_user_update)
-        )
-
-    def _async_handle_user_update(
-        self, force_refresh: bool, world_update: bool
-    ) -> None:
-        """Write state after data changes."""
-        if not world_update or self.subscribe_to_world_update:
-            self.async_schedule_update_ha_state(force_refresh=force_refresh)
-
-    @property
-    @override
-    def available(self):
-        """Available."""
-        return self.user.account.available
-
-    @property
-    @override
-    def device_info(self):
-        """Device info."""
-        return self.user.device_info
-
-    @cached_property
-    @override
-    def unique_id(self):
-        """Unique ID."""
-        # Preserve existing entity IDs.
-        # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain
-        return f"{DOMAIN}.{self.entity_description.key}.{next(iter(self.device_info['identifiers']))[1]}"
-
-    @cached_property
-    @override
-    def translation_key(self):
-        """Translation key."""
-        return re.sub(r"(?<!^)(?=[A-Z])", "_", self.entity_description.key).lower()
-
-    @property
-    @override
-    def icon(self):
-        """Return icon from icon map. Fallback to default implementation if not found."""
-        if (
-            self.icon_map is not None
-            and (icon := self.icon_map.get(self.vrchat_user_data_state)) is not None
-        ):
-            return icon
-        return super().icon
-
-    @classmethod
-    def get_raw_state_from_user_data(cls, user_data: User, key: str | None = None):
-        """Get raw state from user data."""
-        if key is None:
-            key = cls.entity_description.key
-        return user_data.get(key) or user_data.get("presence", {}).get(key)
-
-    @classmethod
-    def get_state_from_user_data(cls, user_data: User, key: str | None = None):
-        """Get state from user data."""
-        state = cls.get_raw_state_from_user_data(user_data, key)
-        if isinstance(state, str):
-            return process_vrchat_string(state)
-        return state
-
-    @property
-    def vrchat_user_data_state(self):
-        """The state."""
-        return self.get_state_from_user_data(self.user.data)
-
-    def vrchat_user_world_data_get[T](self, key: str, default: T | None = None):
-        """Get from user world data."""
-        if (world := self.user.world or self.user.destination_world) is not None and (
-            data := world.data
-        ) is not None:
-            return data.get(key, default)
-        return default
-
-    @classmethod
-    def should_add(cls, user: VRChatUserDataCoordinator) -> bool:
-        """Determine whether this entity should be added."""
-        return (
-            (user.is_current_user and cls.should_add_for_current_user)
-            or (user.is_not_current_user and cls.should_add_for_non_current_user)
-        ) and cls.should_add_based_on_user_data(user.data)
-
-    @classmethod
-    def should_add_based_on_user_data(cls, user_data):
-        """Determine whether this entity should be added based on user data."""
-        return cls.get_state_from_user_data(user_data) is not None
-
-    @classmethod
-    def _register_vrchat_user_data_entity_subclass(cls, platform: str):
-        vrchat_user_data_entity_classes_map.setdefault(platform, []).append(cls)
-
-
-vrchat_user_data_entity_classes_map: dict[str, list[type[VRChatUserDataEntity]]] = {}
-
-
-class VRChatUserLocationEntityMixin:
-    """VRChat user location data entity mixin."""
-
-    subscribe_to_world_update = True
-
-    @classmethod
-    def should_add_based_on_user_data(cls, user_data):
-        """Should always add user location data."""
-        return True
-
-    async def async_update(self):
-        """Wait for world data update task if necessary."""
-
-        world: VRChatWorldData | None = self.user.world or self.user.destination_world
-
-        if world is None:
-            return
-        if world.data is not None:
-            return
-        if world.task is not None:
-            await world.task
