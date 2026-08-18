@@ -8,7 +8,7 @@ from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.sofar_modbus.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.sofar.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -28,7 +28,7 @@ async def test_user_step_success(
     seed_pv_inverter(mock_conn.for_unit(1))
 
     with patch(
-        "homeassistant.components.sofar_modbus.config_flow.ModbusConnection",
+        "homeassistant.components.sofar.config_flow.ModbusConnection",
         return_value=mock_conn,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -52,7 +52,7 @@ async def test_user_step_success_without_model(
     seed_pv_inverter(mock_conn.for_unit(1), serial=_UNMODELED_SERIAL)
 
     with patch(
-        "homeassistant.components.sofar_modbus.config_flow.ModbusConnection",
+        "homeassistant.components.sofar.config_flow.ModbusConnection",
         return_value=mock_conn,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -95,7 +95,7 @@ async def test_user_step_errors(
     seed(mock_conn.for_unit(1))
 
     with patch(
-        "homeassistant.components.sofar_modbus.config_flow.ModbusConnection",
+        "homeassistant.components.sofar.config_flow.ModbusConnection",
         return_value=mock_conn,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -112,7 +112,7 @@ async def test_user_step_errors(
     seed_pv_inverter(working_conn.for_unit(1))
 
     with patch(
-        "homeassistant.components.sofar_modbus.config_flow.ModbusConnection",
+        "homeassistant.components.sofar.config_flow.ModbusConnection",
         return_value=working_conn,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -131,7 +131,7 @@ async def test_user_step_already_configured(hass: HomeAssistant) -> None:
     seed_pv_inverter(mock_conn.for_unit(1))
 
     with patch(
-        "homeassistant.components.sofar_modbus.config_flow.ModbusConnection",
+        "homeassistant.components.sofar.config_flow.ModbusConnection",
         return_value=mock_conn,
     ):
         result = await hass.config_entries.flow.async_init(

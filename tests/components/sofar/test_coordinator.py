@@ -6,7 +6,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusTimeoutError
 
-from homeassistant.components.sofar_modbus.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.sofar.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 

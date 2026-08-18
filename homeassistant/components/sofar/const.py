@@ -1,6 +1,6 @@
 """Constants for the Sofar Inverter Modbus integration — distinct from sofar_modbus's own const module (the PyPI library's bitmasks/register tables)."""
 
-DOMAIN = "sofar_modbus"
+DOMAIN = "sofar"
 ATTR_MANUFACTURER = "Sofar Solar"
 
 DEFAULT_NAME = "Sofar"

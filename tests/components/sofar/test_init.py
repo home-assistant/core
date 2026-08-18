@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 from modbus_connection.mock import MockModbusConnection
 
-from homeassistant.components.sofar_modbus.const import DOMAIN
-from homeassistant.components.sofar_modbus.coordinator import SofarDataUpdateCoordinator
+from homeassistant.components.sofar.const import DOMAIN
+from homeassistant.components.sofar.coordinator import SofarDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -46,7 +46,7 @@ async def test_setup_entry_unrecognized_inverter_raises_setup_error(
     unseeded_connection.for_unit(1)  # zeroed registers -> no recognizable serial
 
     with patch(
-        "homeassistant.components.sofar_modbus.ModbusConnection",
+        "homeassistant.components.sofar.ModbusConnection",
         return_value=unseeded_connection,
     ):
         await hass.config_entries.async_setup(entry.entry_id)

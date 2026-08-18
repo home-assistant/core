@@ -724,7 +724,7 @@ FLOWS = {
         "snapcast",
         "snoo",
         "snooz",
-        "sofar_modbus",
+        "sofar",
         "solaredge",
         "solarlog",
         "solarman",

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from modbus_connection.mock import MockModbusUnit
 
-from homeassistant.components.sofar_modbus.const import CONF_MODBUS_ADDR, CONF_READ_EPS
+from homeassistant.components.sofar.const import CONF_MODBUS_ADDR, CONF_READ_EPS
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 MOCK_SERIAL = "SS2ES104N5S445"

@@ -23,7 +23,7 @@ async def test_active_power_control_switch_state_and_staging(
 ) -> None:
     """Test the switch reflects live state and stages, rather than writes, on toggle."""
     entity_id = entity_registry.async_get_entity_id(
-        SWITCH_DOMAIN, "sofar_modbus", f"{MOCK_SERIAL}_active_power_control_enabled"
+        SWITCH_DOMAIN, "sofar", f"{MOCK_SERIAL}_active_power_control_enabled"
     )
     assert entity_id is not None
 
@@ -57,7 +57,7 @@ async def test_active_power_control_switch_unique_id_and_device(
 ) -> None:
     """Test the switch is attached to the inverter's device with the expected unique_id."""
     entity_id = entity_registry.async_get_entity_id(
-        SWITCH_DOMAIN, "sofar_modbus", f"{MOCK_SERIAL}_active_power_control_enabled"
+        SWITCH_DOMAIN, "sofar", f"{MOCK_SERIAL}_active_power_control_enabled"
     )
     assert entity_id is not None
     entity_entry = entity_registry.async_get(entity_id)
@@ -73,7 +73,7 @@ async def test_active_power_control_switch_unavailable_on_component_failure(
 ) -> None:
     """Test the switch goes unavailable when its component fails to refresh, and recovers."""
     entity_id = entity_registry.async_get_entity_id(
-        SWITCH_DOMAIN, "sofar_modbus", f"{MOCK_SERIAL}_active_power_control_enabled"
+        SWITCH_DOMAIN, "sofar", f"{MOCK_SERIAL}_active_power_control_enabled"
     )
     assert entity_id is not None
 
