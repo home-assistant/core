@@ -430,7 +430,8 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
             self.username,
             delay,
         )
-        self.starting_task.cancel()
+        if self.starting_task is not asyncio.current_task():
+            self.starting_task.cancel()
         self.starting_task = self.create_task(self._restart(delay))
         return self.starting_task
 

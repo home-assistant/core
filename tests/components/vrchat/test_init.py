@@ -174,6 +174,25 @@ async def test_restart_closes_replacement_api() -> None:
     replacement_api.close.assert_awaited_once()
 
 
+async def test_restart_does_not_cancel_current_task() -> None:
+    """Test a restarting task is allowed to finish its cleanup."""
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    current_task = asyncio.current_task()
+    assert current_task is not None
+    replacement_task = Mock()
+
+    def create_task(coro: object) -> Mock:
+        coro.close()
+        return replacement_task
+
+    coordinator.current_user_data = {"username": "current_user"}
+    coordinator.starting_task = current_task
+    coordinator.create_task = create_task
+
+    assert coordinator.restart() is replacement_task
+    assert current_task.cancelling() == 0
+
+
 async def test_use_api_closes_temporary_api() -> None:
     """Test using an API copy closes it after a successful callback."""
     primary_api = Mock()
