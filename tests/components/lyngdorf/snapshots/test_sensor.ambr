@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Stereo',
   })
 # ---
 # name: test_entities[sensor.mock_lyngdorf_audio_input-entry]
@@ -55,7 +55,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'optical',
+        'aux',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -91,13 +96,17 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Audio input',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'optical',
+        'aux',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_lyngdorf_audio_input',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'optical',
   })
 # ---
 # name: test_entities[sensor.mock_lyngdorf_streaming_source-entry]
@@ -106,7 +115,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'AirPlay',
+        'DLNA',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -142,13 +156,17 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Streaming source',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'AirPlay',
+        'DLNA',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_lyngdorf_streaming_source',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'AirPlay',
   })
 # ---
 # name: test_entities[sensor.mock_lyngdorf_video_information-entry]
@@ -198,7 +216,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '4K HDR',
   })
 # ---
 # name: test_entities[sensor.mock_lyngdorf_video_input-entry]
@@ -207,7 +225,11 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'hdmi',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -243,13 +265,16 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Video input',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'hdmi',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_lyngdorf_video_input',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'hdmi',
   })
 # ---
 # name: test_entities[sensor.mock_lyngdorf_zone_b_audio_input-entry]
@@ -258,7 +283,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'optical',
+        'aux',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -294,13 +324,17 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Zone B audio input',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'optical',
+        'aux',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_lyngdorf_zone_b_audio_input',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'aux',
   })
 # ---
 # name: test_entities[sensor.mock_lyngdorf_zone_b_streaming_source-entry]
@@ -309,7 +343,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'AirPlay',
+        'DLNA',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -345,12 +384,16 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Zone B streaming source',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'AirPlay',
+        'DLNA',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_lyngdorf_zone_b_streaming_source',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'DLNA',
   })
 # ---

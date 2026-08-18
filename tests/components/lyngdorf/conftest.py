@@ -71,22 +71,22 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver.sound_mode = None
         receiver.available_sound_modes = []
 
-        receiver.audio_information = None
-        receiver.video_information = None
-        receiver.audio_input = None
-        receiver.video_input = None
-        receiver.streaming_source = None
-        receiver.available_audio_inputs = []
-        receiver.available_video_inputs = []
-        receiver.available_stream_types = []
+        receiver.audio_information = "Stereo"
+        receiver.video_information = "4K HDR"
+        receiver.audio_input = "optical"
+        receiver.video_input = "hdmi"
+        receiver.streaming_source = "AirPlay"
+        receiver.available_audio_inputs = ["optical", "aux"]
+        receiver.available_video_inputs = ["hdmi"]
+        receiver.available_stream_types = ["AirPlay", "DLNA"]
 
         receiver.zone_b_power_on = False
         receiver.zone_b_volume = -40.0
         receiver.zone_b_mute_enabled = False
         receiver.zone_b_source = None
         receiver.zone_b_available_sources = []
-        receiver.zone_b_audio_input = None
-        receiver.zone_b_streaming_source = None
+        receiver.zone_b_audio_input = "aux"
+        receiver.zone_b_streaming_source = "DLNA"
 
         create_mock.return_value = receiver
         yield receiver
