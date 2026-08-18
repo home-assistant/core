@@ -40,6 +40,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_NEXT_DEPARTURE = "nextdeparture"
 
+# Deprecated since the legacy platform-only setup; kept here only so existing
+# YAML with this key still validates and can be imported as a config entry.
+CONF_DIRECTIONS = "directions"
+
 NONE_ICON = "mdi:clock"
 
 ATTRIBUTION = "Data provided by mvg.de"
@@ -50,6 +54,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
             {
                 vol.Required(CONF_STATION): cv.string,
                 vol.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
+                vol.Optional(CONF_DIRECTIONS): cv.ensure_list_csv,
                 vol.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
                 vol.Optional(CONF_PRODUCTS, default=None): cv.ensure_list_csv,
                 vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,

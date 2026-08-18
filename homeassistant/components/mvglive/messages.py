@@ -49,9 +49,10 @@ async def fetch_incident_messages(hass: HomeAssistant) -> list[dict[str, Any]]:
             f"Bad API call: Got {type(exc)!s} from {MESSAGES_URL}"
         ) from exc
 
-    try:
-        assert isinstance(result, list)
+    if not isinstance(result, list):
+        raise MvgApiError(f"Bad API call: Expected a list, but got {type(result)}")
 
+    try:
         messages: list[dict[str, Any]] = []
         for message in result:
             if message.get("type") != "INCIDENT":
@@ -81,6 +82,6 @@ async def fetch_incident_messages(hass: HomeAssistant) -> list[dict[str, Any]]:
                     ],
                 }
             )
-    except (AssertionError, KeyError, TypeError, ValueError) as exc:
+    except (KeyError, TypeError, ValueError) as exc:
         raise MvgApiError("Bad API call: Could not parse message data") from exc
     return messages

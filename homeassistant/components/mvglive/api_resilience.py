@@ -78,15 +78,11 @@ async def call_with_resilience(
             status = _extract_status_code(exc)
 
             if status == RATE_LIMIT_STATUS:
-                _rate_limit_state.limited_until = (
-                    time.monotonic() + _rate_limit_state.backoff
-                )
-                _rate_limit_state.backoff = min(
-                    _rate_limit_state.backoff * 2, _MAX_BACKOFF
-                )
+                cooldown = _rate_limit_state.backoff
+                _rate_limit_state.limited_until = time.monotonic() + cooldown
+                _rate_limit_state.backoff = min(cooldown * 2, _MAX_BACKOFF)
                 _LOGGER.warning(
-                    "MVG API rate limit hit, backing off for %.0f seconds",
-                    _rate_limit_state.backoff,
+                    "MVG API rate limit hit, backing off for %.0f seconds", cooldown
                 )
                 raise
 

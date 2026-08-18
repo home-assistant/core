@@ -3,11 +3,28 @@
 import pytest
 
 from homeassistant.components.mvglive.const import CONF_ENABLE_MESSAGES
+from homeassistant.components.mvglive.sensor import PLATFORM_SCHEMA
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+
+
+def test_platform_schema_accepts_deprecated_directions() -> None:
+    """Test that a legacy `directions` key still validates so the YAML can be imported.
+
+    `directions` was deprecated in the old platform-only setup; existing
+    users may still have it in `configuration.yaml`. It must not cause
+    schema validation to fail, or the automatic YAML-to-config-entry import
+    would break for them.
+    """
+    PLATFORM_SCHEMA(
+        {
+            "platform": "mvglive",
+            "nextdeparture": [{"station": "Hauptbahnhof", "directions": "Feldmoching"}],
+        }
+    )
 
 
 @pytest.mark.usefixtures("mvg_api")

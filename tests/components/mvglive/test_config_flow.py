@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from mvg import MvgApiError
 import pytest
 
 from homeassistant.components.mvglive.const import (
@@ -104,6 +105,39 @@ async def test_invalid_station(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_station"}
+
+
+async def test_cannot_connect(
+    hass: HomeAssistant, mvg_api: dict[str, AsyncMock]
+) -> None:
+    """Test that an API failure while searching shows an error instead of crashing."""
+    mvg_api["stations_async"].side_effect = MvgApiError("boom")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_STATION: "Hauptbahnhof"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_import_flow_cannot_connect(
+    hass: HomeAssistant, mvg_api: dict[str, AsyncMock]
+) -> None:
+    """Test that an API failure while importing YAML aborts cleanly."""
+    mvg_api["station_async"].side_effect = MvgApiError("boom")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION: "Hauptbahnhof"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mvg_api")

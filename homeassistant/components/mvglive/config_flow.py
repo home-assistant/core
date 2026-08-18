@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from mvg import MvgApi, TransportType
+from mvg import MvgApi, MvgApiError, TransportType
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -66,20 +66,24 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             query = user_input[CONF_STATION].strip().lower()
-            all_stations = await MvgApi.stations_async()
-            matches = sorted(
-                (
-                    station
-                    for station in all_stations
-                    if query in station["name"].lower()
-                ),
-                key=lambda station: station["name"],
-            )[:MAX_STATION_MATCHES]
-            if not matches:
-                errors["base"] = "invalid_station"
+            try:
+                all_stations = await MvgApi.stations_async()
+            except MvgApiError:
+                errors["base"] = "cannot_connect"
             else:
-                self._matches = {station["id"]: station for station in matches}
-                return await self.async_step_select()
+                matches = sorted(
+                    (
+                        station
+                        for station in all_stations
+                        if query in station["name"].lower()
+                    ),
+                    key=lambda station: station["name"],
+                )[:MAX_STATION_MATCHES]
+                if not matches:
+                    errors["base"] = "invalid_station"
+                else:
+                    self._matches = {station["id"]: station for station in matches}
+                    return await self.async_step_select()
 
         schema = vol.Schema({vol.Required(CONF_STATION): str})
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
@@ -124,7 +128,10 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, import_data: dict[str, Any]
     ) -> config_entries.ConfigFlowResult:
         """Import a single `nextdeparture` entry from YAML configuration."""
-        station = await MvgApi.station_async(import_data[CONF_STATION])
+        try:
+            station = await MvgApi.station_async(import_data[CONF_STATION])
+        except MvgApiError:
+            return self.async_abort(reason="cannot_connect")
         if station is None:
             return self.async_abort(reason="invalid_station")
 
