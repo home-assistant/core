@@ -1,8 +1,8 @@
 """Tests for the homeassistant LLM tools platform."""
 
+from probatio import to_openapi
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from voluptuous_openapi import convert
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant import llm as ha_llm
@@ -405,6 +405,6 @@ async def test_get_live_context_schema(
     tool = next(t for t in result.tools if t.name == "GetLiveContext")
 
     api = await llm.async_get_api(hass, "assist", _llm_context())
-    schema = convert(tool.parameters, custom_serializer=api.custom_serializer)
+    schema = to_openapi(tool.parameters, custom_serializer=api.custom_serializer)
 
     assert schema == snapshot
