@@ -597,7 +597,7 @@ class VRChatUserDataCoordinator(AsyncCleanups):
         return self._calculate_device_info(data_get("displayName"), data_get("bio"))
 
     @lru_cache(maxsize=128)
-    def _calculate_device_info(self, name: str, bio: str):
+    def _calculate_device_info(self, name: str | None, bio: str | None) -> DeviceInfo:
         user_id = self.data["id"]
         return DeviceInfo(
             identifiers={
