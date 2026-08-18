@@ -71,6 +71,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.on_dnd_event.append.side_effect = dnd_event_handler.append
 
         async def _sync_dnd_state() -> None:
+            assert dnd_event_handler, "on_dnd_event handler was not registered"
             await dnd_event_handler[0]({TEST_DEVICE_1_SN: False})
 
         client.sync_dnd_state = AsyncMock(side_effect=_sync_dnd_state)

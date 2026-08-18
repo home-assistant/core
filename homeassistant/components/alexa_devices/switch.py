@@ -29,7 +29,7 @@ TYPE_COMMUNICATION = "communication"
 class AmazonSwitchEntityDescription(SwitchEntityDescription):
     """Alexa Devices switch entity description."""
 
-    is_on_fn: Callable[[AmazonDevice], bool] | None = None
+    is_on_fn: Callable[[AmazonDevice], bool]
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
         device.online
         and (sensor := device.sensors.get(key)) is not None
@@ -42,6 +42,8 @@ class AmazonSwitchEntityDescription(SwitchEntityDescription):
 DND_SWITCH: Final = AmazonSwitchEntityDescription(
     key="dnd",
     translation_key="do_not_disturb",
+    # Unused: DND state is read from coordinator.dnd_states instead.
+    is_on_fn=lambda device: False,
     is_available_fn=lambda device, _key: device.online,
     method="set_do_not_disturb",
     switch_type=TYPE_DND,
@@ -106,7 +108,7 @@ async def async_setup_entry(
         # DND state may arrive after device discovery (initial sync failure,
         # or a later push), so track it separately from `known_devices`.
         new_dnd_devices = (
-            current_devices & set(coordinator.dnd_states)
+            current_devices & coordinator.dnd_states.keys()
         ) - known_dnd_devices
         known_dnd_devices.update(new_dnd_devices)
 
@@ -166,7 +168,6 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
         if self.entity_description.switch_type == TYPE_DND:
             return self.coordinator.dnd_states.get(self.device.serial_number, False)
 
-        assert self.entity_description.is_on_fn is not None
         return self.entity_description.is_on_fn(self.device)
 
     @property
