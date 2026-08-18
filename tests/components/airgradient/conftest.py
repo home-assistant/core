@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from airgradient import ApiVersion
 import pytest
 
 from homeassistant.components.airgradient.const import DOMAIN
@@ -38,6 +39,7 @@ def mock_airgradient_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.host = "10.0.0.131"
+        client.api_version = ApiVersion.LEGACY
         client.get_current_measures.return_value = load_measures_fixture(
             "current_measures_indoor.json"
         )
@@ -75,6 +77,21 @@ def mock_cloud_airgradient_client(
     """Mock a cloud AirGradient client."""
     mock_airgradient_client.get_config.return_value = load_config_fixture(
         "get_config_cloud.json"
+    )
+    return mock_airgradient_client
+
+
+@pytest.fixture
+def mock_v1_airgradient_client(
+    mock_airgradient_client: AsyncMock,
+) -> AsyncMock:
+    """Mock an AirGradient client with a complete API V1 payload."""
+    mock_airgradient_client.api_version = ApiVersion.V1
+    mock_airgradient_client.get_current_measures.return_value = load_measures_fixture(
+        "measures_v1_full.json", ApiVersion.V1
+    )
+    mock_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_full.json", ApiVersion.V1
     )
     return mock_airgradient_client
 
