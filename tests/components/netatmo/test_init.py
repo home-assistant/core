@@ -1,5 +1,6 @@
 """The tests for Netatmo component."""
 
+import asyncio
 from collections.abc import Callable, Coroutine, Iterator
 from contextlib import contextmanager
 from datetime import timedelta
@@ -102,8 +103,8 @@ TEST_MAX_RETRY_DELAY = 3600
 def _patched_retry_delays() -> Iterator[None]:
     """Pin the registration backoff to the delays the tests drive."""
     with (
-        patch.object(netatmo, "WEBHOOK_RETRY_DELAY", TEST_RETRY_DELAY),
-        patch.object(netatmo, "MAX_WEBHOOK_RETRY_DELAY", TEST_MAX_RETRY_DELAY),
+        patch.object(netatmo.webhook, "WEBHOOK_RETRY_DELAY", TEST_RETRY_DELAY),
+        patch.object(netatmo.webhook, "MAX_WEBHOOK_RETRY_DELAY", TEST_MAX_RETRY_DELAY),
     ):
         yield
 
@@ -1476,13 +1477,12 @@ def _cloud_subscribed(hass: HomeAssistant) -> Iterator[None]:
 
 
 @pytest.mark.parametrize(
-    ("reconnect_after", "expected_registrations"),
+    "reconnect_after",
     [
-        pytest.param(TEST_RETRY_DELAY // 3, 1, id="reconnect_inside_the_retry_window"),
-        # The reconnect cannot cancel a retry that already ran, so it registers a
-        # second time. Harmless now that registering is idempotent, where it used
-        # to raise "Handler is already defined!"
-        pytest.param(TEST_RETRY_DELAY * 2, 2, id="retry_fires_before_the_reconnect"),
+        pytest.param(TEST_RETRY_DELAY // 3, id="reconnect_inside_the_retry_window"),
+        # The reconnect cannot cancel a retry that already ran, and must not
+        # register on top of what that retry already registered
+        pytest.param(TEST_RETRY_DELAY * 2, id="retry_fires_before_the_reconnect"),
     ],
 )
 async def test_a_cloud_reconnect_registers_the_webhook_once(
@@ -1490,7 +1490,6 @@ async def test_a_cloud_reconnect_registers_the_webhook_once(
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     reconnect_after: int,
-    expected_registrations: int,
 ) -> None:
     """Test that a disconnect and reconnect never registers the webhook twice."""
     with (
@@ -1543,7 +1542,7 @@ async def test_a_cloud_reconnect_registers_the_webhook_once(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert mock_register.call_count == expected_registrations
+    assert mock_register.call_count == 1
 
 
 async def test_a_failed_registration_keeps_the_local_handler(
@@ -1972,3 +1971,110 @@ async def test_an_unreachable_api_does_not_block_unloading(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_a_reconnect_without_a_disconnect_keeps_the_registration(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that a webhook already registered is not dropped and added again."""
+    with (
+        _cloud_subscribed(hass),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_auth.return_value.async_addwebhook.reset_mock()
+
+        # Nothing was dropped in between, so the registration made at setup stands
+        for _ in range(2):
+            async_dispatcher_send(
+                hass,
+                SIGNAL_CLOUD_CONNECTION_STATE,
+                cloud.CloudConnectionState.CLOUD_CONNECTED,
+            )
+            await hass.async_block_till_done()
+
+    mock_auth.return_value.async_addwebhook.assert_not_called()
+
+
+async def test_a_disconnect_waits_for_a_registration_in_flight(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that a drop cannot overtake the registration it has to undo."""
+    calls: list[str] = []
+    registering = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _blocking_addwebhook(*args: Any) -> None:
+        registering.set()
+        await release.wait()
+        calls.append("add")
+
+    async def _dropwebhook(*args: Any) -> None:
+        calls.append("drop")
+
+    with (
+        _cloud_subscribed(hass),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook = AsyncMock(side_effect=_dropwebhook)
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_auth.return_value.async_addwebhook = AsyncMock(
+            side_effect=_blocking_addwebhook
+        )
+        calls.clear()
+
+        # The disconnect drops the webhook and arms the re-registration below
+        async_dispatcher_send(
+            hass,
+            SIGNAL_CLOUD_CONNECTION_STATE,
+            cloud.CloudConnectionState.CLOUD_DISCONNECTED,
+        )
+        await hass.async_block_till_done()
+
+        async_dispatcher_send(
+            hass,
+            SIGNAL_CLOUD_CONNECTION_STATE,
+            cloud.CloudConnectionState.CLOUD_CONNECTED,
+        )
+        async with asyncio.timeout(10):
+            await registering.wait()
+
+        # A cloud that drops out again while the registration is still in flight
+        async_dispatcher_send(
+            hass,
+            SIGNAL_CLOUD_CONNECTION_STATE,
+            cloud.CloudConnectionState.CLOUD_DISCONNECTED,
+        )
+        await asyncio.sleep(0)
+        release.set()
+        await hass.async_block_till_done()
+
+    # A drop that overtakes the add leaves the registration live at Netatmo
+    assert calls == ["drop", "add", "drop"]

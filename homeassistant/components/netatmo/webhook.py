@@ -1,5 +1,6 @@
 """The Netatmo integration."""
 
+import asyncio
 import logging
 import secrets
 from typing import Any
@@ -21,8 +22,9 @@ from homeassistant.const import (
     ATTR_PERSONS,
     CONF_WEBHOOK_ID,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -33,9 +35,11 @@ from .const import (
     DEFAULT_PERSON,
     DOMAIN,
     EVENT_ID_MAP,
+    MAX_WEBHOOK_RETRY_DELAY,
     NETATMO_EVENT,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
+    WEBHOOK_RETRY_DELAY,
 )
 from .coordinator import NetatmoConfigEntry, NetatmoDataHandler
 
@@ -216,3 +220,78 @@ async def async_register_webhook(
     else:
         _LOGGER.debug("Register Netatmo webhook: %s", webhook_url)
         return True
+
+
+class NetatmoWebhookManager:
+    """Keep the Netatmo webhook registered for as long as the entry is loaded.
+
+    Registering, retrying and dropping all act on the one registration Netatmo
+    holds for the account, so they take a lock. A drop that overtakes the
+    registration it is meant to undo leaves Netatmo delivering to a webhook Home
+    Assistant no longer answers, and the failed deliveries suspend the URL.
+    """
+
+    def __init__(self, hass: HomeAssistant, entry: NetatmoConfigEntry) -> None:
+        """Initialize the webhook manager."""
+        self.hass = hass
+        self.entry = entry
+        self._register_lock = asyncio.Lock()
+        self._registered = False
+        self._attempt_delay = WEBHOOK_RETRY_DELAY
+        self._cancel_attempt: CALLBACK_TYPE | None = None
+
+    @callback
+    def cancel_pending_attempt(self) -> None:
+        """Drop a scheduled registration attempt, if one is pending."""
+        if self._cancel_attempt is not None:
+            self._cancel_attempt()
+            self._cancel_attempt = None
+
+    @callback
+    def _schedule_attempt(self) -> None:
+        """Arm the next attempt, replacing any already pending."""
+        self.cancel_pending_attempt()
+        self._cancel_attempt = async_call_later(
+            self.hass, self._attempt_delay, self.async_ensure_registered
+        )
+
+    async def async_ensure_registered(self, _: Any = None) -> None:
+        """Register the webhook, and keep trying until it sticks."""
+        async with self._register_lock:
+            self.cancel_pending_attempt()
+            if self._registered:
+                return
+
+            # Registering while the cloud is down points Netatmo at an endpoint
+            # that cannot answer, and the failed deliveries suspend the URL
+            settled = False
+            if not cloud.async_active_subscription(
+                self.hass
+            ) or cloud.async_is_connected(self.hass):
+                settled = await async_register_webhook(self.hass, self.entry)
+
+            if settled:
+                self._registered = True
+                self._attempt_delay = WEBHOOK_RETRY_DELAY
+                return
+
+            self._schedule_attempt()
+            self._attempt_delay = min(self._attempt_delay * 2, MAX_WEBHOOK_RETRY_DELAY)
+
+    async def async_unregister(self, _: Any = None) -> None:
+        """Drop the webhook, waiting out a registration still in flight."""
+        async with self._register_lock:
+            self.cancel_pending_attempt()
+            self._registered = False
+            await async_unregister_webhook(self.hass, self.entry)
+
+    async def async_handle_cloud_state(self, state: cloud.CloudConnectionState) -> None:
+        """Follow the cloud connection the webhook URL is delivered over."""
+        self._attempt_delay = WEBHOOK_RETRY_DELAY
+
+        if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
+            await self.async_ensure_registered()
+
+        if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
+            await self.async_unregister()
+            self._schedule_attempt()
