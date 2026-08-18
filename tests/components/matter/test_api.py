@@ -533,10 +533,9 @@ async def test_network_topology(
 ) -> None:
     """Test the network_topology command."""
     matter_client.server_info.schema_version = 13
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 
@@ -604,10 +603,9 @@ async def test_subscribe_network_topology(
 ) -> None:
     """Test the subscribe_network_topology command."""
     matter_client.server_info.schema_version = 13
-    entry = device_registry.async_get_device(
-        identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
-        }
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
     assert entry is not None
 

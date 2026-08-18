@@ -373,8 +373,9 @@ def _serialize_topology(
     for node in result["nodes"]:
         device = None
         if (node_id := node.get("node_id")) is not None and server_info is not None:
-            device = dev_reg.async_get_device(
-                identifiers={get_node_device_identifier(server_info, node_id)}
+            device = dev_reg.async_get_device_by_identifier(
+                get_node_device_identifier(server_info, node_id),
+                matter.config_entry.entry_id,
             )
         node["ha_device_id"] = device.id if device else None
     return result
