@@ -1,0 +1,48 @@
+{
+  "entity": {
+    "sensor": {
+      "sensor_batt_placeholder": {
+        "default": "mdi:battery"
+      },
+      "sensor_co2_placeholder": {
+        "default": "mdi:molecule-co2"
+      },
+      "sensor_counter_placeholder": {
+        "default": "mdi:square-wave"
+      },
+      "sensor_dew_point": {
+        "default": "mdi:thermometer-water"
+      },
+      "sensor_dew_point_placeholder": {
+        "default": "mdi:thermometer-water"
+      },
+      "sensor_humidity": {
+        "default": "mdi:water-percent"
+      },
+      "sensor_humidity_placeholder": {
+        "default": "mdi:water-percent"
+      },
+      "sensor_pressure_placeholder": {
+        "default": "mdi:gauge"
+      },
+      "sensor_rain_placeholder": {
+        "default": "mdi:weather-rainy"
+      },
+      "sensor_rsii_placeholder": {
+        "default": "mdi:signal"
+      },
+      "sensor_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "sensor_temperature_placeholder": {
+        "default": "mdi:thermometer"
+      },
+      "sensor_wind_direction_placeholder": {
+        "default": "mdi:compass"
+      },
+      "sensor_wind_speed_placeholder": {
+        "default": "mdi:weather-windy"
+      }
+    }
+  }
+}

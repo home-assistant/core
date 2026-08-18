@@ -1,0 +1,94 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This device is already configured, you can delete it from the integration and configure it again.",
+      "mode_is_missing": "The device didn't provide its current mode",
+      "unsupported_device": "This device is unsupported.",
+      "web_mode_required": "The integration requires the device to be in web mode to function."
+    },
+    "create_entry": {
+      "default": "The device has been successfully configured."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device.",
+      "invalid_auth": "The password you provided is invalid, try a different one.",
+      "invalid_ip_format": "Invalid IPv4 address format."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "IPv4 address",
+          "password": "Password (optional)",
+          "refresh_rate": "Scan interval (seconds)"
+        },
+        "data_description": {
+          "ip_address": "Enter the IPv4 address of your device.",
+          "password": "Leave blank if your device does not require authentication.",
+          "refresh_rate": "How often Home Assistant should poll the device for new data."
+        },
+        "title": "Add a new device"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "sensor_batt_placeholder": {
+        "name": "{placeholder} Battery"
+      },
+      "sensor_co2_placeholder": {
+        "name": "{placeholder} CO2"
+      },
+      "sensor_counter_placeholder": {
+        "name": "Input {placeholder} Count"
+      },
+      "sensor_dew_point": {
+        "name": "Dew Point"
+      },
+      "sensor_dew_point_placeholder": {
+        "name": "{placeholder} Dew Point"
+      },
+      "sensor_humidity": {
+        "name": "Humidity"
+      },
+      "sensor_humidity_placeholder": {
+        "name": "{placeholder} Humidity"
+      },
+      "sensor_pressure_placeholder": {
+        "name": "{placeholder} Pressure"
+      },
+      "sensor_rain_placeholder": {
+        "name": "{placeholder} Rainfall"
+      },
+      "sensor_rsii_placeholder": {
+        "name": "{placeholder} Signal Strength"
+      },
+      "sensor_temperature": {
+        "name": "Temperature"
+      },
+      "sensor_temperature_placeholder": {
+        "name": "{placeholder} Temperature"
+      },
+      "sensor_wind_direction_placeholder": {
+        "name": "{placeholder} Wind Direction"
+      },
+      "sensor_wind_speed_placeholder": {
+        "name": "{placeholder} Wind Speed"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to device {name} ({location})."
+    },
+    "command_failed": {
+      "message": "Failed to execute command {cmd} on {name}."
+    },
+    "invalid_auth": {
+      "message": "Invalid password of device {name} ({location})"
+    },
+    "unsupported_device": {
+      "message": "Device {name} ({location}) is unsupported."
+    }
+  }
+}

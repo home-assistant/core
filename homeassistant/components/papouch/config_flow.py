@@ -1,0 +1,147 @@
+"""Config flow for the Papouch integration."""
+
+import re
+from typing import Any, override
+
+import aiohttp
+from aiopapouch import PapouchHTTPClient
+from aiopapouch.exceptions import (
+    DeviceAuthError,
+    DeviceConnectionError,
+    DeviceLogicError,
+)
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
+
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .utils import _get_device_name
+
+WEB_MODE_INDEX = 3
+
+
+class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Papouch."""
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._saved_input: dict | None = None
+        self.discovered_ip: str | None = None
+
+    async def _test_connection(
+        self, ip_address: str, password: str = ""
+    ) -> tuple[dict[str, str], int | None]:
+        """Test the connection and return any errors and the device mode."""
+        if not re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address):
+            return {"ip_address": "invalid_ip_format"}, None
+
+        session = async_get_clientsession(self.hass)
+        client = PapouchHTTPClient(ip_address, session, password=password)
+
+        try:
+            await client.fetch_info()
+            mode_device = await client.get_device_mode()
+        except DeviceAuthError:
+            return {"base": "invalid_auth"}, None
+        except (
+            aiohttp.ClientError,
+            DeviceConnectionError,
+            TimeoutError,
+        ):
+            return {"base": "cannot_connect"}, None
+        else:
+            return {}, mode_device
+
+    async def _async_process_user_input(
+        self, user_input: dict[str, Any]
+    ) -> tuple[dict[str, str], ConfigFlowResult | None]:
+        """Process user input, test connection, and determine the next routing step."""
+        for entry in self._async_current_entries():
+            if entry.data.get("ip_address") == user_input["ip_address"]:
+                return {}, self.async_abort(reason="already_configured")
+
+        ip_address = user_input["ip_address"]
+        password = str(user_input.get("password", ""))
+
+        errors, mode_device = await self._test_connection(
+            user_input["ip_address"], password
+        )
+
+        if errors:
+            return errors, None
+
+        self._saved_input = user_input
+
+        if mode_device == -1:
+            return {}, self.async_abort(reason="mode_is_missing")
+        if mode_device != WEB_MODE_INDEX:
+            return {}, self.async_abort(reason="web_mode_required")
+
+        session = async_get_clientsession(self.hass)
+        client = PapouchHTTPClient(ip_address, session, password=password)
+        title_name = await _get_device_name(self.hass, ip_address, password)
+
+        try:
+            mac_address = await client.get_device_mac()
+        except DeviceAuthError:
+            errors["base"] = "invalid_auth"
+        except aiohttp.ClientError, DeviceLogicError:
+            errors["base"] = "cannot_connect"
+
+        if errors:
+            return errors, None
+
+        if mac_address:
+            formatted_mac = format_mac(mac_address)
+            await self.async_set_unique_id(formatted_mac)
+            self._abort_if_unique_id_configured()
+
+        data = {
+            "ip_address": user_input["ip_address"],
+            "password": password,
+            "device_name": title_name,
+        }
+
+        return {}, self.async_create_entry(
+            title=f"{title_name} - {user_input['ip_address']}", data=data
+        )
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the first step in config flow."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            errors, result = await self._async_process_user_input(user_input)
+            if result:
+                return result
+
+        default_ip = self.discovered_ip or ""
+        default_interval = DEFAULT_SCAN_INTERVAL
+
+        if self._saved_input and "refresh_rate" in self._saved_input:
+            default_interval = self._saved_input["refresh_rate"]
+        if user_input and "refresh_rate" in user_input:
+            default_interval = user_input["refresh_rate"]
+        if user_input and "ip_address" in user_input:
+            default_ip = user_input["ip_address"]
+
+        schema = vol.Schema(
+            {
+                vol.Required("ip_address", default=default_ip): str,
+                vol.Required("refresh_rate", default=default_interval): vol.All(
+                    int, vol.Range(min=1, max=3600)
+                ),
+                vol.Optional("password"): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+        )
