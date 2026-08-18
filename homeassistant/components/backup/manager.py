@@ -15,7 +15,7 @@ import shutil
 import sys
 import tarfile
 import time
-from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
+from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast, override
 
 import aiohttp
 from securetar import SecureTarArchive, atomic_contents_add
@@ -1712,6 +1712,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         self._hass = hass
         self.temp_backup_dir = Path(hass.config.path("tmp_backups"))
 
+    @override
     async def async_create_backup(
         self,
         *,
@@ -1957,6 +1958,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             ) from err
         return (tar_file_path, stat_result.st_size)
 
+    @override
     async def async_receive_backup(
         self,
         *,
@@ -2021,6 +2023,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             release_stream=remove_backup,
         )
 
+    @override
     async def async_restore_backup(
         self,
         backup_id: str,
@@ -2099,6 +2102,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         )
         await self._hass.services.async_call("homeassistant", "restart", blocking=True)
 
+    @override
     async def async_resume_restore_progress_after_restart(
         self,
         *,
@@ -2147,6 +2151,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         )
         on_progress(IdleEvent())
 
+    @override
     async def async_validate_config(self, *, config: BackupConfig) -> None:
         """Validate backup config.
 

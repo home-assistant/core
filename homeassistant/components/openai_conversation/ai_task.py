@@ -3,7 +3,7 @@
 import base64
 from json import JSONDecodeError
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from openai.types.responses.response_output_item import ImageGenerationCall
 
@@ -28,6 +28,8 @@ if TYPE_CHECKING:
     from . import OpenAIConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -63,6 +65,7 @@ class OpenAITaskEntity(
         if not model.startswith(tuple(UNSUPPORTED_IMAGE_MODELS)):
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,
@@ -100,6 +103,7 @@ class OpenAITaskEntity(
             data=data,
         )
 
+    @override
     async def _async_generate_image(
         self,
         task: ai_task.GenImageTask,

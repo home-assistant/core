@@ -7,9 +7,10 @@ from bosch_alarm_mode2.const import ALARM_PANEL_FAULTS
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bosch_alarm.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import call_observable, setup_integration
 
@@ -76,3 +77,30 @@ async def test_area_ready_to_arm(
     await call_observable(hass, area.status_observer)
     assert hass.states.get(entity_id).state == STATE_OFF
     assert hass.states.get(entity_id_2).state == STATE_OFF
+
+
+@pytest.mark.parametrize("model", ["b5512"])
+@pytest.mark.usefixtures("mock_panel")
+async def test_point_via_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a point's device links to the panel device via via_device_id."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_entry = entity_registry.async_get("binary_sensor.window")
+    assert entity_entry
+    assert entity_entry.device_id
+
+    point_device = device_registry.async_get(entity_entry.device_id)
+    assert point_device
+
+    panel_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id),
+        mock_config_entry.entry_id,
+    )
+    assert panel_device
+
+    assert point_device.via_device_id == panel_device.id

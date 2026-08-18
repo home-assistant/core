@@ -86,6 +86,7 @@ from homeassistant.setup import (
     async_get_setup_timings,
     async_wait_component,
 )
+from homeassistant.util import slugify
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
@@ -126,6 +127,7 @@ def async_register_commands(
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
+    async_reg(hass, handle_slugify)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
@@ -726,6 +728,17 @@ def handle_ping(
     connection.send_message(pong_message(msg["id"]))
 
 
+@callback
+@decorators.websocket_command(
+    {vol.Required("type"): "slugify", vol.Required("text"): str}
+)
+def handle_slugify(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle slugify command."""
+    connection.send_result(msg["id"], {"slug": slugify(msg["text"])})
+
+
 @lru_cache
 def _cached_template(template_str: str, hass: HomeAssistant) -> template.Template:
     """Return a cached template."""
@@ -1070,7 +1083,7 @@ async def handle_test_condition(
     # alongside the result.
     condition_trace = trace.trace_get()
     try:
-        with trace.record_template_errors():
+        with trace.suppress_template_error_logging():
             check_result = condition.async_check(variables=msg.get("variables"))
     except HomeAssistantError as err:
         connection.send_error(
@@ -1134,7 +1147,7 @@ async def handle_subscribe_condition(
 
         condition_trace = trace.trace_get()
         try:
-            with trace.record_template_errors():
+            with trace.suppress_template_error_logging():
                 new_event_data = {"result": condition.async_check()}
         except HomeAssistantError as err:
             new_event_data = {"error": str(err)}

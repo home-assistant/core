@@ -39,7 +39,7 @@
 # name: test_all_entities[button.stove_silent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Stove Silent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stove Silent',
     }),
     'context': <ANY>,
     'entity_id': 'button.stove_silent',

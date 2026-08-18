@@ -70,5 +70,10 @@
         }
       }
     }
+  },
+  "services": {
+    "upload_art_frame_image": {
+      "service": "mdi:cloud-upload-outline"
+    }
   }
 }

@@ -36,6 +36,14 @@
         "name": "Discussions",
         "unit_of_measurement": "discussions"
       },
+      "followers": {
+        "name": "Followers",
+        "unit_of_measurement": "followers"
+      },
+      "following": {
+        "name": "Following",
+        "unit_of_measurement": "users"
+      },
       "forks_count": {
         "name": "Forks",
         "unit_of_measurement": "forks"
@@ -65,6 +73,14 @@
       "merged_pulls_count": {
         "name": "Merged pull requests",
         "unit_of_measurement": "pull requests"
+      },
+      "public_gists": {
+        "name": "Public gists",
+        "unit_of_measurement": "gists"
+      },
+      "public_repos": {
+        "name": "Public repositories",
+        "unit_of_measurement": "repositories"
       },
       "pulls_count": {
         "name": "Pull requests",

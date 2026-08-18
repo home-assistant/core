@@ -1,4 +1,5 @@
 """The Nmap Tracker integration."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from dataclasses import dataclass
@@ -115,10 +116,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
     )
-
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 1:
         new_options = {**entry.options}

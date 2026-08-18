@@ -1,7 +1,7 @@
 """OAuth2 implementations for Toon."""
 
 import base64
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.application_credentials import (
     AuthImplementation,
@@ -35,10 +35,12 @@ class ElectricKiwiLocalOAuth2Implementation(AuthImplementation):
         self._name = client_credential.name
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": SCOPE_VALUES}
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Initialize local Electric Kiwi auth implementation."""
         data = {
@@ -49,6 +51,7 @@ class ElectricKiwiLocalOAuth2Implementation(AuthImplementation):
 
         return await self._token_request(data)
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
         data = {
@@ -59,6 +62,7 @@ class ElectricKiwiLocalOAuth2Implementation(AuthImplementation):
         new_token = await self._token_request(data)
         return {**token, **new_token}
 
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         session = async_get_clientsession(self.hass)

@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.trace import (
     CONF_STORED_TRACES,
@@ -26,15 +26,19 @@ class AutomationTrace(ActionTrace):
         config: ConfigType | None,
         blueprint_inputs: ConfigType | None,
         context: Context,
+        *,
+        not_triggered: bool = False,
     ) -> None:
         """Container for automation trace."""
         super().__init__(item_id, config, blueprint_inputs, context)
         self._trigger_description: str | None = None
+        self.not_triggered = not_triggered
 
     def set_trigger_description(self, trigger: str) -> None:
         """Set trigger description."""
         self._trigger_description = trigger
 
+    @override
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this AutomationTrace."""
         if self._short_dict:
@@ -53,9 +57,13 @@ def trace_automation(
     blueprint_inputs: ConfigType | None,
     context: Context,
     trace_config: ConfigType,
+    *,
+    not_triggered: bool = False,
 ) -> Generator[AutomationTrace]:
     """Trace action execution of automation with automation_id."""
-    trace = AutomationTrace(automation_id, config, blueprint_inputs, context)
+    trace = AutomationTrace(
+        automation_id, config, blueprint_inputs, context, not_triggered=not_triggered
+    )
     async_store_trace(hass, trace, trace_config[CONF_STORED_TRACES])
 
     try:

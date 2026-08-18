@@ -26,6 +26,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DEVICE_NAME,
@@ -221,8 +222,7 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
             ):
                 try:
                     value = float(current_state.state)
-                    # pylint: disable-next=home-assistant-enforce-utcnow
-                    timestamp = current_state.last_updated or dt.datetime.now(dt.UTC)
+                    timestamp = current_state.last_updated or dt_util.utcnow()
                     client.get_or_create_sensor(energyid_key).update(value, timestamp)
                 except ValueError, TypeError:
                     _LOGGER.debug(

@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import EventName, OverkizState
+from pyoverkiz.enums import OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -28,7 +28,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import assert_command_call, async_deliver_events, build_event
+from .helpers import (
+    assert_command_call,
+    async_deliver_events,
+    device_state_changed_event,
+    device_unavailable_event,
+)
 
 from tests.common import snapshot_platform
 
@@ -47,11 +52,19 @@ RGB_LIGHT = FixtureDevice(
     "io://1234-5678-3293/14608095",
     "light.light_terras_rgb",
 )
+# RTS is one-way, thus this dimmable light can only be dimmed via the
+# stepPositive/stepNegative buttons and is exposed as an on/off light.
+RTS_DIMMABLE_LIGHT = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16752757",
+    "light.palm_court_led_strip",
+)
 
 SNAPSHOT_FIXTURES = [
     ONOFF_LIGHT,
     DIMMABLE_LIGHT,
     RGB_LIGHT,
+    RTS_DIMMABLE_LIGHT,
 ]
 
 
@@ -150,8 +163,7 @@ async def test_light_state_update(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=DIMMABLE_LIGHT.device_url,
                 device_states=[
                     {
@@ -186,8 +198,7 @@ async def test_light_rgb_state_update(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=RGB_LIGHT.device_url,
                 device_states=[
                     {
@@ -230,8 +241,7 @@ async def test_light_unavailability(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_UNAVAILABLE.value,
+            device_unavailable_event(
                 device_url=DIMMABLE_LIGHT.device_url,
             )
         ],

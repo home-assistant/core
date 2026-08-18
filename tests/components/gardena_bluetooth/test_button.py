@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_switch_chars(mock_read_char_raw):
     """Mock data on device."""
-    mock_read_char_raw[Reset.factory_reset.uuid] = b"\x00"
+    mock_read_char_raw[Reset.factory_reset.unique_id] = b"\x00"
     return mock_read_char_raw
 
 
@@ -36,7 +36,7 @@ async def test_setup(
     await setup_entry(hass, mock_entry, [Platform.BUTTON])
     assert hass.states.get(entity_id) == snapshot
 
-    mock_switch_chars[Reset.factory_reset.uuid] = b"\x01"
+    mock_switch_chars[Reset.factory_reset.unique_id] = b"\x01"
     await scan_step()
     assert hass.states.get(entity_id) == snapshot
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from pprint import pformat
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 
@@ -16,17 +16,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import AuthenticatedMonzoAPI
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from .webhook import MonzoWebhookManager
 
-type MonzoConfigEntry = ConfigEntry[MonzoCoordinator]
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
 class MonzoData:
     """A dataclass for holding sensor data returned by the DataUpdateCoordinator."""
 
-    accounts: list[dict[str, Any]]
-    pots: list[dict[str, Any]]
+    accounts: dict[str, dict[str, Any]]
+    pots: dict[str, dict[str, Any]]
 
 
 class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
@@ -50,6 +51,7 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> MonzoData:
         """Fetch data from Monzo API."""
         try:
@@ -69,4 +71,18 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
                 message += " Enabling debug logging for details."
             raise UpdateFailed(message) from err
 
-        return MonzoData(accounts, pots)
+        return MonzoData(
+            accounts={account["id"]: account for account in accounts},
+            pots={pot["id"]: pot for pot in pots},
+        )
+
+
+@dataclass
+class MonzoRuntimeData:
+    """Runtime data for a Monzo config entry."""
+
+    coordinator: MonzoCoordinator
+    webhook_manager: MonzoWebhookManager
+
+
+type MonzoConfigEntry = ConfigEntry[MonzoRuntimeData]

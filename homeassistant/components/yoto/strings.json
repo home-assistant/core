@@ -10,6 +10,8 @@
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The reauthorized account does not match the original Yoto account. Please log in with the same account.",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "create_entry": {
@@ -27,15 +29,117 @@
           "implementation": "[%key:common::config_flow::description::implementation%]"
         },
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Yoto integration needs to re-authenticate your account.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "bluetooth_audio": {
+        "name": "Bluetooth audio"
+      },
+      "headphones": {
+        "name": "Headphones"
+      }
+    },
+    "number": {
+      "day_mode_brightness": {
+        "name": "Day mode brightness"
+      },
+      "day_mode_max_volume": {
+        "name": "Day mode maximum volume"
+      },
+      "night_mode_brightness": {
+        "name": "Night mode brightness"
+      },
+      "night_mode_max_volume": {
+        "name": "Night mode maximum volume"
+      }
+    },
+    "select": {
+      "day_mode_color": {
+        "name": "Day mode color",
+        "state": {
+          "apple_green": "Apple green",
+          "bumblebee_yellow": "Bumblebee yellow",
+          "lilac": "Lilac",
+          "off": "[%key:common::state::off%]",
+          "orange_peel": "Orange peel",
+          "sky_blue": "Sky blue",
+          "tambourine_red": "Tambourine red",
+          "white": "White"
+        }
+      },
+      "night_mode_color": {
+        "name": "Night mode color",
+        "state": {
+          "apple_green": "[%key:component::yoto::entity::select::day_mode_color::state::apple_green%]",
+          "bumblebee_yellow": "[%key:component::yoto::entity::select::day_mode_color::state::bumblebee_yellow%]",
+          "lilac": "[%key:component::yoto::entity::select::day_mode_color::state::lilac%]",
+          "off": "[%key:common::state::off%]",
+          "orange_peel": "[%key:component::yoto::entity::select::day_mode_color::state::orange_peel%]",
+          "sky_blue": "[%key:component::yoto::entity::select::day_mode_color::state::sky_blue%]",
+          "tambourine_red": "[%key:component::yoto::entity::select::day_mode_color::state::tambourine_red%]",
+          "white": "[%key:component::yoto::entity::select::day_mode_color::state::white%]"
+        }
+      }
+    },
+    "sensor": {
+      "card_insertion_state": {
+        "name": "Card slot",
+        "state": {
+          "none": "Empty",
+          "physical": "Physical card",
+          "remote": "Remote",
+          "streaming": "Streaming"
+        }
+      },
+      "day_mode": {
+        "name": "Day mode",
+        "state": {
+          "day": "Day",
+          "night": "Night"
+        }
+      }
+    },
+    "switch": {
+      "bluetooth_pairing": {
+        "name": "Bluetooth pairing"
+      },
+      "day_mode_auto_brightness": {
+        "name": "Day mode automatic brightness"
+      },
+      "max_headphone_volume": {
+        "name": "Maximum headphone volume"
+      },
+      "night_mode_auto_brightness": {
+        "name": "Night mode automatic brightness"
+      }
+    },
+    "time": {
+      "day_mode_start": {
+        "name": "Day mode start"
+      },
+      "night_mode_start": {
+        "name": "Night mode start"
       }
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Yoto credentials are no longer valid. Please reauthenticate your account."
+    },
     "card_detail_failed": {
       "message": "Could not load Yoto card details: {error}"
     },
     "command_failed": {
       "message": "Yoto command failed: {error}"
+    },
+    "config_update_failed": {
+      "message": "Failed to update Yoto player settings: {error}"
     },
     "invalid_media_id": {
       "message": "Not a Yoto media identifier: {media_id}"
@@ -51,6 +155,9 @@
     },
     "unknown_chapter": {
       "message": "Unknown chapter {chapter_key} on card {card_id}"
+    },
+    "unknown_group": {
+      "message": "Unknown Yoto group: {group_id}"
     },
     "unknown_track": {
       "message": "Unknown track {track_key} on card {card_id}"

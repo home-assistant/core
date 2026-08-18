@@ -82,7 +82,7 @@ def mock_register_webhook() -> Generator[None]:
             AsyncMock(
                 return_value=WebhookInfo(
                     url="mock url",
-                    last_error_date=datetime.now(),
+                    last_error_date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                     has_custom_certificate=False,
                     pending_update_count=0,
                 )
@@ -111,7 +111,7 @@ def mock_external_calls() -> Generator[None]:
     test_user = User(123456, "Testbot", True, "mock last name", "mock_bot")
     message = Message(
         message_id=12345,
-        date=datetime.now(),
+        date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
         chat=Chat(id=123456, type=ChatType.PRIVATE),
     )
 
@@ -130,7 +130,7 @@ def mock_external_calls() -> Generator[None]:
         return [
             Message(
                 message_id=12345 + idx,
-                date=datetime.now(),
+                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                 chat=Chat(id=chat_id, type=ChatType.PRIVATE),
             )
             for idx, _ in enumerate(kwargs[ATTR_MEDIA])
@@ -160,7 +160,7 @@ def mock_external_calls() -> Generator[None]:
                     1,
                     Message(
                         1,
-                        datetime.now(),
+                        datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                         Chat(
                             id=123456,
                             type=ChatType.PRIVATE,
