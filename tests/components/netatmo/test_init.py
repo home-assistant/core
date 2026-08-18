@@ -957,7 +957,7 @@ async def test_disabled_home_keeps_its_device(
 
     # A disabled home is still live, so its device must not be removable
     client = await hass_ws_client(hass)
-    response = await client.remove_device(config_entry.entry_id)
+    response = await client.remove_device(home_device.id)
     assert not response["success"]
 
 
@@ -1077,7 +1077,7 @@ async def test_device_remove_devices(
         (DOMAIN, "12:34:56:25:cf:a8"), config_entry.entry_id
     )
     assert air_care_device is not None
-    response = await client.remove_device(air_care_device.id, config_entry.entry_id)
+    response = await client.remove_device(air_care_device.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
@@ -1119,14 +1119,14 @@ async def test_disabled_home_keeps_its_descendants(
 
     # The room is absent from the account now, but its device is still live
     client = await hass_ws_client(hass)
-    response = await client.remove_device(livingroom.id, config_entry.entry_id)
+    response = await client.remove_device(livingroom.id)
     assert not response["success"]
 
     # A hand-disabled device keeps USER, so only the walk up to the home finds it
     device_registry.async_update_device(
         livingroom.id, disabled_by=dr.DeviceEntryDisabler.USER
     )
-    response = await client.remove_device(livingroom.id, config_entry.entry_id)
+    response = await client.remove_device(livingroom.id)
     assert not response["success"]
 
 
