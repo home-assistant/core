@@ -1,5 +1,7 @@
 """Battery sensor for the Nuki Lock."""
 
+from typing import override
+
 from pynuki.device import NukiDevice
 
 from homeassistant.components.sensor import (
@@ -38,11 +40,13 @@ class NukiBatterySensor(NukiEntity[NukiDevice], SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_battery_level"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._nuki_device.battery_charge

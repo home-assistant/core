@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import logging
 from pprint import pformat
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from onvif.util import is_auth_error, stringify_onvif_error
@@ -111,6 +111,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OnvifOptionsFlowHandler:
@@ -123,6 +124,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         self.devices: list[dict[str, Any]] = []
         self.onvif_config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -175,6 +177,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -183,14 +186,16 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         mac = discovery_info.macaddress
         registry = dr.async_get(self.hass)
         if not (
-            device := registry.async_get_device(
+            devices := registry.async_get_devices(
                 connections={(dr.CONNECTION_NETWORK_MAC, mac)}
             )
         ):
             return self.async_abort(reason="no_devices_found")
-        for entry_id in device.config_entries:
+        for device in devices:
             if (
-                not (entry := hass.config_entries.async_get_entry(entry_id))
+                not (
+                    entry := hass.config_entries.async_get_entry(device.config_entry_id)
+                )
                 or entry.domain != DOMAIN
                 or entry.state is ConfigEntryState.LOADED
             ):
@@ -198,7 +203,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if hass.config_entries.async_update_entry(
                 entry, data=entry.data | {CONF_HOST: discovery_info.ip}
             ):
-                hass.async_create_task(self.hass.config_entries.async_reload(entry_id))
+                hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
         return self.async_abort(reason="already_configured")
 
     async def async_step_device(

@@ -3,7 +3,7 @@
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any
+from typing import Any, override
 
 from google_drive_api.exceptions import GoogleDriveApiError
 
@@ -70,6 +70,7 @@ class GoogleDriveBackupAgent(BackupAgent):
         self.unique_id = slugify(config_entry.unique_id)
         self._client = config_entry.runtime_data.client
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -100,15 +101,19 @@ class GoogleDriveBackupAgent(BackupAgent):
         try:
             await self._client.async_upload_backup(wrapped_open_stream, backup)
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(f"Failed to upload backup: {err}") from err
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         try:
             return await self._client.async_list_backups()
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(f"Failed to list backups: {err}") from err
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -119,8 +124,10 @@ class GoogleDriveBackupAgent(BackupAgent):
         for backup in backups:
             if backup.backup_id == backup_id:
                 return backup
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise BackupNotFound(f"Backup {backup_id} not found")
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -139,9 +146,12 @@ class GoogleDriveBackupAgent(BackupAgent):
                 stream = await self._client.async_download(file_id)
                 return ChunkAsyncStreamIterator(stream)
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(f"Failed to download backup: {err}") from err
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise BackupNotFound(f"Backup {backup_id} not found")
 
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -160,5 +170,7 @@ class GoogleDriveBackupAgent(BackupAgent):
                 _LOGGER.debug("Deleted backup_id: %s", backup_id)
                 return
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(f"Failed to delete backup: {err}") from err
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise BackupNotFound(f"Backup {backup_id} not found")

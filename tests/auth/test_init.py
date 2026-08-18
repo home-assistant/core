@@ -172,12 +172,12 @@ async def test_create_new_user(hass: HomeAssistant) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     credential = step["result"]
     assert credential is not None
 
@@ -241,12 +241,12 @@ async def test_login_as_existing_user(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
     credential = step["result"]
     user = await manager.async_get_user_by_credentials(credential)
@@ -285,9 +285,7 @@ async def test_linking_user_to_two_auth_providers(
     user = await manager.async_get_or_create_user(credential)
     assert user is not None
 
-    step = await manager.login_flow.async_init(
-        ("insecure_example", "another-provider"), context={"credential_only": True}
-    )
+    step = await manager.login_flow.async_init(("insecure_example", "another-provider"))
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "another-user", "password": "another-password"}
     )
@@ -840,14 +838,14 @@ async def test_login_with_auth_module(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
     # After auth_provider validated, request auth module input form
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     step = await manager.login_flow.async_configure(
@@ -855,7 +853,7 @@ async def test_login_with_auth_module(mock_hass) -> None:
     )
 
     # Invalid code error
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
     assert step["errors"] == {"base": "invalid_code"}
 
@@ -864,7 +862,7 @@ async def test_login_with_auth_module(mock_hass) -> None:
     )
 
     # Finally passed, get credential
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
     assert step["result"].id == "mock-id"
 
@@ -915,21 +913,21 @@ async def test_login_with_multi_auth_module(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
     # After auth_provider validated, request select auth module
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "select_mfa_module"
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"multi_factor_auth_module": "module2"}
     )
 
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     step = await manager.login_flow.async_configure(
@@ -937,7 +935,7 @@ async def test_login_with_multi_auth_module(mock_hass) -> None:
     )
 
     # Finally passed, get credential
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
     assert step["result"].id == "mock-id"
 
@@ -983,13 +981,13 @@ async def test_auth_module_expired_session(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     with freeze_time(dt_util.utcnow() + MFA_SESSION_EXPIRATION):
@@ -997,7 +995,7 @@ async def test_auth_module_expired_session(mock_hass) -> None:
             step["flow_id"], {"pin": "test-pin"}
         )
         # login flow abort due session timeout
-        assert step["type"] == data_entry_flow.FlowResultType.ABORT
+        assert step["type"] is data_entry_flow.FlowResultType.ABORT
         assert step["reason"] == "login_expired"
 
 

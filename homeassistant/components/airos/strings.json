@@ -33,16 +33,16 @@
         },
         "description": "Enter the username and password for {device_name}",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
-              "ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data::ssl%]",
+              "ssl": "[%key:component::airos::config::step::manual::sections::additional_settings::data::ssl%]",
               "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
             },
             "data_description": {
-              "ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data_description::ssl%]",
-              "verify_ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data_description::verify_ssl%]"
+              "ssl": "[%key:component::airos::config::step::manual::sections::additional_settings::data_description::ssl%]",
+              "verify_ssl": "[%key:component::airos::config::step::manual::sections::additional_settings::data_description::verify_ssl%]"
             },
-            "name": "[%key:component::airos::config::step::manual::sections::advanced_settings::name%]"
+            "name": "[%key:component::airos::config::step::manual::sections::additional_settings::name%]"
           }
         }
       },
@@ -58,7 +58,7 @@
           "username": "Administrator username for the airOS device, normally 'ubnt'"
         },
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
               "ssl": "Use HTTPS",
               "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
@@ -67,7 +67,7 @@
               "ssl": "Whether the connection should be encrypted (required for most devices)",
               "verify_ssl": "Whether the certificate should be verified when using HTTPS. This should be off for self-signed certificates"
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         }
       },
@@ -87,16 +87,16 @@
           "password": "[%key:component::airos::config::step::manual::data_description::password%]"
         },
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
-              "ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data::ssl%]",
+              "ssl": "[%key:component::airos::config::step::manual::sections::additional_settings::data::ssl%]",
               "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
             },
             "data_description": {
-              "ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data_description::ssl%]",
-              "verify_ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data_description::verify_ssl%]"
+              "ssl": "[%key:component::airos::config::step::manual::sections::additional_settings::data_description::ssl%]",
+              "verify_ssl": "[%key:component::airos::config::step::manual::sections::additional_settings::data_description::verify_ssl%]"
             },
-            "name": "[%key:component::airos::config::step::manual::sections::advanced_settings::name%]"
+            "name": "[%key:component::airos::config::step::manual::sections::additional_settings::name%]"
           }
         }
       },
@@ -206,6 +206,9 @@
     },
     "reboot_failed": {
       "message": "The device did not accept the reboot request. Try again, or check your device web interface for errors."
+    },
+    "unknown": {
+      "message": "[%key:common::config_flow::error::unknown%]"
     },
     "update_connection_authentication_error": {
       "message": "Authentication or connection failed during firmware update"

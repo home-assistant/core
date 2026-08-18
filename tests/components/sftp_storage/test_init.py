@@ -9,17 +9,14 @@ import pytest
 from homeassistant.components.sftp_storage import SFTPConfigEntryData
 from homeassistant.components.sftp_storage.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util.ulid import ulid
 
 from .asyncssh_mock import SSHClientConnectionMock
 from .conftest import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     USER_INPUT,
     ComponentSetup,
     create_private_key_file,

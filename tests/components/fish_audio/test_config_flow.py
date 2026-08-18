@@ -7,18 +7,17 @@ import pytest
 
 from homeassistant.components.fish_audio.const import (
     CONF_BACKEND,
-    CONF_LANGUAGE,
     CONF_LATENCY,
-    CONF_NAME,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
+    CONF_SPEED,
     CONF_TITLE,
     CONF_USER_ID,
     CONF_VOICE_ID,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -148,6 +147,7 @@ async def test_subflow_happy_path(
             CONF_VOICE_ID: "voice-alpha",
             CONF_BACKEND: "s1",
             CONF_LATENCY: "balanced",
+            CONF_SPEED: 1.5,
             CONF_NAME: "My Custom Voice",
         },
     )
@@ -157,6 +157,7 @@ async def test_subflow_happy_path(
     assert result["data"][CONF_VOICE_ID] == "voice-alpha"
     assert result["data"][CONF_BACKEND] == "s1"
     assert result["data"][CONF_LATENCY] == "balanced"
+    assert result["data"][CONF_SPEED] == 1.5
     assert result["unique_id"] == "voice-alpha-s1"
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
@@ -252,12 +253,14 @@ async def test_subflow_reconfigure(
             CONF_VOICE_ID: "voice-gamma",
             CONF_BACKEND: "s1",
             CONF_LATENCY: "normal",
+            CONF_SPEED: 1.3,
             CONF_NAME: "Updated Voice",
         },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.subentries[subentry.subentry_id].data[CONF_SPEED] == 1.3
 
 
 async def test_subflow_reconfigure_already_configured(

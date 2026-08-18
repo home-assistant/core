@@ -99,6 +99,9 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         os_info = get_os_info(hass)
         information["board"] = os_info.get("board")
 
+    if (disk_life_time := host_info.get("disk_life_time")) is not None:
+        information["disk_life_time"] = f"{disk_life_time:.0f} %"
+
     # Not using aiohasupervisor for ping call below intentionally. Given system health
     # context, it seems preferable to do this check with minimal dependencies
     information["supervisor_api"] = system_health.async_check_can_reach_url(

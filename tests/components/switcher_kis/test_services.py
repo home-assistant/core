@@ -14,7 +14,7 @@ from homeassistant.components.switcher_kis.const import (
     SERVICE_SET_AUTO_OFF_NAME,
     SERVICE_TURN_ON_WITH_TIMER_NAME,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers.config_validation import time_period_str
@@ -189,8 +189,9 @@ async def test_set_auto_off_service_fail(
         mock_set_auto_shutdown.assert_called_once_with(
             time_period_str(DUMMY_AUTO_OFF_SET)
         )
+        # A single failed service call must not flap the entity unavailable.
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
@@ -220,8 +221,9 @@ async def test_set_auto_off_service_fail_token_needed(
 
     assert mock_api.call_count == 2
     mock_set_auto_shutdown.assert_called_once_with(time_period_str(DUMMY_AUTO_OFF_SET))
+    # A single failed service call must not flap the entity unavailable.
     state = hass.states.get(entity_id)
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_PLUG_DEVICE]], indirect=True)

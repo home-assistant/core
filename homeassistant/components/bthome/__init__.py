@@ -158,7 +158,10 @@ def process_service_info(
             )
 
     # If payload is encrypted and the bindkey is not verified then we need to reauth
-    if data.encryption_scheme != EncryptionScheme.NONE and not data.bindkey_verified:
+    if (
+        data.encryption_scheme is not EncryptionScheme.NONE
+        and not data.bindkey_verified
+    ):
         entry.async_start_reauth(hass, data={"device": data})
 
     return update

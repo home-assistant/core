@@ -5,6 +5,9 @@ from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
+AVEA_FIRMWARE_VERSION = "2.4.6 (135)"
+AVEA_SERIAL_NUMBER = "FFEEDDCCBBAA"
+
 AVEA_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="Avea Bulb",
     address="AA:BB:CC:DD:EE:FF",

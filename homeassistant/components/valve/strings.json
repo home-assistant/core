@@ -85,7 +85,7 @@
   "title": "Valve",
   "triggers": {
     "closed": {
-      "description": "Triggers after one or more valves close.",
+      "description": "Triggers when one or more valves close.",
       "fields": {
         "behavior": {
           "name": "[%key:component::valve::common::trigger_behavior_name%]"
@@ -97,7 +97,7 @@
       "name": "Valve closed"
     },
     "opened": {
-      "description": "Triggers after one or more valves open.",
+      "description": "Triggers when one or more valves open.",
       "fields": {
         "behavior": {
           "name": "[%key:component::valve::common::trigger_behavior_name%]"

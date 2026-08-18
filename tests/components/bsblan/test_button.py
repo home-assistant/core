@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -111,13 +112,19 @@ async def test_button_press_error_handling(
     mock_bsblan.time.side_effect = BSBLANError("Connection failed")
 
     # Press the button - should raise HomeAssistantError
-    with pytest.raises(HomeAssistantError, match="Failed to sync time"):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: ENTITY_SYNC_TIME},
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "sync_time_failed"
+    assert exc.value.translation_placeholders == {
+        "device_name": "BSB-LAN",
+        "error": "Connection failed",
+    }
 
 
 async def test_button_press_set_time_error(
@@ -140,10 +147,16 @@ async def test_button_press_set_time_error(
     mock_bsblan.set_time.side_effect = BSBLANError("Write failed")
 
     # Press the button - should raise HomeAssistantError
-    with pytest.raises(HomeAssistantError, match="Failed to sync time"):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: ENTITY_SYNC_TIME},
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "sync_time_failed"
+    assert exc.value.translation_placeholders == {
+        "device_name": "BSB-LAN",
+        "error": "Write failed",
+    }

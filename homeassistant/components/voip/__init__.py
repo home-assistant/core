@@ -20,7 +20,6 @@ from .voip import HassVoipDatagramProtocol
 
 PLATFORMS = (
     Platform.ASSIST_SATELLITE,
-    Platform.BINARY_SENSOR,
     Platform.SELECT,
     Platform.SWITCH,
 )
@@ -124,7 +123,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> boo
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove device from a config entry."""
     return True

@@ -12,6 +12,7 @@ import pytest
 from requests_mock.mocker import Mocker
 import voluptuous as vol
 
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -20,31 +21,33 @@ from .conftest import (
     MESSAGE,
     NUMBER_FROM,
     NUMBERS_TO,
+    SIGNAL_BASE_URL,
     SIGNAL_SEND_PATH_SUFIX,
     URL_ATTACHMENT,
     SignalNotificationService,
 )
 
-BASE_COMPONENT = "notify"
-
 
 async def test_signal_messenger_init(hass: HomeAssistant) -> None:
     """Test that service loads successfully."""
     config = {
-        BASE_COMPONENT: {
+        NOTIFY_DOMAIN: {
             "name": "test",
             "platform": "signal_messenger",
-            "url": "http://127.0.0.1:8080",
+            "url": SIGNAL_BASE_URL,
             "number": NUMBER_FROM,
             "recipients": NUMBERS_TO,
         }
     }
 
-    with patch("pysignalclirestapi.SignalCliRestApi.send_message", return_value=None):
-        assert await async_setup_component(hass, BASE_COMPONENT, config)
+    with (
+        patch("pysignalclirestapi.SignalCliRestApi.send_message", return_value=None),
+        patch("pysignalclirestapi.SignalCliRestApi.mode", return_value="normal"),
+    ):
+        assert await async_setup_component(hass, NOTIFY_DOMAIN, config)
         await hass.async_block_till_done()
 
-        assert hass.services.has_service(BASE_COMPONENT, "test")
+        assert hass.services.has_service(NOTIFY_DOMAIN, "test")
 
 
 def test_send_message(
@@ -60,7 +63,7 @@ def test_send_message(
         signal_notification_service.send_message(MESSAGE)
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 2
+    assert signal_requests_mock.call_count == 3
     assert_sending_requests(signal_requests_mock)
 
 
@@ -79,7 +82,7 @@ def test_send_message_with_custom_recipients(
         )
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 2
+    assert signal_requests_mock.call_count == 3
     assert_sending_requests(
         signal_requests_mock, recipients=["+49111111111", "+49222222222"]
     )
@@ -100,7 +103,7 @@ def test_send_message_styled(
     post_data = json.loads(signal_requests_mock.request_history[-1].text)
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 2
+    assert signal_requests_mock.call_count == 3
     assert post_data["text_mode"] == "styled"
     assert_sending_requests(signal_requests_mock)
 
@@ -122,8 +125,8 @@ def test_send_message_to_api_with_bad_data_throws_error(
 
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 2
-    assert "Couldn't send signal message" in str(exc.value)
+    assert signal_requests_mock.call_count == 3
+    assert "send message" in str(exc.value).lower()
 
 
 def test_send_message_with_bad_data_throws_vol_error(
@@ -186,7 +189,7 @@ def test_send_message_with_attachment(
 
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 2
+    assert signal_requests_mock.call_count == 3
     assert_sending_requests(signal_requests_mock, 1)
 
 
@@ -211,7 +214,7 @@ def test_send_message_styled_with_attachment(
     post_data = json.loads(signal_requests_mock.request_history[-1].text)
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 2
+    assert signal_requests_mock.call_count == 3
     assert_sending_requests(signal_requests_mock, 1)
     assert post_data["text_mode"] == "styled"
 
@@ -231,7 +234,7 @@ def test_send_message_with_attachment_as_url(
 
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 3
+    assert signal_requests_mock.call_count == 4
     assert_sending_requests(signal_requests_mock, 1)
 
 
@@ -250,7 +253,7 @@ def test_send_message_styled_with_attachment_as_url(
     post_data = json.loads(signal_requests_mock.request_history[-1].text)
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 3
+    assert signal_requests_mock.call_count == 4
     assert_sending_requests(signal_requests_mock, 1)
     assert post_data["text_mode"] == "styled"
 
@@ -449,8 +452,8 @@ def assert_sending_requests(
     assert body_request["message"] == MESSAGE
     assert body_request["number"] == NUMBER_FROM
     assert body_request["recipients"] == (recipients or NUMBERS_TO)
-    assert len(body_request["base64_attachments"]) == attachments_num
+    assert len(body_request.get("base64_attachments", [])) == attachments_num
 
-    for attachment in body_request["base64_attachments"]:
+    for attachment in body_request.get("base64_attachments", []):
         if len(attachment) > 0:
             assert base64.b64decode(attachment) == CONTENT

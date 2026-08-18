@@ -30,6 +30,9 @@
       "container_disk_usage_total_size": {
         "default": "mdi:harddisk"
       },
+      "container_health_state": {
+        "default": "mdi:heart-pulse"
+      },
       "container_state": {
         "default": "mdi:state-machine"
       },
@@ -118,6 +121,9 @@
   "services": {
     "prune_images": {
       "service": "mdi:delete-sweep"
+    },
+    "recreate_container": {
+      "service": "mdi:restart"
     }
   }
 }

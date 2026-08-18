@@ -41,9 +41,6 @@ async def async_migrate_entry(
         config_entry.minor_version,
     )
 
-    if config_entry.version > 2:
-        return False
-
     if config_entry.version == 1:
         # Migrate to version 2
         counter_id = config_entry.data.get(CONF_COUNTER_ID)

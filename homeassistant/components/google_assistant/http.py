@@ -3,7 +3,7 @@
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 from uuid import uuid4
 
 from aiohttp import ClientError, ClientResponseError
@@ -12,8 +12,7 @@ import jwt
 
 from homeassistant.components import webhook
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -89,6 +88,7 @@ class GoogleConfig(AbstractConfig):
         self._access_token = None
         self._access_token_renew = None
 
+    @override
     async def async_initialize(self):
         """Perform async initialization of config."""
         # We need to initialize the store before calling super
@@ -100,25 +100,30 @@ class GoogleConfig(AbstractConfig):
         self.async_enable_local_sdk()
 
     @property
+    @override
     def enabled(self):
         """Return if Google is enabled."""
         return True
 
     @property
+    @override
     def entity_config(self):
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
 
     @property
+    @override
     def secure_devices_pin(self):
         """Return entity config."""
         return self._config.get(CONF_SECURE_DEVICES_PIN)
 
     @property
+    @override
     def should_report_state(self):
         """Return if states should be proactively reported."""
         return self._config.get(CONF_REPORT_STATE)
 
+    @override
     def get_local_user_id(self, webhook_id):
         """Map webhook ID to a Home Assistant user ID.
 
@@ -137,16 +142,19 @@ class GoogleConfig(AbstractConfig):
 
         return found_agent_user_id
 
+    @override
     def get_local_webhook_id(self, agent_user_id):
         """Return the webhook ID for a given agent user id via the local SDK."""
         if data := self._store.agent_user_ids.get(agent_user_id):
             return data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
         return None
 
+    @override
     def get_agent_user_id_from_context(self, context):
         """Get agent user ID making request."""
         return context.user_id
 
+    @override
     def get_agent_user_id_from_webhook(self, webhook_id):
         """Map webhook ID to a Google agent user ID.
 
@@ -158,20 +166,14 @@ class GoogleConfig(AbstractConfig):
 
         return None
 
-    def should_expose(self, state) -> bool:
+    @override
+    def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
         expose_by_default = self._config.get(CONF_EXPOSE_BY_DEFAULT)
         exposed_domains = self._config.get(CONF_EXPOSED_DOMAINS)
 
-        if state.attributes.get("view") is not None:
-            # Ignore entities that are views
-            return False
-
-        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            return False
-
         entity_registry = er.async_get(self.hass)
-        registry_entry = entity_registry.async_get(state.entity_id)
+        registry_entry = entity_registry.async_get(entity_id)
         if registry_entry:
             auxiliary_entity = (
                 registry_entry.entity_category is not None
@@ -180,10 +182,10 @@ class GoogleConfig(AbstractConfig):
         else:
             auxiliary_entity = False
 
-        explicit_expose = self.entity_config.get(state.entity_id, {}).get(CONF_EXPOSE)
+        explicit_expose = self.entity_config.get(entity_id, {}).get(CONF_EXPOSE)
 
         domain_exposed_by_default = (
-            expose_by_default and state.domain in exposed_domains
+            expose_by_default and split_entity_id(entity_id)[0] in exposed_domains
         )
 
         # Expose an entity by default if the entity's domain is exposed by default
@@ -197,10 +199,12 @@ class GoogleConfig(AbstractConfig):
 
         return is_default_exposed or explicit_expose
 
+    @override
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
         return True
 
+    @override
     async def _async_request_sync_devices(self, agent_user_id: str) -> HTTPStatus:
         if CONF_SERVICE_ACCOUNT in self._config:
             return await self.async_call_homegraph_api(
@@ -210,6 +214,7 @@ class GoogleConfig(AbstractConfig):
         _LOGGER.error("No configuration for request_sync available")
         return HTTPStatus.INTERNAL_SERVER_ERROR
 
+    @override
     async def async_connect_agent_user(self, agent_user_id: str):
         """Add a synced and known agent_user_id.
 
@@ -217,6 +222,7 @@ class GoogleConfig(AbstractConfig):
         """
         self._store.add_agent_user_id(agent_user_id)
 
+    @override
     async def async_disconnect_agent_user(self, agent_user_id: str):
         """Turn off report state and disable further state reporting.
 
@@ -228,6 +234,7 @@ class GoogleConfig(AbstractConfig):
         self._store.pop_agent_user_id(agent_user_id)
 
     @callback
+    @override
     def async_get_agent_users(self):
         """Return known agent users."""
         return self._store.agent_user_ids
@@ -285,6 +292,7 @@ class GoogleConfig(AbstractConfig):
             _LOGGER.error("Could not contact %s", url)
             return HTTPStatus.INTERNAL_SERVER_ERROR
 
+    @override
     async def async_report_state(
         self, message: dict[str, Any], agent_user_id: str, event_id: str | None = None
     ) -> HTTPStatus:

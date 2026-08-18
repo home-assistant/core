@@ -21,6 +21,7 @@ from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_PRESENCE_DETECTED,
     ATTR_WATER_LEVEL_DETECTED,
     ATTR_WINDOW_STATE,
+    SIMPLE_BINARY_SENSOR_DESCRIPTIONS,
 )
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_EVENT_DELAY,
@@ -131,8 +132,8 @@ async def test_hmip_home_cloud_connection_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipCloudConnectionSensor."""
-    entity_id = "binary_sensor.cloud_connection"
-    entity_name = "Home Cloud Connection"
+    entity_id = "binary_sensor.home_cloud_connection"
+    entity_name = "Home Cloud connection"
     device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Cloud Connection"]
@@ -154,11 +155,11 @@ async def test_hmip_acceleration_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipAccelerationSensor."""
-    entity_id = "binary_sensor.garagentor"
-    entity_name = "Garagentor"
+    entity_id = "binary_sensor.garagentor_moving"
+    entity_name = "Garagentor Moving"
     device_model = "HmIP-SAM"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Garagentor"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -193,11 +194,11 @@ async def test_hmip_tilt_vibration_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipTiltVibrationSensor."""
-    entity_id = "binary_sensor.garage_neigungs_und_erschutterungssensor"
-    entity_name = "Garage Neigungs- und Erschütterungssensor"
+    entity_id = "binary_sensor.garage_neigungs_und_erschutterungssensor_moving"
+    entity_name = "Garage Neigungs- und Erschütterungssensor Moving"
     device_model = "HmIP-STV"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Garage Neigungs- und Erschütterungssensor"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -231,11 +232,11 @@ async def test_hmip_contact_interface(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipContactInterface."""
-    entity_id = "binary_sensor.kontakt_schnittstelle_unterputz_1_fach"
-    entity_name = "Kontakt-Schnittstelle Unterputz – 1-fach"
+    entity_id = "binary_sensor.kontakt_schnittstelle_unterputz_1_fach_opening"
+    entity_name = "Kontakt-Schnittstelle Unterputz – 1-fach Opening"
     device_model = "HmIP-FCI1"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Kontakt-Schnittstelle Unterputz – 1-fach"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -256,11 +257,11 @@ async def test_hmip_shutter_contact(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipShutterContact."""
-    entity_id = "binary_sensor.fenstergriffsensor"
-    entity_name = "Fenstergriffsensor"
+    entity_id = "binary_sensor.fenstergriffsensor_door"
+    entity_name = "Fenstergriffsensor Door"
     device_model = "HmIP-SRH"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Fenstergriffsensor"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -298,11 +299,11 @@ async def test_hmip_shutter_contact_optical(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipShutterContact."""
-    entity_id = "binary_sensor.sitzplatzture"
-    entity_name = "Sitzplatzt\u00fcre"
+    entity_id = "binary_sensor.sitzplatzture_door"
+    entity_name = "Sitzplatzt\u00fcre Door"
     device_model = "HmIP-SWDO-PL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Sitzplatzt\u00fcre"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -330,11 +331,11 @@ async def test_hmip_motion_detector(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipMotionDetector."""
-    entity_id = "binary_sensor.bewegungsmelder_fur_55er_rahmen_innen"
-    entity_name = "Bewegungsmelder für 55er Rahmen – innen"
+    entity_id = "binary_sensor.bewegungsmelder_fur_55er_rahmen_innen_motion"
+    entity_name = "Bewegungsmelder für 55er Rahmen – innen Motion"
     device_model = "HmIP-SMI55"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Bewegungsmelder für 55er Rahmen – innen"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -351,12 +352,10 @@ async def test_hmip_presence_detector(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipPresenceDetector."""
-    entity_id = "binary_sensor.spi_1"
-    entity_name = "SPI_1"
+    entity_id = "binary_sensor.spi_1_presence"
+    entity_name = "SPI_1 Presence"
     device_model = "HmIP-SPI"
-    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
-    )
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["SPI_1"])
 
     ha_state, hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
@@ -377,11 +376,11 @@ async def test_hmip_pluggable_mains_failure_surveillance_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipPresenceDetector."""
-    entity_id = "binary_sensor.netzausfalluberwachung"
-    entity_name = "Netzausfallüberwachung"
+    entity_id = "binary_sensor.netzausfalluberwachung_power"
+    entity_name = "Netzausfallüberwachung Power"
     device_model = "HmIP-PMFS"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Netzausfallüberwachung"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -398,11 +397,11 @@ async def test_hmip_smoke_detector(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipSmokeDetector."""
-    entity_id = "binary_sensor.rauchwarnmelder"
-    entity_name = "Rauchwarnmelder"
+    entity_id = "binary_sensor.rauchwarnmelder_smoke"
+    entity_name = "Rauchwarnmelder Smoke"
     device_model = "HmIP-SWSD"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Rauchwarnmelder"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -433,7 +432,7 @@ async def test_hmip_smoke_detector_chamber_degraded(
 ) -> None:
     """Test HomematicipSmokeDetectorChamberDegraded."""
     entity_id = "binary_sensor.rauchwarnmelder_chamber_degraded"
-    entity_name = "Rauchwarnmelder Chamber Degraded"
+    entity_name = "Rauchwarnmelder Chamber degraded"
     device_model = "HmIP-SWSD"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Rauchwarnmelder"]
@@ -453,11 +452,11 @@ async def test_hmip_water_detector(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipWaterDetector."""
-    entity_id = "binary_sensor.wassersensor"
-    entity_name = "Wassersensor"
+    entity_id = "binary_sensor.wassersensor_moisture"
+    entity_name = "Wassersensor Moisture"
     device_model = "HmIP-SWD"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Wassersensor"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -564,6 +563,11 @@ async def test_hmip_battery_sensor(
     ha_state, hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
+    assert [
+        state.entity_id
+        for state in hass.states.async_all("binary_sensor")
+        if state.entity_id.startswith("binary_sensor.wohnungsture_battery")
+    ] == [entity_id]
 
     assert ha_state.state == STATE_OFF
     await async_manipulate_test_data(hass, hmip_device, "lowBat", True)
@@ -727,3 +731,20 @@ async def test_hmip_multi_contact_interface(
     )
 
     assert ha_state.state == STATE_UNKNOWN
+
+
+def test_simple_binary_sensor_descriptions_no_overlap() -> None:
+    """Every Device subclass must match at most one description group."""
+    groups = list(SIMPLE_BINARY_SENSOR_DESCRIPTIONS)
+    for i, group_a in enumerate(groups):
+        for group_b in groups[i + 1 :]:
+            for cls in group_a:
+                assert not issubclass(cls, group_b), (
+                    f"{cls.__name__} matches both {group_a} and {group_b}; "
+                    "duplicate entities would be created"
+                )
+            for cls in group_b:
+                assert not issubclass(cls, group_a), (
+                    f"{cls.__name__} matches both {group_b} and {group_a}; "
+                    "duplicate entities would be created"
+                )

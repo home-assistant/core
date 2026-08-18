@@ -9,13 +9,12 @@ import pytest
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
-    ATTR_MODEL,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
     SCAN_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.const import ATTR_MODEL, ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 

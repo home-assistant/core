@@ -18,7 +18,6 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 )
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     CONF_DISABLE_MULTI_PAN,
-    get_flasher_addon_manager,
     get_multiprotocol_addon_manager,
 )
 from homeassistant.components.homeassistant_hardware.util import (
@@ -384,15 +383,11 @@ async def test_options_flow_multipan_uninstall(
         version="1.0.0",
     )
 
-    mock_flasher_manager = Mock(spec_set=get_flasher_addon_manager(hass))
-    mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
-        available=True,
-        hostname=None,
-        options={},
-        state=AddonState.NOT_RUNNING,
-        update_available=False,
-        version="1.0.0",
-    )
+    mock_fw_manifest = Mock()
+    mock_fw_manifest.filename = "skyconnect_zigbee_ncp_7.4.4.0.gbl"
+    mock_fw_client = AsyncMock()
+    mock_fw_client.async_update_data.return_value = Mock(firmwares=[mock_fw_manifest])
+    mock_fw_client.async_fetch_firmware.return_value = b"fake_firmware"
 
     with (
         patch(
@@ -400,8 +395,12 @@ async def test_options_flow_multipan_uninstall(
             return_value=mock_multipan_manager,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_flasher_addon_manager",
-            return_value=mock_flasher_manager,
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.async_flash_silabs_firmware",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.FirmwareUpdateClient",
+            return_value=mock_fw_client,
         ),
         patch(
             "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
@@ -424,11 +423,15 @@ async def test_options_flow_multipan_uninstall(
             result["flow_id"], user_input={CONF_DISABLE_MULTI_PAN: True}
         )
 
-        # Finish the flow
+        # Uninstall multiprotocol addon
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Flash zigbee firmware
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Flashing complete
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.CREATE_ENTRY
 

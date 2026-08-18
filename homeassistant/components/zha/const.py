@@ -13,8 +13,6 @@ ATTR_ENDPOINT_NAMES = "endpoint_names"
 ATTR_IEEE = "ieee"
 ATTR_LAST_SEEN = "last_seen"
 ATTR_LQI = "lqi"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_MANUFACTURER = "manufacturer"
 ATTR_MANUFACTURER_CODE = "manufacturer_code"
 ATTR_NEIGHBORS = "neighbors"
 ATTR_NWK = "nwk"
@@ -77,3 +75,7 @@ MFG_CLUSTER_ID_START = 0xFC00
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"
+
+# Dispatcher signal carrying device reconfigure progress events (bind result,
+# attribute reporting result, configure complete) to the websocket subscriber.
+SIGNAL_DEVICE_RECONFIGURE_EVENT = "zha_device_reconfigure_event"

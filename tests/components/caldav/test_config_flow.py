@@ -64,6 +64,7 @@ async def test_form(
     ("side_effect", "expected_error"),
     [
         (Exception(), "unknown"),
+        (requests.Timeout(), "cannot_connect"),
         (requests.ConnectionError(), "cannot_connect"),
         (DAVError(), "cannot_connect"),
         (AuthorizationError(reason="Unauthorized"), "invalid_auth"),

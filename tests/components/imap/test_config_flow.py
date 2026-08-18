@@ -440,7 +440,7 @@ async def test_options_flow_when_connection_fails(
             result2 = await hass.config_entries.options.async_configure(
                 result["flow_id"], new_config
             )
-            assert result2["type"] == assert_result
+            assert result2["type"] is assert_result
 
             if result2.get("errors") is not None:
                 assert assert_result is FlowResultType.FORM

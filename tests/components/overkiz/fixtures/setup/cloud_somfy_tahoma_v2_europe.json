@@ -8440,6 +8440,108 @@
       "uiClass": "Pergola"
     },
     {
+      "label": "Bioclimatic Pergola",
+      "deviceURL": "ogp://1234-1234-6233/10943109",
+      "shortcut": false,
+      "controllableName": "ogp:Pergola",
+      "creationTime": 1748079242000,
+      "lastUpdateTime": 1748079242000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "goToAlias",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "saveAlias",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOrientation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTilt",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SlateOrientationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TiltState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicPergola",
+        "uiProfiles": ["Specific"],
+        "uiClass": "Pergola",
+        "qualifiedName": "ogp:Pergola",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:TiltState",
+          "type": 1,
+          "value": 89
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 89
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "DynamicPergola",
+      "type": 1,
+      "oid": "21832602-8bce-4317-b785-68f72b2113f6",
+      "uiClass": "Pergola"
+    },
+    {
       "creationTime": 1633183247000,
       "lastUpdateTime": 1633183247000,
       "label": "Pergola Awning",
@@ -8859,6 +8961,1007 @@
       "oid": "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff",
       "widget": "DynamicVenetianBlind",
       "type": 1
+    },
+    {
+      "states": [
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Pool House"
+        },
+        {
+          "name": "core:OnOffState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 64.0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        }
+      ],
+      "enabled": true,
+      "type": 1,
+      "synced": true,
+      "available": true,
+      "deviceURL": "io://1234-1234-6233/16580352",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "onWithTimer",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOnOff",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "values": ["good", "low", "normal", "verylow"],
+            "type": "DiscreteState",
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "values": ["off", "on"],
+            "type": "DiscreteState",
+            "qualifiedName": "core:OnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "values": ["available", "unavailable"],
+            "type": "DiscreteState",
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "type": "DiscreteState",
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "type": "DiscreteState",
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "SwimmingPool",
+        "uiClass": "SwimmingPool",
+        "qualifiedName": "io:SwimmingPoolIOComponent",
+        "type": "ACTUATOR"
+      },
+      "label": "Pool House",
+      "controllableName": "io:SwimmingPoolIOComponent",
+      "widget": "SwimmingPool",
+      "uiClass": "SwimmingPool",
+      "subsystemId": 0
+    },
+    {
+      "creationTime": 1558256403000,
+      "lastUpdateTime": 1558256403000,
+      "label": "External Siren",
+      "deviceURL": "rtds://1234-1234-6233/4065441",
+      "shortcut": false,
+      "controllableName": "rtd:OutdoorSirenRTDComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "bip",
+            "nparams": 0
+          },
+          {
+            "commandName": "flash",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "pair",
+            "nparams": 0
+          },
+          {
+            "commandName": "ring",
+            "nparams": 0
+          },
+          {
+            "commandName": "setVolume",
+            "nparams": 1
+          },
+          {
+            "commandName": "fastBipSequence",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "RTDOutdoorSiren",
+        "uiClass": "Siren",
+        "qualifiedName": "rtd:OutdoorSirenRTDComponent",
+        "type": "ACTUATOR"
+      },
+      "attributes": [
+        {
+          "name": "core:GroupId",
+          "type": 3,
+          "value": "1234-1234-6233"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "91ba6fe7-704e-4ee3-ab7f-1cb7eb2549a4",
+      "widget": "RTDOutdoorSiren",
+      "type": 1,
+      "oid": "a7c3e8d1-5b92-4f1a-b8e6-9d2c4a7f3e01",
+      "uiClass": "Siren"
+    },
+    {
+      "creationTime": 1706785990000,
+      "lastUpdateTime": 1706785990000,
+      "label": "Front Door",
+      "deviceURL": "io://1234-1234-6233/30",
+      "shortcut": false,
+      "controllableName": "io:DoorLockIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "addLockLevel",
+            "nparams": 2
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "executeManufacturerProcedure",
+            "nparams": 2
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "getOpenClose",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "lock",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "readManufacturerData",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshLockedUnlocked",
+            "nparams": 0
+          },
+          {
+            "commandName": "removeLockLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "commandName": "setLockedUnlocked",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOpenClosed",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "unlock",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "writeManufacturerData",
+            "nparams": 1
+          },
+          {
+            "commandName": "runManufacturerSettingsCommand",
+            "nparams": 2
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "qualifiedName": "core:AdditionalStatusState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:CommandLockLevelsState",
+            "eventBased": true,
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:DiscreteRSSILevelState",
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"]
+          },
+          {
+            "qualifiedName": "core:LockedUnlockedState",
+            "type": "DiscreteState",
+            "values": ["locked", "unlocked"]
+          },
+          {
+            "qualifiedName": "core:ManufacturerDiagnosticsState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:ManufacturerSettingsState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:NameState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:OpenClosedState",
+            "type": "DiscreteState",
+            "values": ["closed", "open"]
+          },
+          {
+            "qualifiedName": "core:PriorityLockTimerState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:RSSILevelState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:StatusState",
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"]
+          },
+          {
+            "qualifiedName": "io:PriorityLockLevelState",
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ]
+          },
+          {
+            "qualifiedName": "io:PriorityLockOriginatorState",
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ]
+          }
+        ],
+        "uiClassifiers": [],
+        "uiProfiles": [
+          "StatefulDoorLockWithOpeningStatus",
+          "StatefulLockWithOpeningStatus",
+          "StatefulLock",
+          "LockStatus",
+          "Lock",
+          "StatefulBasicOpenClose",
+          "BasicOpenClose"
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "DoorLock",
+        "uiClass": "DoorLock",
+        "qualifiedName": "io:DoorLockIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Front Door"
+        },
+        {
+          "name": "core:LockedUnlockedState",
+          "type": 3,
+          "value": "locked"
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Public"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "DoorLock",
+      "type": 1,
+      "oid": "e01dc448-51ec-4b7e-b538-b8fd0e4a8375",
+      "uiClass": "DoorLock"
+    },
+    {
+      "creationTime": 1665238630000,
+      "lastUpdateTime": 1665238630000,
+      "label": "Balcony Window",
+      "deviceURL": "io://1234-1234-6233/8059108#1",
+      "shortcut": false,
+      "controllableName": "io:SomfyWindowStateSensor",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "executeManufacturerProcedure",
+            "nparams": 1
+          },
+          {
+            "commandName": "writeManufacturerData",
+            "nparams": 1
+          },
+          {
+            "commandName": "readManufacturerData",
+            "nparams": 1
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "runManufacturerSettingsCommand",
+            "nparams": 2
+          }
+        ],
+        "type": "SENSOR",
+        "uiClass": "ContactSensor",
+        "states": [
+          {
+            "name": "core:BatteryState"
+          },
+          {
+            "name": "core:SensorDefectState"
+          },
+          {
+            "name": "core:ErrorsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "core:TiltedState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:LockedUnlockedState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          }
+        ],
+        "widgetName": "IntrusionEventSensor"
+      },
+      "states": [
+        {
+          "value": "good",
+          "type": 3,
+          "name": "core:DiscreteRSSILevelState"
+        },
+        {
+          "value": -48,
+          "type": 1,
+          "name": "core:RSSILevelState"
+        },
+        {
+          "value": "available",
+          "type": 3,
+          "name": "core:StatusState"
+        },
+        {
+          "value": "unlocked",
+          "type": 3,
+          "name": "core:LockedUnlockedState"
+        },
+        {
+          "value": "IntelliTAG air",
+          "type": 3,
+          "name": "core:NameState"
+        },
+        {
+          "value": false,
+          "type": 6,
+          "name": "core:TiltedState"
+        },
+        {
+          "value": "open",
+          "type": 3,
+          "name": "core:OpenClosedState"
+        }
+      ],
+      "attributes": [
+        {
+          "value": [
+            "cde_nb",
+            "customer_production_date",
+            "eom_name",
+            "integrated_sensor_position",
+            "intrusion_detection_level_threshold",
+            "max_detected_temperature",
+            "nb_intrusion_detected_per_threshold_of_vibration",
+            "nb_of_oem_factory_mode_due_to_local_stimuli",
+            "number_of_battery_door_openings",
+            "number_of_buttons_pressed",
+            "number_of_locks",
+            "number_of_tilt_openings",
+            "number_of_turn_openings",
+            "number_of_unknown_positions",
+            "of_nb",
+            "production_date",
+            "window_depth",
+            "window_exposure",
+            "window_exterior_appearance",
+            "window_fitting_range",
+            "window_glazing_range",
+            "window_height",
+            "window_interior_appearance",
+            "window_model_name",
+            "window_number_of_panels",
+            "window_sensed_panel",
+            "window_type",
+            "window_type_of_material",
+            "window_width"
+          ],
+          "type": 10,
+          "name": "core:SupportedReadableManufacturerData"
+        },
+        {
+          "value": "Somfy",
+          "type": 3,
+          "name": "core:Manufacturer"
+        },
+        {
+          "value": [],
+          "type": 10,
+          "name": "core:SupportedManufacturerProcedures"
+        },
+        {
+          "value": "5151415A15",
+          "type": 3,
+          "name": "core:FirmwareRevision"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "IntrusionEventSensor",
+      "type": 2,
+      "oid": "intellitag-0",
+      "uiClass": "ContactSensor"
+    },
+    {
+      "creationTime": 1665238630000,
+      "lastUpdateTime": 1665238630000,
+      "label": "Garage Sliding Window",
+      "deviceURL": "io://1234-1234-6233/10538479#1",
+      "shortcut": false,
+      "controllableName": "io:SomfySlidingWindowStateSensor",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "executeManufacturerProcedure",
+            "nparams": 1
+          },
+          {
+            "commandName": "readManufacturerData",
+            "nparams": 1
+          },
+          {
+            "commandName": "writeManufacturerData",
+            "nparams": 1
+          }
+        ],
+        "type": "SENSOR",
+        "uiClass": "ContactSensor",
+        "states": [
+          {
+            "name": "core:BatteryState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:ErrorsState"
+          },
+          {
+            "name": "core:LockedUnlockedState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "core:SensorDefectState"
+          },
+          {
+            "name": "core:StatusState"
+          }
+        ],
+        "widgetName": "IntrusionEventSensor"
+      },
+      "states": [
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:LockedUnlockedState",
+          "type": 3,
+          "value": "locked"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "IntelliTAG air"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": -55
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": []
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "cde_nb",
+            "customer_production_date",
+            "eom_name",
+            "integrated_sensor_position",
+            "intrusion_detection_level_threshold",
+            "max_detected_temperature",
+            "nb_intrusion_detected_per_threshold_of_vibration",
+            "nb_of_oem_factory_mode_due_to_local_stimuli",
+            "number_of_buttons_pressed",
+            "number_of_locks",
+            "number_of_sliding_openings",
+            "number_of_unknown_positions",
+            "of_nb",
+            "production_date",
+            "window_depth",
+            "window_exposure",
+            "window_exterior_appearance",
+            "window_fitting_range",
+            "window_glazing_range",
+            "window_height",
+            "window_interior_appearance",
+            "window_model_name",
+            "window_number_of_panels",
+            "window_sensed_panel",
+            "window_type",
+            "window_type_of_material",
+            "window_width"
+          ]
+        },
+        {
+          "name": "core:MaxSensedValue",
+          "type": 1,
+          "value": 65535
+        },
+        {
+          "name": "core:MinSensedValue",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5155011A08"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "IntrusionEventSensor",
+      "type": 2,
+      "oid": "intellitag-1",
+      "uiClass": "ContactSensor"
+    },
+    {
+      "creationTime": 1665238630000,
+      "lastUpdateTime": 1665238630000,
+      "label": "Garage Sliding Window",
+      "deviceURL": "io://1234-1234-6233/10538479#2",
+      "shortcut": false,
+      "controllableName": "io:SomfyIDEOIIntrusionSensor",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "executeManufacturerProcedure",
+            "nparams": 1
+          },
+          {
+            "commandName": "readManufacturerData",
+            "nparams": 1
+          },
+          {
+            "commandName": "setVibrationLevelThreshold",
+            "nparams": 1
+          },
+          {
+            "commandName": "writeManufacturerData",
+            "nparams": 1
+          }
+        ],
+        "type": "SENSOR",
+        "uiClass": "ContactSensor",
+        "states": [
+          {
+            "name": "core:BatteryState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:ErrorsState"
+          },
+          {
+            "name": "core:IntrusionDetectedState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "core:SensorDefectState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:VibrationLevelThresholdState"
+          }
+        ],
+        "widgetName": "IntrusionSensor"
+      },
+      "states": [
+        {
+          "name": "core:VibrationLevelThresholdState",
+          "type": 1,
+          "value": 1
+        },
+        {
+          "name": "core:IntrusionDetectedState",
+          "type": 6,
+          "value": true,
+          "lastUpdateTime": 1778583613000
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": -55
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": []
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "cde_nb",
+            "customer_production_date",
+            "eom_name",
+            "integrated_sensor_position",
+            "intrusion_detection_level_threshold",
+            "max_detected_temperature",
+            "nb_intrusion_detected_per_threshold_of_vibration",
+            "nb_of_oem_factory_mode_due_to_local_stimuli",
+            "number_of_buttons_pressed",
+            "number_of_locks",
+            "number_of_sliding_openings",
+            "number_of_unknown_positions",
+            "of_nb",
+            "production_date",
+            "window_depth",
+            "window_exposure",
+            "window_exterior_appearance",
+            "window_fitting_range",
+            "window_glazing_range",
+            "window_height",
+            "window_interior_appearance",
+            "window_model_name",
+            "window_number_of_panels",
+            "window_sensed_panel",
+            "window_type",
+            "window_type_of_material",
+            "window_width"
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:MaxSensedValue",
+          "type": 1,
+          "value": 65535
+        },
+        {
+          "name": "core:MinSensedValue",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5155011A08"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "battery"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "IntrusionSensor",
+      "type": 2,
+      "oid": "intellitag-2",
+      "uiClass": "ContactSensor"
     }
   ],
   "zones": [],

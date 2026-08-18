@@ -1,5 +1,7 @@
 """Support for inkbird ble sensors."""
 
+from typing import override
+
 from inkbird_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -15,10 +17,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -37,13 +38,13 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{DeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{DeviceClass.BATTERY}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
@@ -59,7 +60,7 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.CO2, Units.CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
         key=f"{DeviceClass.CO2}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.PRESSURE, Units.PRESSURE_HPA): SensorEntityDescription(
@@ -117,7 +118,9 @@ async def async_setup_entry(
             INKBIRDBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(entry.runtime_data.async_register_processor(processor))
+    entry.async_on_unload(
+        entry.runtime_data.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class INKBIRDBluetoothSensorEntity(
@@ -129,6 +132,7 @@ class INKBIRDBluetoothSensorEntity(
     """Representation of a inkbird ble sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

@@ -15,7 +15,7 @@ from aiohasupervisor.models import (
 )
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_LOCATION, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -43,7 +43,6 @@ from .const import (
     ATTR_HOMEASSISTANT,
     ATTR_HOMEASSISTANT_EXCLUDE_DATABASE,
     ATTR_INPUT,
-    ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_SLUG,
     DOMAIN,
@@ -456,7 +455,11 @@ def async_register_network_storage_services(
         """Handle service calls for Hass.io."""
         coordinator: HassioMainDataUpdateCoordinator | None = None
 
-        if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) is None:
+        if (
+            device := dev_reg.async_get(
+                service.data[ATTR_DEVICE_ID], include_child_devices=False
+            )
+        ) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mount_reload_unknown_device_id",

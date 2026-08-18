@@ -39,7 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
     try:
         client = await SaunumClient.create(host)
     except (SaunumConnectionError, SaunumTimeoutError) as exc:
-        raise ConfigEntryNotReady(f"Error connecting to {host}: {exc}") from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        ) from exc
 
     entry.async_on_unload(client.async_close)
 

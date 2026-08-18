@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, override
 
 from androidtv.constants import KEYS
 
@@ -34,6 +34,7 @@ class AndroidTVRemote(AndroidTVEntity, RemoteEntity):
     _attr_should_poll = False
 
     @adb_decorator()
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         options = self._entry_runtime_data.dev_opt
@@ -43,6 +44,7 @@ class AndroidTVRemote(AndroidTVEntity, RemoteEntity):
             await self.aftv.turn_on()
 
     @adb_decorator()
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         options = self._entry_runtime_data.dev_opt
@@ -52,6 +54,7 @@ class AndroidTVRemote(AndroidTVEntity, RemoteEntity):
             await self.aftv.turn_off()
 
     @adb_decorator()
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device."""
 

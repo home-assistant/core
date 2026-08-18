@@ -369,7 +369,7 @@ async def test_service(
     await hass.services.async_call(
         DOMAIN,
         "test_service_1",
-        {"field_1": 1, "field_2": "auto", "field_3": 1, "field_4": "forwards"},
+        {"field_1": 1, "field_2": "auto", "field_3": 1, "field_4": "forward"},
         blocking=True,
     )
 

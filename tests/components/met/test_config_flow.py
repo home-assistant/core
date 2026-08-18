@@ -87,7 +87,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     in the config gui. Then the form should show with error.
     """
     first_entry = MockConfigEntry(
-        domain="met",
+        domain=DOMAIN,
         data={"name": "home", CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_ELEVATION: 0},
     )
     first_entry.add_to_hass(hass)

@@ -39,6 +39,7 @@ from telegram.request import HTTPXRequest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
+    ATTR_DATE,
     CONF_API_KEY,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_BEARER_AUTHENTICATION,
@@ -58,7 +59,6 @@ from .const import (
     ATTR_CHAT_ID,
     ATTR_CHAT_INSTANCE,
     ATTR_DATA,
-    ATTR_DATE,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
@@ -124,6 +124,8 @@ _FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
 
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
+
+_RETRY_DELAY = 1  # 1 second delay between retries
 
 
 def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
@@ -202,6 +204,9 @@ class BaseTelegramBot:
             ATTR_DATE: message.date,
             ATTR_MESSAGE_THREAD_ID: message.message_thread_id,
         }
+        if message.reply_to_message:
+            event_data[ATTR_REPLY_TO_MSGID] = message.reply_to_message.message_id
+
         if filters.COMMAND.filter(message):
             # This is a command message - set event type
             # to command and split data into command and args
@@ -1213,9 +1218,8 @@ async def load_data(
                     _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
                 retry_num += 1
                 if retry_num < num_retries:
-                    await asyncio.sleep(
-                        1
-                    )  # Add a sleep to allow other async operations to proceed
+                    # Add a sleep to allow other async operations to proceed
+                    await asyncio.sleep(_RETRY_DELAY)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url",

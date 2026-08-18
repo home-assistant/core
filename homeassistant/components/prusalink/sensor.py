@@ -3,10 +3,16 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast
+from typing import cast, override
 
-from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
-from pyprusalink.types_legacy import LegacyPrinterStatus
+from pyprusalink.types import (
+    JobFilePrint,
+    JobInfo,
+    PrinterInfo,
+    PrinterState,
+    PrinterStatus,
+)
+from pyprusalink.types_legacy import LegacyPrinterStatus, LegacyPrinterTelemetry
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -47,7 +53,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[PrinterStatus](
             key="printer.state",
             name=None,
-            value_fn=lambda data: cast(str, data["printer"]["state"].lower()),
+            value_fn=lambda data: cast(str, data["printer"]["state"]).lower(),
             device_class=SensorDeviceClass.ENUM,
             options=[state.value.lower() for state in PrinterState],
             translation_key="printer_state",
@@ -149,7 +155,10 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[LegacyPrinterStatus](
             key="printer.telemetry.material",
             translation_key="material",
-            value_fn=lambda data: cast(str, data["telemetry"]["material"]),
+            value_fn=lambda data: cast(
+                str, cast(LegacyPrinterTelemetry, data["telemetry"])["material"]
+            ),
+            available_fn=lambda data: data.get("telemetry") is not None,
         ),
     ),
     "job": (
@@ -166,7 +175,11 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.filename",
             translation_key="filename",
-            value_fn=lambda data: cast(str, data["file"]["display_name"]),
+            # `available_fn` guarantees `file` is not None at this point;
+            # the inner cast narrows the Optional for the index.
+            value_fn=lambda data: cast(
+                str, cast(JobFilePrint, data["file"])["display_name"]
+            ),
             available_fn=lambda data: (
                 data.get("file") is not None
                 and data.get("state") != PrinterState.IDLE.value
@@ -189,8 +202,12 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             key="job.finish",
             translation_key="print_finish",
             device_class=SensorDeviceClass.TIMESTAMP,
+            # `available_fn` guarantees `time_remaining` is not None at this
+            # point; the cast narrows the Optional for `timedelta`.
             value_fn=ignore_variance(
-                lambda data: utcnow() + timedelta(seconds=data["time_remaining"]),
+                lambda data: (
+                    utcnow() + timedelta(seconds=cast(int, data["time_remaining"]))
+                ),
                 timedelta(minutes=2),
             ),
             available_fn=lambda data: (
@@ -213,7 +230,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="min_extrusion_temp",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
-            value_fn=lambda data: cast(int, data["min_extrusion_temp"]),
+            value_fn=lambda data: data["min_extrusion_temp"],
             supported_fn=lambda data: data.get("min_extrusion_temp") is not None,
             entity_registry_enabled_default=False,
         ),
@@ -258,6 +275,7 @@ class PrusaLinkSensorEntity(PrusaLinkEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

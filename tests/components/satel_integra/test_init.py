@@ -218,8 +218,8 @@ async def test_parent_device_exists(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_ENTRY_ID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_ENTRY_ID), mock_config_entry.entry_id
     )
     assert device_entry == snapshot(name="parent-device")
 
@@ -242,4 +242,4 @@ async def test_setup_exceptions(
     """Test the client async_connect."""
     mock_satel.connect.side_effect = exception
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state == expected_state
+    assert mock_config_entry.state is expected_state

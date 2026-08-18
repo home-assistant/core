@@ -32,7 +32,7 @@ async def _async_play_chime(service_call: ServiceCall) -> None:
 
     for device_id in service_data[ATTR_DEVICE_ID]:
         config_entry = None
-        device = device_registry.async_get(device_id)
+        device = device_registry.async_get(device_id, include_child_devices=False)
         if device is not None:
             for entry_id in device.config_entries:
                 config_entry = service_call.hass.config_entries.async_get_entry(
@@ -43,7 +43,7 @@ async def _async_play_chime(service_call: ServiceCall) -> None:
         if (
             config_entry is None
             or device is None
-            or config_entry.state != ConfigEntryState.LOADED
+            or config_entry.state is not ConfigEntryState.LOADED
         ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

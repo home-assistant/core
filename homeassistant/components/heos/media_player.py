@@ -7,7 +7,7 @@ from datetime import datetime
 from functools import reduce, wraps
 import logging
 from operator import ior
-from typing import Any, Final
+from typing import Any, Final, override
 
 from pyheos import (
     AddCriteriaType,
@@ -37,7 +37,6 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.components.media_source import BrowseMediaSource
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -193,6 +192,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attributes()
@@ -239,6 +239,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 | MediaPlayerEntityFeature.SHUFFLE_SET
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Device added to hass."""
         # Update state when attributes of the player change
@@ -253,41 +254,49 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         return {"queue": [dataclasses.asdict(item) for item in queue]}
 
     @catch_action_error("clear playlist")
+    @override
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._player.clear_queue()
 
     @catch_action_error("pause")
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._player.pause()
 
     @catch_action_error("play")
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._player.play()
 
     @catch_action_error("move to previous track")
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._player.play_previous()
 
     @catch_action_error("move to next track")
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._player.play_next()
 
     @catch_action_error("stop")
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._player.stop()
 
     @catch_action_error("set mute")
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self._player.set_mute(mute)
 
     @catch_action_error("play media")
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -364,6 +373,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         raise ValueError(f"Unsupported media type '{media_type}'")
 
     @catch_action_error("select source")
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         # Favorite
@@ -383,6 +393,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         )
 
     @catch_action_error("set repeat")
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         await self._player.set_play_mode(
@@ -390,11 +401,13 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         )
 
     @catch_action_error("set shuffle")
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         await self._player.set_play_mode(self._player.repeat, shuffle)
 
     @catch_action_error("set volume level")
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._player.set_volume(int(volume * 100))
@@ -435,6 +448,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         await self.coordinator.heos.group_volume_up(self._player.group_id)
 
     @catch_action_error("join players")
+    @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         player_ids: list[int] = [self._player.player_id]
@@ -460,6 +474,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         await self.coordinator.heos.set_group(player_ids)
 
     @catch_action_error("unjoin player")
+    @override
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
         for group in self.coordinator.heos.groups.values():
@@ -474,6 +489,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 await self.coordinator.heos.set_group(new_members)
                 return
 
+    @catch_action_error("remove from queue")
     async def async_remove_from_queue(self, queue_ids: list[int]) -> None:
         """Remove items from the queue."""
         await self._player.remove_from_queue(queue_ids)
@@ -486,11 +502,13 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         await self._player.move_queue_item(queue_ids, destination_position)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the device is available."""
         return self._player.available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Get additional attribute about the state."""
         return {
@@ -502,26 +520,31 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         }
 
     @property
+    @override
     def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
         return self._player.is_muted
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         return self._player.now_playing_media.album
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         return self._player.now_playing_media.artist
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         return self._player.now_playing_media.media_id
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         duration = self._player.now_playing_media.duration
@@ -530,6 +553,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         # Some media doesn't have duration but reports position, return None
@@ -540,6 +564,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_position_updated_at(self) -> datetime | None:
         """When was the position of the current playing media valid."""
         # Some media doesn't have duration but reports position, return None
@@ -548,6 +573,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         return self._media_position_updated_at
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         # May be an empty string, if so, return None
@@ -555,21 +581,25 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         return image_url or None
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         return self._player.now_playing_media.song
 
     @property
+    @override
     def shuffle(self) -> bool:
         """Boolean if shuffle is enabled."""
         return self._player.shuffle
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """State of the player."""
         return PLAY_STATE_TO_STATE[self._player.state]
 
     @property
+    @override
     def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         return self._player.volume / 100
@@ -624,7 +654,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     async def _async_browse_media_source(
         self, media_content_id: str | None = None
-    ) -> BrowseMediaSource:
+    ) -> media_source.BrowseMediaSource | media_source.RootBrowseMediaSource:
         """Browse a media source item."""
         return await media_source.async_browse_media(
             self.hass,
@@ -632,6 +662,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

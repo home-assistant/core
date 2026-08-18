@@ -2,19 +2,18 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 import voluptuous as vol
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.const import ATTR_MODEL, ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import (
     ATTR_FIRMWARE,
-    ATTR_MODEL,
     DEFAULT_ADDRESS,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
@@ -80,6 +79,7 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
         self._com_ports_list: list[str] | None = None
         self._default_com_port: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
