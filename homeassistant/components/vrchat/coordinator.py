@@ -303,56 +303,65 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
 
     def _handle_ws_message(self, data: dict[str, Any]) -> None:
         """Handle a single websocket message."""
-        # pylint: disable=too-many-nested-blocks
         data["account_id"] = self.config_entry.unique_id
         data["config_entry_id"] = self.config_entry.entry_id
+        if "type" not in data:
+            data["type"] = "error" if "err" in data else "unknown"
+            _LOGGER.error("%s", data)
+            return
+
+        event_type = data["type"]
+        if (
+            "content" not in data
+            or event_type in VRCHAT_WEBSOCKET_EVENT_TYPES_WITH_STRING_CONTENT
+        ):
+            return
+
         try:
-            if "type" in data:
-                event_type = data["type"]
-                if (
-                    "content" in data
-                    and event_type
-                    not in VRCHAT_WEBSOCKET_EVENT_TYPES_WITH_STRING_CONTENT
-                ):
-                    try:
-                        content: dict[str, Any] = json.loads(data["content"])
-                        data["content"] = content
-                        if "userId" in content:
-                            user_id: str = content["userId"]
-                            if user_id in self.users:
-                                user = self.users[user_id]
-                                data["old_user"] = user.data
-                                if (device_entry := user.device_entry) is not None:
-                                    data["device_id"] = device_entry.id
-                                user.handle_event(cast(WebsocketUserEvent, data))
-                            elif event_type != VRChatWebsocketEventType.FRIEND_DELETE:
-                                if "user" in content:
-                                    self.set_user(content["user"])
-                                else:
-                                    self.create_task(self.ensure_user(user_id))
-                        if isinstance((world := content.get("world")), dict) and (
-                            (world_id := process_vrchat_string(world.get("id")))
-                            is not None
-                        ):
-                            VRChatWorldData.get(world_id, cast(World, world))
-                        if (
-                            (
-                                world_id := parse_vrchat_location_string(
-                                    content.get("travelingToLocation")
-                                )[0]
-                            )
-                            is not None
-                            and world_id not in VRCHAT_SPECIAL_LOCATION_STRINGS
-                        ):
-                            self.create_task(VRChatWorldData.get(world_id).get_data())
-                            content["travelingToWorldId"] = world_id
-                    except Exception:
-                        _LOGGER.exception(EXCEPTION_MESSAGE_VRCHAT_WEBSOCKET_EVENT)
-            else:
-                data["type"] = "error" if "err" in data else "unknown"
-                _LOGGER.error("%s", data)
-        finally:
-            pass
+            content: dict[str, Any] = json.loads(data["content"])
+            data["content"] = content
+            self._handle_ws_user_content(event_type, content, data)
+            self._handle_ws_world_content(content)
+        except Exception:
+            _LOGGER.exception(EXCEPTION_MESSAGE_VRCHAT_WEBSOCKET_EVENT)
+
+    def _handle_ws_user_content(
+        self, event_type: str, content: dict[str, Any], data: dict[str, Any]
+    ) -> None:
+        """Handle a WebSocket event's user content."""
+        if "userId" not in content:
+            return
+
+        user_id: str = content["userId"]
+        if (user := self.users.get(user_id)) is not None:
+            data["old_user"] = user.data
+            if (device_entry := user.device_entry) is not None:
+                data["device_id"] = device_entry.id
+            user.handle_event(cast(WebsocketUserEvent, data))
+            return
+
+        if event_type == VRChatWebsocketEventType.FRIEND_DELETE:
+            return
+        if "user" in content:
+            self.set_user(content["user"])
+            return
+        self.create_task(self.ensure_user(user_id))
+
+    def _handle_ws_world_content(self, content: dict[str, Any]) -> None:
+        """Handle a WebSocket event's world content."""
+        if isinstance((world := content.get("world")), dict) and (
+            (world_id := process_vrchat_string(world.get("id"))) is not None
+        ):
+            VRChatWorldData.get(world_id, cast(World, world))
+
+        if (
+            world_id := parse_vrchat_location_string(
+                content.get("travelingToLocation")
+            )[0]
+        ) is None or world_id in VRCHAT_SPECIAL_LOCATION_STRINGS:
+            return
+        self.create_task(VRChatWorldData.get(world_id).get_data())
+        content["travelingToWorldId"] = world_id
 
     async def _ws_error_handler(self, exc: Exception) -> None:
         """Handle websocket errors."""
