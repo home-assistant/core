@@ -7,6 +7,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pyaqvify"],
-  "quality_scale": "silver",
-  "requirements": ["pyaqvify==0.0.10"]
+  "quality_scale": "platinum",
+  "requirements": ["pyaqvify==0.0.12"]
 }

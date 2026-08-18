@@ -55,7 +55,7 @@ from zwave_js_server.model.utils import (
     async_parse_qr_code_string,
     async_try_parse_dsk_from_qr_code_string,
 )
-from zwave_js_server.model.value import ConfigurationValueFormat
+from zwave_js_server.model.value import ConfigurationValueFormat, Value
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -84,12 +84,14 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_VALUE_UPDATED,
     LOGGER,
     USER_AGENT,
 )
 from .helpers import (
     CannotConnect,
     async_enable_statistics,
+    async_get_config_entry_from_node,
     async_get_node_from_device_id,
     async_get_provisioning_entry_from_device_id,
     async_get_version_info,
@@ -444,6 +446,9 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
     websocket_api.async_register_command(hass, websocket_get_raw_config_parameter)
     websocket_api.async_register_command(hass, websocket_set_raw_config_parameter)
+    websocket_api.async_register_command(
+        hass, websocket_subscribe_config_parameter_updates
+    )
     websocket_api.async_register_command(hass, websocket_subscribe_log_updates)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
@@ -777,6 +782,7 @@ async def websocket_add_node(
             node.on("interview started", forward_event),
             node.on("interview completed", forward_event),
             node.on("interview stage completed", forward_stage),
+            node.on("interview progress", forward_progress),
             node.on("interview failed", forward_event),
         ]
         unsubs.extend(interview_unsubs)
@@ -810,6 +816,19 @@ async def websocket_add_node(
         connection.send_message(
             websocket_api.event_message(
                 msg[ID], {"event": event["event"], "stage": event["stageName"]}
+            )
+        )
+
+    @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
             )
         )
 
@@ -1122,6 +1141,14 @@ async def websocket_provision_smart_start_node(
             manufacturer = device_info.manufacturer
             model = device_info.label
 
+        via_device_id: str | None = None
+        if driver.controller.own_node:
+            via_device_id = dr.async_get_device_id_by_identifier(
+                hass,
+                get_device_id(driver, driver.controller.own_node),
+                config_entry_id=entry.entry_id,
+            )
+
         # Create an empty device
         device = dev_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
@@ -1129,9 +1156,7 @@ async def websocket_provision_smart_start_node(
             name=device_name,
             manufacturer=manufacturer,
             model=model,
-            via_device=get_device_id(driver, driver.controller.own_node)
-            if driver.controller.own_node
-            else None,
+            via_device_id=via_device_id,
         )
         dev_reg.async_update_device(
             device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
@@ -1545,6 +1570,19 @@ async def websocket_replace_failed_node(
         )
 
     @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
+            )
+        )
+
+    @callback
     def node_found(event: dict) -> None:
         node = event["node"]
         node_details = {
@@ -1563,6 +1601,7 @@ async def websocket_replace_failed_node(
             node.on("interview started", forward_event),
             node.on("interview completed", forward_event),
             node.on("interview stage completed", forward_stage),
+            node.on("interview progress", forward_progress),
             node.on("interview failed", forward_event),
         ]
         unsubs.extend(interview_unsubs)
@@ -1863,11 +1902,25 @@ async def websocket_refresh_node_info(
             )
         )
 
+    @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
+            )
+        )
+
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         node.on("interview started", forward_event),
         node.on("interview completed", forward_event),
         node.on("interview stage completed", forward_stage),
+        node.on("interview progress", forward_progress),
         node.on("interview failed", forward_event),
     ]
 
@@ -2059,6 +2112,46 @@ async def websocket_set_raw_config_parameter(
             STATUS: result.status,
         },
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/subscribe_config_parameter_updates",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_subscribe_config_parameter_updates(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    node: Node,
+) -> None:
+    """Subscribe to value updates for the config parameters of a node."""
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_values(event: dict) -> None:
+        value: Value = event["value"]
+        if value.command_class != CommandClass.CONFIGURATION:
+            return
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"id": value.value_id, "value": value.value}
+            )
+        )
+
+    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on(EVENT_VALUE_UPDATED, forward_values)]
+    connection.subscriptions[msg["id"]] = async_cleanup
+
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -2738,7 +2831,10 @@ def _get_node_statistics_dict(
         """Convert a node to a device id."""
         driver = node.client.driver
         assert driver
-        device = dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
+        entry = async_get_config_entry_from_node(hass, node)
+        device = dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, node), entry.entry_id
+        )
         assert device
         return device.id
 

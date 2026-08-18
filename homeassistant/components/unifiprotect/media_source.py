@@ -4,7 +4,7 @@ import asyncio
 from calendar import monthrange
 from datetime import date, datetime, timedelta
 from enum import StrEnum
-from typing import Any, NoReturn, cast
+from typing import Any, NoReturn, cast, override
 
 from uiprotect.data import Camera, Event, EventType, SmartDetectObjectType
 from uiprotect.exceptions import NvrError
@@ -193,6 +193,7 @@ class ProtectMediaSource(MediaSource):
         self.data_sources = data_sources
         self._registry = None
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Return a streamable URL and associated mime type for a UniFi Protect event.
 
@@ -229,6 +230,7 @@ class ProtectMediaSource(MediaSource):
             )
         return PlayMedia(async_generate_event_video_url(event), "video/mp4")
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return a browsable UniFi Protect media source.
 

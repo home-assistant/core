@@ -1,6 +1,7 @@
 """Holiday Calendar."""
 
 from datetime import datetime, timedelta
+from typing import override
 
 from holidays import PUBLIC, HolidayBase, country_holidays
 
@@ -147,10 +148,12 @@ class HolidayCalendarEntity(CalendarEntity):
         self._update_state_and_setup_listener()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up first update."""
         self._update_state_and_setup_listener()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cancel listener when removing."""
         await super().async_will_remove_from_hass()
@@ -179,10 +182,12 @@ class HolidayCalendarEntity(CalendarEntity):
         )
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._attr_event
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:

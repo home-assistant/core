@@ -6,7 +6,7 @@ import logging
 from homeassistant.components.climate import HVACMode
 
 DOMAIN = "niko_home_control"
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 NIKO_HOME_CONTROL_THERMOSTAT_MODES_MAP = {
     HVACMode.OFF: 3,

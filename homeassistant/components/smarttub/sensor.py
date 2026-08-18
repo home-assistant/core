@@ -1,7 +1,7 @@
 """Platform for sensor integration."""
 
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 import smarttub
 import voluptuous as vol
@@ -107,6 +107,7 @@ class SmartTubBuiltinSensor(SmartTubOnboardSensorBase, SensorEntity):
         self._attr_translation_key = state_key
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the current state of the sensor."""
         if self._state is None:
@@ -136,11 +137,13 @@ class SmartTubPrimaryFiltrationCycle(SmartTubBuiltinSensor):
         return self._state
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the current state of the sensor."""
         return self.cycle.status.name.lower()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
@@ -177,11 +180,13 @@ class SmartTubSecondaryFiltrationCycle(SmartTubBuiltinSensor):
         return self._state
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the current state of the sensor."""
         return self.cycle.status.name.lower()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {

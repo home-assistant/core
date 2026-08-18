@@ -5,7 +5,7 @@ import dataclasses
 from datetime import datetime
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import Any, cast, override
 
 from propcache.api import cached_property
 from python_otbr_api import tlv_parser
@@ -145,6 +145,7 @@ class DatasetEntry:
 class DatasetStoreStore(Store):
     """Store Thread datasets."""
 
+    @override
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:

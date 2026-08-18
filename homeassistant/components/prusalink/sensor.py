@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast
+from typing import cast, override
 
 from pyprusalink.types import (
     JobFilePrint,
@@ -275,6 +275,7 @@ class PrusaLinkSensorEntity(PrusaLinkEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.sql.const import (
-    CONF_ADVANCED_OPTIONS,
+    CONF_ADDITIONAL_OPTIONS,
     CONF_COLUMN_NAME,
     CONF_QUERY,
     DOMAIN,
@@ -94,7 +94,7 @@ async def test_query_value_template(
     options = {
         CONF_QUERY: "SELECT 5.01 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_VALUE_TEMPLATE: "{{ value | int }}",
             CONF_UNIT_OF_MEASUREMENT: "MiB",
             CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
@@ -126,7 +126,7 @@ async def test_template_query(
             " 5 {% else %} 6 {% endif %} as value"
         ),
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_VALUE_TEMPLATE: "{{ value | int }}",
         },
     }
@@ -168,7 +168,7 @@ async def test_broken_template_query(
     options = {
         CONF_QUERY: "SELECT {{ 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_VALUE_TEMPLATE: "{{ value | int }}",
         },
     }
@@ -672,7 +672,7 @@ async def test_attributes_from_entry_config(
         options={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
                 CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
                 CONF_STATE_CLASS: SensorStateClass.TOTAL,
@@ -694,7 +694,7 @@ async def test_attributes_from_entry_config(
         options={
             CONF_QUERY: "SELECT 6 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },

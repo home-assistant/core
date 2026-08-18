@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from apyhiveapi import Auth
 from apyhiveapi.helper.hive_exceptions import (
@@ -41,6 +41,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         self.device_registration: bool = False
         self.device_name = "Home Assistant"
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -197,6 +198,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: HiveConfigEntry,
     ) -> HiveOptionsFlowHandler:

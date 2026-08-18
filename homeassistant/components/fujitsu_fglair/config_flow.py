@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
 from ayla_iot_unofficial.fujitsu_consts import FGLAIR_APP_CREDENTIALS
@@ -68,6 +68,7 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
