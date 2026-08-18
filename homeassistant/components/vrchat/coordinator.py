@@ -187,7 +187,13 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
         try:
             current_user_data = await self.api.get_current_user()
         except vrchatapi.exceptions.UnauthorizedException as e:
-            raise VRChatAccountAuthFailed(self.config_entry) from e
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+                translation_placeholders={
+                    "config_entry_title": self.config_entry.title,
+                },
+            ) from e
         except Exception as e:
             raise VRChatAccountSetupFailed(self.config_entry) from e
         if current_user_data["id"] != self.config_entry.unique_id:
@@ -479,26 +485,6 @@ class VRChatAccountSetupFailed(ConfigEntryNotReady):
         )
 
 
-class VRChatAccountAuthFailed(ConfigEntryAuthFailed):
-    """VRChat account auth failed error."""
-
-    def __init__(
-        self,
-        config_entry: VRChatConfigEntry,
-        translation_key: str = "auth_failed",
-        translation_placeholders: dict[str, str] | None = None,
-    ) -> None:
-        """Fill in info."""
-        super().__init__(
-            translation_domain=DOMAIN,
-            translation_key=translation_key,
-            translation_placeholders={
-                "config_entry_title": config_entry.title,
-                **(translation_placeholders or {}),
-            },
-        )
-
-
 class VRChatUserDataCoordinator(AsyncCleanups):
     """Data update coordinator for VRChat user."""
 
@@ -581,7 +567,7 @@ class VRChatUserDataCoordinator(AsyncCleanups):
         self, force_refresh: bool, world_update: bool = False
     ) -> None:
         """Notify added entities about account or world data changes."""
-        for listener in self._entity_update_listeners:
+        for listener in list(self._entity_update_listeners):
             listener(force_refresh, world_update)
 
     def async_add_entity_update_listener(

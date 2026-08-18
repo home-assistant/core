@@ -14,16 +14,16 @@ from homeassistant.components.vrchat import async_remove_entry
 from homeassistant.components.vrchat.api_data_types import CurrentUser
 from homeassistant.components.vrchat.const import DOMAIN
 from homeassistant.components.vrchat.coordinator import (
-    VRChatAccountAuthFailed,
     VRChatAccountDataCoordinator,
     VRChatAccountSetupFailed,
+    VRChatUserDataCoordinator,
 )
 from homeassistant.components.vrchat.store import (
     InitialCurrentUserData,
     VRChatAuthCookieStore,
 )
 from homeassistant.components.vrchat.utils import AsyncCleanups, is_user_in_game
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryAuthFailed, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -261,6 +261,21 @@ async def test_websocket_error_handler_logs_callback_exception(
     assert caplog.records[0].exc_info == (RuntimeError, error, None)
 
 
+def test_entity_update_listener_snapshot() -> None:
+    """Test removing a listener during an update does not skip later listeners."""
+    coordinator = object.__new__(VRChatUserDataCoordinator)
+    second_listener = Mock()
+
+    def remove_second_listener(_: bool, __: bool) -> None:
+        coordinator._entity_update_listeners.remove(second_listener)
+
+    coordinator._entity_update_listeners = [remove_second_listener, second_listener]
+
+    coordinator.async_update_entities(True)
+
+    second_listener.assert_called_once_with(True, False)
+
+
 async def test_get_friends_propagates_fetch_error() -> None:
     """Test friend fetch errors propagate from the task group."""
     coordinator = object.__new__(VRChatAccountDataCoordinator)
@@ -327,24 +342,27 @@ def test_is_user_in_game_matches_original_binary_sensor(
     assert is_user_in_game(user_data) is expected
 
 
-@pytest.mark.parametrize(
-    ("exception_class", "translation_key"),
-    [
-        pytest.param(VRChatAccountAuthFailed, "auth_failed", id="auth_failed"),
-        pytest.param(VRChatAccountSetupFailed, "setup_failed", id="setup_failed"),
-    ],
-)
-def test_account_exception_translations(
-    exception_class: type[VRChatAccountAuthFailed | VRChatAccountSetupFailed],
-    translation_key: str,
-) -> None:
+def test_account_setup_exception_translation() -> None:
     """Test account exceptions use registered translation keys."""
     entry = MockConfigEntry(domain=DOMAIN, title="current_user")
 
-    exception = exception_class(entry)
+    exception = VRChatAccountSetupFailed(entry)
 
     assert exception.translation_domain == DOMAIN
-    assert exception.translation_key == translation_key
+    assert exception.translation_key == "setup_failed"
+    assert exception.translation_placeholders == {"config_entry_title": "current_user"}
+
+
+def test_account_auth_exception_translation() -> None:
+    """Test the authentication error uses a registered translation key."""
+    exception = ConfigEntryAuthFailed(
+        translation_domain=DOMAIN,
+        translation_key="auth_failed",
+        translation_placeholders={"config_entry_title": "current_user"},
+    )
+
+    assert exception.translation_domain == DOMAIN
+    assert exception.translation_key == "auth_failed"
     assert exception.translation_placeholders == {"config_entry_title": "current_user"}
 
 
