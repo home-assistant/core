@@ -1,12 +1,12 @@
 # serializer version: 1
-# name: test_entity[select.myhome-entry]
+# name: test_entity[select.myhome_schedule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
         'Winter',
       ]),
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.myhome',
+    'entity_id': 'select.myhome_schedule',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -26,33 +26,33 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Schedule',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Schedule',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'schedule',
     'unique_id': '91763b24c43d3e344f424e8b-schedule-select',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[select.myhome-state]
+# name: test_entity[select.myhome_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'MYHOME',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MYHOME Schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
         'Winter',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.myhome',
+    'entity_id': 'select.myhome_schedule',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

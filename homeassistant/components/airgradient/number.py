@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from airgradient import AirGradientClient, Config
 from airgradient.models import ConfigurationControl
@@ -11,7 +12,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import EntityCategory, UnitOfRatio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -39,7 +40,7 @@ DISPLAY_BRIGHTNESS = AirGradientNumberEntityDescription(
     native_min_value=0,
     native_max_value=100,
     native_step=1,
-    native_unit_of_measurement=PERCENTAGE,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     value_fn=lambda config: config.display_brightness,
     set_value_fn=lambda client, value: client.set_display_brightness(value),
 )
@@ -51,7 +52,7 @@ LED_BAR_BRIGHTNESS = AirGradientNumberEntityDescription(
     native_min_value=0,
     native_max_value=100,
     native_step=1,
-    native_unit_of_measurement=PERCENTAGE,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     value_fn=lambda config: config.led_bar_brightness,
     set_value_fn=lambda client, value: client.set_led_bar_brightness(value),
 )
@@ -119,11 +120,13 @@ class AirGradientNumber(AirGradientEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the number."""
         return self.entity_description.value_fn(self.coordinator.data.config)
 
     @exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the selected value."""
         await self.entity_description.set_value_fn(self.coordinator.client, int(value))

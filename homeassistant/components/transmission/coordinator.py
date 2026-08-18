@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import override
 
 import transmission_rpc
 from transmission_rpc.session import SessionStats
@@ -103,6 +104,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         for listener in list(self._event_listeners.values()):
             listener(event)
 
+    @override
     async def _async_update_data(self) -> SessionStats:
         """Update transmission data."""
         data = await self.hass.async_add_executor_job(self.update)

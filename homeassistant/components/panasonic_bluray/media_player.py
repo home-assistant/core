@@ -1,6 +1,7 @@
 """Support for Panasonic Blu-ray players."""
 
 from datetime import timedelta
+from typing import override
 
 from panacotta import PanasonicBD
 import voluptuous as vol
@@ -89,6 +90,7 @@ class PanasonicBluRay(MediaPlayerEntity):
         self._attr_media_position_updated_at = utcnow()
         self._attr_media_duration = state[2]
 
+    @override
     def turn_off(self) -> None:
         """Instruct the device to turn standby.
 
@@ -102,6 +104,7 @@ class PanasonicBluRay(MediaPlayerEntity):
 
         self._attr_state = MediaPlayerState.OFF
 
+    @override
     def turn_on(self) -> None:
         """Wake the device back up from standby."""
         if self.state == MediaPlayerState.OFF:
@@ -109,14 +112,17 @@ class PanasonicBluRay(MediaPlayerEntity):
 
         self._attr_state = MediaPlayerState.IDLE
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self._device.send_key("PLAYBACK")
 
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self._device.send_key("PAUSE")
 
+    @override
     def media_stop(self) -> None:
         """Send stop command."""
         self._device.send_key("STOP")

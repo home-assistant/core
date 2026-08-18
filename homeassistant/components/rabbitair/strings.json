@@ -32,6 +32,18 @@
           }
         }
       }
+    },
+    "sensor": {
+      "air_quality": {
+        "name": "Air quality",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "highest": "Highest",
+          "low": "[%key:common::state::low%]",
+          "lowest": "Lowest",
+          "medium": "[%key:common::state::medium%]"
+        }
+      }
     }
   }
 }

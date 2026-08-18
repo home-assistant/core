@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from oru import Meter, MeterError
 import voluptuous as vol
@@ -63,6 +64,7 @@ class CurrentEnergyUsageSensor(SensorEntity):
         self.meter = meter
 
     @property
+    @override
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return self.meter.meter_id

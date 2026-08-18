@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from ttn_client import TTNAuthError, TTNClient
 
@@ -44,6 +45,7 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
             push_callback=self._push_callback,
         )
 
+    @override
     async def _async_update_data(self) -> TTNClient.DATA_TYPE:
         """Fetch data from API endpoint.
 

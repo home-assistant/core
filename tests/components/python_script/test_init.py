@@ -28,7 +28,7 @@ async def test_setup(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert res
     assert hass.services.has_service("python_script", "hello")
@@ -60,7 +60,7 @@ async def test_setup_fails_on_no_dir(
     with patch(
         "homeassistant.components.python_script.os.path.isdir", return_value=False
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert not res
     assert "Folder python_scripts not found in configuration folder" in caplog.text
@@ -371,7 +371,7 @@ async def test_reload(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert res
     assert hass.services.has_service("python_script", "hello")
@@ -537,7 +537,7 @@ async def test_execute_with_output(
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 output = {"result": f"hello {data.get('name', 'World')}"}
@@ -581,7 +581,7 @@ async def test_execute_no_output(
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 no_output = {"result": f"hello {data.get('name', 'World')}"}
@@ -620,7 +620,7 @@ async def test_execute_wrong_output_type(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.glob.iglob", return_value=scripts
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 output = f"hello {data.get('name', 'World')}"

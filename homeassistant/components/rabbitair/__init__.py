@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import RabbitAirConfigEntry, RabbitAirDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.FAN]
+PLATFORMS: list[Platform] = [Platform.FAN, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RabbitAirConfigEntry) -> bool:

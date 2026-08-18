@@ -1,5 +1,7 @@
 """Support for HomematicIP Cloud weather devices."""
 
+from typing import override
+
 from homematicip.base.enums import WeatherCondition
 from homematicip.device import WeatherSensor, WeatherSensorPlus, WeatherSensorPro
 
@@ -75,21 +77,25 @@ class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
         super().__init__(hap, device, feature_id="weather")
 
     @property
+    @override
     def native_temperature(self) -> float:
         """Return the platform temperature."""
         return self._device.actualTemperature
 
     @property
+    @override
     def humidity(self) -> int:
         """Return the humidity."""
         return self._device.humidity
 
     @property
+    @override
     def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self._device.windSpeed
 
     @property
+    @override
     def condition(self) -> str:
         """Return the current condition."""
         if getattr(self._device, "raining", None):
@@ -105,6 +111,7 @@ class HomematicipWeatherSensorPro(HomematicipWeatherSensor):
     """Representation of the HomematicIP weather sensor pro."""
 
     @property
+    @override
     def wind_bearing(self) -> float:
         """Return the wind bearing."""
         return self._device.windDirection
@@ -124,36 +131,43 @@ class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
         super().__init__(hap, hap.home, feature_id="home_weather")
 
     @property
+    @override
     def available(self) -> bool:
         """Return if weather entity is available."""
         return self._home.connected
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return f"Weather {self._home.location.city}"
 
     @property
+    @override
     def native_temperature(self) -> float:
         """Return the temperature."""
         return self._device.weather.temperature
 
     @property
+    @override
     def humidity(self) -> int:
         """Return the humidity."""
         return self._device.weather.humidity
 
     @property
+    @override
     def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return round(self._device.weather.windSpeed, 1)
 
     @property
+    @override
     def wind_bearing(self) -> float:
         """Return the wind bearing."""
         return self._device.weather.windDirection
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         return HOME_WEATHER_CONDITION.get(self._device.weather.weatherCondition)

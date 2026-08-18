@@ -1,5 +1,7 @@
 """LD2410 BLE integration sensor platform."""
 
+from typing import override
+
 from ld2410_ble import LD2410BLE
 
 from homeassistant.components.sensor import (
@@ -156,12 +158,14 @@ class LD2410BLESensor(CoordinatorEntity[LD2410BLECoordinator], SensorEntity):
         self._attr_native_value = getattr(self._device, self._key)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = getattr(self._device, self._key)
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Unavailable if coordinator isn't connected."""
         return self._coordinator.connected and super().available

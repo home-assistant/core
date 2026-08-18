@@ -55,7 +55,7 @@ async def mock_client(
     MockConfigEntry(
         domain=DOMAIN, data={"webhook_id": "owntracks_test", "secret": "abcd"}
     ).add_to_hass(hass)
-    await async_setup_component(hass, "owntracks", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     return await hass_client_no_auth()
 

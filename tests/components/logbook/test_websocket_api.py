@@ -12,7 +12,7 @@ import pytest
 from homeassistant import core
 from homeassistant.components import logbook, recorder
 from homeassistant.components.automation import ATTR_SOURCE, EVENT_AUTOMATION_TRIGGERED
-from homeassistant.components.logbook import websocket_api
+from homeassistant.components.logbook import DOMAIN, websocket_api
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.util import get_instance
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
@@ -35,6 +35,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -372,7 +373,7 @@ async def test_get_events_future_start_time(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get_events with a future start time."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
     future = dt_util.utcnow() + timedelta(hours=10)
 
@@ -397,7 +398,7 @@ async def test_get_events_bad_start_time(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get_events bad start time."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -418,7 +419,7 @@ async def test_get_events_bad_end_time(
 ) -> None:
     """Test get_events bad end time."""
     now = dt_util.utcnow()
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -439,7 +440,7 @@ async def test_get_events_invalid_filters(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get_events invalid filters."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -1480,6 +1481,64 @@ async def test_subscribe_unsubscribe_logbook_stream(
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_subscribe_logbook_stream_state_attributes(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the live logbook stream exposes allowlisted state attributes."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["event"]["partial"] is True
+
+    await hass.async_block_till_done()
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert "partial" not in msg["event"]
+    assert msg["event"]["events"] == []
+
+    hass.states.async_set("event.doorbell", STATE_UNKNOWN, {"event_type": None})
+    hass.states.async_set(
+        "event.doorbell",
+        "2024-01-01T00:00:00.000+00:00",
+        {"event_type": "ring", "supported_features": 1},
+    )
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {
+            "entity_id": "event.doorbell",
+            "state": "2024-01-01T00:00:00.000+00:00",
+            "attributes": {"event_type": "ring"},
+            "when": ANY,
+        }
+    ]
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_entities(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -1968,7 +2027,7 @@ async def test_event_stream_bad_start_time(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test event_stream bad start time."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -2205,7 +2264,7 @@ async def test_event_stream_bad_end_time(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test event_stream bad end time."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
     utc_now = dt_util.utcnow()
 

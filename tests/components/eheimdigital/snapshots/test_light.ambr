@@ -6,10 +6,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'daycl_mode',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -46,17 +46,17 @@
 # name: test_dynamic_new_devices[light.mock_aquarium_mock_classicledcontrol_e_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 99,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'effect': 'daycl_mode',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 99,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'daycl_mode',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'daycl_mode',
       ]),
-      'friendly_name': 'Mock classicLEDcontrol+e Channel 1',
-      'supported_color_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock classicLEDcontrol+e Channel 1',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 4>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
     }),
     'context': <ANY>,
     'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_1',
@@ -73,10 +73,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'daycl_mode',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -113,17 +113,17 @@
 # name: test_setup_classic_led_ctrl[tankconfig0][light.mock_aquarium_mock_classicledcontrol_e_channel_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 26,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'effect': 'daycl_mode',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 26,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'daycl_mode',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'daycl_mode',
       ]),
-      'friendly_name': 'Mock classicLEDcontrol+e Channel 0',
-      'supported_color_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock classicLEDcontrol+e Channel 0',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 4>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
     }),
     'context': <ANY>,
     'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_0',
@@ -140,10 +140,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'daycl_mode',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -180,17 +180,17 @@
 # name: test_setup_classic_led_ctrl[tankconfig1][light.mock_aquarium_mock_classicledcontrol_e_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 99,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'effect': 'daycl_mode',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 99,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'daycl_mode',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'daycl_mode',
       ]),
-      'friendly_name': 'Mock classicLEDcontrol+e Channel 1',
-      'supported_color_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock classicLEDcontrol+e Channel 1',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 4>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
     }),
     'context': <ANY>,
     'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_1',
@@ -207,10 +207,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'daycl_mode',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -247,17 +247,17 @@
 # name: test_setup_classic_led_ctrl[tankconfig2][light.mock_aquarium_mock_classicledcontrol_e_channel_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 26,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'effect': 'daycl_mode',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 26,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'daycl_mode',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'daycl_mode',
       ]),
-      'friendly_name': 'Mock classicLEDcontrol+e Channel 0',
-      'supported_color_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock classicLEDcontrol+e Channel 0',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 4>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
     }),
     'context': <ANY>,
     'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_0',
@@ -274,10 +274,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'daycl_mode',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -314,17 +314,17 @@
 # name: test_setup_classic_led_ctrl[tankconfig2][light.mock_aquarium_mock_classicledcontrol_e_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 99,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'effect': 'daycl_mode',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 99,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'daycl_mode',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'daycl_mode',
       ]),
-      'friendly_name': 'Mock classicLEDcontrol+e Channel 1',
-      'supported_color_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock classicLEDcontrol+e Channel 1',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 4>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
     }),
     'context': <ANY>,
     'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_1',

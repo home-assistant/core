@@ -2,6 +2,7 @@
 
 import asyncio
 import re
+from typing import override
 
 from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
@@ -150,6 +151,7 @@ class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=home-assistan
         self.ffmpeg = ffmpeg
         self.initial_state = initial_state
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register dispatcher & events.
 
@@ -175,6 +177,7 @@ class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=home-assistan
         self._async_register_events()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.ffmpeg.is_running

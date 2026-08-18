@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from esios_api.const import KEY_INJECTION, KEY_MAG, KEY_OMIE, KEY_PVPC
 
@@ -185,12 +185,14 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.data.availability.get(
             self.entity_description.key, False
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -224,11 +226,13 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
         self.async_write_ha_state()
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.coordinator.api.states.get(self.entity_description.key)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
         sensor_attributes = self.coordinator.api.sensor_attributes.get(

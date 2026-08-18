@@ -292,6 +292,7 @@ async def async_test_home_assistant(
             )
         },
     )
+    hass.config_entries._initialized.set()
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         hass.config_entries._async_shutdown,
@@ -677,7 +678,8 @@ def mock_registry(
     if mock_entries is None:
         mock_entries = {}
     registry.deleted_entities = {}
-    registry.entities = er.EntityRegistryItems()
+    registry.entities = er.EntityRegistryItems(hass)
+    registry.settings = er.EntityRegistrySettings()
     registry._entities_data = registry.entities.data
     for key, entry in mock_entries.items():
         registry.entities[key] = entry
@@ -759,11 +761,13 @@ def mock_device_registry(
     registry = dr.DeviceRegistry(hass)
     registry.devices = dr.ActiveDeviceRegistryItems()
     registry._device_data = registry.devices.data
+    registry.child_devices = dr.ChildDeviceRegistryItems()
+    registry._child_device_data = registry.child_devices.data
     if mock_entries is None:
         mock_entries = {}
     for key, entry in mock_entries.items():
         registry.devices[key] = entry
-    registry.deleted_devices = dr.DeviceRegistryItems()
+    registry.deleted_devices = dr.DeletedDeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
     return registry
@@ -1587,7 +1591,16 @@ async def flush_store(store: storage.Store) -> None:
 
 async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, Any]:
     """Get system health info."""
-    return await hass.data["system_health"][domain].info_callback(hass)
+    from homeassistant.components.system_health import (  # noqa: PLC0415
+        DATA_SYSTEM_HEALTH_PLATFORMS,
+        DOMAIN as SYSTEM_HEALTH_DOMAIN,
+    )
+
+    platform_registrations = await hass.data[
+        DATA_SYSTEM_HEALTH_PLATFORMS
+    ].async_get_platforms()
+    registrations = {**hass.data[SYSTEM_HEALTH_DOMAIN], **platform_registrations}
+    return await registrations[domain].info_callback(hass)
 
 
 @contextmanager

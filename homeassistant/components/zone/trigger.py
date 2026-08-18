@@ -1,19 +1,18 @@
 """Offer zone automation rules."""
 
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import ATTR_IN_ZONES
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
     CONF_ENTITY_ID,
     CONF_EVENT,
     CONF_FOR,
     CONF_OPTIONS,
     CONF_TARGET,
     CONF_ZONE,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -36,14 +35,17 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
     EntityTriggerBase,
+    NotTriggeredReasonReporter,
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
+    TriggerNotTriggeredReporter,
 )
 from homeassistant.helpers.typing import ConfigType
 
 from . import condition
 from .const import DOMAIN
+from .helpers import get_in_zones_attribute
 
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
@@ -52,6 +54,20 @@ DEFAULT_EVENT = EVENT_ENTER
 _LOGGER = logging.getLogger(__name__)
 
 _EVENT_DESCRIPTION = {EVENT_ENTER: "entering", EVENT_LEAVE: "leaving"}
+
+
+def _state_has_zone_info(state: State) -> bool:
+    """Return True if the state can be matched against a zone.
+
+    For device_tracker and person entities an ``in_zones`` attribute is
+    sufficient even when the state has no coordinates (e.g. a scanner-based
+    tracker); other entities are matched by their coordinates.
+    """
+    return location.has_location(state) or (
+        (in_zones_attr := get_in_zones_attribute(state)) is not None
+        and in_zones_attr in state.attributes
+    )
+
 
 _LEGACY_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
     vol.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
@@ -84,6 +100,7 @@ class LegacyZoneTrigger(Trigger):
     """Legacy zone trigger (platform: zone)."""
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -94,6 +111,7 @@ class LegacyZoneTrigger(Trigger):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -112,8 +130,11 @@ class LegacyZoneTrigger(Trigger):
             assert config.options is not None
         self._options = config.options
 
+    @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Listen for state changes based on configuration."""
         entity_id: list[str] = self._options[CONF_ENTITY_ID]
@@ -127,8 +148,8 @@ class LegacyZoneTrigger(Trigger):
             from_s = zone_event.data["old_state"]
             to_s = zone_event.data["new_state"]
 
-            if (from_s and not location.has_location(from_s)) or (
-                to_s and not location.has_location(to_s)
+            if (from_s and not _state_has_zone_info(from_s)) or (
+                to_s and not _state_has_zone_info(to_s)
             ):
                 return
 
@@ -147,7 +168,7 @@ class LegacyZoneTrigger(Trigger):
             if (event == EVENT_ENTER and not from_match and to_match) or (
                 event == EVENT_LEAVE and from_match and not to_match
             ):
-                description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[ATTR_FRIENDLY_NAME]}"
+                description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[EntityStateAttribute.FRIENDLY_NAME]}"
                 run_action(
                     {
                         "entity_id": entity,
@@ -178,18 +199,27 @@ class ZoneTriggerBase(EntityTriggerBase):
 
     def _in_target_zone(self, state: State) -> bool:
         """Check if the entity is in the selected zone."""
-        in_zones = state.attributes.get(ATTR_IN_ZONES) or ()
-        return self._zone in in_zones
+        if (in_zones_attr := get_in_zones_attribute(state)) and (
+            in_zones := state.attributes.get(in_zones_attr)
+        ):
+            return self._zone in in_zones
+        return False
 
 
 class EnteredZoneTrigger(ZoneTriggerBase):
     """Trigger when an entity enters the selected zone."""
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the entity was not already in the selected zone."""
         return not self._in_target_zone(from_state)
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check that the entity is now in the selected zone."""
         return self._in_target_zone(state)
 
@@ -197,11 +227,17 @@ class EnteredZoneTrigger(ZoneTriggerBase):
 class LeftZoneTrigger(ZoneTriggerBase):
     """Trigger when an entity leaves the selected zone."""
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the entity was previously in the selected zone."""
         return self._in_target_zone(from_state)
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check that the entity is no longer in the selected zone."""
         return not self._in_target_zone(state)
 
@@ -223,6 +259,7 @@ class _ZoneOccupancyTriggerBase(EntityTriggerBase):
     _schema = _OCCUPANCY_TRIGGER_SCHEMA
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -253,10 +290,16 @@ class _ZoneOccupancyTriggerBase(EntityTriggerBase):
 class OccupancyDetectedTrigger(_ZoneOccupancyTriggerBase):
     """Trigger when a zone transitions to an occupied state."""
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check that the zone is occupied."""
         return self._is_occupied(state)
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the zone was previously not occupied."""
         return not self._is_occupied(from_state)
@@ -265,10 +308,16 @@ class OccupancyDetectedTrigger(_ZoneOccupancyTriggerBase):
 class OccupancyClearedTrigger(_ZoneOccupancyTriggerBase):
     """Trigger when a zone transitions from occupied to unoccupied."""
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check that the zone is empty (count == 0)."""
         return self._occupancy_count(state) == 0
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the zone was previously occupied."""
         return self._is_occupied(from_state)

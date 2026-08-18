@@ -28,7 +28,8 @@ async def test_device_registry_cleanup(
         config_entry_id=mock_config_entry.entry_id,
     )
 
-    assert len(devices) == 1
+    # One device for the authenticated user, one for the configured repository
+    assert len(devices) == 2
 
     hass.config_entries.async_remove_subentry(
         mock_config_entry, list(mock_config_entry.subentries)[0]
@@ -40,7 +41,8 @@ async def test_device_registry_cleanup(
         config_entry_id=mock_config_entry.entry_id,
     )
 
-    assert len(devices) == 0
+    # Only the user device remains after removing the repository subentry
+    assert len(devices) == 1
 
 
 async def test_subscription_setup(
