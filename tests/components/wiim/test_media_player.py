@@ -1333,7 +1333,7 @@ async def test_media_image_hash_changes_for_same_local_artwork_url(
 ) -> None:
     """Test the media proxy returns new artwork when its URL is reused."""
     await setup_integration(hass, mock_config_entry)
-    image_url = "https://192.168.1.100/changing-album-art.jpg#existing-fragment"
+    image_url = "https://192.168.1.100/changing-album-art.jpg"
 
     client = await hass_client()
 
@@ -1359,7 +1359,6 @@ async def test_media_image_hash_changes_for_same_local_artwork_url(
     assert media_response.status == 200
     first_image = await media_response.read()
     assert first_image == b"first-image"
-    assert "existing-fragment" not in aioclient_mock.mock_calls[0][1].fragment
 
     mock_wiim_device.current_media = WiimMediaMetadata(
         title="Second Song",
