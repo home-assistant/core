@@ -63,6 +63,7 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver = MagicMock(spec=Receiver)
         receiver.name = "Mock Lyngdorf"
         receiver.connected = True
+        receiver.model = LyngdorfModel.MP_60
 
         # Diagnostics reports the whole receiver, so every property it reads
         # needs a value here; an unset one is a mock the response cannot encode.
@@ -100,6 +101,15 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver.available_audio_inputs = ["optical", "aux"]
         receiver.available_video_inputs = ["hdmi"]
         receiver.available_stream_types = ["AirPlay", "DLNA"]
+
+        receiver.now_playing = None
+        receiver.has_position = False
+        receiver.position_ms = None
+        receiver.position_updated_at = None
+        receiver.shuffle = None
+        receiver.repeat = None
+        receiver.can_shuffle = False
+        receiver.available_repeat_modes = frozenset()
 
         receiver.zone_b_power_on = False
         receiver.zone_b_volume = -40.0

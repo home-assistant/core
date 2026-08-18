@@ -1,25 +1,47 @@
 """Tests for the Lyngdorf media player platform."""
 
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 from lyngdorf.const import LyngdorfModel
+from lyngdorf.states import Control, PlaybackState, Repeat
+from lyngdorf.streaming import NowPlaying
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_REPEAT,
+    ATTR_MEDIA_SEEK_POSITION,
+    ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_SEEK,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
+    RepeatMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_REPEAT_SET,
+    SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
@@ -31,6 +53,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import notify_receiver_update
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -321,3 +345,196 @@ async def test_zone_b_state_properties(
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
     assert state.attributes[ATTR_INPUT_SOURCE] == "Optical"
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["HDMI", "Optical"]
+
+
+@pytest.fixture
+def playing_receiver(mock_receiver: MagicMock) -> MagicMock:
+    """Return a receiver that is streaming a track."""
+    mock_receiver.power_on = True
+    mock_receiver.now_playing = NowPlaying(
+        state=PlaybackState.PLAYING,
+        title="The Killing Moon",
+        artist="Echo & the Bunnymen",
+        album="Songs to Learn & Sing",
+        source="Total Solar Eclipse Playlist",
+        art_url="https://example.test/art.jpg",
+        duration_ms=346280,
+        controls=frozenset(
+            {
+                Control.PAUSE,
+                Control.NEXT_TRACK,
+                Control.PREVIOUS_TRACK,
+                Control.SEEK,
+            }
+        ),
+        play_modes=frozenset(),
+    )
+    mock_receiver.has_position = True
+    mock_receiver.position_ms = 318544
+    mock_receiver.position_updated_at = datetime(2026, 8, 17, 13, tzinfo=UTC)
+    mock_receiver.shuffle = False
+    mock_receiver.repeat = Repeat.OFF
+    mock_receiver.can_shuffle = True
+    mock_receiver.available_repeat_modes = frozenset({Repeat.OFF, Repeat.ALL})
+    return mock_receiver
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_now_playing_metadata(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+) -> None:
+    """Test now-playing metadata and position are reported."""
+    for cb in [
+        call.args[0]
+        for call in playing_receiver.register_notification_callback.call_args_list
+    ]:
+        cb()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MAIN_ZONE)
+    assert state.state == MediaPlayerState.PLAYING
+    assert state.attributes[ATTR_MEDIA_TITLE] == "The Killing Moon"
+    assert state.attributes[ATTR_MEDIA_ARTIST] == "Echo & the Bunnymen"
+    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Songs to Learn & Sing"
+    assert state.attributes[ATTR_MEDIA_DURATION] == 346
+    assert state.attributes[ATTR_MEDIA_POSITION] == 319
+    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
+    assert state.attributes[ATTR_MEDIA_SHUFFLE] is False
+    assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.OFF
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_transport_features_follow_the_device(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+) -> None:
+    """Test supported features track what the source currently offers."""
+    for cb in [
+        call.args[0]
+        for call in playing_receiver.register_notification_callback.call_args_list
+    ]:
+        cb()
+    await hass.async_block_till_done()
+
+    features = hass.states.get(MAIN_ZONE).attributes[ATTR_SUPPORTED_FEATURES]
+    for feature in (
+        MediaPlayerEntityFeature.PAUSE,
+        MediaPlayerEntityFeature.NEXT_TRACK,
+        MediaPlayerEntityFeature.PREVIOUS_TRACK,
+        MediaPlayerEntityFeature.SEEK,
+        MediaPlayerEntityFeature.SHUFFLE_SET,
+        MediaPlayerEntityFeature.REPEAT_SET,
+    ):
+        assert features & feature
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_transport_features_absent_when_idle(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test no transport is offered when nothing is playing."""
+    features = hass.states.get(MAIN_ZONE).attributes[ATTR_SUPPORTED_FEATURES]
+    assert not features & MediaPlayerEntityFeature.PAUSE
+    assert not features & MediaPlayerEntityFeature.SEEK
+
+
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        pytest.param(SERVICE_MEDIA_PAUSE, "async_pause", id="pause"),
+        pytest.param(SERVICE_MEDIA_NEXT_TRACK, "async_next", id="next"),
+        pytest.param(SERVICE_MEDIA_PREVIOUS_TRACK, "async_previous", id="previous"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_transport_actions(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+    service: str,
+    method: str,
+) -> None:
+    """Test transport actions reach the receiver."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: MAIN_ZONE},
+        blocking=True,
+    )
+    getattr(playing_receiver, method).assert_awaited_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_seek_converts_to_milliseconds(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+) -> None:
+    """Test seek converts the position Home Assistant gives in seconds."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_SEEK,
+        {ATTR_ENTITY_ID: MAIN_ZONE, ATTR_MEDIA_SEEK_POSITION: 42.5},
+        blocking=True,
+    )
+    playing_receiver.async_seek.assert_awaited_once_with(42500)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_shuffle_and_repeat(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+) -> None:
+    """Test shuffle and repeat are set on their own axes."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SHUFFLE_SET,
+        {ATTR_ENTITY_ID: MAIN_ZONE, ATTR_MEDIA_SHUFFLE: True},
+        blocking=True,
+    )
+    playing_receiver.async_set_shuffle.assert_awaited_once_with(True)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {ATTR_ENTITY_ID: MAIN_ZONE, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+        blocking=True,
+    )
+    playing_receiver.async_set_repeat.assert_awaited_once_with(Repeat.ALL)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_no_streaming_features_on_model_without_streamer(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+) -> None:
+    """Test a model with no streaming module offers no transport."""
+    playing_receiver.model = LyngdorfModel.TDAI_2170
+    notify_receiver_update(playing_receiver)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MAIN_ZONE)
+    assert (
+        not state.attributes[ATTR_SUPPORTED_FEATURES] & MediaPlayerEntityFeature.PAUSE
+    )
+    assert state.attributes.get(ATTR_MEDIA_TITLE) is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_position_jump_updates_state(
+    hass: HomeAssistant,
+    playing_receiver: MagicMock,
+) -> None:
+    """Test a position discontinuity refreshes the reported position."""
+    jump_callbacks = [
+        call.args[0]
+        for call in playing_receiver.register_position_jump_callback.call_args_list
+    ]
+    assert jump_callbacks
+
+    playing_receiver.position_ms = 1000
+    for cb in jump_callbacks:
+        cb(1000)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MAIN_ZONE).attributes[ATTR_MEDIA_POSITION] == 1
