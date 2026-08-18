@@ -23,7 +23,11 @@ from homeassistant.components.vrchat.store import (
     VRChatAuthCookieStore,
 )
 from homeassistant.components.vrchat.utils import AsyncCleanups, is_user_in_game
-from homeassistant.config_entries import ConfigEntryAuthFailed, ConfigEntryState
+from homeassistant.config_entries import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -227,6 +231,109 @@ async def test_use_api_reauthenticates_after_closing_temporary_api() -> None:
     coordinator.restart.assert_awaited_once()
     assert callback.await_args_list[0].args == (temporary_api,)
     assert callback.await_args_list[1].args == (primary_api,)
+
+
+async def test_authenticate_saves_current_user_and_cookie() -> None:
+    """Test authenticating stores current user data and cookies."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=CURRENT_USER_ID)
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.config_entry = entry
+    coordinator.api = Mock(
+        get_current_user=AsyncMock(return_value=CURRENT_USER.copy()),
+        cookie={"auth": "cookie"},
+    )
+    coordinator.cookie_store = Mock(async_save=AsyncMock())
+
+    await coordinator.authenticate()
+
+    assert coordinator.current_user_data["id"] == CURRENT_USER_ID
+    coordinator.cookie_store.async_save.assert_awaited_once_with({"auth": "cookie"})
+
+
+async def test_authenticate_rejects_mismatched_user() -> None:
+    """Test authentication rejects a response for another user."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=CURRENT_USER_ID)
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.config_entry = entry
+    coordinator.api = Mock(get_current_user=AsyncMock(return_value={"id": "usr_other"}))
+
+    with pytest.raises(ConfigEntryError):
+        await coordinator.authenticate()
+
+
+async def test_authenticate_translates_unexpected_error() -> None:
+    """Test unexpected authentication errors become setup failures."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=CURRENT_USER_ID)
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.config_entry = entry
+    coordinator.api = Mock(
+        get_current_user=AsyncMock(side_effect=RuntimeError("test error"))
+    )
+
+    with pytest.raises(VRChatAccountSetupFailed):
+        await coordinator.authenticate()
+
+
+async def test_ensure_user_returns_existing_user() -> None:
+    """Test ensuring an existing user does not fetch it again."""
+    user = Mock()
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.users = {FRIEND_USER_ID: user}
+    coordinator.api = Mock(get_user=AsyncMock())
+
+    assert await coordinator.ensure_user(FRIEND_USER_ID) is user
+    coordinator.api.get_user.assert_not_awaited()
+
+
+async def test_ensure_user_fetches_missing_user() -> None:
+    """Test ensuring a missing user fetches and stores it."""
+    user = Mock()
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.users = {}
+    coordinator.api = Mock(get_user=AsyncMock(return_value=FRIEND_USER.copy()))
+    coordinator.set_user = Mock(return_value=user)
+
+    assert await coordinator.ensure_user(FRIEND_USER_ID) is user
+    coordinator.api.get_user.assert_awaited_once_with(FRIEND_USER_ID)
+    coordinator.set_user.assert_called_once_with(FRIEND_USER, False)
+
+
+def test_available_notifies_users_on_change() -> None:
+    """Test account availability changes notify all users."""
+    first_user = Mock()
+    second_user = Mock()
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator._available = False
+    coordinator.username = "current_user"
+    coordinator.users = {"first": first_user, "second": second_user}
+
+    coordinator.available = True
+
+    assert coordinator.available
+    first_user.async_update_entities.assert_called_once_with(force_refresh=True)
+    second_user.async_update_entities.assert_called_once_with(force_refresh=True)
+
+
+async def test_fetch_users_sets_online_and_offline_friends() -> None:
+    """Test fetched online and offline friends are added to the account."""
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.current_user_data = {
+        "id": CURRENT_USER_ID,
+        "friends": [FRIEND_USER_ID, NEW_FRIEND_USER_ID],
+    }
+    coordinator.users = {}
+    coordinator.set_user = Mock()
+    coordinator._get_friends = AsyncMock(
+        side_effect=[[FRIEND_USER.copy()], [NEW_FRIEND_USER.copy()]]
+    )
+
+    await coordinator.fetch_users()
+
+    assert coordinator.set_user.call_args_list[0].args == (
+        coordinator.current_user_data,
+    )
+    assert coordinator.set_user.call_args_list[1].args == (NEW_FRIEND_USER,)
+    assert coordinator.set_user.call_args_list[2].args == (FRIEND_USER,)
 
 
 async def test_websocket_handler_task_cleanup_is_removed_when_done(

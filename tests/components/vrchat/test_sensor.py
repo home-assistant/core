@@ -1,5 +1,6 @@
 """Test VRChat sensors."""
 
+import asyncio
 from types import SimpleNamespace
 from typing import cast
 
@@ -180,3 +181,25 @@ def test_location_sensor_world_attributes() -> None:
         "id": "wrld_test",
         "name": "Test world",
     }
+
+
+async def test_entity_world_data_helpers() -> None:
+    """Test world data lookup and update waiting helpers."""
+    world_task = asyncio.create_task(asyncio.sleep(0))
+    world = SimpleNamespace(data={"name": "Test world"}, task=world_task)
+    user = cast(
+        VRChatUserDataCoordinator,
+        SimpleNamespace(
+            data={"location": "offline", "status": "offline"},
+            world=world,
+            destination_world=None,
+        ),
+    )
+    status_sensor = VRChatUserStatusSensor(user)
+    location_sensor = VRChatUserLocationSensor(user)
+
+    assert status_sensor.vrchat_user_world_data_get("name") == "Test world"
+    assert VRChatUserLocationSensor.should_add_based_on_user_data({})
+    world.data = None
+    await location_sensor.async_update()
+    await world_task
