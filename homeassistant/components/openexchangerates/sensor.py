@@ -1,5 +1,7 @@
 """Support for openexchangerates.org exchange rates service."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_QUOTE
 from homeassistant.core import HomeAssistant
@@ -60,6 +62,7 @@ class OpenexchangeratesSensor(
         self._quote = quote
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self.coordinator.data.rates[self._quote]

@@ -1,6 +1,6 @@
 """Config flow to configure the Venstar integration."""
 
-from typing import Any
+from typing import Any, override
 
 from venstarcolortouch import VenstarColorTouch
 import voluptuous as vol
@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
+from .const import DOMAIN, LOGGER, VENSTAR_TIMEOUT
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
@@ -51,6 +51,7 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -65,7 +66,7 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=title, data=user_input)

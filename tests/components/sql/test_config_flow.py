@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.sql.const import (
-    CONF_ADVANCED_OPTIONS,
+    CONF_ADDITIONAL_OPTIONS,
     CONF_COLUMN_NAME,
     CONF_QUERY,
     DOMAIN,
@@ -100,7 +100,7 @@ async def test_form_simple(
     assert result["options"] == {
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
             CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
             CONF_STATE_CLASS: SensorStateClass.TOTAL,
@@ -141,7 +141,7 @@ async def test_form_with_query_template(
             " 5 {% else %} 6 {% endif %} as value"
         ),
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
             CONF_VALUE_TEMPLATE: "{{ value }}",
         },
@@ -188,7 +188,7 @@ async def test_form_with_broken_query_template(
             " 5 {% else %} 6 {% endif %} as value"
         ),
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
             CONF_VALUE_TEMPLATE: "{{ value }}",
         },
@@ -225,7 +225,7 @@ async def test_form_with_value_template(
     assert result["options"] == {
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
             CONF_VALUE_TEMPLATE: "{{ value }}",
         },
@@ -348,7 +348,7 @@ async def test_flow_fails_invalid_query(hass: HomeAssistant) -> None:
     assert result["options"] == {
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
             CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
             CONF_STATE_CLASS: SensorStateClass.TOTAL,
@@ -391,7 +391,7 @@ async def test_flow_fails_invalid_column_name(hass: HomeAssistant) -> None:
     assert result["options"] == {
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
             CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
             CONF_STATE_CLASS: SensorStateClass.TOTAL,
@@ -407,7 +407,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         options={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
                 CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
                 CONF_STATE_CLASS: SensorStateClass.TOTAL,
@@ -430,7 +430,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         user_input={
             CONF_QUERY: "SELECT 5 as size",
             CONF_COLUMN_NAME: "size",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
                 CONF_VALUE_TEMPLATE: "{{ value }}",
                 CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
@@ -443,7 +443,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_QUERY: "SELECT 5 as size",
         CONF_COLUMN_NAME: "size",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
             CONF_VALUE_TEMPLATE: "{{ value }}",
             CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
@@ -460,7 +460,7 @@ async def test_options_flow_name_previously_removed(hass: HomeAssistant) -> None
         options={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -482,7 +482,7 @@ async def test_options_flow_name_previously_removed(hass: HomeAssistant) -> None
         user_input={
             CONF_QUERY: "SELECT 5 as size",
             CONF_COLUMN_NAME: "size",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -493,7 +493,7 @@ async def test_options_flow_name_previously_removed(hass: HomeAssistant) -> None
     assert result["data"] == {
         CONF_QUERY: "SELECT 5 as size",
         CONF_COLUMN_NAME: "size",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
         },
     }
@@ -507,7 +507,7 @@ async def test_options_flow_fails_db_url(hass: HomeAssistant) -> None:
         options={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -529,7 +529,7 @@ async def test_options_flow_fails_db_url(hass: HomeAssistant) -> None:
             user_input={
                 CONF_QUERY: "SELECT 5 as size",
                 CONF_COLUMN_NAME: "size",
-                CONF_ADVANCED_OPTIONS: {
+                CONF_ADDITIONAL_OPTIONS: {
                     CONF_UNIT_OF_MEASUREMENT: "MiB",
                 },
             },
@@ -546,7 +546,7 @@ async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
         options={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -630,7 +630,7 @@ async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
         user_input={
             CONF_QUERY: "SELECT 5 as size",
             CONF_COLUMN_NAME: "size",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -640,7 +640,7 @@ async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_QUERY: "SELECT 5 as size",
         CONF_COLUMN_NAME: "size",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
         },
     }
@@ -654,7 +654,7 @@ async def test_options_flow_fails_invalid_column_name(hass: HomeAssistant) -> No
         options={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -682,7 +682,7 @@ async def test_options_flow_fails_invalid_column_name(hass: HomeAssistant) -> No
         user_input={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -692,7 +692,7 @@ async def test_options_flow_fails_invalid_column_name(hass: HomeAssistant) -> No
     assert result["data"] == {
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
         },
     }
@@ -706,7 +706,7 @@ async def test_options_flow_db_url_empty(hass: HomeAssistant) -> None:
         options={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -727,7 +727,7 @@ async def test_options_flow_db_url_empty(hass: HomeAssistant) -> None:
         user_input={
             CONF_QUERY: "SELECT 5 as size",
             CONF_COLUMN_NAME: "size",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -738,7 +738,7 @@ async def test_options_flow_db_url_empty(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_QUERY: "SELECT 5 as size",
         CONF_COLUMN_NAME: "size",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
         },
     }
@@ -770,7 +770,7 @@ async def test_full_flow_not_recorder_db(
         {
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {},
+            CONF_ADDITIONAL_OPTIONS: {},
         },
     )
     await hass.async_block_till_done()
@@ -781,7 +781,7 @@ async def test_full_flow_not_recorder_db(
     assert result["options"] == {
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {},
+        CONF_ADDITIONAL_OPTIONS: {},
     }
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -796,7 +796,7 @@ async def test_full_flow_not_recorder_db(
         user_input={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -807,7 +807,7 @@ async def test_full_flow_not_recorder_db(
     assert result["data"] == {
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
         },
     }
@@ -822,7 +822,7 @@ async def test_device_state_class(hass: HomeAssistant) -> None:
         options={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -839,7 +839,7 @@ async def test_device_state_class(hass: HomeAssistant) -> None:
         user_input={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
                 CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
                 CONF_STATE_CLASS: SensorStateClass.TOTAL,
@@ -852,7 +852,7 @@ async def test_device_state_class(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
             CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
             CONF_STATE_CLASS: SensorStateClass.TOTAL,
@@ -868,7 +868,7 @@ async def test_device_state_class(hass: HomeAssistant) -> None:
         user_input={
             CONF_QUERY: "SELECT 5 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {
+            CONF_ADDITIONAL_OPTIONS: {
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
@@ -881,7 +881,7 @@ async def test_device_state_class(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_UNIT_OF_MEASUREMENT: "MiB",
         },
     }

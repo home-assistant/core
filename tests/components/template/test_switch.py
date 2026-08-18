@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import switch, template
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.template.switch import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -25,6 +26,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_extra_template_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_action,
@@ -826,3 +828,39 @@ async def test_not_optimistic(hass: HomeAssistant, expected: str) -> None:
 
     state = hass.states.get(TEST_SWITCH.entity_id)
     assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass,
+        TEST_SWITCH,
+        style,
+        SWITCH_ACTIONS,
+    )
+
+
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_SWITCH,
+        ConfigurationStyle.MODERN,
+        0,
+        {
+            **SWITCH_ACTIONS,
+            "attributes": {"device_class": "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: device_class"
+        in caplog.text
+    )

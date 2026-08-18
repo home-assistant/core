@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioeafm import get_station
 
@@ -44,6 +44,7 @@ class EafmCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             update_interval=timedelta(seconds=15 * 60),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch the latest data from the source."""
         # DataUpdateCoordinator will handle aiohttp ClientErrors and timeouts

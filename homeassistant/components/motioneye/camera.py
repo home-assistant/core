@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from jinja2 import Template
@@ -228,11 +228,13 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         ) and MotionEyeClient.is_camera_streaming(self._camera)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._is_acceptable_streaming_camera()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
@@ -244,6 +246,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self._motion_detection_enabled

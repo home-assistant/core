@@ -1,7 +1,7 @@
 """Config flow to configure the OVO Energy integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from ovoenergy import OVOEnergy
@@ -33,6 +33,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         self.username = None
         self.account = None
 
+    @override
     async def async_step_user(
         self,
         user_input: Mapping[str, Any] | None = None,

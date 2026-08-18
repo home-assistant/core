@@ -1,7 +1,7 @@
 """Support for Sinch notifications."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from clx.xms.api import MtBatchTextSmsResult
 from clx.xms.client import Client
@@ -66,6 +66,7 @@ class SinchNotificationService(BaseNotificationService):
         self.sender = config[CONF_SENDER]
         self.client = Client(config[CONF_SERVICE_PLAN_ID], config[CONF_API_KEY])
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         targets = kwargs.get(ATTR_TARGET, self.default_recipients)

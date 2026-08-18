@@ -87,7 +87,11 @@ async def async_get_triggers(
             }
         )
 
-        if state and const.ATTR_CURRENT_TEMPERATURE in state.attributes:
+        if (
+            state
+            and const.ClimateEntityStateAttribute.CURRENT_TEMPERATURE
+            in state.attributes
+        ):
             triggers.append(
                 {
                     **base_trigger,
@@ -95,7 +99,10 @@ async def async_get_triggers(
                 }
             )
 
-        if state and const.ATTR_CURRENT_HUMIDITY in state.attributes:
+        if (
+            state
+            and const.ClimateEntityStateAttribute.CURRENT_HUMIDITY in state.attributes
+        ):
             triggers.append(
                 {
                     **base_trigger,

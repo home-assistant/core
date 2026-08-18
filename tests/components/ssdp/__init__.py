@@ -20,6 +20,6 @@ async def init_ssdp_component(hass: HomeAssistant) -> SsdpListener:
 
 def _ssdp_headers(headers) -> CaseInsensitiveDict:
     """Create a CaseInsensitiveDict with headers and a timestamp."""
-    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime.now())
+    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime.now())  # pylint: disable=home-assistant-enforce-naive-now
     ssdp_headers["_udn"] = udn_from_headers(ssdp_headers)
     return ssdp_headers

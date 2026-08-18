@@ -1,7 +1,7 @@
 """Config flow for LG ThinQ."""
 
 import logging
-from typing import Any
+from typing import Any, override
 import uuid
 
 from thinqconnect import ThinQApi, ThinQAPIErrorCodes, ThinQAPIException
@@ -72,6 +72,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["geopy", "pyipma"],
-  "requirements": ["pyipma==3.0.9"]
+  "requirements": ["pyipma==3.0.10"]
 }
