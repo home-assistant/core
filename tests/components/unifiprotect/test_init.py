@@ -423,6 +423,36 @@ async def test_device_remove_devices_nvr(
     assert not response["success"]
 
 
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+) -> None:
+    """Test removing an unexpected child device is rejected."""
+    await init_entry(hass, ufp, [light])
+    assert await async_setup_component(hass, "config", {})
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=ufp.entry.entry_id,
+        identifiers={(DOMAIN, "test_parent_device")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=ufp.entry.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=parent_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)
+
+
 @pytest.mark.parametrize(
     ("mock_entries", "expected_result"),
     [
