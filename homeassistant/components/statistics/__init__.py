@@ -69,10 +69,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     source_device_id=source_device_id,
                 )
         if config_entry.minor_version < 3:
-            # A sampling size of 0 was accepted by an older config flow but
-            # produces an invalid helper. Remove it so the sensor relies on the
-            # max age instead. "sampling_size" is used as a string literal to
-            # avoid a circular import from the sensor platform.
             if options.get("sampling_size") == 0:
                 options.pop("sampling_size")
         hass.config_entries.async_update_entry(
