@@ -1106,6 +1106,7 @@ async def test_rpc_linkedgo_st802_thermostat(
         {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
+    monkeypatch.setitem(mock_rpc_device.status["boolean:201"], "value", True)
     monkeypatch.setitem(mock_rpc_device.status["enum:201"], "value", "heat")
     mock_rpc_device.mock_update()
 
