@@ -96,24 +96,31 @@ async def async_setup_entry(
     await async_update_unique_id(hass, coordinator, SWITCH_DOMAIN, old_key, new_key)
 
     known_devices: set[str] = set()
+    known_dnd_devices: set[str] = set()
 
     def _check_device() -> None:
         current_devices = set(coordinator.data)
         new_devices = current_devices - known_devices
-        if new_devices:
-            known_devices.update(new_devices)
-            dnd_switches = [
-                AmazonSwitchEntity(coordinator, serial_num, DND_SWITCH)
-                for serial_num in new_devices
-                if serial_num in coordinator.dnd_states
-            ]
-            communication_switches = [
-                AmazonSwitchEntity(coordinator, serial_num, switch_desc)
-                for switch_desc in COMMUNICATION_SWITCHES
-                for serial_num in new_devices
-                if switch_desc.key
-                in coordinator.data[serial_num].communication_settings
-            ]
+        known_devices.update(new_devices)
+
+        # DND state may arrive after device discovery (initial sync failure,
+        # or a later push), so track it separately from `known_devices`.
+        new_dnd_devices = (
+            current_devices & set(coordinator.dnd_states)
+        ) - known_dnd_devices
+        known_dnd_devices.update(new_dnd_devices)
+
+        dnd_switches = [
+            AmazonSwitchEntity(coordinator, serial_num, DND_SWITCH)
+            for serial_num in new_dnd_devices
+        ]
+        communication_switches = [
+            AmazonSwitchEntity(coordinator, serial_num, switch_desc)
+            for switch_desc in COMMUNICATION_SWITCHES
+            for serial_num in new_devices
+            if switch_desc.key in coordinator.data[serial_num].communication_settings
+        ]
+        if dnd_switches or communication_switches:
             async_add_entities(dnd_switches + communication_switches)
 
     _check_device()
@@ -159,8 +166,7 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
         if self.entity_description.switch_type == TYPE_DND:
             return self.coordinator.dnd_states.get(self.device.serial_number, False)
 
-        if TYPE_CHECKING:
-            assert self.entity_description.is_on_fn is not None
+        assert self.entity_description.is_on_fn is not None
         return self.entity_description.is_on_fn(self.device)
 
     @property

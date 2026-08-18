@@ -120,6 +120,26 @@ async def test_switch_dnd_not_created_without_synced_state(
     assert hass.states.get(ENTITY_ID) is None
 
 
+async def test_switch_dnd_created_by_late_pushed_event(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the DND switch is created by a push arriving after initial sync failed."""
+    mock_amazon_devices_client.sync_dnd_state = AsyncMock()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID) is None
+
+    event_handler = mock_amazon_devices_client.on_dnd_event.append.call_args.args[0]
+    await event_handler({TEST_DEVICE_1_SN: True})
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_ON
+
+
 async def test_offline_device(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

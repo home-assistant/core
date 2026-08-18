@@ -378,7 +378,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
     async def dnd_event_handler(self, dnd_states: dict[str, bool]) -> None:
         """Handle pushed dnd events."""
-        self._dnd_states = dnd_states
+        self._dnd_states = {**self._dnd_states, **dnd_states}
         self.async_update_listeners()
 
     @property
