@@ -311,7 +311,8 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
                     except Exception:
                         _LOGGER.exception(EXCEPTION_MESSAGE_VRCHAT_WEBSOCKET_EVENT)
         except TimeoutError:
-            # Keep receiving updates until the reconnecting handler replaces this one.
+            # Keep receiving updates until this handler's callback reconnects.
+            # Do not add a callback here; it would schedule a duplicate reconnect.
             self.ws_handler_task = self.create_task(self.ws_handler())
             self._track_ws_handler_task(self.ws_handler_task)
             raise
