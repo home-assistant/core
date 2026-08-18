@@ -159,7 +159,7 @@ def make_cookie(name: str, value: str):
 
 def set_cookie(api: vrchatapi.ApiClient, name: str, value: str | None = None):
     """Set a single cookie to VRChat API client."""
-    if value is not None:
+    if value:
         api.rest_client.cookie_jar.set_cookie(make_cookie(name, value))
 
 
@@ -170,17 +170,15 @@ def set_cookie_dict(api: vrchatapi.ApiClient, cookie: VRChatAuthCookie | None = 
         set_cookie(api, CONF_COOKIE_2FA, cookie.get(CONF_COOKIE_2FA))
 
 
-dummy_cookie = make_cookie("", "")
-
-
 def get_cookie_dict(api: vrchatapi.ApiClient):
     """Get a cookie dict from VRChat API client."""
     cookie_jar_data = cast(Any, api.rest_client.cookie_jar)._cookies  # noqa: SLF001
     cookie_jar = cookie_jar_data.get(VRCHAT_API_HOST, {}).get("/", {})
-    return VRChatAuthCookie(
-        auth=cookie_jar.get(CONF_COOKIE_AUTH, dummy_cookie).value,
-        twoFactorAuth=cookie_jar.get(CONF_COOKIE_2FA, dummy_cookie).value,
-    )
+    return {
+        name: cookie.value
+        for name in (CONF_COOKIE_AUTH, CONF_COOKIE_2FA)
+        if (cookie := cookie_jar.get(name)) is not None and cookie.value
+    }
 
 
 def wrap_api_object[T](obj: T) -> T:
