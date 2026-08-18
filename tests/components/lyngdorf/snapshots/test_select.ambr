@@ -7,6 +7,8 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Global',
+        'Focus 1',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -44,6 +46,8 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf RoomPerfect position',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Global',
+        'Focus 1',
       ]),
     }),
     'context': <ANY>,
@@ -51,7 +55,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Focus 1',
   })
 # ---
 # name: test_entities[select.mock_lyngdorf_voicing-entry]
@@ -62,6 +66,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Neutral',
+        'Music',
+        'Movie',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -99,6 +106,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Voicing',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Neutral',
+        'Music',
+        'Movie',
       ]),
     }),
     'context': <ANY>,
@@ -106,6 +116,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Neutral',
   })
 # ---

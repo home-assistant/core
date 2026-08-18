@@ -39,23 +39,6 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
-async def test_room_perfect_current_option(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test that the RoomPerfect select entity reflects the current position."""
-    mock_receiver.room_perfect_position = "focus"
-    mock_receiver.available_room_perfect_positions = ["focus", "global"]
-
-    notify_receiver_update(mock_receiver)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ROOM_PERFECT_ENTITY_ID)
-    assert state is not None
-    assert state.state == "focus"
-
-
 async def test_room_perfect_select_option(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -79,23 +62,6 @@ async def test_room_perfect_select_option(
     )
 
     assert mock_receiver.room_perfect_position == "global"
-
-
-async def test_voicing_current_option(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test that the voicing select entity reflects the current voicing."""
-    mock_receiver.voicing = "Neutral"
-    mock_receiver.available_voicings = ["Neutral", "Music", "Movie"]
-
-    notify_receiver_update(mock_receiver)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(VOICING_ENTITY_ID)
-    assert state is not None
-    assert state.state == "Neutral"
 
 
 async def test_voicing_select_option(

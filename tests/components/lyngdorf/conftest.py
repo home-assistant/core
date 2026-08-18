@@ -69,10 +69,10 @@ def mock_receiver() -> Generator[MagicMock]:
         # needs a value here; an unset one is a mock the response cannot encode.
         receiver.model = LyngdorfModel.MP_60
         receiver.max_volume = 0.0
-        receiver.room_perfect_position = None
-        receiver.available_room_perfect_positions = []
-        receiver.voicing = None
-        receiver.available_voicings = []
+        receiver.room_perfect_position = "Focus 1"
+        receiver.available_room_perfect_positions = ["Global", "Focus 1"]
+        receiver.voicing = "Neutral"
+        receiver.available_voicings = ["Neutral", "Music", "Movie"]
         receiver.lipsync = None
         receiver.lipsync_range = NumericRange(0, 500, 1)
         for _t in ("bass", "treble"):
