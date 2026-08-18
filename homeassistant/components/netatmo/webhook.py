@@ -4,6 +4,7 @@ import logging
 import secrets
 from typing import Any
 
+import aiohttp
 from aiohttp.web import Request
 import pyatmo
 
@@ -149,16 +150,24 @@ async def async_unregister_webhook(
     """Unregister the webhook from the Netatmo backend."""
     if CONF_WEBHOOK_ID not in entry.data:
         return
+
+    if not entry.runtime_data.webhook_registered:
+        return
+
+    entry.runtime_data.webhook_registered = False
+
     _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
     async_dispatcher_send(
         hass,
         f"signal-{DOMAIN}-webhook-None",
         {"type": "None", "data": {WEBHOOK_PUSH_TYPE: WEBHOOK_DEACTIVATION}},
     )
+
     webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+
     try:
         await entry.runtime_data.auth.async_dropwebhook()
-    except pyatmo.ApiError:
+    except pyatmo.ApiError, TimeoutError, aiohttp.ClientError:
         _LOGGER.debug("No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID])
 
 
@@ -184,8 +193,6 @@ async def async_register_webhook(
         )
         return True
 
-    # Registering twice raises. Cloud connection changes can land in an order that
-    # asks for a second registration, so drop any handler we already hold first.
     webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     webhook_register(
         hass,
@@ -194,13 +201,11 @@ async def async_register_webhook(
         entry.data[CONF_WEBHOOK_ID],
         async_handle_webhook,
     )
+    entry.runtime_data.webhook_registered = True
 
     try:
         await entry.runtime_data.auth.async_addwebhook(webhook_url)
-    except pyatmo.ApiError as err:
-        # Kept in place deliberately. A registration may still be live at Netatmo -
-        # the listing this call starts with can fail on its own - and a handler that
-        # receives nothing costs nothing, where a missing one drops every delivery
+    except (pyatmo.ApiError, TimeoutError, aiohttp.ClientError) as err:
         _LOGGER.error("Error during webhook registration - %s", err)
         return False
     else:

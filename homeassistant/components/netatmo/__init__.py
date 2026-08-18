@@ -174,7 +174,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> 
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         try:
             await entry.runtime_data.auth.async_dropwebhook()
-        except pyatmo.ApiError:
+        except pyatmo.ApiError, TimeoutError, ClientError:
+            # Best effort: an unreachable API must not block unloading the entry
             _LOGGER.debug("No webhook to be dropped")
         _LOGGER.debug("Unregister Netatmo webhook")
 

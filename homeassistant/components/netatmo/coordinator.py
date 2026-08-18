@@ -171,6 +171,9 @@ class NetatmoDataHandler:
         self.publisher: dict[str, NetatmoPublisher] = {}
         self._queue: deque = deque()
         self._webhook: bool = False
+        # Distinct from _webhook, which only turns true once a delivery proves the
+        # registration works. This one says we asked Netatmo for one, so we owe a drop
+        self.webhook_registered: bool = False
         if config_entry.data["auth_implementation"] == cloud.DOMAIN:
             self._interval_factor = CLOUD_FACTOR
             self._rate_limit = CLOUD_LIMIT
