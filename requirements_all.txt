@@ -2786,7 +2786,7 @@ python-swisscom-internet-box==0.2.0
 python-tado==0.18.16
 
 # homeassistant.components.technove
-python-technove==2.1.2
+python-technove==2.1.3
 
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==22.7
@@ -3333,7 +3333,7 @@ vilfo-api-client==0.5.0
 visionpluspython==1.1.0
 
 # homeassistant.components.vizio
-vizaio==0.4.0
+vizaio==0.5.0
 
 # homeassistant.components.caldav
 vobject==0.9.9
@@ -3436,7 +3436,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==3.3.1
+yalexs-ble==4.0.1
 
 # homeassistant.components.august
 # homeassistant.components.yale
@@ -3497,7 +3497,7 @@ zinvolt==1.0.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.73.0
+zwave-js-server-python==0.73.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
