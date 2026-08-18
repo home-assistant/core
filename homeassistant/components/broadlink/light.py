@@ -1,7 +1,7 @@
 """Support for Broadlink lights."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from broadlink.exceptions import BroadlinkException
 
@@ -68,6 +68,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
 
         self._update_state(data)
 
+    @override
     def _update_state(self, data):
         """Update the state of the entity."""
         if "pwr" in data:
@@ -95,6 +96,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
                 # Scenes are not yet supported.
                 self._attr_color_mode = ColorMode.UNKNOWN
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         state = {"pwr": 1}
@@ -119,6 +121,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
 
         await self._async_set_state(state)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self._async_set_state({"pwr": 0})

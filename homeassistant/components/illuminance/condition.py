@@ -14,10 +14,10 @@ from homeassistant.helpers.condition import (
     make_entity_state_condition,
 )
 
-ILLUMINANCE_DETECTED_DOMAIN_SPECS = {
-    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.LIGHT)
+ILLUMINANCE_DETECTED_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.LIGHT),
 }
-ILLUMINANCE_VALUE_DOMAIN_SPECS = {
+ILLUMINANCE_VALUE_DOMAIN_SPECS: dict[str, DomainSpec] = {
     SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.ILLUMINANCE),
 }
 

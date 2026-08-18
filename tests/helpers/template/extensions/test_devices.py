@@ -325,3 +325,41 @@ async def test_device_attr(
     )
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
+
+
+async def test_device_functions_with_child_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device functions with child devices."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+
+    # device_id finds a child device by name
+    info = render_to_info(hass, "{{ device_id('Outlet 1') }}")
+    assert_result_info(info, child_device.id)
+
+    # device_name resolves a child device
+    info = render_to_info(hass, f"{{{{ device_name('{child_device.id}') }}}}")
+    assert_result_info(info, "Outlet 1")
+
+    # device_attr returns None for attributes a child device does not have
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{child_device.id}', 'manufacturer') }}}}"
+    )
+    assert_result_info(info, None)
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{child_device.id}', 'parent_device_id') }}}}"
+    )
+    assert_result_info(info, child_device.parent_device_id)

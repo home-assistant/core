@@ -5,7 +5,7 @@ from enum import IntFlag
 import functools as ft
 import logging
 import math
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -28,6 +28,8 @@ from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+
+from .const import FanEntityCapabilityAttribute, FanEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -202,7 +204,9 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for fan entities."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_PRESET_MODES})
+    _entity_component_unrecorded_attributes = frozenset(
+        {FanEntityCapabilityAttribute.PRESET_MODES}
+    )
 
     entity_description: FanEntityDescription
     _attr_current_direction: str | None = None
@@ -288,6 +292,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Set the direction of the fan."""
         await self.hass.async_add_executor_job(self.set_direction, direction)
 
+    @override
     def turn_on(
         self,
         percentage: int | None = None,
@@ -309,6 +314,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self._valid_preset_mode_or_raise(preset_mode)
         await self.async_turn_on(percentage, preset_mode, **kwargs)
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -334,6 +340,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         await self.hass.async_add_executor_job(self.oscillate, oscillating)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return (
@@ -366,44 +373,47 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_oscillating
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, list[str] | None]:
         """Return capability attributes."""
-        attrs = {}
+        attrs: dict[str, list[str] | None] = {}
         supported_features = self.supported_features
 
         if (
             FanEntityFeature.SET_SPEED in supported_features
             or FanEntityFeature.PRESET_MODE in supported_features
         ):
-            attrs[ATTR_PRESET_MODES] = self.preset_modes
+            attrs[FanEntityCapabilityAttribute.PRESET_MODES] = self.preset_modes
 
         return attrs
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, float | str | None]:
         """Return optional state attributes."""
         data: dict[str, float | str | None] = {}
         supported_features = self.supported_features
 
         if FanEntityFeature.DIRECTION in supported_features:
-            data[ATTR_DIRECTION] = self.current_direction
+            data[FanEntityStateAttribute.DIRECTION] = self.current_direction
 
         if FanEntityFeature.OSCILLATE in supported_features:
-            data[ATTR_OSCILLATING] = self.oscillating
+            data[FanEntityStateAttribute.OSCILLATING] = self.oscillating
 
         has_set_speed = FanEntityFeature.SET_SPEED in supported_features
 
         if has_set_speed:
-            data[ATTR_PERCENTAGE] = self.percentage
-            data[ATTR_PERCENTAGE_STEP] = self.percentage_step
+            data[FanEntityStateAttribute.PERCENTAGE] = self.percentage
+            data[FanEntityStateAttribute.PERCENTAGE_STEP] = self.percentage_step
 
         if has_set_speed or FanEntityFeature.PRESET_MODE in supported_features:
-            data[ATTR_PRESET_MODE] = self.preset_mode
+            data[FanEntityStateAttribute.PRESET_MODE] = self.preset_mode
 
         return data
 
     @cached_property
+    @override
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features

@@ -1,7 +1,7 @@
 """Support for Qbus binary sensor."""
 
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from qbusmqttapi.discovery import QbusMqttDevice, QbusMqttOutput
 from qbusmqttapi.factory import QbusMqttTopicFactory
@@ -103,6 +103,7 @@ class QbusWeatherBinarySensor(QbusEntity, BinarySensorEntity):
 
         self.entity_description = description
 
+    @override
     async def _handle_state_received(self, state: QbusMqttWeatherState) -> None:
         if value := state.read_property(self.entity_description.property, None):
             self._attr_is_on = (
@@ -127,6 +128,7 @@ class QbusControllerConnectedBinarySensor(BinarySensorEntity):
             identifiers={create_device_identifier(controller)}
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         topic = QbusMqttTopicFactory().get_device_state_topic(self._controller.id)

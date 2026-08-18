@@ -120,6 +120,27 @@ async def test_yaml_import_without_filter(
     assert entries[0].source == SOURCE_IMPORT
 
 
+@pytest.mark.usefixtures("mock_setup_entry", "mock_hass_splunk")
+async def test_yaml_import_defaults_ssl_on(hass: HomeAssistant) -> None:
+    """Test YAML import defaults to SSL enabled when the field is omitted."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_TOKEN: "test-token",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8088,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_SSL] is True
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_yaml_with_filter(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock
@@ -313,7 +334,7 @@ async def test_yaml_filter_only_no_deprecation_issue(
     assert len(entries) == 0
 
     # Verify no deprecation issue was created
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issues = issue_registry.issues
     assert not any(
         issue_id[0] == DOMAIN and "deprecated" in issue_id[1] for issue_id in issues
@@ -349,7 +370,7 @@ async def test_yaml_with_connection_creates_deprecation_issue(
     assert entries[0].source == SOURCE_IMPORT
 
     # Verify deprecation issue was created in homeassistant domain
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues
 
 
@@ -379,7 +400,7 @@ async def test_yaml_import_error_creates_specific_issue(
     assert len(entries) == 0
 
     # Verify error-specific issue was created
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         DOMAIN,
         "deprecated_yaml_import_issue_cannot_connect",
@@ -411,5 +432,5 @@ async def test_yaml_import_already_configured_creates_deprecation_issue(
     await hass.async_block_till_done()
 
     # Verify deprecation issue was still created (single_instance_allowed is ok)
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues

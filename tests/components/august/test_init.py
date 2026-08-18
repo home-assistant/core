@@ -246,14 +246,14 @@ async def test_device_remove_devices(
 
     device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
     )
-    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 
@@ -261,12 +261,12 @@ async def test_brand_migration_issue(hass: HomeAssistant) -> None:
     """Test removing the brand migration issue."""
     august_operative_lock = await _mock_operative_august_lock_detail(hass)
     config_entry, _ = await _create_august_with_devices(
-        hass, [august_operative_lock], brand=Brand.YALE_HOME
+        hass, [august_operative_lock], brand=Brand.YALE_AUGUST
     )
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    issue_reg = ir.async_get(hass)
+    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     await hass.config_entries.async_remove(config_entry.entry_id)
     assert not issue_reg.async_get_issue(DOMAIN, "yale_brand_migration")

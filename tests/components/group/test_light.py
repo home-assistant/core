@@ -1565,7 +1565,7 @@ async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {
             "group": {
                 "group_zero": {"entities": "light.Bowl", "icon": "mdi:work"},
@@ -1595,7 +1595,7 @@ async def test_reload_with_base_integration_platform_not_setup(
     """Test the ability to reload lights."""
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {
             "group": {
                 "group_zero": {"entities": "light.Bowl", "icon": "mdi:work"},

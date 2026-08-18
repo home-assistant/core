@@ -306,6 +306,79 @@ async def test_config_entry_migration_v5_prefers_active_entry(
     assert active_entry.unique_id == serial_number
 
 
+async def test_config_entry_migration_v5_removes_duplicates_of_migrated_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test v1.5 migration removes duplicates of an already migrated entry.
+
+    A migrated entry (minor version 5) never runs the migration again, so the
+    remaining minor version 4 duplicates have to remove themselves instead of
+    relying on the canonical entry's migration to remove them.
+    """
+    serial_number = "9e2adbd75b8beb119fe564a0f320645d"
+    data = {
+        "description": "SkyConnect v1.0",
+        "device": (
+            "/dev/serial/by-id/"
+            "usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+        ),
+        "vid": "10C4",
+        "pid": "EA60",
+        "serial_number": serial_number,
+        "manufacturer": "Nabu Casa",
+        "product": "SkyConnect v1.0",
+        "firmware": "ezsp",
+        "firmware_version": "7.4.4.0",
+    }
+
+    older_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=(
+            "10C4:EA60_9e2adbd75b8beb119fe564a0f320645d_Nabu Casa_SkyConnect v1.0"
+        ),
+        source="usb",
+        data=dict(data),
+        version=1,
+        minor_version=4,
+    )
+    older_entry.add_to_hass(hass)
+
+    duplicate_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="10C4:EA60_9e2adbd75b8beb119fe564a0f320645d_Nabu_Casa_SkyConnect",
+        source="import",
+        data=dict(data),
+        version=1,
+        minor_version=4,
+    )
+    duplicate_entry.add_to_hass(hass)
+
+    migrated_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=serial_number,
+        source="import",
+        data=dict(data),
+        version=1,
+        minor_version=5,
+    )
+    migrated_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        return_value=True,
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    remaining = hass.config_entries.async_entries(DOMAIN)
+    assert len(remaining) == 1
+    assert remaining[0].entry_id == migrated_entry.entry_id
+    assert remaining[0].minor_version == 5
+    assert remaining[0].unique_id == serial_number
+    assert hass.config_entries.async_get_entry(older_entry.entry_id) is None
+    assert hass.config_entries.async_get_entry(duplicate_entry.entry_id) is None
+
+
 async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
     """Test setup failing when the USB port is missing."""
 
@@ -531,7 +604,7 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
             )
         ],
     ):
-        await async_setup_component(hass, "homeassistant_sky_connect", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert hass.config_entries.async_get_entry(new_entry.entry_id) is not None
     assert hass.config_entries.async_get_entry(old_entry.entry_id) is not None

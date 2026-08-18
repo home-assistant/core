@@ -212,6 +212,14 @@ def ring_keypad_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("ring_keypad_state.json", DOMAIN)
 
 
+@pytest.fixture(name="zooz_zac36_titan_valve_actuator_state")
+def zooz_zac36_titan_valve_actuator_state_fixture() -> dict[str, Any]:
+    """Load the Zooz ZAC36 Titan valve actuator node state fixture data."""
+    return load_json_object_fixture(
+        "zooz_zac36_titan_valve_actuator_state.json", DOMAIN
+    )
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="package")
 def nortek_thermostat_state_fixture() -> dict[str, Any]:
     """Load the nortek thermostat node state fixture data."""
@@ -978,6 +986,16 @@ def ring_keypad_fixture(client: MagicMock, ring_keypad_state: NodeDataType) -> N
     return node
 
 
+@pytest.fixture(name="zooz_zac36_titan_valve_actuator")
+def zooz_zac36_titan_valve_actuator_fixture(
+    client: MagicMock, zooz_zac36_titan_valve_actuator_state: NodeDataType
+) -> Node:
+    """Mock a Zooz ZAC36 Titan valve actuator node."""
+    node = Node(client, zooz_zac36_titan_valve_actuator_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="integration")
 async def integration_fixture(
     hass: HomeAssistant,
@@ -987,7 +1005,7 @@ async def integration_fixture(
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org"},
         unique_id=str(client.driver.controller.home_id),
     )

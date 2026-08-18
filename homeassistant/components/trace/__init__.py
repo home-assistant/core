@@ -58,8 +58,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             await store.async_save(
                 {
-                    key: list(traces.values())
-                    for key, traces in hass.data[DATA_TRACE].items()
+                    key: list(trace_bucket.all_traces())
+                    for key, trace_bucket in hass.data[DATA_TRACE].items()
                 }
             )
         except HomeAssistantError as exc:

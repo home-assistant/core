@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
@@ -104,12 +104,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=self.schema,
                 errors={"base": "invalid_auth"},
             )
-        except DaikinException as daikin_exp:
-            _LOGGER.error(daikin_exp)
+        except DaikinException:
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.schema,
-                errors={"base": "unknown"},
+                errors={"base": "cannot_connect"},
             )
         except Exception:
             _LOGGER.exception("Unexpected error creating device")
@@ -122,6 +121,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         mac = device.mac
         return await self._create_entry(host, mac, key, uuid, password)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -141,6 +141,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             user_input.get(CONF_PASSWORD),
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

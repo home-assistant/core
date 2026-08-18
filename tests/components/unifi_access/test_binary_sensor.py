@@ -197,5 +197,5 @@ async def test_v2_device_update_no_explicit_state_does_not_overwrite(
     await handlers["access.data.v2.device.update"](update_msg)
     await hass.async_block_till_done()
 
-    # Back door must still be open/on – not silently reset to closed/off
+    # Back door must still be open/on - not silently reset to closed/off
     assert hass.states.get(BACK_DOOR_ENTITY).state == "on"

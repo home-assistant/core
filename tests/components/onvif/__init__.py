@@ -11,7 +11,7 @@ from zeep.exceptions import Fault
 
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
-from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
+from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH, DOMAIN
 from homeassistant.components.onvif.event_manager import EventManager
 from homeassistant.components.onvif.models import (
     Capabilities,
@@ -275,7 +275,7 @@ async def setup_onvif_integration(
         }
 
     config_entry = MockConfigEntry(
-        domain=config_flow.DOMAIN,
+        domain=DOMAIN,
         source=source,
         data={**config},
         options=options or {},

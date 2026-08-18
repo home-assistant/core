@@ -12,6 +12,7 @@
       "invalid_url": "Failed to connect. Check the URL and if the device is connected to power",
       "missing_device_info": "Failed to read device information. Check the network connection of the device"
     },
+    "flow_title": "{name} ({model})",
     "step": {
       "discovery_confirm": {
         "description": "Do you want to set up the Lunatone device at {url}?"

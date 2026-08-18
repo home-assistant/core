@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyfreedompro import get_list, get_states
 
@@ -38,6 +38,7 @@ class FreedomproDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self):
         if self._devices is None:
             result = await get_list(

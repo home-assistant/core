@@ -1,5 +1,7 @@
 """Application credentials platform for the Volvo integration."""
 
+from typing import override
+
 from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
 from volvocarsapi.scopes import ALL_SCOPES
 
@@ -28,6 +30,7 @@ class VolvoOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
     """Volvo oauth2 implementation."""
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         return super().extra_authorize_data | {

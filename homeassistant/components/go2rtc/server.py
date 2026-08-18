@@ -74,6 +74,7 @@ _API_ALLOW_PATHS = (
     "/",  # UI static page and version control
     "/api",  # Main API path
     "/api/frame.jpeg",  # Snapshot functionality
+    "/api/preload",  # Preload functionality
     "/api/schemes",  # Supported stream schemes
     "/api/streams",  # Stream management
     "/api/webrtc",  # Webrtc functionality

@@ -31,7 +31,7 @@ class BroadlinkHeartbeat:
     async def async_setup(self) -> None:
         """Set up the heartbeat."""
         if self._unsubscribe is None:
-            await self.async_heartbeat(dt.datetime.now())
+            await self.async_heartbeat(dt.datetime.now())  # pylint: disable=home-assistant-enforce-naive-now
             self._unsubscribe = event.async_track_time_interval(
                 self._hass, self.async_heartbeat, self.HEARTBEAT_INTERVAL
             )

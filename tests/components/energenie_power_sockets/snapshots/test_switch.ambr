@@ -2,8 +2,8 @@
 # name: test_switch_setup[mockedusbdevice_socket_0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'MockedUSBDevice Socket 0',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MockedUSBDevice Socket 0',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mockedusbdevice_socket_0',
@@ -53,8 +53,8 @@
 # name: test_switch_setup[mockedusbdevice_socket_1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'MockedUSBDevice Socket 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MockedUSBDevice Socket 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mockedusbdevice_socket_1',
@@ -104,8 +104,8 @@
 # name: test_switch_setup[mockedusbdevice_socket_2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'MockedUSBDevice Socket 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MockedUSBDevice Socket 2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mockedusbdevice_socket_2',
@@ -155,8 +155,8 @@
 # name: test_switch_setup[mockedusbdevice_socket_3]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'MockedUSBDevice Socket 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MockedUSBDevice Socket 3',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mockedusbdevice_socket_3',

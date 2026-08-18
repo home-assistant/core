@@ -1,6 +1,6 @@
 """Support for controlling projector via the PJLink protocol."""
 
-from typing import Any
+from typing import Any, override
 
 from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
@@ -188,21 +188,25 @@ class PjLinkDevice(MediaPlayerEntity):
             else:
                 raise
 
+    @override
     def turn_off(self) -> None:
         """Turn projector off."""
         with self.projector() as projector:
             projector.set_power("off")
 
+    @override
     def turn_on(self) -> None:
         """Turn projector on."""
         with self.projector() as projector:
             projector.set_power("on")
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) of unmute (false) media player."""
         with self.projector() as projector:
             projector.set_mute(MUTE_AUDIO, mute)
 
+    @override
     def select_source(self, source: str) -> None:
         """Set the input source."""
         source = self._source_name_mapping[source]

@@ -45,12 +45,13 @@ ZEROCONF_MAP: Final[dict[str, str]] = {
 }
 
 type NumberType = Literal[
-    "maximum_boiler_temperature",
-    "max_dhw_temperature",
+    "boiler_temperature",
+    "dhw_temperature",
     "temperature_offset",
 ]
 
 type SelectType = Literal[
+    "dhw_mode",
     "select_dhw_mode",
     "select_gateway_mode",
     "select_regulation_mode",
@@ -81,6 +82,7 @@ MASTER_THERMOSTATS: Final[list[str]] = [
 ]
 
 # Select constants
+DHW_MODE: Final = "dhw_mode"
 SELECT_DHW_MODE: Final = "select_dhw_mode"
 SELECT_GATEWAY_MODE: Final = "select_gateway_mode"
 SELECT_REGULATION_MODE: Final = "select_regulation_mode"

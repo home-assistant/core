@@ -5,9 +5,6 @@ import logging
 DOMAIN = "weatherflow_cloud"
 LOGGER = logging.getLogger(__package__)
 
-ATTR_ATTRIBUTION = "Weather data delivered by WeatherFlow/Tempest API"
-MANUFACTURER = "WeatherFlow"
-
 STATE_MAP = {
     "clear-day": "sunny",
     "clear-night": "clear-night",

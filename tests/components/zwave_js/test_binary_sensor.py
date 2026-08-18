@@ -329,6 +329,199 @@ async def test_notification_sensor(
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "device_class"),
+    [
+        ("binary_sensor.keypad_v2_power_has_been_applied", None),
+        (
+            "binary_sensor.keypad_v2_ac_mains_re_connected",
+            BinarySensorDeviceClass.PLUG,
+        ),
+    ],
+    ids=["power_applied", "mains_re_connected"],
+)
+@pytest.mark.usefixtures("ring_keypad", "integration")
+async def test_power_management_notification_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    device_class: BinarySensorDeviceClass | None,
+) -> None:
+    """Test Power Management notification sensors are diagnostic."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.usefixtures("ring_keypad", "integration")
+async def test_power_management_mains_disconnected_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the AC mains disconnected sensor is kept as a diagnostic sensor.
+
+    State 3 (AC mains re-connected) is the PLUG sensor, with state 2 (AC mains
+    disconnected) as its off state. State 2 also gets its own entity without a
+    device class, kept for backwards compatibility to be deprecated separately.
+    """
+    entity_id = "binary_sensor.keypad_v2_ac_mains_disconnected"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.usefixtures("zooz_zac36_titan_valve_actuator", "integration")
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "binary_sensor.titan_water_valve_actuator_overheat_detected",
+        "binary_sensor.titan_water_valve_actuator_underheat_detected",
+    ],
+)
+async def test_heat_notification_sensor_diagnostic(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+) -> None:
+    """Test overheat/underheat is diagnostic for non-heat-relevant device classes."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.HEAT
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.usefixtures("climate_heatit_z_trm6", "integration")
+async def test_heat_notification_sensor_primary(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test overheat/underheat is primary for heat-relevant generic device classes."""
+    entity_id = "binary_sensor.floor_thermostat_overheat_detected"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.HEAT
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is None
+
+
+@pytest.mark.usefixtures("wallmote_central_scene", "integration")
+async def test_power_management_battery_charging_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test Power Management battery charging notification sensor."""
+    entity_id = "binary_sensor.mbr_wallmote_quad_battery_is_charging"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert (
+        state.attributes.get(ATTR_DEVICE_CLASS)
+        == BinarySensorDeviceClass.BATTERY_CHARGING
+    )
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "device_class"),
+    [
+        ("binary_sensor.mbr_wallmote_quad_battery_is_fully_charged", None),
+        (
+            "binary_sensor.mbr_wallmote_quad_charge_battery_soon",
+            BinarySensorDeviceClass.BATTERY,
+        ),
+        (
+            "binary_sensor.mbr_wallmote_quad_charge_battery_now",
+            BinarySensorDeviceClass.BATTERY,
+        ),
+    ],
+    ids=["fully_charged", "charge_soon", "charge_now"],
+)
+@pytest.mark.usefixtures("wallmote_central_scene", "integration")
+async def test_power_management_battery_level_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    device_class: BinarySensorDeviceClass | None,
+) -> None:
+    """Test Power Management battery level notification sensors are diagnostic."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "binary_sensor.smart_switch_7_over_current_detected",
+        "binary_sensor.smart_switch_7_over_load_detected",
+    ],
+    ids=["over_current", "over_load"],
+)
+@pytest.mark.usefixtures("aeotec_smart_switch_7", "integration")
+async def test_power_management_safety_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+) -> None:
+    """Test Power Management power status notification sensors use safety class."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.SAFETY
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "binary_sensor.touchscreen_deadbolt_replace_battery_soon",
+        "binary_sensor.touchscreen_deadbolt_replace_battery_now",
+    ],
+    ids=["replace_soon", "replace_now"],
+)
+@pytest.mark.usefixtures("lock_schlage_be469", "integration")
+async def test_power_management_battery_maintenance_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+) -> None:
+    """Test Power Management battery maintenance notification sensors use battery class."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.BATTERY
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
 async def test_notification_off_state(
     hass: HomeAssistant,
     lock_popp_electric_strike_lock_control: Node,
@@ -342,7 +535,7 @@ async def test_notification_off_state(
         if value_id == "62-113-0-Access Control-Door state"
     }
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -459,7 +652,7 @@ async def test_opening_state_creates_open_binary_sensor(
     node = Node(client, state)
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -485,7 +678,7 @@ async def test_opening_state_disables_legacy_window_door_notification_sensors(
     )
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -538,7 +731,7 @@ async def test_opening_state_binary_sensors_with_tilted(
     )
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -618,7 +811,7 @@ async def test_opening_state_tilted_appears_via_metadata_update(
     node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -684,7 +877,7 @@ async def test_reenabled_legacy_door_state_entity_follows_opening_state(
     node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -744,7 +937,7 @@ async def test_legacy_door_state_entities_follow_opening_state(
     node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -860,7 +1053,7 @@ async def test_legacy_door_state_non_zero_endpoint(
     node = Node(client, state)
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -911,7 +1104,7 @@ async def test_access_control_lock_state_notification_sensors(
     node = Node(client, _add_lock_state_notification_states(lock_august_asl03_state))
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -952,7 +1145,7 @@ async def test_access_control_catch_all_with_opening_state_present(
     )
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1192,7 +1385,7 @@ async def test_legacy_door_open_state_repair_issue(
     )
     entity_id = entity_entry.entity_id
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1280,7 +1473,7 @@ async def test_legacy_door_tilt_state_repair_issue(
         },
     )
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1340,7 +1533,7 @@ async def test_legacy_door_open_state_no_repair_issue_when_disabled(
         },
     )
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1390,7 +1583,7 @@ async def test_legacy_closed_door_state_does_not_create_repair_issue(
         },
     )
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1446,7 +1639,7 @@ async def test_hoppe_custom_tilt_sensor_no_repair_issue(
         },
     )
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1502,7 +1695,7 @@ async def test_legacy_door_open_state_stale_repair_issue_cleaned_up(
         is not None
     )
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

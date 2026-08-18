@@ -18,6 +18,7 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import (
+    set_attribute_value,
     setup_integration,
     snapshot_smartthings_entities,
     trigger_health_update,
@@ -61,6 +62,28 @@ async def test_state_update(
     )
 
     assert hass.states.get("sensor.theater_ac_office_granit_temperature").state == "20"
+
+
+@pytest.mark.parametrize("device_fixture", ["multipurpose_sensor"])
+async def test_three_axis_none_value(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test three axis coordinate sensors handle a None value."""
+    set_attribute_value(devices, Capability.THREE_AXIS, Attribute.THREE_AXIS, None)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.theater_deck_door_x_coordinate").state == (
+        STATE_UNKNOWN
+    )
+    assert hass.states.get("sensor.theater_deck_door_y_coordinate").state == (
+        STATE_UNKNOWN
+    )
+    assert hass.states.get("sensor.theater_deck_door_z_coordinate").state == (
+        STATE_UNKNOWN
+    )
 
 
 @pytest.mark.parametrize(

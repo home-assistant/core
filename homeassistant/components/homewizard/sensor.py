@@ -3,8 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
-from typing import Final
+from typing import Final, override
 
 from homewizard_energy.const import Model
 from homewizard_energy.models import CombinedModels, ExternalDevice
@@ -17,9 +16,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_VIA_DEVICE,
     PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -32,8 +30,10 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    async_get_device_id_by_identifier,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
@@ -136,7 +136,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
         key="wifi_rssi",
         translation_key="wifi_rssi",
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -863,11 +863,13 @@ class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
             self._attr_entity_registry_enabled_default = False
 
     @property
+    @override
     def native_value(self) -> StateType | datetime | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of meter."""
         return super().available and self.native_value is not None
@@ -887,21 +889,24 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         self.entity_description = description
         self._device_id = device_unique_id
         self._suggested_device_class = description.suggested_device_class
-        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"
+        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_unique_id)},
             name=description.device_name,
             manufacturer="HomeWizard",
-            model=coordinator.data.device.product_type,
+            model_id=coordinator.data.device.product_type,
+            model=coordinator.data.device.model_name,
             serial_number=device_unique_id,
         )
         if coordinator.data.device.serial is not None:
-            self._attr_device_info[ATTR_VIA_DEVICE] = (
-                DOMAIN,
-                coordinator.data.device.serial,
+            self._attr_device_info["via_device_id"] = async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.data.device.serial),
+                config_entry_id=coordinator.config_entry.entry_id,
             )
 
     @property
+    @override
     def native_value(self) -> float | int | str | None:
         """Return the sensor value."""
         return self.device.value if self.device is not None else None
@@ -916,11 +921,13 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of meter."""
         return super().available and self.device is not None
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement based on device unit."""
         if (device := self.device) is None:
@@ -933,6 +940,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         return device.unit
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Validate unit of measurement and set device class."""
         if (

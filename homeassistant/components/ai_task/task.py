@@ -1,12 +1,12 @@
 """AI tasks to be handled by agents."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import io
 import mimetypes
 from pathlib import Path
 import tempfile
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
-from homeassistant.util import RE_SANITIZE_FILENAME, slugify
+from homeassistant.util import RE_SANITIZE_FILENAME, dt as dt_util, slugify
 
 from .const import (
     DATA_COMPONENT,
@@ -72,8 +72,7 @@ async def _resolve_attachments(
             resolved_attachments.append(
                 conversation.Attachment(
                     media_content_id=media_content_id,
-                    mime_type=attachment.get("media_content_type")
-                    or image_data.content_type,
+                    mime_type=image_data.content_type,
                     path=temp_filename,
                 )
             )
@@ -211,7 +210,7 @@ async def async_generate_image(
 
     source = hass.data[DATA_MEDIA_SOURCE]
 
-    current_time = datetime.now()
+    current_time = dt_util.now()
     ext = mimetypes.guess_extension(task_result.mime_type, False) or ".png"
     sanitized_task_name = RE_SANITIZE_FILENAME.sub("", slugify(task_name))
 
@@ -260,6 +259,7 @@ class GenDataTask:
     llm_api: llm.API | None = None
     """API to provide to the LLM."""
 
+    @override
     def __str__(self) -> str:
         """Return task as a string."""
         return f"<GenDataTask {self.name}: {id(self)}>"
@@ -296,6 +296,7 @@ class GenImageTask:
     attachments: list[conversation.Attachment] | None = None
     """List of attachments to go along the instructions."""
 
+    @override
     def __str__(self) -> str:
         """Return task as a string."""
         return f"<GenImageTask {self.name}: {id(self)}>"

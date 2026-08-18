@@ -408,6 +408,24 @@ async def test_sensors(
         assert snapshot(name=f"{entity_id}:device-registry") == device_entry
 
 
+async def test_external_device_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test an external device is linked to the main device via via_device_id."""
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "5c2fafabcdef"), init_integration.entry_id
+    )
+    assert main_device is not None
+
+    gas_meter_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "gas_meter_G001"), init_integration.entry_id
+    )
+    assert gas_meter_device is not None
+    assert gas_meter_device.via_device_id == main_device.id
+
+
 @pytest.mark.parametrize(
     ("device_fixture", "entity_ids"),
     [
