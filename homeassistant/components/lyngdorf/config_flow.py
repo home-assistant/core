@@ -1,5 +1,7 @@
 """Config flow for Lyngdorf integration."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 import logging
 from typing import Any, override
 from urllib.parse import urlparse
@@ -26,15 +28,6 @@ from homeassistant.helpers.service_info.ssdp import (
 from .const import CONF_SERIAL_NUMBER, DEFAULT_DEVICE_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class _ProbeError(Exception):
-    """Raised when a host could not be identified as a supported device."""
-
-    def __init__(self, error: str) -> None:
-        """Store the error key to show on the form."""
-        super().__init__(error)
-        self.error = error
 
 
 class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -67,7 +60,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 model, serial = await self._async_probe(self._host)
             except _ProbeError as err:
-                errors["base"] = err.error
+                errors["base"] = str(err)
             else:
                 self._device_model = model.model_name
                 self._name = model.model_name
@@ -88,18 +81,13 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _async_probe(self, host: str) -> tuple[LyngdorfModel, str]:
         """Return the model and serial of the device at a host."""
-        try:
+        with _probe_errors():
             model = await async_find_receiver_model(host)
-            serial = await async_get_device_serial(host) if model else None
-        except TimeoutError:
-            raise _ProbeError("timeout_connect") from None
-        except OSError:
-            raise _ProbeError("cannot_connect") from None
-        except Exception:  # noqa: BLE001
-            raise _ProbeError("unknown") from None
-
         if not model:
             raise _ProbeError("unsupported_model")
+
+        with _probe_errors():
+            serial = await async_get_device_serial(host)
         if not serial:
             raise _ProbeError("cannot_determine_id")
 
@@ -122,7 +110,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 model, serial = await self._async_probe(host)
             except _ProbeError as err:
-                errors["base"] = err.error
+                errors["base"] = str(err)
             else:
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_mismatch()
@@ -235,3 +223,23 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             raise AbortFlow("cannot_determine_id")
         await self.async_set_unique_id(self._device_serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+
+
+class _ProbeError(Exception):
+    """Raised when a host could not be identified as a supported device.
+
+    Its argument is the key of the error to show on the form.
+    """
+
+
+@contextmanager
+def _probe_errors() -> Iterator[None]:
+    """Map a failure to reach the device onto a form error."""
+    try:
+        yield
+    except TimeoutError:
+        raise _ProbeError("timeout_connect") from None
+    except OSError:
+        raise _ProbeError("cannot_connect") from None
+    except Exception:  # noqa: BLE001
+        raise _ProbeError("unknown") from None
