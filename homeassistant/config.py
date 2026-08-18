@@ -16,6 +16,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, overload
 
 from awesomeversion import AwesomeVersion
+from probatio import Undefined
 import voluptuous as vol
 from voluptuous.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
 from yaml.error import MarkedYAMLError
@@ -608,9 +609,7 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
         _LOGGER.exception("Unexpected error identifying config schema")
         return None
 
-    if hasattr(key, "default") and not isinstance(
-        key.default, vol.schema_builder.Undefined
-    ):
+    if hasattr(key, "default") and not isinstance(key.default, Undefined):
         default_value = module.CONFIG_SCHEMA({module.DOMAIN: key.default()})[
             module.DOMAIN
         ]
