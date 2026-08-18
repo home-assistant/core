@@ -66,6 +66,13 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.on_volume_state_event = MagicMock()
         client.on_media_state_event = MagicMock()
         client.on_todo_event = MagicMock()
+        client.on_dnd_event = MagicMock()
+
+        async def _sync_dnd_state() -> None:
+            handler = client.on_dnd_event.append.call_args.args[0]
+            await handler({TEST_DEVICE_1_SN: False})
+
+        client.sync_dnd_state = AsyncMock(side_effect=_sync_dnd_state)
 
         async def _start_http2_processing(*_args, **_kwargs) -> asyncio.Task[None]:
             async def _completed_task() -> None:
