@@ -543,9 +543,11 @@ def _build_migration_message(total: int, checks: dict[str, tuple[bool, str]]) ->
         f"{total} {noun} adopted with full history; the previous TrueNAS "
         "integration was disabled (not deleted).\n\n"
         f"**Validation**\n{lines}\n\n"
-        "To undo this, press the **Roll back migration** button on the TrueNAS "
-        "device — it opens a confirmation. This works only while you keep the old "
-        "TrueNAS integration; once you delete it, the migration is permanent.\n\n"
+        "To undo this, go to **Settings → Repairs**, open the "
+        "**TrueNAS CE migration — rollback available** repair, and choose "
+        "**Roll back to the previous integration**. This works only while you "
+        "keep the old TrueNAS integration; once you delete it, the migration "
+        "is permanent.\n\n"
         f"[Open the migration guide]({_GUIDE_URL})"
     )
 

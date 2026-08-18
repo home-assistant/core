@@ -334,8 +334,16 @@ class TrueNASSensor(TrueNASEntity, SensorEntity):
             if self.entity_description.native_unit_of_measurement.startswith("data__"):
                 uom = self.entity_description.native_unit_of_measurement[6:]
                 if uom in self._data:
-                    data_uom: str | None = self._data[uom]
-                    return data_uom
+                    data_uom = self._data[uom]
+                    if isinstance(data_uom, str):
+                        return data_uom
+                    _LOGGER.debug(
+                        "Sensor %s: data-derived UOM %s is %r, expected str",
+                        self.entity_description.key,
+                        uom,
+                        data_uom,
+                    )
+                    return None
 
             return self.entity_description.native_unit_of_measurement
 
@@ -649,7 +657,16 @@ class TrueNASAppStatsSensor(TrueNASEntity, SensorEntity):
                     self._uid,
                 )
         else:
-            self._data = self.coordinator.data.get("app_stats", {}).get(self._uid, {})
+            app_stats = self.coordinator.data.get("app_stats")
+            if isinstance(app_stats, dict):
+                self._data = app_stats.get(self._uid, {})
+            else:
+                self._data = {}
+                _LOGGER.debug(
+                    "App stats sensor %s: coordinator app_stats is %r, expected dict",
+                    self._uid,
+                    app_stats,
+                )
 
     @property
     @override
