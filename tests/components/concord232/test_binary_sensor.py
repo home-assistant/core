@@ -1,229 +1,99 @@
 """Tests for the Concord232 binary sensor platform."""
 
-import datetime
-from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-import requests
 
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDeviceClass,
-)
-from homeassistant.components.concord232.binary_sensor import (
-    CONF_EXCLUDE_ZONES,
-    CONF_ZONE_TYPES,
-)
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.concord232.const import UPDATE_INTERVAL
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from tests.common import async_fire_time_changed
+from .conftest import setup_integration
 
-VALID_CONFIG = {
-    BINARY_SENSOR_DOMAIN: {
-        "platform": "concord232",
-        CONF_HOST: "localhost",
-        CONF_PORT: 5007,
-    }
-}
+from tests.common import MockConfigEntry, async_fire_time_changed
 
-VALID_CONFIG_WITH_EXCLUDE = {
-    BINARY_SENSOR_DOMAIN: {
-        "platform": "concord232",
-        CONF_HOST: "localhost",
-        CONF_PORT: 5007,
-        CONF_EXCLUDE_ZONES: [2],
-    }
-}
 
-VALID_CONFIG_WITH_ZONE_TYPES = {
-    BINARY_SENSOR_DOMAIN: {
-        "platform": "concord232",
-        CONF_HOST: "localhost",
-        CONF_PORT: 5007,
-        CONF_ZONE_TYPES: {1: "door", 2: "window"},
-    }
-}
+async def test_zone_sensors_created(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test one binary sensor is created per zone."""
+    await setup_integration(hass, mock_config_entry)
 
-VALID_CONFIG_SSL = {
-    BINARY_SENSOR_DOMAIN: {
-        "platform": "concord232",
-        CONF_HOST: "localhost",
-        CONF_PORT: 5007,
-        CONF_SSL: True,
-    }
-}
+    front_door = hass.states.get("binary_sensor.localhost_front_door")
+    assert front_door is not None
+    assert front_door.state == STATE_OFF
+    assert front_door.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.OPENING
+
+    motion = hass.states.get("binary_sensor.localhost_hall_motion")
+    assert motion is not None
+    assert motion.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.MOTION
 
 
 @pytest.mark.parametrize(
-    ("config", "expected_url"),
+    ("zone_name", "expected_class"),
     [
-        pytest.param(VALID_CONFIG, "http://localhost:5007", id="default"),
-        pytest.param(VALID_CONFIG_SSL, "https://localhost:5007", id="ssl"),
+        ("SIDE MOTION", BinarySensorDeviceClass.MOTION),
+        ("FIRE KEY", BinarySensorDeviceClass.SAFETY),
+        ("HALL SMOKE", BinarySensorDeviceClass.SMOKE),
+        ("SINK WATER", BinarySensorDeviceClass.MOISTURE),
+        ("FRONT DOOR", BinarySensorDeviceClass.OPENING),
     ],
 )
-async def test_client_url(
-    hass: HomeAssistant,
-    mock_concord232_client_class: MagicMock,
-    config: dict[str, Any],
-    expected_url: str,
-) -> None:
-    """Test the client is created with a URL matching the ssl option."""
-    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-    mock_concord232_client_class.assert_called_once_with(expected_url)
-
-
-async def test_setup_platform(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test platform setup."""
-    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    state1 = hass.states.get("binary_sensor.zone_1")
-    state2 = hass.states.get("binary_sensor.zone_2")
-    assert state1 is not None
-    assert state2 is not None
-    assert state1.state == "off"
-    assert state2.state == "off"
-
-
-async def test_setup_platform_connection_error(
+async def test_device_class_guessing(
     hass: HomeAssistant,
     mock_concord232_client: MagicMock,
-    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    zone_name: str,
+    expected_class: BinarySensorDeviceClass,
 ) -> None:
-    """Test platform setup with connection error."""
-    mock_concord232_client.list_zones.side_effect = requests.exceptions.ConnectionError(
-        "Connection failed"
-    )
-
-    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    assert "Unable to connect to Concord232" in caplog.text
-    assert hass.states.get("binary_sensor.zone_1") is None
-
-
-async def test_setup_with_exclude_zones(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test platform setup with excluded zones."""
-    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, VALID_CONFIG_WITH_EXCLUDE)
-    await hass.async_block_till_done()
-
-    state1 = hass.states.get("binary_sensor.zone_1")
-    state2 = hass.states.get("binary_sensor.zone_2")
-    assert state1 is not None
-    assert state2 is None  # Zone 2 should be excluded
-
-
-async def test_setup_with_zone_types(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test platform setup with custom zone types."""
-    await async_setup_component(
-        hass, BINARY_SENSOR_DOMAIN, VALID_CONFIG_WITH_ZONE_TYPES
-    )
-    await hass.async_block_till_done()
-
-    state1 = hass.states.get("binary_sensor.zone_1")
-    state2 = hass.states.get("binary_sensor.zone_2")
-    assert state1 is not None
-    assert state2 is not None
-    # Check device class is set correctly
-    assert state1.attributes.get("device_class") == BinarySensorDeviceClass.DOOR
-    assert state2.attributes.get("device_class") == BinarySensorDeviceClass.WINDOW
-
-
-async def test_zone_state_faulted(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test zone state when faulted."""
+    """Test the device class is guessed from the zone name."""
     mock_concord232_client.list_zones.return_value = [
-        {"number": 1, "name": "Zone 1", "state": "Faulted"},
+        {"number": 1, "name": zone_name, "state": "Normal"}
     ]
-    mock_concord232_client.zones = mock_concord232_client.list_zones.return_value
+    await setup_integration(hass, mock_config_entry)
 
-    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
+    entity_id = f"binary_sensor.localhost_{zone_name.lower().replace(' ', '_')}"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_DEVICE_CLASS] == expected_class
 
-    state = hass.states.get("binary_sensor.zone_1")
-    assert state.state == "on"  # Faulted state means on (faulted)
 
-
-@pytest.mark.freeze_time("2023-10-21")
-async def test_zone_update_refresh(
+async def test_zone_state_updates(
     hass: HomeAssistant,
     mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that zone updates refresh the client data."""
+    """Test a tripped zone turns the sensor on at the next poll."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("binary_sensor.localhost_front_door").state == STATE_OFF
+
     mock_concord232_client.list_zones.return_value = [
-        {"number": 1, "name": "Zone 1", "state": "Normal"},
+        {"number": 1, "name": "FRONT DOOR", "state": "Tripped"},
+        {"number": 2, "name": "HALL MOTION", "state": "Normal"},
     ]
-    mock_concord232_client.zones = mock_concord232_client.list_zones.return_value
-
-    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("binary_sensor.zone_1").state == "off"
-
-    # Update zone state - need to update both return_value and zones attribute
-    new_zones = [
-        {"number": 1, "name": "Zone 1", "state": "Faulted"},
-    ]
-    mock_concord232_client.list_zones.return_value = new_zones
-    mock_concord232_client.zones = new_zones
-
-    freezer.tick(datetime.timedelta(seconds=10))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    freezer.tick(datetime.timedelta(seconds=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.zone_1")
-    assert state.state == "on"
+    assert hass.states.get("binary_sensor.localhost_front_door").state == STATE_ON
 
 
-@pytest.mark.parametrize(
-    ("sensor_name", "entity_id", "expected_device_class"),
-    [
-        (
-            "MOTION Sensor",
-            "binary_sensor.motion_sensor",
-            BinarySensorDeviceClass.MOTION,
-        ),
-        ("SMOKE Sensor", "binary_sensor.smoke_sensor", BinarySensorDeviceClass.SMOKE),
-        (
-            "Unknown Sensor",
-            "binary_sensor.unknown_sensor",
-            BinarySensorDeviceClass.OPENING,
-        ),
-    ],
-)
-async def test_device_class(
+async def test_unsorted_zones_map_to_stable_entities(
     hass: HomeAssistant,
     mock_concord232_client: MagicMock,
-    sensor_name: str,
-    entity_id: str,
-    expected_device_class: BinarySensorDeviceClass,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test zone type detection for motion sensor."""
+    """Test zones are sorted by number regardless of server order."""
     mock_concord232_client.list_zones.return_value = [
-        {"number": 1, "name": sensor_name, "state": "Normal"},
+        {"number": 2, "name": "HALL MOTION", "state": "Normal"},
+        {"number": 1, "name": "FRONT DOOR", "state": "Tripped"},
     ]
-    mock_concord232_client.zones = mock_concord232_client.list_zones.return_value
+    await setup_integration(hass, mock_config_entry)
 
-    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state.attributes.get("device_class") == expected_device_class
+    assert hass.states.get("binary_sensor.localhost_front_door").state == STATE_ON
+    assert hass.states.get("binary_sensor.localhost_hall_motion").state == STATE_OFF
