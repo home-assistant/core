@@ -160,8 +160,8 @@ class VRChatUserLocationSensor(
     def options(self):
         """Dynamically return options based on known locations."""
         special_options = [
-            *VRChatSpecialLocationString,
-            VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE,
+            *(location.value for location in VRChatSpecialLocationString),
+            VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE.value,
         ]
         return [
             *special_options,

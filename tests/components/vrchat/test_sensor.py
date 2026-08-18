@@ -47,3 +47,4 @@ def test_location_sensor_options_are_stable_and_unique() -> None:
         "World one",
         "World two",
     ]
+    assert all(type(option) is str for option in sensor.options)
